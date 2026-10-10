@@ -1,0 +1,1 @@
+{"name":"refund-comparison-stage7","private":true,"type":"module","scripts":{"compare":"node compare.mjs","test":"node run-tests.mjs","regression":"node regression.mjs","demo":"node demo.mjs","audit":"node audit.mjs","report":"node report.mjs"}}

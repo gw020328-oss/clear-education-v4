@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f2ea">
+    <title>환급 약속 금고</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="환급 약속 금고 처음으로">
+        <span class="brand-mark" aria-hidden="true">약</span>
+        <span>환급 약속 금고</span>
+      </a>
+      <span class="demo-badge">로컬 시제품</span>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="course-title">
+        <div class="hero-copy">
+          <p class="eyebrow">단일 강좌 · 환급 진행</p>
+          <h1 id="course-title">블록체인 환급권 실습</h1>
+          <p class="hero-summary">약속된 제출 증빙 4개를 보관하면, 교육업체의 추가 승인 없이 예치된 테스트 토큰을 청구할 수 있습니다.</p>
+        </div>
+        <div class="amount-panel" aria-label="환급 핵심 정보">
+          <p>받을 수 있는 금액</p>
+          <strong id="amount">50 TEST</strong>
+          <span>무가치한 로컬 테스트 토큰</span>
+        </div>
+        <div class="next-action" id="next-action" role="status" aria-live="polite">
+          <span class="step-number">다음</span>
+          <div><strong id="next-title">조건을 확인해 주세요</strong><p id="next-detail">동의하면 참가자 몫의 준비금이 금고에 예치됩니다.</p></div>
+        </div>
+        <div class="hero-metrics">
+          <div><span>남은 조건</span><strong id="remaining">증빙 4개</strong></div>
+          <div><span>청구 기한</span><strong id="claim-deadline">불러오는 중</strong></div>
+          <div><span>준비금</span><strong id="reserve-summary">확인 전</strong></div>
+        </div>
+      </section>
+
+      <section class="content-section" id="terms" aria-labelledby="terms-title">
+        <div class="section-heading"><span>01</span><div><p>환급 조건</p><h2 id="terms-title">먼저 약속의 범위를 확인하세요</h2></div></div>
+        <div class="two-column">
+          <div class="condition-card">
+            <h3>환급 조건</h3>
+            <dl>
+              <div><dt>환급액</dt><dd>50 TEST</dd></div>
+              <div><dt>필요 증빙</dt><dd>서로 다른 제출 증빙 4개</dd></div>
+              <div><dt>제출 인정 기간</dt><dd id="submission-period">불러오는 중</dd></div>
+              <div><dt>청구 마감</dt><dd id="terms-deadline">불러오는 중</dd></div>
+            </dl>
+          </div>
+          <aside class="limits-card" aria-labelledby="limits-title">
+            <h3 id="limits-title">보장하지 않는 사항</h3>
+            <ul>
+              <li>블록체인은 실제 제출 사실이나 학습 성과를 증명하지 않습니다.</li>
+              <li>발급자가 증빙을 주지 않거나 거짓으로 서명하면 보호되지 않습니다.</li>
+              <li>체인·토큰 장애나 지갑 키 분실 때는 지급이 막힐 수 있습니다.</li>
+              <li>오류 수정, 수령 주소 변경, 발급자 키 교체 기능이 없습니다.</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <section class="content-section" id="agreement" aria-labelledby="agreement-title">
+        <div class="section-heading"><span>02</span><div><p>동의와 예치</p><h2 id="agreement-title">조건 동의와 준비금 확보 상태</h2></div></div>
+        <div class="status-card">
+          <div class="status-copy">
+            <div class="status-line"><span class="status-dot" id="consent-dot"></span><div><strong id="consent-label">조건 동의 전</strong><small id="consent-help">위 조건을 확인하고 동의 기록을 남겨야 합니다.</small></div></div>
+            <div class="status-line"><span class="status-dot" id="reserve-dot"></span><div><strong id="reserve-label">준비금 확인 전</strong><small id="reserve-help">동의가 기록될 때 참가자 몫 50 TEST를 함께 예치합니다.</small></div></div>
+          </div>
+          <div class="action-area">
+            <label class="check-row" for="terms-check"><input id="terms-check" type="checkbox"><span>환급 조건과 보장하지 않는 사항을 확인했습니다.</span></label>
+            <button class="button primary" id="consent-button" disabled>동의하고 준비금 확인</button>
+            <p class="connection-note"><span aria-hidden="true">●</span> 현재는 브라우저 지갑 대신 서버 메모리의 로컬 데모 지갑을 사용합니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="evidence" aria-labelledby="evidence-title">
+        <div class="section-heading"><span>03</span><div><p>제출 내역</p><h2 id="evidence-title">환급에 필요한 증빙 4개</h2></div></div>
+        <div class="evidence-card">
+          <div class="progress-copy"><strong id="evidence-count">0 / 4 확보</strong><span>모든 증빙의 수령자·조건·서명을 검사합니다.</span></div>
+          <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+          <ol class="evidence-list" id="evidence-list"></ol>
+          <button class="button secondary" id="issue-button" disabled>모의 제출 증빙 4개 받기</button>
+          <p class="helper">공모전 시연용 발급 기능입니다. 실제 교육업체 제출 시스템과 연결되어 있지 않습니다.</p>
+        </div>
+      </section>
+
+      <section class="content-section" id="download" aria-labelledby="download-title">
+        <div class="section-heading"><span>04</span><div><p>휴대 가능한 증빙</p><h2 id="download-title">증빙 파일을 내 기기에 보관하세요</h2></div></div>
+        <div class="download-card">
+          <div class="file-visual" aria-hidden="true"><span>{ }</span><small>JSON</small></div>
+          <div class="download-copy"><h3>refund-evidence.v1.json</h3><p>조건·버전·체인과 계약 식별 정보·수령자·기한·제출 내역과 서명을 담습니다. 개인키와 이름·이메일은 포함하지 않습니다.</p><span id="file-status">증빙 4개를 모두 확보하면 내려받을 수 있습니다.</span></div>
+          <div class="download-actions">
+            <a class="button primary disabled" id="download-button" download="refund-evidence.v1.json" aria-disabled="true">증빙 파일 다운로드</a>
+            <label class="button ghost file-label" for="file-input">보관한 파일 선택<input id="file-input" type="file" accept="application/json,.json"></label>
+            <button class="text-button" id="use-current-button" disabled>방금 만든 증빙을 검증해 사용</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section claim-section" id="claim" aria-labelledby="claim-title">
+        <div class="section-heading"><span>05</span><div><p>환급 실행</p><h2 id="claim-title">검증된 증빙으로 환급 청구</h2></div></div>
+        <div class="claim-card">
+          <div class="claim-overview">
+            <p>수령 주소</p><code id="recipient">불러오는 중</code>
+            <div class="claim-amount"><span>청구 금액</span><strong>50 TEST</strong></div>
+            <button class="button dark" id="claim-button" disabled>환급 청구하기</button>
+            <p class="helper" id="claim-help">먼저 증빙 파일을 선택하고 검증해 주세요.</p>
+          </div>
+          <div class="result-panel" id="result-panel" aria-live="polite" aria-atomic="true">
+            <div class="result-icon" id="result-icon" aria-hidden="true">…</div>
+            <div><p id="result-kicker">처리 결과</p><h3 id="result-title">아직 청구하지 않았습니다</h3><p id="result-detail">청구 뒤 거래 영수증과 수령자 잔액을 확인해 지급 완료를 표시합니다.</p><dl id="receipt-details" hidden><div><dt>거래 영수증</dt><dd id="tx-hash"></dd></div><div><dt>확인된 잔액</dt><dd id="confirmed-balance"></dd></div></dl></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="alert" aria-live="assertive" hidden></div>
+    <footer><span>환급 약속 금고 · 로컬 시제품</span><p>실자금에 사용할 수 없으며 보안 감사를 받지 않았습니다.</p></footer>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

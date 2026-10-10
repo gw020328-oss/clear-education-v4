@@ -1,0 +1,240 @@
+# CLEAR 기존 구현 점검과 PRD 선행 결정 보고서
+
+2026년 10월 10일 · 1단계 기술 점검 · 제품 코드 변경 없음
+
+CLEAR에는 **AI 초안, 검토 승인, 양측 서명, 사전 예치, 지정 발급자 증빙, 사업자 종료 후 직접 청구까지 연결한 로컬 시제품이 이미 있다.** 새 시연의 활성 경로는 Stage14 화면과 Stage15 v3 계약이다. 다음 단계는 이 자산을 재사용하면서 TOEIC 점수·시드 학습 기록·신청자·수취 지갑을 연결하는 PRD를 확정하는 것이다.
+
+반면 **실제 YBM 기록과 Amoy 검증 계약은 지급 시제품에 아직 연결되지 않았다.** 저장된 YBM 시험은 실제 계정 1개의 응시자 정보와 성적 기록 연결, Amoy 시험은 과거 배포 구현의 서명 호환성까지 보여 준다. 공개 Amoy 지급, 독립 본인인증, 학원 API 연동, 일반적인 AI 정확도·효용은 입증되지 않았다. 멘토링 문서에서 기능을 설계 단계로 표현했더라도, 아래 코드와 실행 기록을 기능별 기준으로 삼아야 한다.
+
+## 점검 범위와 증거 수준
+
+현재 작업 폴더는 `/Users/ohgyuwon/Documents/ChatGPT/블록체인`이다. 원본 구현은 한글 분해형 경로의 [refund-vault-prototype](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype)에 있으며, 실험은 이전 프로젝트의 [experiments](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments)에 남아 있다. 이 보고서와 두 JSON 보고서만 새 output 폴더에 저장했다.
+
+- **코드 확인**: 직접 읽은 소스의 실제 분기와 제약이다. 실행 성공을 뜻하지 않는다.
+- **저장 기록**: 과거 JSON·영수증·시험 결과를 읽은 것이다. 이번 재실행과 구분한다.
+- **이번 직접 확인**: 선택한 파일의 해시 대조와 임시 복사본의 오프라인 검사다.
+- **권고·미구현**: 다음 PRD·설계에서 다룰 사항이다. 이번에 개발하지 않았다.
+
+적용 가능한 상위·하위 AGENTS.md를 확인했다. 구현 경로에는 관련 AGENTS.md가 없고, 이전 프로젝트의 [AGENTS.md](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/AGENTS.md)는 `sources/`를 읽기 전용으로 취급하도록 한다. 구현 폴더에는 자체 `.git`이 없으며 상위 홈의 `.git`은 CLEAR 저장소로 사용하지 않았다. Git 변경·푸시를 수행하지 않았다.
+
+private 증명·정책 파일은 열지 않았다. 공개 요약의 허용된 상태 필드와 검증 소스만 읽었다. 개인정보 값, 원문 증명, 쿠키, 키를 보고서에 포함하지 않았다. 외부 AI 호출·새 로그인·공개 RPC 조회·체인 거래·타인 연락은 모두 수행하지 않았다. 원본 시험 실행기 중 YBM과 Amoy 실행기는 기존 JSON을 덮어쓰므로 실행하지 않았다. 저장된 Amoy 상태를 현재 상태로 표현하지 않는다.
+
+이번 [직접 검사 결과](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/direct-checks.json)는 10/10 통과다. 제품 경계 모듈·설정 해시 모듈·Solidity 파일 3개를 임시 폴더에 복사해 검사한 후 복사본을 제거했다. 고정 조건 승인, 점수·수강률 조건 거부, 검토 확인 누락·가짜 인용·AI 승인 상태 거부, 설정 필드별 해시 변화, 증빙 수·버전 거부, v3 Solidity 컴파일을 확인했다. Node v25.6.1·solc 0.8.30을 사용했다. 지갑 서명 실행·EVM 지급·브라우저·실제 증명은 재시험하지 않았다.
+
+[선택 근거와 해시 대조](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/evidence-index.json)에는 소스 18개의 지문, 최신 저장 Stage15 시험의 입력 9개 일치 여부, AI 호출 기록 목록이 있다. 전체 저장소 체크섬이나 동결 manifest의 완전성을 재검사한 것은 아니다.
+
+## 기존 기능과 실제 근거
+
+아래 S 번호는 마지막 절의 코드 링크, H 번호는 저장된 실행 기록 링크다. 이번 재실행 열의 ‘아니오’는 기능이 없다는 뜻이 아니라 과거 성공을 이번 성공으로 다시 주장하지 않는다는 뜻이다.
+
+| 기능 | 구현과 코드 근거 | 저장된 시험 결과 | 이번 재실행 |
+| --- | --- | --- | --- |
+| AI 초안과 출처 인용 | S01의 DRAFT 전용 schema와 원문 substring·span 검사, S02의 Gemini 호출·상한·재시도 분기 | H01: 완전·누락·충돌 3개 합성 사례. 추출 10/10·8/10·9/10, 실제 사용자 0명 | AI 호출 없음. schema·가짜 인용 등 일부 순수 함수만 검사 |
+| 캐시와 수동 입력 | S03 20–27행: 원문이 일치하는 고정 캐시와 checksum, manual 빈 초안. UI 경로 존재 | H02: live·cached·manual 각각 로컬 지급 성공 기록 | 전체 UI 아니오 |
+| 검토와 승인 | S01 21–28행: 확인 체크·질문 응답·필수값 검사. S04: 사람 수정본을 원문과 구별해 서명 | H03: 제품 36/36, 승인 전 차단·변조·미지원 조건 시험 | 고정 조건 승인·미지원 조건 거부만 직접 확인 |
+| 승인 조건의 결정적 컴파일 | S05: canonical JSON, 출처 hash, 검토자·운영자 신뢰 목록, 세 서명 검증, BoundTerms/3 | H04: 과거 stage11 바인딩 28/28. H05: 현재 v3 관련 시험 47/47 | 전체 컴파일·서명 시나리오 아니오 |
+| 실행 설정에 대한 참가자 동의 | S06·S07: runtimeConfigHash를 실제 계약 필드에서 계산하고 참가자 동의와 함께 검사 | H05: 정상 2, 등록 거부 26, 정산 19 = 47/47. 최신 저장 실행의 입력 9개가 현재 파일과 일치 | 해시 변화·버전 검사, Solidity 컴파일만 수행 |
+| 운영자의 사전 예치 | S07 57–71행, S08 40–49행: sponsor가 참가자별 정확히 50,000,000 단위 TEST를 예치. 참가자 동의 필요 | H03·H05·H06: 예치·준비금·잔액 확인 | EVM 재실행 없음 |
+| 증빙 발급 | S09: 별도 issuer 프로세스가 임시 키로 0–3번 증빙 생성. S08 51–52행에서 네 증빙의 완료 시각을 같은 값으로 만들 수 있음 | H02·H06: 서명 4개와 잘못된 발급자·증빙 수 등 검사 기록 | 아니오. 실제 학습 API나 출석 사실을 검증하는 코드는 아님 |
+| 독립 청구와 일회 지급 | S07 74–90행: 고정 learner로 지급, settled로 중복 정산 방지. S10: 원본 조건·배포·토큰·준비금·증빙 확인 후 RPC 직접 claim | H06: v3 cached UI PASS, 사업자 요청 계측 0, Paid·Transfer·잔액 +50 TEST·settled 확인 | 아니오 |
+| 만료 후 회수 | S07 93–100행: claimUntil을 지난 뒤 sponsor만 미정산 몫 회수 | H05 정산 19개에 정확한 마감 청구·마감 이후 회수·조기 및 무권한 회수 거부 포함 | 아니오 |
+| 중앙 비교군 | `stage15/lib/central.mjs`: SQLite 무가치 장부에 같은 동의·증빙·기한 조건 적용 | H05의 중앙/EVM 허용·거부 비교 | 아니오. 은행 자금 보관이나 블록체인의 독점 우위 증거가 아님 |
+| 실제 YBM 응시자와 성적 연결 | S11: 공증자 서명·요청 정책 hash·URL/메서드·추출값·owner/context·시간 검사 후 시험 종류/날짜/접수번호 연결 | H07: 실제 계정 1개, 연결 1쌍 성공; 변조 6건·연결 불일치 단위 시험 3건·미신뢰 서명자 거부 | 아니오. 원본 증명도 열지 않음 |
+| Amoy 외부 검증 계약 호환성 | S12: 공개 상태만 조회하는 제한 provider로 로컬 fork를 만들고 private 증명 eth_call은 로컬에서만 수행 | H08: 원본 2개 성공, 변조·잘못된 서명 거부, 같은 증명 재제출 성공 | 아니오. 공개 지급 및 현재 배포 상태는 미확인 |
+
+H04의 stage6·stage11 격리 회귀는 저장된 종료 코드 0이며 stage6 11/11은 해당 stdout 기록에 근거한다. 서로 다른 실행과 반복 시험을 합쳐 정확도나 독립 보안 사례 수로 계산하지 않는다.
+
+### 문서와 현재 코드의 차이
+
+**Stage14의 역사적 설명과 현재 활성 경로가 다르다.** Stage14 ARCHITECTURE는 stage11·stage6 재사용을 설명하지만 현재 `server/demo.mjs`는 stage15 계약 컴파일을, `server/main.mjs`는 stage15 정책·배포 모듈을 가져온다. 정적 서버의 브라우저 컴파일러와 recovery도 v3다. 과거 결과는 BoundTerms/1과 EIP-712 도메인 v2, 새 경로는 BoundTerms/3·도메인 v3다. 과거 금고와 복구 패킷은 자동 변환·이전되지 않는다. Stage14 FINAL_SELECTION만으로 최신 v3 검증을 대표하게 해서는 안 된다.
+
+**AI 전체 기록은 기존 요약보다 뒤에 이어진다.** AI_LEDGER_FINAL과 README는 attempt 1–6 시점의 기록이다. 현재 폴더에는 촬영용 별도 승인 파일 2개와 attempt 7·8의 예약·응답 기록이 있다. 7번은 HTTP500, 8번은 HTTP200 VALID다. 두 승인 파일은 당시 승인 이력을 주장하는 저장 자료이며 이번 추가 호출 권한으로 재사용하지 않았다. `tests/film-ai.mjs`도 별도 촬영 경로와 첫 성공 후 중단 조건을 가진다.
+
+현재 예약·결과 메타데이터 8건을 합치면 당시 단가 기준 보수적 추정은 **$0.14449875**, usage가 있는 응답의 추정 합계는 **$0.01380075**, 실제 청구액은 여전히 미확인이다. 이것은 현재 가격이나 청구 조회가 아니다. 기존 일반 client는 여전히 6회 상한이므로 8건 원장 상태에서 추가 호출할 수 없다. 과거 촬영 승인·파일을 이용해 예산을 초기화하거나 호출을 재개하지 않는다. **평가 사례는 여전히 3개**이고, 추가 촬영은 새 정확도 평가가 아니다.
+
+## 목표 흐름과 재사용 판단
+
+목표 MVP는 가상 운영자 1곳·환급반 1개·TOEIC이며 학습 기록은 시드 API, 실명 인증과 실제 학원 API는 후속 범위다. 아래 연결부는 현재 Stage14/15와 두 실험의 활성 코드를 기준으로 분류했다. 저장소의 모든 과거 실험에 기능이 전혀 없다고 단정하는 목록은 아니다.
+
+| 목표 단계 | 분류 | 재사용 범위와 필요한 작업 |
+| --- | --- | --- |
+| 조건 초안·원문 근거·누락 및 충돌 질문 | 수정 필요 | DRAFT/출처/사람 검토 경계는 재사용. 고정 10필드·3개 안내문 전용 제한을 TOEIC 정책 schema로 교체. 일반 안내문 지원과 충돌 탐지 성능은 새 평가 필요 |
+| 운영자가 조건 확정 | 수정 필요 | 승인 수정본·정책 hash·버전 고정 구조 재사용. 실제 운영자 권한, 조건별 타입·단위·근거, 게시 전 검토 화면 필요 |
+| 환급반 선택과 신청 | 새 구현 | 반·신청·참가자 식별자, 중복 신청 정책, 가입 상태, 서버 역할 분리와 저장 모델 필요 |
+| 신청과 수취 지갑 연결 | 새 구현 | 현재 임시 참가자 서명을 실제 지갑 소유 증명과 연결. 실명 미검증 상태를 명시하고 지갑 서명을 실명 인증으로 표현하지 않기 |
+| 동의한 규칙과 실제 계약 설정 연결 | 그대로 재사용하는 설계 원칙, 구현 수정 | Stage15 설정 hash·도메인 분리·변조 거부를 유지하되 점수/수강률 schema와 새 계약 버전에 포함 |
+| 운영자 예치 | 수정 필요 | 정확한 입금량·준비금 검사는 재사용. 금액·자산·모집 정원·예치 완료 시점 결정. 현재 TEST 안전 토큰 hash 고정도 수정 대상 |
+| 시드 학습 기록 조회 | 새 구현 | 현재 issuer는 요청만 받으면 4개를 만든다. 수강률 분모/분자·중복 수업·정정·집계 시각을 가진 시드 API와 결정적 집계기 필요 |
+| YBM 응시자·성적 조회 및 연결 | 기술 실험 후 수정 | 진단용 두 증명 연결 규칙을 출발점으로 사용. 신청별 challenge·지갑·정책·반 연결, 유효 시간, 허용 시험·점수 검사가 필요 |
+| 지급 자격 결정 | 새 구현 | 확정된 수치 규칙을 실행하는 결정적 검증기와 사유 코드 필요. AI에 지급 허용권을 부여하지 않음 |
+| 자격 증명에서 계약 지급으로 연결 | 기술 실험 및 새 구현 | 개인정보를 숨긴 지급 권한 서명 방식 또는 온체인 직접 검증 방식의 신뢰·복구 조건 비교 후 선택 |
+| 직접 청구·중복 방지·기한 후 회수 | 수정 필요 | 현재 settled/고정 수취인/권한·기한 검사를 보존. 반·신청·자격증명 단위 중복 범위와 새 청구 자료 설계 |
+| 장애 복구와 화면 | 수정 필요 | 독립 정적 화면·RPC 청구 패턴 재사용. 외부 지갑·영속 자료·복구 패킷 내보내기·신뢰할 배포 식별·RPC 대체 경로 필요 |
+
+현재 서버는 `main.mjs`의 전역 source/draft/review/bundle/plan 상태 하나와 임시 세 역할 키를 사용한다. 다중 참가자 상태·인증된 역할·DB·지갑 확장 프로그램 연동을 갖춘 서비스 서버가 아니다. 또한 현재 컴파일러의 BoundTerms에는 recipient가 들어가고 시연은 예측한 계약 주소 하나를 쓴다. 반 1개가 참가자 1명이라는 뜻은 아니므로, 반별 공통 정책과 참가자별 약정/금고를 어떻게 나눌지 설계에서 결정해야 한다.
+
+## 신뢰와 데이터 경계
+
+| 주체 | 현재 책임·권한 | 목표에서 유지하거나 명시할 경계 |
+| --- | --- | --- |
+| AI | 안내문을 초안으로 구조화하고 출처·질문 제시. 별도 체인·지갑 모듈 연결 없음 | 초안은 비신뢰 입력. 점수/출석 증명의 진위·환급 최종 자격·서명·지급 권한 없음. 개인정보 원문을 AI 입력에 추가하지 않는 방향 권고 |
+| 검토자·운영자 | 로컬 신뢰 목록에 있는 키가 조건 승인·사업자 약정 서명. sponsor가 예치 및 만료 후 회수 | 정책의 의미와 예치 책임을 가짐. 계약은 자연어 의미와 학원 직원의 실제 권한을 판별하지 않음 |
+| 서버 | 세 역할 임시 키 보유, 화면 상태·검토·배포·증빙 요청 수행 | 실서비스 역할 분리 필요. 서버가 지급 권한을 발급하는 설계를 택하면 자격 평가 정확성과 키 보관의 핵심 신뢰 주체가 됨 |
+| 학습 기록 발급자 | 현재는 IPC 요청에 따라 임시 키로 증빙 4개 서명 | 시드 API는 모의 기록임을 표시. 서명 검증이 실제 수강을 입증하지 않음. 실제 학원 연동 후에도 발급 오류·거부·정정 권한이 남음 |
+| YBM | 실제 계정의 응시자 정보·성적 원천 | 데이터 원천이며 CLEAR 신청자 실명 확인 기관이나 CLEAR 운영 파트너로 확정된 것은 아님 |
+| Reclaim 공증자와 SDK | 원천 요청·추출 결과에 대한 서명 검증 경로. 진단 verifier는 공식 registry를 신뢰 | 공증자 신뢰, 요청/추출 정책의 정확성, 인증서·비공개 수집 경로에 의존. signed context가 있다는 것만으로 학원 신청 사실을 증명하지 않음 |
+| Amoy Reclaim 계약 | 해당 과거 구현은 claimInfo hash와 서명자 집합 일치 검사 | 단일 witness·최소 1명, UUPS owner 업그레이드 신뢰가 남음. freshness·자격·신청·일회 지급은 별도 소비자 로직 필요 |
+| CLEAR 금고 | 등록 동의·설정·입금량·발급자 서명·수취인·정산 상태·기한을 검사 | 입력 증빙이 참인지, 수업을 실제 들었는지, 점수가 조건을 만족하는지는 현재 검사하지 않음 |
+| 복구 화면·RPC | 별도 origin과 경로로 동일 로컬 Ganache에 접근 | 독립 사업자·별도 합의 노드라는 뜻은 아님. 신뢰할 화면·배포 정보·가스·지갑·체인 접근성 필요 |
+
+데이터 종류는 다음처럼 화면·API·시험 보고서 모두에서 구분해야 한다.
+
+| 데이터 | 현재 확인된 성격 | 허용되는 설명 |
+| --- | --- | --- |
+| Gemini 고정 캐시 | 최초 평가의 실제 응답을 저장한 합성 안내문 예시 | ‘저장된 이전 AI 응답’. 현재 실시간 분석으로 표시하지 않기 |
+| 수동 입력·로컬 서명 증빙 | 가상의 4주 프로그램과 임시 계정·로컬 시계 | ‘로컬 모의 시연’. 실제 교육 완료나 실제 사용자 승인으로 표시하지 않기 |
+| 향후 시드 학습 API | 이번 점검 범위의 활성 코드에 아직 없음 | 구현 후 ‘시드 학습 기록’. 실제 학원 데이터와 혼합하지 않기 |
+| YBM 두 증명 | 실제 계정 1개에서 만든 과거 진단 자료 | 실제 기록의 연결 실험. 새 반의 fresh 증명·지갑 소유·실명 인증을 충족한다고 간주하지 않기 |
+| Amoy fork 결과 | 2026-10-09에 저장된 블록 49711041의 로컬 실행 | 당시 외부 구현과의 호환성. 공개 체인 지급·현재 서비스 가용성으로 표현하지 않기 |
+
+권고 데이터 경로는 ‘비공개 원본 수집 → 출처·서명·요청 정책 검증 → 신청/지갑/반 연결 → 점수·학습 규칙 판정 → 최소 지급 권한 발급 → 참가자가 보관 → 계약 청구’다. 서버 발급 방식을 택하면 서버의 신뢰를 숨기지 말아야 한다. 개인정보 원본의 공개 온체인 전송은 현재 해커톤의 기본 경로로 삼지 않는 것을 권고한다.
+
+## 주요 제약과 설계에 넘길 조건
+
+### 고정 조건을 점수와 수강률로 바꾸기
+
+S01은 프로그램 이름 외 9개 입력을 정해진 문구와 정확히 비교하고, S04는 고정 courseId·50 TEST·4개 활동·2030년 기간을 구성한다. S05는 31337 체인만 허용한다. S07은 금액 50,000,000과 증빙 수 4가 constant다. S08의 토큰 bytecode hash 검사까지 있어, 체인 번호·토큰 주소만 바꾸는 Amoy 이전도 불가능하다.
+
+따라서 운영자 입력 schema, 검토 화면, 승인본, 컴파일러, 동의 서명, 계약의 실행 설정, 자격 검증, 복구 검사를 함께 버전 관리해야 한다. `score >= threshold`와 `completedUnits / totalUnits >= attendanceThreshold` 같은 규칙은 기술 예시이며 실제 임계값은 아직 정해지지 않았다. 점수 종류·시험 기간·복수 응시 선택·수업 분모·소수점 반올림·미수집 기록 처리부터 PRD로 정한다. 수강률은 정수 단위 비교 등을 사용해 경계값을 명확히 하고, 데이터 누락을 조건 미달과 구분하는 것이 좋다.
+
+### 신청자와 지갑 연결
+
+S13의 증명 생성기는 임의 owner 키와 진단 목적·sessionId를 생성한다. S11의 expectedOwner·expectedContext는 그 진단에 맞춘 검증이다. 동일 owner는 두 증명의 연결 근거지만 CLEAR 수취 지갑이나 독립 인증된 신청자라는 근거는 아니다.
+
+새 신청에는 반·신청 ID·정책 버전·수취 지갑·일회 challenge·만료를 연결한 지갑 서명과 검증 세션이 필요하다. 실명 인증을 후속으로 미루는 MVP에서는 ‘실명 미검증 데모 신청’ 상태를 명시해야 한다. 계정 공유·도용 방지까지 해결했다고 주장하지 않는다. 실제 학원 도입 단계에서는 학원 또는 인증 제공자의 독립 신청자 정보와 YBM 기록을 비교하는 절차가 별도로 필요하다.
+
+### 개인정보와 최소 공개
+
+응시자·성적 증명에 개인정보가 들어가는 구조이며, hash만 있다고 자동으로 익명화되는 것도 아니다. 이름·생년월일처럼 추측 가능한 값의 단순 hash를 공개 식별자로 쓰는 방식은 피하는 것이 좋다. 개인정보 원문·추출값·원문 증명은 비공개 저장, 접근 권한, 최소 보존 기간, 삭제와 장애 로그 방식을 설계해야 한다. 보고서에서는 법적 적합성을 판정하지 않았다.
+
+공개 RPC의 `eth_call`도 데이터를 외부 제공자에게 전송한다. 원본 증명을 담은 온체인 거래는 공개 데이터가 되므로, 현재 실험의 로컬 검증 방식을 곧바로 공개 호출로 바꾸지 않는다. 최소 지급 권한에는 opaque 신청 식별자·정책 hash·지갑·금액·자산·만료·nonce 등 필요한 값만 넣는 방향을 검토한다. 증명 원문 자체의 hash 공개도 연결 가능성을 검토해야 한다.
+
+### Freshness와 시간 경계
+
+S11은 `now-1800 <= timestampS <= now+60`을 검사한다. 저장 증명은 과거 진단 자료이며, 현재 시각의 해당 검사를 통과한다고 전제할 수 없다. 시간을 과거로 돌려 통과시킨 결과를 fresh 검증으로 보고해서도 안 된다. 새 신청에서는 **증명 생성 시각, 시험 응시일, 학습 집계 기준 시각, 지급 권한 만료, 청구 기한**을 각각 구분해야 한다.
+
+S07은 완료 시각이 start 이상·due 이하·미래가 아님을 검사하지만, 완료가 개별 enrolledAt 이후인지나 주차별 실제 구간에 들어가는지는 검사하지 않는다. 네 증빙이 준비되면 due 전에도 청구할 수 있다. ‘등록 후 활동만 인정’과 ‘반 종료 후 지급’이 제품 요건이면 별도 규칙과 시험이 필요하다.
+
+원본 검증의 짧은 freshness를 지급 권한에 그대로 적용하면 발급 직후 서버가 멈춘 경우 직접 청구 시간이 매우 짧아질 수 있다. 원본은 평가 시점에 fresh인지 확인하고, 발급된 권한은 합의한 청구 마감까지 유효하게 할지 결정해야 한다. 이미 발급된 권한의 취소 가능성은 독립 청구 약속과 함께 결정한다.
+
+### 재사용과 중복 지급
+
+현재 CLEAR 계약은 동일 금고의 learner에 대해 한 번만 정산하고, 한 청구 안에서 세션 0–3 중복을 거부한다. 도메인은 체인·계약·버전을 묶으며 termsHash·learner도 서명에 포함한다. 이는 같은 실제 시험 성적을 다른 신청·반·지갑으로 재사용하는 문제까지 막지 않는다.
+
+H08의 SAME_PROOF_AGAIN 통과는 검증 계약에 지급용 소비 상태가 없다는 경계를 보여 준다. 반복된 로컬 eth_call은 거래 상태를 저장하는 시험도 아니므로 ‘실제 중복 지급 발생’으로 표현하지 않는다. 다음 계약/서비스에는 신청별 지급 ID 또는 nonce 소비, 원자적인 settled 전환, 동시 청구 시험이 필요하다. 원천 기록 중복은 서명이 새로 발급돼 identifier가 바뀌는 경우도 고려해야 하며, 증명 hash 하나만 저장하는 것으로 끝내지 않는다. 반 간 재사용 허용 여부는 제품 결정이다.
+
+### 외부 검증 계약의 버전과 신뢰
+
+저장된 Amoy 기준은 chainId **80002**, proxy **0xcd94A4f7F85dFF1523269C52D0Ab6b85e9B22866**, 블록 **49711041**이다. 당시 implementation은 **0x4af7676dead1d21a6f157ff014bd088836659ec4**, 코드 hash는 `0x1fe96e949bc6c0e7fb55329f5af785e40c0393419cb4a572d69075fa4e3cf4c2`였다. H09의 exact_match는 저장된 소스 검증 결과다.
+
+H09 내 `contracts/Reclaim.sol` 258–298행은 returns(bool)을 선언하지만 성공 return이 없다. 당시 정상은 **revert 없음 + false 반환**, 실패는 revert였다. `require(verifyProof(...))`는 그 구현의 정상도 거절할 수 있다. 반대로 모든 버전에서 ‘revert만 없으면 성공’이라고 일반화하면 안 된다. 허용한 구현/버전·ABI·반환 의미·실패 전파를 한 단위로 검증하는 어댑터가 필요하다. UUPS 업그레이드는 owner 권한이므로 proxy 주소 고정만으로 구현을 고정할 수 없다. 미검증 구현으로 바뀌면 지급 경로를 차단하거나, 독립적으로 검증된 고정 어댑터를 사용하도록 설계해야 한다.
+
+이 함수는 원문 응답의 영지식 증명을 직접 검증하는 코드가 아니라 claimInfo hash·공증자 서명을 검사하며 `verify zkproof` TODO가 남아 있다. 점수 임계값·허용 YBM 정책·신청자·시간·일회 지급은 소비자 책임이다. 단일 witness 1명 및 외부 owner의 변경 권한도 잔여 신뢰로 기록한다. 두 proof의 추정 gas 225,433/211,842는 당시 로컬 추정이며, 최종 환급 총 gas나 현행 비용 견적이 아니다.
+
+### 장애와 기한 후 회수
+
+현재 claim은 `timestamp <= claimUntil`, sponsor 회수는 `timestamp > claimUntil`로 경계가 나뉜다. 마감 전 취소·조건 변경·분쟁·유예·자동 연장은 없다. 발급자 장애, 외부 로그인 실패, 기록 지연 때문에 마감에 못 맞춘 경우도 계약상 자동 구제되지 않는다. 지급이나 회수 이후에는 settled로 재정산이 차단된다. 반환은 수동 sponsor 거래이지 자동 스케줄 실행이 아니다.
+
+정상 입금 시 totalReserved가 증가하고 지급/회수 시 줄어드는 패턴은 재사용할 수 있다. 다만 반 전체 모집 인원을 미리 보장하는 예치가 아니라 등록별 예치이며, 실제 참가비 결제·은행 환불과는 연결되지 않는다. TEST 이외 토큰, 수수료 차감·동결·업그레이드 가능 토큰은 별도 검토가 필요하다.
+
+### 독립 청구가 유지되는 조건
+
+기존 시연이 보여 준 것은 **예치와 4개 서명 확보 뒤** main·issuer를 종료해도 남아 있는 supervisor·정적 복구 서버·동일 Ganache를 통해 지급받는 경로다. 발급 전에 기관이 사라져도 자격을 새로 입증할 수 있다는 보장은 아니다.
+
+목표에서 같은 약속을 유지하려면 다음이 함께 필요하다.
+
+1. 자격 충족 때 지급에 충분한 서명 자료를 참가자가 내려받아 보관한다. 청구 시 서버 재로그인·재평가·추가 승인·실시간 발급을 요구하지 않는다.
+2. 준비금과 조건이 청구 마감까지 유지되고, 서명된 권한의 유효 기간이 복구 가능 시간을 보장한다.
+3. 서버가 제공한 trust/anchor를 그대로 믿는 구조를 넘어서, 승인한 계약·코드·정책을 독립적으로 식별할 수 있는 배포 기준을 갖춘다. 현재 recovery는 `/config.json`의 packet에 담긴 trust와 anchor를 사용한다.
+4. 참가자가 실제 지갑과 가스를 보유하고, 복구 화면·ABI·증빙·RPC에 접근할 수 있다. 원본 자료와 화면의 영속 보관/재시작 복구를 검증한다.
+5. 외부 검증 proxy나 권한 취소 목록을 청구 시 실시간으로 의존시키면 그 가용성·업그레이드 권한이 독립 청구를 제한한다는 점을 드러낸다.
+
+발급 이전의 기관 협조 문제와 발급 이후의 직접 청구 보장은 PRD에서 별도 문장으로 써야 한다.
+
+## PRD에서 먼저 결정할 질문
+
+다음은 이번 점검의 **권고안이며 아직 사용자 결정으로 확정하지 않았다.** 1–6을 우선 확정하면 자격·서명·계약 설계의 범위가 정해진다.
+
+| 순서 | 제품 결정 질문 | 권고안 | 기술 설계로 넘길 항목 |
+| --- | --- | --- | --- |
+| 1 | 어떤 조건을 모두 만족하면 얼마를 지급하는가 | MVP는 TOEIC 점수 조건과 시드 수강률 조건의 AND, 전액 1회 지급. 임계 점수·수강률·정확한 테스트 지급액은 사용자가 확정 | 타입 schema, 단위·경계 비교, 정책 버전 hash |
+| 2 | 인정할 시험과 학습 기록의 범위는 무엇인가 | TOEIC 종류·응시 기간·복수 응시 선택을 하나의 규칙으로 명시. 시드 강의 목록/총량을 승인 시 고정하고 누락은 판정 보류 | 정규화, 집계, 중복 기록 제거, 응시일 필터 |
+| 3 | 실명 인증 없는 MVP에서 누구를 신청자로 취급하는가 | 데모 신청 ID와 실제 지갑 소유 확인을 연결하고 실명 미검증을 표시. 실제 학원 신청자 동일성은 후속 단계로 남김 | challenge, nonce, 세션·owner·지갑 결합, 역할 인증 |
+| 4 | 증빙 지연·장애·이의제기 때 어떻게 처리하는가 | 활동 종료와 청구 마감을 분리하고 정정/재시도 시간을 미리 정함. 청구 마감 전 자의 회수 금지 | 상태 전이, 타임아웃, 오류별 재시도, 마감 경계 |
+| 5 | ‘독립 청구’는 언제부터 보장하는가 | 자격 증빙 또는 지급 권한 발급·다운로드 후부터 보장. 청구 단계에 추가 운영자 승인 없음 | 오프라인 패킷, 계약 권한 유효 기간, 복구 배포 |
+| 6 | 같은 시험 성적을 같은 반·다른 반에서 재사용할 수 있는가 | 같은 반의 동일 신청/동일 인물 중복 지급 금지. 반 간 재사용은 허용 범위를 명시하고 자동 추정하지 않음 | 신청 및 원천 기록 식별, nonce 소비, 동시성 |
+| 7 | 지갑 변경·분실을 허용하는가 | MVP는 예치 후 고정 지갑. 변경을 지원하려면 이전 권리 무효화·새 동의·이중 지급 방지 절차를 별도 설계 | 키 교체·취소 범위, 서명 갱신·마이그레이션 |
+| 8 | 어떤 돈을 누가 언제 예치하고, 무엇을 시연 성공으로 보는가 | 실자금 대신 테스트 자산과 가상 운영자 사용. 현재 로컬 완료와 향후 공개 Amoy 시연 완료를 별도 목표로 정의 | 토큰 profile, 예치/등록 원자성, 가스와 확인 정책 |
+| 9 | 개인정보를 누가 얼마나 보관하는가 | AI·공개 체인에는 원본 제외. 비공개 최소 보존과 실패 로그 비식별화 원칙을 확정 | 암호화·접근권한·삭제·감사 로그 |
+| 10 | 운영자 확정 후 조건을 변경할 수 있는가 | 이미 동의·예치한 신청에는 소급 변경하지 않고 새 정책 버전·새 동의 적용 | 정책 상태, 서명 도메인, 이전 권리 보존 |
+
+제품 결정과 별개로 개발자가 비교해야 할 기술 선택은 다음과 같다.
+
+| 기술 선택 | 권고 출발점 | 선택의 대가와 확인 기준 |
+| --- | --- | --- |
+| 비공개 서버 검증 후 지급 권한 vs 원본 온체인 검증 | MVP는 비공개 결정적 검증 후 최소 지급 권한 서명을 우선 검토 | 개인정보 공개를 줄이고 기존 issuer 패턴을 활용하지만 서버가 판정·발급 신뢰 주체가 된다. 발급 후 직접 청구가 되는지 반드시 시험 |
+| 새 조건을 기존 4개 receipt에 억지 매핑 vs 새 증빙 schema | 새 버전 자격 schema와 계약 어댑터 | 점수·수강률·정책·신청·만료·중복 방지를 명시하고 기존 v2/v3 권리를 자동 변환하지 않음 |
+| 참가자별 금고 vs 반별 공용 금고 | 작은 구현은 참가자별 권리를 명확히 분리하는 방식부터 비용 비교 | 공용 금고는 예치 부족·다중 참가자 격리·공통/개별 hash 설계가 추가됨. PRD의 정원과 비용 제약에 따라 선택 |
+| 외부 verifier 버전 관리 | 구현 hash·ABI·의미를 함께 허용 목록으로 관리 | 버전 변경을 감지하지 못하는 proxy 주소 단독 검증은 부족. 장애·업그레이드 시 신규 발급/기존 권리 처리도 분리 |
+| 지갑·서버 키와 RPC 운영 | 실제 지갑 서명·운영자 역할 분리, 발급 키 분리, 대체 RPC 준비 | 임시 키 공유·잠금 해제 로컬 계정은 개발용으로 한정. 키 유출/분실·RPC 실패 시험 필요 |
+
+## 단계별 구현 계획과 완료 기준
+
+각 단계는 이전 단계의 산출물을 입력으로 삼는다. 이번에는 1단계만 수행했다. 이후 공개 체인 거래·새 로그인·유료 AI 호출은 이 보고서로 실행 권한이 생기지 않는다.
+
+| 단계 | 산출물과 작은 작업 단위 | 정상 완료 기준 | 실패 상황의 완료 기준과 다음 단계 차단 조건 |
+| --- | --- | --- | --- |
+| 1 점검 | 본 보고서, 직접 검사 JSON, 선택 근거 JSON | 코드·저장 시험·직접 확인·권고 분리. 원본 보존. 주요 제약과 버전 확인 | 미실행·불일치 기록을 숨기지 않고 분리. 현재 10/10 좁은 오프라인 검사 완료; 통합 재실행 완료로 표현하지 않음 |
+| 2 PRD | 환급반 규칙표, 사용자/운영자 흐름, 상태·오류 사유, 실제/시드 표기, 위 질문 결정표 | 조건·금액·기한·신청/지갑·중복·장애 처리와 독립 청구 시작점이 명시됨 | 누락·충돌·기록 지연·조건 미달·만료의 사용자 결과를 정함. 임계값이나 권리 변경 원칙이 미정이면 자격/계약 구현 보류 |
+| 3 기술 설계 | 정책/증명/지급 권한 schema, 신뢰 경계, 서명 domain, 데이터 보존, 상태 전이·API, 위협별 시험 표 | 승인 조건→실행 설정→신청→수취인→자격→지급이 하나의 명시적 연결로 설명됨 | 재사용·타인 지갑·오래된 증명·잘못된 출처·버전 교체·발급 장애를 어느 계층이 거부하는지 정함. 개인정보 공개 경로나 모호한 verifier 의미가 남으면 통합 보류 |
+| 4A 작은 구현 | 시드 API와 결정적 자격 평가기 | 고정 반의 정상 점수/수강률 입력에서 기대 판정·근거를 생성. AI 없이 동일 입력에 동일 결과 | 임계값 직전/일치/초과, 분모 0, 중복·누락·정정·잘못된 시험에서 명시적 거부/보류. 모르는 값을 합격으로 보정하지 않음 |
+| 4B 작은 구현 | 신청·지갑·challenge와 비공개 증명 검증 어댑터 | 새 신청에 맞춘 허용 출처·owner/context·시험 연결·freshness 검증. 먼저 합성 자료로 시험 | 타인 신청·지갑 바꾸기·nonce 재사용·과거 진단 증명·불일치 연결·미신뢰 signer 거부. 실제 새 증명 성공은 후속 허용된 별도 실험으로 구분 |
+| 4C 작은 구현 | 새 정책 컴파일·동의·예치·지급 권한·계약 | 설정 일치 후 정확한 예치, 유효 권한으로 고정 수취인 1회 지급, 영수증·이벤트·잔액·준비금 일치 | 금액/수취인/체인/계약/설정 변조, 잘못된 서명·만료·중복/동시 청구·조기 회수 실패. 실패 거래 뒤 자금과 권리 상태가 보존됨 |
+| 4D 작은 구현 | 운영자 검토 UI·신청 UI·복구 패킷과 화면 | 원문/수정/시드/실제/캐시 구분, 서명 화면과 계약 설정 일치, 패킷 내보내기·복구 | AI 장애 시 수동 가능, 승인 전 지급 금지, 서버 재시작·지갑 변경·가스 부족·잘못된 체인에 명확한 복구 안내 |
+| 5 통합 검증 | 격리 로컬 전체 흐름, 장애 검증, 필요 시 승인된 테스트넷 시연 보고서 | 정상 조건에서 사전 예치→자격→권한 다운로드→사업자/발급자 종료→독립 청구. 실제 거래 결과 5종 교차 확인 | 발급 전 장애는 지급 준비로 표시하지 않음. 발급 후 서버/API 완전 차단에도 청구. 중복·만료·준비금 부족·잘못된 signer·지갑·버전·RPC 장애·경계 시간 실패를 확인. 실제 데이터/시드/로컬/공개 체인 결과 분리 |
+
+실제 거래 결과 5종은 거래 영수증 성공, Paid 이벤트, 토큰 Transfer, 정확한 잔액 증가, settled와 준비금 정합성이다. 테스트넷 단계에서는 재조직·확정 대기·RPC 불일치 처리도 포함한다. 공개 Amoy 완료는 실제 허용된 시험에서 지급 거래와 상태까지 확인한 뒤에만 기록한다.
+
+AI 성능 검증은 지급 안전성 시험과 별개로 운영한다. 새 안내문을 대상으로 원문 근거 정확성, 누락/충돌 발견, 오승인, 수정량을 확인하고 실제 운영자 사용성 시험을 한다. 현재 3개 합성 사례와 촬영 재실행을 정확도 표본으로 확대하지 않는다. 먼저 캐시·수동 경로로 작은 구현을 진행할 수 있으며, 새 유료 평가 예산은 기존 원장과 분리된 명시적 결정 사항이다.
+
+## 코드와 저장 기록 링크
+
+코드 링크의 행 번호는 이번 점검 시점 기준이다. H 자료는 모두 과거 저장 결과이며 이번 재실행이 아니다.
+
+| ID | 근거 |
+| --- | --- |
+| S01 | [제품 schema와 검토 제약](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/policy/product.mjs:7) |
+| S02 | [AI client와 6회 상한](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/ai/client.mjs:15) |
+| S03 | [활성 main 서버와 stage15 import](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/main.mjs:4) |
+| S04 | [v3 검토 승인과 고정 조건 adapter](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/policy/binding.mjs:3) |
+| S05 | [v3 정책 compiler](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/policy/core.mjs:47) |
+| S06 | [공유 runtime 설정과 동의 schema](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/shared/runtime.mjs:3) |
+| S07 | [v3 RefundVault](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/contracts/RefundVault.sol:12) |
+| S08 | [v3 배포·등록·증빙·청구 adapter](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/lib/chain.mjs:10) |
+| S09 | [issuer](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/issuer.mjs:1), [supervisor와 로컬 RPC](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/demo.mjs:6) |
+| S10 | [독립 recovery 검사와 지급](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/recovery/app.js:8), [브라우저 v3 adapter](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/static.mjs:9) |
+| S11 | [YBM 두 증명 검증과 연결](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/verify-linked.mjs:13) |
+| S12 | [Amoy 로컬 fork 실행기](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/check-local-fork.mjs:9) |
+| S13 | [YBM 진단 목적과 임시 owner 생성](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/prove-linked.mjs:45) |
+| H01 | [AI 제품 3사례 평가](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/ai/product-evaluation.json), [6회 시점 AI 원장](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/AI_LEDGER_FINAL.json) |
+| H02 | [과거 live](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789363931151/result.json), [cached](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789364330997/result.json), [manual](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789364332140/result.json), [독립 요청 계측](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789364703674/result.json) |
+| H03 | [과거 제품 core 36개](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/core-tests-1789364334850.json), [v3 시기 제품 core 36개](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/core-tests-1789890964236.json) |
+| H04 | [격리 회귀 결과](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/regression-1789364117662/result.json), [stage6 stdout](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/regression-1789364117662/stage6.stdout.txt), [stage11 결과](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/regression-1789364117662/binding-results.json) |
+| H05 | [최신 저장 v3 runtime 47개](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/artifacts/runtime-2026-09-21T04-37-44.489Z/results.json), [시험 계획](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/TEST_PLAN.md), [계측 변경 해설](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/TEST_INSTRUMENTATION_NOTE.md) |
+| H06 | [v3 cached 브라우저 지급](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789890732883/result.json), [별도 지급 감사](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/receipt-audit-1789890872172.json), [v3 실행 계획](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/run-1789890670622/runtime-plan.json) |
+| H07 | [YBM 성공 범위 요약](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-score-success-summary-2026-10-09.json), [연결 검증 결과](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/linked-verification.json) |
+| H08 | [로컬 fork 결과](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/local-fork-report.json), [당시 network state](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/network-state.json) |
+| H09 | [저장된 배포 구현 소스와 exact match](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/deployed-implementation-verified.json) — sources의 contracts/Reclaim.sol 115행 및 258–298행 |
+| H10 | [촬영 추가 승인 기록](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/clear-video-extra-call-authorization.json), [촬영 성공 승인 기록](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/clear-video-success-authorization.json), [별도 촬영 호출 코드](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/tests/film-ai.mjs:9) |
+
+이번 산출물은 [REPORT.ko.md](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/REPORT.ko.md), [direct-checks.json](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/direct-checks.json), [evidence-index.json](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/evidence-index.json)이다. 다음 작업은 위 제품 결정표를 확정해 PRD로 만드는 단계이며, 전체 통합 개발 착수는 이번 범위에 포함하지 않았다.

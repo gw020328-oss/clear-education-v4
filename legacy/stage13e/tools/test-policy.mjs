@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {dualSchemaValidation} from '../../stage13d/tools/schema-validation.mjs';
+import {requestFor} from '../../stage12/protocol-v3/tools/run.mjs';
+import {tests} from '../../stage12/protocol-v3/tools/fixtures.mjs';
+import {settings,semanticBody,smokeBody,conservativeCost,usageCost,decode,retryable,wrongBilling,retryHintMs,evaluate,smokePass} from './policy.mjs';
+import {read,sha,bytes,encode} from './io.mjs';
+export function testPolicy(){const checks=[];const test=(name,fn)=>{try{fn();checks.push({name,passed:true});}catch{checks.push({name,passed:false});}};
+ const {wire,report}=dualSchemaValidation();const baseline=tests[0];
+ const envelope={model:settings.model,status:'completed',steps:[{type:'model_output',content:[{type:'text',text:JSON.stringify(baseline.output)}]}]};
+ test('35-existing-fixtures-and-structural-superset',()=>assert(report.passed&&report.narrowingCount===0&&report.threeCounterexamplesStillFailed));
+ test('wire-byte-hash-matches-stage13d',()=>assert.equal(sha(bytes('stage13d/WIRE_SCHEMA.json')),'89262f2b073001ab07ad89836122c05a3d01f17461a50ae4282b18f51b79f1bd'));
+ test('all42-prompts-and-inputs-exactly-stage12',()=>{for(const r of read('stage12/protocol-v3/CALL_PLAN.json')){const before=requestFor(r,settings.model),after=semanticBody(r,wire);assert.equal(after.system_instruction,before.messages[0].content);assert.equal(after.input,before.messages[1].content);assert(!after.headers&&!after.tools&&!after.previous_interaction_id);assert.equal(after.generation_config.seed,undefined);}});
+ test('full-schema-neutral-smoke',()=>assert.deepEqual(smokeBody(wire).response_format.schema,wire));
+ test('current-rest-model-output-parsed',()=>assert.deepEqual(decode(JSON.stringify(envelope)).parsed,baseline.output));
+ test('markdown-never-repaired',()=>{const e=structuredClone(envelope);e.steps[0].content[0].text='```json\n'+JSON.stringify(baseline.output)+'\n```';assert.equal(decode(JSON.stringify(e)).parseStatus,'NOT_PARSED');});
+ test('no-thought-block-as-output',()=>assert.equal(decode(JSON.stringify({steps:[{type:'thought',summary:[{type:'text',text:'{}'}]}]})).parseStatus,'NOT_PARSED'));
+ test('allowed-http-transport-errors-only',()=>{for(const s of [429,500,502,503,504])assert(retryable(s,null));for(const s of [200,201,400,401,403,404,501])assert(!retryable(s,null));});
+ test('network-reset-timeout-only',()=>{assert(retryable(null,'NETWORK_TIMEOUT'));assert(retryable(null,'CONNECTION_RESET'));assert(!retryable(null,'OTHER_NETWORK_ERROR'));assert(!retryable(200,'NETWORK_TIMEOUT'));});
+ test('free-tier429-is-wrong-billing-project',()=>{assert(wrongBilling(429,'generate_content_free_tier_requests'));assert(wrongBilling(429,'FREE_TIER'));assert(!wrongBilling(500,'free_tier'));});
+ test('retry-after-seconds-and-body-longer',()=>assert.equal(retryHintMs('30',JSON.stringify({error:{details:[{retryDelay:'75.2s'}]}}),'2026-09-14T00:00:00Z'),75200));
+ test('retry-after-date',()=>assert.equal(retryHintMs('Mon, 14 Sep 2026 00:02:00 GMT','{}','2026-09-14T00:00:00Z'),120000));
+ test('retry-body-text-duration',()=>assert.equal(retryHintMs(null,'Please retry in 2 minutes.','2026-09-14T00:00:00Z'),120000));
+ test('cost-includes-full-byte-input-and4096-output',()=>assert.equal(conservativeCost('abc'),3*.75/1e6+4096*3.75/1e6));
+ test('usage-with-thinking-in-output-not-double-counted',()=>assert.equal(usageCost({total_input_tokens:100,total_output_tokens:200,total_thought_tokens:80,total_tokens:300}).billedOutputTokens,200));
+ test('usage-with-separate-thinking-included',()=>assert.equal(usageCost({total_input_tokens:100,total_output_tokens:200,total_thought_tokens:80,total_tokens:380}).billedOutputTokens,280));
+ test('missing-usage-not-zero',()=>assert.equal(usageCost(null),null));
+ test('http200-schema-failure-is-not-transport-failure',()=>{const invalid=tests.find(t=>t.id==='zero-denominator').output;const r=evaluate({httpStatus:200,actualModel:settings.model,interactionStatus:'completed',envelopeErrorCount:0,parsed:invalid,parseStatus:'PARSED'},read('stage12/protocol-v3/CALL_PLAN.json')[0],wire);assert.equal(r.transportFailure,false);assert.equal(r.scoringStatus,'SCHEMA_INVALID');assert.equal(r.score.majorError,true);});
+ test('wrong-model-fails',()=>assert(evaluate({httpStatus:200,actualModel:'UNAPPROVED',interactionStatus:'completed',parsed:baseline.output,parseStatus:'PARSED'},null,wire).transportFailure));
+ test('smoke-needs-all10-not-stated',()=>{const x={transportFailure:false,parseStatus:'PARSED',wireSchemaStatus:'VALID',authoritativeSchemaStatus:'VALID',parsed:baseline.output};assert(!smokePass(x));});
+ return {kind:'OFFLINE_SYNTHETIC_TESTS_NOT_MODEL_EVALUATION',passed:checks.filter(c=>c.passed).length,failed:checks.filter(c=>!c.passed).length,total:checks.length,checks};
+}
+if(process.argv[1]?.endsWith('/test-policy.mjs')){const r=testPolicy();console.log(encode(r));process.exitCode=r.failed?1:0;}

@@ -1,0 +1,498 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:refund-vault:stage9:output:v1",
+  "title": "Frozen refund-condition extraction output v1",
+  "description": "classification is mapping within supplied excerpts: any explicitly incompatible condition => UNSUPPORTED, otherwise an unresolved critical field => CLARIFICATION_REQUIRED, else SUPPORTED. SUPPORTED at field level is not deployment approval. Current local deployment is exactly 50 TEST, a fixed EOA recipient, four distinct issuer-signed submissions 0..3, fixed issuer, completion/claim instants, no discretionary exceptions, one payment. Never convert money or assume a timezone. executable=true is only proposed eligibility when every important field is grounded, supported and matches that profile; no actual execution is authorized. Outside excerpt information and unanswered questions remain unknown.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceId",
+    "classification",
+    "refundAmount",
+    "recipient",
+    "requiredEvidence",
+    "completionDeadline",
+    "claimDeadline",
+    "approvalActor",
+    "exceptions",
+    "unsupportedConditions",
+    "clarificationQuestions",
+    "evidenceSpans",
+    "confidence",
+    "executable"
+  ],
+  "properties": {
+    "sourceId": {
+      "type": "string",
+      "pattern": "^R[0-9]{2}$"
+    },
+    "classification": {
+      "enum": [
+        "SUPPORTED",
+        "UNSUPPORTED",
+        "CLARIFICATION_REQUIRED"
+      ]
+    },
+    "refundAmount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "spanIds",
+        "reason",
+        "unit",
+        "basis"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "UNSUPPORTED",
+            "CLARIFICATION_REQUIRED"
+          ]
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "basis": {
+          "enum": [
+            "FIXED",
+            "FORMULA",
+            "PERCENTAGE",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "recipient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "spanIds",
+        "reason",
+        "kind"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "UNSUPPORTED",
+            "CLARIFICATION_REQUIRED"
+          ]
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "ADDRESS",
+            "ACCOUNT_HOLDER",
+            "UNSPECIFIED"
+          ]
+        }
+      }
+    },
+    "requiredEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "spanIds",
+        "reason",
+        "kind"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "UNSUPPORTED",
+            "CLARIFICATION_REQUIRED"
+          ]
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "SIGNED_SUBMISSIONS",
+            "OTHER",
+            "UNKNOWN"
+          ]
+        }
+      },
+      "description": "For SIGNED_SUBMISSIONS, value contains exactly SUBMISSION_0, SUBMISSION_1, SUBMISSION_2, SUBMISSION_3 only when the source actually specifies four distinct signed submission requirements. These strings are descriptors, not actual signatures. Never translate other conditions into these descriptors."
+    },
+    "completionDeadline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "spanIds",
+        "reason",
+        "timeZone",
+        "rawText"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "UNSUPPORTED",
+            "CLARIFICATION_REQUIRED"
+          ]
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timeZone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rawText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "claimDeadline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "spanIds",
+        "reason",
+        "timeZone",
+        "rawText"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "UNSUPPORTED",
+            "CLARIFICATION_REQUIRED"
+          ]
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timeZone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rawText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "approvalActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "spanIds",
+        "reason",
+        "kind"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "UNSUPPORTED",
+            "CLARIFICATION_REQUIRED"
+          ]
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "ISSUER_ADDRESS",
+            "SERVICE_ACTOR",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "exceptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "status",
+        "spanIds",
+        "reason",
+        "completeness"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "status": {
+          "enum": [
+            "SUPPORTED",
+            "UNSUPPORTED",
+            "CLARIFICATION_REQUIRED"
+          ]
+        },
+        "spanIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          },
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "completeness": {
+          "enum": [
+            "EXPLICIT_NONE",
+            "LISTED",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "unsupportedConditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "reason",
+          "spanIds"
+        ],
+        "properties": {
+          "field": {
+            "enum": [
+              "refundAmount",
+              "recipient",
+              "requiredEvidence",
+              "completionDeadline",
+              "claimDeadline",
+              "approvalActor",
+              "exceptions"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "spanIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^R[0-9]{2}-S[0-9]+$"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "clarificationQuestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "question"
+        ],
+        "properties": {
+          "field": {
+            "enum": [
+              "refundAmount",
+              "recipient",
+              "requiredEvidence",
+              "completionDeadline",
+              "claimDeadline",
+              "approvalActor",
+              "exceptions"
+            ]
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "evidenceSpans": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "spanId"
+        ],
+        "properties": {
+          "field": {
+            "enum": [
+              "refundAmount",
+              "recipient",
+              "requiredEvidence",
+              "completionDeadline",
+              "claimDeadline",
+              "approvalActor",
+              "exceptions"
+            ]
+          },
+          "spanId": {
+            "type": "string",
+            "pattern": "^R[0-9]{2}-S[0-9]+$"
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Uncalibrated self-report, not a permission or a ground-truth score."
+    },
+    "executable": {
+      "type": "boolean"
+    }
+  }
+}

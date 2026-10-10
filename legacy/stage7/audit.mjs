@@ -1,0 +1,10 @@
+import { readFile,readdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { jsonFile,treeHashes } from './lib/process.mjs';
+const project=fileURLToPath(new URL('../',import.meta.url)),out=join(project,'stage7/artifacts');
+const before=JSON.parse(await readFile(join(out,'prior-file-hashes.json'))),after={};
+for(const stage of ['stage2','stage3','stage4','stage5','stage6'])for(const [file,hash]of Object.entries(await treeHashes(join(project,stage))))after[stage+'/'+file]=hash;
+const missing=Object.keys(before).filter(k=>!(k in after)),added=Object.keys(after).filter(k=>!(k in before)),changed=Object.keys(before).filter(k=>k in after&&before[k]!==after[k]);
+const result={beforeFiles:Object.keys(before).length,afterFiles:Object.keys(after).length,missing,added,changed,allPreserved:missing.length+added.length+changed.length===0};
+await jsonFile(join(out,'preservation-results.json'),result);console.log(JSON.stringify(result));if(!result.allPreserved)process.exitCode=1;

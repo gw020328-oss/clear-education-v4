@@ -1,0 +1,20 @@
+// One-time freeze, no network/model. Refuses overwriting prior receipts.
+import {readFileSync,readdirSync,writeFileSync,existsSync} from 'node:fs';
+import {join,relative} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {root,stage,priorIntact,config} from './run.mjs';
+const manifestPath=join(root,'SHA256_MANIFEST.json'),receiptPath=join(root,'FREEZE_RECEIPT.json');
+if(existsSync(manifestPath)||existsSync(receiptPath))throw Error('ALREADY_FROZEN');
+if(!priorIntact())throw Error('PRIOR_INTEGRITY');
+const verify=JSON.parse(execFileSync(process.execPath,[join(root,'tools/verify.mjs')],{encoding:'utf8'}));
+const scorer=JSON.parse(execFileSync(process.execPath,[join(root,'tools/test-scorer.mjs')],{encoding:'utf8'}));
+if(verify.failed||scorer.failed)throw Error('TEST_FAILURE');
+const hash=b=>createHash('sha256').update(b).digest('hex');
+const files={};function walk(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);if(e.isDirectory())walk(p);else if(e.isFile())files[relative(stage,p)]=hash(readFileSync(p));}}walk(root);
+for(const p of ['MODEL_ACCESS_HANDOFF.md','artifacts/model-access-inventory.json','artifacts/source-collection-check.json','artifacts/precheck/prior-files.json','artifacts/precheck/stage11-audit.json','artifacts/precheck/manual-preview.json'])files[p]=hash(readFileSync(join(stage,p)));
+const manifest={algorithm:'SHA-256',pathBase:'stage12',files:Object.fromEntries(Object.entries(files).sort())};
+writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n',{flag:'wx'});
+const census=verify.checks.find(c=>c.id==='no-model-output-artifacts').detail;
+const receipt={frozenAt:new Date().toISOString(),manifestSha256:hash(readFileSync(manifestPath)),frozenFiles:Object.keys(files).length,semanticOutputsAtFreeze:census.actualSemanticCalls,neutralOutputsAtFreeze:census.actualNeutralSmokeCalls??0,modelId:config.modelId,modelVersion:config.modelVersion,backendVersion:config.backendVersion,scorer:{passed:scorer.passed,total:scorer.total},preFreezeAudit:{passed:verify.passed,total:verify.total},protectedPriorFiles:Object.keys(JSON.parse(readFileSync(join(stage,'artifacts/precheck/prior-files.json'))).files).length,decision:'READY_FOR_STRONG_MODEL_RUN',scope:'SELECTED_PUBLIC_POLICY_CLAUSES_NOT_FULL_CONTRACT_ELIGIBILITY'};
+writeFileSync(receiptPath,JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify(receipt,null,2));

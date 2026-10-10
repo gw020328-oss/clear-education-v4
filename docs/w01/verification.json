@@ -1,0 +1,70 @@
+{
+  "stage": "W01",
+  "result": "PASS",
+  "checks": [
+    {
+      "check": "shared instanceId rejected",
+      "result": "PASS",
+      "invalidConfigurationRejected": true
+    },
+    {
+      "check": "claimable pending manifest rejected",
+      "result": "PASS",
+      "invalidConfigurationRejected": true
+    },
+    {
+      "check": "missing data path rejected",
+      "result": "PASS",
+      "invalidConfigurationRejected": true
+    },
+    {
+      "check": "verify:workspace",
+      "result": "PASS",
+      "summary": {
+        "result": "PASS",
+        "schemaVersion": 4,
+        "sourceReferenceFiles": 191,
+        "profiles": 3,
+        "runtime": "24.21.0",
+        "dependencyGraphPreserved": true,
+        "pendingManifestsNotClaimable": true
+      }
+    },
+    {
+      "check": "verify:dependencies",
+      "result": "PASS",
+      "summary": {
+        "result": "PASS",
+        "dependencies": {
+          "ethers": "6.17.0",
+          "ganache": "7.9.2",
+          "solc": "0.8.30"
+        },
+        "legacyCompileSource": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/legacy/stage15/contracts/RefundVault.sol",
+        "compiledInMemory": true,
+        "deployed": false,
+        "chainStarted": false,
+        "ganacheRuntimeCompatibility": "NOT_TESTED"
+      }
+    },
+    {
+      "check": "original and experiment metadata unchanged",
+      "result": "PASS",
+      "contentVerificationScope": "copied code only; complete roots verified by metadata without reading private originals"
+    },
+    {
+      "check": "191 selected original source content hashes unchanged",
+      "result": "PASS"
+    }
+  ],
+  "productAcceptanceTests": "NOT_RUN",
+  "publicTransactions": false,
+  "actualYbmProofGenerated": false,
+  "deployment": "NOT_RUN",
+  "ganacheRuntime": "NOT_TESTED",
+  "gitIndex": {
+    "sourceAndReferenceBytesPreserved": true,
+    "checkedFiles": 195,
+    "executableWrappers": true
+  }
+}

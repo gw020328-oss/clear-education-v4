@@ -1,0 +1,22 @@
+[
+  {
+    "file": "PRD.ko.md",
+    "source": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-draft-2026-10-10/PRD.ko.md",
+    "sha256": "4ebd73a210662d3cc4aae03329494fcb4b02d14c205a51cf45d19baf326186f9"
+  },
+  {
+    "file": "DESIGN.ko.md",
+    "source": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-technical-design-2026-10-10/DESIGN.ko.md",
+    "sha256": "ea1eb5ca7ab2a4dcb0511dffaaf690d9015a0eaa6e304302938089bb552ceca8"
+  },
+  {
+    "file": "IMPLEMENTATION_PLAN.ko.md",
+    "source": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-technical-design-2026-10-10/IMPLEMENTATION_PLAN.ko.md",
+    "sha256": "cecdff9388680e233da0681bdd5959108d1554ce4918172fa99139e13d2dacb3"
+  },
+  {
+    "file": "AUDIT.ko.md",
+    "source": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/REPORT.ko.md",
+    "sha256": "5905b635107c28ce6ccc19fbbe764da803118098d6ed6a609ddf5e9658685213"
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 4,
+  "environmentId": "remote-synthetic",
+  "status": "PREPARED_NOT_STARTED",
+  "instanceId": "16fb17a6-3284-4403-adc3-597a9e35bc96",
+  "chainId": 431703,
+  "dataMode": "SYNTHETIC",
+  "networkType": "DEDICATED_TEST_CHAIN",
+  "databaseName": "clear_v4_remote_synthetic",
+  "paths": {
+    "chainState": "data/remote-synthetic/chain",
+    "postgresData": "data/remote-synthetic/postgres",
+    "serviceArtifacts": "data/remote-synthetic/artifacts",
+    "retainedServiceData": "data/remote-synthetic/retained",
+    "privateConfig": "private/remote-synthetic",
+    "rawProofMount": "var/remote-synthetic/raw-proof"
+  },
+  "rawProofStorage": {
+    "requiredFilesystem": "tmpfs",
+    "ready": false,
+    "allowDiskFallback": false,
+    "maxRetentionSeconds": 86400,
+    "deleteOnClaimPacketIssuance": true
+  },
+  "residualRetention": {
+    "maxDaysAfterFinalClaimDeadline": 30,
+    "ready": false
+  },
+  "credentials": {
+    "provisioned": false,
+    "separateByEnvironment": true
+  },
+  "deploymentManifest": "config/manifests/remote-synthetic.pending.json",
+  "datePolicyStatus": "UNCONFIRMED",
+  "mayStartProductServices": false
+}

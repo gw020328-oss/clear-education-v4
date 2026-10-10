@@ -1,0 +1,1356 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PolicyProposal v3.2 (no execution authority)",
+  "type": "object",
+  "properties": {
+    "classification": {
+      "type": "string",
+      "enum": [
+        "POLICY_SUPPORTED",
+        "POLICY_UNSUPPORTED",
+        "CLARIFICATION_REQUIRED"
+      ]
+    },
+    "fields": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "object",
+                  "properties": {
+                    "fixedAmount": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "units": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "units",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "rate": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "numerator": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "denominator": {
+                              "type": "string",
+                              "pattern": "^[1-9][0-9]*$"
+                            }
+                          },
+                          "required": [
+                            "numerator",
+                            "denominator"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "multiplier": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "numerator": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "denominator": {
+                              "type": "string",
+                              "pattern": "^[1-9][0-9]*$"
+                            }
+                          },
+                          "required": [
+                            "numerator",
+                            "denominator"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "unit": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        }
+                      ]
+                    },
+                    "base": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "cap": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "units": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "units",
+                            "unit"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "deductionOrder": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": [
+                    "fixedAmount",
+                    "rate",
+                    "multiplier",
+                    "unit",
+                    "base",
+                    "cap",
+                    "deductionOrder"
+                  ],
+                  "additionalProperties": false
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "asset": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "activities": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "completionPeriod": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "RELATIVE",
+                        "ABSOLUTE"
+                      ]
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "operator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "base": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "timeZone": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "value",
+                    "unit",
+                    "operator",
+                    "base",
+                    "timeZone"
+                  ],
+                  "additionalProperties": false
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "claimPeriod": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "RELATIVE",
+                        "ABSOLUTE"
+                      ]
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "operator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "base": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "timeZone": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "value",
+                    "unit",
+                    "operator",
+                    "base",
+                    "timeZone"
+                  ],
+                  "additionalProperties": false
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "evidenceType": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "approvalRole": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "exceptions": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "recipient": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "applicabilityPeriod": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "EXTRACTED",
+                    "AMBIGUOUS"
+                  ]
+                },
+                "value": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "RELATIVE",
+                        "ABSOLUTE"
+                      ]
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "operator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "base": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    },
+                    "timeZone": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "value",
+                    "unit",
+                    "operator",
+                    "base",
+                    "timeZone"
+                  ],
+                  "additionalProperties": false
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "NOT_STATED"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "",
+                        "NOT_STATED",
+                        "not stated",
+                        "not specified",
+                        "none specified",
+                        "(no value)",
+                        "미기재",
+                        "미명시"
+                      ]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "maxItems": 0
+                    }
+                  ]
+                },
+                "spanIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "maxItems": 0
+                }
+              },
+              "required": [
+                "status",
+                "value",
+                "spanIds"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "amount",
+        "asset",
+        "activities",
+        "completionPeriod",
+        "claimPeriod",
+        "evidenceType",
+        "approvalRole",
+        "exceptions",
+        "recipient",
+        "applicabilityPeriod"
+      ],
+      "additionalProperties": false
+    },
+    "ambiguities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "amount",
+              "asset",
+              "activities",
+              "completionPeriod",
+              "claimPeriod",
+              "evidenceType",
+              "approvalRole",
+              "exceptions",
+              "recipient",
+              "applicabilityPeriod"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "MISSING_YEAR",
+              "MISSING_COURSE_THRESHOLD",
+              "CURRENT_OBLIGOR",
+              "REFUND_FORM_AND_AMOUNT"
+            ]
+          },
+          "spanIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "uniqueItems": true,
+            "minItems": 1
+          }
+        },
+        "required": [
+          "field",
+          "code",
+          "spanIds"
+        ],
+        "additionalProperties": false
+      },
+      "uniqueItems": true
+    },
+    "clarificationQuestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "amount",
+              "asset",
+              "activities",
+              "completionPeriod",
+              "claimPeriod",
+              "evidenceType",
+              "approvalRole",
+              "exceptions",
+              "recipient",
+              "applicabilityPeriod"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "MISSING_YEAR",
+              "MISSING_COURSE_THRESHOLD",
+              "CURRENT_OBLIGOR",
+              "REFUND_FORM_AND_AMOUNT"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "field",
+          "code",
+          "text"
+        ],
+        "additionalProperties": false
+      },
+      "uniqueItems": true
+    },
+    "unsupportedConditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "GENERAL_CANCELLATION",
+          "DISCRETIONARY_EXCEPTION",
+          "SELF_COMMITMENT"
+        ]
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "classification",
+    "fields",
+    "ambiguities",
+    "clarificationQuestions",
+    "unsupportedConditions"
+  ],
+  "additionalProperties": false
+}

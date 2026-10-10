@@ -1,0 +1,17 @@
+node_modules/
+.toolchain/
+data/
+var/
+private/
+artifacts/
+.runtime/
+tmp/
+logs/
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.sqlite*
+*.log
+.DS_Store

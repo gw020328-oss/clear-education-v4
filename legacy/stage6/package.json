@@ -1,0 +1,12 @@
+{
+  "name": "refund-vault-stage6-security-fixes",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scenario:normal": "node harness.mjs normal",
+    "scenario:outage": "node harness.mjs outage",
+    "scenario:browser": "node harness.mjs browser",
+    "regression:stage4": "node test/run-stage4-isolated.mjs",
+    "test": "node --test --test-reporter=tap test/*.test.mjs"
+  }
+}

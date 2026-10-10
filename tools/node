@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+TASK_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+TASK_NODE="$TASK_ROOT/.toolchain/node-v24.21.0-darwin-arm64/bin/node"
+if [ ! -x "$TASK_NODE" ]; then TASK_NODE=$(command -v node); fi
+if [ "$("$TASK_NODE" --version)" != "v24.21.0" ]; then
+  echo 'CLEAR requires Node 24.21.0; install the pinned runtime.' >&2
+  exit 1
+fi
+exec "$TASK_NODE" "$@"

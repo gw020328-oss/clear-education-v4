@@ -1,0 +1,22 @@
+{
+  "name": "clear-education-v4",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify:workspace": "node tools/verify-workspace.mjs",
+    "verify:dependencies": "node tools/verify-dependencies.mjs",
+    "prepare:workspace": "node tools/prepare-workspace.mjs"
+  },
+  "dependencies": {
+    "ethers": "6.17.0",
+    "ganache": "7.9.2",
+    "solc": "0.8.30"
+  },
+  "version": "0.0.0",
+  "description": "CLEAR v4 isolated development workspace — W01 setup only",
+  "engines": {
+    "node": "24.21.0",
+    "npm": "11.19.0"
+  },
+  "packageManager": "npm@11.19.0"
+}

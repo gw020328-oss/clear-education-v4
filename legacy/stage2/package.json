@@ -1,0 +1,11 @@
+{
+  "name": "refund-vault-stage2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-reporter=tap --test-concurrency=1 test/*.test.mjs",
+    "demo": "node demo.mjs",
+    "verify": "node cli.mjs verify",
+    "regression": "node regression.mjs"
+  }
+}

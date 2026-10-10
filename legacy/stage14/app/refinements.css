@@ -1,0 +1,2 @@
+@media(min-width:701px){textarea{height:220px}.lead{margin-bottom:22px}.card{padding:24px}}
+.outline.full{margin-top:10px}.removal{margin-top:26px;padding-top:20px;border-top:1px solid #e0e4ec;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;font-size:12px;line-height:1.8;color:#727d91}.removal b{display:block;color:#46516a;margin-bottom:5px}@media(max-width:700px){.removal{grid-template-columns:1fr;gap:12px}}

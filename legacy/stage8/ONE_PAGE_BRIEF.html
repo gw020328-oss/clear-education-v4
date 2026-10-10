@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>환급 약속 금고 | 8단계 1쪽 기획서 초안</title>
+<style>
+@page { size: A4; margin: 14mm; }
+* { box-sizing: border-box; }
+body { margin: 0; color: #182b39; background: #edf1f3; font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; }
+main { width: 182mm; min-height: 269mm; margin: 20px auto; padding: 0; background: white; }
+.eyebrow { font-size: 8.5pt; color: #526675; letter-spacing: .05em; padding-top: 3mm; }
+h1 { font-size: 26pt; margin: 3mm 0 2mm; letter-spacing: -.05em; }
+.lead { font-size: 12pt; line-height: 1.55; margin: 0 0 4mm; }
+.rule { border-top: 2px solid #16655b; padding-top: 3mm; }
+h2 { font-size: 10.5pt; margin: 0 0 1.5mm; color: #125a52; }
+p, li { font-size: 9.4pt; line-height: 1.62; margin: 0; word-break: keep-all; overflow-wrap: anywhere; }
+section { margin-bottom: 3.2mm; break-inside: avoid; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+.flow { padding: 3mm; background: #eef6f3; border-left: 3px solid #16655b; font-size: 9.5pt; line-height: 1.7; margin: 2mm 0 4mm; }
+.badge { font-size: 8pt; font-weight: 700; border: 1px solid #71838b; border-radius: 3px; padding: .3mm 1mm; vertical-align: 1px; }
+.planned { color: #8d4a11; }
+table { width: 100%; border-collapse: collapse; font-size: 9.2pt; margin: 1mm 0 1.5mm; }
+td, th { text-align: left; padding: 1.3mm 1mm; border-bottom: 1px solid #d8e1e5; }
+th { font-weight: 600; color: #526675; }
+.note { color: #526675; font-size: 8.4pt; line-height: 1.55; }
+.verdict { background: #f3f5f7; padding: 3mm; margin-bottom: 3mm; }
+footer { border-top: 1px solid #bfcdd3; padding-top: 2.5mm; font-size: 7.8pt; line-height: 1.6; color: #526675; }
+a { color: #125a52; text-decoration: underline; }
+@media print { body { background: white; } main { margin: 0; min-height: 0; width: 100%; } }
+@media screen and (max-width: 740px) { main { width: 100%; padding: 18px; margin: 0; } .grid { grid-template-columns: 1fr; gap: 0; } }
+</style>
+</head>
+<body><main>
+<div class="eyebrow">공모전 기획 요약 · 내부 초안 · 2026.09.14 · 단계 8</div>
+<h1>환급 약속 금고</h1>
+<p class="lead">이미 받은 증빙으로, 약속한 예치금을 직접 청구하는<br>조건부 환급 시제품</p>
+<section class="rule">
+<h2>문제와 해결 범위</h2>
+<p>환급형 교육에서는 조건 충족 다툼과 미지급 피해가 보고된다.[1] 이 시제품은 그중 <strong>유효한 증빙과 전액 예치가 이미 확보된 뒤</strong> 지급을 실행하는 문제에 집중한다. 미예치·증빙 미발급·학습 사실의 참·예외 분쟁까지 해결하지 않는다.</p>
+</section>
+<div class="flow"><strong>현재 구현</strong>　고정 조건 동의 → 참가자별 50 TEST 예치 → 모의 발급자의 네 서명 → 파일 보관 → 독립 화면·CLI 청구 → 지급 확인</div>
+<div class="grid">
+<section><h2>현재 기능 <span class="badge">로컬 구현</span></h2>
+<p>단일 강좌·고정액, 조건과 수령자에 결합된 증빙 JSON, 서명·기한·준비금 검증, 일회 지급. 수령자와 가스 전달자를 분리한다. 기본 금고·TEST 토큰에는 관리자 동결·조기 회수가 없다.</p>
+<p class="note">Solidity · ethers · Node.js · Ganache · 한국어 HTML/JS. 중앙 비교본은 독립 SQLite 원장. 실제 교육 제출 DB는 연결하지 않았다.</p></section>
+<section><h2>AI 융합 <span class="badge planned">계획 / 미검증</span></h2>
+<p>원문 약관에서 근거가 붙은 조건 초안과 지원 불가 규정을 제안하고, 사람이 확정하도록 할 계획이다. 폼·규칙·범용 LLM과 비교한 후 채택한다. 현재 AI 호출 경로와 정확도·시간 절감 결과는 없다.</p>
+<p class="note">서명 개수·기한 검사는 일반 코드가 담당한다. AI나 체인이 실제 학습 성과를 증명하지 않는다.</p></section>
+</div>
+<section><h2>강한 중앙 대조군과의 비교 <span class="badge">7단계 과거 로컬 실험</span></h2>
+<table><thead><tr><th>동일 증빙·금액·기한의 조건</th><th>중앙 원장</th><th>온체인 금고</th></tr></thead>
+<tbody><tr><td>주 서비스·발급자 중단</td><td>지급</td><td>지급</td></tr>
+<tr><td>중앙 실행자만 중단</td><td>접속 실패</td><td>지급</td></tr>
+<tr><td>체인/RPC 중단 또는 가스 부족</td><td>지급</td><td>실패·거절</td></tr></tbody></table>
+<p class="note">17쌍 시나리오·과거 101개 검사 기록.[2] 실제 경쟁사 시험이나 사용성 연구가 아니다. 로컬 단일 체인 결과를 운영망의 검열 저항·성능으로 일반화하지 않는다.</p></section>
+<section><h2>기존 대안과 검증할 차이</h2>
+<p>Accustom의 온체인 담보, Escrow.com의 자동 지급, Stripe의 준비금, Kickback의 자격 확정 후 직접 인출은 이미 선행한다.[3] 검증할 차이는 <strong>기관의 사전 서명 파일·전액 고정 준비금·새 지급 승인 없는 집행</strong>의 조합이 특정 실행자 위험에 대해 선택 가치가 있는지다. ‘최초’나 시장 우위는 주장하지 않는다.</p></section>
+<section><h2>최초 고객과 재원 <span class="badge planned">가설</span></h2>
+<p>구매자는 환급형 소규모 교육업체, 재원은 운영자 sponsor, 발급자는 제출을 확인하는 기관을 가정한다. 운영자가 신뢰 형성을 위해 준비금과 도구 비용을 부담할지는 미확인이다. 현재 가스는 전달자가 부담하며 대납은 없다. 100명×50 TEST=5,000 TEST는 합성 예시다.</p></section>
+<div class="verdict"><h2>판정과 다음 검증</h2>
+<p><strong>특정 고위험 상황에서만 조건부 지지.</strong> 추가 권한은 특정 중앙 지급 실행자가 없어도 조건을 집행하는 경로다. 대가는 지갑·가스·정직한 RPC·신뢰한 화면/명세와 어려운 오류 복구다. 다음은 공개 약관·평가 규약 동결, 이후 실제 AI 비교다. 고객·예치 의향·좁은 장애 수요는 미확인이다.</p></div>
+<footer>
+[1] <a href="https://www.kca.go.kr/webzine/board/view?div=kca_2608&amp;linkId=1047&amp;menuId=MENU00307">한국소비자원 공개 사례(2026.08)</a>　[2] <a href="../stage7/COMPARISON_RESULTS.md">7단계 결과</a>　[3] <a href="EVIDENCE_TABLE.md">공식 문서·고정 코드 증거표</a><br>
+실제 연구 참여자 0명 · OS 파일 선택·실제 확장 지갑·시장성 미검증 · 공개 배포·실자금·외부 보안 감사 없음.<br>
+공식 제출물은 별도 10쪽 이내 제안서의 8항목을 갖춰야 한다. 이 문서는 내부 1쪽 요약이며 팀·역할·참가 자격은 미확인이다.[<a href="https://drive.google.com/file/d/1zhfKcCe5ENhKurbnuVsfoxj1Jyy27T7N/view?usp=sharing">공식 안내</a>]
+</footer>
+</main></body>
+</html>

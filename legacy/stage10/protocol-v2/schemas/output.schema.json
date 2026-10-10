@@ -1,0 +1,348 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:refund-vault:stage10:output:v2",
+  "description": "Analyze only supplied excerpts. Policy template representation is independent of runtime readiness and current vault compilation. POLICY_SUPPORTED: observed core clauses have a coherent symbolic representation (formulas, relative periods, attendance/rewards allowed); unmentioned ancillary fields remain NOT_STATED, not assumed absent. CLARIFICATION_REQUIRED: conflicting amount, unspecified mission/threshold or unresolved calendar year prevents that representation. POLICY_UNSUPPORTED: general withdrawal/self-pledge/discretionary medical judgment outside the completion-refund template scope. Lack of participant wallets, signatures, registration dates or runtime observations alone must never make policy unsupported. runtimeExecutable requires verified complete runtime inputs and compatible fixed-amount four-submission profile; public documents alone cannot authorize payment. text may be a concise faithful paraphrase, preserving formulas, units, scope and exceptions. Unknown text=null. No external information.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceId",
+    "policyLabel",
+    "policyFields",
+    "clarificationQuestions",
+    "unsupportedReasons",
+    "runtimeExecutable",
+    "runtimeMissing"
+  ],
+  "properties": {
+    "sourceId": {
+      "type": "string"
+    },
+    "policyLabel": {
+      "enum": [
+        "POLICY_SUPPORTED",
+        "POLICY_UNSUPPORTED",
+        "CLARIFICATION_REQUIRED"
+      ]
+    },
+    "policyFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "amount",
+        "currency",
+        "activities",
+        "completionPeriod",
+        "evidenceType",
+        "approvalRole",
+        "claimPeriod",
+        "exceptions",
+        "recipientRole"
+      ],
+      "properties": {
+        "amount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "currency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "activities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "completionPeriod": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "evidenceType": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "approvalRole": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "claimPeriod": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "exceptions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "recipientRole": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text",
+            "status",
+            "spanIds"
+          ],
+          "properties": {
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "status": {
+              "enum": [
+                "EXTRACTED",
+                "NOT_STATED",
+                "AMBIGUOUS"
+              ]
+            },
+            "spanIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "clarificationQuestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "unsupportedReasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "runtimeExecutable": {
+      "type": "boolean"
+    },
+    "runtimeMissing": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    }
+  }
+}

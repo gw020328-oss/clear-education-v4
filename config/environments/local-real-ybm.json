@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 4,
+  "environmentId": "local-real-ybm",
+  "status": "PREPARED_NOT_STARTED",
+  "instanceId": "a18cedc7-4058-4fd8-967c-2363d4606491",
+  "chainId": 431702,
+  "dataMode": "REAL_YBM",
+  "networkType": "DEDICATED_TEST_CHAIN",
+  "databaseName": "clear_v4_local_real_ybm",
+  "paths": {
+    "chainState": "data/local-real-ybm/chain",
+    "postgresData": "data/local-real-ybm/postgres",
+    "serviceArtifacts": "data/local-real-ybm/artifacts",
+    "retainedServiceData": "data/local-real-ybm/retained",
+    "privateConfig": "private/local-real-ybm",
+    "rawProofMount": "var/local-real-ybm/raw-proof"
+  },
+  "rawProofStorage": {
+    "requiredFilesystem": "tmpfs",
+    "ready": false,
+    "allowDiskFallback": false,
+    "maxRetentionSeconds": 86400,
+    "deleteOnClaimPacketIssuance": true
+  },
+  "residualRetention": {
+    "maxDaysAfterFinalClaimDeadline": 30,
+    "ready": false
+  },
+  "credentials": {
+    "provisioned": false,
+    "separateByEnvironment": true
+  },
+  "deploymentManifest": "config/manifests/local-real-ybm.pending.json",
+  "datePolicyStatus": "UNCONFIRMED",
+  "mayStartProductServices": false
+}

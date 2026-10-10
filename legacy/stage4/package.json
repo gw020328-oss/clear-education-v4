@@ -1,0 +1,10 @@
+{
+  "name": "refund-vault-stage4-independent-claim",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scenario:normal": "node harness.mjs normal",
+    "scenario:outage": "node harness.mjs outage",
+    "test": "node --test --test-reporter=tap test/*.test.mjs"
+  }
+}

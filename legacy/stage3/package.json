@@ -1,0 +1,9 @@
+{
+  "name": "refund-vault-stage3-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test --test-reporter=tap test/*.test.mjs"
+  }
+}

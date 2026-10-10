@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+TASK_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+TASK_NODE_DIR="$TASK_ROOT/.toolchain/node-v24.21.0-darwin-arm64/bin"
+if [ -x "$TASK_NODE_DIR/node" ]; then PATH="$TASK_NODE_DIR:$PATH"; export PATH; fi
+if [ "$(node --version)" != "v24.21.0" ] || [ "$(npm --version)" != "11.19.0" ]; then
+  echo 'CLEAR requires Node 24.21.0 and npm 11.19.0.' >&2
+  exit 1
+fi
+cd "$TASK_ROOT"
+exec npm "$@"

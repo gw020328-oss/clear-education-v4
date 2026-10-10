@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17231d"><title>독립 환급 청구</title><link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header><div class="brand"><span>약</span> 환급 약속 금고</div><div class="independent">독립 청구 화면</div></header>
+  <main>
+    <section class="intro"><p class="eyebrow">주 서비스 없이 직접 청구</p><h1>보관한 증빙으로<br>환급을 청구하세요</h1><p>이 화면은 교육업체 로그인이나 증빙 발급 서버를 호출하지 않습니다. 저장한 파일, 청구 전달 지갑, 로컬 체인 RPC만 사용합니다.</p><div class="summary"><div><small>환급액</small><strong>50 TEST</strong></div><div><small>필요 증빙</small><strong>4개</strong></div><div><small>수령자</small><strong>파일에 고정</strong></div></div></section>
+
+    <section class="step" id="file-step"><div class="number">1</div><div class="body"><p class="label">증빙 파일</p><h2>저장한 JSON 파일 불러오기</h2><div class="file-actions"><label class="button primary" for="file-input">증빙 파일 선택<input id="file-input" type="file" accept="application/json,.json"></label><button class="button outline" id="demo-file">검증용 저장 파일 불러오기</button></div><p class="hint">검증용 버튼도 주 서비스 API가 아니라 독립 화면 서버에 저장된 동일 파일을 읽습니다.</p><div class="status neutral" id="file-status"><span>…</span><div><strong>파일을 기다리고 있습니다</strong><small>계약 주소·조건·수령자·기한·서명을 고정 명세와 대조합니다.</small></div></div></div></section>
+
+    <section class="step"><div class="number">2</div><div class="body"><p class="label">체인 접속</p><h2>직접 사용할 RPC 경로</h2><div class="inline"><input id="rpc" value="http://127.0.0.1:8545" aria-label="로컬 체인 RPC 주소"><button class="button dark" id="chain-button">체인 확인</button></div><p class="hint">한 경로가 중단되면 같은 체인의 다른 RPC로 바꿀 수 있습니다. 이번 시제품은 대체 RPC 서버를 제공하지 않습니다.</p><div class="status neutral" id="chain-status"><span>…</span><div><strong>체인 확인 전</strong><small>chainId, 배포 블록, 코드와 계약 설정을 확인합니다.</small></div></div></div></section>
+
+    <section class="step"><div class="number">3</div><div class="body"><p class="label">청구 전달 지갑</p><h2>거래에 서명할 지갑 연결</h2><div class="wallet-actions"><button class="button primary" id="wallet-button">브라우저 지갑 연결</button><button class="button outline" id="demo-wallet">로컬 데모 지갑 만들기</button></div><p class="hint">데모 지갑의 키는 이 탭 메모리에만 있으며 화면·파일·로그에 표시하지 않습니다. 지급 수령 주소는 증빙 파일에 고정되어 별도로 바뀌지 않습니다.</p><div class="status neutral" id="wallet-status"><span>…</span><div><strong>지갑 연결 전</strong><small>실제 브라우저 지갑이 없으면 로컬 데모 지갑으로 전달 흐름만 확인할 수 있습니다.</small></div></div><button class="gas" id="gas-button" hidden>로컬 체인 테스트 가스 받기</button><p class="gas-note" id="gas-note" hidden>Ganache 전용 테스트 RPC를 사용합니다. 실제 서비스의 대납·가스 지원이 아니며 교육업체와 무관합니다.</p></div></section>
+
+    <section class="claim"><div><p class="label">최종 확인</p><h2 id="claim-title">아직 청구할 수 없습니다</h2><ul id="checklist"><li>증빙 파일 검증</li><li>체인과 계약 확인</li><li>청구 전달 지갑 연결</li></ul></div><div class="claim-box"><div><small>고정 수령 주소</small><code id="recipient">증빙 파일을 불러오세요</code></div><div class="amount"><span>청구 금액</span><strong>50 TEST</strong></div><button class="button claim-button" id="claim-button" disabled>환급 청구하기</button></div></section>
+
+    <section class="result" id="result" aria-live="polite"><div class="result-mark" id="result-mark">…</div><div><p class="label" id="result-label">처리 결과</p><h2 id="result-title">아직 청구하지 않았습니다</h2><p id="result-detail">청구 접수와 실제 지급 완료를 구분해 표시합니다.</p><dl id="receipt" hidden><div><dt>거래 영수증</dt><dd id="tx"></dd></div><div><dt>확인된 수령 잔액</dt><dd id="balance"></dd></div></dl></div></section>
+
+    <aside><strong>이 화면이 해결하지 못하는 것</strong><p>증빙 미발급·거짓 서명, 체인 또는 토큰 장애, 수령 지갑 키 유실, 계약 오류 복구는 남습니다. 블록체인은 실제 제출이나 학습 성과를 증명하지 않습니다.</p></aside>
+  </main>
+  <div id="toast" role="alert" hidden></div>
+  <footer>로컬 시제품 · 실자금 사용 금지 · 보안 감사 미완료</footer>
+  <script src="/vendor/ethers.min.js"></script><script src="/app.js"></script>
+</body></html>

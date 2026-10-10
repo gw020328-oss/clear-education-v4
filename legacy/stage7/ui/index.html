@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>환급 청구 비교</title><link rel="stylesheet" href="/style.css"></head>
+<body><header>환급 약속 금고 <span id="rail">독립 청구</span></header><main>
+<section class="hero"><p>같은 증빙 · 같은 조건</p><h1>보관한 증빙으로<br>50 TEST 청구</h1><p id="deadline">기한 확인 중</p><p id="unit"></p></section>
+<section><h2>1. 증빙 파일</h2><p>이름·이메일 없이 조건 동의와 제출 서명 4개를 확인합니다.</p><label class="button" for="file">증빙 파일 선택</label><input id="file" type="file" accept=".json,application/json"><button id="demo" hidden>같은 데모 파일 불러오기</button><p id="file-status">64KB 이하 JSON 파일을 선택하세요.</p><code id="recipient"></code></section>
+<section><h2>2. 조건·준비금 검증</h2><label for="endpoint" id="endpoint-label">독립 접속 주소</label><input id="endpoint" type="url"><button id="verify" disabled>증빙과 준비금 확인</button><p id="verify-status">증빙 파일을 먼저 불러오세요.</p>
+<div id="wallet-section" hidden><button id="wallet">브라우저 지갑 연결</button><button id="demo-wallet" hidden>로컬 데모 전달 지갑 연결</button><p id="wallet-status">지갑·예상 가스비·양쪽 provider 배포를 확인합니다.</p><small>데모는 미리 가스가 배정된 Ganache 잠금 해제 계정입니다. 실제 확장 지갑·가스 대납 검증이 아닙니다.</small></div></section>
+<section><h2>3. 환급 청구</h2><p id="remaining">파일·조건·준비금 확인이 남았습니다.</p><button id="claim" disabled>50 TEST 환급 청구</button><div id="result" role="status" aria-live="polite">아직 청구하지 않았습니다.</div><pre id="receipt"></pre></section>
+<section class="alternate"><h2>대체 접속</h2><p>이 화면이 중단되면 보관한 파일과 별도 CLI로 청구할 수 있습니다.</p><code id="cli"></code><p id="dependency"></p></section>
+<aside><h2>보장하지 않는 사항</h2><p id="trust"></p><p>실제 제출·학습 성과는 증명하지 않습니다. 미발급·거짓 서명·실행 계층 장애는 남습니다. 화면·명세·접속 경로를 신뢰해야 합니다.</p><p>로컬 모의 비교 · 실제 사용자 0명 · 실자금·은행·PG 연결 없음 · 외부 보안 감사 미완료</p></aside>
+</main><script src="/vendor/ethers.js"></script><script type="module" src="/app.mjs"></script></body></html>

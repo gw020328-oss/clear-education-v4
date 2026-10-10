@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 4,
+  "environmentId": "local-synthetic",
+  "status": "PREPARED_NOT_STARTED",
+  "instanceId": "d10dc9de-b44a-47ac-83ba-852c990e9859",
+  "chainId": 431701,
+  "dataMode": "SYNTHETIC",
+  "networkType": "DEDICATED_TEST_CHAIN",
+  "databaseName": "clear_v4_local_synthetic",
+  "paths": {
+    "chainState": "data/local-synthetic/chain",
+    "postgresData": "data/local-synthetic/postgres",
+    "serviceArtifacts": "data/local-synthetic/artifacts",
+    "retainedServiceData": "data/local-synthetic/retained",
+    "privateConfig": "private/local-synthetic",
+    "rawProofMount": "var/local-synthetic/raw-proof"
+  },
+  "rawProofStorage": {
+    "requiredFilesystem": "tmpfs",
+    "ready": false,
+    "allowDiskFallback": false,
+    "maxRetentionSeconds": 86400,
+    "deleteOnClaimPacketIssuance": true
+  },
+  "residualRetention": {
+    "maxDaysAfterFinalClaimDeadline": 30,
+    "ready": false
+  },
+  "credentials": {
+    "provisioned": false,
+    "separateByEnvironment": true
+  },
+  "deploymentManifest": "config/manifests/local-synthetic.pending.json",
+  "datePolicyStatus": "UNCONFIRMED",
+  "mayStartProductServices": false
+}
