@@ -2,7 +2,7 @@
 
 2026년 10월 10일 · 추천 **GPT-6 Astra / high** · 증명 신뢰 경계와 신청·지갑 결합 검토에 사용하기 위한 권고다. 실제 모델 자동 전환을 뜻하지 않는다.
 
-**오프라인 기술 시험 36개는 통과했고, 실제 브라우저 YBM 연결은 미완료다.** 고정 SDK를 별도 spike에 설치해 서명·문맥·두 시험 기록의 연결을 확인했다. 사용자가 Reclaim 개발자 콘솔 로그인을 완료했지만, 등록된 앱과 개인 provider는 없었다. 수동 provider 작성 도구가 세션 생성에 실패해 실제 연결 확인을 진행하지 못했다.
+**오프라인 기술 시험 36개는 통과했고, v4 작업본의 실제 브라우저 YBM 연결은 미완료다. 과거 별도 세션에서는 공식 Reclaim을 통한 실제 YBM 증명 생성·검증에 성공했다.** 고정 SDK를 별도 spike에 설치해 서명·문맥·두 시험 기록의 연결을 확인했다. 사용자가 Reclaim 개발자 콘솔 로그인을 완료했지만, 등록된 앱과 개인 provider는 없었다. 수동 provider 작성 도구의 세션 오류를 먼저 조사했으나, 후속 확인에서 이 도구를 거치지 않은 기존 성공 경로를 찾았다. 아래 ‘과거 성공 세션 대조와 W02 경로 정정’을 우선한다.
 
 **후속 진단:** 로그인된 Chrome에서도 같은 오류가 재현됐다. 배포된 수동 builder의 세션 서버 `dev-tool.reclaimprotocol.org`는 Google·Cloudflare DNS 모두에서 A·AAAA 응답이 없어 주소 해석 단계에서 막혔다. [원인과 해결 경로](SESSION_DIAGNOSIS.ko.md)에 기록했다. 현재 세션 오류 자체는 해결되지 않았으며 대체 AI builder는 입력 화면까지만 확인했다.
 
@@ -55,15 +55,15 @@ TEE 검증을 생략하거나 SDK의 `hasNoPii`/content-validation 우회 옵션
 
 | 순서 | 필요한 결과 | 현재 상태 |
 | --- | --- | --- |
-| 1 | 수동 builder 또는 검토 가능한 공식 provider 작성 경로 사용 가능 | 현재 수동 builder 세션 오류 |
-| 2 | YBM 접수·성적 원천의 필수 필드와 추출 규칙, provider ID·정확한 버전·policy hash | 미확정 |
+| 1 | 기존 공식 Attestor 직접 생성 경로를 v4에 적용할 수 있는지 확인 | 과거 성공 확인, v4 이식 미검증; 수동 builder는 필수 선행 조건 아님 |
+| 2 | YBM 두 원천의 최소 추출 규칙·정책 hash·생성 및 검증 runtime 고정 | 직접 경로와 hosted SDK 경로의 식별·버전 체계 구분 필요 |
 | 3 | 참가자 브라우저 문맥·owner·지갑 결합 방식과 TEE 검증 경로 | 브라우저 실측 필요 |
-| 4 | 테스트용 앱 credential, 명시적 callback, 원본 저장/로그/백업 경계 | 미준비 |
+| 4 | 경로별 수신 방식과 원본 저장/로그/백업 경계; hosted SDK 선택 시 앱 credential·callback | 미준비; 앱 등록이 모든 생성 방식의 필수 조건은 아님 |
 | 5 | 사용자 직접 YBM 로그인, 새 증명 한 쌍 생성, 실제 binding 검사 | 아직 요청할 시점 아님 |
 
 정적 요구사항은 [provider-requirements.json](provider-requirements.json)에 정리했다. 과거 코드에서 확인한 POST 접수 조회와 GET 성적 조회를 출발점으로 삼지만 현행 추출 규칙은 확정하지 않았다. 필수 필드는 시험 종류·시험일·수험번호·총점이다. 실명 인증을 하지 않는 PRD이므로 이름·생년월일을 기본 추출 대상으로 추가하지 않는다.
 
-현재 다음 조치는 **provider 작성 세션 오류의 원인·사용 가능한 클라이언트 확인**이다. 이후 앱 생성은 용도·provider·callback·보관 경로가 정리된 상태에서 진행한다. 수동 builder의 모바일 앱 연결 및 실제 YBM 로그인에 사용자 조작이 필요해지면 그 시점에 안내한다. 비밀번호·쿠키·앱 secret을 채팅으로 보내는 절차는 없다.
+현재 다음 조치는 **기존 공식 Attestor 동일 연결 경로의 v4 적합성 검토**다. 새 provider·앱 등록은 선택한 생성 경로에서 필요할 때만 검토한다. 실제 YBM 로그인에 사용자 조작이 필요해지면 준비된 수집 경로와 처리 범위를 설명한 뒤 안내한다. 비밀번호·쿠키·앱 secret을 채팅으로 보내는 절차는 없다.
 
 ## 보존과 일정
 
@@ -72,3 +72,39 @@ TEE 검증을 생략하거나 SDK의 `hasNoPii`/content-validation 우회 옵션
 W02 전체 상태는 [verification.json](verification.json)의 **OFFLINE_PASS_LIVE_BLOCKED**다. 10월 13일까지 브라우저의 실제 원천·문맥 결합 경로를 확인한다는 P1 목표는 아직 통과하지 않았다. W03–W05의 독립 작업은 가능하지만, 실제 YBM 연결이 끝난 것으로 일정표를 갱신하지 않는다.
 
 다음 W02 재개도 **GPT-6 Astra / high**를 권고한다. W03 지갑·네트워크 시험을 별도로 시작할 경우에는 **GPT-6.1 Sol / high**를 권고한다.
+
+
+## 과거 성공 세션 대조와 W02 경로 정정 — 2026-10-10
+
+사용자 지적에 따라 **「Clear 멘토링 피드백 반영 방향 정리」** 세션(`01a11411-3254-7c70-a566-c2743d88d4f7`)의 과거 대화와 공개 요약·소스를 대조했다. 실제 성공 이력이 맞다. 기존 감사에도 결과를 기록했지만, W02에서는 생성 경로까지 추적하지 않고 웹 콘솔 수동 작성기를 필수 선행 조건처럼 취급했다. 이 판단을 정정한다.
+
+### 확인한 성공과 구현 경로
+
+- 10월 9일 성적 증명 성공 대화: turn `01a11f2f-c651-73a1-8c52-f46d5dee32fc`. 일반 로그인 후 공식 공증자에서 증명을 요청하면 302였지만, 로그인과 증명 생성이 같은 공식 Attestor client를 사용하면 200 및 증명 생성·검증에 성공한 기록이다. YBM 내부의 IP 결합인지 다른 세션 처리 차이인지는 미확정이다.
+- 10월 9일 응시자·성적 연결 성공 대화: turn `01a11f56-1b72-7311-9601-634e46972870`. 접수 정보 POST와 성적 목록 GET에서 두 증명을 만들고 시험 종류·시험일·수험번호, 공통 owner·context로 연결했다. 실제 계정 1개·연결 1쌍이며 지급은 실행하지 않았다.
+- 진단용 Chrome의 HTTPS 트래픽은 loopback CONNECT gateway를 통해 공식 `wss://attestor.reclaimprotocol.org:444/ws` 연결로 전달됐다. gateway의 TLS 가로채기는 없었다. 별도 코드에서 인증된 요청 정보를 메모리로 수집해 증명에 사용했으므로, ‘TLS 가로채기 없음’을 ‘수집 코드가 쿠키를 전혀 취급하지 않음’으로 해석하지 않는다.
+- `prove-linked.mjs`는 `@reclaimprotocol/attestor-core`의 `createClaimOnAttestor`에 HTTP 요청 정책·비밀 매개변수·context·임시 owner key·공통 client를 직접 전달한다. 이 호출 경로에는 웹 수동 builder의 `GenerateSession`, 콘솔 provider ID, 앱 secret이 등장하지 않는다. 성적 성공 요약의 runtime은 attestor-core 5.1.4, zkEngine stwo이며 기존 agent package는 0.1.29다.
+- 독립 검증 코드·기록은 공식 registry 서명자, 요청 정책 hash, 원천 URL·method, 추출 필드, owner/context, freshness를 검사한다. 연결 성공 요약은 변조 6건, 연결 불일치 3건, 미신뢰 서명자 거부를 기록한다. 이번에는 과거 코드를 실행하거나 원본 증명을 다시 검증하지 않았다.
+
+### 현재 설계와의 차이 및 다음 순서
+
+| 순서 | 할 일 | 완료 기준 |
+| --- | --- | --- |
+| 1 | 직접 Attestor 경로와 hosted SDK 경로의 계약 차이 정리 | provider 식별/정책 버전, session/context, owner, TEE 신뢰 조건을 문서로 대응. 현재 보장을 자동으로 삭제하지 않음 |
+| 2 | 원본을 복사·실행하지 않고 별도 작업본에서 필요한 부분만 이식 | 원본 결과 덮어쓰기 없음; 이름·생년월일 제외한 최소 필드; 메모리/임시 저장·로그·종료 경계 검토 |
+| 3 | 합성 자료로 신청·반·지갑·nonce 결합 및 실패 처리 확인 | 진단용 임시 owner와 수취 지갑의 차이를 해소하고 기존 W02 거부 조건 유지 |
+| 4 | 준비된 동일 연결 경로에서 사용자가 YBM 로그인 | 새 증명 생성·검증·삭제 확인. 과거 증명 재생을 새 성공으로 세지 않음 |
+
+기존 진단은 임시 owner와 진단용 context를 사용하고 원본 증명·정책을 private 디스크에 남겼다. v4의 신청·지갑 결합 및 원본 보존 경계와 다르다. 또한 공식 공증자 서명 성공 기록만으로 현재 설계가 요구하는 TEE 검증까지 완료됐다고 볼 수 없다. 일반 브라우저 테스트 사이트만으로 과거 전용 Chrome gateway 흐름을 제공할 수 있는지도 미확인이다. 11월 7일 각자 PC 체험 요건에 맞춘 배포 방식은 별도로 검토한다.
+
+**수동 builder DNS 진단은 해당 경로에 한해 유효하다. 그러나 그것이 Reclaim 전체 또는 YBM 증명 생성의 필수 장애물이라는 결론은 철회한다.** AI builder 검토보다 기존 성공 경로의 이식 적합성을 우선한다. 이번 확인에서는 과거 소스와 개인정보 없는 요약만 읽었으며, 제품 코드와 실험 원본은 수정하지 않았다. private 증명·쿠키·키는 읽지 않았다. 현재 사용자의 추가 조작은 필요 없다.
+
+근거:
+
+- [공식 공증자 성적 성공 요약](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-sticky-attestor-2026-10-09/success-summary-2026-10-09.json)
+- [응시자·성적 연결 성공 요약](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-score-success-summary-2026-10-09.json)
+- [동일 경로 연결 코드](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-route.mjs)
+- [두 증명 생성 코드](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/prove-linked.mjs)
+- [독립 검증 코드](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/verify-linked.mjs)
+
+다음 경로 적합성 검토 추천: **GPT-6 Astra / high**. 이후 구현은 검토된 범위에 따라 진행한다.

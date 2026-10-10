@@ -61,5 +61,12 @@
     "no AI-generated policy patches during a session"
   ],
   "credentialsPolicy": "YBM login only in the reviewed client flow; CLEAR must not collect password/cookies",
-  "mayGenerateRealProof": false
+  "mayGenerateRealProof": false,
+  "routeReview": {
+    "status": "PENDING",
+    "historicalAlternative": "DIRECT_HTTP_POLICY_WITH_OFFICIAL_ATTESTOR_SHARED_CLIENT",
+    "scopeOfExistingFields": "Current hosted SDK candidate requirements; direct route needs explicit mapping for provider identity, version, context session, owner, TEE and result transport before adoption",
+    "registeredConsoleProviderRequiredForHistoricalRoute": false,
+    "liveGenerationStillDisabled": true
+  }
 }

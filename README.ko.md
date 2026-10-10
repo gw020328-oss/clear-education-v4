@@ -2,7 +2,7 @@
 
 W01 환경 준비용 저장소다. 기존 프로젝트와 실험 원본은 원래 위치에 보존하고, 선택한 코드 191개를 `legacy/`에 바이트 그대로 복사했다. 코드 참고본은 읽기 전용이며 출력·증명·쿠키·키·설치 패키지·실험 원본은 복사하지 않았다. JSON은 package/lockfile과 출력 schema만 허용했다. 자격 증명처럼 보이는 문자열을 포함한 과거 시험 스크립트 1개도 복사 대상에서 제외했다. 이는 전체 과거 실험의 실행 가능한 복제본이 아니다.
 
-2026-10-10 W02 업데이트: [ProofAdapter 기술 확인](docs/w02/REPORT.ko.md)의 오프라인 시험 36개 통과. 실제 YBM 연결은 provider 작성 세션 오류와 미확인 브라우저 binding 때문에 미완료다. 코드는 `spikes/w02-proof-adapter/`에 격리했다. Reclaim 콘솔 로그인은 사용자가 완료했으며 YBM 로그인·새 증명 생성은 아직 하지 않았다.
+2026-10-10 W02 업데이트: [ProofAdapter 기술 확인](docs/w02/REPORT.ko.md)의 오프라인 시험 36개 통과. v4의 실제 YBM 연결은 신청·지갑 binding과 수집 경계가 준비되지 않아 미완료다. 과거 별도 세션의 공식 Attestor 직접 생성 성공을 확인했으며, 수동 provider 작성기는 필수 선행 조건이 아니다. 코드는 `spikes/w02-proof-adapter/`에 격리했다. Reclaim 콘솔 로그인은 사용자가 완료했으며 YBM 로그인·새 증명 생성은 아직 하지 않았다.
 
 W02 후속: Chrome에서도 세션 오류 재현. 수동 builder의 서버 DNS 주소 부재를 확인했다. [진단 및 대체 경로](docs/w02/SESSION_DIAGNOSIS.ko.md)를 참고한다. 두 브라우저 로그인은 완료됐다.
 

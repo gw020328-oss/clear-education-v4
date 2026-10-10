@@ -16,23 +16,23 @@
   "gates": [
     {
       "id": "PROVIDER",
-      "status": "BLOCKED",
-      "reason": "No usable YBM provider; manual builder fails in both browsers because configured dev-tool host does not resolve; alternative AI builder input screen reachable but not run"
+      "status": "ROUTE_REVIEW_PENDING",
+      "reason": "Historical direct attestor HTTP policy route succeeded without console provider registration; review v4 policy/runtime identity and integration. Manual builder DNS failure is route-specific."
     },
     {
       "id": "APP",
       "status": "NOT_PROVISIONED",
-      "reason": "No application credentials created or read"
+      "reason": "Not provisioned; required for hosted SDK candidate, not established as required for historical direct attestor route"
     },
     {
       "id": "OWNER_BINDING",
       "status": "UNCONFIRMED",
-      "reason": "Current SDK request API does not expose a pre-proof ownerPublicKey option; browser behavior must be tested before the design is adopted"
+      "reason": "Hosted SDK pre-binding unconfirmed; historical direct route supplies ownerPrivateKey but used an ephemeral diagnostic owner, not the recipient wallet. v4 binding requires review."
     },
     {
       "id": "TEE",
       "status": "UNTESTED",
-      "reason": "Real session/hardware attestation requires a provisioned application and reviewed provider"
+      "reason": "Historical official attestor signature success does not establish v4 TEE verification. Preserve requirement pending route-specific design review."
     },
     {
       "id": "STORAGE_CALLBACK",
@@ -42,7 +42,7 @@
     {
       "id": "ACTUAL_YBM",
       "status": "NOT_RUN",
-      "reason": "User YBM login and new proof generation have not started"
+      "reason": "No new v4 proof generated; historical separate-session success confirmed and not counted as current v4 acceptance"
     }
   ],
   "paymentAllowed": false,
@@ -54,6 +54,18 @@
     "report": "SESSION_DIAGNOSIS.ko.md",
     "chromeLogin": "USER_COMPLETED",
     "manualBuilderResolved": false,
-    "alternativeBuilder": "INPUT_SCREEN_ONLY_NOT_EXECUTED"
-  }
+    "alternativeBuilder": "INPUT_SCREEN_ONLY_NOT_EXECUTED",
+    "scope": "MANUAL_BUILDER_ONLY_NOT_ALL_RECLAIM_OR_YBM_GENERATION"
+  },
+  "historicalYbmEvidence": {
+    "status": "PAST_OFFICIAL_ATTESTOR_SUCCESS_CONFIRMED_FROM_THREAD_CODE_AND_SUMMARIES",
+    "threadId": "01a11411-3254-7c70-a566-c2743d88d4f7",
+    "route": "BROWSER_AND_PROOF_SAME_OFFICIAL_ATTESTOR_CLIENT",
+    "realAccounts": 1,
+    "linkedPairs": 1,
+    "rerunThisTurn": false,
+    "v4Integrated": false,
+    "manualBuilderRequired": false
+  },
+  "nextAction": "REVIEW_HISTORICAL_SAME_CLIENT_ATTESTOR_ROUTE_FOR_V4"
 }
