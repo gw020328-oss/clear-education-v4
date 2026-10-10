@@ -103,10 +103,10 @@ W02 전체 상태는 [verification.json](verification.json)의 **OFFLINE_PASS_LI
 
 근거:
 
-- [공식 공증자 성적 성공 요약](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-sticky-attestor-2026-10-09/success-summary-2026-10-09.json)
-- [응시자·성적 연결 성공 요약](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-score-success-summary-2026-10-09.json)
-- [동일 경로 연결 코드](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-route.mjs)
-- [두 증명 생성 코드](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/prove-linked.mjs)
-- [독립 검증 코드](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/verify-linked.mjs)
+- 공식 공증자 성적 성공 요약 (비공개 로컬 자료)
+- 응시자·성적 연결 성공 요약 (비공개 로컬 자료)
+- 동일 경로 연결 코드 (비공개 로컬 자료)
+- 두 증명 생성 코드 (비공개 로컬 자료)
+- 독립 검증 코드 (비공개 로컬 자료)
 
 다음 경로 적합성 검토 추천: **GPT-6 Astra / high**. 이후 구현은 검토된 범위에 따라 진행한다.

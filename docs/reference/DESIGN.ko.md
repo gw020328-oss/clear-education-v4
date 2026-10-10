@@ -10,9 +10,9 @@ CLEAR는 **비공개 증명 검증 서비스가 자격을 판단하고, 예치�
 
 ## 기준과 결정 상태
 
-- [PRD v0.3](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-draft-2026-10-10/PRD.ko.md)의 D01–D15와 A01–A18, U01–U06을 구현 기준으로 사용한다.
-- [1단계 점검 보고서](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/REPORT.ko.md)의 기존 코드·과거 시험·미연결 경계를 유지한다. 그 보고서의 당시 미정 수치는 현재 PRD가 우선한다.
-- [단계별 구현 계획](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-technical-design-2026-10-10/IMPLEMENTATION_PLAN.ko.md)에 11월 7일까지의 작업 순서, 의존성, 통과 기준과 지연 대응을 정리했다.
+- PRD v0.3 (비공개 로컬 자료)의 D01–D15와 A01–A18, U01–U06을 구현 기준으로 사용한다.
+- [1단계 점검 보고서](AUDIT.ko.md)의 기존 코드·과거 시험·미연결 경계를 유지한다. 그 보고서의 당시 미정 수치는 현재 PRD가 우선한다.
+- [단계별 구현 계획](IMPLEMENTATION_PLAN.ko.md)에 11월 7일까지의 작업 순서, 의존성, 통과 기준과 지연 대응을 정리했다.
 
 | 구분 | 설계에 적용할 내용 |
 | --- | --- |
@@ -334,10 +334,10 @@ raw staging은 최초 collectedAt를 서버가 정하고 사용자 재전송으�
 
 ## 근거와 읽기 범위
 
-[선택 입력 지문](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-technical-design-2026-10-10/source-snapshot.json)은 PRD·보고서와 직접 확인한 코드 8개의 지문이다. 전체 저장소 무변경 증명이나 보안 감사가 아니다. private proof·쿠키·키 파일은 열지 않았다.
+선택 입력 지문 (비공개 로컬 자료)은 PRD·보고서와 직접 확인한 코드 8개의 지문이다. 전체 저장소 무변경 증명이나 보안 감사가 아니다. private proof·쿠키·키 파일은 열지 않았다.
 
-- [기존 금고 계약](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/contracts/RefundVault.sol), [runtime schema](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/shared/runtime.mjs): 고정 50 TEST·4 receipts·설정 hash와 도메인, claim/reclaim 경계.
-- [기존 main 서버](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/main.mjs), [기존 시연 실행기](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/demo.mjs), [기존 recovery](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/recovery/app.js): 전역 상태·임시 키·loopback 노드·기존 복구의 경계.
-- [YBM 검증 소스](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/verify-linked.mjs), [YBM 생성 소스](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/prove-linked.mjs): 기존 진단용 문맥·개별 기대값·두 원천 연결. 실행하지 않음.
+- [기존 금고 계약](../../legacy/stage15/contracts/RefundVault.sol), [runtime schema](../../legacy/stage15/shared/runtime.mjs): 고정 50 TEST·4 receipts·설정 hash와 도메인, claim/reclaim 경계.
+- [기존 main 서버](../../legacy/stage14/server/main.mjs), [기존 시연 실행기](../../legacy/stage14/server/demo.mjs), [기존 recovery](../../legacy/stage14/recovery/app.js): 전역 상태·임시 키·loopback 노드·기존 복구의 경계.
+- YBM 검증 소스 (비공개 로컬 자료), YBM 생성 소스 (비공개 로컬 자료): 기존 진단용 문맥·개별 기대값·두 원천 연결. 실행하지 않음.
 
 외부 표준과 SDK 문서는 2026년 10월 10일 확인한 공식 자료를 본문의 관련 선택에 연결했다. 기존 SDK와 문서의 API 차이는 구현 초기에 확인할 과제다. 새 테스트·컴파일·실제 증명·브라우저 과업을 통과했다는 주장으로 사용하지 않는다.

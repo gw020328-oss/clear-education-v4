@@ -8,20 +8,20 @@ CLEAR에는 **AI 초안, 검토 승인, 양측 서명, 사전 예치, 지정 발
 
 ## 점검 범위와 증거 수준
 
-현재 작업 폴더는 `/Users/ohgyuwon/Documents/ChatGPT/블록체인`이다. 원본 구현은 한글 분해형 경로의 [refund-vault-prototype](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype)에 있으며, 실험은 이전 프로젝트의 [experiments](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments)에 남아 있다. 이 보고서와 두 JSON 보고서만 새 output 폴더에 저장했다.
+현재 작업 폴더는 `/Users/ohgyuwon/Documents/ChatGPT/블록체인`이다. 원본 구현은 한글 분해형 경로의 refund-vault-prototype (비공개 로컬 자료)에 있으며, 실험은 이전 프로젝트의 experiments (비공개 로컬 자료)에 남아 있다. 이 보고서와 두 JSON 보고서만 새 output 폴더에 저장했다.
 
 - **코드 확인**: 직접 읽은 소스의 실제 분기와 제약이다. 실행 성공을 뜻하지 않는다.
 - **저장 기록**: 과거 JSON·영수증·시험 결과를 읽은 것이다. 이번 재실행과 구분한다.
 - **이번 직접 확인**: 선택한 파일의 해시 대조와 임시 복사본의 오프라인 검사다.
 - **권고·미구현**: 다음 PRD·설계에서 다룰 사항이다. 이번에 개발하지 않았다.
 
-적용 가능한 상위·하위 AGENTS.md를 확인했다. 구현 경로에는 관련 AGENTS.md가 없고, 이전 프로젝트의 [AGENTS.md](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/AGENTS.md)는 `sources/`를 읽기 전용으로 취급하도록 한다. 구현 폴더에는 자체 `.git`이 없으며 상위 홈의 `.git`은 CLEAR 저장소로 사용하지 않았다. Git 변경·푸시를 수행하지 않았다.
+적용 가능한 상위·하위 AGENTS.md를 확인했다. 구현 경로에는 관련 AGENTS.md가 없고, 이전 프로젝트의 AGENTS.md (비공개 로컬 자료)는 `sources/`를 읽기 전용으로 취급하도록 한다. 구현 폴더에는 자체 `.git`이 없으며 상위 홈의 `.git`은 CLEAR 저장소로 사용하지 않았다. Git 변경·푸시를 수행하지 않았다.
 
 private 증명·정책 파일은 열지 않았다. 공개 요약의 허용된 상태 필드와 검증 소스만 읽었다. 개인정보 값, 원문 증명, 쿠키, 키를 보고서에 포함하지 않았다. 외부 AI 호출·새 로그인·공개 RPC 조회·체인 거래·타인 연락은 모두 수행하지 않았다. 원본 시험 실행기 중 YBM과 Amoy 실행기는 기존 JSON을 덮어쓰므로 실행하지 않았다. 저장된 Amoy 상태를 현재 상태로 표현하지 않는다.
 
-이번 [직접 검사 결과](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/direct-checks.json)는 10/10 통과다. 제품 경계 모듈·설정 해시 모듈·Solidity 파일 3개를 임시 폴더에 복사해 검사한 후 복사본을 제거했다. 고정 조건 승인, 점수·수강률 조건 거부, 검토 확인 누락·가짜 인용·AI 승인 상태 거부, 설정 필드별 해시 변화, 증빙 수·버전 거부, v3 Solidity 컴파일을 확인했다. Node v25.6.1·solc 0.8.30을 사용했다. 지갑 서명 실행·EVM 지급·브라우저·실제 증명은 재시험하지 않았다.
+이번 직접 검사 결과 (비공개 로컬 자료)는 10/10 통과다. 제품 경계 모듈·설정 해시 모듈·Solidity 파일 3개를 임시 폴더에 복사해 검사한 후 복사본을 제거했다. 고정 조건 승인, 점수·수강률 조건 거부, 검토 확인 누락·가짜 인용·AI 승인 상태 거부, 설정 필드별 해시 변화, 증빙 수·버전 거부, v3 Solidity 컴파일을 확인했다. Node v25.6.1·solc 0.8.30을 사용했다. 지갑 서명 실행·EVM 지급·브라우저·실제 증명은 재시험하지 않았다.
 
-[선택 근거와 해시 대조](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/evidence-index.json)에는 소스 18개의 지문, 최신 저장 Stage15 시험의 입력 9개 일치 여부, AI 호출 기록 목록이 있다. 전체 저장소 체크섬이나 동결 manifest의 완전성을 재검사한 것은 아니다.
+선택 근거와 해시 대조 (비공개 로컬 자료)에는 소스 18개의 지문, 최신 저장 Stage15 시험의 입력 9개 일치 여부, AI 호출 기록 목록이 있다. 전체 저장소 체크섬이나 동결 manifest의 완전성을 재검사한 것은 아니다.
 
 ## 기존 기능과 실제 근거
 
@@ -213,28 +213,28 @@ AI 성능 검증은 지급 안전성 시험과 별개로 운영한다. 새 안�
 
 | ID | 근거 |
 | --- | --- |
-| S01 | [제품 schema와 검토 제약](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/policy/product.mjs:7) |
-| S02 | [AI client와 6회 상한](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/ai/client.mjs:15) |
-| S03 | [활성 main 서버와 stage15 import](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/main.mjs:4) |
-| S04 | [v3 검토 승인과 고정 조건 adapter](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/policy/binding.mjs:3) |
-| S05 | [v3 정책 compiler](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/policy/core.mjs:47) |
-| S06 | [공유 runtime 설정과 동의 schema](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/shared/runtime.mjs:3) |
-| S07 | [v3 RefundVault](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/contracts/RefundVault.sol:12) |
-| S08 | [v3 배포·등록·증빙·청구 adapter](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/lib/chain.mjs:10) |
-| S09 | [issuer](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/issuer.mjs:1), [supervisor와 로컬 RPC](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/demo.mjs:6) |
-| S10 | [독립 recovery 검사와 지급](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/recovery/app.js:8), [브라우저 v3 adapter](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/server/static.mjs:9) |
-| S11 | [YBM 두 증명 검증과 연결](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/verify-linked.mjs:13) |
-| S12 | [Amoy 로컬 fork 실행기](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/check-local-fork.mjs:9) |
-| S13 | [YBM 진단 목적과 임시 owner 생성](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/prove-linked.mjs:45) |
-| H01 | [AI 제품 3사례 평가](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/ai/product-evaluation.json), [6회 시점 AI 원장](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/AI_LEDGER_FINAL.json) |
-| H02 | [과거 live](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789363931151/result.json), [cached](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789364330997/result.json), [manual](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789364332140/result.json), [독립 요청 계측](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789364703674/result.json) |
-| H03 | [과거 제품 core 36개](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/core-tests-1789364334850.json), [v3 시기 제품 core 36개](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/core-tests-1789890964236.json) |
-| H04 | [격리 회귀 결과](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/regression-1789364117662/result.json), [stage6 stdout](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/regression-1789364117662/stage6.stdout.txt), [stage11 결과](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/regression-1789364117662/binding-results.json) |
-| H05 | [최신 저장 v3 runtime 47개](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/artifacts/runtime-2026-09-21T04-37-44.489Z/results.json), [시험 계획](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/TEST_PLAN.md), [계측 변경 해설](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage15/TEST_INSTRUMENTATION_NOTE.md) |
-| H06 | [v3 cached 브라우저 지급](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/browser-1789890732883/result.json), [별도 지급 감사](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/receipt-audit-1789890872172.json), [v3 실행 계획](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/run-1789890670622/runtime-plan.json) |
-| H07 | [YBM 성공 범위 요약](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-score-success-summary-2026-10-09.json), [연결 검증 결과](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/linked-verification.json) |
-| H08 | [로컬 fork 결과](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/local-fork-report.json), [당시 network state](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/network-state.json) |
-| H09 | [저장된 배포 구현 소스와 exact match](/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-amoy-feasibility-2026-10-09/deployed-implementation-verified.json) — sources의 contracts/Reclaim.sol 115행 및 258–298행 |
-| H10 | [촬영 추가 승인 기록](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/clear-video-extra-call-authorization.json), [촬영 성공 승인 기록](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/artifacts/clear-video-success-authorization.json), [별도 촬영 호출 코드](/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype/stage14/tests/film-ai.mjs:9) |
+| S01 | [제품 schema와 검토 제약](../../legacy/stage14/policy/product.mjs#L7) |
+| S02 | [AI client와 6회 상한](../../legacy/stage14/ai/client.mjs#L15) |
+| S03 | [활성 main 서버와 stage15 import](../../legacy/stage14/server/main.mjs#L4) |
+| S04 | [v3 검토 승인과 고정 조건 adapter](../../legacy/stage15/policy/binding.mjs#L3) |
+| S05 | [v3 정책 compiler](../../legacy/stage15/policy/core.mjs#L47) |
+| S06 | [공유 runtime 설정과 동의 schema](../../legacy/stage15/shared/runtime.mjs#L3) |
+| S07 | [v3 RefundVault](../../legacy/stage15/contracts/RefundVault.sol#L12) |
+| S08 | [v3 배포·등록·증빙·청구 adapter](../../legacy/stage15/lib/chain.mjs#L10) |
+| S09 | [issuer](../../legacy/stage14/server/issuer.mjs#L1), [supervisor와 로컬 RPC](../../legacy/stage14/server/demo.mjs#L6) |
+| S10 | [독립 recovery 검사와 지급](../../legacy/stage14/recovery/app.js#L8), [브라우저 v3 adapter](../../legacy/stage14/server/static.mjs#L9) |
+| S11 | YBM 두 증명 검증과 연결 (비공개 로컬 자료) |
+| S12 | Amoy 로컬 fork 실행기 (비공개 로컬 자료) |
+| S13 | YBM 진단 목적과 임시 owner 생성 (비공개 로컬 자료) |
+| H01 | AI 제품 3사례 평가 (비공개 로컬 자료), 6회 시점 AI 원장 (비공개 로컬 자료) |
+| H02 | 과거 live (비공개 로컬 자료), cached (비공개 로컬 자료), manual (비공개 로컬 자료), 독립 요청 계측 (비공개 로컬 자료) |
+| H03 | 과거 제품 core 36개 (비공개 로컬 자료), v3 시기 제품 core 36개 (비공개 로컬 자료) |
+| H04 | 격리 회귀 결과 (비공개 로컬 자료), stage6 stdout (비공개 로컬 자료), stage11 결과 (비공개 로컬 자료) |
+| H05 | 최신 저장 v3 runtime 47개 (비공개 로컬 자료), 시험 계획 (비공개 로컬 자료), 계측 변경 해설 (비공개 로컬 자료) |
+| H06 | v3 cached 브라우저 지급 (비공개 로컬 자료), 별도 지급 감사 (비공개 로컬 자료), v3 실행 계획 (비공개 로컬 자료) |
+| H07 | YBM 성공 범위 요약 (비공개 로컬 자료), 연결 검증 결과 (비공개 로컬 자료) |
+| H08 | 로컬 fork 결과 (비공개 로컬 자료), 당시 network state (비공개 로컬 자료) |
+| H09 | 저장된 배포 구현 소스와 exact match (비공개 로컬 자료) — sources의 contracts/Reclaim.sol 115행 및 258–298행 |
+| H10 | 촬영 추가 승인 기록 (비공개 로컬 자료), 촬영 성공 승인 기록 (비공개 로컬 자료), [별도 촬영 호출 코드](../../legacy/stage14/tests/film-ai.mjs#L9) |
 
-이번 산출물은 [REPORT.ko.md](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/REPORT.ko.md), [direct-checks.json](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/direct-checks.json), [evidence-index.json](/Users/ohgyuwon/Documents/ChatGPT/블록체인/output/clear-prd-audit-2026-10-10/evidence-index.json)이다. 다음 작업은 위 제품 결정표를 확정해 PRD로 만드는 단계이며, 전체 통합 개발 착수는 이번 범위에 포함하지 않았다.
+이번 산출물은 [REPORT.ko.md](AUDIT.ko.md), direct-checks.json (비공개 로컬 자료), evidence-index.json (비공개 로컬 자료)이다. 다음 작업은 위 제품 결정표를 확정해 PRD로 만드는 단계이며, 전체 통합 개발 착수는 이번 범위에 포함하지 않았다.
