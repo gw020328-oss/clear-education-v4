@@ -1,0 +1,112 @@
+{
+  "stage": "W02",
+  "checkedAt": "2026-10-10T12:23:01.680504+09:00",
+  "reviewStatus": "DESIGN_REVIEW_COMPLETE_CONDITIONAL_CANDIDATE",
+  "routeCandidate": "DIRECT_ATTESTOR_SHARED_CLIENT",
+  "report": "V4_ROUTE_DESIGN.ko.md",
+  "implementationStatus": "NOT_STARTED_THIS_REVIEW",
+  "mayGenerateRealProof": false,
+  "paymentAllowed": false,
+  "decisions": {
+    "manualBuilderRequired": false,
+    "credentialsStayOnParticipantDevice": true,
+    "ephemeralOwnerPreboundByRecipientWallet": true,
+    "sourcePolicyBundleInsteadOfConsoleProviderId": true,
+    "routeDiscriminatorRequired": true,
+    "noFabricatedReclaimSessionId": true,
+    "applicationScopedAttestorClient": true,
+    "existingTeeRequirementRetained": true,
+    "historicalProofCountsAsFreshV4Proof": false
+  },
+  "unresolved": [
+    "TEE_GENERATION_AND_VERIFIER_COMPATIBILITY",
+    "CLIENT_PACKAGING_AND_SUPPORTED_OS",
+    "VOLATILE_PROFILE_AND_RAW_STORAGE_BOUNDARY",
+    "MINIMAL_SOURCE_POLICY_AND_MULTI_EXAM_EXTRACTION",
+    "FINAL_RUNTIME_PINNING"
+  ],
+  "nextStep": {
+    "id": "W02_A",
+    "task": "Public and synthetic direct-route compatibility spike; no user credentials",
+    "modelRecommendation": "GPT-6 Astra",
+    "reasoningRecommendation": "high"
+  },
+  "loginGate": [
+    "Required TEE path established without lowering guarantees",
+    "Owner and recipient binding checked with synthetic data",
+    "Application scoped connection and collector tested",
+    "Volatile browser profile, capture filters, staging, logs and cleanup checked"
+  ],
+  "testsExecutedThisReview": [],
+  "preservationCheck": "verify:workspace PASS; selected frozen source references 191; not a fresh full experiment-tree forensic comparison",
+  "pastOfflineTests": {
+    "pass": 36,
+    "rerunThisReview": false
+  },
+  "privateProofsRead": false,
+  "originalScriptsExecuted": false,
+  "productCodeChanged": false,
+  "sources": [
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-sticky-attestor-2026-10-09/success-summary-2026-10-09.json",
+      "sha256": "e420cc10162ca511a0da38ed3a7bca3b8cfe38569c9689fde72880831c111f07",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-score-success-summary-2026-10-09.json",
+      "sha256": "ebad8ef7b3aa8dd478868f441ef5cc268fba428f81c987cc14a65e1a9c87adf3",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/identity-route.mjs",
+      "sha256": "76ffc7929aa70821023722e423729bacc2b61aec1541c6b8ddc6da9cfa338255",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/prove-linked.mjs",
+      "sha256": "05e576dace82e5c2ddc67678e9e54079e3c63e714cdb039d756f389c0adc5dc2",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/verify-linked.mjs",
+      "sha256": "f9c1cabe95ebf6f444bf3592c0ef4d8ebeb2536b29d66e3ac5ac7ad3939b1dd4",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-toeic-reclaim-2026-10-08/node_modules/@reclaimprotocol/attestor-core/lib/types/claims.d.ts",
+      "sha256": "827c208a443261ed3fdb6da28782c9d41c567be138d8c9400f8f0b6722c7e68e",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-toeic-reclaim-2026-10-08/node_modules/@reclaimprotocol/attestor-core/lib/proto/api.d.ts",
+      "sha256": "e252c0b4414cbbe44d3d3279db66e2eb54c503f5ae2e8919a674fa8694a459e0",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-toeic-reclaim-2026-10-08/node_modules/@reclaimprotocol/agent/lib/cdp/capture.js",
+      "sha256": "40d362defa14c630b747e4b503ae5f70f094e84e3190837692169617cd0514b1",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/node_modules/@reclaimprotocol/js-sdk/dist/index.js",
+      "sha256": "acdc720bd4fafd417e34a4829a20a5a278b6c68e29d172eb9a6a097c8fa4b815",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/node_modules/@reclaimprotocol/js-sdk/dist/index.d.ts",
+      "sha256": "2174ce506a8ac20f0fbeddbe465094a41a562dedef5e6d10e02d16315eb49598",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    },
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/offline-adapter.mjs",
+      "sha256": "43e5fccd0b8743fb6afe020193bdfa0a508737e55930754a7ad26dfa58037c4f",
+      "kind": "read_only_source_or_nonpersonal_summary"
+    }
+  ],
+  "webSources": [
+    "https://github.com/reclaimprotocol/attestor-core/blob/main/docs/claim-creation.md",
+    "https://docs.reclaimprotocol.org/manual/js-sdk/usage",
+    "https://docs.reclaimprotocol.org/manual/inapp-sdks/advanced/verification-options",
+    "https://developers.openai.com/api/docs/guides/model-selection"
+  ]
+}

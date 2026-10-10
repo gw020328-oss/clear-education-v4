@@ -63,10 +63,30 @@
   "credentialsPolicy": "YBM login only in the reviewed client flow; CLEAR must not collect password/cookies",
   "mayGenerateRealProof": false,
   "routeReview": {
-    "status": "PENDING",
+    "status": "DESIGN_REVIEW_COMPLETE_IMPLEMENTATION_PENDING",
     "historicalAlternative": "DIRECT_HTTP_POLICY_WITH_OFFICIAL_ATTESTOR_SHARED_CLIENT",
     "scopeOfExistingFields": "Current hosted SDK candidate requirements; direct route needs explicit mapping for provider identity, version, context session, owner, TEE and result transport before adoption",
     "registeredConsoleProviderRequiredForHistoricalRoute": false,
-    "liveGenerationStillDisabled": true
+    "liveGenerationStillDisabled": true,
+    "report": "V4_ROUTE_DESIGN.ko.md"
+  },
+  "directRouteCandidate": {
+    "enabled": false,
+    "route": "DIRECT_ATTESTOR",
+    "claimProvider": "http",
+    "consoleProviderId": null,
+    "sourcePolicyBundleHash": null,
+    "contextRequired": [
+      "clearSchemaVersion",
+      "clearRoute",
+      "clearBindingHash",
+      "clearSourceRole",
+      "clearSourceRequestId",
+      "clearSourcePolicyHash"
+    ],
+    "ownerBinding": "PRE_SIGNED_RECIPIENT_BINDING_TO_EPHEMERAL_COLLECTOR_OWNER",
+    "requiredTeeEvidence": "EXISTING_VERIFIER_APP_TEE_REQUIREMENT_RETAINED_COMPATIBILITY_UNCONFIRMED",
+    "resultTransport": "REVIEWED_DIRECT_SUBMISSION_NO_DEFAULT_RELAY",
+    "sourcePolicyAndRuntimeFinalized": false
   }
 }

@@ -16,8 +16,8 @@
   "gates": [
     {
       "id": "PROVIDER",
-      "status": "ROUTE_REVIEW_PENDING",
-      "reason": "Historical direct attestor HTTP policy route succeeded without console provider registration; review v4 policy/runtime identity and integration. Manual builder DNS failure is route-specific."
+      "status": "DESIGN_REVIEWED_IMPLEMENTATION_PENDING",
+      "reason": "Direct same-client route selected as candidate; source policy bundle, schema and runtime require synthetic and live validation; console builder is not mandatory"
     },
     {
       "id": "APP",
@@ -26,13 +26,13 @@
     },
     {
       "id": "OWNER_BINDING",
-      "status": "UNCONFIRMED",
-      "reason": "Hosted SDK pre-binding unconfirmed; historical direct route supplies ownerPrivateKey but used an ephemeral diagnostic owner, not the recipient wallet. v4 binding requires review."
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "reason": "Recipient EIP-712 signature prebinds a collector-local ephemeral owner public key; direct route checks owner address and signed context; no recipient private key shared"
     },
     {
       "id": "TEE",
-      "status": "UNTESTED",
-      "reason": "Historical official attestor signature success does not establish v4 TEE verification. Preserve requirement pending route-specific design review."
+      "status": "COMPATIBILITY_GAP",
+      "reason": "SDK 5.8.2 distinguishes proof verifier-app TEE from witness attestor TEE. Historical core 5.1.4 wrapper provides neither verified evidence path; requirement retained pending public/synthetic compatibility work"
     },
     {
       "id": "STORAGE_CALLBACK",
@@ -67,5 +67,11 @@
     "v4Integrated": false,
     "manualBuilderRequired": false
   },
-  "nextAction": "REVIEW_HISTORICAL_SAME_CLIENT_ATTESTOR_ROUTE_FOR_V4"
+  "nextAction": "W02_A_PUBLIC_AND_SYNTHETIC_DIRECT_ROUTE_COMPATIBILITY_SPIKE",
+  "routeDesignReview": {
+    "status": "COMPLETE_CONDITIONAL_CANDIDATE",
+    "report": "V4_ROUTE_DESIGN.ko.md",
+    "evidence": "v4-route-review.json",
+    "liveEnabled": false
+  }
 }
