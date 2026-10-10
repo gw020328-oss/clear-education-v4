@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-10-10T02:52:14.883031+00:00",
+  "roots": {
+    "original": {
+      "path": "/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype",
+      "entryCount": 26857,
+      "metadataSha256": "3bc0ce33bcc8fdce8c5452f4047180fa23f81cb4b3fdd958dbc81954d10b8d00"
+    },
+    "experiments": {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments",
+      "entryCount": 92550,
+      "metadataSha256": "3be524f1a7eed010bfd26738564f7c7b51a9b63e806cc5a3fc1f7e4b9c4a713e"
+    }
+  },
+  "contentsRead": false
+}

@@ -1,0 +1,84 @@
+{
+  "package": "@reclaimprotocol/js-sdk",
+  "version": "5.8.2",
+  "integrity": "sha512-2U4hutn2jJQkjaaTiS3o/UT2vjbFxECBA+AUrIVBIUYnJ3LCh775zBnspt1hJ+aMa4EiKyTjxl5sSsC2gCARrA==",
+  "resolved": "https://registry.npmjs.org/@reclaimprotocol/js-sdk/-/js-sdk-5.8.2.tgz",
+  "entrySha256": "acdc720bd4fafd417e34a4829a20a5a278b6c68e29d172eb9a6a097c8fa4b815",
+  "typescriptSourceMapFindings": [
+    {
+      "source": "../src/Reclaim.ts",
+      "sha256": "e2911b1e20d05d1c22fbdab83409255fc29d6a1496a0c406700711fc9aac127e",
+      "findings": {
+        "static async init(": [
+          350
+        ],
+        "acceptTeeAttestation: options?.acceptTeeAttestation ?? true": [
+          362,
+          457
+        ],
+        "setJsonContext(context": [
+          859
+        ],
+        "setContext(address": [
+          892,
+          913
+        ],
+        "config.hasNoPii !== true": [
+          149
+        ],
+        "runTeeVerification(proofs": [
+          167
+        ],
+        "return this.appCallbackUrl ||": [
+          961
+        ],
+        "getProviderVersion():": [
+          1859
+        ],
+        "ownerPublicKey": []
+      }
+    },
+    {
+      "source": "../src/witness.ts",
+      "sha256": "969bcd57b30322101229d8388fe483cb31998068ecae1cf9a30115908e576f97",
+      "findings": {
+        "data.owner.toLowerCase()": [
+          9
+        ],
+        "const filteredParams:": [
+          136,
+          151
+        ],
+        "url: params?.url": [
+          137,
+          152
+        ],
+        "method: params?.method": [
+          139,
+          153
+        ]
+      }
+    },
+    {
+      "source": "../src/utils/proofUtils.ts",
+      "sha256": "99a2c55764120a0c62d3ae381cafd2b502f1ea7f82b5ddd49014294971b47bdf",
+      "findings": {
+        "export async function assertVerifiedProof": [
+          104
+        ],
+        ".some(attestor": [
+          115
+        ],
+        "createSignDataForClaim": [
+          3,
+          91
+        ]
+      }
+    }
+  ],
+  "browserExtensionSdkCandidateVersion": "0.5.1",
+  "browserExtensionSdkInstalled": false,
+  "browserProviderValidated": false,
+  "ownerBindingBrowserSupport": "UNCONFIRMED",
+  "actualProofRead": false
+}

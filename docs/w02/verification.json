@@ -1,0 +1,52 @@
+{
+  "stage": "W02",
+  "status": "OFFLINE_PASS_LIVE_BLOCKED",
+  "offlineTests": {
+    "total": 36,
+    "pass": 36,
+    "fail": 0,
+    "network": "global fetch blocked; no network generation path invoked",
+    "signatureImplementation": "Pinned official SDK 5.8.2 and ethers 6.17.0",
+    "claimData": "Artificial self-signed test attestor claims; not YBM or zkTLS evidence",
+    "privateKeys": "Fresh synthetic test wallets in memory only",
+    "scope": "binding, trust/policy checks, pair matching and single-process duplicate handling",
+    "productAcceptanceTests": "NOT_RUN"
+  },
+  "userLogin": "COMPLETE_RECLAIM_CONSOLE_ONLY",
+  "gates": [
+    {
+      "id": "PROVIDER",
+      "status": "BLOCKED",
+      "reason": "No matching public provider found; account has no provider; manual builder session creation failed twice"
+    },
+    {
+      "id": "APP",
+      "status": "NOT_PROVISIONED",
+      "reason": "No application credentials created or read"
+    },
+    {
+      "id": "OWNER_BINDING",
+      "status": "UNCONFIRMED",
+      "reason": "Current SDK request API does not expose a pre-proof ownerPublicKey option; browser behavior must be tested before the design is adopted"
+    },
+    {
+      "id": "TEE",
+      "status": "UNTESTED",
+      "reason": "Real session/hardware attestation requires a provisioned application and reviewed provider"
+    },
+    {
+      "id": "STORAGE_CALLBACK",
+      "status": "NOT_READY",
+      "reason": "No reviewed callback or tmpfs storage boundary; real capture disabled"
+    },
+    {
+      "id": "ACTUAL_YBM",
+      "status": "NOT_RUN",
+      "reason": "User YBM login and new proof generation have not started"
+    }
+  ],
+  "paymentAllowed": false,
+  "publicChainTransactions": false,
+  "externalDeployment": false,
+  "paidAiCalls": false
+}

@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-10T03:03:16.835742+00:00",
+  "roots": {
+    "original": {
+      "entryCount": 26857,
+      "metadataSha256": "3bc0ce33bcc8fdce8c5452f4047180fa23f81cb4b3fdd958dbc81954d10b8d00"
+    },
+    "experiments": {
+      "entryCount": 92550,
+      "metadataSha256": "3be524f1a7eed010bfd26738564f7c7b51a9b63e806cc5a3fc1f7e4b9c4a713e"
+    }
+  },
+  "metadataUnchanged": true,
+  "selectedOriginalAndLegacyContentUnchanged": true,
+  "selectedSourceCount": 191,
+  "privateExperimentContentsRead": false
+}

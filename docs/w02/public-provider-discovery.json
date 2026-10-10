@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-10T02:52:56.643257+00:00",
+  "url": "https://api.reclaimprotocol.org/api/providers/active",
+  "httpStatus": 200,
+  "responseSha256": "d0e91fbaf2328b874c00cc599f5ff1882dc1c945b381c8a58d273d19730da9c8",
+  "recordCount": 20368,
+  "searchScope": "name/title/description word tokens + exact YBM/TOEIC login domain; no substring scan of opaque payloads",
+  "matches": [],
+  "conclusion": "NO_PUBLIC_MATCH_FOUND",
+  "privateOrUnlistedProvidersExcludedFromConclusion": true
+}

@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-10T03:00:53.999801+00:00",
+  "consoleLogin": "USER_COMPLETED",
+  "myApplications": "EMPTY",
+  "myProvidersCount": 0,
+  "manualBuilderUrl": "https://dev.reclaimprotocol.org/provider-builder",
+  "manualBuilderRequires": "Connect Your Mobile App",
+  "manualBuilderResult": "SESSION_GENERATION_FAILED",
+  "observedError": "GenerateSession UNKNOWN: Response closed without headers",
+  "retryCount": 1,
+  "retryResult": "Session Generation Failed — Unable to create session",
+  "scope": "Observed in Codex in-app browser; not proof of a global provider service outage",
+  "applicationCreated": false,
+  "providerCreated": false,
+  "credentialsRead": false,
+  "ybmLoginStarted": false,
+  "newProofGenerated": false
+}

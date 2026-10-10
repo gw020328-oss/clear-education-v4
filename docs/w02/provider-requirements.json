@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 4,
+  "status": "REQUIREMENTS_ONLY_NOT_REGISTERED",
+  "sdkVersion": "5.8.2",
+  "appId": null,
+  "actualProviderId": null,
+  "actualProviderVersion": null,
+  "sourcePolicySetHash": null,
+  "requiredSources": [
+    {
+      "role": "registration",
+      "url": "https://exam.toeic.co.kr/receipt/confirmDetail.php",
+      "method": "POST",
+      "fields": [
+        "exam_type",
+        "exam_date",
+        "registration_number"
+      ],
+      "requestBodyFieldNamesFromHistoricalCode": [
+        "encExamData",
+        "zzxxcc"
+      ],
+      "extractionRules": "UNVERIFIED_CURRENT_PAGE"
+    },
+    {
+      "role": "score",
+      "url": "https://exam.toeic.co.kr/result/scoreList.php",
+      "method": "GET",
+      "fields": [
+        "exam_type",
+        "exam_date",
+        "registration_number",
+        "total_score"
+      ],
+      "extractionRules": "UNVERIFIED_CURRENT_PAGE"
+    }
+  ],
+  "joinFields": [
+    "exam_type",
+    "normalized_exam_date",
+    "registration_number"
+  ],
+  "notRequiredToExtract": [
+    "candidate_name",
+    "birth_date"
+  ],
+  "contextRequired": [
+    "clearBindingHash",
+    "clearSourceRole",
+    "reclaimSessionId"
+  ],
+  "browserOwnerBinding": "UNCONFIRMED_DO_NOT_REMOVE_REQUIREMENT",
+  "teeAttestation": "REQUIRED_FOR_LIVE_CANDIDATE_NOT_TESTED",
+  "callbackTransport": "Explicit owned HTTPS callback; no SDK default relay",
+  "sourcePolicyRequirements": [
+    "exact provider id and version from created session",
+    "required request and extraction hashes",
+    "URL and explicit method checks",
+    "authentication and header-policy review beyond SDK hash",
+    "no optional omission of the mandatory source fields",
+    "no AI-generated policy patches during a session"
+  ],
+  "credentialsPolicy": "YBM login only in the reviewed client flow; CLEAR must not collect password/cookies",
+  "mayGenerateRealProof": false
+}

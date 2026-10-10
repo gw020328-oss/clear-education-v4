@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-10T03:00:53.999801+00:00",
+  "url": "https://api.reclaimprotocol.org/api/attestors",
+  "httpStatus": 200,
+  "responseSha256": "2d93ac5fede93d5aef2b120715b097f1a5feced0cd571ffc02764d7bc0fa87fa",
+  "attestorCount": 3,
+  "addresses": [
+    "0x1be31a94361a391bbafb2a4ccd704f57dc04d4bb",
+    "0x244897572368eadf65bfbc5aec98d8e5443a9072",
+    "0x15ea90114bffea9bb996e8775bf6ca0a338e97e5"
+  ],
+  "usage": "Public discovery only; not activated as a live verification trust set",
+  "actualProofSent": false
+}
