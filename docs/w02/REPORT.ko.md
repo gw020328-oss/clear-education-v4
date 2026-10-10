@@ -4,6 +4,8 @@
 
 **오프라인 기술 시험 36개는 통과했고, 실제 브라우저 YBM 연결은 미완료다.** 고정 SDK를 별도 spike에 설치해 서명·문맥·두 시험 기록의 연결을 확인했다. 사용자가 Reclaim 개발자 콘솔 로그인을 완료했지만, 등록된 앱과 개인 provider는 없었다. 수동 provider 작성 도구가 세션 생성에 실패해 실제 연결 확인을 진행하지 못했다.
 
+**후속 진단:** 로그인된 Chrome에서도 같은 오류가 재현됐다. 배포된 수동 builder의 세션 서버 `dev-tool.reclaimprotocol.org`는 Google·Cloudflare DNS 모두에서 A·AAAA 응답이 없어 주소 해석 단계에서 막혔다. [원인과 해결 경로](SESSION_DIAGNOSIS.ko.md)에 기록했다. 현재 세션 오류 자체는 해결되지 않았으며 대체 AI builder는 입력 화면까지만 확인했다.
+
 ## 확인한 연결 경로
 
 원본의 `verify-linked.mjs`와 `prove-linked.mjs` 코드를 읽었다. 과거 private 증명·정책·쿠키·키 파일과 실행 결과는 읽거나 재실행하지 않았다. 기존 생성기는 개발자가 포착한 요청·쿠키, 임시 owner 키, 진단 context를 사용한다. 현재 신청의 사용자 브라우저 경로로 바로 재사용할 수 없다.

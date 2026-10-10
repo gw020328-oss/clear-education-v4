@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-10T12:09:06.057670+09:00",
+  "frontendAssetUrl": "https://dev.reclaimprotocol.org/static/js/main.05e68e77.js",
+  "assetSha256": "64b5b06c11bfa392edb80ea54a8e573781c27a97be70eeb7a0aa7d5cf9da2f2d",
+  "manual": {
+    "transport": "gRPC-Web",
+    "service": "channel.SessionService",
+    "method": "GenerateSession",
+    "backendUrl": "https://dev-tool.reclaimprotocol.org",
+    "metadataNames": [
+      "Authorization",
+      "client-type"
+    ],
+    "credentialsRead": false
+  },
+  "browserComparison": {
+    "codexInApp": {
+      "authenticated": true,
+      "result": "Response closed without headers",
+      "retryThisTurn": 1
+    },
+    "chrome": {
+      "authenticated": true,
+      "loginCompletedByUser": true,
+      "result": "Response closed without headers",
+      "providerCreationAttempted": false
+    }
+  },
+  "aiAlternative": {
+    "url": "https://dev.reclaimprotocol.org/provider-builder/ai",
+    "inputScreenReached": true,
+    "firstNext": "local URL state only",
+    "secondNext": "mount triggers provider registration request",
+    "registrationEndpointFromPublicCode": "https://api.reclaimprotocol.org/api/providers/register/ai-manual-auth",
+    "requestFieldNames": [
+      "loginUrl",
+      "name",
+      "logoUrl",
+      "metadata.prompt"
+    ],
+    "requestSubmitted": false,
+    "costVerified": false,
+    "authenticationDataFlowVerified": false
+  },
+  "sessionCause": "Configured manual backend has no A/AAAA answers on two public DNS resolvers; local system resolution also fails",
+  "remainingUncertainty": "Why Reclaim removed/omitted the address records, and whether a supported replacement endpoint exists",
+  "ybmLoginStarted": false,
+  "newProofGenerated": false,
+  "dnsSettingsChanged": false,
+  "cookiesCopied": false
+}

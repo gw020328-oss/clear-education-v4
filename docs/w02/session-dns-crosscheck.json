@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-10-10T12:07:05.163174+09:00",
+  "host": "dev-tool.reclaimprotocol.org",
+  "resolvers": [
+    {
+      "resolver": "Google",
+      "url": "https://dns.google/resolve?name=dev-tool.reclaimprotocol.org&type=A",
+      "dnsStatus": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "reclaimprotocol.org.",
+          "type": 6,
+          "TTL": 900,
+          "data": "ns-1699.awsdns-20.co.uk. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400"
+        }
+      ],
+      "recordType": "A"
+    },
+    {
+      "resolver": "Cloudflare",
+      "url": "https://cloudflare-dns.com/dns-query?name=dev-tool.reclaimprotocol.org&type=A",
+      "dnsStatus": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "reclaimprotocol.org",
+          "type": 6,
+          "TTL": 900,
+          "data": "ns-1699.awsdns-20.co.uk. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400"
+        }
+      ],
+      "recordType": "A"
+    },
+    {
+      "resolver": "Google",
+      "recordType": "AAAA",
+      "url": "https://dns.google/resolve?name=dev-tool.reclaimprotocol.org&type=AAAA",
+      "dnsStatus": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "reclaimprotocol.org.",
+          "type": 6,
+          "TTL": 900,
+          "data": "ns-1699.awsdns-20.co.uk. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400"
+        }
+      ]
+    },
+    {
+      "resolver": "Cloudflare",
+      "recordType": "AAAA",
+      "url": "https://cloudflare-dns.com/dns-query?name=dev-tool.reclaimprotocol.org&type=AAAA",
+      "dnsStatus": 0,
+      "answer": [],
+      "authority": [
+        {
+          "name": "reclaimprotocol.org",
+          "type": 6,
+          "TTL": 900,
+          "data": "ns-1699.awsdns-20.co.uk. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400"
+        }
+      ]
+    }
+  ],
+  "control": {
+    "host": "devapi.reclaimprotocol.org",
+    "dnsStatus": 0,
+    "hasAnswer": true
+  },
+  "systemDnsChanged": false,
+  "conclusion": "NO_A_OR_AAAA_ANSWERS_FROM_BOTH_RESOLVERS",
+  "notNxDomain": true
+}

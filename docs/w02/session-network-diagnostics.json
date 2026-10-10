@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-10T12:06:41.460274+09:00",
+  "host": "dev-tool.reclaimprotocol.org",
+  "endpoint": "https://dev-tool.reclaimprotocol.org/channel.SessionService/GenerateSession",
+  "requestsCarryCredentials": false,
+  "sessionGenerationInvoked": false,
+  "dnsError": "[Errno 8] nodename nor servname provided, or not known",
+  "tls": {
+    "valid": null,
+    "error": "[Errno 8] nodename nor servname provided, or not known",
+    "status": "NOT_REACHED_DNS_FAILURE"
+  },
+  "corsPreflight": {
+    "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+    "status": "NOT_REACHED_DNS_FAILURE"
+  }
+}

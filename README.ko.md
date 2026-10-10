@@ -4,6 +4,8 @@ W01 환경 준비용 저장소다. 기존 프로젝트와 실험 원본은 원�
 
 2026-10-10 W02 업데이트: [ProofAdapter 기술 확인](docs/w02/REPORT.ko.md)의 오프라인 시험 36개 통과. 실제 YBM 연결은 provider 작성 세션 오류와 미확인 브라우저 binding 때문에 미완료다. 코드는 `spikes/w02-proof-adapter/`에 격리했다. Reclaim 콘솔 로그인은 사용자가 완료했으며 YBM 로그인·새 증명 생성은 아직 하지 않았다.
 
+W02 후속: Chrome에서도 세션 오류 재현. 수동 builder의 서버 DNS 주소 부재를 확인했다. [진단 및 대체 경로](docs/w02/SESSION_DIAGNOSIS.ko.md)를 참고한다. 두 브라우저 로그인은 완료됐다.
+
 새 기능은 `src/`, `contracts/`, `tests/`에서 시작한다. W01에서는 기능을 구현하지 않았고 기존 재현 실행기도 실행하지 않았다.
 
 ## 실행

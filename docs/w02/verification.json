@@ -17,7 +17,7 @@
     {
       "id": "PROVIDER",
       "status": "BLOCKED",
-      "reason": "No matching public provider found; account has no provider; manual builder session creation failed twice"
+      "reason": "No usable YBM provider; manual builder fails in both browsers because configured dev-tool host does not resolve; alternative AI builder input screen reachable but not run"
     },
     {
       "id": "APP",
@@ -48,5 +48,12 @@
   "paymentAllowed": false,
   "publicChainTransactions": false,
   "externalDeployment": false,
-  "paidAiCalls": false
+  "paidAiCalls": false,
+  "sessionDiagnosis": {
+    "status": "CAUSE_IDENTIFIED_VENDOR_ENDPOINT_UNRESOLVABLE",
+    "report": "SESSION_DIAGNOSIS.ko.md",
+    "chromeLogin": "USER_COMPLETED",
+    "manualBuilderResolved": false,
+    "alternativeBuilder": "INPUT_SCREEN_ONLY_NOT_EXECUTED"
+  }
 }
