@@ -1,0 +1,27 @@
+{
+  "originalCommit": "9684b354c2aff84d25627112133839ff5c729454",
+  "normalizationCommit": "375051e00f8f45a8266a6158024c84d3898b11c9",
+  "reason": "Public reference links were normalized; original W01 inputs and hashes remain immutable.",
+  "files": [
+    {
+      "file": "PRD.ko.md",
+      "originalSha256": "4ebd73a210662d3cc4aae03329494fcb4b02d14c205a51cf45d19baf326186f9",
+      "sha256": "754d8f8da40115ce9ebac2ea9b9e1ca8877ca19a8bb4ac698d8d78b777149c11"
+    },
+    {
+      "file": "DESIGN.ko.md",
+      "originalSha256": "ea1eb5ca7ab2a4dcb0511dffaaf690d9015a0eaa6e304302938089bb552ceca8",
+      "sha256": "ef39c93ce0fb031d68f69d80d3aeedc5c343d0632938aa956a8419c4ebc2e202"
+    },
+    {
+      "file": "IMPLEMENTATION_PLAN.ko.md",
+      "originalSha256": "cecdff9388680e233da0681bdd5959108d1554ce4918172fa99139e13d2dacb3",
+      "sha256": "8dc178aca3ab7c84993fa8321ea125b363daf998181b1c17cc88cd800defc770"
+    },
+    {
+      "file": "AUDIT.ko.md",
+      "originalSha256": "5905b635107c28ce6ccc19fbbe764da803118098d6ed6a609ddf5e9658685213",
+      "sha256": "b2d3d28c53ae133a46ac4cd7262341f8514957717470fb4a36c1a1d1b5979761"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { processIdentity, sameProcess, legacyWorker } from './process-identity.mjs';
 const exec = promisify(execFile);
 export const TTL = 86_400_000;
 export const requireValue = (ok, code) => { if (!ok) throw new Error(code); };
@@ -51,9 +52,17 @@ export async function createSession(root, now = Date.now(), ownerPid = null) {
   await secureDirectory(root);
   const path = join(root, `session-${randomUUID()}`);
   await fs.mkdir(path, { mode: 0o700 });
-  for(const p of ['profile', 'cache', 'tmp', 'crash', 'downloads']) await fs.mkdir(join(path,p), { mode:0o700 });
-  await writePrivate(join(path,'session.json'), JSON.stringify({ version:4, createdAt:now, expiresAt:now+TTL, ownerPid }));
-  return { path, createdAt:now, expiresAt:now+TTL };
+  try {
+    for(const p of ['profile', 'cache', 'tmp', 'crash', 'downloads']) await fs.mkdir(join(path,p), { mode:0o700 });
+    const ownerIdentity = ownerPid === null ? null : await processIdentity(ownerPid);
+    requireValue(ownerPid === null || ownerIdentity, 'SESSION_OWNER_NOT_FOUND');
+    await writePrivate(join(path,'session.json'), JSON.stringify({ version:4, createdAt:now, expiresAt:now+TTL, ownerPid, ownerIdentity }));
+    return { path, createdAt:now, expiresAt:now+TTL };
+  } catch(error) {
+    // No browser can exist before initialization returns. Roll back partial I/O.
+    await removeSession(root,path);
+    throw error;
+  }
 }
 export async function removeSession(root, path) {
   requireValue(dirname(resolve(path)) === resolve(root) && sessionName.test(path.split('/').at(-1)), 'INVALID_SESSION_PATH');
@@ -83,9 +92,15 @@ export async function clearAbandoned(root, stopBrowser) {
     }
     if(record.ownerPid !== null && record.ownerPid !== undefined) {
       requireValue(Number.isSafeInteger(record.ownerPid)&&record.ownerPid>1,'INVALID_SESSION_OWNER');
-      let alive=true;
-      try { process.kill(record.ownerPid,0); } catch(e) { if(e.code==='ESRCH')alive=false;else throw e; }
-      requireValue(!alive,'ACTIVE_SESSION_OWNER');
+      const current = await processIdentity(record.ownerPid);
+      if (record.ownerIdentity) {
+        requireValue(typeof record.ownerIdentity.start === 'string' && record.ownerIdentity.start.length>0 && typeof record.ownerIdentity.boot === 'string' && record.ownerIdentity.boot.length>0 && typeof record.ownerIdentity.command === 'string' && Number.isInteger(record.ownerIdentity.uid), 'INVALID_SESSION_OWNER');
+        requireValue(!sameProcess(record.ownerIdentity,current),'ACTIVE_SESSION_OWNER');
+      } else {
+        // Old PID-only records cannot identify a generation. Block a possible
+        // collector, but never signal an unrelated process that reused its PID.
+        requireValue(!legacyWorker(current),'ACTIVE_SESSION_OWNER');
+      }
     }
     await stopBrowser(path); // Must terminate verified owned browser before deleting an active profile.
     await removeSession(root,path); removed++;

@@ -43,3 +43,10 @@
 - PR 생성 후 attach_artifact로 연결한다. 사용자 승인 없이 PR 병합·브랜치 삭제·팀원 초대/권한 변경·검토 우회를 하지 않는다. 이번 승인된 초대는 puppy57201-stack Write 1건이다.
 - CI는 .github/workflows/public-synthetic.yml의 공개/합성 경로만 실행한다. 실제 로그인·증명·유료 API·공개 체인 지급·민감 키를 넣지 않는다. 실제 CI 성공 및 검사 이름 확인 뒤에만 필수 보호 검사로 등록한다.
 - 푸시 전 tools/check-public-content.mjs로 도달 가능한 이력을 검사하고 값 대신 경로/규칙만 보고한다. 자동 검사만으로 민감정보가 없다고 단정하지 않는다. 협업 규칙은 CONTRIBUTING.md와 docs/github-collaboration.md를 따른다.
+
+## PR #1 검토 후 수정
+
+- 초기화 중 중단은 진행 중 I/O가 끝난 뒤 정리하며, Chrome 시작 실패는 메모리에 잡은 자식 프로세스 그룹의 종료를 확인한 뒤 삭제한다. 초기화/Chrome 기록 저장 중 종료 신호와 오류 재현 시험을 유지한다.
+- 세션 소유자는 PID와 시작 시각·부팅 식별자·UID·명령을 함께 비교한다. 과거 PID-only 기록은 실제 worker 가능성이 있으면 보수적으로 차단하고, 재사용된 무관한 프로세스를 종료하지 않는다.
+- 패키지는 공식 고정 Node 아카이브를 기존 config SHA-256으로 검증하고 실행 파일·라이선스를 함께 사용한다. 새 복제본 재현 시험은 Mac에서 실행하며 배포 업로드는 하지 않는다.
+- 위 과거 W01 문서 지문 실패 메모는 수정 전 이력이다. 원본 reference-inputs.json은 보존하고 별도 공개용 manifest와 기준 Git 커밋으로 검증한다. verify:workspace는 이식 가능한 CI 검사, verify:workspace:local은 로컬 권한·준비 경로를 추가 검사한다. 전체 Git 이력이 필요하다.

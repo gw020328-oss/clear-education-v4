@@ -66,3 +66,22 @@ test('restart cleans interrupted initialization with no browser record',async t=
  const b=await createSession(root);await fs.writeFile(join(b.path,'session.json'),'{');
  assert.equal(await clearAbandoned(root,async()=>{}),1);
 });
+
+test('reused PID with a different process start or boot never blocks stale cleanup',async t=>{
+ const {root}=await setup(t);
+ for(const key of ['start','boot']){
+  const s=await createSession(root,Date.now()-2*TTL,process.pid);
+  const path=join(s.path,'session.json'),record=JSON.parse(await fs.readFile(path,'utf8'));record.ownerIdentity[key]+='-old';
+  await fs.writeFile(path,JSON.stringify(record));assert.equal(await clearAbandoned(root,async()=>{}),1);process.kill(process.pid,0);
+ }
+});
+test('legacy PID-only record for unrelated process is cleaned without signalling it',async t=>{
+ const {root}=await setup(t);const s=await createSession(root,Date.now()-2*TTL,process.pid);
+ const path=join(s.path,'session.json'),record=JSON.parse(await fs.readFile(path,'utf8'));delete record.ownerIdentity;
+ await fs.writeFile(path,JSON.stringify(record));assert.equal(await clearAbandoned(root,async()=>{}),1);process.kill(process.pid,0);
+});
+test('legacy worker identification remains conservative',async()=>{
+ const {legacyWorker}=await import('../../src/mac-collector/process-identity.mjs');
+ assert.equal(legacyWorker({command:'/node /some/package/src/worker.mjs --test-hold'}),true);
+ assert.equal(legacyWorker({command:'/bin/sleep 100'}),false);
+});

@@ -6,6 +6,7 @@ import { resolve, relative, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const local = process.argv.includes('--local');
 const readJson = async (path) => JSON.parse(await readFile(resolve(root, path), 'utf8'));
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const safePath = (path) => {
@@ -32,7 +33,7 @@ for (const file of copy.sourceFiles) {
   const path = safePath(`legacy/${file.path}`);
   const info = await lstat(path);
   assert.ok(info.isFile() && !info.isSymbolicLink());
-  assert.equal(info.mode & 0o222, 0, 'Legacy reference files must be read-only');
+  if(local)assert.equal(info.mode & 0o222, 0, 'Legacy reference files must be read-only');
   assert.equal(info.size, file.bytes);
   assert.equal(sha256(await readFile(path)), file.sha256, `Legacy changed: ${file.path}`);
   copiedPaths.add(`legacy/${file.path}`);
@@ -48,8 +49,26 @@ async function walk(path) {
   return found;
 }
 assert.deepEqual(new Set(await walk(resolve(root, 'legacy'))), copiedPaths);
-for (const file of await readJson('docs/w01/reference-inputs.json')) {
-  assert.equal(sha256(await readFile(resolve(root, 'docs/reference', file.file))), file.sha256);
+const originalCommit='9684b354c2aff84d25627112133839ff5c729454';
+const gitBlob=(revision,path)=>{
+  try {return execFileSync('git',['show',`${revision}:${path}`],{cwd:root,stdio:['ignore','pipe','pipe']});}
+  catch {throw new Error('REFERENCE_HISTORY_REQUIRED: fetch full Git history');}
+};
+const originalBytes=await readFile(resolve(root,'docs/w01/reference-inputs.json'));
+assert.deepEqual(originalBytes,gitBlob(originalCommit,'docs/w01/reference-inputs.json'),'W01 original manifest changed');
+const originals=JSON.parse(originalBytes);
+const published=await readJson('docs/reference/published-fingerprints.json');
+assert.equal(published.originalCommit,originalCommit);
+assert.equal(published.normalizationCommit,'375051e00f8f45a8266a6158024c84d3898b11c9');
+assert.deepEqual(published.files.map(f=>f.file).sort(),originals.map(f=>f.file).sort());
+for(const file of originals) {
+  const path=`docs/reference/${file.file}`;
+  assert.equal(sha256(gitBlob(originalCommit,path)),file.sha256,`Original provenance changed: ${file.file}`);
+  const current=published.files.find(f=>f.file===file.file);
+  assert.equal(current.originalSha256,file.sha256);
+  assert.equal(sha256(gitBlob(published.normalizationCommit,path)),current.sha256,`Published baseline changed: ${file.file}`);
+  const info=await lstat(resolve(root,path));assert.ok(info.isFile()&&!info.isSymbolicLink());
+  assert.equal(sha256(await readFile(resolve(root,path))),current.sha256,`Published reference changed: ${file.file}`);
 }
 
 const expected = new Map([
@@ -80,7 +99,7 @@ for (const file of files) {
     assert.ok(path.startsWith(`${prefix}/${config.environmentId}/`) || path === `${prefix}/${config.environmentId}`);
     assert.ok(!unique.paths.has(absolute));
     unique.paths.add(absolute);
-    assert.ok((await lstat(absolute)).isDirectory());
+    if(local)assert.ok((await lstat(absolute)).isDirectory());
     assert.equal(execFileSync('git', ['check-ignore', path], { cwd: root, encoding: 'utf8' }).trim(), path);
   }
   assert.equal(config.mayStartProductServices, false);
@@ -101,7 +120,7 @@ for (const file of files) {
   assert.deepEqual(manifest.recoveryUrls, []);
 }
 assert.equal(execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: root, encoding: 'utf8' }).trim(), root.replace(/\/$/, ''));
-assert.equal(execFileSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8' }).trim(), 'codex/clear-education-v4');
+// Content integrity is independent of branch name and detached CI checkouts.
 for (const path of ['.env', '.env.local', 'issuer.key', '.toolchain/cache', 'node_modules/package', 'private/secret', 'data/proof', 'var/raw-proof', 'artifacts/proof']) {
   assert.equal(execFileSync('git', ['check-ignore', path], { cwd: root, encoding: 'utf8' }).trim(), path);
 }
@@ -109,4 +128,4 @@ for (const path of execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf
   assert.ok(!/^(?:private|data|var|node_modules|\.toolchain|artifacts|tmp|\.runtime)\//.test(path), `Private/runtime file tracked: ${path}`);
   assert.ok(!/(?:^|\/)\.env(?:\.|$)|\.(?:key|pem|p12)$/.test(path), `Secret file tracked: ${path}`);
 }
-console.log(JSON.stringify({ result: 'PASS', schemaVersion: 4, sourceReferenceFiles: copy.sourceFiles.length, profiles: expected.size, runtime: process.versions.node, dependencyGraphPreserved: true, pendingManifestsNotClaimable: true }));
+console.log(JSON.stringify({ result: 'PASS', mode: local?'LOCAL_PREFLIGHT':'PORTABLE_CONTENT', originalFingerprintsPreserved: true, publishedReferences: originals.length, schemaVersion: 4, sourceReferenceFiles: copy.sourceFiles.length, profiles: expected.size, runtime: process.versions.node, dependencyGraphPreserved: true, pendingManifestsNotClaimable: true }));
