@@ -35,3 +35,11 @@
 - 최신 정책은 config/mac-managed-storage.json 및 docs/current/MAC_MVP.ko.md를 따른다. docs/reference와 기존 config/environments는 W01 설계 스냅샷이며 새 live release 지문이 아니다.
 
 - Mac 저장 경계 구현: docs/w02/MAC_STORAGE_REPORT.ko.md와 mac-storage-verification.json 참조. 신규 17개+보정 후 재시작 반복 10회 및 압축 해제 패키지 실행 통과. src/mac-collector는 현재 합성 localhost 시험만 허용한다. 공식 동일 client 수집·실제 adapter·지급은 미연결이다. 사용자 실제 로그인은 연결과 합성 리허설 후 안내한다. 새 앱 경로만 Time Machine에서 제외했고 원본/실험 메타데이터와 원본/legacy 191개 지문은 보존했다.
+
+## GitHub 협업 규칙
+
+- 이후 새 작업은 최신 origin/develop에서 codex/작업명 브랜치를 만든다. 현재 전환 작업은 codex/clear-education-v4를 보존한다. 의미 있는 단위로 검사·커밋·해당 작업 브랜치 푸시를 수행하며 main/develop에 직접 푸시하거나 force push하지 않는다.
+- 작업 PR은 develop 대상이며 미완료·검토 대기는 Draft다. 전체 통합 검증 뒤 develop→main PR로 반영한다. 파일 선별 복사가 아닌 이력 병합이며 main은 현재 완성 서비스가 아닌 개발 기준본이다.
+- PR 생성 후 attach_artifact로 연결한다. 사용자 승인 없이 PR 병합·브랜치 삭제·팀원 초대/권한 변경·검토 우회를 하지 않는다. 이번 승인된 초대는 puppy57201-stack Write 1건이다.
+- CI는 .github/workflows/public-synthetic.yml의 공개/합성 경로만 실행한다. 실제 로그인·증명·유료 API·공개 체인 지급·민감 키를 넣지 않는다. 실제 CI 성공 및 검사 이름 확인 뒤에만 필수 보호 검사로 등록한다.
+- 푸시 전 tools/check-public-content.mjs로 도달 가능한 이력을 검사하고 값 대신 경로/규칙만 보고한다. 자동 검사만으로 민감정보가 없다고 단정하지 않는다. 협업 규칙은 CONTRIBUTING.md와 docs/github-collaboration.md를 따른다.
