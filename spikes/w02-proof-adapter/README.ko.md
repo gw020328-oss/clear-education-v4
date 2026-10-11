@@ -16,3 +16,12 @@
 동시 callback 시험은 단일 Node 프로세스의 메모리 상태만 검증한다. 재시작·다중 worker·DB transaction·보존/삭제·HTTP 본문 제한 구현을 검증한 것으로 확대하지 않는다. `ProofSessionBindingV4` typed-data 모양도 기술 시험용이며 W04의 최종 schema를 대신하지 않는다.
 
 브라우저에서 proof owner를 사전에 얻고 참가자 지갑 서명에 연결할 수 있는지는 미확인이다. 그 조건을 제거하거나 대신 만족했다고 처리하지 않았다. 실제 provider·TEE·명시적 callback·tmpfs가 준비되기 전 실제 증명을 받지 않는다. [W02 결과](../../docs/w02/REPORT.ko.md)를 참고한다.
+
+
+## W02 A 직접 경로 추가 시험
+
+2026-10-11: `direct-route.mjs`와 `test/direct-route.test.mjs`를 추가했다. 같은 명령으로 기존 36개와 신규 71개, 총 107개 시험을 실행한다. source bundle·직접 context·임시 owner 결합을 검사하고 SDK의 필수 TEE 누락·앱/세션/nonce 불일치·위조 토큰 거부를 확인한다.
+
+직접 검사 함수는 순수한 합성 분석이다. 성공 결과도 `teeVerified=false`, `paymentAllowed=false`, `sessionConsumed=false`이며 실제 수집·HTTP 수신·nonce 저장·지급 API가 아니다. TEE 정상 하드웨어 샘플은 검증하지 않았다. 서버가 만든 record와 정책을 신뢰 입력으로 받으므로 사용자 입력을 그대로 전달하는 endpoint로 사용하면 안 된다. canonical JSON 및 exact params 비교도 현재 spike의 제한이다.
+
+[W02 A 결과와 TEE 해결 방향](../../docs/w02/W02A_REPORT.ko.md)을 참고한다. TEE 요구 변경은 제안 상태이며 실제 모드 차단을 유지한다.

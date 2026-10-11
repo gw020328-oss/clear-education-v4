@@ -87,6 +87,13 @@
     "ownerBinding": "PRE_SIGNED_RECIPIENT_BINDING_TO_EPHEMERAL_COLLECTOR_OWNER",
     "requiredTeeEvidence": "EXISTING_VERIFIER_APP_TEE_REQUIREMENT_RETAINED_COMPATIBILITY_UNCONFIRMED",
     "resultTransport": "REVIEWED_DIRECT_SUBMISSION_NO_DEFAULT_RELAY",
-    "sourcePolicyAndRuntimeFinalized": false
+    "sourcePolicyAndRuntimeFinalized": false,
+    "syntheticCompatibility": {
+      "status": "PASS",
+      "newTests": 71,
+      "realGeneration": false,
+      "report": "W02A_REPORT.ko.md"
+    },
+    "teeScopeProposal": "STANDARD_OFFICIAL_ATTESTOR_ZKTLS_FOR_MVP_PROPOSED_NOT_APPLIED"
   }
 }
