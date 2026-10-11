@@ -74,3 +74,40 @@ test('concurrent requests report the failing source rather than the last started
  h.emit('score');await until(()=>release);h.emit('registration');await until(()=>h.capture.summary().received.registration);
  release({body:scoreHtml().replace('class="trSB"','class="SYNTHETIC_PRIVATE"'),base64Encoded:false});await assert.rejects(h.capture.done);assert.equal(h.capture.summary().sourceRole,'score');assert.equal(h.capture.summary().failureCode,'SCORE_LAYOUT');
 });
+
+test('a late failure resuming the first response cannot follow an already successful result',async t=>{
+ const h=await setup(t);await h.capture.arm();const original=h.browser.send;let failFirst;
+ h.browser.send=async(m,p,s)=>{if(m==='Fetch.continueRequest'&&p.requestId==='1')return new Promise((_r,reject)=>failFirst=()=>reject(new Error('BROWSER_COMMAND_FAILED')));return original(m,p,s);};
+ h.emit('score');await until(()=>failFirst);h.emit('registration');
+ await until(()=>h.calls.some(c=>c.method==='Fetch.continueRequest'&&c.params.requestId==='2'));
+ await tick();failFirst();
+ await assert.rejects(h.capture.done,/COLLECTION_CHECK_FAILED/);
+ assert.equal(h.capture.summary().sourceRole,'score');
+});
+
+test('success waits for the earlier response continuation to finish',async t=>{
+ const h=await setup(t);await h.capture.arm();const original=h.browser.send;let resumeFirst,settled=false;
+ h.capture.done.then(()=>settled=true,()=>settled=true);
+ h.browser.send=async(m,p,s)=>{if(m==='Fetch.continueRequest'&&p.requestId==='1')return new Promise(resolve=>resumeFirst=()=>resolve({}));return original(m,p,s);};
+ h.emit('score');await until(()=>resumeFirst);h.emit('registration');await until(()=>h.capture.summary().received.registration);await tick();
+ const premature=settled;resumeFirst();assert.equal((await h.capture.done).complete,true);assert.equal(premature,false);
+});
+
+test('explicit close during pending response continuation cannot publish a late success',async t=>{
+ const h=await setup(t);await h.capture.arm();const original=h.browser.send;let resumeFirst;
+ h.browser.send=async(m,p,s)=>{if(m==='Fetch.continueRequest'&&p.requestId==='1')return new Promise(resolve=>resumeFirst=()=>resolve({}));return original(m,p,s);};
+ h.emit('score');await until(()=>resumeFirst);h.emit('registration');await until(()=>h.capture.summary().received.registration);
+ const closing=h.capture.close();resumeFirst();await closing;assert.equal((await h.capture.done).complete,false);
+});
+
+test('arming drains source events arriving while initial page attachment is still in progress',async t=>{
+ const h=await setup(t),original=h.browser.send;let resumeFirst,armed=false;
+ h.browser.send=async(m,p,s)=>{
+  if(m==='Fetch.continueRequest'&&p.requestId==='1')return new Promise(resolve=>resumeFirst=()=>resolve({}));
+  const result=await original(m,p,s);
+  if(m==='Fetch.enable'){h.emit('score');h.emit('registration');}
+  return result;
+ };
+ const arming=h.capture.arm().then(()=>armed=true);await until(()=>resumeFirst&&h.capture.summary().received.registration);await tick();
+ const premature=armed;resumeFirst();await arming;assert.equal(premature,false);assert.equal((await h.capture.done).complete,true);
+});

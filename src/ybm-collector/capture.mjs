@@ -7,14 +7,21 @@ import {createExtraction} from './extraction.mjs';
 // transiently contain auth headers; do not inspect, retain, or serialize them.
 export function createCapture({browser,collection,signal,onProgress=()=>{}}){
   const extraction=createExtraction(collection),sessions=new Set(),targets=new Set(),unsubscribers=[],tasks=new Set(),seen=new Set();
-  let armed=false,closed=false,settled=false,inflight=0,bodyReads=0,resolveDone,rejectDone;
+  let armed=false,closed=false,settled=false,closing=false,inflight=0,bodyReads=0,resolveDone,rejectDone,completion;
   const received={registration:false,score:false};let failureCode=null,sourceRole=null;
   const safeCodes=new Set(['SOURCE_HTTP_STATUS','SOURCE_CONTENT_TYPE','SOURCE_SIZE','SOURCE_BODY','SOURCE_TEXT_LAYOUT','PAGE_LIMIT','CAPTURE_CAPACITY','HTML_SIZE','HTML_ENCODING','EXAM_TYPE','EXAM_DATE','EXAM_NUMBER','SCORE','AMBIGUOUS_REGISTRATION','REGISTRATION_LAYOUT','SCORE_LAYOUT','SCORE_ROW_COUNT','DUPLICATE_EXAM','EXAM_JOIN','SESSION_EXPIRED','BROWSER_COMMAND_FAILED','BROWSER_CLOSED','BROWSER_TIMEOUT']);
   const done=new Promise((resolve,reject)=>{resolveDone=resolve;rejectDone=reject;});
   // Callers may still be setting up their race when a protocol event fails.
   done.catch(()=>{});
   const fail=(error,role)=>{if(!settled){if(role==='registration'||role==='score')sourceRole=role;failureCode=safeCodes.has(error?.message)?error.message:'COLLECTION_CHECK_FAILED';settled=true;closed=true;extraction.close();rejectDone(new Error('COLLECTION_CHECK_FAILED'));}};
-  const track=promise=>{tasks.add(promise);promise.catch(fail).finally(()=>tasks.delete(promise));};
+  const completeWhenDrained=()=>{
+    if(completion&&!tasks.size&&!settled&&!closing){settled=true;resolveDone(completion);}
+  };
+  const track=promise=>{
+    tasks.add(promise);
+    promise.then(()=>{tasks.delete(promise);completeWhenDrained();},error=>{tasks.delete(promise);fail(error);});
+    return promise;
+  };
   const check=()=>{requireValue(armed&&!closed,'CAPTURE_CLOSED');signal?.throwIfAborted();collection.assertActive();};
   async function attach(info){
     if(info.type!=='page'||targets.has(info.targetId)||closed)return;
@@ -28,7 +35,7 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
     // Ignore events belonging to unrelated CDP sessions entirely.
     if(!sessions.has(sessionId))return;
     const requestId=event.requestId;
-    let counted=false,completed,requestRole;
+    let counted=false,requestRole;
     try{
       if(closed)return;
       check();
@@ -53,7 +60,7 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
       const result=extraction.accept(role,bytes);
       received[role]=true;
       onProgress({role,complete:result.complete});
-      if(result.complete){closed=true;completed=result;}
+      if(result.complete){closed=true;completion=result;}
     }catch(error){
       fail(error,requestRole);throw error;
     }finally{
@@ -62,7 +69,6 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
       try{await browser.send('Fetch.continueRequest',{requestId},sessionId);}
       catch(error){fail(error,requestRole);throw error;}
     }
-    if(completed&&!settled){settled=true;resolveDone(completed);}
   }
   const abort=()=>fail();signal?.addEventListener('abort',abort,{once:true});
   return {
@@ -75,11 +81,13 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
       try{
         await browser.send('Target.setDiscoverTargets',{discover:true});
         const {targetInfos}=await browser.send('Target.getTargets');
-        await Promise.all(targetInfos.map(attach));await Promise.all([...tasks]);if(!settled)check();
+        await Promise.all(targetInfos.map(info=>track(attach(info))));
+        while(tasks.size)await Promise.all([...tasks]);
+        if(!settled)check();
       }catch(error){fail(error);throw new Error('COLLECTION_CHECK_FAILED');}
     },
     async close(){
-      closed=true;extraction.close();signal?.removeEventListener('abort',abort);
+      closing=true;closed=true;extraction.close();signal?.removeEventListener('abort',abort);
       for(const off of unsubscribers)off();
       // Let in-flight body reads release paused requests before disabling Fetch.
       await Promise.allSettled([...tasks]);

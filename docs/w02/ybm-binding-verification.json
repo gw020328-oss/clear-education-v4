@@ -48,5 +48,28 @@
   "implementationBoundary": "Local in-memory diagnostic authority and source layout extraction; not product application API, funded consent, attestation, or payout",
   "nextStep": "Same-client fresh proof generation and independent verification of attestor signature, owner, context, source policy and freshness",
   "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/3",
-  "merged": false
+  "merged": false,
+  "preMergeReview": {
+    "date": "2026-10-11",
+    "reviewedHead": "a81b23ec48364c08027ac3d8d567bbc1616a43bf",
+    "findingsFixed": 1,
+    "finding": "Completion could precede an earlier pending response continuation failure",
+    "regressionTestsAdded": 4,
+    "regressionReproducedBeforeFix": true,
+    "localTests": {
+      "ybmCollector": 93,
+      "macAndIntegrityAndPublicHistory": 48,
+      "proofAdapterSpike": 107,
+      "collectorBoundarySpike": 62,
+      "storagePreparationSpike": 37,
+      "total": 347,
+      "status": "PASS"
+    },
+    "workspaceLocalVerification": "PASS",
+    "dependencyVerification": "PASS",
+    "originalFingerprintsMatch": true,
+    "newLoginOrProofPerformed": false,
+    "remainingKnownBlockers": 0,
+    "mergeGate": "Latest head CI must pass; merge state is tracked by the pull request"
+  }
 }
