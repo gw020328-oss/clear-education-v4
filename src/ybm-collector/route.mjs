@@ -50,7 +50,17 @@ export async function createRoute({client, signal, allowHost = allowedHost, maxT
       socket.destroy();
       if (ready && client.isOpen) void client.rpc('disconnectTunnel', {id}, 5000).catch(() => {});
     };
-    tunnels.set(id, {close, socket});
+    const finish = () => {
+      if (closed) return;
+      closed = true; tunnels.delete(id);
+      // Remote EOF can follow the last data event before Node flushes its
+      // writable buffer. end() drains those TLS bytes; destroy() truncates them.
+      // Keep a finite drain window for a browser that has stopped reading.
+      const timer = setTimeout(() => socket.destroy(), 10000);
+      timer.unref(); socket.once('close', () => clearTimeout(timer));
+      socket.end();
+    };
+    tunnels.set(id, {close, finish, socket});
     socket.once('close', close); socket.once('error', close); socket.once('end', close);
     socket.setTimeout(120000, close);
     // Pausing before each send bounds our upload queue to one stream chunk.
@@ -84,7 +94,7 @@ export async function createRoute({client, signal, allowHost = allowedHost, maxT
     if (bytes.length + tunnel.socket.writableLength > 2 * 1024 * 1024) tunnel.close();
     else tunnel.socket.write(bytes);
   };
-  const onDisconnect = event => tunnels.get(event.data.tunnelId)?.close();
+  const onDisconnect = event => tunnels.get(event.data.tunnelId)?.finish();
   client.addEventListener('tunnel-message', onMessage);
   client.addEventListener('tunnel-disconnect-event', onDisconnect);
   try {

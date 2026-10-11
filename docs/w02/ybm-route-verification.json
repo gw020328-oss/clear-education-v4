@@ -7,10 +7,10 @@
   "recommendedModel": "GPT-6 Astra",
   "recommendedReasoning": "high",
   "tests": {
-    "newRoute": 27,
+    "newRoute": 28,
     "newMacProxy": 2,
     "existingRegression": 251,
-    "totalPassed": 280
+    "totalPassed": 281
   },
   "publicProbe": {
     "attestor": "wss://attestor.reclaimprotocol.org:444/ws",
@@ -49,5 +49,15 @@
       "Mac synthetic recovery"
     ],
     "latestHead": "CHECK_PR_STATUS"
+  },
+  "mergeReview": {
+    "finding": "REMOTE_EOF_TRUNCATED_PENDING_TLS_BYTES",
+    "reproduction": {
+      "expectedBytes": 1048576,
+      "receivedBytesBeforeFix": 327212
+    },
+    "fix": "DRAIN_REMOTE_EOF_WITH_10_SECOND_LIMIT",
+    "routeTestsPassed": 28,
+    "latestCi": "CHECK_PR_STATUS"
   }
 }

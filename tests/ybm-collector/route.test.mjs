@@ -61,6 +61,18 @@ test('oversized downstream payload closes only its tunnel',async t=>{
   const {client,route}=await setup(t);const {socket}=await connect(route);socket.resume();const ended=once(socket,'close');
   client.emit('tunnel-message',{tunnelId:client.calls[0].value.id,message:Buffer.alloc(2*1024*1024+1)});await ended;assert.equal(route.summary().active,0);
 });
+test('remote EOF drains the final TLS bytes to a slow reader instead of truncating them',{timeout:15000},async t=>{
+  const {client,route}=await setup(t);const {socket,head}=await connect(route);t.after(()=>socket.destroy());
+  const chunks=[head];socket.on('data',chunk=>chunks.push(chunk));socket.pause();
+  const ended=once(socket,'close');const id=client.calls[0].value.id;
+  const payload=Buffer.alloc(1024*1024,0x5a);
+  client.emit('tunnel-message',{tunnelId:id,message:payload});
+  client.emit('tunnel-disconnect-event',{tunnelId:id});
+  await delay(50);socket.resume();await ended;
+  assert.deepEqual(Buffer.concat(chunks),payload);
+  assert.equal(route.summary().active,0);
+  assert.equal(client.calls.filter(c=>c.type==='disconnectTunnel').length,0);
+});
 test('cancellation during createTunnel cannot leave a late live tunnel',async t=>{
   const controller=new AbortController();const client=new FakeClient();let finish,started;
   const entered=new Promise(resolve=>{started=resolve;});
