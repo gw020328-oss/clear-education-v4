@@ -33,8 +33,9 @@ export async function startChrome(session,{ headless=false, synthetic=true, prox
   // CDP has inherited pipes rather than an unauthenticated listening port.
   const child=spawn('/bin/sh',['-c',gateScript,'clear-chrome-gate',chromePath,...args],{detached:true,env:{PATH:'/usr/bin:/bin',HOME:process.env.HOME,TMPDIR:join(session.path,'tmp')},stdio:['pipe','ignore','ignore','pipe','pipe']});
   let ended=false, sequence=0, pending=new Map(), buffer=Buffer.alloc(0),resolveClosed;
+  const listeners=new Map();
   const closed=new Promise(resolve=>{resolveClosed=resolve;});
-  const failAll=()=>{ended=true;resolveClosed();for(const p of pending.values()){clearTimeout(p.timer);p.reject(new Error('BROWSER_CLOSED'));}pending.clear();buffer=Buffer.alloc(0);};
+  const failAll=()=>{ended=true;resolveClosed();for(const p of pending.values()){clearTimeout(p.timer);p.reject(new Error('BROWSER_CLOSED'));}pending.clear();listeners.clear();buffer.fill(0);buffer=Buffer.alloc(0);};
   const abort=()=>failAll();
   signal?.addEventListener('abort',abort,{once:true});
   child.once('error',failAll);child.once('exit',failAll);child.stdin.on('error',failAll);child.stdio[3].on('error',failAll);child.stdio[4].on('error',failAll);
@@ -44,6 +45,11 @@ export async function startChrome(session,{ headless=false, synthetic=true, prox
     for(let end;(end=buffer.indexOf(0))!==-1;) {
       let msg;try{msg=JSON.parse(buffer.subarray(0,end));}catch{failAll();return;}
       buffer=buffer.subarray(end+1);
+      if(!msg.id&&msg.method){
+        try{for(const listener of listeners.get(msg.method)??[])listener(msg.params,msg.sessionId);}
+        catch{failAll();return;}
+        continue;
+      }
       const p=pending.get(msg.id);if(!p)continue;pending.delete(msg.id);clearTimeout(p.timer);
       if(msg.error)p.reject(new Error('BROWSER_COMMAND_FAILED'));else p.resolve(msg.result);
     }
@@ -71,7 +77,13 @@ export async function startChrome(session,{ headless=false, synthetic=true, prox
     finally { signal?.removeEventListener('abort',abort);failAll();child.stdin.destroy();child.stdio[3].destroy();child.stdio[4].destroy(); }
     throw e;
   }
-  return {pid:child.pid,send,closed,async close(){
+  const on=(method,listener)=>{
+    requireValue(!ended&&typeof method==='string'&&typeof listener==='function','BROWSER_LISTENER');
+    if(!listeners.has(method)){requireValue(listeners.size<16,'BROWSER_LISTENER_LIMIT');listeners.set(method,new Set());}
+    const set=listeners.get(method);requireValue(set.size<8,'BROWSER_LISTENER_LIMIT');set.add(listener);
+    return ()=>{set.delete(listener);if(!set.size)listeners.delete(method);};
+  };
+  return {pid:child.pid,send,on,closed,async close(){
     if(!ended)await send('Browser.close').catch(()=>{});
     for(let i=0;i<40&&!ended;i++)await delay(50);
     await stopBrowserGroup(session.path,child.pid);

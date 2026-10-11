@@ -48,3 +48,30 @@ test('synthetic roots cannot enable real network mode',()=>{
   assert.equal(parseOptions(['--ybm-route']).interactive,true);
   assert.equal(parseOptions([]).network,undefined);
 });
+
+test('collection diagnostic requires opt-in and an interactive real-network mode',async()=>{
+ assert.throws(()=>parseOptions(['--ybm-collection-check'],'/synthetic'),/MIXED_EXECUTION_MODES/);
+ assert.throws(()=>parseOptions(['--ybm-route','--ybm-collection-check']),/MIXED_EXECUTION_MODES/);
+ assert.equal(parseOptions(['--ybm-collection-check']).collectionCheck,true);
+ await assert.rejects(runYbmRoute({}, {collectionCheck:true}),/INTERACTIVE_COLLECTION_REQUIRED/);
+});
+
+test('collection mode does not enable Fetch before ready and cancellation closes resources',async()=>{
+ const h=harness(),events=new Map();const original=h.options.launchBrowser;
+ h.options.launchBrowser=async(...args)=>({...await original(...args),on:(m,fn)=>{events.set(m,fn);return()=>events.delete(m);}});
+ h.options.interactive=true;h.options.collectionCheck=true;
+ h.options.output=line=>{h.output.push(line);if(h.output.length===3)setImmediate(()=>h.input.end('close\n'));};
+ const result=await runYbmRoute({},h.options);assert.equal(result.collection.complete,false);assert.equal(result.rawCapture,false);assert.equal(result.liveProof,false);assert.ok(!h.calls.includes('Fetch.enable'));assert.deepEqual(h.closed(),{closedBrowser:true,closedClient:true});assert.equal(events.size,0);
+});
+
+test('ready connects recipient authorization, browser collection, matching and cleanup end to end',async()=>{
+ const {registrationHtml,scoreHtml}=await import('./source-fixture.mjs');
+ const {endpoints,methods}=await import('../../src/ybm-collector/source-policy.mjs');
+ const h=harness(),events=new Map();const original=h.options.launchBrowser;
+ h.options.launchBrowser=async(...args)=>{const b=await original(...args);return {...b,on:(m,fn)=>{events.set(m,fn);return()=>events.delete(m);},send:async(m,p,s)=>m==='Fetch.getResponseBody'?{body:p.requestId==='registration'?registrationHtml():scoreHtml(),base64Encoded:false}:b.send(m,p,s)};};
+ h.options.interactive=true;h.options.collectionCheck=true;
+ h.options.output=line=>{h.output.push(line);if(h.output.length===3)setImmediate(()=>h.input.write('ready\n'));if(h.output.length===4)setImmediate(()=>{
+  for(const role of ['registration','score'])events.get('Fetch.requestPaused')({requestId:role,request:{url:endpoints[role],method:methods[role]},responseStatusCode:200,responseHeaders:[{name:'Content-Type',value:'text/html; charset=utf-8'}]},'tab');
+ });};
+ const result=await runYbmRoute({},h.options);assert.equal(result.collection.complete,true);assert.equal(result.collection.applicationBound,true);assert.equal(result.rawCapture,true);assert.equal(result.liveProof,false);assert.equal(result.payment,false);assert.equal(result.sameClient,true);assert.equal(events.size,0);assert.deepEqual(h.closed(),{closedBrowser:true,closedClient:true});assert.ok(!JSON.stringify(result).includes('123456'));assert.ok(h.output.some(line=>line.startsWith('진단 완료:')));
+});
