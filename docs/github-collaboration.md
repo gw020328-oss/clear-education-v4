@@ -22,6 +22,6 @@ PR 작성자는 자신의 PR을 승인하는 사람으로 계산하지 않습니
 
 현재 파일뿐 아니라 푸시할 커밋 이력의 금지 자료 경로와 알려진 자격 증명 패턴을 검사합니다. 검사 로그에는 발견된 값 자체를 남기지 않습니다. 실제 성적·원문 증명·쿠키·키·브라우저 프로필은 포함하지 않고 배포 ZIP은 Git에서 제외합니다. 자동 검사는 탐지 보조 수단이며 자료 검토를 대체하지 않습니다.
 
-CI는 읽기 전용 권한, 고정된 Action commit SHA, 고정 Node와 lockfile, 설치 스크립트 비활성화를 사용합니다. 배포·공개 체인 거래·유료 API·실제 계정 로그인은 실행하지 않습니다. Mac 브라우저 통합 시험은 로컬 결과로 별도 표시합니다. 자세한 실행 범위는 [개발 가이드](development.md)에 있습니다.
+CI는 읽기 전용 권한, 고정된 Action commit SHA, 고정 Node와 lockfile, 설치 스크립트 비활성화를 사용합니다. 배포·공개 체인 거래·유료 API·실제 계정 로그인은 실행하지 않습니다. Mac 브라우저 통합·강제 종료 복구 시험은 별도 `Mac synthetic recovery` CI와 로컬에서 확인합니다. 새 Mac 검사 추가만으로 기존 브랜치 보호 설정을 변경하지 않습니다. 자세한 실행 범위는 [개발 가이드](development.md)에 있습니다.
 
 [GitHub 브랜치 보호 안내](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches), [보호 설정 API](https://docs.github.com/en/rest/branches/branch-protection).

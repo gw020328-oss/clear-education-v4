@@ -65,4 +65,23 @@ jobs:
       - name: Fresh checkout integrity regression
         run: ./tools/node --test tests/workspace-integrity.test.mjs
       - name: Managed storage and initialization regression (synthetic only)
-        run: ./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs
+        run: ./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs tests/mac-collector/recovery.test.mjs
+
+  mac-recovery:
+    name: Mac synthetic recovery
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Confirm Apple Silicon and installed Chrome
+        run: |
+          ./tools/node -e "if(process.platform!=='darwin'||process.arch!=='arm64')process.exit(1)"
+          test -x '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+      - name: Synthetic Chrome lifecycle and hard-kill recovery
+        run: ./tools/node --test tests/mac-collector/*.test.mjs

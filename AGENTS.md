@@ -50,3 +50,6 @@
 - 세션 소유자는 PID와 시작 시각·부팅 식별자·UID·명령을 함께 비교한다. 과거 PID-only 기록은 실제 worker 가능성이 있으면 보수적으로 차단하고, 재사용된 무관한 프로세스를 종료하지 않는다.
 - 패키지는 공식 고정 Node 아카이브를 기존 config SHA-256으로 검증하고 실행 파일·라이선스를 함께 사용한다. 새 복제본 재현 시험은 Mac에서 실행하며 배포 업로드는 하지 않는다.
 - 위 과거 W01 문서 지문 실패 메모는 수정 전 이력이다. 원본 reference-inputs.json은 보존하고 별도 공개용 manifest와 기준 Git 커밋으로 검증한다. verify:workspace는 이식 가능한 CI 검사, verify:workspace:local은 로컬 권한·준비 경로를 추가 검사한다. 전체 Git 이력이 필요하다.
+
+- PR #1 강제 종료 후속: Chrome 실행 허용 전에 대기 프로세스 그룹 기록을 닫는다. 기록 없는 과거 Chrome은 정확한 세션 프로필과 그룹 전체 소유/실행 파일 확인 후 종료한다. 조회/종료 실패 때 삭제 완료를 출력하지 않는다. browser-recovery.mjs는 패키지에 포함하며 시험 fixture는 포함하지 않는다.
+- hard-kill.test.mjs의 5개 시험(구버전 경로 5회 반복), recovery.test.mjs의 11개 거부/복구 시험을 유지한다. 기존 Linux 필수 검사 외에 Mac synthetic recovery CI를 추가했다. 실제 계정·증명은 사용하지 않는다. 새 검사 추가만으로 브랜치 보호 조건을 변경하지 않는다.

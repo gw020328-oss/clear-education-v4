@@ -24,7 +24,7 @@ try {
   if(execFileSync(runtime,['-p','process.versions.node+"/"+process.platform+"/"+process.arch'],{encoding:'utf8'}).trim()!==`${config.node}/darwin/arm64`)throw new Error('RUNTIME_IDENTITY_MISMATCH');
   const dest=join(staging,'CLEAR-Mac-Storage-Preview');
   await fs.mkdir(join(dest,'runtime'),{recursive:true});await fs.mkdir(join(dest,'src'));
-  for(const name of ['storage.mjs','process-identity.mjs','chrome.mjs','synthetic.mjs','worker.mjs','launch.mjs'])await fs.copyFile(join(root,'src/mac-collector',name),join(dest,'src',name));
+  for(const name of ['storage.mjs','browser-recovery.mjs','process-identity.mjs','chrome.mjs','synthetic.mjs','worker.mjs','launch.mjs'])await fs.copyFile(join(root,'src/mac-collector',name),join(dest,'src',name));
   await fs.copyFile(runtime,join(dest,'runtime/node'));await fs.chmod(join(dest,'runtime/node'),0o755);
   await fs.copyFile(join(source,'LICENSE'),join(dest,'runtime/NODE-LICENSE.txt'));
   await fs.copyFile(join(root,'docs/current/MAC_TOOL_GUIDE.ko.md'),join(dest,'사용 안내.md'));
