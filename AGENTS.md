@@ -20,3 +20,5 @@
 - W02 A 완료: docs/w02/W02A_REPORT.ko.md 및 w02a-verification.json 참조. 기존 36개+신규 71개 합성 시험 통과. direct-route.mjs는 실제 adapter나 nonce 소비기가 아니다. 다음은 W02 B 합성 원천 추출·연결 격리·저장 경계 시험. MVP의 TEE를 추가 보장으로 분리하는 안은 제안 상태이며, 명시적 기술 결정 없이 기존 필수 TEE 차단을 끄지 않는다. 실제 로그인은 아직 필요하지 않다.
 
 - W02 A 보존 검사: 원본·legacy 소스 191개는 W01과 일치. verify:workspace는 이전 375051e 문서 링크 정리 이후 참고 문서 4개의 W01 지문 불일치로 실패한다. 이번 작업에서 기준 지문을 바꾸지 않았으며, 후속 정리 시 원본 지문과 배포용 참고 문서 지문을 구분한다.
+
+- W02 B 합성 시험 완료: docs/w02/W02B_REPORT.ko.md 및 w02b-verification.json 참조. 신규 62개+회귀 107개 통과. 공식 HTTP provider를 인공 receipt로 검사했으며 실제 Attestor 수집이 아니다. 첫 매치 가림으로 전체 목록 완전성을 주장하지 않는다. Chrome 합성 프로필은 디스크 Cookie DB를 만들어 실제 수집에 부적합하며 제거했다. tmpfs 수명 검사는 통과했지만 Docker noswap 미지원·host/VM 경계가 남아 live 차단 유지. 다음은 OS별 브라우저/서버 저장 경계와 명시적 TEE 결정, 그 후 W02 C 로그인 안내다.

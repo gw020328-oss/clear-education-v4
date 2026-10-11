@@ -94,6 +94,14 @@
       "realGeneration": false,
       "report": "W02A_REPORT.ko.md"
     },
-    "teeScopeProposal": "STANDARD_OFFICIAL_ATTESTOR_ZKTLS_FOR_MVP_PROPOSED_NOT_APPLIED"
+    "teeScopeProposal": "STANDARD_OFFICIAL_ATTESTOR_ZKTLS_FOR_MVP_PROPOSED_NOT_APPLIED",
+    "collectorBoundaryReview": {
+      "status": "SYNTHETIC_TESTS_COMPLETE_LIVE_STORAGE_BOUNDARY_BLOCKED",
+      "report": "W02B_REPORT.ko.md",
+      "syntheticExtractionTests": 24,
+      "currentYbmPolicyVerified": false,
+      "listCompletenessProven": false,
+      "liveStorageReady": false
+    }
   }
 }

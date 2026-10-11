@@ -16,8 +16,8 @@
   "gates": [
     {
       "id": "PROVIDER",
-      "status": "SYNTHETIC_POLICY_MAPPING_PASS_REAL_EXTRACTION_PENDING",
-      "reason": "Direct source bundle and route-specific context verified with artificial signed claims. Real source extraction and same-client collection remain untested in v4."
+      "status": "SYNTHETIC_REAL_HTTP_PROVIDER_TESTS_PASS_CURRENT_YBM_POLICY_PENDING",
+      "reason": "Mandatory extraction and UTF-8/redaction checked in actual pinned provider on synthetic receipts. First-match redaction cannot establish list completeness; current YBM policy remains unverified."
     },
     {
       "id": "APP",
@@ -36,8 +36,8 @@
     },
     {
       "id": "STORAGE_CALLBACK",
-      "status": "NOT_READY",
-      "reason": "No reviewed callback or tmpfs storage boundary; real capture disabled"
+      "status": "SYNTHETIC_LIFECYCLE_PASS_LIVE_BOUNDARY_NOT_READY",
+      "reason": "Synthetic envelope/lifecycle and tmpfs probes pass; noswap rejected, VM/host and actual browser storage boundary unverified. No production callback."
     },
     {
       "id": "ACTUAL_YBM",
@@ -67,7 +67,7 @@
     "v4Integrated": false,
     "manualBuilderRequired": false
   },
-  "nextAction": "W02_B_SYNTHETIC_EXTRACTION_ISOLATION_STORAGE_AND_EXPLICIT_TEE_DESIGN_DECISION",
+  "nextAction": "W02_B_FOLLOWUP_REVIEWED_OS_STORAGE_BROWSER_BOUNDARY_AND_EXPLICIT_TEE_DECISION_BEFORE_W02_C",
   "routeDesignReview": {
     "status": "COMPLETE_CONDITIONAL_CANDIDATE",
     "report": "V4_ROUTE_DESIGN.ko.md",
@@ -97,5 +97,16 @@
     "introducedByCommit": "375051e",
     "legacyAndOriginalSourceFilesMatch": 191,
     "details": "w02a-verification.json"
+  },
+  "collectorBoundarySyntheticTests": {
+    "status": "SYNTHETIC_TESTS_COMPLETE_LIVE_STORAGE_BOUNDARY_BLOCKED",
+    "newTests": 62,
+    "newPass": 62,
+    "regressionPass": 107,
+    "report": "W02B_REPORT.ko.md",
+    "evidence": "w02b-verification.json",
+    "browserSyntheticProfiles": 2,
+    "actualAttestorConnection": false,
+    "liveStorageReady": false
   }
 }
