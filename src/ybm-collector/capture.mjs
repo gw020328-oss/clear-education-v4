@@ -1,0 +1,82 @@
+import {endpoints,methods,MAX_HTML_BYTES} from './source-policy.mjs';
+import {requireValue} from './values.mjs';
+import {createExtraction} from './extraction.mjs';
+
+// Opt-in, response-only layout diagnostic. Does not query cookies or browser
+// storage, or read bodies outside the two exact URLs. CDP request metadata may
+// transiently contain auth headers; do not inspect, retain, or serialize them.
+export function createCapture({browser,collection,signal}){
+  const extraction=createExtraction(collection),sessions=new Set(),targets=new Set(),unsubscribers=[],tasks=new Set(),seen=new Set();
+  let armed=false,closed=false,settled=false,inflight=0,bodyReads=0,resolveDone,rejectDone;
+  const done=new Promise((resolve,reject)=>{resolveDone=resolve;rejectDone=reject;});
+  // Callers may still be setting up their race when a protocol event fails.
+  done.catch(()=>{});
+  const fail=()=>{if(!settled){settled=true;closed=true;extraction.close();rejectDone(new Error('COLLECTION_CHECK_FAILED'));}};
+  const track=promise=>{tasks.add(promise);promise.catch(fail).finally(()=>tasks.delete(promise));};
+  const check=()=>{requireValue(armed&&!closed,'CAPTURE_CLOSED');signal?.throwIfAborted();collection.assertActive();};
+  async function attach(info){
+    if(info.type!=='page'||targets.has(info.targetId)||closed)return;
+    requireValue(targets.size<8,'PAGE_LIMIT');targets.add(info.targetId);
+    const {sessionId}=await browser.send('Target.attachToTarget',{targetId:info.targetId,flatten:true});
+    if(closed)return;
+    sessions.add(sessionId);
+    await browser.send('Fetch.enable',{patterns:Object.values(endpoints).map(urlPattern=>({urlPattern,requestStage:'Response'})),handleAuthRequests:false},sessionId);
+  }
+  async function paused(event,sessionId){
+    // Ignore events belonging to unrelated CDP sessions entirely.
+    if(!sessions.has(sessionId))return;
+    const requestId=event.requestId;
+    let counted=false,completed;
+    try{
+      if(closed)return;
+      check();
+      const role=Object.keys(endpoints).find(role=>event.request?.url===endpoints[role]&&event.request?.method===methods[role]);
+      if(!role)return;
+      requireValue(event.responseStatusCode===200&&!event.responseErrorReason,'SOURCE_HTTP_STATUS');
+      if(seen.has(role))return;
+      requireValue(inflight<2,'CAPTURE_CAPACITY');inflight++;counted=true;seen.add(role);
+      const headers=event.responseHeaders??[];
+      const types=headers.filter(h=>h.name.toLowerCase()==='content-type');
+      requireValue(types.length===1&&/^text\/html(?:\s*;\s*charset=["']?utf-8["']?)?\s*$/i.test(types[0].value),'SOURCE_CONTENT_TYPE');
+      const lengths=headers.filter(h=>h.name.toLowerCase()==='content-length');
+      requireValue(lengths.length<=1&&(!lengths.length||(/^\d+$/.test(lengths[0].value)&&Number(lengths[0].value)<=MAX_HTML_BYTES)),'SOURCE_SIZE');
+      bodyReads++;
+      let response=await browser.send('Fetch.getResponseBody',{requestId},sessionId);
+      check();
+      requireValue(typeof response.body==='string'&&typeof response.base64Encoded==='boolean','SOURCE_BODY');
+      requireValue(response.body.length<=(response.base64Encoded?Math.ceil(MAX_HTML_BYTES/3)*4:MAX_HTML_BYTES),'SOURCE_SIZE');
+      const bytes=Buffer.from(response.body,response.base64Encoded?'base64':'utf8');response=undefined;
+      const result=extraction.accept(role,bytes);
+      if(result.complete){closed=true;completed=result;}
+    }finally{
+      if(counted)inflight--;
+      // Always release the paused browser request, including mismatch/errors.
+      await browser.send('Fetch.continueRequest',{requestId},sessionId);
+    }
+    if(completed&&!settled){settled=true;resolveDone(completed);}
+  }
+  const abort=()=>fail();signal?.addEventListener('abort',abort,{once:true});
+  return {
+    done,
+    summary:()=>({bodyReads}),
+    async arm(){
+      requireValue(!armed&&!closed,'CAPTURE_STATE');signal?.throwIfAborted();collection.start();armed=true;
+      unsubscribers.push(browser.on('Fetch.requestPaused',(e,s)=>{if(tasks.size>=32){fail();return;}track(paused(e,s));}));
+      unsubscribers.push(browser.on('Target.targetCreated',({targetInfo})=>track(attach(targetInfo))));
+      try{
+        await browser.send('Target.setDiscoverTargets',{discover:true});
+        const {targetInfos}=await browser.send('Target.getTargets');
+        await Promise.all(targetInfos.map(attach));await Promise.all([...tasks]);if(!settled)check();
+      }catch{fail();throw new Error('COLLECTION_CHECK_FAILED');}
+    },
+    async close(){
+      closed=true;extraction.close();signal?.removeEventListener('abort',abort);
+      for(const off of unsubscribers)off();
+      // Let in-flight body reads release paused requests before disabling Fetch.
+      await Promise.allSettled([...tasks]);
+      await Promise.all([...sessions].map(s=>browser.send('Fetch.disable',{},s).catch(()=>{})));
+      sessions.clear();targets.clear();seen.clear();
+      resolveDone({complete:false,proofVerified:false,paymentAllowed:false});
+    },
+  };
+}

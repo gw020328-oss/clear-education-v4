@@ -32,7 +32,7 @@ try{
     });
   }else if(options.network){
     const {runYbmRoute}=await import('../ybm-collector/run.mjs');
-    const result=await runYbmRoute(session,{signal,interactive:options.interactive});
+    const result=await runYbmRoute(session,{signal,interactive:options.interactive,collectionCheck:options.collectionCheck});
     await stopRecordedBrowser(session.path);await removeSession(root,session.path);session=null;
     console.log(JSON.stringify({...result,staleSessionsRemoved:removed,profilesDeleted:true}));
   }else{
