@@ -18,6 +18,8 @@
 
 ## 실험 기록
 
+- 최신 W02: [YBM 접속 경로 연결과 남은 수집 단계](w02/YBM_ROUTE_REPORT.ko.md)
+
 - W01: [환경 준비 결과](w01/REPORT.ko.md)
 - W02: [합성 검증 결과](w02/REPORT.ko.md), [검증 상태 JSON](w02/verification.json)
 - [기존 YBM 경로의 v4 적용 설계](w02/V4_ROUTE_DESIGN.ko.md)

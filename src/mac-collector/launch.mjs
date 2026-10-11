@@ -2,15 +2,16 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { prepareRoot, requireValue } from './storage.mjs';
+import { parseOptions } from './options.mjs';
 process.umask(0o077);
 try{
   requireValue(process.versions.node==='24.21.0','PINNED_NODE_REQUIRED');
   requireValue(process.platform==='darwin'&&process.arch==='arm64','MAC_ARM64_REQUIRED');
   const testRoot=process.env.CLEAR_TEST_ROOT;
-  const root=await prepareRoot(testRoot,{synthetic:Boolean(testRoot)});
   const args=process.argv.slice(2);
-  requireValue(args.every(a=>['--show-browser','--test-hold','--test-browser-hold'].includes(a)),'UNKNOWN_OPTION');
-  const child=spawn('/usr/bin/lockf',['-s','-k','-t','0',join(root,'.lock'),process.execPath,fileURLToPath(new URL('./worker.mjs',import.meta.url)),...args],{detached:true,env:{PATH:'/usr/bin:/bin',HOME:process.env.HOME,CLEAR_LOCKED:'1',...(testRoot?{CLEAR_TEST_ROOT:root}:{})},stdio:'inherit'});
+  parseOptions(args,testRoot);
+  const root=await prepareRoot(testRoot,{synthetic:Boolean(testRoot)});
+  const child=spawn('/bin/sh',['-c','ulimit -c 0 || exit 1; exec "$@"','clear-worker-launch','/usr/bin/lockf','-s','-k','-t','0',join(root,'.lock'),process.execPath,fileURLToPath(new URL('./worker.mjs',import.meta.url)),...args],{detached:true,env:{PATH:'/usr/bin:/bin',HOME:process.env.HOME,CLEAR_LOCKED:'1',LOG_LEVEL:'silent',...(testRoot?{CLEAR_TEST_ROOT:root}:{})},stdio:'inherit'});
   for(const signal of ['SIGINT','SIGTERM','SIGHUP']) process.once(signal,()=>{try{process.kill(-child.pid,signal);}catch{}});
   child.once('error',()=>{console.error('CLEAR: 실행 도구를 열 수 없습니다.');process.exitCode=1;});
   child.once('exit',(code)=>{

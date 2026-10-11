@@ -25,15 +25,16 @@ export async function stopRecordedBrowser(path) {
   await recovery.recover(path,pid);
 }
 export async function startChrome(session,{ headless=false, synthetic=true, proxyUrl, signal }={}) {
-  requireValue(synthetic,'LIVE_COLLECTOR_NOT_CONNECTED');
-  requireValue(!proxyUrl,'SYNTHETIC_PROXY_FORBIDDEN');
+  requireValue(synthetic ? !proxyUrl : /^http:\/\/127\.0\.0\.1:([1-9][0-9]{0,4})$/.test(proxyUrl ?? '') && Number(new URL(proxyUrl).port)>0,'INVALID_BROWSER_ROUTE');
+  const networkArgs=synthetic?['--no-proxy-server']:['--proxy-server='+proxyUrl,'--proxy-bypass-list=<-loopback>','--force-webrtc-ip-handling-policy=disable_non_proxied_udp'];
   signal?.throwIfAborted();
-  const args=['--remote-debugging-pipe','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-component-update','--disable-default-apps','--disable-sync','--disable-extensions','--disable-breakpad','--disable-crash-reporter','--metrics-recording-only','--password-store=basic','--use-mock-keychain','--disable-quic','--no-proxy-server','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1',`--user-data-dir=${join(session.path,'profile')}`,`--disk-cache-dir=${join(session.path,'cache')}`,`--crash-dumps-dir=${join(session.path,'crash')}`,'about:blank'];
+  const args=['--remote-debugging-pipe','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-component-update','--disable-default-apps','--disable-sync','--disable-extensions','--disable-breakpad','--disable-crash-reporter','--metrics-recording-only','--password-store=basic','--use-mock-keychain','--disable-quic',...networkArgs,'--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1',`--user-data-dir=${join(session.path,'profile')}`,`--disk-cache-dir=${join(session.path,'cache')}`,`--crash-dumps-dir=${join(session.path,'crash')}`,'about:blank'];
   if(headless)args.unshift('--headless=new');
   // CDP has inherited pipes rather than an unauthenticated listening port.
   const child=spawn('/bin/sh',['-c',gateScript,'clear-chrome-gate',chromePath,...args],{detached:true,env:{PATH:'/usr/bin:/bin',HOME:process.env.HOME,TMPDIR:join(session.path,'tmp')},stdio:['pipe','ignore','ignore','pipe','pipe']});
-  let ended=false, sequence=0, pending=new Map(), buffer=Buffer.alloc(0);
-  const failAll=()=>{ended=true;for(const p of pending.values()){clearTimeout(p.timer);p.reject(new Error('BROWSER_CLOSED'));}pending.clear();};
+  let ended=false, sequence=0, pending=new Map(), buffer=Buffer.alloc(0),resolveClosed;
+  const closed=new Promise(resolve=>{resolveClosed=resolve;});
+  const failAll=()=>{ended=true;resolveClosed();for(const p of pending.values()){clearTimeout(p.timer);p.reject(new Error('BROWSER_CLOSED'));}pending.clear();buffer=Buffer.alloc(0);};
   const abort=()=>failAll();
   signal?.addEventListener('abort',abort,{once:true});
   child.once('error',failAll);child.once('exit',failAll);child.stdin.on('error',failAll);child.stdio[3].on('error',failAll);child.stdio[4].on('error',failAll);
@@ -70,7 +71,7 @@ export async function startChrome(session,{ headless=false, synthetic=true, prox
     finally { signal?.removeEventListener('abort',abort);failAll();child.stdin.destroy();child.stdio[3].destroy();child.stdio[4].destroy(); }
     throw e;
   }
-  return {pid:child.pid,send,async close(){
+  return {pid:child.pid,send,closed,async close(){
     if(!ended)await send('Browser.close').catch(()=>{});
     for(let i=0;i<40&&!ended;i++)await delay(50);
     await stopBrowserGroup(session.path,child.pid);

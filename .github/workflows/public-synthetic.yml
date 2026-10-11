@@ -52,6 +52,7 @@ jobs:
           ./tools/npm ci --ignore-scripts
           ./tools/npm --prefix spikes/w02-proof-adapter ci --ignore-scripts
           ./tools/npm --prefix spikes/w02-collector-boundary ci --ignore-scripts
+          ./tools/npm --prefix src/ybm-collector ci --ignore-scripts
       - name: Check dependencies and compile reference contract in memory
         run: ./tools/npm run verify:dependencies
       - name: Offline proof adapter tests
@@ -60,6 +61,8 @@ jobs:
         run: ./tools/npm --prefix spikes/w02-collector-boundary test
       - name: Storage preparation tests
         run: ./tools/npm --prefix spikes/w02-storage-preparation test
+      - name: YBM route with synthetic attestor and in-memory SDK socket
+        run: ./tools/npm --prefix src/ybm-collector test
       - name: Verify original and published document fingerprints and legacy content
         run: ./tools/npm run verify:workspace
       - name: Fresh checkout integrity regression

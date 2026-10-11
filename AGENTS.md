@@ -55,3 +55,5 @@
 - hard-kill.test.mjs의 5개 시험(구버전 경로 5회 반복), recovery.test.mjs의 11개 거부/복구 시험을 유지한다. 기존 Linux 필수 검사 외에 Mac synthetic recovery CI를 추가했다. 실제 계정·증명은 사용하지 않는다. 새 검사 추가만으로 브랜치 보호 조건을 변경하지 않는다.
 
 - 최신 협업 정책: 사용자가 각 담당자의 병합 전 코드 리뷰 방식을 선택하여 main/develop의 필수 승인 인원을 0명으로 변경하도록 승인했다. 다른 팀원의 GitHub Approve를 별도로 요구하지 않는다. PR 경유, 기존 필수 CI·최신 기준 브랜치 검사, 검토 대화 해결, 관리자 적용, 강제 푸시·삭제 금지는 유지한다. PR #1 develop 병합도 승인되었으며 main으로의 통합은 별도 작업이다.
+
+- W02 실제 접속 경로: docs/w02/YBM_ROUTE_REPORT.ko.md 참조. 새 src/ybm-collector는 전용 worker의 공식 Attestor 연결을 Chrome HTTPS 중계에 사용한다. 익명 YBM 공개 페이지/Chrome 접속과 정리만 실측했다. 사용자 로그인·원본 수집·새 증명·지급은 미실행이며 기본/ZIP은 계속 합성 전용이다. 로그인 전송 경로 성공을 실제 수집 전체 완료로 기록하지 않는다. 계정 재로그인은 신청/owner 결합과 원천 정책 준비 뒤 요청한다. worker에서 client를 재생성하거나 과거 프로필·증명을 재사용하지 않는다. 새 접속 시험도 CI에서는 외부 네트워크를 차단한다.

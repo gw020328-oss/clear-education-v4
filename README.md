@@ -10,7 +10,7 @@ CLEAR는 어학원 환급 안내를 검토 가능한 규칙으로 정리하고, 
 
 ## 최신 Mac 작업본
 
-현재 Mac의 관리형 임시 저장과 종료·재시작 정리 정책을 승인된 MVP 기준으로 적용했습니다. [변경된 PRD·설계와 일정](docs/current/MAC_MVP.ko.md), [저장 경계 시험 결과](docs/w02/MAC_STORAGE_REPORT.ko.md), [Mac 시험 도구 사용 안내](docs/current/MAC_TOOL_GUIDE.ko.md)를 참고하세요. 이 도구는 합성 저장 경계 시험용이며 실제 YBM 로그인·지급은 아직 연결되지 않았습니다.
+현재 Mac의 관리형 임시 저장과 종료·재시작 정리 정책을 승인된 MVP 기준으로 적용했습니다. [변경된 PRD·설계와 일정](docs/current/MAC_MVP.ko.md), [저장 경계 시험 결과](docs/w02/MAC_STORAGE_REPORT.ko.md), [Mac 시험 도구 사용 안내](docs/current/MAC_TOOL_GUIDE.ko.md)를 참고하세요. 기존 ZIP은 합성 저장 경계 시험용입니다. 저장소에는 [공식 Attestor를 통한 YBM 접속 경로](docs/w02/YBM_ROUTE_REPORT.ko.md)를 추가했고 익명 공개 페이지 접속·종료 후 삭제까지 확인했습니다. 실제 로그인·성적 수집·증명·지급은 아직 미검증입니다.
 
 ```sh
 ./tools/node --test tests/mac-collector/*.test.mjs

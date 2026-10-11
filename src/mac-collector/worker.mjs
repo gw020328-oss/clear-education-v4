@@ -3,9 +3,11 @@ import { promises as fs } from 'node:fs';
 import { defaultRoot, clearAbandoned, createSession, removeSession, TTL, requireValue } from './storage.mjs';
 import { stopRecordedBrowser, startChrome } from './chrome.mjs';
 import { syntheticBrowserCheck } from './synthetic.mjs';
+import { parseOptions } from './options.mjs';
 process.umask(0o077);
 requireValue(process.env.CLEAR_LOCKED==='1','LOCKED_LAUNCHER_REQUIRED');
 const root=process.env.CLEAR_TEST_ROOT || defaultRoot();
+const options=parseOptions(process.argv.slice(2),process.env.CLEAR_TEST_ROOT);
 const controller=new AbortController(),{signal}=controller;
 let session,browser,exitCode=0;
 // Signals request cancellation. The sole finally block waits for the current
@@ -28,6 +30,11 @@ try{
       const timer=setInterval(()=>{},1000);
       signal.addEventListener('abort',()=>{clearInterval(timer);resolve();},{once:true});
     });
+  }else if(options.network){
+    const {runYbmRoute}=await import('../ybm-collector/run.mjs');
+    const result=await runYbmRoute(session,{signal,interactive:options.interactive});
+    await stopRecordedBrowser(session.path);await removeSession(root,session.path);session=null;
+    console.log(JSON.stringify({...result,staleSessionsRemoved:removed,profilesDeleted:true}));
   }else{
     console.log('CLEAR: 합성 Chrome 저장 경계 확인을 시작합니다.');
     const result=await syntheticBrowserCheck(session,{headless:!process.argv.includes('--show-browser'),signal});
@@ -37,7 +44,7 @@ try{
   }
 }catch(error){
   if(!signal.aborted){
-    const codes=new Set(['ACTIVE_SESSION_OWNER','BROWSER_IDENTITY_MISMATCH','BROWSER_OWNER_MISMATCH','BROWSER_EXECUTABLE_MISMATCH','BROWSER_PROFILE_MISMATCH','BROWSER_STILL_RUNNING','BROWSER_PROCESS_CHECK_FAILED','INVALID_SESSION_METADATA','BROWSER_TIMEOUT','SYNTHETIC_COOKIE_CHECK_FAILED']);
+    const codes=new Set(['ATTESTOR_UNAVAILABLE','PUBLIC_ROUTE_NOT_READY','ROUTE_RESTART_REQUIRES_LOGIN','ROUTE_SESSION_EXPIRED','ACTIVE_SESSION_OWNER','BROWSER_IDENTITY_MISMATCH','BROWSER_OWNER_MISMATCH','BROWSER_EXECUTABLE_MISMATCH','BROWSER_PROFILE_MISMATCH','BROWSER_STILL_RUNNING','BROWSER_PROCESS_CHECK_FAILED','INVALID_SESSION_METADATA','BROWSER_TIMEOUT','SYNTHETIC_COOKIE_CHECK_FAILED']);
     if(codes.has(error.message))console.error('진단 코드: '+error.message);
     console.error('CLEAR: 실행을 중단했습니다. 진단 보고서에 개인정보는 기록하지 않았습니다.');exitCode=1;
   }
