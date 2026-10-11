@@ -24,3 +24,14 @@
 - W02 B 합성 시험 완료: docs/w02/W02B_REPORT.ko.md 및 w02b-verification.json 참조. 신규 62개+회귀 107개 통과. 공식 HTTP provider를 인공 receipt로 검사했으며 실제 Attestor 수집이 아니다. 첫 매치 가림으로 전체 목록 완전성을 주장하지 않는다. Chrome 합성 프로필은 디스크 Cookie DB를 만들어 실제 수집에 부적합하며 제거했다. tmpfs 수명 검사는 통과했지만 Docker noswap 미지원·host/VM 경계가 남아 live 차단 유지. 다음은 OS별 브라우저/서버 저장 경계와 명시적 TEE 결정, 그 후 W02 C 로그인 안내다.
 
 - 저장 경계 준비 후속: docs/w02/STORAGE_PREPARATION.ko.md와 storage-preparation-verification.json 참조. 사용자 답변은 수집 기기 미정이다. 새 spikes/w02-storage-preparation의 읽기 전용 preflight·계획과 37개 시험은 완료했으나 대상 OS/기기 미선택, Linux probe의 swap·고정 Node, host/browser 검토가 남아 있다. 진단 통과도 실제 수집 허용이 아니며 live=false를 유지한다. 현재 Mac의 FileVault/encrypted swap을 무디스크 보장으로 해석하거나 Time Machine/전역 swap을 변경하지 않는다. 기기 선택 뒤 실제 구성과 합성 브라우저 검증, TEE 결정 후 로그인 안내한다.
+
+## 2026년 10월 11일 승인된 최신 범위
+
+- 원래 세션에서 직접 확인한 사용자 승인에 따라 현재 Mac의 관리형 민감정보 저장을 MVP 기준으로 채택했다. Linux PC·전역 무디스크·필수 추가 TEE는 이 경로의 선행 조건이 아니다. 과거 strict tmpfs/TEE spike와 보고서는 보존하며, 통과한 것처럼 고치지 않는다.
+- 공식 공증자 서명이 검증된 zkTLS 경로를 사용하고 추가 TEE 보장은 후속이다. 서명·원천 정책·신청/수취 지갑 결합·신선도·중복 차단은 그대로 필요하다.
+- 사용자 답변으로 정상/오류 종료 즉시 삭제, 실행 중 24시간 상한, 강제 종료/전원 종료 후 다음 실행 전 정리 예외가 승인되었다. 이는 디스크 흔적의 완전 삭제나 앱 미실행 중 정시 삭제를 보장하지 않는다.
+- 신규 구현은 별도 작업본에서 진행한다. 첫 배포 대상은 Apple Silicon Mac 및 설치된 Chrome. 본인 새 YBM 증명→로컬 지급 후 타 사용자 자기 PC/계정 실제 수집 최소 1건, 별도 비개발자 합성 사용성 시험 2명을 구분한다. 실행 가능한 도구와 설치/사용 안내를 준비한다.
+- 실제 로그인은 저장·수집 경로 준비 후 사용자에게 안내한다. 합성 시험/패키지 준비와 실제 로그인·증명·지급 완료를 구분한다. 유료 구매·공개 체인 거래·제3자 연락은 포함하지 않는다.
+- 최신 정책은 config/mac-managed-storage.json 및 docs/current/MAC_MVP.ko.md를 따른다. docs/reference와 기존 config/environments는 W01 설계 스냅샷이며 새 live release 지문이 아니다.
+
+- Mac 저장 경계 구현: docs/w02/MAC_STORAGE_REPORT.ko.md와 mac-storage-verification.json 참조. 신규 17개+보정 후 재시작 반복 10회 및 압축 해제 패키지 실행 통과. src/mac-collector는 현재 합성 localhost 시험만 허용한다. 공식 동일 client 수집·실제 adapter·지급은 미연결이다. 사용자 실제 로그인은 연결과 합성 리허설 후 안내한다. 새 앱 경로만 Time Machine에서 제외했고 원본/실험 메타데이터와 원본/legacy 191개 지문은 보존했다.

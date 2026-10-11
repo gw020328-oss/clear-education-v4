@@ -1,0 +1,22 @@
+import { promises as fs } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { resolve,join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const base=resolve(root,'artifacts/mac-collector');
+const dest=join(base,'CLEAR-Mac-Storage-Preview');
+await fs.rm(dest,{recursive:true,force:true});
+await fs.mkdir(dest,{recursive:true,mode:0o700});
+await fs.mkdir(join(dest,'runtime'),{recursive:true});
+await fs.mkdir(join(dest,'src'),{recursive:true});
+for(const name of ['storage.mjs','chrome.mjs','synthetic.mjs','worker.mjs','launch.mjs'])await fs.copyFile(join(root,'src/mac-collector',name),join(dest,'src',name));
+await fs.copyFile(process.execPath,join(dest,'runtime/node'));await fs.chmod(join(dest,'runtime/node'),0o755);
+const license=resolve(root,'.toolchain/node-v24.21.0-darwin-arm64/LICENSE');await fs.copyFile(license,join(dest,'runtime/NODE-LICENSE.txt'));
+await fs.copyFile(join(root,'docs/current/MAC_TOOL_GUIDE.ko.md'),join(dest,'사용 안내.md'));
+await fs.writeFile(join(dest,'시작.command'),'#!/bin/sh\nset -eu\numask 077\nulimit -c 0\nTASK_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nunset NODE_OPTIONS NODE_PATH CLEAR_TEST_ROOT CLEAR_LOCKED\nexec "$TASK_DIR/runtime/node" "$TASK_DIR/src/launch.mjs" --show-browser\n',{mode:0o755});
+const manifest={name:'CLEAR-Mac-Storage-Preview',scope:'SYNTHETIC_STORAGE_ONLY',liveCollection:false,platform:'darwin-arm64',node:process.versions.node,files:{}};
+async function walk(dir){for(const e of await fs.readdir(dir,{withFileTypes:true})){const p=join(dir,e.name);if(e.isDirectory())await walk(p);else{if(e.isSymbolicLink())throw new Error('NO_SYMLINKS');manifest.files[p.slice(dest.length+1)]=createHash('sha256').update(await fs.readFile(p)).digest('hex');}}}
+await walk(dest);await fs.writeFile(join(dest,'MANIFEST.json'),JSON.stringify(manifest,null,2)+'\n');
+const zip=join(base,'CLEAR-Mac-Storage-Preview.zip');await fs.rm(zip,{force:true});execFileSync('/usr/bin/ditto',['-c','-k','--keepParent',dest,zip]);
+const sha256=createHash('sha256').update(await fs.readFile(zip)).digest('hex');await fs.writeFile(zip+'.sha256',sha256+'  CLEAR-Mac-Storage-Preview.zip\n');console.log(JSON.stringify({zip,sha256,liveCollection:false}));

@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-11T05:11:06.799Z",
+  "scope": "W02_MAC_MANAGED_STORAGE_SYNTHETIC_PREPARATION",
+  "status": "PASS_WITH_LIVE_COLLECTION_NOT_CONNECTED",
+  "policy": "MAC_MANAGED_STORAGE_2026_10_11",
+  "tests": {
+    "passed": 17,
+    "failed": 0,
+    "postFixRestartRepetitions": 10
+  },
+  "host": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "24.21.0",
+    "fileVault": "ON",
+    "dedicatedDirectoryTimeMachine": "EXCLUDED"
+  },
+  "package": {
+    "status": "PASS",
+    "verifiedFiles": 9,
+    "unpackedRuntimeExecuted": true,
+    "syntheticOnly": true
+  },
+  "packageSha256": "3eac1f5484a258157234d28f6af824b174739c2f42bc5666f240a056b41b044c",
+  "preservation": {
+    "originalMetadataEntries": 26857,
+    "experimentMetadataEntries": 92550,
+    "metadataUnchanged": true,
+    "originalAndLegacySourceHashes": 191,
+    "sourceUnchanged": true
+  },
+  "workspaceBaseline": "KNOWN_FAILURE_REFERENCE_DOCUMENT_HASH_DRIFT",
+  "liveYbmProof": false,
+  "payment": false,
+  "additionalTeeVerified": false,
+  "remaining": [
+    "official-attestor-client-browser-integration",
+    "source-policy-and-live-binding-adapter",
+    "fresh-user-login",
+    "local-payout-integration",
+    "other-user-real-collection",
+    "two-nondeveloper-usability-tests"
+  ],
+  "sourceHashes": {
+    "chrome.mjs": "2b338f34263c878879cff05727a10bdc21f257e959acd8d5e0316e3cad5a62a2",
+    "launch.mjs": "1ff9ac79bb6559ee201b08e2a4f766023e763793ab23c0ad0c7a6d9496eddebb",
+    "storage.mjs": "c41b43b22e083d211dcd1663f3ee93bebb7e0c81ffdeb1873e445d777cd028ee",
+    "synthetic.mjs": "cc3634fb4bff3eec724d4c823aa8676aa1ad1d970216093220a92fa2b476f8a3",
+    "worker.mjs": "f3d8d75c8dc269d5f17ef740a3d7a554bc5d625aeb10a114ca4c802679d42deb"
+  }
+}
