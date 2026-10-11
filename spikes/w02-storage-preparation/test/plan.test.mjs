@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {buildPlan} from '../build-plan.mjs';
+const t=JSON.parse(await readFile(new URL('../targets.candidate.json',import.meta.url),'utf8'));
+test('collector and verifier plans never share volatile paths',()=>{const a=buildPlan(t,'collector'),b=buildPlan(t,'verifier');assert.ok(a.paths.every(p=>!b.paths.includes(p)));assert.notEqual(a.root,b.root);assert.equal(a.targetSelected,false);assert.equal(b.targetSelected,false);});
+test('collector plan puts profile cache and XDG/temp in its owned root without disabling sandbox',()=>{const p=buildPlan(t,'collector');assert.ok(p.browser.args.includes(`--user-data-dir=${p.root}/profile`));assert.ok(Object.values(p.browser.env).every(s=>s.startsWith(p.root+'/')));assert.ok(!p.browser.args.includes('--no-sandbox'));assert.ok(!p.browser.args.some(s=>s.startsWith('--remote-debugging-port')));assert.equal(p.browser.syntheticStartUrl,'about:blank');});
+test('verifier raw data cleanup is distinct from independent claim and ledger retention',()=>{const p=buildPlan(t,'verifier');assert.equal(p.verifier.retentionSeconds,86400);assert.equal(p.verifier.deleteOnPacketIssued,true);assert.match(p.verifier.packetAndLedger,/never delete/);});
+for(const mode of ['REAL_YBM','PRODUCTION',''])test(`plan builder rejects mode ${JSON.stringify(mode)}`,()=>assert.throws(()=>buildPlan(t,'collector',mode),/SYNTHETIC/));
+test('editing a boolean cannot turn this preparation into live launch',()=>{assert.throws(()=>buildPlan({...t,mayGenerateRealProof:true},'collector'));assert.equal(buildPlan(t,'collector').mayGenerateRealProof,false);});

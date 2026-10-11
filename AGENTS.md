@@ -22,3 +22,5 @@
 - W02 A 보존 검사: 원본·legacy 소스 191개는 W01과 일치. verify:workspace는 이전 375051e 문서 링크 정리 이후 참고 문서 4개의 W01 지문 불일치로 실패한다. 이번 작업에서 기준 지문을 바꾸지 않았으며, 후속 정리 시 원본 지문과 배포용 참고 문서 지문을 구분한다.
 
 - W02 B 합성 시험 완료: docs/w02/W02B_REPORT.ko.md 및 w02b-verification.json 참조. 신규 62개+회귀 107개 통과. 공식 HTTP provider를 인공 receipt로 검사했으며 실제 Attestor 수집이 아니다. 첫 매치 가림으로 전체 목록 완전성을 주장하지 않는다. Chrome 합성 프로필은 디스크 Cookie DB를 만들어 실제 수집에 부적합하며 제거했다. tmpfs 수명 검사는 통과했지만 Docker noswap 미지원·host/VM 경계가 남아 live 차단 유지. 다음은 OS별 브라우저/서버 저장 경계와 명시적 TEE 결정, 그 후 W02 C 로그인 안내다.
+
+- 저장 경계 준비 후속: docs/w02/STORAGE_PREPARATION.ko.md와 storage-preparation-verification.json 참조. 사용자 답변은 수집 기기 미정이다. 새 spikes/w02-storage-preparation의 읽기 전용 preflight·계획과 37개 시험은 완료했으나 대상 OS/기기 미선택, Linux probe의 swap·고정 Node, host/browser 검토가 남아 있다. 진단 통과도 실제 수집 허용이 아니며 live=false를 유지한다. 현재 Mac의 FileVault/encrypted swap을 무디스크 보장으로 해석하거나 Time Machine/전역 swap을 변경하지 않는다. 기기 선택 뒤 실제 구성과 합성 브라우저 검증, TEE 결정 후 로그인 안내한다.
