@@ -11,7 +11,7 @@ try{
   const args=process.argv.slice(2);
   parseOptions(args,testRoot);
   const root=await prepareRoot(testRoot,{synthetic:Boolean(testRoot)});
-  const child=spawn('/usr/bin/lockf',['-s','-k','-t','0',join(root,'.lock'),process.execPath,fileURLToPath(new URL('./worker.mjs',import.meta.url)),...args],{detached:true,env:{PATH:'/usr/bin:/bin',HOME:process.env.HOME,CLEAR_LOCKED:'1',LOG_LEVEL:'silent',...(testRoot?{CLEAR_TEST_ROOT:root}:{})},stdio:'inherit'});
+  const child=spawn('/bin/sh',['-c','ulimit -c 0 || exit 1; exec "$@"','clear-worker-launch','/usr/bin/lockf','-s','-k','-t','0',join(root,'.lock'),process.execPath,fileURLToPath(new URL('./worker.mjs',import.meta.url)),...args],{detached:true,env:{PATH:'/usr/bin:/bin',HOME:process.env.HOME,CLEAR_LOCKED:'1',LOG_LEVEL:'silent',...(testRoot?{CLEAR_TEST_ROOT:root}:{})},stdio:'inherit'});
   for(const signal of ['SIGINT','SIGTERM','SIGHUP']) process.once(signal,()=>{try{process.kill(-child.pid,signal);}catch{}});
   child.once('error',()=>{console.error('CLEAR: 실행 도구를 열 수 없습니다.');process.exitCode=1;});
   child.once('exit',(code)=>{

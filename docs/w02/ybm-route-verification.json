@@ -6,7 +6,12 @@
   "status": "ANONYMOUS_PUBLIC_ROUTE_PASS_CAPTURE_NOT_CONNECTED",
   "recommendedModel": "GPT-6 Astra",
   "recommendedReasoning": "high",
-  "tests": {"newRoute": 27, "newMacProxy": 2, "existingRegression": 251, "totalPassed": 280},
+  "tests": {
+    "newRoute": 27,
+    "newMacProxy": 2,
+    "existingRegression": 251,
+    "totalPassed": 280
+  },
   "publicProbe": {
     "attestor": "wss://attestor.reclaimprotocol.org:444/ws",
     "ybmHomeStatus": 200,
@@ -17,12 +22,32 @@
     "cdpListeningPort": false,
     "profilesDeleted": true
   },
-  "preservation": {"originalSources": 191, "historicalRouteSources": 3, "workspaceCheck": "PASS", "privateProofsRead": false},
+  "preservation": {
+    "originalSources": 191,
+    "historicalRouteSources": 3,
+    "workspaceCheck": "PASS",
+    "privateProofsRead": false
+  },
   "actualLogin": "NOT_RUN",
   "rawCapture": false,
   "liveProof": false,
   "payment": false,
   "collectionPackage": "NOT_BUILT_STORAGE_PREVIEW_REMAINS_SYNTHETIC_ONLY",
-  "remaining": ["RECIPIENT_OWNER_BINDING", "CURRENT_MINIMAL_SOURCE_POLICY", "FRESH_PROOF_GENERATION_AND_VERIFICATION", "ELIGIBILITY_AND_LOCAL_PAYMENT"],
-  "ci": "PENDING_BRANCH_PUSH"
+  "remaining": [
+    "RECIPIENT_OWNER_BINDING",
+    "CURRENT_MINIMAL_SOURCE_POLICY",
+    "FRESH_PROOF_GENERATION_AND_VERIFICATION",
+    "ELIGIBILITY_AND_LOCAL_PAYMENT"
+  ],
+  "ci": {
+    "status": "PASS_FOR_IMPLEMENTATION_COMMIT",
+    "head": "543734d58a220823f798ecd057e3e56ad50bc9e8",
+    "run": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/38119265257",
+    "jobs": [
+      "Public content history",
+      "Public synthetic tests",
+      "Mac synthetic recovery"
+    ],
+    "latestHead": "CHECK_PR_STATUS"
+  }
 }
