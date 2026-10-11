@@ -16,8 +16,8 @@
   "gates": [
     {
       "id": "PROVIDER",
-      "status": "DESIGN_REVIEWED_IMPLEMENTATION_PENDING",
-      "reason": "Direct same-client route selected as candidate; source policy bundle, schema and runtime require synthetic and live validation; console builder is not mandatory"
+      "status": "SYNTHETIC_REAL_HTTP_PROVIDER_TESTS_PASS_CURRENT_YBM_POLICY_PENDING",
+      "reason": "Mandatory extraction and UTF-8/redaction checked in actual pinned provider on synthetic receipts. First-match redaction cannot establish list completeness; current YBM policy remains unverified."
     },
     {
       "id": "APP",
@@ -26,18 +26,18 @@
     },
     {
       "id": "OWNER_BINDING",
-      "status": "DESIGNED_NOT_IMPLEMENTED",
-      "reason": "Recipient EIP-712 signature prebinds a collector-local ephemeral owner public key; direct route checks owner address and signed context; no recipient private key shared"
+      "status": "SYNTHETIC_PASS_BROWSER_NOT_IMPLEMENTED",
+      "reason": "Direct context and ephemeral owner bind to recipient EIP-712 signature in 71-test synthetic suite; browser pre-binding remains untested"
     },
     {
       "id": "TEE",
-      "status": "COMPATIBILITY_GAP",
-      "reason": "SDK 5.8.2 distinguishes proof verifier-app TEE from witness attestor TEE. Historical core 5.1.4 wrapper provides neither verified evidence path; requirement retained pending public/synthetic compatibility work"
+      "status": "PINNED_DIRECT_PATH_INCOMPATIBLE_WITH_CURRENT_REQUIRED_TEE_SHAPE",
+      "reason": "Historical claimTunnel output lacks required verifier-app TEE material; SDK rejects missing/malformed/mismatched evidence. Standard zkTLS MVP is proposed, not applied; positive hardware TEE not verified."
     },
     {
       "id": "STORAGE_CALLBACK",
-      "status": "NOT_READY",
-      "reason": "No reviewed callback or tmpfs storage boundary; real capture disabled"
+      "status": "PREPARATION_TESTED_TARGET_UNDECIDED_LIVE_NOT_READY",
+      "reason": "Read-only collector/verifier preflight and role plans tested. Synthetic Linux paths pass layout checks but swap and exact Node remain blocked; physical device and full host/browser boundary unselected. No production callback."
     },
     {
       "id": "ACTUAL_YBM",
@@ -67,11 +67,55 @@
     "v4Integrated": false,
     "manualBuilderRequired": false
   },
-  "nextAction": "W02_A_PUBLIC_AND_SYNTHETIC_DIRECT_ROUTE_COMPATIBILITY_SPIKE",
+  "nextAction": "SELECT_COLLECTION_DEVICE_THEN_TARGET_SPECIFIC_STORAGE_AND_SYNTHETIC_BROWSER_VERIFICATION",
   "routeDesignReview": {
     "status": "COMPLETE_CONDITIONAL_CANDIDATE",
     "report": "V4_ROUTE_DESIGN.ko.md",
     "evidence": "v4-route-review.json",
     "liveEnabled": false
+  },
+  "directRouteSyntheticTests": {
+    "status": "PASS",
+    "newTests": 71,
+    "originalRegressionRerun": 36,
+    "totalPass": 107,
+    "fail": 0,
+    "report": "W02A_REPORT.ko.md",
+    "evidence": "w02a-verification.json",
+    "realGeneration": false,
+    "positiveHardwareTeeVerification": false
+  },
+  "teeDesignProposal": {
+    "id": "W02_TEE_SCOPE",
+    "status": "PROPOSED_NOT_APPLIED",
+    "report": "W02A_REPORT.ko.md",
+    "requiredGateRetained": true
+  },
+  "workspacePreservationCheck": {
+    "status": "FAIL_PREEXISTING_REFERENCE_DOCUMENT_HASH_DRIFT",
+    "referenceFiles": 4,
+    "introducedByCommit": "375051e",
+    "legacyAndOriginalSourceFilesMatch": 191,
+    "details": "w02a-verification.json"
+  },
+  "collectorBoundarySyntheticTests": {
+    "status": "SYNTHETIC_TESTS_COMPLETE_LIVE_STORAGE_BOUNDARY_BLOCKED",
+    "newTests": 62,
+    "newPass": 62,
+    "regressionPass": 107,
+    "report": "W02B_REPORT.ko.md",
+    "evidence": "w02b-verification.json",
+    "browserSyntheticProfiles": 2,
+    "actualAttestorConnection": false,
+    "liveStorageReady": false
+  },
+  "storagePreparation": {
+    "status": "PREPARATION_TOOLS_TESTED_TARGET_UNDECIDED_LIVE_BLOCKED",
+    "newTests": 37,
+    "pass": 37,
+    "report": "STORAGE_PREPARATION.ko.md",
+    "evidence": "storage-preparation-verification.json",
+    "targetDevice": "UNDECIDED",
+    "liveReady": false
   }
 }

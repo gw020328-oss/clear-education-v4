@@ -1,0 +1,87 @@
+name: Public synthetic CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: ['codex/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-synthetic-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  public-content:
+    name: Public content history
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Test redacted history scanner
+        run: ./tools/node --test tests/public-content.test.mjs
+      - name: Scan reachable Git history without printing values
+        run: ./tools/node tools/check-public-content.mjs HEAD
+
+  synthetic-tests:
+    name: Public synthetic tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Install pinned dependencies without lifecycle scripts
+        run: |
+          ./tools/npm ci --ignore-scripts
+          ./tools/npm --prefix spikes/w02-proof-adapter ci --ignore-scripts
+          ./tools/npm --prefix spikes/w02-collector-boundary ci --ignore-scripts
+      - name: Check dependencies and compile reference contract in memory
+        run: ./tools/npm run verify:dependencies
+      - name: Offline proof adapter tests
+        run: ./tools/npm --prefix spikes/w02-proof-adapter test
+      - name: Synthetic extraction and isolation tests (loopback only)
+        run: ./tools/npm --prefix spikes/w02-collector-boundary test
+      - name: Storage preparation tests
+        run: ./tools/npm --prefix spikes/w02-storage-preparation test
+      - name: Verify original and published document fingerprints and legacy content
+        run: ./tools/npm run verify:workspace
+      - name: Fresh checkout integrity regression
+        run: ./tools/node --test tests/workspace-integrity.test.mjs
+      - name: Managed storage and initialization regression (synthetic only)
+        run: ./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs tests/mac-collector/recovery.test.mjs
+
+  mac-recovery:
+    name: Mac synthetic recovery
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Confirm Apple Silicon and installed Chrome
+        run: |
+          ./tools/node -e "if(process.platform!=='darwin'||process.arch!=='arm64')process.exit(1)"
+          test -x '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+      - name: Synthetic Chrome lifecycle and hard-kill recovery
+        run: ./tools/node --test tests/mac-collector/*.test.mjs

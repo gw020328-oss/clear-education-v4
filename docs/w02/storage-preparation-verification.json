@@ -1,0 +1,1028 @@
+{
+  "stage": "W02_B_STORAGE_PREPARATION",
+  "recordedAt": "2026-10-11T13:46:21.404796+09:00",
+  "status": "PREPARATION_TOOLS_TESTED_TARGET_UNDECIDED_LIVE_BLOCKED",
+  "report": "STORAGE_PREPARATION.ko.md",
+  "userDecision": {
+    "collectorDevice": "UNDECIDED",
+    "verbatimAnswer": "아직 정하지 못함",
+    "selectedOs": null,
+    "linuxIsRecommendationOnly": true
+  },
+  "tests": {
+    "new": 37,
+    "pass": 37,
+    "fail": 0,
+    "names": [
+      "collector and verifier plans never share volatile paths",
+      "collector plan puts profile cache and XDG/temp in its owned root without disabling sandbox",
+      "verifier raw data cleanup is distinct from independent claim and ledger retention",
+      "plan builder rejects mode \"REAL_YBM\"",
+      "plan builder rejects mode \"PRODUCTION\"",
+      "plan builder rejects mode \"\"",
+      "editing a boolean cannot turn this preparation into live launch",
+      "synthetic collector kernel facts pass but can never authorize real collection",
+      "synthetic verifier kernel facts pass but can never authorize real collection",
+      "reject Mac",
+      "reject wrong Node",
+      "reject root",
+      "reject unknown uid",
+      "reject core dump enabled",
+      "reject unknown core dump",
+      "reject privilege escalation",
+      "reject swappable process",
+      "reject one unsafe collector path: exists",
+      "reject one unsafe collector path: directory",
+      "reject one unsafe collector path: symlinkFree",
+      "reject one unsafe collector path: ownerMatches",
+      "reject one unsafe collector path: privateMode",
+      "reject one unsafe collector path: tmpfs",
+      "reject missing mount flag rw",
+      "reject missing mount flag nosuid",
+      "reject missing mount flag nodev",
+      "reject missing mount flag noexec",
+      "cgroup zero alone does not satisfy conservative swap gate",
+      "noswap mount alone does not cover anonymous process memory",
+      "missing unknown mount data blocks",
+      "duplicate path cannot hide a missing role directory",
+      "verifier facts cannot stand in for collector facts",
+      "mountinfo decodes escaped paths and chooses nested mount not parent tmpfs",
+      "maps namespaced and host cgroup paths without assuming cgroup root",
+      "malformed mountinfo is not silently accepted",
+      "read-only observer rejects arbitrary paths and unknown roles",
+      "current machine observation leaves missing directories missing and live disabled"
+    ],
+    "tapSha256": "ad0199daf05f650794bb77a8d00e5491f4e431154560b4a54313f70657f4e780",
+    "previous169Rerun": false
+  },
+  "hostReadOnlyObservations": {
+    "os": "macOS 26.5.2",
+    "arch": "arm64",
+    "fileVaultOn": true,
+    "swapEnabled": true,
+    "swapReportedEncrypted": true,
+    "workspaceVarTimeMachineExcluded": false,
+    "backupActuallyExecuted": "NOT_CHECKED",
+    "dockerVersion": "29.2.0",
+    "osSettingsModified": false
+  },
+  "macPreflight": {
+    "collector": {
+      "snapshot": {
+        "schemaVersion": 4,
+        "observedAt": "2026-10-11T04:41:52.831Z",
+        "role": "collector",
+        "root": "/run/clear-collector",
+        "platform": "darwin",
+        "node": "24.21.0",
+        "uid": 501,
+        "paths": [
+          {
+            "path": "/run/clear-collector",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/profile",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/cache",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/temp",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/downloads",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/crash",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/xdg-config",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/xdg-cache",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/xdg-data",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/xdg-state",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-collector/xdg-runtime",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          }
+        ],
+        "globalSwapDisabled": null,
+        "cgroupSwapMaxZero": null,
+        "coreDumpDisabled": null,
+        "noNewPrivileges": null,
+        "source": "LOCAL_READ_ONLY_PROCESS_OBSERVATION"
+      },
+      "result": {
+        "status": "LOCAL_PREFLIGHT_BLOCKED",
+        "role": "collector",
+        "failures": [
+          "LINUX_REQUIRED",
+          "CORE_DUMP_DISABLED",
+          "NO_NEW_PRIVILEGES",
+          "PRIVATE_PATH:root",
+          "TMPFS:root",
+          "MOUNT_FLAGS:root",
+          "SWAP_BOUNDARY:root",
+          "PRIVATE_PATH:profile",
+          "TMPFS:profile",
+          "MOUNT_FLAGS:profile",
+          "SWAP_BOUNDARY:profile",
+          "PRIVATE_PATH:cache",
+          "TMPFS:cache",
+          "MOUNT_FLAGS:cache",
+          "SWAP_BOUNDARY:cache",
+          "PRIVATE_PATH:temp",
+          "TMPFS:temp",
+          "MOUNT_FLAGS:temp",
+          "SWAP_BOUNDARY:temp",
+          "PRIVATE_PATH:downloads",
+          "TMPFS:downloads",
+          "MOUNT_FLAGS:downloads",
+          "SWAP_BOUNDARY:downloads",
+          "PRIVATE_PATH:crash",
+          "TMPFS:crash",
+          "MOUNT_FLAGS:crash",
+          "SWAP_BOUNDARY:crash",
+          "PRIVATE_PATH:xdg-config",
+          "TMPFS:xdg-config",
+          "MOUNT_FLAGS:xdg-config",
+          "SWAP_BOUNDARY:xdg-config",
+          "PRIVATE_PATH:xdg-cache",
+          "TMPFS:xdg-cache",
+          "MOUNT_FLAGS:xdg-cache",
+          "SWAP_BOUNDARY:xdg-cache",
+          "PRIVATE_PATH:xdg-data",
+          "TMPFS:xdg-data",
+          "MOUNT_FLAGS:xdg-data",
+          "SWAP_BOUNDARY:xdg-data",
+          "PRIVATE_PATH:xdg-state",
+          "TMPFS:xdg-state",
+          "MOUNT_FLAGS:xdg-state",
+          "SWAP_BOUNDARY:xdg-state",
+          "PRIVATE_PATH:xdg-runtime",
+          "TMPFS:xdg-runtime",
+          "MOUNT_FLAGS:xdg-runtime",
+          "SWAP_BOUNDARY:xdg-runtime"
+        ],
+        "kernelPreflightPassed": false,
+        "mayGenerateRealProof": false,
+        "paymentAllowed": false,
+        "externalReviewRequired": [
+          "physical_host_or_entire_vm_host_chain_swap_hibernation_dump",
+          "backup_snapshot_and_cloud_sync_exclusions",
+          "browser_descendant_paths_crash_upload_and_sandbox",
+          "bounded_structured_logs_without_secret_payloads",
+          "signed_runtime_identity_and_fresh_preflight_at_launch",
+          "actual_sdk_client_isolation_and_current_source_policy",
+          "explicit_tee_requirement_decision"
+        ],
+        "scope": "CURRENT_PROCESS_AND_DECLARED_PATHS_ONLY_NOT_BROWSER_OR_HOST_ATTESTATION"
+      }
+    },
+    "verifier": {
+      "snapshot": {
+        "schemaVersion": 4,
+        "observedAt": "2026-10-11T04:41:52.869Z",
+        "role": "verifier",
+        "root": "/run/clear-verifier",
+        "platform": "darwin",
+        "node": "24.21.0",
+        "uid": 501,
+        "paths": [
+          {
+            "path": "/run/clear-verifier",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-verifier/raw-proof",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          },
+          {
+            "path": "/run/clear-verifier/temp",
+            "exists": false,
+            "directory": false,
+            "symlinkFree": false,
+            "ownerMatches": false,
+            "privateMode": false,
+            "tmpfs": false,
+            "mount": null
+          }
+        ],
+        "globalSwapDisabled": null,
+        "cgroupSwapMaxZero": null,
+        "coreDumpDisabled": null,
+        "noNewPrivileges": null,
+        "source": "LOCAL_READ_ONLY_PROCESS_OBSERVATION"
+      },
+      "result": {
+        "status": "LOCAL_PREFLIGHT_BLOCKED",
+        "role": "verifier",
+        "failures": [
+          "LINUX_REQUIRED",
+          "CORE_DUMP_DISABLED",
+          "NO_NEW_PRIVILEGES",
+          "PRIVATE_PATH:root",
+          "TMPFS:root",
+          "MOUNT_FLAGS:root",
+          "SWAP_BOUNDARY:root",
+          "PRIVATE_PATH:raw-proof",
+          "TMPFS:raw-proof",
+          "MOUNT_FLAGS:raw-proof",
+          "SWAP_BOUNDARY:raw-proof",
+          "PRIVATE_PATH:temp",
+          "TMPFS:temp",
+          "MOUNT_FLAGS:temp",
+          "SWAP_BOUNDARY:temp"
+        ],
+        "kernelPreflightPassed": false,
+        "mayGenerateRealProof": false,
+        "paymentAllowed": false,
+        "externalReviewRequired": [
+          "physical_host_or_entire_vm_host_chain_swap_hibernation_dump",
+          "backup_snapshot_and_cloud_sync_exclusions",
+          "browser_descendant_paths_crash_upload_and_sandbox",
+          "bounded_structured_logs_without_secret_payloads",
+          "signed_runtime_identity_and_fresh_preflight_at_launch",
+          "actual_sdk_client_isolation_and_current_source_policy",
+          "explicit_tee_requirement_decision"
+        ],
+        "scope": "CURRENT_PROCESS_AND_DECLARED_PATHS_ONLY_NOT_BROWSER_OR_HOST_ATTESTATION"
+      }
+    }
+  },
+  "container": {
+    "status": "SYNTHETIC_ROLE_LAYOUTS_VALIDATED_LIVE_BLOCKED",
+    "imageId": "sha256:105a2584129c9600aebed6f5ac49ca4371c92b996ecd1af7179750333e9e2120",
+    "roles": [
+      {
+        "snapshot": {
+          "schemaVersion": 4,
+          "observedAt": "2026-10-11T04:42:11.978Z",
+          "role": "collector",
+          "root": "/run/clear-collector",
+          "platform": "linux",
+          "node": "24.19.0",
+          "uid": 65534,
+          "paths": [
+            {
+              "path": "/run/clear-collector",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/profile",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/cache",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/temp",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/downloads",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/crash",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/xdg-config",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/xdg-cache",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/xdg-data",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/xdg-state",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-collector/xdg-runtime",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-collector",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            }
+          ],
+          "globalSwapDisabled": false,
+          "cgroupSwapMaxZero": true,
+          "coreDumpDisabled": true,
+          "noNewPrivileges": true,
+          "source": "LOCAL_READ_ONLY_PROCESS_OBSERVATION"
+        },
+        "result": {
+          "status": "LOCAL_PREFLIGHT_BLOCKED",
+          "role": "collector",
+          "failures": [
+            "PINNED_NODE_REQUIRED",
+            "SWAP_BOUNDARY:root",
+            "SWAP_BOUNDARY:profile",
+            "SWAP_BOUNDARY:cache",
+            "SWAP_BOUNDARY:temp",
+            "SWAP_BOUNDARY:downloads",
+            "SWAP_BOUNDARY:crash",
+            "SWAP_BOUNDARY:xdg-config",
+            "SWAP_BOUNDARY:xdg-cache",
+            "SWAP_BOUNDARY:xdg-data",
+            "SWAP_BOUNDARY:xdg-state",
+            "SWAP_BOUNDARY:xdg-runtime"
+          ],
+          "kernelPreflightPassed": false,
+          "mayGenerateRealProof": false,
+          "paymentAllowed": false,
+          "externalReviewRequired": [
+            "physical_host_or_entire_vm_host_chain_swap_hibernation_dump",
+            "backup_snapshot_and_cloud_sync_exclusions",
+            "browser_descendant_paths_crash_upload_and_sandbox",
+            "bounded_structured_logs_without_secret_payloads",
+            "signed_runtime_identity_and_fresh_preflight_at_launch",
+            "actual_sdk_client_isolation_and_current_source_policy",
+            "explicit_tee_requirement_decision"
+          ],
+          "scope": "CURRENT_PROCESS_AND_DECLARED_PATHS_ONLY_NOT_BROWSER_OR_HOST_ATTESTATION"
+        },
+        "checks": [
+          "actual permission drift detected",
+          "outside-root disk write denied",
+          "SIGKILL and restart remove all role paths and canary"
+        ]
+      },
+      {
+        "snapshot": {
+          "schemaVersion": 4,
+          "observedAt": "2026-10-11T04:42:12.504Z",
+          "role": "verifier",
+          "root": "/run/clear-verifier",
+          "platform": "linux",
+          "node": "24.19.0",
+          "uid": 65534,
+          "paths": [
+            {
+              "path": "/run/clear-verifier",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-verifier",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-verifier/raw-proof",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-verifier",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            },
+            {
+              "path": "/run/clear-verifier/temp",
+              "exists": true,
+              "directory": true,
+              "symlinkFree": true,
+              "ownerMatches": true,
+              "privateMode": true,
+              "tmpfs": true,
+              "mount": {
+                "root": "/",
+                "target": "/run/clear-verifier",
+                "type": "tmpfs",
+                "options": [
+                  "rw",
+                  "nosuid",
+                  "nodev",
+                  "noexec",
+                  "relatime",
+                  "size=8192k",
+                  "mode=700",
+                  "uid=65534",
+                  "gid=65534"
+                ]
+              }
+            }
+          ],
+          "globalSwapDisabled": false,
+          "cgroupSwapMaxZero": true,
+          "coreDumpDisabled": true,
+          "noNewPrivileges": true,
+          "source": "LOCAL_READ_ONLY_PROCESS_OBSERVATION"
+        },
+        "result": {
+          "status": "LOCAL_PREFLIGHT_BLOCKED",
+          "role": "verifier",
+          "failures": [
+            "PINNED_NODE_REQUIRED",
+            "SWAP_BOUNDARY:root",
+            "SWAP_BOUNDARY:raw-proof",
+            "SWAP_BOUNDARY:temp"
+          ],
+          "kernelPreflightPassed": false,
+          "mayGenerateRealProof": false,
+          "paymentAllowed": false,
+          "externalReviewRequired": [
+            "physical_host_or_entire_vm_host_chain_swap_hibernation_dump",
+            "backup_snapshot_and_cloud_sync_exclusions",
+            "browser_descendant_paths_crash_upload_and_sandbox",
+            "bounded_structured_logs_without_secret_payloads",
+            "signed_runtime_identity_and_fresh_preflight_at_launch",
+            "actual_sdk_client_isolation_and_current_source_policy",
+            "explicit_tee_requirement_decision"
+          ],
+          "scope": "CURRENT_PROCESS_AND_DECLARED_PATHS_ONLY_NOT_BROWSER_OR_HOST_ATTESTATION"
+        },
+        "checks": [
+          "actual permission drift detected",
+          "outside-root disk write denied",
+          "SIGKILL and restart remove all role paths and canary"
+        ]
+      }
+    ],
+    "hostChainVerified": false,
+    "browserStarted": false,
+    "mayGenerateRealProof": false
+  },
+  "plans": {
+    "collector": {
+      "role": "collector",
+      "mode": "SYNTHETIC",
+      "status": "REVIEWABLE_PLAN_NOT_INSTALLED",
+      "targetSelected": false,
+      "mayGenerateRealProof": false,
+      "paymentAllowed": false,
+      "root": "/run/clear-collector",
+      "paths": [
+        "/run/clear-collector/profile",
+        "/run/clear-collector/cache",
+        "/run/clear-collector/temp",
+        "/run/clear-collector/downloads",
+        "/run/clear-collector/crash",
+        "/run/clear-collector/xdg-config",
+        "/run/clear-collector/xdg-cache",
+        "/run/clear-collector/xdg-data",
+        "/run/clear-collector/xdg-state",
+        "/run/clear-collector/xdg-runtime"
+      ],
+      "candidateMemoryMiB": 1024,
+      "capacityMeasured": false,
+      "requiredNodeVersion": "24.21.0",
+      "controls": {
+        "nonRoot": true,
+        "readOnlyRoot": true,
+        "capabilities": [],
+        "noNewPrivileges": true,
+        "coreSoftLimit": 0,
+        "coreHardLimit": 0,
+        "swap": "GLOBAL_DISABLED_OR_REVIEWED_NOSWAP_AND_CGROUP_ZERO",
+        "backup": "MUST_VERIFY_HOST_AND_GUEST_EXCLUSION",
+        "snapshots": "MUST_VERIFY_NO_MEMORY_SNAPSHOT",
+        "logs": "BOUNDED_ALLOWLIST_METADATA_ONLY_NO_STDOUT_PAYLOAD",
+        "network": "SYNTHETIC_LOOPBACK_ONLY",
+        "browserSandboxMustRemainEnabled": true
+      },
+      "startup": [
+        "Confirm selected physical/VM host and current review evidence",
+        "Create fresh bounded volatile mount; never reuse nonempty existing directory",
+        "Verify mount owner, mode, nested mounts, swap, dump and exact runtime",
+        "Create owned per-session child paths with mode 0700",
+        "Recheck immediately before launch; refuse missing/unknown facts"
+      ],
+      "shutdown": [
+        "Stop descendants and transport first",
+        "Revoke session and discard cookie/owner; no automatic reconnect",
+        "Delete session staging; unmount only this run owned mount",
+        "Fail closed on cleanup error and report only an error code"
+      ],
+      "blockers": [
+        "physical_host_or_entire_vm_host_chain_swap_hibernation_dump",
+        "backup_snapshot_and_cloud_sync_exclusions",
+        "browser_descendant_paths_crash_upload_and_sandbox",
+        "bounded_structured_logs_without_secret_payloads",
+        "signed_runtime_identity_and_fresh_preflight_at_launch",
+        "actual_sdk_client_isolation_and_current_source_policy",
+        "explicit_tee_requirement_decision"
+      ],
+      "browser": {
+        "binary": "UNSELECTED_LINUX_CHROME_BUILD",
+        "syntheticStartUrl": "about:blank",
+        "args": [
+          "--user-data-dir=/run/clear-collector/profile",
+          "--disk-cache-dir=/run/clear-collector/cache",
+          "--remote-debugging-pipe",
+          "--no-first-run",
+          "--no-default-browser-check",
+          "--disable-sync",
+          "--disable-extensions",
+          "--disable-background-networking",
+          "--disable-component-update"
+        ],
+        "env": {
+          "TMPDIR": "/run/clear-collector/temp",
+          "XDG_CONFIG_HOME": "/run/clear-collector/xdg-config",
+          "XDG_CACHE_HOME": "/run/clear-collector/xdg-cache",
+          "XDG_DATA_HOME": "/run/clear-collector/xdg-data",
+          "XDG_STATE_HOME": "/run/clear-collector/xdg-state",
+          "XDG_RUNTIME_DIR": "/run/clear-collector/xdg-runtime"
+        },
+        "downloadPolicy": "BLOCK_UNLESS_EXPLICITLY_REVIEWED",
+        "crashPolicy": "VERIFY_ALL_DESCENDANT_PATHS_AND_NO_UPLOAD_NOT_FLAG_ONLY",
+        "display": "UNDECIDED_USER_INTERACTIVE_PATH_REQUIRED_BEFORE_LOGIN"
+      }
+    },
+    "verifier": {
+      "role": "verifier",
+      "mode": "SYNTHETIC",
+      "status": "REVIEWABLE_PLAN_NOT_INSTALLED",
+      "targetSelected": false,
+      "mayGenerateRealProof": false,
+      "paymentAllowed": false,
+      "root": "/run/clear-verifier",
+      "paths": [
+        "/run/clear-verifier/raw-proof",
+        "/run/clear-verifier/temp"
+      ],
+      "candidateMemoryMiB": 128,
+      "capacityMeasured": false,
+      "requiredNodeVersion": "24.21.0",
+      "controls": {
+        "nonRoot": true,
+        "readOnlyRoot": true,
+        "capabilities": [],
+        "noNewPrivileges": true,
+        "coreSoftLimit": 0,
+        "coreHardLimit": 0,
+        "swap": "GLOBAL_DISABLED_OR_REVIEWED_NOSWAP_AND_CGROUP_ZERO",
+        "backup": "MUST_VERIFY_HOST_AND_GUEST_EXCLUSION",
+        "snapshots": "MUST_VERIFY_NO_MEMORY_SNAPSHOT",
+        "logs": "BOUNDED_ALLOWLIST_METADATA_ONLY_NO_STDOUT_PAYLOAD",
+        "network": "SYNTHETIC_LOOPBACK_ONLY",
+        "browserSandboxMustRemainEnabled": true
+      },
+      "startup": [
+        "Confirm selected physical/VM host and current review evidence",
+        "Create fresh bounded volatile mount; never reuse nonempty existing directory",
+        "Verify mount owner, mode, nested mounts, swap, dump and exact runtime",
+        "Create owned per-session child paths with mode 0700",
+        "Recheck immediately before launch; refuse missing/unknown facts"
+      ],
+      "shutdown": [
+        "Stop descendants and transport first",
+        "Revoke session and discard cookie/owner; no automatic reconnect",
+        "Delete session staging; unmount only this run owned mount",
+        "Fail closed on cleanup error and report only an error code"
+      ],
+      "blockers": [
+        "physical_host_or_entire_vm_host_chain_swap_hibernation_dump",
+        "backup_snapshot_and_cloud_sync_exclusions",
+        "browser_descendant_paths_crash_upload_and_sandbox",
+        "bounded_structured_logs_without_secret_payloads",
+        "signed_runtime_identity_and_fresh_preflight_at_launch",
+        "actual_sdk_client_isolation_and_current_source_policy",
+        "explicit_tee_requirement_decision"
+      ],
+      "verifier": {
+        "rawProofPath": "/run/clear-verifier/raw-proof",
+        "tempPath": "/run/clear-verifier/temp",
+        "retentionSeconds": 86400,
+        "deleteOnPacketIssued": true,
+        "restart": "Raw data loss allowed; fresh proof required within fixed deadline",
+        "packetAndLedger": "Persist separately with existing rights and 30-day policy; never delete them with raw-proof mount",
+        "transport": "AUTHENTICATED_HTTPS_NOT_IMPLEMENTED"
+      }
+    }
+  },
+  "preservation": {
+    "before": {
+      "original": {
+        "root": "/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype",
+        "count": 26857,
+        "metadataSha256": "78f8342c77bdea58ebe51791708eb6d09306910f7cbb71b6441bfe07afdd996b"
+      },
+      "experiments": {
+        "root": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments",
+        "count": 92550,
+        "metadataSha256": "289a78a39c02c6999aa5f2bdd3f7819b5b80cb1da927db8e779dabcecdadfaa2"
+      }
+    },
+    "after": {
+      "original": {
+        "count": 26857,
+        "metadataSha256": "78f8342c77bdea58ebe51791708eb6d09306910f7cbb71b6441bfe07afdd996b",
+        "unchanged": true
+      },
+      "experiments": {
+        "count": 92550,
+        "metadataSha256": "289a78a39c02c6999aa5f2bdd3f7819b5b80cb1da927db8e779dabcecdadfaa2",
+        "unchanged": true
+      }
+    },
+    "originalAndLegacySourceCount": 191,
+    "sourceMismatches": [],
+    "existingReferenceHashMismatch": "UNCHANGED_PREEXISTING_4_DOCUMENTS",
+    "productCodeChanged": false,
+    "originalPrivateMaterialRead": false
+  },
+  "mayGenerateRealProof": false,
+  "paymentAllowed": false,
+  "actualLoginRequested": false,
+  "browserStartedThisStep": false,
+  "privilegedContainerUsed": false,
+  "teeRequirementChanged": false,
+  "newImagesOrOsInstalled": false,
+  "nextStep": "SELECT_COLLECTION_DEVICE_THEN_TARGET_SPECIFIC_STORAGE_AND_SYNTHETIC_BROWSER_VERIFICATION",
+  "fingerprints": [
+    {
+      "path": "spikes/w02-storage-preparation/README.ko.md",
+      "sha256": "50ed4ac9318469cfbc9a512d1959c33286384551fcdfee90e32d4c3679fc5cf9"
+    },
+    {
+      "path": "spikes/w02-storage-preparation/build-plan.mjs",
+      "sha256": "3cb25174881771f8a61800ad86bceca1ce2d1f30a032698c45fef79a1a17ec41"
+    },
+    {
+      "path": "spikes/w02-storage-preparation/package.json",
+      "sha256": "214817c26466c542e12db85aaec609f7194262459bce8b2cc6682293a0e90222"
+    },
+    {
+      "path": "spikes/w02-storage-preparation/preflight.mjs",
+      "sha256": "38e7b9938209c9f78e3c8fd970de87ede894e0b33df2b8717b7ffe33bfc23a04"
+    },
+    {
+      "path": "spikes/w02-storage-preparation/probe-container.mjs",
+      "sha256": "d0ad9a95f77ab0a45fa2fa383dd1d7817ee7da4f3956e3edba4c5734132555bf"
+    },
+    {
+      "path": "spikes/w02-storage-preparation/targets.candidate.json",
+      "sha256": "07c18027e1b55c5abcb6bf93a54baef8d8513524a4a18caa90554f5b969f93aa"
+    },
+    {
+      "path": "spikes/w02-storage-preparation/test/plan.test.mjs",
+      "sha256": "9d0a8da0c3ce0626468a213ca5c26a572b01849c8c4f611134fd763d967f1967"
+    },
+    {
+      "path": "spikes/w02-storage-preparation/test/preflight.test.mjs",
+      "sha256": "b1b9dc1884e00df1488e21763f0909ac4d58f22b965bd8a163a7eb352fdd7567"
+    }
+  ]
+}

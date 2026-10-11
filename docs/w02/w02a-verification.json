@@ -1,0 +1,244 @@
+{
+  "stage": "W02_A",
+  "date": "2026-10-11",
+  "recordedAt": "2026-10-11T13:15:09.019782+09:00",
+  "status": "COMPLETE_SYNTHETIC_PASS_TEE_PATH_GAP_CONFIRMED",
+  "report": "W02A_REPORT.ko.md",
+  "tests": {
+    "total": 107,
+    "pass": 107,
+    "fail": 0,
+    "originalRegression": 36,
+    "newDirectAndTeeNegative": 71,
+    "names": [
+      "positive: two artificial signed claims bind to the wallet; no payment authority",
+      "REAL_YBM mode cannot enter this offline adapter",
+      "duplicate concurrent callbacks accept once in this process",
+      "newly signed proof on consumed session is a replay",
+      "wallet signature cannot move to another applicationId",
+      "wallet signature cannot move to another policyHash",
+      "wallet signature cannot move to another runtimeConfigHash",
+      "wallet signature cannot move to another proofSessionId",
+      "wallet signature cannot move to another requestNonce",
+      "wallet signature rejects changed chain",
+      "wallet signature rejects changed contract",
+      "wallet signature rejects changed instance",
+      "wallet signature rejects changed wallet",
+      "attested proof still cannot move to a newly consented different application",
+      "unsigned context alteration invalidates the actual signature",
+      "an untrusted signer with trusted-looking witness metadata is rejected",
+      "SDK accepts any trusted signer; wrapper rejects an extra untrusted signer",
+      "claim identifier must match signed contents",
+      "valid attestor signature does not override the pinned extraction rules",
+      "valid attestor signature does not override source URL/method",
+      "different proof owner fails even with a valid attestor signature",
+      "stale proof is rejected",
+      "before request proof is rejected",
+      "future proof is rejected",
+      "expired session is rejected",
+      "rejects signed but wrong SDK session",
+      "rejects signed but wrong source role",
+      "rejects signed but wrong exam number",
+      "rejects signed but wrong exam date",
+      "rejects signed but wrong invalid calendar date",
+      "rejects signed but wrong exam type",
+      "rejects signed but wrong score range",
+      "unsigned score convenience fields cannot change the result",
+      "missing proof is rejected without consuming the session",
+      "oversized callback is rejected before signature verification",
+      "pinned SDK exposes JSON context and exact provider-version methods",
+      "direct context and ephemeral owner bind without any hosted provider/session ID",
+      "context builder never forwards caller-injected extracted fields",
+      "direct rejects real data mode",
+      "direct rejects wrong scope",
+      "direct rejects unfunded application",
+      "direct rejects hosted envelope",
+      "direct rejects hosted record",
+      "direct rejects different recipient",
+      "direct rejects expired session",
+      "direct rejects not-yet-created session",
+      "direct rejects malformed public key",
+      "direct rejects missing pair",
+      "direct rejects oversized envelope",
+      "direct rejects raw cookie field",
+      "direct rejects missing role request",
+      "direct rejects shared role request",
+      "wallet binding prevents substituted applicationId",
+      "wallet binding prevents substituted policyHash",
+      "wallet binding prevents substituted runtimeConfigHash",
+      "wallet binding prevents substituted proofSessionId",
+      "wallet binding prevents substituted requestNonce",
+      "wallet binding prevents substituted expiresAt",
+      "wallet binding prevents substituted ownerPublicKey",
+      "direct wallet binding rejects other chainId",
+      "direct wallet binding rejects other verifyingContract",
+      "direct wallet binding rejects other salt",
+      "new wallet consent for another application cannot reuse old proofs",
+      "attestor-signed clearSchemaVersion mismatch is still rejected",
+      "attestor-signed clearRoute mismatch is still rejected",
+      "attestor-signed clearBindingHash mismatch is still rejected",
+      "attestor-signed clearSourceRole mismatch is still rejected",
+      "attestor-signed clearSourceRequestId mismatch is still rejected",
+      "attestor-signed clearSourcePolicyHash mismatch is still rejected",
+      "fabricated vendor session field cannot make direct proof a hosted proof",
+      "unsigned context alteration fails the real SDK signature check",
+      "untrusted signer with trusted-looking metadata is rejected",
+      "second signature cannot smuggle an extra untrusted attestor",
+      "a valid attestor signature cannot change the owner",
+      "signed changed URL fails the pinned source policy",
+      "signed changed method fails the pinned source policy",
+      "signed changed header fails the pinned source policy",
+      "signed changed extraction rule fails the pinned source policy",
+      "signed changed redaction rule fails the pinned source policy",
+      "mutating the trusted source bundle without updating its binding is rejected",
+      "SDK hash omits accept header; direct exact parameter check covers it",
+      "direct rejects stale proof",
+      "direct rejects before session proof",
+      "direct rejects future proof",
+      "direct rejects different exam",
+      "direct rejects invalid date",
+      "direct rejects wrong type",
+      "direct rejects missing score",
+      "direct rejects invalid score",
+      "direct rejects unneeded identity",
+      "unsigned convenience score is not authority",
+      "duplicate keys in signed context are rejected, not silently normalized",
+      "proof snapshot cannot be changed while asynchronous verification is pending",
+      "pure inspection does not consume a nonce or grant payment on repeated requests",
+      "historical direct proof shape is signed but fails required SDK TEE validation",
+      "required TEE stays blocked for empty proof array",
+      "required TEE stays blocked for one proof",
+      "required TEE stays blocked for client success flags",
+      "required TEE stays blocked for witness-only attestation label",
+      "actual SDK rejects a forged attestor TEE token independently of claim signing",
+      "real SDK TEE validator rejects wrong app",
+      "real SDK TEE validator rejects wrong session",
+      "real SDK TEE validator rejects old nonce timestamp",
+      "real SDK TEE validator rejects fabricated nonce material",
+      "real SDK TEE validator rejects bundle nonce mismatch",
+      "real SDK TEE validator rejects unsupported TEE format",
+      "real SDK TEE validator rejects unsigned JWT"
+    ],
+    "execution": "./tools/node --test --test-reporter=tap --test-concurrency=1 spikes/w02-proof-adapter/test/*.test.mjs",
+    "fetchAttempts": 0,
+    "actualYbm": false,
+    "actualZkTlsGeneration": false,
+    "validHardwareTeeProofs": 0,
+    "rawProofsWritten": false,
+    "dependencyTrustRootsMocked": false,
+    "onlyMocks": "fetch blocked; console error/log muted in seven synthetic TEE-negative cases"
+  },
+  "publicPackages": [
+    {
+      "name": "@reclaimprotocol/attestor-core",
+      "version": "5.1.4",
+      "gitHead": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+      "registryUrl": "https://registry.npmjs.org/@reclaimprotocol%2Fattestor-core/latest",
+      "distIntegrity": "sha512-6s8pywB5gWSUA/igj7AdAn9qObkSpk2SfkCWu4KheQIbyMCIKyUH5FMsektU9TzYNKZW7YRQDxRFbxNTcMulgg=="
+    },
+    {
+      "name": "@reclaimprotocol/js-sdk",
+      "version": "5.8.2",
+      "gitHead": "543739d679f76dbecfc6251dc2df92038538b8ef",
+      "registryUrl": "https://registry.npmjs.org/@reclaimprotocol%2Fjs-sdk/latest",
+      "distIntegrity": "sha512-2U4hutn2jJQkjaaTiS3o/UT2vjbFxECBA+AUrIVBIUYnJ3LCh775zBnspt1hJ+aMa4EiKyTjxl5sSsC2gCARrA=="
+    }
+  ],
+  "comparison": {
+    "historicalSuccess": "Official-attestor signed YBM claim generation and linked-record verification, one account",
+    "directCreationRpc": "claimTunnel",
+    "currentDirectOutputCompatibleWithRequiredTee": false,
+    "scope": "Pinned direct generator and historical wrapper; not a claim about all Reclaim paths",
+    "teeVerifierAppAndAttestorAreDistinct": true
+  },
+  "recommendation": {
+    "id": "W02_TEE_SCOPE",
+    "status": "PROPOSED_NOT_APPLIED",
+    "preferred": "MVP standard official-attestor zkTLS with explicit attestor trust; TEE optional additional assurance",
+    "alternative": "Keep required verifier-app TEE and obtain a supported generator plus actual compatible evidence",
+    "existingTeeGateStillRequired": true
+  },
+  "nextStep": "W02_B_SYNTHETIC_EXTRACTION_ISOLATION_STORAGE; resolve TEE design choice before real capture",
+  "mayGenerateRealProof": false,
+  "paymentAllowed": false,
+  "productCodeChanged": false,
+  "privateMaterialRead": false,
+  "sources": [
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/direct-route.mjs",
+      "sha256": "ebb88b660cb0acb91cd728ccfae35ea08aceb850dec7765620db17a9afe918e7"
+    },
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/test/direct-route.test.mjs",
+      "sha256": "d7b81af1cc1889d52f87fa6177d2009bf80418caeb4da1a420ca0d478fdd3a5c"
+    },
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/offline-adapter.mjs",
+      "sha256": "43e5fccd0b8743fb6afe020193bdfa0a508737e55930754a7ad26dfa58037c4f"
+    },
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/package-lock.json",
+      "sha256": "def12a8af4c44bff1bcfaae857ceb1d45c56f7745811bf65fc71bcf8bb072cc2"
+    },
+    {
+      "path": "/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/spikes/w02-proof-adapter/node_modules/@reclaimprotocol/js-sdk/dist/index.js",
+      "sha256": "acdc720bd4fafd417e34a4829a20a5a278b6c68e29d172eb9a6a097c8fa4b815"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-ybm-identity-2026-10-09/prove-linked.mjs",
+      "sha256": "05e576dace82e5c2ddc67678e9e54079e3c63e714cdb039d756f389c0adc5dc2"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-toeic-reclaim-2026-10-08/node_modules/@reclaimprotocol/attestor-core/lib/index.js",
+      "sha256": "3f898e87fab790d4a9acd42da905b166652edf27e29b1ee4066e7648a19fa2e9"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-local-attestor-2026-10-09/attestor-core-bc36dac3657fc46b79b4ecd545262c32440b05a6/src/client/create-claim.ts",
+      "sha256": "81dd69b12dbefcce5360307f4e4f5c9ba3a6153e8c9a3dcfa241057337881c85"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-local-attestor-2026-10-09/attestor-core-bc36dac3657fc46b79b4ecd545262c32440b05a6/src/server/handlers/claimTunnel.ts",
+      "sha256": "6f644c512036010e55565eea249c66338c8cdd1d60996560b1a4f33972f38a06"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-local-attestor-2026-10-09/attestor-core-bc36dac3657fc46b79b4ecd545262c32440b05a6/src/server/handlers/claimTeeBundle.ts",
+      "sha256": "0dbcf25e6f07b0abc648f7ef94b199792e441bc8c5b724ce5978c20063fc17d3"
+    },
+    {
+      "path": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments/clear-local-attestor-2026-10-09/attestor-core-bc36dac3657fc46b79b4ecd545262c32440b05a6/src/server/utils/assert-valid-claim-request.ts",
+      "sha256": "f21cad75e025a499ad88ae31e7926ca3052286e62052ed5d4042b32ff70013d4"
+    }
+  ],
+  "preservation": {
+    "legacySourceFiles": 191,
+    "legacyMismatches": [],
+    "originalSourceMismatches": [],
+    "sourceFingerprintsChecked": 11,
+    "workspaceVerification": "FAIL_PREEXISTING_REFERENCE_DOCUMENT_HASH_DRIFT",
+    "referenceDriftCommit": "375051e",
+    "referenceFilesUnchangedInW02A": true,
+    "referenceHashMismatches": [
+      {
+        "file": "PRD.ko.md",
+        "expected": "4ebd73a210662d3cc4aae03329494fcb4b02d14c205a51cf45d19baf326186f9",
+        "actual": "754d8f8da40115ce9ebac2ea9b9e1ca8877ca19a8bb4ac698d8d78b777149c11"
+      },
+      {
+        "file": "DESIGN.ko.md",
+        "expected": "ea1eb5ca7ab2a4dcb0511dffaaf690d9015a0eaa6e304302938089bb552ceca8",
+        "actual": "ef39c93ce0fb031d68f69d80d3aeedc5c343d0632938aa956a8419c4ebc2e202"
+      },
+      {
+        "file": "IMPLEMENTATION_PLAN.ko.md",
+        "expected": "cecdff9388680e233da0681bdd5959108d1554ce4918172fa99139e13d2dacb3",
+        "actual": "8dc178aca3ab7c84993fa8321ea125b363daf998181b1c17cc88cd800defc770"
+      },
+      {
+        "file": "AUDIT.ko.md",
+        "expected": "5905b635107c28ce6ccc19fbbe764da803118098d6ed6a609ddf5e9658685213",
+        "actual": "b2d3d28c53ae133a46ac4cd7262341f8514957717470fb4a36c1a1d1b5979761"
+      }
+    ],
+    "baselineOrReferenceDocumentsModifiedInW02A": false
+  }
+}

@@ -1,0 +1,301 @@
+{
+  "stage": "W02_B",
+  "date": "2026-10-11",
+  "recordedAt": "2026-10-11T13:35:58.949206+09:00",
+  "status": "SYNTHETIC_TESTS_COMPLETE_LIVE_STORAGE_BOUNDARY_BLOCKED",
+  "report": "W02B_REPORT.ko.md",
+  "modelRecommendation": {
+    "model": "GPT-6 Astra",
+    "reasoning": "high",
+    "settingChanged": false
+  },
+  "tests": {
+    "new": 62,
+    "newPass": 62,
+    "newFail": 0,
+    "groups": {
+      "providerExtraction": 24,
+      "processIsolation": 16,
+      "storage": 22
+    },
+    "priorRegression": 107,
+    "regressionPass": 107,
+    "totalNodeTests": 169,
+    "names": [
+      "real HTTP provider extracts registration from synthetic redacted UTF-8 transcript",
+      "real HTTP provider extracts score from synthetic redacted UTF-8 transcript",
+      "row order never mixes fields or selects first row instead of requested exam",
+      "provider rejects no rows",
+      "provider rejects missing target",
+      "provider rejects empty required value",
+      "provider rejects duplicate target",
+      "provider rejects duplicate conflicting score",
+      "provider rejects cross-row splice",
+      "provider rejects hidden row fragment",
+      "provider rejects different test",
+      "provider rejects extra field",
+      "provider rejects source HTTP 302 Found",
+      "provider rejects source HTTP 401 Unauthorized",
+      "provider rejects source HTTP 500 Server Error",
+      "provider mandatory extraction throws before context injection can be reused",
+      "empty extraction is possible with weak policy: reproduce server merge risk without claiming TLS attestation",
+      "required extraction returns complete source values replacing injected client values in pinned merge model",
+      "post-extraction validator rejects calendar",
+      "post-extraction validator rejects range",
+      "post-extraction validator rejects step",
+      "post-extraction validator rejects missing",
+      "altered URL and method do not match even synthetically valid transcript",
+      "first-match redaction hides second table: provider success is not proof of list completeness",
+      "two actual worker processes keep distinct owners cookies profiles and TCP clients",
+      "disconnect after one proof invalidates session and never reconnects with old cookie",
+      "profile cleanup on worker cancel",
+      "profile cleanup on worker finish",
+      "profile cleanup on worker crash",
+      "expiry ends the worker and deletes synthetic profile",
+      "signed instruction rejects real mode",
+      "signed instruction rejects expired",
+      "signed instruction rejects wrong runtime",
+      "signed instruction rejects wrong origin",
+      "signed instruction rejects injected URL",
+      "instruction signature and caller origin checked before starting a process",
+      "parallel starts for one application reserve only one process",
+      "proof command before login fails closed",
+      "early capture filter never touches login headers or body",
+      "loss of parent IPC ends child and supervisor observes cleanup",
+      "staging accepts only synthetic pair and uses private permissions",
+      "retries never reset initial collection TTL; exact boundary sweeps",
+      "restart retains creation time for failure/interruption cleanup",
+      "synthetic raw staging can be deleted on packet-issued",
+      "synthetic raw staging can be deleted on cancelled",
+      "synthetic raw staging can be deleted on failed",
+      "API boundary rejects real mode without writing or echoing content",
+      "API boundary rejects cookie field without writing or echoing content",
+      "API boundary rejects HTML without writing or echoing content",
+      "API boundary rejects private key without writing or echoing content",
+      "API boundary rejects transcript without writing or echoing content",
+      "API boundary rejects partial pair without writing or echoing content",
+      "API boundary rejects path traversal without writing or echoing content",
+      "API boundary rejects extra nested object without writing or echoing content",
+      "API rejects oversize",
+      "API rejects invalid UTF8",
+      "API rejects invalid JSON",
+      "API rejects duplicate key",
+      "symlink stage file cannot overwrite target or pass as accepted proof",
+      "symlink root and public permissions are rejected",
+      "current macOS disk directory never authorizes real capture",
+      "partial interrupted write remains unavailable rather than accepted as valid staging"
+    ],
+    "tapSha256": "febae89985d50922eb715aba33ea217a6fe18bb41241e5ccbde3f5d24abcae48",
+    "regressionTapSha256": "8bf13b8455c6713ac87138c44d9db32043c71dae2884f251abe1672e45520465"
+  },
+  "testBoundaries": {
+    "realHttpProviderFunctions": true,
+    "syntheticHttpReceipts": true,
+    "fullClaimServerVerification": false,
+    "claimContextMerge": "Source-matched model only; not actual server claim signature verification",
+    "actualYbm": false,
+    "actualZkTlsGeneration": false,
+    "actualAttestorConnection": false,
+    "actualNativeMessaging": false,
+    "productionCallbackEndpoint": false,
+    "databaseAtomicAcceptance": false,
+    "nodeTestNetwork": "Tripwire blocks fetch and external TCP/DNS; loopback TCP allowed; child has hardcoded loopback target",
+    "browserNetwork": "Dedicated synthetic loopback source; background networking disabled by flags, not an OS-wide network audit",
+    "canariesAbsentFromNodeTap": true,
+    "realSecretsRead": false
+  },
+  "packages": {
+    "coreVersion": "5.1.4",
+    "coreBundleSha256": "3f898e87fab790d4a9acd42da905b166652edf27e29b1ee4066e7648a19fa2e9",
+    "coreBundleMatchesW02AHistoricalPackage": true,
+    "ethersVersion": "6.17.0",
+    "installationScripts": "DISABLED",
+    "regexEngine": "NATIVE_REGEXP_FALLBACK_RE2_NOT_BUILT",
+    "hostNode": "24.21.0"
+  },
+  "findings": [
+    {
+      "id": "MANDATORY_EXTRACTION",
+      "status": "REQUIRED_POLICY_SYNTHETIC_PASS",
+      "risk": "Weak empty-extraction policy plus preserved input context can retain fully schema-valid injected values; schema alone is insufficient."
+    },
+    {
+      "id": "LIST_COMPLETENESS",
+      "status": "NOT_PROVEN",
+      "risk": "Actual first-match redaction can hide a second table. Do not infer full highest-score search or final failure from one pair."
+    },
+    {
+      "id": "CLIENT_ISOLATION",
+      "status": "SYNTHETIC_PROCESSES_PASS_ACTUAL_RECLAIM_PENDING",
+      "requirement": "Dedicated actual client object, total attempt count one, discard on disconnect; browser pairing still pending."
+    }
+  ],
+  "container": {
+    "scope": "SYNTHETIC_CONTAINER_ONLY",
+    "imageTag": "public.ecr.aws/supabase/storage-api:v1.72.1",
+    "imageId": "sha256:105a2584129c9600aebed6f5ac49ca4371c92b996ecd1af7179750333e9e2120",
+    "checks": [
+      "container restrictions verified",
+      "real tmpfs stage file mode 0600",
+      "packet issuance deletion",
+      "24-hour retention exact boundary without retry reset",
+      "disk fallback denied",
+      "tmpfs capacity exhaustion fails",
+      "SIGKILL and same-container restart leaves tmpfs empty"
+    ],
+    "liveCaptureAllowed": false,
+    "hostVmSwapAndBackupsVerified": false,
+    "browserLaunched": false,
+    "boundary": {
+      "platform": "linux",
+      "tmpfs": true,
+      "swapDisabled": false,
+      "mountNoswap": false,
+      "cgroupSwapDisabled": true,
+      "coreDisabled": true,
+      "symlinkFree": true,
+      "privateMode": true,
+      "liveCaptureAllowed": false,
+      "syntheticKernelBoundaryPassed": false
+    },
+    "node": "v24.19.0",
+    "status": "SYNTHETIC_LIFECYCLE_PASS_STORAGE_GATE_BLOCKED"
+  },
+  "requiredNoswapProbe": {
+    "scope": "SYNTHETIC_CONTAINER_ONLY",
+    "imageTag": "public.ecr.aws/supabase/storage-api:v1.72.1",
+    "imageId": "sha256:105a2584129c9600aebed6f5ac49ca4371c92b996ecd1af7179750333e9e2120",
+    "checks": [
+      "Docker rejects noswap; no fallback attempted in this strict probe"
+    ],
+    "liveCaptureAllowed": false,
+    "hostVmSwapAndBackupsVerified": false,
+    "browserLaunched": false,
+    "status": "REQUIRED_TMPFS_NOSWAP_OPTION_UNSUPPORTED"
+  },
+  "browser": {
+    "scope": "SYNTHETIC_HEADLESS_CHROME_ONLY",
+    "chromeVersion": "Google Chrome 154.0.8037.99",
+    "checks": [
+      "two dedicated Chrome processes and profiles authenticate independently to synthetic loopback HTTP source",
+      "synthetic HTTP-only cookies reach their source; no cookie printed to stdout/stderr",
+      "both Chrome profiles create disk cookie databases; real collection remains blocked",
+      "both synthetic browser profiles and temporary directories removed"
+    ],
+    "liveCaptureAllowed": false,
+    "attestorConnected": false,
+    "osSwapBackupsVerified": false,
+    "profileFindings": {
+      "profiles": 2,
+      "cookieDatabases": 2,
+      "diskFilesPresent": true
+    },
+    "status": "PASS_SYNTHETIC_BROWSER_ISOLATION_DISK_STORAGE_NOT_APPROVED"
+  },
+  "browserProbeLimits": {
+    "initialDomAutoExitProbesTimedOut": 2,
+    "finalAcceptance": "Observed two per-profile HttpOnly cookie receipts at synthetic source, then explicit termination",
+    "renderingOrUserTaskVerified": false,
+    "cookiesWrittenToDedicatedSyntheticDiskProfiles": true,
+    "profilesRemoved": true
+  },
+  "preservation": {
+    "before": {
+      "original": {
+        "root": "/Users/ohgyuwon/Desktop/dev/블록체인/refund-vault-prototype",
+        "count": 26857,
+        "metadataSha256": "78f8342c77bdea58ebe51791708eb6d09306910f7cbb71b6441bfe07afdd996b"
+      },
+      "experiments": {
+        "root": "/Users/ohgyuwon/.codex/.chatgpt-projects/g-p-6a9fbda3d8e88191aa2320656de7fb49/experiments",
+        "count": 92550,
+        "metadataSha256": "289a78a39c02c6999aa5f2bdd3f7819b5b80cb1da927db8e779dabcecdadfaa2"
+      }
+    },
+    "after": {
+      "original": {
+        "count": 26857,
+        "metadataSha256": "78f8342c77bdea58ebe51791708eb6d09306910f7cbb71b6441bfe07afdd996b",
+        "unchanged": true
+      },
+      "experiments": {
+        "count": 92550,
+        "metadataSha256": "289a78a39c02c6999aa5f2bdd3f7819b5b80cb1da927db8e779dabcecdadfaa2",
+        "unchanged": true
+      }
+    },
+    "originalAndLegacySourceCount": 191,
+    "sourceMismatches": [],
+    "workspaceCheck": "FAIL_PREEXISTING_REFERENCE_DOCUMENT_HASH_DRIFT",
+    "referenceMismatches": [
+      "PRD.ko.md",
+      "DESIGN.ko.md",
+      "IMPLEMENTATION_PLAN.ko.md",
+      "AUDIT.ko.md"
+    ],
+    "baselineChanged": false,
+    "originalExecutorsRerun": false
+  },
+  "mayGenerateRealProof": false,
+  "paymentAllowed": false,
+  "teeRequirement": "REQUIRED_UNCHANGED",
+  "nextStep": "W02_B_FOLLOWUP_REVIEWED_OS_STORAGE_BROWSER_BOUNDARY_AND_EXPLICIT_TEE_DECISION_BEFORE_W02_C",
+  "fingerprints": [
+    {
+      "path": "spikes/w02-collector-boundary/.gitignore",
+      "sha256": "0946341f7607406600e0b2a55f28055ad8fcfbf0c0d8378752c0d30e1c0095c3"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/README.ko.md",
+      "sha256": "d5a68f5ce5157efbd594f8ae7dd0a9742da0d6a08b2126ce065e750f6b8457ff"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/collector-worker.mjs",
+      "sha256": "39e073392cda50555040990df217c06d277ad7bc23c6f3253940682ae81dc1e3"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/extraction.mjs",
+      "sha256": "b39bd9ae9e8db2545463becd669f21cff9d382d109ad189390164cbaca379be3"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/isolation.mjs",
+      "sha256": "02c4f108ba2b17d16c8477b080bbac9d4f57b7d162a4776e7f8d785344179483"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/package-lock.json",
+      "sha256": "34b06353e9ffab615e6381e9a5fd90008c874fb86b1bf241d5f8eae599a04211"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/package.json",
+      "sha256": "f726be92ec7af34514198682bfa9cf67a65966ada3227963de567857522b9b8c"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/storage.mjs",
+      "sha256": "725d0a64f804da6d4bffe36b9ca8f429d4161710df059620c8f90ef2b4edf775"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/test/extraction.test.mjs",
+      "sha256": "cbb493a9f5e41366b4efd95c23d8b45b3d933ce2ace09263222397d56db3da29"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/test/isolation.test.mjs",
+      "sha256": "268be1121054e6aed408b92333dadd14fd6d304582ca8c92dfc8145b5d5fa0b7"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/test/no-external-network.mjs",
+      "sha256": "b1c6925fa899c1dfa5dfbf1cb88a6a60f4498be1297697e5e36d13cdac557f91"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/test/storage.test.mjs",
+      "sha256": "8deb7bb3d6572af5beb9498de83ddccc2c09ff2ab69b1520a48b9938fd29f85f"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/test-browser-synthetic.mjs",
+      "sha256": "80c0b3921fdd807673c5c0ee5d5ba281ee3042a38261bc3ccbd4a57894f580f0"
+    },
+    {
+      "path": "spikes/w02-collector-boundary/test-storage-container.mjs",
+      "sha256": "1133067c776b810168ec77f326603dfa1a6716bda3761af8c7b9db9cd1b6fb39"
+    }
+  ]
+}

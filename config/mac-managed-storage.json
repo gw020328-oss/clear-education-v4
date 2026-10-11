@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 4,
+  "policyId": "MAC_MANAGED_STORAGE_2026_10_11",
+  "status": "APPROVED_POLICY_IMPLEMENTATION_UNDER_TEST",
+  "platform": "darwin-arm64",
+  "runtime": "24.21.0",
+  "browser": "installed-Google-Chrome",
+  "storage": "USER_PRIVATE_FILEVAULT_PROTECTED_APPLICATION_SUPPORT",
+  "timeMachine": "EXCLUDE_ONLY_NEW_APP_DIRECTORY",
+  "rawProofServerStaging": "MEMORY_ONLY",
+  "rawRetentionMs": 86400000,
+  "normalOrErrorExit": "DELETE_SESSION",
+  "powerOffOrForcedExit": "DELETE_ABANDONED_SESSION_BEFORE_NEXT_COLLECTION",
+  "zeroDiskTraceClaim": false,
+  "attestationAssurance": "OFFICIAL_ATTESTOR_SIGNED_ZKTLS",
+  "additionalTeeAssurance": "DEFERRED_EXPLICITLY",
+  "liveCollectionEnabled": false,
+  "publicChainPaymentEnabled": false
+}

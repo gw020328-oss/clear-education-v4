@@ -5,7 +5,8 @@
   "scripts": {
     "verify:workspace": "node tools/verify-workspace.mjs",
     "verify:dependencies": "node tools/verify-dependencies.mjs",
-    "prepare:workspace": "node tools/prepare-workspace.mjs"
+    "prepare:workspace": "node tools/prepare-workspace.mjs",
+    "verify:workspace:local": "node tools/verify-workspace.mjs --local"
   },
   "dependencies": {
     "ethers": "6.17.0",
