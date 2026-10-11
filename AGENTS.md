@@ -59,3 +59,5 @@
 - W02 실제 접속 경로: docs/w02/YBM_ROUTE_REPORT.ko.md 참조. 새 src/ybm-collector는 전용 worker의 공식 Attestor 연결을 Chrome HTTPS 중계에 사용한다. 익명 YBM 공개 페이지/Chrome 접속과 정리만 실측했다. 사용자 로그인·원본 수집·새 증명·지급은 미실행이며 기본/ZIP은 계속 합성 전용이다. 로그인 전송 경로 성공을 실제 수집 전체 완료로 기록하지 않는다. 계정 재로그인은 신청/owner 결합과 원천 정책 준비 뒤 요청한다. worker에서 client를 재생성하거나 과거 프로필·증명을 재사용하지 않는다. 새 접속 시험도 CI에서는 외부 네트워크를 차단한다.
 
 - W02 신청/지갑·추출 연결: docs/w02/YBM_BINDING_REPORT.ko.md 참조. 새 --ybm-collection-check는 사용자가 선택한 새 로컬 테스트 지갑으로 서명한 메모리 진단 명령과 원천 형식 확인이다. 배포 vault/예치/제품 동의를 가장하지 않는다. ready 전에는 수집하지 않으며 두 고정 URL/메서드만 읽는다. 실제 형식 검증 전 원천 정책은 후보 상태이고 알 수 없는 형식은 거부한다. HTML 연결 성공을 공식 증명 검증·최고점 확인·환급 자격·지급으로 기록하지 않는다. SDK proof 생성/검증은 별도 후속이다. 기존 합성 ZIP과 원본·실험 자료는 보존한다.
+
+- W02 실제 형식 진단 후속: 동일 지문의 후보 2로 본인 로그인 후 실제 성적·접수 기록의 같은 시험 연결, 로컬 테스트 신청·수취 지갑 결합, 동일 client 및 프로필 정리를 확인했다. docs/w02/ybm-binding-verification.json 참조. 새 증명·공식 서명 검증·지급은 false다. 성적 상세 scoreDetailToeic.php는 수집 대상이 아니며 접수 목록 confirmList.php에서 confirmDetail.php를 연다. 정상 완료 시 창 종료가 오류처럼 보이지 않도록 완료 문구를 유지한다. 다음 증명 단계 추천은 GPT-6 Astra / High다.

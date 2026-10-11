@@ -64,6 +64,7 @@ export async function runYbmRoute(session, {signal, interactive = false, collect
         if (live.aborted) abort();
       });
       live.throwIfAborted();
+      if(collectionResult?.complete)output('진단 완료: 성적·접수 기록의 같은 시험 연결을 확인했습니다. 전용 Chrome을 정상 종료하고 임시 프로필을 정리합니다. 새 증명 검증·지급은 실행하지 않았습니다.');
     }
     return {scope:collectionCheck?'BOUND_SOURCE_LAYOUT_DIAGNOSTIC':interactive ? 'YBM_LOGIN_ROUTE_ONLY' : 'ANONYMOUS_PUBLIC_ROUTE', ...publicCheck, browserNavigated: true, sameClient: route.client === connection.client, cdpListeningPort: false, rawCapture:collectionCheck?Boolean(capture?.summary().bodyReads):false, liveProof: false, payment: false,...(collectionCheck?{collection:collectionResult??{complete:false,proofVerified:false,paymentAllowed:false}}:{})};
   } catch(error) {

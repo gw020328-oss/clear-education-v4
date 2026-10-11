@@ -13,7 +13,7 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
   const done=new Promise((resolve,reject)=>{resolveDone=resolve;rejectDone=reject;});
   // Callers may still be setting up their race when a protocol event fails.
   done.catch(()=>{});
-  const fail=error=>{if(!settled){failureCode=safeCodes.has(error?.message)?error.message:'COLLECTION_CHECK_FAILED';settled=true;closed=true;extraction.close();rejectDone(new Error('COLLECTION_CHECK_FAILED'));}};
+  const fail=(error,role)=>{if(!settled){if(role==='registration'||role==='score')sourceRole=role;failureCode=safeCodes.has(error?.message)?error.message:'COLLECTION_CHECK_FAILED';settled=true;closed=true;extraction.close();rejectDone(new Error('COLLECTION_CHECK_FAILED'));}};
   const track=promise=>{tasks.add(promise);promise.catch(fail).finally(()=>tasks.delete(promise));};
   const check=()=>{requireValue(armed&&!closed,'CAPTURE_CLOSED');signal?.throwIfAborted();collection.assertActive();};
   async function attach(info){
@@ -28,12 +28,13 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
     // Ignore events belonging to unrelated CDP sessions entirely.
     if(!sessions.has(sessionId))return;
     const requestId=event.requestId;
-    let counted=false,completed;
+    let counted=false,completed,requestRole;
     try{
       if(closed)return;
       check();
       const role=Object.keys(endpoints).find(role=>event.request?.url===endpoints[role]&&event.request?.method===methods[role]);
       if(!role)return;
+      requestRole=role;
       sourceRole=role;
       requireValue(event.responseStatusCode===200&&!event.responseErrorReason,'SOURCE_HTTP_STATUS');
       if(seen.has(role))return;
@@ -53,10 +54,13 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
       received[role]=true;
       onProgress({role,complete:result.complete});
       if(result.complete){closed=true;completed=result;}
+    }catch(error){
+      fail(error,requestRole);throw error;
     }finally{
       if(counted)inflight--;
       // Always release the paused browser request, including mismatch/errors.
-      await browser.send('Fetch.continueRequest',{requestId},sessionId);
+      try{await browser.send('Fetch.continueRequest',{requestId},sessionId);}
+      catch(error){fail(error,requestRole);throw error;}
     }
     if(completed&&!settled){settled=true;resolveDone(completed);}
   }

@@ -1,0 +1,52 @@
+{
+  "stage": "W02_APPLICATION_RECIPIENT_SOURCE_BINDING",
+  "date": "2026-10-11",
+  "baseCommit": "dc08a37e8f37387daf1159a85a2dd6087e8f538f",
+  "branch": "codex/ybm-binding-extraction",
+  "modelRecommendation": {
+    "model": "GPT-6 Astra",
+    "reasoning": "high"
+  },
+  "sourcePolicyHash": "0x1cb26198d29fd05b06ad8a57c3f6b26594b16b9b71684011baafd2e77d844b18",
+  "localLayoutValidation": "MATCHED_ONCE_WITH_CURRENT_YBM_LOGIN",
+  "liveDiagnostic": {
+    "codeCommit": "3b626223f568b119950d1cf05be4e627a81ec63f",
+    "testRecipient": "NEW_EPHEMERAL_LOCAL_WALLET",
+    "applicationBound": true,
+    "recipientAuthorized": true,
+    "sameClient": true,
+    "sourcePairMatched": true,
+    "certificateValidated": true,
+    "profilesDeleted": true,
+    "remainingManagedSessions": 0,
+    "exitCode": 0,
+    "proofGenerated": false,
+    "proofVerified": false,
+    "listComplete": false,
+    "highestScoreAssessed": false,
+    "eligibilityAssessed": false,
+    "payment": false
+  },
+  "localTests": {
+    "ybmCollector": 89,
+    "macAndIntegrityAndPublicHistory": 48,
+    "proofAdapterSpike": 107,
+    "collectorBoundarySpike": 62,
+    "storagePreparationSpike": 37,
+    "total": 343,
+    "status": "PASS"
+  },
+  "preservation": {
+    "originalAndLegacySourceFiles": 191,
+    "historicalScripts": 3,
+    "fingerprintsMatch": true,
+    "privateOriginalProofsRead": false,
+    "originalScriptsExecuted": false,
+    "workspaceLocalVerification": "PASS",
+    "dependencyVerification": "PASS"
+  },
+  "implementationBoundary": "Local in-memory diagnostic authority and source layout extraction; not product application API, funded consent, attestation, or payout",
+  "nextStep": "Same-client fresh proof generation and independent verification of attestor signature, owner, context, source policy and freshness",
+  "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/3",
+  "merged": false
+}

@@ -45,3 +45,10 @@ test('score text-node reveals exclude private attributes even when they resemble
  const html=scoreHtml().replace('class="trSB"','data-secret="999999" class="trSB active"').replaceAll('<td>','<td title="SYNTHETIC_PRIVATE" data-number="999999">');
  const result=receipt('score',html);assert.deepEqual(examFields(result.fields,'score'),extractSource('score',Buffer.from(html))[0].fields);assert.ok(!result.text.includes('SYNTHETIC_PRIVATE'));assert.ok(!result.text.includes('999999'));
 });
+
+test('SDK recipes cannot truncate another exam type or an oversized identifier into valid fields',()=>{
+ assert.throws(()=>receipt('score',scoreHtml().replace('TOEIC</td>','TOEICSW</td>')));
+ assert.throws(()=>receipt('score',scoreHtml([{number:'12345678901'}])));
+ assert.throws(()=>receipt('registration',registrationHtml('2026.09.20','12345678901')));
+ assert.throws(()=>receipt('score',scoreHtml().replace('TOEIC</td>','TOEIC<span>SW</span></td>')));
+});

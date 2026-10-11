@@ -29,9 +29,9 @@ DOM 추출과 공식 HTTP provider의 가림·추출 규칙을 합성 HTTP recei
 
 ## 검증
 
-- YBM 수집기 시험 87개: 기존 28개와 신규 59개. 실제 키를 새로 만드는 서명·격리 시험, 합성 추출, SDK receipt, CDP 모의 이벤트 및 실행기 통합을 포함한다. 외부 네트워크는 차단한다.
+- YBM 수집기 시험 89개: 기존 28개와 신규 61개. 실제 키를 새로 만드는 서명·격리 시험, 합성 추출, SDK receipt, CDP 모의 이벤트 및 실행기 통합을 포함한다. 외부 네트워크는 차단한다.
 - Mac/원본 보존/공개 이력 회귀 48개. 실제 Chrome의 로컬 합성 HTTP 응답 읽기·요청 재개 시험 1개를 추가했다. 기존 강제 종료 복구 시험을 유지한다.
-- 기존 spike 107 + 62 + 37개. 합계 **341개** 통과.
+- 기존 spike 107 + 62 + 37개. 합계 **343개** 통과.
 - `verify:workspace:local`, `verify:dependencies` 통과. 원본·legacy 191개와 기존 성공 실행기 3개의 내용 지문 일치. 원본 문서 지문도 보존했다. 비공개 실험 증명·키·쿠키는 읽거나 복사하지 않았다.
 - 실제 로그인 진단과 GitHub CI 상태는 아래 후속 기록으로 구분한다.
 
@@ -48,3 +48,15 @@ DOM 추출과 공식 HTTP provider의 가림·추출 규칙을 합성 HTTP recei
 후보 1은 태그 속성과 두 칸짜리 접수 표를 지나치게 제한했다. 표시 속성 및 여러 th/td 쌍이 있는 표를 합성 자료로 재현하고, 후보 2에서는 인접한 th/td를 찾고 텍스트 노드만 가린 응답에서 드러내도록 수정했다. 주석 속 가짜 행, 속성 속 가짜 점수/수험번호, 엔티티 치환, 분리된 텍스트도 시험한다. 실제 페이지에 대한 원인 확정/성공 여부는 후속 진단 결과로 구분한다.
 
 원천별 성공 상태와 허용 목록의 실패 코드만 출력하도록 보강했다. 임의 SDK/CDP 오류 문자열은 복사하지 않는다. 새 규칙은 새 지문으로 고정하며 이전 세션을 재사용하지 않는다.
+
+## 실제 연결 진단 결과
+
+후보 2의 지문 `0x1cb26198d29fd05b06ad8a57c3f6b26594b16b9b71684011baafd2e77d844b18`으로 실제 로그인 후 성적 목록과 접수 상세의 같은 시험 연결을 확인했다. 실행 코드 기준은 `3b626223f568b119950d1cf05be4e627a81ec63f`다. 결과는 `applicationBound`, `recipientAuthorized`, `sourcePairMatched`, `sameClient`가 모두 true이고 `proofVerified`, `liveProof`, `payment`는 모두 false다. 이 값은 원천 내용이나 실제 성적 점수를 로그에 기록하지 않은 로컬 진단 결과다.
+
+정상 종료 코드 0과 `profilesDeleted: true`를 확인했고 관리 경로의 잔여 session 디렉터리도 0개였다. 사용자에게 창이 갑자기 닫힌 것처럼 보였으므로 정상 완료·정리임을 명확히 알리는 문구를 추가했다. 재로그인은 더 필요하지 않다. 다음 증명 생성 연결에서는 새 세션이 필요할 수 있다.
+
+진행 중 열린 `scoreDetailToeic.php`는 성적 상세로, 이번 접수 원천의 수집 대상이 아니다. 본문을 읽지 않고 `confirmList.php`의 접수 목록에서 `confirmDetail.php`를 열도록 안내한 뒤 완료했다. 당시 새 창 요청 누락 가능성은 가설이었으며 원인으로 확정하지 않았다. 접수 상세의 페이지 구조 전체를 저장하거나 실제 HTML의 속성값을 보고서에 복사하지 않았다.
+
+번들의 `AWAITING_CURRENT_YBM_LAYOUT`는 발급 전 후보 상태를 고정한 스냅샷이다. 위 동일 지문에 대한 로컬 적합성 1건은 [별도 검증 기록](ybm-binding-verification.json)으로 남긴다. 이것만으로 공증자 서명 검증이 끝난 운영용 proof 정책으로 승격하지 않는다. 실제 원천을 이용한 SDK proof 생성·독립 검증은 다음 단계다.
+
+`3b62622`의 [PR CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38121665812)와 [push CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38121662227)는 공개 이력·Linux 합성·Mac 복구 모두 통과했다. 이후 진단 코드·완료 안내 보정까지 포함한 최신 결과는 [Draft PR #3](https://github.com/gw020328-oss/clear-education-v4/pull/3)의 검사를 따른다. 병합하지 않았다.

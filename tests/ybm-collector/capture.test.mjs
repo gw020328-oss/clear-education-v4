@@ -67,3 +67,10 @@ test('failure summary names only fixed source and validation codes, never source
 test('arbitrary CDP failure text is never copied into the diagnostic summary',async t=>{
  const h=await setup(t);await h.capture.arm();const original=h.browser.send;h.browser.send=async(m,p,s)=>{if(m==='Fetch.getResponseBody')throw new Error('SYNTHETIC_PRIVATE_PASSWORD');return original(m,p,s);};h.emit('score');await assert.rejects(h.capture.done);assert.equal(h.capture.summary().failureCode,'COLLECTION_CHECK_FAILED');assert.ok(!JSON.stringify(h.capture.summary()).includes('PASSWORD'));
 });
+
+test('concurrent requests report the failing source rather than the last started source',async t=>{
+ const h=await setup(t);await h.capture.arm();const original=h.browser.send;let release;
+ h.browser.send=async(m,p,s)=>{if(m==='Fetch.getResponseBody'&&p.requestId==='1')return new Promise(r=>release=r);return original(m,p,s);};
+ h.emit('score');await until(()=>release);h.emit('registration');await until(()=>h.capture.summary().received.registration);
+ release({body:scoreHtml().replace('class="trSB"','class="SYNTHETIC_PRIVATE"'),base64Encoded:false});await assert.rejects(h.capture.done);assert.equal(h.capture.summary().sourceRole,'score');assert.equal(h.capture.summary().failureCode,'SCORE_LAYOUT');
+});
