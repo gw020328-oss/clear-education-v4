@@ -1,0 +1,28 @@
+{
+  "stage": "W02_YBM_TRANSPORT",
+  "date": "2026-10-11",
+  "base": "dd7ec920fafbaf44ee9ac848f6fabb9ee5e7a467",
+  "branch": "codex/ybm-live-collector",
+  "status": "ANONYMOUS_PUBLIC_ROUTE_PASS_CAPTURE_NOT_CONNECTED",
+  "recommendedModel": "GPT-6 Astra",
+  "recommendedReasoning": "high",
+  "tests": {"newRoute": 27, "newMacProxy": 2, "existingRegression": 251, "totalPassed": 280},
+  "publicProbe": {
+    "attestor": "wss://attestor.reclaimprotocol.org:444/ws",
+    "ybmHomeStatus": 200,
+    "certificateValidated": true,
+    "toeicPage": true,
+    "browserNavigated": true,
+    "sameClient": true,
+    "cdpListeningPort": false,
+    "profilesDeleted": true
+  },
+  "preservation": {"originalSources": 191, "historicalRouteSources": 3, "workspaceCheck": "PASS", "privateProofsRead": false},
+  "actualLogin": "NOT_RUN",
+  "rawCapture": false,
+  "liveProof": false,
+  "payment": false,
+  "collectionPackage": "NOT_BUILT_STORAGE_PREVIEW_REMAINS_SYNTHETIC_ONLY",
+  "remaining": ["RECIPIENT_OWNER_BINDING", "CURRENT_MINIMAL_SOURCE_POLICY", "FRESH_PROOF_GENERATION_AND_VERIFICATION", "ELIGIBILITY_AND_LOCAL_PAYMENT"],
+  "ci": "PENDING_BRANCH_PUSH"
+}

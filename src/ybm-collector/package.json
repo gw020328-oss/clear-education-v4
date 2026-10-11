@@ -1,0 +1,19 @@
+{
+  "name": "clear-ybm-collector",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.21.0",
+    "npm": "11.19.0"
+  },
+  "scripts": {
+    "test": "node --import ../../tests/ybm-collector/network-guard.mjs --test ../../tests/ybm-collector/*.test.mjs"
+  },
+  "dependencies": {
+    "@reclaimprotocol/attestor-core": "5.1.4",
+    "@reclaimprotocol/tls": "0.1.4",
+    "ethers": "6.17.0",
+    "ws": "8.22.0"
+  }
+}
