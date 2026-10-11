@@ -7,7 +7,7 @@
 1. [현재 상태](docs/status.md)와 [최신 PRD·설계 변경](docs/current/MAC_MVP.ko.md)을 확인합니다.
 2. 최신 `origin/develop`에서 작업별 브랜치를 만듭니다. Codex 브랜치는 `codex/작업명`을 사용합니다.
 3. 검증 가능한 작업 단위마다 커밋하고 해당 작업 브랜치에 푸시합니다.
-4. 작업 브랜치에서 `develop` 대상으로 PR을 만들고 팀원 검토와 자동 검사를 받습니다. 미완료·검토 대기는 Draft PR로 표시합니다.
+4. 담당자가 배정된 작업의 코드를 리뷰하고 작업 브랜치에서 `develop` 대상으로 PR을 만듭니다. 자동 검사와 필요한 수정이 끝나면 병합할 수 있으며, 다른 팀원의 GitHub Approve는 필수가 아닙니다. 미완료·검토 전에는 Draft PR로 표시합니다.
 5. `develop`에서 전체 통합 검증을 마친 뒤 `develop` → `main` PR로 반영합니다. 소스·테스트·설정·문서를 변경 이력과 함께 병합하며 최종 파일만 골라 복사하지 않습니다.
 
 `main`·`develop` 직접 푸시, 강제 푸시, 브랜치 삭제는 제한합니다. Codex가 PR을 자동 병합하거나 관리자 우회 권한을 사용하지 않습니다. 기존 `codex/clear-education-v4`는 전환 PR과 과거 개발 이력 보존을 위해 유지합니다. 미커밋 작업이 있으면 먼저 보존하고 다른 사람이 사용 중인 checkout을 강제로 전환하지 않습니다.
@@ -20,7 +20,7 @@ git switch -c codex/작업명 origin/develop
 # PR 대상: develop
 ```
 
-실제 원격 보호 상태와 최초 전환 근거는 [GitHub 협업 전환](docs/github-collaboration.md)에 기록합니다. 검토자가 초대를 수락하고 Write 이상 권한을 갖춰야 승인 필수 규칙을 충족할 수 있습니다. 팀원 초대·권한 변경은 별도 사용자 승인을 받습니다.
+실제 원격 보호 상태와 최초 전환 근거는 [GitHub 협업 전환](docs/github-collaboration.md)에 기록합니다. 필수 승인 인원은 0명입니다. 각 담당자의 병합 전 코드 리뷰와 PR·CI 절차는 유지합니다. 팀원 초대·권한 변경은 별도 사용자 승인을 받습니다.
 
 ## 검증과 Pull Request
 
