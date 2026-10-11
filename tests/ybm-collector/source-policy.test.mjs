@@ -14,7 +14,6 @@ for(const [name,role,html] of [
  ['wrong exam','registration',registrationHtml().replace('class="TOEIC"','class="OTHER"')],
  ['invalid date','registration',registrationHtml('2026.02.30')],
  ['duplicate header','registration',registrationHtml().replace('</table>','<tr><th>수험번호</th><td>123456</td></tr></table>')],
- ['fake comment row','registration','<!--'+registrationHtml()+'-->'+registrationHtml()],
  ['invalid score','score',scoreHtml([{score:'991'}])],
  ['score step','score',scoreHtml([{score:'801'}])],
  ['duplicate exam','score',scoreHtml([{},{}])],
@@ -33,8 +32,17 @@ test('all fixed selection recipes are pinned before collection and returned by c
  assert.equal(digest(sourceBundle()),sourcePolicyHash);assert.notDeepEqual(policyFor('score',0),policyFor('score',1));
 });
 
-test('unexpected attributes in revealed markup fail closed rather than exposing values',()=>{
- assert.throws(()=>read('registration',registrationHtml().replace('<html class="TOEIC">','<html class="TOEIC" data-name="SYNTHETIC_PRIVATE">')));
- assert.throws(()=>read('registration',registrationHtml().replace('<div>','<div data-name="SYNTHETIC_PRIVATE">')));
- assert.throws(()=>read('score',scoreHtml().replace('<td>','<td data-name="SYNTHETIC_PRIVATE">')));
+test('presentation attributes are ignored locally; the SDK test separately verifies they remain hidden',()=>{
+ for(const html of [registrationHtml().replace('<html class="TOEIC">','<html lang="ko" data-name="SYNTHETIC_PRIVATE" class="TOEIC">'),registrationHtml().replace('<div>','<div data-name="SYNTHETIC_PRIVATE">')])assert.equal(read('registration',html)[0].fields.registration_number,'123456');
+ assert.equal(read('score',scoreHtml().replace('<td>','<td data-name="SYNTHETIC_PRIVATE">'))[0].fields.total_score,'850');
+});
+test('comment lookalikes do not override real DOM rows',()=>{
+ const html='<!--'+registrationHtml('2026.01.01','999999')+'-->'+registrationHtml();assert.equal(read('registration',html)[0].fields.registration_number,'123456');
+});
+test('adjacent th/td pairs work in a multi-column registration table',()=>{
+ const html=registrationHtml().replace('</td></tr><tr><th>수험번호','</td><th>수험번호');assert.equal(read('registration',html)[0].fields.registration_number,'123456');
+});
+test('ambiguous split text and entity substitution cannot disagree with byte extraction',()=>{
+ assert.throws(()=>read('score',scoreHtml().replace('TOEIC</td>','TO&#69;IC</td>')));
+ assert.throws(()=>read('registration',registrationHtml().replace('123456','123<span>456</span>')));
 });

@@ -57,3 +57,13 @@ test('failed request continuation cannot be reported as successful completion',a
  const h=await setup(t);await h.capture.arm();h.emit('score');await until(()=>h.calls.some(c=>c.method==='Fetch.continueRequest'));
  const original=h.browser.send;h.browser.send=async(m,p,s)=>{if(m==='Fetch.continueRequest')throw new Error('SYNTHETIC_PRIVATE');return original(m,p,s);};h.emit('registration');await assert.rejects(h.capture.done,e=>e.message==='COLLECTION_CHECK_FAILED');
 });
+
+test('failure summary names only fixed source and validation codes, never source values or external errors',async t=>{
+ const h=await setup(t);await h.capture.arm();const original=h.browser.send;h.browser.send=async(m,p,s)=>m==='Fetch.getResponseBody'?{body:scoreHtml().replace('class="trSB"','class="SYNTHETIC_PRIVATE"'),base64Encoded:false}:original(m,p,s);
+ h.emit('score');await assert.rejects(h.capture.done);assert.deepEqual(h.capture.summary(),{bodyReads:1,received:{registration:false,score:false},failureCode:'SCORE_LAYOUT',sourceRole:'score'});
+ assert.ok(!JSON.stringify(h.capture.summary()).includes('SYNTHETIC_PRIVATE'));
+});
+
+test('arbitrary CDP failure text is never copied into the diagnostic summary',async t=>{
+ const h=await setup(t);await h.capture.arm();const original=h.browser.send;h.browser.send=async(m,p,s)=>{if(m==='Fetch.getResponseBody')throw new Error('SYNTHETIC_PRIVATE_PASSWORD');return original(m,p,s);};h.emit('score');await assert.rejects(h.capture.done);assert.equal(h.capture.summary().failureCode,'COLLECTION_CHECK_FAILED');assert.ok(!JSON.stringify(h.capture.summary()).includes('PASSWORD'));
+});

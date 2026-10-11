@@ -33,3 +33,15 @@ test('all Korean weekdays survive UTF-8 redaction without revealing arbitrary we
  }
  assert.throws(()=>extractSource('score',Buffer.from(scoreHtml().replace('(일)','(PRIVATE)'))));
 });
+
+test('multi-column and styled registration rows hide attributes and comment lookalikes',()=>{
+ const html=('<!--'+registrationHtml('2026.01.01','999999')+'-->'+registrationHtml())
+  .replace('<html class="TOEIC"><body><p>SYNTHETIC_PRIVATE_NAME</p><table><tr><th>시험일</th><td><div>2026.09.20','<html lang="ko" data-secret="SYNTHETIC_ATTR_SECRET" class="TOEIC"><body><p>SYNTHETIC_PRIVATE_NAME</p><table><tr><th style="width:120px">시험일</th><td class="SYNTHETIC_ATTR_SECRET"><div>2026.09.20')
+  .replaceAll('</td></tr><tr><th>수험번호','</td><th>수험번호');
+ const result=receipt('registration',html);assert.deepEqual(examFields(result.fields,'registration'),extractSource('registration',Buffer.from(html))[0].fields);
+ for(const secret of ['SYNTHETIC_ATTR_SECRET','999999','SYNTHETIC_PRIVATE','SYNTHETIC_BIRTH'])assert.ok(!result.text.includes(secret));
+});
+test('score text-node reveals exclude private attributes even when they resemble scores or identifiers',()=>{
+ const html=scoreHtml().replace('class="trSB"','data-secret="999999" class="trSB active"').replaceAll('<td>','<td title="SYNTHETIC_PRIVATE" data-number="999999">');
+ const result=receipt('score',html);assert.deepEqual(examFields(result.fields,'score'),extractSource('score',Buffer.from(html))[0].fields);assert.ok(!result.text.includes('SYNTHETIC_PRIVATE'));assert.ok(!result.text.includes('999999'));
+});

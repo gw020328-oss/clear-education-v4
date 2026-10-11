@@ -5,13 +5,15 @@ import {createExtraction} from './extraction.mjs';
 // Opt-in, response-only layout diagnostic. Does not query cookies or browser
 // storage, or read bodies outside the two exact URLs. CDP request metadata may
 // transiently contain auth headers; do not inspect, retain, or serialize them.
-export function createCapture({browser,collection,signal}){
+export function createCapture({browser,collection,signal,onProgress=()=>{}}){
   const extraction=createExtraction(collection),sessions=new Set(),targets=new Set(),unsubscribers=[],tasks=new Set(),seen=new Set();
   let armed=false,closed=false,settled=false,inflight=0,bodyReads=0,resolveDone,rejectDone;
+  const received={registration:false,score:false};let failureCode=null,sourceRole=null;
+  const safeCodes=new Set(['SOURCE_HTTP_STATUS','SOURCE_CONTENT_TYPE','SOURCE_SIZE','SOURCE_BODY','SOURCE_TEXT_LAYOUT','PAGE_LIMIT','CAPTURE_CAPACITY','HTML_SIZE','HTML_ENCODING','EXAM_TYPE','EXAM_DATE','EXAM_NUMBER','SCORE','AMBIGUOUS_REGISTRATION','REGISTRATION_LAYOUT','SCORE_LAYOUT','SCORE_ROW_COUNT','DUPLICATE_EXAM','EXAM_JOIN','SESSION_EXPIRED','BROWSER_COMMAND_FAILED','BROWSER_CLOSED','BROWSER_TIMEOUT']);
   const done=new Promise((resolve,reject)=>{resolveDone=resolve;rejectDone=reject;});
   // Callers may still be setting up their race when a protocol event fails.
   done.catch(()=>{});
-  const fail=()=>{if(!settled){settled=true;closed=true;extraction.close();rejectDone(new Error('COLLECTION_CHECK_FAILED'));}};
+  const fail=error=>{if(!settled){failureCode=safeCodes.has(error?.message)?error.message:'COLLECTION_CHECK_FAILED';settled=true;closed=true;extraction.close();rejectDone(new Error('COLLECTION_CHECK_FAILED'));}};
   const track=promise=>{tasks.add(promise);promise.catch(fail).finally(()=>tasks.delete(promise));};
   const check=()=>{requireValue(armed&&!closed,'CAPTURE_CLOSED');signal?.throwIfAborted();collection.assertActive();};
   async function attach(info){
@@ -32,6 +34,7 @@ export function createCapture({browser,collection,signal}){
       check();
       const role=Object.keys(endpoints).find(role=>event.request?.url===endpoints[role]&&event.request?.method===methods[role]);
       if(!role)return;
+      sourceRole=role;
       requireValue(event.responseStatusCode===200&&!event.responseErrorReason,'SOURCE_HTTP_STATUS');
       if(seen.has(role))return;
       requireValue(inflight<2,'CAPTURE_CAPACITY');inflight++;counted=true;seen.add(role);
@@ -47,6 +50,8 @@ export function createCapture({browser,collection,signal}){
       requireValue(response.body.length<=(response.base64Encoded?Math.ceil(MAX_HTML_BYTES/3)*4:MAX_HTML_BYTES),'SOURCE_SIZE');
       const bytes=Buffer.from(response.body,response.base64Encoded?'base64':'utf8');response=undefined;
       const result=extraction.accept(role,bytes);
+      received[role]=true;
+      onProgress({role,complete:result.complete});
       if(result.complete){closed=true;completed=result;}
     }finally{
       if(counted)inflight--;
@@ -58,7 +63,7 @@ export function createCapture({browser,collection,signal}){
   const abort=()=>fail();signal?.addEventListener('abort',abort,{once:true});
   return {
     done,
-    summary:()=>({bodyReads}),
+    summary:()=>({bodyReads,received:{...received},failureCode,sourceRole}),
     async arm(){
       requireValue(!armed&&!closed,'CAPTURE_STATE');signal?.throwIfAborted();collection.start();armed=true;
       unsubscribers.push(browser.on('Fetch.requestPaused',(e,s)=>{if(tasks.size>=32){fail();return;}track(paused(e,s));}));
@@ -67,7 +72,7 @@ export function createCapture({browser,collection,signal}){
         await browser.send('Target.setDiscoverTargets',{discover:true});
         const {targetInfos}=await browser.send('Target.getTargets');
         await Promise.all(targetInfos.map(attach));await Promise.all([...tasks]);if(!settled)check();
-      }catch{fail();throw new Error('COLLECTION_CHECK_FAILED');}
+      }catch(error){fail(error);throw new Error('COLLECTION_CHECK_FAILED');}
     },
     async close(){
       closed=true;extraction.close();signal?.removeEventListener('abort',abort);

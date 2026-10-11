@@ -5,6 +5,7 @@ import {probeYbmHome} from './probe.mjs';
 import {startChrome} from '../mac-collector/chrome.mjs';
 import {prepareLocalDiagnostic} from './binding.mjs';
 import {createCapture} from './capture.mjs';
+import {endpoints} from './source-policy.mjs';
 
 // Default mode is transport only. Explicit collection-check mode adds a bound
 // local HTML diagnostic, never attestation or a payment eligibility decision.
@@ -33,7 +34,7 @@ export async function runYbmRoute(session, {signal, interactive = false, collect
       if(collectionCheck){
         output('새 로컬 테스트 지갑에 결합한 원천 형식 진단입니다. 증명 생성·검증·지급은 비활성입니다.');
         output('로그인 후 ready를 입력하면 지정된 성적·접수 내역 두 페이지의 메모리 수집을 켭니다. close로 언제든 종료합니다.');
-        capture=createCapture({browser,collection:diagnostic.collection,signal:live});
+        capture=createCapture({browser,collection:diagnostic.collection,signal:live,onProgress:({role})=>output(role==='score'?'성적 원천 형식 확인 완료. 시험접수 → 접수확인/변경/취소에서 해당 시험의 자세히 보기를 열어 주세요.':'접수 원천 형식 확인 완료. 두 원천의 같은 시험 여부를 확인합니다.')});
       }else{
         output('현재는 로그인 연결 확인 단계입니다. 성적 원본 수집·증명 생성·지급은 비활성입니다.');
         output('확인을 마치면 이 터미널에 close를 입력해 종료합니다. 연결이 끊기면 새 로그인으로 다시 시작해야 합니다.');
@@ -48,8 +49,15 @@ export async function runYbmRoute(session, {signal, interactive = false, collect
         lines.on('line', line => {
           if(line.trim()==='close')lines.close();
           if(capture&&!ready&&line.trim()==='ready'){
-            ready=true;capture.arm().then(()=>output('수집 준비 완료: 성적 확인 목록과 연결할 시험의 접수 확인 상세를 열거나 새로고침해 주세요. 개인정보를 터미널에 입력하지 마세요.'),reject);
+            ready=true;
+            void (async()=>{
+              await capture.arm();
+              output('수집 준비 완료: 성적 확인 목록을 엽니다. 개인정보를 터미널에 입력하지 마세요.');
+              const next=await browser.send('Page.navigate',{url:endpoints.score},sessionId);
+              if(next.errorText)throw new Error('SOURCE_NAVIGATION_FAILED');
+            })().catch(reject);
           }
+          if(capture&&line.trim()==='status')output(JSON.stringify({scope:'BOUND_SOURCE_DIAGNOSTIC_STATUS',...capture.summary()}));
         });
         live.addEventListener('abort', abort, {once: true});
         removeAbort=()=>live.removeEventListener('abort',abort);
@@ -58,6 +66,9 @@ export async function runYbmRoute(session, {signal, interactive = false, collect
       live.throwIfAborted();
     }
     return {scope:collectionCheck?'BOUND_SOURCE_LAYOUT_DIAGNOSTIC':interactive ? 'YBM_LOGIN_ROUTE_ONLY' : 'ANONYMOUS_PUBLIC_ROUTE', ...publicCheck, browserNavigated: true, sameClient: route.client === connection.client, cdpListeningPort: false, rawCapture:collectionCheck?Boolean(capture?.summary().bodyReads):false, liveProof: false, payment: false,...(collectionCheck?{collection:collectionResult??{complete:false,proofVerified:false,paymentAllowed:false}}:{})};
+  } catch(error) {
+    if(capture)output(JSON.stringify({scope:'BOUND_SOURCE_DIAGNOSTIC_FAILURE',...capture.summary(),proofVerified:false,paymentAllowed:false}));
+    throw error;
   } finally {
     removeAbort?.();
     lines?.close();
