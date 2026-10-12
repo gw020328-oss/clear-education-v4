@@ -129,5 +129,28 @@
     "publicHistory": "PASS",
     "publicSynthetic": "PASS",
     "macRecovery": "PASS"
+  },
+  "preMergeReview": {
+    "reviewedHead": "8b9a10dd4d9aef13313dd2ee737d9d40b31f7d6a",
+    "finding": "VERIFIER_SPAWN_FAILURE_WAITED_FOR_EXIT_INSTEAD_OF_CLOSE",
+    "reproducedBeforeFix": true,
+    "regressionTestsAdded": 7,
+    "localTests": {
+      "ybmCollector": 153,
+      "macIntegrityPublic": 48,
+      "proofAdapter": 107,
+      "collectorBoundary": 62,
+      "storagePreparation": 37,
+      "total": 407,
+      "status": "PASS"
+    },
+    "workspaceCheck": "PASS",
+    "dependencyCheck": "PASS",
+    "originalFingerprintsPreserved": true,
+    "additionalBlockingFindings": 0,
+    "newYbmLogin": false,
+    "newProofGenerated": false,
+    "mergeAuthorizedByUser": true,
+    "mergeGate": "LATEST_HEAD_CI_AND_PR_STATE"
   }
 }
