@@ -4,6 +4,7 @@ import { compileSyntheticPolicy } from '../policy/compiler.mjs';
 import { RuleError, canonical, exactKeys, freeze, hash, hash32, identifier, requireRule } from '../policy/values.mjs';
 import { openStore } from './store.mjs';
 import { createFundingService } from './funding.mjs';
+import { createProofSessionService } from './proof-sessions.mjs';
 
 const secret = () => randomBytes(32).toString('hex');
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -86,6 +87,7 @@ export function createApplicationService({ directory, origin, chainId, instanceI
     hexSecret, signatureShape, view, vaultReader, chainId, instanceId });
   return {
     ...funding.methods,
+    ...createProofSessionService({ db, transaction, session, owned, clock, digest, secret, signatureShape, vaultReader }),
     origin, chainId, close: store.close,
     challenge(body) {
       exactKeys(body, ['wallet', 'chainId'], 'AUTH_SCHEMA');

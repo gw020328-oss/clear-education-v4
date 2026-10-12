@@ -25,9 +25,12 @@ async function jsonBody(req) {
   catch { throw new RuleError('JSON'); }
 }
 const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].includes(code) ? 401
-  : ['FORBIDDEN', 'SPONSOR_REQUIRED', 'NOT_INVITED', 'ORIGIN', 'CSRF', 'WALLET_CONTEXT_CHANGED', 'TRANSPORT'].includes(code) ? 403
-    : ['APPLICATION_NOT_FOUND', 'POLICY_NOT_FOUND', 'ROUTE'].includes(code) ? 404
-      : ['IDEMPOTENCY_CONFLICT', 'POLICY_VERSION_CONFLICT', 'POLICY_SUPERSEDED', 'APPLICATION_STATE', 'CONSENT_CHALLENGE'].includes(code) ? 409
+  : ['FORBIDDEN', 'SPONSOR_REQUIRED', 'NOT_INVITED', 'ORIGIN', 'CSRF', 'WALLET_CONTEXT_CHANGED', 'TRANSPORT', 'PROOF_BROWSER_SESSION'].includes(code) ? 403
+    : ['APPLICATION_NOT_FOUND', 'POLICY_NOT_FOUND', 'ROUTE', 'PROOF_SESSION_NOT_FOUND'].includes(code) ? 404
+      : code === 'PROOF_SESSION_EXPIRED' ? 410
+      : ['IDEMPOTENCY_CONFLICT', 'POLICY_VERSION_CONFLICT', 'POLICY_SUPERSEDED', 'APPLICATION_STATE', 'CONSENT_CHALLENGE',
+        'PROOF_SESSION_ACTIVE', 'PROOF_OWNER_REUSED', 'PROOF_NONCE_CONSUMED', 'PROOF_SESSION_CANCELLED', 'PROOF_ENROLLMENT_REQUIRED',
+        'PROOF_ENROLLMENT_CHANGED', 'PROOF_ENROLLMENT_SETTLED', 'PROOF_GRANT_EXISTS', 'PROOF_SUBMISSION_CLOSED'].includes(code) ? 409
         : code === 'AUTH_RATE_LIMIT' ? 429 : code === 'BODY_SIZE' ? 413 : 422;
 
 // The factory does not listen or deploy. HTTPS termination must preserve Host
@@ -80,6 +83,15 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       else if (req.method === 'GET' && /^\/runtimes\/0x[0-9a-f]{64}$/.test(path)) result = service.getRuntime(context, path.split('/')[2]);
       else if (req.method === 'GET' && path === '/applications') result = service.listApplications(context);
       else if (req.method === 'POST' && path === '/applications') result = service.createApplication(context, body, key);
+      else if (/^\/applications\/0x[0-9a-f]{64}\/proof-sessions(?:\/0x[0-9a-f]{64}(?:\/(?:authorize|cancel))?)?$/.test(path)) {
+        const [, , appId, , proofId, action] = path.split('/');
+        if (req.method === 'POST' && !proofId) result = await service.createProofSession(context, appId, body, key);
+        else if (req.method === 'GET' && !proofId) result = service.listProofSessions(context, appId);
+        else if (req.method === 'GET' && !action) result = service.getProofSession(context, appId, proofId);
+        else if (req.method === 'POST' && action === 'authorize') result = await service.authorizeProofSession(context, appId, proofId, body);
+        else if (req.method === 'POST' && action === 'cancel') result = service.cancelProofSession(context, appId, proofId, body);
+        else throw new RuleError('ROUTE');
+      }
       else {
         const match = /^\/applications\/(0x[0-9a-f]{64})(?:\/(consent-challenge|consent|final-consent-challenge|final-consent|funding-intent|funding-confirmation))?$/.exec(path);
         requireRule(match, 'ROUTE');
