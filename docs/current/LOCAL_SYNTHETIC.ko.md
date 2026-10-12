@@ -83,6 +83,8 @@ Ctrl-C/SIGTERM은 새 연결을 닫고 진행 중 처리 정리 후 DB·체인�
 
 새 시험은 신뢰한 CA를 통한 실제 loopback HTTPS, 로그인·CSRF·Host/Origin 거부, 두 단계 동의와 TEST 예치, 재시작 후 세션/예치/블록 보존, 환경 혼합·누락·권한·포트 충돌 거부, CLI 정상/강제 종료와 명시적 잠금 복구를 확인한다. 사용자 키체인 신뢰 설치와 확장 지갑 UI 조작은 자동 시험하지 않는다.
 
+2026-10-12 Apple Silicon Mac 검증(구현 커밋 `7ea2440`): C1 33개, 기존 신청/인증 58개, 금고 78개 통과(각 실패/skip 0). `verify:dependencies`, `verify:workspace`, 문서 링크 60개 및 공개 이력 검사도 통과했다. 실행 데이터와 `.toolchain`이 없는 새 전체 clone에서 고정 런타임을 PATH로 제공하고 `npm ci --ignore-scripts` → 보존 검사 → C1 33개 시험을 다시 통과했다. 새 clone의 CLI 초기화·정상/강제 종료·재시작도 포함하며 로컬 CA를 명시적으로 신뢰하는 시험 클라이언트를 사용했다. 최신 GitHub CI 결과와 병합 상태는 이슈 #10의 연결 PR을 확인한다.
+
 고정 Ganache의 네이티브 모듈이 Node 24와 맞지 않으면 JS fallback 경고가 나올 수 있다. 합성 기능 검증은 fallback에서도 실행된다. 새 네이티브 패키지나 전역 런타임을 설치해 경고만 없애지 않는다.
 
 이 설정은 개발 편의용이며 배포 release manifest가 아니다. `usableForClaim=false`와 `paymentAllowed=false`를 유지한다. 원격/공개 체인·실제 YBM·issuer outbox·운영 키 관리·독립 청구는 후속 계획을 따른다.
