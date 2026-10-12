@@ -3,7 +3,8 @@ import { closeSync, constants, lstatSync, mkdirSync, openSync, readFileSync, rea
 import { join, resolve } from 'node:path';
 import { canonical, requireRule } from '../policy/values.mjs';
 
-// A dedicated local, single-host database. No proof/key/signature blobs.
+// Dedicated local, single-host DB. No proofs, private keys or login signatures.
+// Final contract authorization is retained to recover sponsor funding.
 export function openStore(directory, config) {
   const root = resolve(directory);
   mkdirSync(root, { recursive: true, mode: 0o700 });
@@ -27,9 +28,11 @@ export function openStore(directory, config) {
     transaction(() => {
       db.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
       const stored = db.prepare('SELECT config FROM metadata WHERE id=1').get();
-      const encoded = canonical({ schemaVersion: 1, ...config });
-      requireRule(!stored || stored.config === encoded, 'DB_ENVIRONMENT_MISMATCH');
+      const encoded = canonical({ schemaVersion: 2, ...config });
+      const previous = canonical({ schemaVersion: 1, ...config });
+      requireRule(!stored || stored.config === encoded || stored.config === previous, 'DB_ENVIRONMENT_MISMATCH');
       if (!stored) db.prepare('INSERT INTO metadata VALUES(1,?)').run(encoded);
+      else if (stored.config === previous) db.prepare('UPDATE metadata SET config=? WHERE id=1').run(encoded);
     });
   } catch (error) { db.close(); throw error; }
   return { db, transaction, close: () => db.close() };
