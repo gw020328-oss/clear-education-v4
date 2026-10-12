@@ -1,6 +1,7 @@
 import {randomBytes} from 'node:crypto';
 import {computeAddress,SigningKey,TypedDataEncoder,verifyTypedData,getAddress,Wallet} from 'ethers';
 import {digest,requireValue,exactKeys} from './values.mjs';
+import {validateTrust} from './trust.mjs';
 import {sourcePolicyHash,policyFor,MAX_ROWS} from './source-policy.mjs';
 
 const bytes32=()=> '0x'+randomBytes(32).toString('hex');
@@ -23,10 +24,11 @@ const ownerAddress=key=>{
 // W02 collection diagnostics have their own EIP-712 domain. No deployed vault,
 // paid enrollment, or product wallet consent is fabricated by this authority.
 // Register/issue are trusted local service calls, never callback body fields.
-export function createDiagnosticAuthority({signer,now=()=>Math.floor(Date.now()/1000),capacity=16}={}){
+export function createDiagnosticAuthority({signer,now=()=>Math.floor(Date.now()/1000),capacity=16,attestorTrust}={}){
   requireValue(signer?.address&&typeof signer.signTypedData==='function','AUTHORITY_KEY_REQUIRED');
   const domain={name:'ClearCollectionDiagnostic',version:'4',chainId:431702,salt:bytes32()};
   const runtime={scope:'W02_LOCAL_TEST',dataMode:'REAL_YBM_DIAGNOSTIC',route:'DIRECT_ATTESTOR',instance:domain.salt,sourcePolicyHash,additionalTee:'DEFERRED',paymentAllowed:false};
+  if(attestorTrust)runtime.attestorTrust=validateTrust(attestorTrust);
   const runtimeConfigHash=digest(runtime),applications=new Map(),sessions=new Map(),owners=new Set();let closed=false;
   const clock=()=>{const t=now();requireValue(Number.isSafeInteger(t)&&t>0,'CLOCK');return t;};
   const get=id=>{requireValue(!closed,'AUTHORITY_CLOSED');const s=sessions.get(id);requireValue(s,'UNKNOWN_SESSION');requireValue(clock()>=s.record.createdAt&&clock()<s.record.binding.expiresAt,'SESSION_EXPIRED');return s;};
@@ -105,16 +107,19 @@ export function createBoundCollection({authority,envelope,expectedRecord,ownerPu
   };
 }
 
-export async function prepareLocalDiagnostic(){
+export async function prepareLocalDiagnostic({attestorTrust}={}){
   // Explicitly approved throwaway local test recipient. All three keys remain
   // in this process; none is a funded/product wallet or sent to an attestor.
   const recipient=Wallet.createRandom(),owner=Wallet.createRandom(),signer=Wallet.createRandom();
-  const authority=createDiagnosticAuthority({signer});
+  const authority=createDiagnosticAuthority({signer,attestorTrust});
   const applicationId=bytes32(),policyHash=digest({purpose:'W02_COLLECTION_ONLY',scoreThreshold:800,attendanceThreshold:80,paymentAllowed:false});
   authority.registerApplication({applicationId,recipient:recipient.address,policyHash});
   const record=authority.issue({applicationId,ownerPublicKey:owner.signingKey.publicKey});
   const walletSignature=await recipient.signTypedData(record.domain,bindingTypes,record.binding);
   const envelope=await authority.authorize({sessionId:record.binding.proofSessionId,walletSignature});
   const collection=createBoundCollection({authority,envelope,expectedRecord:record,ownerPublicKey:owner.signingKey.publicKey});
-  return {collection,close(){collection.cancel();authority.close();}};
+  return {collection,
+    verificationInput:()=>structuredClone({envelope,expectedRecord:record,trustedConfig:authority.trustedConfig()}),
+    async generateClaim(createClaim,options){collection.assertActive();return createClaim({...options,ownerPrivateKey:owner.privateKey});},
+    close(){collection.cancel();authority.close();}};
 }

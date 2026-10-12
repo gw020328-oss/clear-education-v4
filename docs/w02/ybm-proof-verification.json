@@ -1,0 +1,45 @@
+{
+  "stage": "W02_SAME_CLIENT_PROOF_VERIFICATION",
+  "date": "2026-10-12",
+  "baseCommit": "d880fd65a99109c6802df364fdb40c44d60c0247",
+  "branch": "codex/ybm-proof-verification",
+  "modelRecommendation": {
+    "model": "GPT-6 Astra",
+    "reasoning": "high"
+  },
+  "status": "IMPLEMENTED_AWAITING_USER_LOGIN",
+  "localTests": {
+    "ybmCollector": 139,
+    "macIntegrityPublic": 48,
+    "proofAdapter": 107,
+    "collectorBoundary": 62,
+    "storagePreparation": 37,
+    "total": 393,
+    "status": "PASS"
+  },
+  "runtimeStwoSyntheticProof": "PASS",
+  "publicRegistry": {
+    "available": true,
+    "addressCount": 3
+  },
+  "preservation": {
+    "originalAndLegacyFiles": 191,
+    "historicalScripts": 3,
+    "fingerprintsMatch": true,
+    "originalPrivateProofsRead": false,
+    "dependencyLockChanged": false
+  },
+  "live": {
+    "newYbmLogin": false,
+    "proofGenerated": false,
+    "independentVerification": false,
+    "payment": false
+  },
+  "limits": [
+    "LOCAL_DIAGNOSTIC_AUTHORITY",
+    "NO_ELIGIBILITY_OR_HIGHEST_SCORE",
+    "NO_ADDITIONAL_TEE",
+    "NO_PERSISTENT_SERVER_NONCE_API"
+  ],
+  "merged": false
+}
