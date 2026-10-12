@@ -1,24 +1,29 @@
 // 합성 신청 fixture
 //
 // docs/current/API_CONTRACT.ko.md 의 기본 view 필드와 최종 동의 후 추가 필드를
-// 그대로 따른다. 다섯 상태를 각각 하나씩 둔다.
+// 그대로 따른다.
+//
+// 참가자는 '한 반에 신청 하나'다. 계약의 enrollments 가 applicationId 당 한 번만
+// 등록되게 막고, 서버도 같은 정책에 중복 신청을 만들지 않는다. 그래서 목록에
+// 서로 다른 지갑 다섯 건을 늘어놓지 않는다. 같은 신청이 다섯 단계를 거치는 것을
+// 시나리오로 바꿔 보여준다.
 //
 // 값은 모두 눈에 보이게 합성이다. 실제 지갑·거래·성적·개인정보를 넣지 않는다.
-// 주소와 해시는 반복 패턴으로 만들어 실제 값과 혼동되지 않게 한다.
 
 const hash = (tag) => '0x' + tag.repeat(32).slice(0, 64);
-const wallet = (tag) => '0x' + tag.repeat(40).slice(0, 40);
 
+const LEARNER = '0x' + '7a'.repeat(20);
+const APPLICATION_ID = hash('31');
 const POLICY_HASH = hash('a1');
 
-/** 공통 기본값 — APPLICATION_ONLY 단계 */
-const base = (id, state, extra = {}) => ({
-  applicationId: hash(id),
-  learner: wallet(id),
+/** APPLICATION_ONLY 단계 공통 */
+const base = (state, extra = {}) => ({
+  applicationId: APPLICATION_ID,
+  learner: LEARNER,
   policyHash: POLICY_HASH,
   state,
   consentDigest: null,
-  createdAt: '1762000000',
+  createdAt: '1788224400',
   consentedAt: null,
   consentScope: 'APPLICATION_ONLY',
   contractConsentRequired: true,
@@ -38,47 +43,56 @@ const contractScope = (extra = {}) => ({
   ...extra,
 });
 
-export const SYNTHETIC_APPLICATIONS = Object.freeze([
-  base('11', 'DRAFT'),
+const AT_DRAFT = base('DRAFT');
 
-  base('22', 'TERMS_ACCEPTED', {
-    consentDigest: hash('d2'),
-    consentedAt: '1762003600',
-  }),
-
-  base('33', 'CONSENTED', {
-    consentDigest: hash('d3'),
-    consentedAt: '1762007200',
-    ...contractScope(),
-  }),
-
-  base('44', 'FUNDING_PENDING', {
-    consentDigest: hash('d4'),
-    consentedAt: '1762010800',
-    ...contractScope(),
-  }),
-
-  base('55', 'ENROLLED', {
-    consentDigest: hash('d5'),
-    consentedAt: '1762014400',
-    ...contractScope({
-      funded: true,
-      fundingEvidence: {
-        transactionHash: hash('e5'),
-        blockNumber: '1234',
-        blockHash: hash('b5'),
-      },
-    }),
-  }),
-]);
-
-/** 화면 시나리오 — 주소창에서 바꿔 끼운다 */
-export const SCENARIOS = Object.freeze({
-  default: { label: '정상 — 신청 5건', items: SYNTHETIC_APPLICATIONS, delayMs: 220 },
-  empty: { label: '신청 없음', items: [], delayMs: 220 },
-  slow: { label: '느린 응답', items: SYNTHETIC_APPLICATIONS, delayMs: 2400 },
-  authError: { label: '로그인 필요', items: SYNTHETIC_APPLICATIONS, delayMs: 220, failWith: 'AUTH_REQUIRED' },
-  apiError: { label: '요청 실패', items: SYNTHETIC_APPLICATIONS, delayMs: 220, failWith: 'API_REQUEST_FAILED' },
+const AT_TERMS = base('TERMS_ACCEPTED', {
+  consentDigest: hash('d2'),
+  consentedAt: '1788228000',
 });
 
-export const DEFAULT_SCENARIO = 'default';
+const AT_CONSENTED = base('CONSENTED', {
+  consentDigest: hash('d2'),
+  consentedAt: '1788228000',
+  ...contractScope(),
+});
+
+const AT_FUNDING = base('FUNDING_PENDING', {
+  consentDigest: hash('d2'),
+  consentedAt: '1788228000',
+  ...contractScope(),
+});
+
+const AT_ENROLLED = base('ENROLLED', {
+  consentDigest: hash('d2'),
+  consentedAt: '1788228000',
+  ...contractScope({
+    funded: true,
+    fundingEvidence: {
+      transactionHash: hash('e5'),
+      blockNumber: '482915',
+      blockHash: hash('b5'),
+    },
+  }),
+});
+
+/** 다섯 단계를 한 번에 보고 싶을 때만 쓰는 검토용 묶음 */
+export const SYNTHETIC_APPLICATIONS = Object.freeze([
+  AT_DRAFT, AT_TERMS, AT_CONSENTED, AT_FUNDING, AT_ENROLLED,
+]);
+
+export const DEMO_APPLICATION_ID = APPLICATION_ID;
+
+/** 화면 상황 — 주소창 ?scenario= 또는 화면 위 선택 상자로 바꾼다 */
+export const SCENARIOS = Object.freeze({
+  stage1: { label: '1단계 — 신청 생성', items: [AT_DRAFT], delayMs: 200 },
+  stage2: { label: '2단계 — 신청 조건 확인', items: [AT_TERMS], delayMs: 200 },
+  stage3: { label: '3단계 — 최종 동의 저장', items: [AT_CONSENTED], delayMs: 200 },
+  stage4: { label: '4단계 — 예치 준비', items: [AT_FUNDING], delayMs: 200 },
+  stage5: { label: '5단계 — 예치 확인', items: [AT_ENROLLED], delayMs: 200 },
+  empty: { label: '신청 없음', items: [], delayMs: 200 },
+  slow: { label: '느린 응답', items: [AT_ENROLLED], delayMs: 2400 },
+  authError: { label: '로그인 필요', items: [AT_ENROLLED], delayMs: 200, failWith: 'AUTH_REQUIRED' },
+  apiError: { label: '요청 실패', items: [AT_ENROLLED], delayMs: 200, failWith: 'API_REQUEST_FAILED' },
+});
+
+export const DEFAULT_SCENARIO = 'stage1';

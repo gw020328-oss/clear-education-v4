@@ -8,6 +8,7 @@
 // 화면은 계획 F4 다. 점수·수강률 값은 이 응답에 들어있지도 않다.
 
 import { el, field } from './dom.js';
+import { PROGRESS_NOT_YET } from './state-labels.js';
 
 /** minCompletionBps 는 베이시스포인트다. 8000 = 80.00% */
 export function bpsText(bps) {
@@ -44,26 +45,41 @@ export function policySection(compiled) {
       text: '3단계(최종 동의)에서 고정된 값입니다. 이후 운영자도 CLEAR도 바꿀 수 없습니다.',
     }),
 
-    el('div.cond', {}, [
-      el('div.cond-item', {}, [
-        el('span.cond-label', { text: '시험' }),
-        el('strong.cond-value', { text: `${p.examType} 총점 ${p.minScore}점 이상` }),
-        el('span.note', { text: `응시 인정 기간 ${p.examDateStart} ~ ${p.examDateEnd} (응시일 기준)` }),
+    el('div.cond-wrap', {}, [
+      el('p.cond-wrap-head', { text: '두 조건을 모두 충족해야 환급 대상' }),
+      el('div.cond-wrap-body', {}, [
+        el('div.cond', {}, [
+          el('div.cond-item', {}, [
+            el('span.cond-label', { text: '시험' }),
+            el('strong.cond-value', {}, [
+              el('em', { text: `${p.minScore}점` }), ' 이상',
+            ]),
+            el('span.note', { text: `${p.examType} 총점 · 응시 인정 기간 ${p.examDateStart} ~ ${p.examDateEnd} (응시일 기준)` }),
+          ]),
+          el('p.cond-and', { text: 'AND' }),
+          el('div.cond-item', {}, [
+            el('span.cond-label', { text: '이수' }),
+            el('strong.cond-value', {}, [
+              el('em', { text: bpsText(p.minCompletionBps) }), ' 이상 완료',
+            ]),
+            el('span.note', { text: `필수 강의 ${p.requiredLectureIds.length}개 기준 · 인정 기간 ${seoulText(p.learningStart)} ~ ${seoulText(p.learningEnd)}` }),
+          ]),
+          el('p.cond-and', { text: '충족 시' }),
+          el('div.cond-item', {}, [
+            el('span.cond-label', { text: '지급' }),
+            el('strong.cond-value', {}, [
+              el('em', { text: `${amountText(p.amount, p.tokenDecimals)} TEST` }), ' 1회',
+            ]),
+            el('span.note', { text: '무가치 시험 단위입니다. 실제 수강료나 현금 환불이 아닙니다.' }),
+          ]),
+        ]),
       ]),
-      el('div.cond-item', {}, [
-        el('span.cond-label', { text: '이수' }),
-        el('strong.cond-value', {
-          text: `필수 강의 ${p.requiredLectureIds.length}개 중 ${bpsText(p.minCompletionBps)} 이상 완료`,
-        }),
-        el('span.note', { text: `인정 기간 ${seoulText(p.learningStart)} ~ ${seoulText(p.learningEnd)}` }),
-      ]),
-      el('div.cond-item', {}, [
-        el('span.cond-label', { text: '지급' }),
-        el('strong.cond-value', { text: `${amountText(p.amount, p.tokenDecimals)} TEST 1회` }),
-        el('span.note', { text: '무가치 시험 단위입니다. 실제 수강료나 현금 환불이 아닙니다.' }),
-      ]),
+      el('p.cond-foot', { text: '부분 지급은 없습니다. 한 조건만 충족해도 지급되지 않습니다.' }),
     ]),
-    el('p.muted', { text: '두 조건을 모두 충족해야 합니다.' }),
+    el('p.pending-line', {}, [
+      el('span.pending-dot', { 'aria-hidden': 'true', text: '○' }),
+      el('span', { text: PROGRESS_NOT_YET }),
+    ]),
 
     el('h3', { text: '기한' }),
     el('dl.fields', {}, [
@@ -84,10 +100,6 @@ export function policySection(compiled) {
         '합성 정책이라 게시 가능하지 않습니다.'),
     ]),
 
-    el('div.card.limits', {}, [
-      el('p', { text: '이 구역은 조건의 내용만 보여줍니다. 참가자가 이 조건을 충족했는지는 '
-        + '판정하지 않으며, 점수와 이수율 값도 여기에 들어있지 않습니다.' }),
-    ]),
   ]);
 }
 
