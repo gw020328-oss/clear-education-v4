@@ -65,3 +65,13 @@
 고정 SDK의 HTTP createRequest가 params.headers를 참조해 기본 User-Agent를 추가한다는 사실을 확인했다. 같은 동작을 합성 생성 시험에 반영하자 이전 성공 시험이 실패하여, 서명된 전체 params와 사전 정책 비교의 불일치를 재현했다. 비교를 완화하지 않고 공개 정책에 `User-Agent: reclaim/0.0.1`을 명시했다. 후보 3 지문은 `0x1a8946e685bef4a4c1b9b7bd27c0a1b6ac23cc96373114a5d1345a65d2e11821`이며 새 세션에만 적용한다. 과거 실제 진단 지문/기록은 보존한다.
 
 공식 SDK 호출 전후 정책 불변 시험과 검증 오류 코드 비노출 시험을 추가하고, 실제 SDK 요청 조립을 거치는 합성 생성→독립 검증 시험이 통과했다. 수집기 146개, 전체 검증 누계 400개 통과. 검증 자식 프로세스는 사전에 허용한 오류 코드만 전달하며 claim 내용·개인정보·원문 오류는 계속 전달하지 않는다. 새 정책의 실제 생성·검증 결과는 후속 기록을 따른다.
+
+## 실제 새 증명 생성·독립 검증 성공
+
+실행 코드 `1a99de4bfcb60bc486e420b12aab33550f927d2e`, 후보 3 정책 지문으로 사용자 본인이 새 로그인한 뒤 접수·성적의 서명 claim 2건을 새로 생성했다. 별도 오프라인 검증 프로세스에서 공증자 서명·identifier·owner·신청/수취 지갑 EIP-712 결합·정확한 params/context·신선도·두 원천 시험 연결을 검증하여 `proofVerified: true`, `independentProcess: true`, `sameClient: true`를 확인했다. HTML이나 과거 증명 재생을 이 결과로 세지 않았다.
+
+정상 종료 코드 0, `profilesDeleted: true`, 잔여 관리형 session 디렉터리 0개를 확인했다. 성적 값·시험일·수험번호·지갑·원본 증명·쿠키·키·HTML·본문 해시는 로그/보고서/fixture에 저장하지 않았다. 소스/정책 코드 지문과 boolean 검증 이력만 기록했다. 원본/legacy 191개와 기존 실행기 3개 지문도 다시 일치했다.
+
+[실제 실행 코드의 PR CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38194206010) 및 [push CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38194203348)는 공개 이력·Linux 합성·Mac 복구 모두 통과했다. 이후 문서 기록 커밋의 CI는 [Draft PR #4](https://github.com/gw020328-oss/clear-education-v4/pull/4)를 따른다. 병합하지 않았다.
+
+이 성공은 현재 메모리 진단 authority와 새 로컬 테스트 수취 지갑에 결합한 본인 실제 증명 1쌍이다. 예치·실제 자격·최고점/목록 완전성·타 참가자 수집·로컬 지급은 아직 미완료다. 추가 TEE 검증을 주장하지 않는다. 다음 단계는 PR 검토 후 제품 신청/정책 및 서버 검증 상태·중복 소비 연결이며, 추천 설정은 GPT-6 Astra / High다.

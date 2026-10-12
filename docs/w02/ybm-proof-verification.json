@@ -7,7 +7,7 @@
     "model": "GPT-6 Astra",
     "reasoning": "high"
   },
-  "status": "SDK_POLICY_MUTATION_FIXED_AWAITING_LIVE_RETRY",
+  "status": "PASS_REAL_YBM_PAIR_GENERATION_AND_INDEPENDENT_VERIFICATION",
   "localTests": {
     "ybmCollector": 146,
     "macIntegrityPublic": 48,
@@ -30,9 +30,23 @@
     "dependencyLockChanged": false
   },
   "live": {
+    "codeCommit": "1a99de4bfcb60bc486e420b12aab33550f927d2e",
     "newYbmLogin": true,
+    "signedClaimsReceived": 2,
     "proofGenerated": true,
-    "independentVerification": false,
+    "independentVerification": true,
+    "sameClient": true,
+    "applicationBound": true,
+    "recipientAuthorized": true,
+    "sourcePairMatched": true,
+    "sourcePolicyPinned": true,
+    "certificateValidated": true,
+    "profilesDeleted": true,
+    "remainingManagedSessions": 0,
+    "exitCode": 0,
+    "listComplete": false,
+    "highestScoreAssessed": false,
+    "eligibilityAssessed": false,
     "payment": false
   },
   "limits": [
@@ -77,6 +91,26 @@
       "independentVerification": false,
       "remainingManagedSessions": 0,
       "exitCode": 1
+    },
+    {
+      "codeCommit": "1a99de4bfcb60bc486e420b12aab33550f927d2e",
+      "newYbmLogin": true,
+      "signedClaimsReceived": 2,
+      "proofGenerated": true,
+      "independentVerification": true,
+      "sameClient": true,
+      "applicationBound": true,
+      "recipientAuthorized": true,
+      "sourcePairMatched": true,
+      "sourcePolicyPinned": true,
+      "certificateValidated": true,
+      "profilesDeleted": true,
+      "remainingManagedSessions": 0,
+      "exitCode": 0,
+      "listComplete": false,
+      "highestScoreAssessed": false,
+      "eligibilityAssessed": false,
+      "payment": false
     }
   ],
   "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/4",
@@ -87,5 +121,13 @@
     "proofSendTimeoutSeconds": 60,
     "sdkOrphanResponseRejectionObserved": true
   },
-  "sourcePolicyHash": "0x1a8946e685bef4a4c1b9b7bd27c0a1b6ac23cc96373114a5d1345a65d2e11821"
+  "sourcePolicyHash": "0x1a8946e685bef4a4c1b9b7bd27c0a1b6ac23cc96373114a5d1345a65d2e11821",
+  "ciAtLiveCode": {
+    "head": "1a99de4bfcb60bc486e420b12aab33550f927d2e",
+    "pullRequestRun": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/38194206010",
+    "pushRun": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/38194203348",
+    "publicHistory": "PASS",
+    "publicSynthetic": "PASS",
+    "macRecovery": "PASS"
+  }
 }
