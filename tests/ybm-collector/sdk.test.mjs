@@ -22,7 +22,9 @@ test('pinned SDK initializes crypto and RPC over an in-memory socket, then forbi
   }
   const connection=await openOfficialClient({socketFactory:url=>new MemorySocket(url)});
   assert.equal(connection.client.isInitialised,true);assert.equal(created,1);
-  await connection.close();assert.equal(socket.readyState,3);
+  socket.sendPromise=async()=>{throw new Error('SYNTHETIC_SEND_FAILURE');};
+  await assert.rejects(connection.client.rpc('createTunnel',{id:123,host:'example.invalid',port:443},1000),/SYNTHETIC_SEND_FAILURE/);
+  await connection.close();await new Promise(resolve=>setImmediate(resolve));assert.equal(socket.readyState,3);
   await assert.rejects(openOfficialClient({socketFactory:()=>{throw new Error('MUST_NOT_RECONNECT');}}),/NEW_WORKER_REQUIRED/);
 });
 

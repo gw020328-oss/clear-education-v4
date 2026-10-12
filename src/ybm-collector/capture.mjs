@@ -5,11 +5,11 @@ import {createExtraction} from './extraction.mjs';
 // Opt-in, response-only layout diagnostic. Does not query cookies or browser
 // storage, or read bodies outside the two exact URLs. CDP request metadata may
 // transiently contain auth headers; do not inspect, retain, or serialize them.
-export function createCapture({browser,collection,signal,onProgress=()=>{}}){
-  const extraction=createExtraction(collection),sessions=new Set(),targets=new Set(),unsubscribers=[],tasks=new Set(),seen=new Set();
+export function createCapture({browser,collection,signal,onProgress=()=>{},extractionFactory=createExtraction,onSourceRequest}){
+  const extraction=extractionFactory(collection),sessions=new Set(),targets=new Set(),unsubscribers=[],tasks=new Set(),seen=new Set();
   let armed=false,closed=false,settled=false,closing=false,inflight=0,bodyReads=0,resolveDone,rejectDone,completion;
   const received={registration:false,score:false};let failureCode=null,sourceRole=null;
-  const safeCodes=new Set(['SOURCE_HTTP_STATUS','SOURCE_CONTENT_TYPE','SOURCE_SIZE','SOURCE_BODY','SOURCE_TEXT_LAYOUT','PAGE_LIMIT','CAPTURE_CAPACITY','HTML_SIZE','HTML_ENCODING','EXAM_TYPE','EXAM_DATE','EXAM_NUMBER','SCORE','AMBIGUOUS_REGISTRATION','REGISTRATION_LAYOUT','SCORE_LAYOUT','SCORE_ROW_COUNT','DUPLICATE_EXAM','EXAM_JOIN','SESSION_EXPIRED','BROWSER_COMMAND_FAILED','BROWSER_CLOSED','BROWSER_TIMEOUT']);
+  const safeCodes=new Set(['SOURCE_REQUEST_BODY','SOURCE_COOKIES','SOURCE_COOKIE_DOMAIN','SECRET_SCOPE','SOURCE_HTTP_STATUS','SOURCE_CONTENT_TYPE','SOURCE_SIZE','SOURCE_BODY','SOURCE_TEXT_LAYOUT','PAGE_LIMIT','CAPTURE_CAPACITY','HTML_SIZE','HTML_ENCODING','EXAM_TYPE','EXAM_DATE','EXAM_NUMBER','SCORE','AMBIGUOUS_REGISTRATION','REGISTRATION_LAYOUT','SCORE_LAYOUT','SCORE_ROW_COUNT','DUPLICATE_EXAM','EXAM_JOIN','SESSION_EXPIRED','BROWSER_COMMAND_FAILED','BROWSER_CLOSED','BROWSER_TIMEOUT']);
   const done=new Promise((resolve,reject)=>{resolveDone=resolve;rejectDone=reject;});
   // Callers may still be setting up their race when a protocol event fails.
   done.catch(()=>{});
@@ -57,7 +57,9 @@ export function createCapture({browser,collection,signal,onProgress=()=>{}}){
       requireValue(typeof response.body==='string'&&typeof response.base64Encoded==='boolean','SOURCE_BODY');
       requireValue(response.body.length<=(response.base64Encoded?Math.ceil(MAX_HTML_BYTES/3)*4:MAX_HTML_BYTES),'SOURCE_SIZE');
       const bytes=Buffer.from(response.body,response.base64Encoded?'base64':'utf8');response=undefined;
-      const result=extraction.accept(role,bytes);
+      let result;
+      try{await onSourceRequest?.(role,event.request,sessionId);check();result=extraction.accept(role,bytes);}
+      finally{bytes.fill(0);}
       received[role]=true;
       onProgress({role,complete:result.complete});
       if(result.complete){closed=true;completion=result;}

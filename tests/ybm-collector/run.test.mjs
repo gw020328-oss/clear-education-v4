@@ -75,3 +75,33 @@ test('ready connects recipient authorization, browser collection, matching and c
  });};
  const result=await runYbmRoute({},h.options);assert.equal(result.collection.complete,true);assert.equal(result.collection.applicationBound,true);assert.equal(result.rawCapture,true);assert.equal(result.liveProof,false);assert.equal(result.payment,false);assert.equal(result.sameClient,true);assert.equal(events.size,0);assert.deepEqual(h.closed(),{closedBrowser:true,closedClient:true});assert.ok(!JSON.stringify(result).includes('123456'));assert.ok(h.output.some(line=>line.startsWith('진단 완료:')));
 });
+
+test('proof check is interactive, isolated from synthetic modes and needs registry before browser',async()=>{
+ assert.equal(parseOptions(['--ybm-proof-check']).proofCheck,true);
+ for(const args of [['--ybm-proof-check','--ybm-collection-check'],['--ybm-proof-check','--show-browser']])assert.throws(()=>parseOptions(args));
+ assert.throws(()=>parseOptions(['--ybm-proof-check'],'/synthetic'));
+ await assert.rejects(runYbmRoute({}, {proofCheck:true}),/INTERACTIVE_COLLECTION_REQUIRED/);
+ const h=harness();await assert.rejects(runYbmRoute({},{...h.options,proofCheck:true,interactive:true,loadTrust:async()=>{throw new Error('ATTESTOR_TRUST_UNAVAILABLE');}}));assert.equal(h.calls.length,0);
+});
+for(const cancelDuringProof of [false,true])test('proof runner '+(cancelDuringProof?'cancels on user close':'passes the login client and cleans up without leaking secrets'),async()=>{
+ const {registrationHtml,scoreHtml}=await import('./source-fixture.mjs');
+ const {endpoints,methods}=await import('../../src/ybm-collector/source-policy.mjs');
+ const h=harness(),events=new Map();const original=h.options.launchBrowser;let secretReads=0;
+ h.options.launchBrowser=async(...args)=>{const b=await original(...args);return {...b,on:(m,fn)=>{events.set(m,fn);return()=>events.delete(m);},send:async(m,p,s)=>{
+  if(m==='Network.getCookies'){secretReads++;return {cookies:[{name:'SYNTHETIC',value:'SYNTHETIC_COOKIE',domain:'.toeic.co.kr'}]};}
+  if(m==='Fetch.getResponseBody')return {body:p.requestId==='registration'?registrationHtml():scoreHtml(),base64Encoded:false};
+  return b.send(m,p,s);
+ }};};
+ h.options.interactive=true;h.options.proofCheck=true;h.options.loadTrust=async()=>['0x'+'12'.repeat(20)];
+ h.options.prove=async options=>{
+  assert.equal(options.client,h.client);assert.equal(options.routeClient,h.client);assert.equal(options.scoreIndex,0);options.diagnostic.collection.assertActive();
+  if(cancelDuringProof){setImmediate(()=>h.input.write('close\n'));await new Promise(resolve=>options.signal.addEventListener('abort',resolve,{once:true}));throw new Error('CANCELLED');}
+  return {proofVerified:true,independentProcess:true,paymentAllowed:false};
+ };
+ h.options.output=line=>{h.output.push(line);if(h.output.length===3){assert.equal(secretReads,0);setImmediate(()=>h.input.write('ready\n'));}if(h.output.length===4)setImmediate(()=>{
+  for(const role of ['registration','score'])events.get('Fetch.requestPaused')({requestId:role,request:{url:endpoints[role],method:methods[role],...(role==='registration'?{postData:'encExamData=SYNTHETIC&zzxxcc='}:{})},responseStatusCode:200,responseHeaders:[{name:'Content-Type',value:'text/html; charset=utf-8'}]},'tab');
+ });};
+ if(cancelDuringProof)await assert.rejects(runYbmRoute({},h.options),/CANCELLED/);
+ else {const result=await runYbmRoute({},h.options);assert.equal(result.verification.proofVerified,true);assert.equal(result.payment,false);}
+ assert.equal(secretReads,2);assert.equal(events.size,0);assert.deepEqual(h.closed(),{closedBrowser:true,closedClient:true});assert.ok(!h.output.join('').includes('SYNTHETIC_COOKIE'));
+});

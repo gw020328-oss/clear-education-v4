@@ -61,3 +61,7 @@
 - W02 신청/지갑·추출 연결: docs/w02/YBM_BINDING_REPORT.ko.md 참조. 새 --ybm-collection-check는 사용자가 선택한 새 로컬 테스트 지갑으로 서명한 메모리 진단 명령과 원천 형식 확인이다. 배포 vault/예치/제품 동의를 가장하지 않는다. ready 전에는 수집하지 않으며 두 고정 URL/메서드만 읽는다. 실제 형식 검증 전 원천 정책은 후보 상태이고 알 수 없는 형식은 거부한다. HTML 연결 성공을 공식 증명 검증·최고점 확인·환급 자격·지급으로 기록하지 않는다. SDK proof 생성/검증은 별도 후속이다. 기존 합성 ZIP과 원본·실험 자료는 보존한다.
 
 - W02 실제 형식 진단 후속: 동일 지문의 후보 2로 본인 로그인 후 실제 성적·접수 기록의 같은 시험 연결, 로컬 테스트 신청·수취 지갑 결합, 동일 client 및 프로필 정리를 확인했다. docs/w02/ybm-binding-verification.json 참조. 새 증명·공식 서명 검증·지급은 false다. 성적 상세 scoreDetailToeic.php는 수집 대상이 아니며 접수 목록 confirmList.php에서 confirmDetail.php를 연다. 정상 완료 시 창 종료가 오류처럼 보이지 않도록 완료 문구를 유지한다. 다음 증명 단계 추천은 GPT-6 Astra / High다.
+
+- W02 동일 client 증명 연결: docs/w02/YBM_PROOF_REPORT.ko.md 참조. 새 --ybm-proof-check는 registry 신뢰 목록을 로그인 전에 runtime에 고정하고, ready 이후 두 허용 원천의 URL별 쿠키/POST 비밀값을 메모리에서만 사용한다. 동일 client·사전 결합 owner로 새 증명을 만들고, 쿠키/개인키 없는 오프라인 자식 프로세스에서 공식 claim 서명·정확한 params/context·신선도·원천 연결을 검증한다. 완료는 두 증명 검증 뒤이며 부분 성공을 지급/자격 판정으로 기록하지 않는다. 신규 합성 시험 46개 포함 전체 393개 통과는 실제 증명 성공과 구분한다. 로그인/실제 결과는 ybm-proof-verification.json 후속 기록을 따른다.
+
+- W02 실제 proof 성공 후속: docs/w02/ybm-proof-verification.json의 실제 실행 커밋을 기준으로 새 접수·성적 증명 2건 생성과 별도 프로세스의 공식 서명/신청 결합/정책/신선도/시험 연결 검증이 성공했다. 새 후보 3은 SDK 기본 User-Agent를 사전에 고정한다. 증명 모드만 송신 32 MiB/60초이며 일반 중계 2 MiB/10초·수신 4 MiB 제한은 유지한다. 로컬 400개 검증과 실제 결과를 구분하고, 원본 proof는 보관하지 않는다. 정상 종료·프로필 삭제 확인. Draft PR #4이며 자동 병합하지 않는다. 제품 DB/예치/영속 nonce/자격/지급은 후속, 추천 GPT-6 Astra / High.

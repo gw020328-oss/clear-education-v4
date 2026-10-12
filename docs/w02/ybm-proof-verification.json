@@ -1,0 +1,156 @@
+{
+  "stage": "W02_SAME_CLIENT_PROOF_VERIFICATION",
+  "date": "2026-10-12",
+  "baseCommit": "d880fd65a99109c6802df364fdb40c44d60c0247",
+  "branch": "codex/ybm-proof-verification",
+  "modelRecommendation": {
+    "model": "GPT-6 Astra",
+    "reasoning": "high"
+  },
+  "status": "PASS_REAL_YBM_PAIR_GENERATION_AND_INDEPENDENT_VERIFICATION",
+  "localTests": {
+    "ybmCollector": 146,
+    "macIntegrityPublic": 48,
+    "proofAdapter": 107,
+    "collectorBoundary": 62,
+    "storagePreparation": 37,
+    "total": 400,
+    "status": "PASS"
+  },
+  "runtimeStwoSyntheticProof": "PASS",
+  "publicRegistry": {
+    "available": true,
+    "addressCount": 3
+  },
+  "preservation": {
+    "originalAndLegacyFiles": 191,
+    "historicalScripts": 3,
+    "fingerprintsMatch": true,
+    "originalPrivateProofsRead": false,
+    "dependencyLockChanged": false
+  },
+  "live": {
+    "codeCommit": "1a99de4bfcb60bc486e420b12aab33550f927d2e",
+    "newYbmLogin": true,
+    "signedClaimsReceived": 2,
+    "proofGenerated": true,
+    "independentVerification": true,
+    "sameClient": true,
+    "applicationBound": true,
+    "recipientAuthorized": true,
+    "sourcePairMatched": true,
+    "sourcePolicyPinned": true,
+    "certificateValidated": true,
+    "profilesDeleted": true,
+    "remainingManagedSessions": 0,
+    "exitCode": 0,
+    "listComplete": false,
+    "highestScoreAssessed": false,
+    "eligibilityAssessed": false,
+    "payment": false
+  },
+  "limits": [
+    "LOCAL_DIAGNOSTIC_AUTHORITY",
+    "NO_ELIGIBILITY_OR_HIGHEST_SCORE",
+    "NO_ADDITIONAL_TEE",
+    "NO_PERSISTENT_SERVER_NONCE_API"
+  ],
+  "merged": false,
+  "liveAttempts": [
+    {
+      "codeCommit": "6f837918759f0794f8c2c4c9a3e9f2904ccaa3eb",
+      "userLoginCompleted": true,
+      "localSourcePairMatched": true,
+      "failedPhase": "REGISTRATION_PROOF_GENERATION",
+      "safeFailureCode": "PROOF_GENERATION_FAILED",
+      "exactCause": "UNKNOWN",
+      "proofGenerated": false,
+      "independentVerification": false,
+      "remainingManagedSessions": 0,
+      "exitCode": 1
+    },
+    {
+      "codeCommit": "63a1084",
+      "userLoginCompleted": true,
+      "localSourcePairMatched": true,
+      "failedPhase": "REGISTRATION_WAITING_FOR_VERIFICATION",
+      "safeFailureCode": "ATTESTOR_BACKPRESSURE_LIMIT",
+      "proofGenerated": false,
+      "independentVerification": false,
+      "remainingManagedSessions": 0,
+      "exitCode": 1
+    },
+    {
+      "codeCommit": "87dac36",
+      "userLoginCompleted": true,
+      "localSourcePairMatched": true,
+      "failedPhase": "INDEPENDENT_VERIFICATION",
+      "safeFailureCode": "PROOF_VERIFICATION_FAILED",
+      "signedClaimsReceived": 2,
+      "proofGenerated": true,
+      "independentVerification": false,
+      "remainingManagedSessions": 0,
+      "exitCode": 1
+    },
+    {
+      "codeCommit": "1a99de4bfcb60bc486e420b12aab33550f927d2e",
+      "newYbmLogin": true,
+      "signedClaimsReceived": 2,
+      "proofGenerated": true,
+      "independentVerification": true,
+      "sameClient": true,
+      "applicationBound": true,
+      "recipientAuthorized": true,
+      "sourcePairMatched": true,
+      "sourcePolicyPinned": true,
+      "certificateValidated": true,
+      "profilesDeleted": true,
+      "remainingManagedSessions": 0,
+      "exitCode": 0,
+      "listComplete": false,
+      "highestScoreAssessed": false,
+      "eligibilityAssessed": false,
+      "payment": false
+    }
+  ],
+  "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/4",
+  "transportFix": {
+    "defaultOutboundBytes": 2097152,
+    "proofModeOutboundBytes": 33554432,
+    "inboundBytes": 4194304,
+    "proofSendTimeoutSeconds": 60,
+    "sdkOrphanResponseRejectionObserved": true
+  },
+  "sourcePolicyHash": "0x1a8946e685bef4a4c1b9b7bd27c0a1b6ac23cc96373114a5d1345a65d2e11821",
+  "ciAtLiveCode": {
+    "head": "1a99de4bfcb60bc486e420b12aab33550f927d2e",
+    "pullRequestRun": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/38194206010",
+    "pushRun": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/38194203348",
+    "publicHistory": "PASS",
+    "publicSynthetic": "PASS",
+    "macRecovery": "PASS"
+  },
+  "preMergeReview": {
+    "reviewedHead": "8b9a10dd4d9aef13313dd2ee737d9d40b31f7d6a",
+    "finding": "VERIFIER_SPAWN_FAILURE_WAITED_FOR_EXIT_INSTEAD_OF_CLOSE",
+    "reproducedBeforeFix": true,
+    "regressionTestsAdded": 7,
+    "localTests": {
+      "ybmCollector": 153,
+      "macIntegrityPublic": 48,
+      "proofAdapter": 107,
+      "collectorBoundary": 62,
+      "storagePreparation": 37,
+      "total": 407,
+      "status": "PASS"
+    },
+    "workspaceCheck": "PASS",
+    "dependencyCheck": "PASS",
+    "originalFingerprintsPreserved": true,
+    "additionalBlockingFindings": 0,
+    "newYbmLogin": false,
+    "newProofGenerated": false,
+    "mergeAuthorizedByUser": true,
+    "mergeGate": "LATEST_HEAD_CI_AND_PR_STATE"
+  }
+}

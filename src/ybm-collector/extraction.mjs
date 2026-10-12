@@ -3,7 +3,7 @@ import {requireValue} from './values.mjs';
 
 // A local layout check, never proof verification. Browser HTML is untrusted.
 // The future attestor verifier must independently derive these same fields.
-export function createExtraction(collection){
+export function createExtraction(collection,{onPair,finish=true}={}){
   let registration,scores,closed=false;
   return {
     accept(role,bytes){
@@ -18,7 +18,7 @@ export function createExtraction(collection){
         const pair=joinSources(registration,scores);
         const linked=[collection.request('registration'),collection.request('score',pair.score.index)];
         requireValue(linked[0].context.clearBindingHash===linked[1].context.clearBindingHash&&linked[0].ownerAddress===linked[1].ownerAddress&&linked[0].context.clearSourceRequestId!==linked[1].context.clearSourceRequestId,'SOURCE_BINDING');
-        collection.assertActive();collection.finish();closed=true;
+        collection.assertActive();onPair?.({scoreIndex:pair.score.index});if(finish)collection.finish();closed=true;
         // No exam fields, request identifiers, wallet or body hashes in logs.
         // Retain no diagnostic artifact that might be mistaken for a proof.
         const result={complete:true,applicationBound:true,recipientAuthorized:true,sourcePairMatched:true,sourcePolicyPinned:true,listComplete:false,highestScoreAssessed:false,proofVerified:false,paymentAllowed:false};
