@@ -1,4 +1,6 @@
 import { getAddress, hexlify, toUtf8Bytes, TypedDataEncoder } from 'ethers';
+import { finalTermsTypes, runtimeHash, vaultDomain } from '../vault/encoding.mjs';
+import { canonical } from '../policy/values.mjs';
 
 // EIP-1193 controller for the future UI. api(path, options) must use same-origin
 // credentials, must not persist signatures, and must reject non-2xx responses.
@@ -77,6 +79,28 @@ export function createWalletClient({ provider, api, chainId }) {
       await check(stamp);
       const result = await api(`/applications/${applicationId}/consent`, { method: 'POST',
         body: { nonce: typed.message.nonce.slice(2), signature }, headers: { ...headers(), 'idempotency-key': idempotencyKey } });
+      await check(stamp); return result;
+    },
+    // Caller first displays GET /runtimes/:policyHash and passes the reviewed
+    // record. A changed deployment/config must be presented for review again.
+    async finalConsent(applicationId, reviewedRuntime) {
+      const stamp = generation; await check(stamp);
+      if (!authenticated) fail('AUTH_REQUIRED');
+      const typed = await api(`/applications/${applicationId}/final-consent-challenge`, { method: 'POST', body: {}, headers: headers() });
+      await check(stamp);
+      try {
+        const record = typed.runtime;
+        const reviewedRuntimeHash = reviewedRuntime.runtimeConfigHash;
+        if (typed.primaryType !== 'TermsAcceptanceV4' || canonical(typed.types) !== canonical(finalTermsTypes)
+          || canonical(record) !== canonical(reviewedRuntime) || runtimeHash(record.config) !== reviewedRuntimeHash
+          || canonical(typed.domain) !== canonical(vaultDomain(record)) || typed.domain.chainId !== chainId
+          || typed.message.applicationId !== applicationId || typed.message.learner !== connected.wallet
+          || typed.message.policyHash !== record.config.policyHash || typed.message.runtimeConfigHash !== reviewedRuntimeHash) fail('CONSENT_CONTEXT');
+      } catch { fail('CONSENT_CONTEXT'); }
+      const signature = await rpc('eth_signTypedData_v4', [connected.wallet, JSON.stringify(TypedDataEncoder.getPayload(typed.domain, typed.types, typed.message))]);
+      await check(stamp);
+      const result = await api(`/applications/${applicationId}/final-consent`, { method: 'POST',
+        body: { nonce: typed.message.nonce.slice(2), signature }, headers: headers() });
       await check(stamp); return result;
     },
     dispose() { invalidate(); disposed = true; for (const name of ['accountsChanged', 'chainChanged', 'disconnect']) provider.removeListener(name, invalidate); },

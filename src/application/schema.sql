@@ -36,3 +36,21 @@ CREATE TRIGGER IF NOT EXISTS policy_immutable BEFORE UPDATE ON policies
 CREATE TRIGGER IF NOT EXISTS application_identity_immutable
   BEFORE UPDATE OF wallet,policy_hash ON applications
   BEGIN SELECT RAISE(ABORT,'IMMUTABLE_APPLICATION'); END;
+
+CREATE TABLE IF NOT EXISTS runtime_configs (
+  hash TEXT PRIMARY KEY, policy_hash TEXT NOT NULL UNIQUE REFERENCES policies(hash),
+  cohort_id TEXT NOT NULL UNIQUE, record TEXT NOT NULL
+) STRICT;
+CREATE TABLE IF NOT EXISTS final_challenges (
+  digest TEXT PRIMARY KEY, application_id TEXT NOT NULL REFERENCES applications(id),
+  session_digest TEXT NOT NULL REFERENCES sessions(digest), runtime_hash TEXT NOT NULL REFERENCES runtime_configs(hash),
+  issued_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, consumed_at INTEGER
+) STRICT;
+CREATE TABLE IF NOT EXISTS funding (
+  application_id TEXT PRIMARY KEY REFERENCES applications(id), runtime_hash TEXT NOT NULL REFERENCES runtime_configs(hash),
+  state TEXT NOT NULL CHECK(state IN ('CONSENTED','FUNDING_PENDING','ENROLLED')),
+  typed_data TEXT NOT NULL, signature TEXT NOT NULL, consent_digest TEXT NOT NULL,
+  evidence TEXT, CHECK((state='ENROLLED' AND evidence IS NOT NULL) OR (state!='ENROLLED' AND evidence IS NULL))
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS runtime_immutable BEFORE UPDATE ON runtime_configs
+  BEGIN SELECT RAISE(ABORT,'IMMUTABLE_RUNTIME'); END;

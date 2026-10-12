@@ -25,7 +25,7 @@ async function jsonBody(req) {
   catch { throw new RuleError('JSON'); }
 }
 const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].includes(code) ? 401
-  : ['FORBIDDEN', 'NOT_INVITED', 'ORIGIN', 'CSRF', 'WALLET_CONTEXT_CHANGED', 'TRANSPORT'].includes(code) ? 403
+  : ['FORBIDDEN', 'SPONSOR_REQUIRED', 'NOT_INVITED', 'ORIGIN', 'CSRF', 'WALLET_CONTEXT_CHANGED', 'TRANSPORT'].includes(code) ? 403
     : ['APPLICATION_NOT_FOUND', 'POLICY_NOT_FOUND', 'ROUTE'].includes(code) ? 404
       : ['IDEMPOTENCY_CONFLICT', 'POLICY_VERSION_CONFLICT', 'POLICY_SUPERSEDED', 'APPLICATION_STATE', 'CONSENT_CHALLENGE'].includes(code) ? 409
         : code === 'AUTH_RATE_LIMIT' ? 429 : code === 'BODY_SIZE' ? 413 : 422;
@@ -67,16 +67,24 @@ export function createApplicationServer(service, { allowLoopbackHttpForTests = f
         result = service.logout(context); res.setHeader('Set-Cookie', cookie(SESSION, '', 0));
       } else if (req.method === 'POST' && path === '/policies') result = service.registerPolicy(context, body);
       else if (req.method === 'GET' && /^\/policies\/0x[0-9a-f]{64}$/.test(path)) result = service.getPolicy(context, path.split('/')[2]);
+      else if (req.method === 'POST' && path === '/runtimes') result = await service.bindRuntime(context, body);
+      else if (req.method === 'GET' && /^\/runtimes\/0x[0-9a-f]{64}$/.test(path)) result = service.getRuntime(context, path.split('/')[2]);
       else if (req.method === 'GET' && path === '/applications') result = service.listApplications(context);
       else if (req.method === 'POST' && path === '/applications') result = service.createApplication(context, body, key);
       else {
-        const match = /^\/applications\/(0x[0-9a-f]{64})(?:\/(consent-challenge|consent))?$/.exec(path);
+        const match = /^\/applications\/(0x[0-9a-f]{64})(?:\/(consent-challenge|consent|final-consent-challenge|final-consent|funding-intent|funding-confirmation))?$/.exec(path);
         requireRule(match, 'ROUTE');
         if (req.method === 'GET' && !match[2]) result = service.getApplication(context, match[1]);
         else if (req.method === 'POST' && match[2] === 'consent-challenge') {
           exactKeys(body, [], 'CONSENT_SCHEMA');
           result = service.consentChallenge(context, match[1]);
         } else if (req.method === 'POST' && match[2] === 'consent') result = service.consent(context, match[1], body, key);
+        else if (req.method === 'POST' && match[2] === 'final-consent-challenge') {
+          exactKeys(body, [], 'FINAL_CONSENT_SCHEMA'); result = await service.finalConsentChallenge(context, match[1]);
+        } else if (req.method === 'POST' && match[2] === 'final-consent') result = service.finalConsent(context, match[1], body);
+        else if (req.method === 'POST' && match[2] === 'funding-intent') {
+          exactKeys(body, [], 'FUNDING_SCHEMA'); result = await service.fundingIntent(context, match[1]);
+        } else if (req.method === 'POST' && match[2] === 'funding-confirmation') result = await service.confirmFunding(context, match[1], body);
         else throw new RuleError('ROUTE');
       }
       res.end(JSON.stringify(result));
