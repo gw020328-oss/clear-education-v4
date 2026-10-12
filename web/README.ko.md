@@ -38,8 +38,8 @@ origin HTTPS 서버는 [계획 C1](../docs/current/TEAM_PLAN.ko.md)에서 추가
 
 | 경로 | 보이는 것 |
 | --- | --- |
-| `/?scenario=default` | DRAFT·TERMS_ACCEPTED·CONSENTED·FUNDING_PENDING·ENROLLED 다섯 건 |
-| `/?scenario=empty` | 빈 목록 |
+| `/?scenario=default` | 정상 — DRAFT·TERMS_ACCEPTED·CONSENTED·FUNDING_PENDING·ENROLLED 각 1건 |
+| `/?scenario=empty` | 신청 없음 |
 | `/?scenario=slow` | 로딩 (2.4초) |
 | `/?scenario=authError` | `AUTH_REQUIRED` 오류 |
 | `/?scenario=apiError` | `API_REQUEST_FAILED` 오류 |
@@ -78,9 +78,11 @@ web/
       synthetic.js        합성 어댑터 (지연·오류 시나리오)
     fixtures/
       applications.js     다섯 상태 fixture와 시나리오
+      policy.js           컴파일된 정책 fixture (동의한 조건)
     ui/
       state-labels.js     상태별 '말할 수 있는 사실'과 '금지되는 추정'
       views.js            목록·상세·로딩·빈 목록·오류
+      policy-view.js      동의한 조건 구역
       dom.js              작은 DOM 도구
   tools/
     dev-server.mjs        개발용 정적 서버 (Node. 브라우저 번들 아님)
@@ -95,9 +97,10 @@ web/
 어댑터를 만들면 화면 코드를 고치지 않고 바꿔 끼울 수 있다.
 
 ```js
-listApplications() -> Promise<ApplicationView[]>
-getApplication(id) -> Promise<ApplicationView>
-describe()         -> { mode, label, scenario, note }
+listApplications()      -> Promise<ApplicationView[]>
+getApplication(id)      -> Promise<ApplicationView>
+getPolicy(policyHash)   -> Promise<CompiledPolicy>
+describe()              -> { mode, label, scenario, note }
 ```
 
 오류는 `AUTH_REQUIRED`와 `API_REQUEST_FAILED` 둘로 한정한다.
@@ -147,3 +150,27 @@ cookie·origin 검증을 약화하지 않는다. 이 어댑터는 네트워크�
 - `web/` 시험을 CI(`.github/workflows/public-synthetic.yml`)에 넣을지. CI 변경은 다른
   담당자에게 영향이 있어 F0에서 건드리지 않았다. 위 명령은 로컬에서 실행한다.
 - 루트 `package.json`에 `test:web` 스크립트를 추가할지. 같은 이유로 보류했다.
+
+## 동의한 조건 구역
+
+상세 화면에 **이 신청에 적용된 조건**을 보여준다. 참가자가 3단계(최종 동의)에서
+무엇에 동의했는지 나중에 확인할 수 있어야 하기 때문이다. 조건을 못 바꾸게 만드는
+것이 제품의 요지인데 정작 참가자가 그 조건을 볼 수 없으면 의미가 없다.
+
+`GET /policies/:policyHash` 에 해당하며 `src/policy/compiler.mjs` 의
+`compileSyntheticPolicy` 가 내보내는 모양을 따른다. 화면이 지어낸 값이 아니라
+컴파일러가 강제하는 값을 그대로 쓴다.
+
+| 컴파일러가 강제하는 것 | 화면 표시 |
+| --- | --- |
+| `minScore: 800` | TOEIC_LR 총점 800점 이상 |
+| `minCompletionBps: 8000` | 필수 강의 10개 중 **80%** 이상 (베이시스포인트를 퍼센트로) |
+| `amount: '50000000'`, `tokenDecimals: 6` | **50 TEST** (문자열 자리수로 계산. 부동소수점 금지) |
+| `supplementEndAt = normalSubmitAt + 259200` | 보완 종료 = 제출 마감 **+3일** |
+| `claimUntil = normalSubmitAt + 864000` | 최종 청구 = 제출 마감 **+10일** |
+
+`checkPolicyView()` 가 이 관계들을 검사한다. 시각은 컴파일러가 서울 기준으로 기간을
+검사하므로 화면도 **KST** 로 표시한다.
+
+**충족 여부는 말하지 않는다.** 점수·이수율 실제 값은 이 응답에 들어있지도 않다.
+자격 판정 화면은 계획 **F4** 이고 선행 API(B1·B2b·B3)가 아직 없다.

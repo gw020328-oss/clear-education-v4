@@ -76,7 +76,7 @@ test('describe 는 합성임을 밝힌다', () => {
   assert.match(info.note, /합성/);
 });
 
-test('시나리오 키에 빈 목록·느린 응답·오류 둘이 모두 있다', () => {
+test('시나리오 키에 신청 없음·느린 응답·오류 둘이 모두 있다', () => {
   for (const key of ['default', 'empty', 'slow', 'authError', 'apiError']) {
     assert.ok(SCENARIO_KEYS.includes(key), `${key} 시나리오가 없다`);
   }

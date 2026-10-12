@@ -74,8 +74,8 @@ export const SYNTHETIC_APPLICATIONS = Object.freeze([
 
 /** 화면 시나리오 — 주소창에서 바꿔 끼운다 */
 export const SCENARIOS = Object.freeze({
-  default: { label: '다섯 상태', items: SYNTHETIC_APPLICATIONS, delayMs: 220 },
-  empty: { label: '빈 목록', items: [], delayMs: 220 },
+  default: { label: '정상 — 신청 5건', items: SYNTHETIC_APPLICATIONS, delayMs: 220 },
+  empty: { label: '신청 없음', items: [], delayMs: 220 },
   slow: { label: '느린 응답', items: SYNTHETIC_APPLICATIONS, delayMs: 2400 },
   authError: { label: '로그인 필요', items: SYNTHETIC_APPLICATIONS, delayMs: 220, failWith: 'AUTH_REQUIRED' },
   apiError: { label: '요청 실패', items: SYNTHETIC_APPLICATIONS, delayMs: 220, failWith: 'API_REQUEST_FAILED' },

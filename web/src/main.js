@@ -49,7 +49,7 @@ function scenarioPicker() {
   })));
 
   return el('div.picker', {}, [
-    el('label', { for: 'scenario', text: '합성 시나리오' }),
+    el('label', { for: 'scenario', text: '화면 상황 바꿔보기' }),
     select,
     el('p.muted', { text: adapter.describe().note }),
   ]);
@@ -74,7 +74,9 @@ async function renderDetail(id) {
   shell(loadingView('신청 상세'));
   try {
     const view = await adapter.getApplication(id);
-    shell(detailView(view));
+    // 조건 조회가 실패해도 상태 화면은 보여준다. 둘은 다른 요청이다.
+    const policy = await adapter.getPolicy(view.policyHash).catch(() => null);
+    shell(detailView(view, policy));
   } catch (error) {
     const known = SCENARIOS[currentScenario()].failWith;
     shell(known ? errorView(known, () => renderDetail(id)) : notFoundView());

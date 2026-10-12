@@ -3,6 +3,7 @@
 // 어댑터를 직접 부르지 않는다. main.js 가 받은 결과만 그린다.
 
 import { el, clear, field, shortHex, boolText } from './dom.js';
+import { policySection } from './policy-view.js';
 import {
   stateLabel, TOTAL_STEPS, SYNTHETIC_NOTICE, NOT_CLAIMED_HERE, errorText,
 } from './state-labels.js';
@@ -71,7 +72,7 @@ export function listView(items) {
 
 // ── 상세 ────────────────────────────────────────────────────────────────────
 
-export function detailView(view) {
+export function detailView(view, policy) {
   const label = stateLabel(view.state);
   const hasContractScope = view.consentScope === 'CONTRACT';
 
@@ -86,6 +87,8 @@ export function detailView(view) {
         el('span', { text: label.forbidden }),
       ]),
     ]),
+
+    policy ? policySection(policy) : el('p.muted', { text: '조건을 불러오지 못했습니다.' }),
 
     el('h3', { text: '신청' }),
     el('dl.fields', {}, [

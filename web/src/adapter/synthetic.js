@@ -7,8 +7,9 @@
 // 이 어댑터는 네트워크·쿠키·지갑을 전혀 쓰지 않는다. 그래서 인증·Secure cookie·
 // origin 검증을 '우회'하는 것이 아니라 아직 '연결하지 않은' 상태다.
 
-import { AdapterError, checkApplicationView } from './contract.js';
+import { AdapterError, checkApplicationView, checkPolicyView } from './contract.js';
 import { SCENARIOS, DEFAULT_SCENARIO } from '../fixtures/applications.js';
+import { SYNTHETIC_POLICY } from '../fixtures/policy.js';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -58,6 +59,18 @@ export function createSyntheticAdapter({ scenario = DEFAULT_SCENARIO, validate =
       const found = chosen.items.find((view) => view.applicationId === id);
       if (!found) throw new AdapterError('API_REQUEST_FAILED');
       return guard([{ ...found }])[0];
+    },
+
+    // GET /policies/:policyHash 에 해당한다. 조건 '내용'만 돌려주며
+    // 참가자가 그 조건을 충족했는지는 말하지 않는다 — 그 판정은 아직 제품에 없다.
+    async getPolicy(policyHash) {
+      await settle();
+      if (policyHash !== SYNTHETIC_POLICY.policyHash) throw new AdapterError('API_REQUEST_FAILED');
+      if (validate) {
+        const problems = checkPolicyView(SYNTHETIC_POLICY);
+        if (problems.length > 0) throw new Error(`정책 fixture 가 계약과 다르다: ${problems.join(' / ')}`);
+      }
+      return SYNTHETIC_POLICY;
     },
   };
 }
