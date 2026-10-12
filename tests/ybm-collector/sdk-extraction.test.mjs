@@ -52,3 +52,11 @@ test('SDK recipes cannot truncate another exam type or an oversized identifier i
  assert.throws(()=>receipt('registration',registrationHtml('2026.09.20','12345678901')));
  assert.throws(()=>receipt('score',scoreHtml().replace('TOEIC</td>','TOEIC<span>SW</span></td>')));
 });
+
+test('official SDK request creation cannot silently change the pre-login public policy',()=>{
+ for(const role of ['registration','score']){
+  const params=policyFor(role),before=structuredClone(params);
+  http.createRequest({cookieStr:'SYNTHETIC_COOKIE',paramValues:{encExamData:'SYNTHETIC_BODY'}},params,quiet);
+  assert.deepEqual(params,before);assert.equal(params.headers['User-Agent'],'reclaim/0.0.1');
+ }
+});

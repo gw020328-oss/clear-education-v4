@@ -9,7 +9,7 @@ const classPattern='class=["\'](?<exam_type>TOEIC)["\']';
 const binary=pattern=>Buffer.from(pattern,'utf8').toString('latin1');
 const firstText=path=>`(${path}//text()[normalize-space()])[1]`;
 function params(role,index=0){
-  const base={url:endpoints[role],method:methods[role],headers:{'Accept-Encoding':'identity'},writeRedactionMode:'zk'};
+  const base={url:endpoints[role],method:methods[role],headers:{'Accept-Encoding':'identity','User-Agent':'reclaim/0.0.1'},writeRedactionMode:'zk'};
   if(role==='registration')return {...base,headers:{...base.headers,'Content-Type':'application/x-www-form-urlencoded'},body:'encExamData={{encExamData}}&zzxxcc=',
     responseMatches:[classPattern,`(?<exam_date>${date})`,`(?<registration_number>${number})`].map(value=>({type:'regex',value})),
     responseRedactions:[
@@ -26,7 +26,7 @@ function params(role,index=0){
   };
 }
 export function sourceBundle(){return {
-  revision:'ybm-minimal-candidate.2',status:'AWAITING_CURRENT_YBM_LAYOUT',encoding:'UTF-8',parser:'strict-ybm-dom.2',maxHtmlBytes:MAX_HTML_BYTES,maxRows:MAX_ROWS,listCompleteness:false,
+  revision:'ybm-minimal-candidate.3',status:'AWAITING_CURRENT_YBM_LAYOUT',encoding:'UTF-8',parser:'strict-ybm-dom.2',maxHtmlBytes:MAX_HTML_BYTES,maxRows:MAX_ROWS,listCompleteness:false,
   sources:{registration:[params('registration')],score:Array.from({length:MAX_ROWS},(_,i)=>params('score',i))},
 };}
 export const sourcePolicyHash=digest(sourceBundle());

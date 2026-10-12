@@ -7,14 +7,14 @@
     "model": "GPT-6 Astra",
     "reasoning": "high"
   },
-  "status": "UPLOAD_LIMIT_FIXED_AWAITING_LIVE_RETRY",
+  "status": "SDK_POLICY_MUTATION_FIXED_AWAITING_LIVE_RETRY",
   "localTests": {
-    "ybmCollector": 144,
+    "ybmCollector": 146,
     "macIntegrityPublic": 48,
     "proofAdapter": 107,
     "collectorBoundary": 62,
     "storagePreparation": 37,
-    "total": 398,
+    "total": 400,
     "status": "PASS"
   },
   "runtimeStwoSyntheticProof": "PASS",
@@ -31,7 +31,7 @@
   },
   "live": {
     "newYbmLogin": true,
-    "proofGenerated": false,
+    "proofGenerated": true,
     "independentVerification": false,
     "payment": false
   },
@@ -65,6 +65,18 @@
       "independentVerification": false,
       "remainingManagedSessions": 0,
       "exitCode": 1
+    },
+    {
+      "codeCommit": "87dac36",
+      "userLoginCompleted": true,
+      "localSourcePairMatched": true,
+      "failedPhase": "INDEPENDENT_VERIFICATION",
+      "safeFailureCode": "PROOF_VERIFICATION_FAILED",
+      "signedClaimsReceived": 2,
+      "proofGenerated": true,
+      "independentVerification": false,
+      "remainingManagedSessions": 0,
+      "exitCode": 1
     }
   ],
   "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/4",
@@ -74,5 +86,6 @@
     "inboundBytes": 4194304,
     "proofSendTimeoutSeconds": 60,
     "sdkOrphanResponseRejectionObserved": true
-  }
+  },
+  "sourcePolicyHash": "0x1a8946e685bef4a4c1b9b7bd27c0a1b6ac23cc96373114a5d1345a65d2e11821"
 }

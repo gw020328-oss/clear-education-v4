@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fixture,core} from './proof-fixture.mjs';
 import {generateAndVerify} from '../../src/ybm-collector/proof.mjs';
+import {quiet} from '../../src/ybm-collector/client.mjs';
 import {canonical} from '../../src/ybm-collector/values.mjs';
 async function harness(t){
  const f=await fixture();t.after(()=>f.diagnostic.close());let calls=0,closed=false;
@@ -9,6 +10,7 @@ async function harness(t){
  const secrets={take:role=>({cookieStr:'SYNTHETIC_COOKIE_'+role}),close(){closed=true;}};
  const createClaim=async options=>{
   calls++;assert.equal(options.client,client);assert.ok(options.ownerPrivateKey);assert.equal(options.zkEngine,'stwo');assert.equal(options.maxRetries,1);assert.equal(options.params.headers['Accept-Encoding'],'identity');seen.push(options.context.clearSourceRole);
+  core.providers.http.createRequest({...options.secretParams,paramValues:{encExamData:'SYNTHETIC'}},options.params,quiet);
   const p=structuredClone(f.input.proofs[calls-1]);p.claim.parameters=canonical(options.params);p.claim.context=canonical({...options.context,extractedParameters:JSON.parse(p.claim.context).extractedParameters,providerHash:core.hashProviderParams(options.params)});await f.sign(p);
   return {claim:p.claim,signatures:{claimSignature:Buffer.from(p.signature.slice(2),'hex'),attestorAddress:p.attestor},request:{secret:'SYNTHETIC_NEVER_IPC'}};
  };

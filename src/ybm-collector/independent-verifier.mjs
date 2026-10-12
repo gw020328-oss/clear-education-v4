@@ -1,3 +1,4 @@
+import {verificationFailureCode} from './proof-diagnostics.mjs';
 import {fork} from 'node:child_process';
 import {requireValue} from './values.mjs';
 export async function verifyIndependently(input,{signal}={}){
@@ -14,7 +15,7 @@ export async function verifyIndependently(input,{signal}={}){
     child.once('exit',(code)=>{
       clearTimeout(timer);signal?.removeEventListener('abort',stop);
       if(!failed&&!signal?.aborted&&code===0&&response?.ok===true&&response.result?.proofVerified===true)resolve(response.result);
-      else reject(new Error('PROOF_VERIFICATION_FAILED'));
+      else {const error=new Error('PROOF_VERIFICATION_FAILED');error.verificationCode=verificationFailureCode({message:response?.reason});reject(error);}
     });
     child.send(input,error=>{if(error)stop();});
     if(signal?.aborted)stop();

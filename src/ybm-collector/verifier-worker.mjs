@@ -1,4 +1,5 @@
 // Offline child: deny network primitives before loading the verifier/SDK.
+import {verificationFailureCode} from './proof-diagnostics.mjs';
 import net from 'node:net';
 import dns from 'node:dns';
 import {syncBuiltinESMExports} from 'node:module';
@@ -13,7 +14,7 @@ process.on('message',async input=>{
   if(used)return;used=true;
   let result;
   try{const {verifyProofPair}=await import('./proof-verifier.mjs');result={ok:true,result:{...await verifyProofPair(input),independentProcess:true}};}
-  catch{result={ok:false};}
+  catch(error){result={ok:false,reason:verificationFailureCode(error)};}
   process.send?.(result,()=>process.disconnect());
 });
 process.on('disconnect',()=>process.exit(0));
