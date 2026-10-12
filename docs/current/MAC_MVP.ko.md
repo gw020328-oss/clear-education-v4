@@ -33,4 +33,4 @@
 | 11월 3–5일 | 권리·개인정보·복구 회귀 및 실패 과업 재검증 | GPT-6 Astra / High |
 | 11월 6–7일 | 릴리스 동결·리허설·시연, 실제/합성 및 미완료 구분 | GPT-6.1 Sol / High → Medium |
 
-시기는 작업 순서의 목표이며 완료 사실이 아니다. 현재 구현 상태와 시험 결과는 [Mac 저장 경계 보고서](../w02/MAC_STORAGE_REPORT.ko.md)를 따른다. 이전 [PRD](../reference/PRD.ko.md), [기술 설계](../reference/DESIGN.ko.md), [구현 계획](../reference/IMPLEMENTATION_PLAN.ko.md)의 해당 저장·TEE·타 사용자 실증 범위를 이 승인된 변경으로 대체한다. 동결한 참고본 지문을 새 설계에 맞춰 덮어쓰지 않는다.
+시기는 작업 순서의 목표이며 완료 사실이 아니다. 현재 구현 상태는 [개발 현황](../status.md)을 먼저 확인한다. develop에는 [본인 새 YBM 증명 1쌍 생성·독립 검증 기록](../w02/YBM_PROOF_REPORT.ko.md)이 반영됐으며 자격 판정·지급·타 사용자 시험은 미완료다. 저장 경계의 당시 시험 결과는 [Mac 저장 경계 보고서](../w02/MAC_STORAGE_REPORT.ko.md)를 따른다. 이전 [PRD](../reference/PRD.ko.md), [기술 설계](../reference/DESIGN.ko.md), [구현 계획](../reference/IMPLEMENTATION_PLAN.ko.md)의 해당 저장·TEE·타 사용자 실증 범위를 이 승인된 변경으로 대체한다. 동결한 참고본 지문을 새 설계에 맞춰 덮어쓰지 않는다.
