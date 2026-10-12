@@ -5,6 +5,7 @@
   "scripts": {
     "test:policy": "node --test tests/policy/*.test.mjs",
     "test:applications": "node --test tests/application/*.test.mjs",
+    "test:vault": "node --test tests/vault/*.test.mjs",
     "verify:workspace": "node tools/verify-workspace.mjs",
     "verify:dependencies": "node tools/verify-dependencies.mjs",
     "prepare:workspace": "node tools/prepare-workspace.mjs",

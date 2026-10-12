@@ -89,9 +89,10 @@ test('HTTP rejects malformed, duplicate cookies and oversized JSON without echoi
   }
 });
 
-test('funding and wallet replacement endpoints do not exist', async t => {
+test('unconfigured funding fails closed; enrollment bypass and wallet replacement do not exist', async t => {
   const f = await serverFixture(t), app = f.create();
-  for (const route of ['funding-intent', 'enroll', 'wallet']) {
+  assert.equal((await f.request(`/applications/${app.applicationId}/funding-intent`, { method: 'POST', body: {}, headers: contextHeaders(f.aliceContext) })).body.code, 'RUNTIME_NOT_BOUND');
+  for (const route of ['enroll', 'wallet']) {
     const response = await f.request(`/applications/${app.applicationId}/${route}`, { method: 'POST', body: {}, headers: contextHeaders(f.aliceContext) });
     assert.equal(response.res.status, 404);
   }

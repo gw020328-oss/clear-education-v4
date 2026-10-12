@@ -3,6 +3,7 @@ import { getAddress, TypedDataEncoder, verifyMessage, verifyTypedData } from 'et
 import { compileSyntheticPolicy } from '../policy/compiler.mjs';
 import { RuleError, canonical, exactKeys, freeze, hash, hash32, identifier, requireRule } from '../policy/values.mjs';
 import { openStore } from './store.mjs';
+import { createFundingService } from './funding.mjs';
 
 const secret = () => randomBytes(32).toString('hex');
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -19,7 +20,7 @@ export const applicationTermsTypes = freeze({ ApplicationTermsV4: [
   { name: 'nonce', type: 'bytes32' }, { name: 'signedAt', type: 'uint256' }, { name: 'expiresAt', type: 'uint256' },
 ] });
 
-export function createApplicationService({ directory, origin, chainId, instanceId, participants, operators, now = () => Math.floor(Date.now() / 1000) }) {
+export function createApplicationService({ directory, origin, chainId, instanceId, participants, operators, vaultReader, now = () => Math.floor(Date.now() / 1000) }) {
   const url = new URL(origin);
   requireRule(url.protocol === 'https:' && url.origin === origin && !url.username && !url.password, 'ORIGIN_CONFIG');
   requireRule(Number.isSafeInteger(chainId) && chainId > 0, 'CHAIN_CONFIG');
@@ -64,7 +65,7 @@ export function createApplicationService({ directory, origin, chainId, instanceI
   }
   const view = a => ({ applicationId: a.id, learner: a.wallet, policyHash: a.policy_hash, state: a.state,
     consentDigest: a.consent_digest, createdAt: String(a.created_at), consentedAt: a.consented_at === null ? null : String(a.consented_at),
-    consentScope: 'APPLICATION_ONLY', contractConsentRequired: true, funded: false, paymentAllowed: false, dataMode: 'SYNTHETIC' });
+    consentScope: 'APPLICATION_ONLY', contractConsentRequired: true, funded: false, paymentAllowed: false, dataMode: 'SYNTHETIC', ...funding.view(a) });
   function idempotent(s, route, key, body, fn) {
     identifier(key, 'IDEMPOTENCY_KEY');
     const bodyHash = hash(body), previous = db.prepare('SELECT * FROM idempotency WHERE actor=? AND route=? AND key=?').get(s.wallet, route, key);
@@ -81,7 +82,10 @@ export function createApplicationService({ directory, origin, chainId, instanceI
       message: { applicationId: a.id, learner: a.wallet, policyHash: a.policy_hash, origin,
         nonce: '0x' + nonce, signedAt: String(issuedAt), expiresAt: String(expiresAt) } };
   }
+  const funding = createFundingService({ db, transaction, session, owned, policy, currentPolicy, clock, digest, secret,
+    hexSecret, signatureShape, view, vaultReader, chainId, instanceId });
   return {
+    ...funding.methods,
     origin, chainId, close: store.close,
     challenge(body) {
       exactKeys(body, ['wallet', 'chainId'], 'AUTH_SCHEMA');
@@ -119,6 +123,7 @@ export function createApplicationService({ directory, origin, chainId, instanceI
         requireRule(session(context, true).role === 'operator', 'FORBIDDEN');
         const p = compileSyntheticPolicy(draft), existing = db.prepare('SELECT hash FROM policies WHERE cohort_id=? AND version=?').get(p.policy.cohortId, p.policy.policyVersion);
         if (existing) { requireRule(existing.hash === p.policyHash, 'POLICY_VERSION_CONFLICT'); return p; }
+        requireRule(!db.prepare('SELECT hash FROM runtime_configs WHERE cohort_id=?').get(p.policy.cohortId), 'COHORT_RUNTIME_FIXED');
         const active = db.prepare('SELECT p.version FROM courses c JOIN policies p ON p.hash=c.policy_hash WHERE c.id=?').get(p.policy.cohortId);
         requireRule(!active || BigInt(p.policy.policyVersion) > BigInt(active.version), 'POLICY_VERSION_ORDER');
         db.prepare('INSERT INTO policies VALUES(?,?,?,?)').run(p.policyHash, p.policy.cohortId, p.policy.policyVersion, canonical(draft));

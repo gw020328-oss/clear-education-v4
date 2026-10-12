@@ -61,6 +61,8 @@ jobs:
         run: ./tools/npm run test:policy
       - name: Wallet authentication, consent and durable application state
         run: ./tools/npm run test:applications
+      - name: Isolated in-memory vault, final consent and funding recovery
+        run: ./tools/npm run test:vault
       - name: Synthetic extraction and isolation tests (loopback only)
         run: ./tools/npm --prefix spikes/w02-collector-boundary test
       - name: Storage preparation tests
