@@ -63,6 +63,8 @@ jobs:
         run: ./tools/npm run test:applications
       - name: Isolated in-memory vault, final consent and funding recovery
         run: ./tools/npm run test:vault
+      - name: Persistent synthetic HTTPS environment and restart isolation
+        run: ./tools/npm run test:dev
       - name: Synthetic extraction and isolation tests (loopback only)
         run: ./tools/npm --prefix spikes/w02-collector-boundary test
       - name: Storage preparation tests

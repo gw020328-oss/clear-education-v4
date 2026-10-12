@@ -1,6 +1,6 @@
 # 프론트·백엔드 연결 계약 — PR #8 기준
 
-2026-10-12, 제품 코드 `841052a` 기준의 **현재 구현**이다. 후속 proof/시드/outbox/청구 API는 아직 없다. 이 문서는 실행 서버가 있다는 뜻이 아니며 개발 실행 구성은 [계획 C1](TEAM_PLAN.ko.md)에서 추가한다.
+2026-10-12, 제품 API는 PR #8 코드 `841052a` 기준이며 C1은 기존 인증·요청 계약을 유지한다. 후속 proof/시드/outbox/청구 API는 아직 없다. 실행은 [C1 로컬 합성 HTTPS 안내](LOCAL_SYNTHETIC.ko.md)를 따른다. 개발 전용 `GET /__dev/config`와 제한된 `POST /rpc`, 정적 프론트 빌드가 같은 origin에서 제공된다. 개발 경로는 제품 proof·지급 API가 아니다.
 
 원문: [HTTP](../../src/application/http.mjs), [서비스](../../src/application/service.mjs), [예치](../../src/application/funding.mjs), [지갑 도구](../../src/application/wallet-client.mjs). 변경 PR에서 소스·시험과 함께 이 문서를 갱신한다. 정책 전체 schema와 서명 필드는 기존 상세 문서와 소스를 따른다.
 

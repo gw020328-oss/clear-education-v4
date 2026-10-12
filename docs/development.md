@@ -6,6 +6,8 @@
 
 ## 런타임
 
+로컬 합성 HTTPS 서버·DB·TEST 체인의 초기화/실행/재시작은 [C1 개발 환경 안내](current/LOCAL_SYNTHETIC.ko.md)를 따릅니다. 프론트 `web/dist`를 같은 origin에서 제공하며, 기존 정책 선언용 환경 설정과 독립된 개발 환경을 만듭니다.
+
 Node.js **24.21.0**, npm **11.19.0**을 사용합니다. `.nvmrc`, `.node-version`, `package.json`이 기준입니다. 런타임 바이너리는 저장소에 포함하지 않습니다.
 
 macOS/Linux의 셸에서 실행하세요. Windows는 WSL 환경을 사용하세요. 이는 셸 안내이며 모든 운영체제의 실행 성공을 검증한 것은 아닙니다.

@@ -3,6 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev:init": "node tools/dev.mjs init",
+    "dev:start": "node tools/dev.mjs start",
+    "dev:status": "node tools/dev.mjs status",
+    "dev:unlock": "node tools/dev.mjs unlock",
+    "test:dev": "node --test tests/dev/*.test.mjs",
     "test:policy": "node --test tests/policy/*.test.mjs",
     "test:applications": "node --test tests/application/*.test.mjs",
     "test:vault": "node --test tests/vault/*.test.mjs",

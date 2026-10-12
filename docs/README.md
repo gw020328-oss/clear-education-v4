@@ -24,6 +24,8 @@
 
 ## 최신 제품 기반 구현 (develop)
 
+- [C1 로컬 합성 HTTPS 개발 환경](current/LOCAL_SYNTHETIC.ko.md): 독립 TEST 체인·DB·인증서·지갑 초기화, 재시작, 프론트 빌드의 동일 origin 제공. 이슈 #10의 연결 PR에서 병합 상태를 확인합니다.
+
 - [합성 정책과 결정적 자격 평가](current/POLICY_EVALUATOR.ko.md): PR #6, 기간 내 최고점·800점 AND 시드 80%·결측/충돌 보류. SYNTHETIC 전용.
 - [지갑 인증·신청 동의·SQLite 영속 상태](current/WALLET_APPLICATIONS.ko.md): PR #7, 로그인/신청 동의 nonce 원자 소비·재시작 복원.
 - [금고 설정·최종 동의·예치 확인](current/VAULT_ENROLLMENT.ko.md): PR #8, CONSENTED→FUNDING_PENDING→ENROLLED와 복구. 메모리 EVM/무가치 TEST 검증.
