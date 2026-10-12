@@ -65,7 +65,8 @@ async function renderList() {
   shell(loadingView('신청 목록'));
   try {
     const items = await adapter.listApplications();
-    shell(items.length === 0 ? emptyView() : listView(items));
+    const runtimeReady = await adapter.isRuntimeReady().catch(() => false);
+    shell(items.length === 0 ? emptyView() : listView(items, { runtimeReady }));
   } catch (error) {
     shell(errorView(error.code ?? 'API_REQUEST_FAILED', () => renderList()));
   }
@@ -77,7 +78,8 @@ async function renderDetail(id) {
     const view = await adapter.getApplication(id);
     // 조건 조회가 실패해도 상태 화면은 보여준다. 둘은 다른 요청이다.
     const policy = await adapter.getPolicy(view.policyHash).catch(() => null);
-    shell(detailView(view, policy));
+    const runtimeReady = await adapter.isRuntimeReady().catch(() => false);
+    shell(detailView(view, policy, { runtimeReady }));
   } catch (error) {
     const known = SCENARIOS[currentScenario()]?.failWith;
     shell(known ? errorView(known, () => renderDetail(id)) : notFoundView());

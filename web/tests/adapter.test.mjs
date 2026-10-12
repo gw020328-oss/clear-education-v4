@@ -230,3 +230,44 @@ test('모든 시나리오가 label 과 items 를 가진다', async () => {
     assert.ok(Number.isInteger(value.delayMs), `${key} delayMs`);
   }
 });
+
+// ── 누구 차례 — 금고 연결 여부로 갈린다 ─────────────────────────────────────
+
+test('참가자는 서명을 두 번 한다 — 1단계 조건 동의, 2단계 최종 동의', async () => {
+  const { actorFor } = await import('../src/ui/state-labels.js');
+  assert.equal(actorFor('DRAFT', {}).key, 'LEARNER', '1단계는 참가자 차례');
+  assert.equal(actorFor('TERMS_ACCEPTED', { runtimeReady: true }).key, 'LEARNER',
+    '금고가 연결되면 2단계도 참가자 차례(최종 동의)');
+});
+
+test('금고 연결 전 2단계는 학원을 기다린다', async () => {
+  const { actorFor, nextFor } = await import('../src/ui/state-labels.js');
+  assert.equal(actorFor('TERMS_ACCEPTED', { runtimeReady: false }).key, 'OPERATOR');
+  assert.match(nextFor('TERMS_ACCEPTED', { runtimeReady: false }), /금고/);
+});
+
+test('3·4단계는 금고가 연결돼 있어도 학원 차례다', async () => {
+  const { actorFor } = await import('../src/ui/state-labels.js');
+  for (const state of ['CONSENTED', 'FUNDING_PENDING']) {
+    assert.equal(actorFor(state, { runtimeReady: true }).key, 'OPERATOR', `${state}`);
+  }
+  assert.equal(actorFor('ENROLLED', { runtimeReady: true }).key, 'DONE');
+});
+
+test('어댑터가 금고 연결 여부를 알려준다', async () => {
+  assert.equal(await createSyntheticAdapter({ scenario: 'stage2' }).isRuntimeReady(), false);
+  assert.equal(await createSyntheticAdapter({ scenario: 'stage2r' }).isRuntimeReady(), true);
+  assert.equal(await createSyntheticAdapter({ scenario: 'stage5' }).isRuntimeReady(), true);
+});
+
+test('타임라인은 단계마다 다른 기록을 보여준다', async () => {
+  // DOM 없이 되는 부분만 — 단계별 기록 구성이 서로 다른지
+  const { STEP_ORDER } = await import('../src/ui/state-labels.js');
+  assert.equal(STEP_ORDER.length, 5);
+  const { SYNTHETIC_APPLICATIONS } = await import('../src/fixtures/applications.js');
+  const draft = SYNTHETIC_APPLICATIONS[0];
+  const enrolled = SYNTHETIC_APPLICATIONS.at(-1);
+  assert.equal(draft.consentDigest, null, 'DRAFT 에는 동의 지문이 없다');
+  assert.ok(enrolled.fundingEvidence, 'ENROLLED 에는 예치 증거가 있다');
+  assert.equal(draft.fundingEvidence, undefined, 'DRAFT 에는 예치 증거가 없다');
+});

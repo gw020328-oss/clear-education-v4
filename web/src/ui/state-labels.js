@@ -32,8 +32,12 @@ export const STATE_LABELS = Object.freeze({
     short: '조건 동의',
     fact: '신청 조건을 확인했습니다.',
     forbidden: '최종 계약 동의가 끝났다고 읽지 않습니다.',
+    // 금고가 연결되기 전에는 학원을 기다리고, 연결된 뒤에는 참가자가
+    // 그 설정을 보고 최종 동의에 서명한다. actorFor() 가 갈라 준다.
     actor: ACTOR.OPERATOR,
     next: '학원이 금고를 배포하고 연결하면 최종 동의를 할 수 있습니다.',
+    actorWhenRuntimeReady: ACTOR.LEARNER,
+    nextWhenRuntimeReady: '금고 설정을 확인하고 최종 동의에 서명하세요. 참가자의 두 번째 서명입니다.',
     step: 2,
   },
   CONSENTED: {
@@ -69,6 +73,31 @@ export const TOTAL_STEPS = 5;
 export const STEP_ORDER = Object.freeze(
   Object.entries(STATE_LABELS).sort((a, b) => a[1].step - b[1].step).map(([state]) => state),
 );
+
+/**
+ * 그 단계에서 '다음에 움직여야 하는 쪽'.
+ *
+ * 상태 이름은 끝난 일을 가리키고 actor 는 다음 행동을 가리킨다. 둘을 섞으면
+ * 참가자가 서명을 한 번만 하는 것처럼 보인다. 실제로는 두 번이다 —
+ * 1단계에서 조건 동의, 2단계에서 최종 동의.
+ *
+ * 2단계의 최종 동의는 금고가 연결된 뒤에만 가능하다. 서버의
+ * final-consent-challenge 가 participant 역할을 요구하면서 runtime 도 함께 읽는다.
+ *
+ * @param {string} state
+ * @param {{runtimeReady?: boolean}} [context]
+ */
+export function actorFor(state, context = {}) {
+  const label = stateLabel(state);
+  if (state === 'TERMS_ACCEPTED' && context.runtimeReady) return label.actorWhenRuntimeReady;
+  return label.actor;
+}
+
+export function nextFor(state, context = {}) {
+  const label = stateLabel(state);
+  if (state === 'TERMS_ACCEPTED' && context.runtimeReady) return label.nextWhenRuntimeReady;
+  return label.next;
+}
 
 export const stateLabel = (state) => STATE_LABELS[state] ?? {
   title: '알 수 없는 상태',

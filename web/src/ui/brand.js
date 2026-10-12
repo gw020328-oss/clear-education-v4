@@ -25,7 +25,6 @@ const svg = (d, size = 14) => {
 };
 
 export const lockIcon = (size) => svg('M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z', size);
-export const checkIcon = (size) => svg('M20 6 9 17l-5-5', size);
 
 /** 머리말 — 제품이 무엇을 보장하는지 한 줄로 */
 export const brandHeader = () => el('header.head', {}, [

@@ -84,11 +84,12 @@ export const DEMO_APPLICATION_ID = APPLICATION_ID;
 
 /** 화면 상황 — 주소창 ?scenario= 또는 화면 위 선택 상자로 바꾼다 */
 export const SCENARIOS = Object.freeze({
-  stage1: { label: '1단계 — 신청 생성', items: [AT_DRAFT], delayMs: 200 },
-  stage2: { label: '2단계 — 신청 조건 확인', items: [AT_TERMS], delayMs: 200 },
-  stage3: { label: '3단계 — 최종 동의 저장', items: [AT_CONSENTED], delayMs: 200 },
-  stage4: { label: '4단계 — 예치 준비', items: [AT_FUNDING], delayMs: 200 },
-  stage5: { label: '5단계 — 예치 확인', items: [AT_ENROLLED], delayMs: 200 },
+  stage1: { label: '1단계 — 신청 생성 (내 차례)', items: [AT_DRAFT], delayMs: 200, runtimeReady: false },
+  stage2: { label: '2단계 — 조건 동의 (금고 연결 전)', items: [AT_TERMS], delayMs: 200, runtimeReady: false },
+  stage2r: { label: '2단계 — 금고 연결됨 (내 차례)', items: [AT_TERMS], delayMs: 200, runtimeReady: true },
+  stage3: { label: '3단계 — 최종 동의 저장', items: [AT_CONSENTED], delayMs: 200, runtimeReady: true },
+  stage4: { label: '4단계 — 예치 준비', items: [AT_FUNDING], delayMs: 200, runtimeReady: true },
+  stage5: { label: '5단계 — 예치 확인 (완료)', items: [AT_ENROLLED], delayMs: 200, runtimeReady: true },
   empty: { label: '신청 없음', items: [], delayMs: 200 },
   slow: { label: '느린 응답', items: [AT_ENROLLED], delayMs: 2400 },
   authError: { label: '로그인 필요', items: [AT_ENROLLED], delayMs: 200, failWith: 'AUTH_REQUIRED' },

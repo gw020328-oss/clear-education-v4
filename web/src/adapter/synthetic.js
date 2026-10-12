@@ -49,6 +49,16 @@ export function createSyntheticAdapter({ scenario = DEFAULT_SCENARIO, validate =
       };
     },
 
+    /**
+     * 금고(runtime)가 연결되었는지. GET /runtimes/:policyHash 의 성공 여부에
+     * 해당한다. 2단계에서 최종 동의를 누가 할 차례인지가 여기서 갈린다.
+     * 실제 어댑터는 404 를 '아직 연결 안 됨' 으로 읽는다.
+     */
+    async isRuntimeReady() {
+      await settle();
+      return chosen.runtimeReady === true;
+    },
+
     async listApplications() {
       await settle();
       return guard(chosen.items.map((view) => ({ ...view })));
