@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:policy": "node --test tests/policy/*.test.mjs",
     "verify:workspace": "node tools/verify-workspace.mjs",
     "verify:dependencies": "node tools/verify-dependencies.mjs",
     "prepare:workspace": "node tools/prepare-workspace.mjs",
