@@ -1,3 +1,4 @@
+import {proofErrorDiagnostic,proofSteps} from './proof-diagnostics.mjs';
 import {quiet} from './client.mjs';
 import {requireValue} from './values.mjs';
 import {verifyIndependently} from './independent-verifier.mjs';
@@ -19,7 +20,7 @@ export async function generateAndVerify({client,routeClient,diagnostic,secrets,s
       let secretParams=secrets.take(role),result;
       try{
         onStep({role,stage:'GENERATING'});
-        result=await diagnostic.generateClaim(createClaim,{name:'http',params:request.params,context:request.context,secretParams,client,zkEngine:'stwo',zkProofConcurrency:1,maxRetries:1,logger:quiet});
+        result=await diagnostic.generateClaim(createClaim,{name:'http',params:request.params,context:request.context,secretParams,client,onStep:step=>{if(proofSteps.has(step.name))onStep({role,stage:'SDK_STEP',step:step.name});},zkEngine:'stwo',zkProofConcurrency:1,maxRetries:1,logger:quiet});
         guard();claims.push(minimalClaim(result));onStep({role,stage:'GENERATED'});
       }finally{secretParams=undefined;result=undefined;}
     }
@@ -28,8 +29,7 @@ export async function generateAndVerify({client,routeClient,diagnostic,secrets,s
     guard();requireValue(result?.proofVerified===true&&result.independentProcess===true&&result.paymentAllowed===false,'PROOF_VERIFICATION_FAILED');
     diagnostic.collection.finish();return result;
   }catch(error){
-    const safe=new Set(['SAME_CLIENT_REQUIRED','PROOF_CLIENT_CLOSED','NO_SIGNED_CLAIM','PROOF_VERIFICATION_FAILED','SESSION_EXPIRED','SOURCE_SECRET_MISSING']);
-    onStep({stage:'FAILED',reason:signal?.aborted?'CANCELLED':safe.has(error?.message)?error.message:'PROOF_GENERATION_FAILED'});
+    onStep({stage:'FAILED',...proofErrorDiagnostic(error),...(signal?.aborted?{reason:'CANCELLED'}:{})});
     diagnostic.collection.cancel();throw new Error('PROOF_GENERATION_OR_VERIFICATION_FAILED');
   }
   finally{claims.length=0;secrets.close();}

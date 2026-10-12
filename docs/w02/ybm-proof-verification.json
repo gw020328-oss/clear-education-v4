@@ -7,14 +7,14 @@
     "model": "GPT-6 Astra",
     "reasoning": "high"
   },
-  "status": "IMPLEMENTED_AWAITING_USER_LOGIN",
+  "status": "FIRST_LIVE_ATTEMPT_FAILED_AWAITING_DIAGNOSTIC_RETRY",
   "localTests": {
-    "ybmCollector": 139,
+    "ybmCollector": 140,
     "macIntegrityPublic": 48,
     "proofAdapter": 107,
     "collectorBoundary": 62,
     "storagePreparation": 37,
-    "total": 393,
+    "total": 394,
     "status": "PASS"
   },
   "runtimeStwoSyntheticProof": "PASS",
@@ -30,7 +30,7 @@
     "dependencyLockChanged": false
   },
   "live": {
-    "newYbmLogin": false,
+    "newYbmLogin": true,
     "proofGenerated": false,
     "independentVerification": false,
     "payment": false
@@ -41,5 +41,20 @@
     "NO_ADDITIONAL_TEE",
     "NO_PERSISTENT_SERVER_NONCE_API"
   ],
-  "merged": false
+  "merged": false,
+  "liveAttempts": [
+    {
+      "codeCommit": "6f837918759f0794f8c2c4c9a3e9f2904ccaa3eb",
+      "userLoginCompleted": true,
+      "localSourcePairMatched": true,
+      "failedPhase": "REGISTRATION_PROOF_GENERATION",
+      "safeFailureCode": "PROOF_GENERATION_FAILED",
+      "exactCause": "UNKNOWN",
+      "proofGenerated": false,
+      "independentVerification": false,
+      "remainingManagedSessions": 0,
+      "exitCode": 1
+    }
+  ],
+  "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/4"
 }
