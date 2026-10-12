@@ -57,6 +57,10 @@ jobs:
         run: ./tools/npm run verify:dependencies
       - name: Offline proof adapter tests
         run: ./tools/npm --prefix spikes/w02-proof-adapter test
+      - name: Synthetic policy compiler and deterministic eligibility
+        run: ./tools/npm run test:policy
+      - name: Wallet authentication, consent and durable application state
+        run: ./tools/npm run test:applications
       - name: Synthetic extraction and isolation tests (loopback only)
         run: ./tools/npm --prefix spikes/w02-collector-boundary test
       - name: Storage preparation tests
