@@ -38,11 +38,18 @@ origin HTTPS 서버는 [계획 C1](../docs/current/TEAM_PLAN.ko.md)에서 추가
 
 | 경로 | 보이는 것 |
 | --- | --- |
-| `/?scenario=default` | 정상 — DRAFT·TERMS_ACCEPTED·CONSENTED·FUNDING_PENDING·ENROLLED 각 1건 |
+| `/?scenario=stage1` | 1단계 `DRAFT` — 내 차례 |
+| `/?scenario=stage2` | 2단계 `TERMS_ACCEPTED` — 학원 차례 |
+| `/?scenario=stage3` | 3단계 `CONSENTED` — 학원 차례 |
+| `/?scenario=stage4` | 4단계 `FUNDING_PENDING` — 학원 차례 |
+| `/?scenario=stage5` | 5단계 `ENROLLED` — 절차 완료 |
 | `/?scenario=empty` | 신청 없음 |
 | `/?scenario=slow` | 로딩 (2.4초) |
 | `/?scenario=authError` | `AUTH_REQUIRED` 오류 |
 | `/?scenario=apiError` | `API_REQUEST_FAILED` 오류 |
+
+기본값은 `stage1` 이다. 같은 신청 하나가 다섯 단계를 거치는 것을 시나리오로 바꿔 본다.
+참가자는 한 반에 신청 하나이므로 목록에는 1건만 뜬다.
 
 화면 위 선택 상자로도 바꿀 수 있다. 목록에서 항목을 누르면 `#/applications/<id>`
 상세로 간다.
@@ -174,3 +181,16 @@ cookie·origin 검증을 약화하지 않는다. 이 어댑터는 네트워크�
 
 **충족 여부는 말하지 않는다.** 점수·이수율 실제 값은 이 응답에 들어있지도 않다.
 자격 판정 화면은 계획 **F4** 이고 선행 API(B1·B2b·B3)가 아직 없다.
+
+## 디자인 방향
+
+광고가 아니라 **증서**로 읽히게 만든다. 제품이 파는 것이 '먼저 고정하고 아무도 못
+바꾼다' 하나이기 때문이다.
+
+- 짙은 남색 바탕에 파랑 포인트. 글로우·느낌표·혜택 강조는 쓰지 않는다.
+  환급 랜딩 페이지의 과장 톤은 `ENROLLED` 를 환급 확정으로 오해하게 만든다.
+- **큰 숫자는 조건 값에만** 쓴다. 약속이 아니라 사실이다.
+- 해시·식별자는 고정폭 글꼴과 숫자 정렬로 원장처럼 보인다.
+- 조건 구역에 **고정됨 봉인**을 붙인다. 바꿀 수 없다는 사실을 글과 시각으로 두 번 말한다.
+- 다섯 단계 진행 막대를 상세 상단에 둔다. 완료·현재·예정을 구분한다.
+- 상태마다 **누구 차례**인지 배지로 보인다. 참가자 차례는 `DRAFT` 하나뿐이다.

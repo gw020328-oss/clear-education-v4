@@ -9,6 +9,7 @@
 
 import { el, field } from './dom.js';
 import { PROGRESS_NOT_YET } from './state-labels.js';
+import { sealBadge } from './brand.js';
 
 /** minCompletionBps 는 베이시스포인트다. 8000 = 80.00% */
 export function bpsText(bps) {
@@ -40,7 +41,10 @@ export function seoulText(unixSeconds) {
 export function policySection(compiled) {
   const p = compiled.policy;
   return el('section', {}, [
-    el('h3', { text: '동의한 조건' }),
+    el('div.sec-head', {}, [
+      el('h3', { text: '동의한 조건' }),
+      sealBadge('고정됨'),
+    ]),
     el('p.muted', {
       text: '3단계(최종 동의)에서 고정된 값입니다. 이후 운영자도 CLEAR도 바꿀 수 없습니다.',
     }),

@@ -8,18 +8,19 @@
 //   ?scenario=empty 등        합성 시나리오 선택 (fixtures/applications.js)
 
 import { createSyntheticAdapter, SCENARIO_KEYS } from './adapter/synthetic.js';
-import { SCENARIOS } from './fixtures/applications.js';
+import { SCENARIOS, DEFAULT_SCENARIO } from './fixtures/applications.js';
 import { el, clear } from './ui/dom.js';
 import {
   syntheticBanner, listView, detailView, loadingView, emptyView, errorView, notFoundView,
 } from './ui/views.js';
+import { brandHeader } from './ui/brand.js';
 
 const chrome = document.querySelector('#chrome');
 const main = document.querySelector('#main');
 
 function currentScenario() {
   const value = new URL(window.location.href).searchParams.get('scenario');
-  return SCENARIO_KEYS.includes(value) ? value : 'default';
+  return SCENARIO_KEYS.includes(value) ? value : DEFAULT_SCENARIO;
 }
 
 let adapter = createSyntheticAdapter({ scenario: currentScenario() });
@@ -78,7 +79,7 @@ async function renderDetail(id) {
     const policy = await adapter.getPolicy(view.policyHash).catch(() => null);
     shell(detailView(view, policy));
   } catch (error) {
-    const known = SCENARIOS[currentScenario()].failWith;
+    const known = SCENARIOS[currentScenario()]?.failWith;
     shell(known ? errorView(known, () => renderDetail(id)) : notFoundView());
   }
   // 라우트가 바뀌면 본문 처음으로 초점을 옮긴다 (키보드 사용)
@@ -96,10 +97,7 @@ function boot() {
   clear(chrome);
   chrome.append(
     syntheticBanner(),
-    el('header.head', {}, [
-      el('h1', { text: 'CLEAR 참가자 신청' }),
-      el('p.muted', { text: '신청 상태를 확인하는 화면입니다. 로그인·서명·거래는 후속 작업에서 붙습니다.' }),
-    ]),
+    brandHeader(),
     scenarioPicker(),
   );
   if (!window.location.hash) window.location.hash = '#/applications';

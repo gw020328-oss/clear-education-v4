@@ -370,3 +370,45 @@ h3 {
 @media (max-width: 560px) {
   .cond-value { font-size: 22px; }
 }
+
+/* ── 브랜드 · 증서 표식 ─────────────────────────────────────────────────── */
+
+.head { margin: 22px 0 12px; }
+.brand { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.brand-mark {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+  border-radius: 8px; background: var(--accent); color: var(--accent-ink);
+}
+.brand h1 {
+  font-size: 22px; font-weight: 900; letter-spacing: 1.5px;
+  margin: 0; color: var(--fg);
+}
+.brand-sub {
+  font-size: 13px; color: var(--muted); font-weight: 700;
+  padding-left: 9px; border-left: 1px solid var(--line);
+}
+.tagline { margin: 7px 0 0; font-size: 13px; color: var(--muted); }
+
+.sec-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sec-head h3 { margin-bottom: 0; }
+
+.seal {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px 2px 6px; border-radius: 999px;
+  border: 1px solid var(--ok); color: var(--ok); background: var(--ok-soft);
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px;
+}
+.seal-icon { display: grid; place-items: center; }
+
+/* 해시·식별자는 원장처럼 — 고정폭, 숫자 정렬 */
+.value, .row-id, code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.field dd .value { font-size: 12.5px; letter-spacing: -0.2px; }
+
+/* 상단 얇은 강조선 — 문서 느낌 */
+body::before {
+  content: ""; display: block; height: 3px;
+  background: linear-gradient(90deg, var(--navy), var(--accent));
+}

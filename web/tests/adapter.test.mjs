@@ -213,3 +213,20 @@ test('ENROLLED 의 다음 안내가 환급을 약속하지 않는다', async () 
     assert.ok(!next.includes(banned), `'${banned}' 가 있다`);
   }
 });
+
+// ── 기본 시나리오 ───────────────────────────────────────────────────────────
+
+test('DEFAULT_SCENARIO 가 실제로 존재하는 키다', async () => {
+  const { SCENARIOS, DEFAULT_SCENARIO } = await import('../src/fixtures/applications.js');
+  assert.ok(DEFAULT_SCENARIO in SCENARIOS,
+    `DEFAULT_SCENARIO '${DEFAULT_SCENARIO}' 가 SCENARIOS 에 없다`);
+});
+
+test('모든 시나리오가 label 과 items 를 가진다', async () => {
+  const { SCENARIOS } = await import('../src/fixtures/applications.js');
+  for (const [key, value] of Object.entries(SCENARIOS)) {
+    assert.ok(typeof value.label === 'string' && value.label.length > 0, `${key} label`);
+    assert.ok(Array.isArray(value.items), `${key} items`);
+    assert.ok(Number.isInteger(value.delayMs), `${key} delayMs`);
+  }
+});
