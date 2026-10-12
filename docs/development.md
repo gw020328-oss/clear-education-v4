@@ -114,3 +114,7 @@ Apple Silicon Mac에서 고정 Node 버전을 PATH에 준비한 뒤 실행합니
 새 `hard-kill.test.mjs`는 시작 허용 전/기록 도중/허용 후 SIGKILL과 이전 버전의 기록 없는 시작(5회)을 검사합니다. 각 재실행은 삭제 완료 출력 뒤에도 옛 프로필과 브라우저 프로세스가 남지 않는지 확인합니다. `recovery.test.mjs`는 조회 실패·다른 사용자/프로필·PID 재사용·종료 거부를 Linux CI에서도 검사합니다.
 
 Runner 구성 근거: [GitHub 표준 runner](https://docs.github.com/en/actions/reference/runners/github-hosted-runners), [Mac 15 Arm64 이미지](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md).
+
+## B1 제품 증명 세션
+
+[세션·영속 nonce와 현재 예치 재검증](current/PROOF_SESSIONS.ko.md)을 확인한다. `./tools/npm run test:proof-sessions`는 새 격리 TEST 체인과 임시 DB/HTTPS로 실행하며 공개 합성 CI에도 포함된다. schema 3은 같은 환경의 v1/v2 DB를 원자 이관한다. 실제 proof 수집·검증 수락·outbox는 후속이다.

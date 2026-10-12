@@ -1,6 +1,6 @@
-# 프론트·백엔드 연결 계약 — PR #8 기준
+# 프론트·백엔드 연결 계약 — B1 구현 기준
 
-2026-10-12, 제품 API는 PR #8 코드 `841052a` 기준이며 C1은 기존 인증·요청 계약을 유지한다. 후속 proof/시드/outbox/청구 API는 아직 없다. 실행은 [C1 로컬 합성 HTTPS 안내](LOCAL_SYNTHETIC.ko.md)를 따른다. 개발 전용 `GET /__dev/config`와 제한된 `POST /rpc`, 정적 프론트 빌드가 같은 origin에서 제공된다. 개발 경로는 제품 proof·지급 API가 아니다.
+2026-10-12, PR #8의 신청/예치와 C1의 HTTPS에 B1 제품 증명 세션 API를 추가했다. B1 병합 여부는 [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15)의 연결 PR을 확인한다. 실제 proof 수락·시드/outbox/청구 API는 아직 없다. 실행은 [C1 로컬 합성 HTTPS 안내](LOCAL_SYNTHETIC.ko.md)를 따른다. 개발 전용 `GET /__dev/config`와 제한된 `POST /rpc`, 정적 프론트 빌드가 같은 origin에서 제공된다. 개발 경로는 제품 proof·지급 API가 아니다.
 
 원문: [HTTP](../../src/application/http.mjs), [서비스](../../src/application/service.mjs), [예치](../../src/application/funding.mjs), [지갑 도구](../../src/application/wallet-client.mjs). 변경 PR에서 소스·시험과 함께 이 문서를 갱신한다. 정책 전체 schema와 서명 필드는 기존 상세 문서와 소스를 따른다.
 
@@ -39,6 +39,22 @@
 
 예치 intent의 `transaction`은 `{to, from, chainId, value, data}`, `value`는 `"0x0"`, chainId는 숫자다. `approval`은 `{token, spender, amount}`이고 amount는 문자열이다. 지갑 RPC 입력 변환과 승인 거래는 프론트 연결에서 구현·검증해야 한다. intent 생성은 거래 전송이 아니며 approval 필요량과 현재 allowance를 확인해야 한다. 서버 응답을 임의 주소·금액으로 덮어쓰지 않는다.
 
+## B1 제품 증명 세션
+
+[상세 계약·상태·합성 재현](PROOF_SESSIONS.ko.md)을 따른다. 동일 origin·인증 헤더·POST CSRF는 위와 같다. 본인 참가자만 접근하며 운영자 조회는 없다.
+
+| 메서드·경로 | 입력 / 결과 |
+| --- | --- |
+| POST `/applications/:id/proof-sessions` | `{ownerPublicKey}` + Idempotency-Key → 세션 view |
+| GET `/applications/:id/proof-sessions` | 본인 세션 view 배열, 최대 100개 |
+| GET `/applications/:id/proof-sessions/:sid` | 세션 view |
+| POST `/applications/:id/proof-sessions/:sid/authorize` | `{requestNonce, signature}` → 지갑 결합 승인 view |
+| POST `/applications/:id/proof-sessions/:sid/cancel` | `{}` → 취소/종료 view |
+
+`ISSUED → AUTHORIZED → CANCELLED/EXPIRED`이며 ISSUED에서 바로 취소/만료될 수도 있다. AUTHORIZED는 proof 검증 완료가 아니다. nonce는 승인 때 한 번 소비하고 동일 서명 재전송은 기존 기록만 반환한다. 이 경로의 **requestNonce는 0x를 포함**한다. 신청당 활성 세션은 하나, TTL 최대 30분, 승인에는 발급받은 동일 로그인 세션이 필요하다. 새 로그인에서는 조회·취소 후 새 owner/새 멱등 키로 다시 시작한다.
+
+생성/승인은 제출 기간·현재 예치·발급/정산 여부와 체인 지문을 재검증한다. C1 기본 정책은 초기화 14일 뒤 제출 시작이므로 즉시 생성이 가능하다고 가정하지 않는다. F4의 서명 helper·안전한 상세 오류 전달은 후속이다. `/callback` 등 proof 성공 수락 API는 없다.
+
 ## 화면 상태
 
 | state | 화면에서 말할 수 있는 사실 | 금지되는 추정 |
@@ -61,8 +77,10 @@ F0 mock은 이 상태와 필드의 합성 fixture를 사용한다. proof 성공�
 
 HTTP 오류는 `{code, message, retryable, nextAction, requestId}`다. 현재 message는 고정 일반 문구, retryable은 false, 401의 nextAction은 `SIGN_IN_AGAIN`, 그 외는 `CHECK_REQUEST`다. **현재 브라우저 adapter는 401을 `AUTH_REQUIRED`, 나머지를 `API_REQUEST_FAILED`로 축약한다.** 상세 code가 화면에 전달된다고 가정하지 않는다. 확장한다면 허용 목록의 안전한 code만 전달하고 원문 서버/provider 오류·URL을 노출하지 않도록 별도 검증한다.
 
+B1은 proof 만료 410과 활성/취소/owner 재사용/예치 상태 충돌 409를 추가한다. 상세 코드는 B1 문서를 따른다.
+
 주요 HTTP 상태는 인증 실패 401, 권한/origin/CSRF/지갑 불일치 403, 미존재 404, 일부 멱등·신청 상태 충돌 409, 빈도 제한 429, 본문 크기 413, 나머지 규칙 위반 422, 내부 오류 500이다. 모든 상태 충돌이 409인 것은 아니다. 지갑 거절은 도구의 `WALLET_REJECTED`, 잘못된 체인은 `WRONG_CHAIN`, 변경은 `WALLET_CONTEXT_CHANGED`를 처리한다. 거절을 자동 재서명·재전송하지 않는다.
 
 ## 후속 계약 변경 절차
 
-B1 이후에는 세션 식별자·상태 전이·만료·재개·권한과 응답의 합성 예제를 먼저 추가한다. 서버 구현과 시험이 없는 경로는 ‘제안’이라고 표시한다. 프론트와 mock은 이 변경을 따라가되, 서버 기능이 실제 병합되기 전에는 연결 완료로 보고하지 않는다.
+B2b 이후 실제 proof 수락·outbox를 연결할 때도 세션 식별자·상태 전이·만료·재개·권한과 응답의 합성 예제를 먼저 추가한다. 서버 구현과 시험이 없는 경로는 ‘제안’이라고 표시한다. 프론트와 mock은 이 변경을 따라가되, 서버 기능이 실제 병합되기 전에는 연결 완료로 보고하지 않는다.

@@ -1,5 +1,5 @@
 import { Contract, getAddress, Interface, keccak256, TypedDataEncoder } from 'ethers';
-import { exactKeys, freeze, hash32, requireRule } from '../policy/values.mjs';
+import { canonical, exactKeys, freeze, hash32, requireRule } from '../policy/values.mjs';
 import { buildVault } from './build.mjs';
 import { runtimeFields, runtimeHash, vaultDomain, finalDigest } from './encoding.mjs';
 
@@ -72,5 +72,29 @@ export function createVaultReader(provider, pin) {
     requireRule((await block(r.blockNumber))?.hash === r.blockHash, 'CHAIN_REORG');
     return { transactionHash: txHash, blockNumber: String(BigInt(r.blockNumber)), blockHash: r.blockHash };
   }
-  return Object.freeze({ inspect, fundingTransaction, fundingEvidence, requireUnfundedAfter });
+  async function proofEnrollment(record, typed, signature, evidence) {
+    // Revalidate the deployment AND the exact historical enrollment before
+    // consulting current state. A historical ENROLLED row is not a live right.
+    requireRule(canonical(await inspect()) === canonical(record), 'RUNTIME_CHANGED');
+    const recovered = await fundingEvidence(record, typed, signature, evidence.transactionHash);
+    requireRule(canonical(recovered) === canonical(evidence), 'CHAIN_REORG');
+    const at = await block('latest'); requireRule(at, 'CHAIN_UNAVAILABLE');
+    const e = await vault.enrollments(typed.message.applicationId, { blockTag: at.number });
+    requireRule(e.learner === typed.message.learner && e.consentDigest === finalDigest(typed), 'PROOF_ENROLLMENT');
+    requireRule(!e.settled, 'PROOF_ENROLLMENT_SETTLED');
+    requireRule(e.grantDigest === '0x' + '0'.repeat(64), 'PROOF_GRANT_EXISTS');
+    const token = new Contract(record.config.token, artifacts.ClearTestToken.abi, provider);
+    const reserved = await vault.totalReserved({ blockTag: at.number });
+    requireRule(reserved >= BigInt(record.config.amount)
+      && await token.balanceOf(fixed.vaultAddress, { blockTag: at.number }) >= reserved, 'RESERVES');
+    const supplementEnabled = await vault.supplementEnabled({ blockTag: at.number });
+    const submitUntil = supplementEnabled ? record.config.supplementEndAt : record.config.normalSubmitAt;
+    requireRule(BigInt(at.timestamp) >= BigInt(record.config.normalSubmitFrom)
+      && BigInt(at.timestamp) <= BigInt(submitUntil), 'PROOF_SUBMISSION_CLOSED');
+    requireRule((await block(at.number))?.hash === at.hash
+      && (await block('0x' + BigInt(evidence.blockNumber).toString(16)))?.hash === evidence.blockHash, 'CHAIN_REORG');
+    return { blockNumber: String(BigInt(at.number)), blockHash: at.hash,
+      blockTimestamp: String(BigInt(at.timestamp)), supplementEnabled, submitUntil };
+  }
+  return Object.freeze({ inspect, fundingTransaction, fundingEvidence, requireUnfundedAfter, proofEnrollment });
 }

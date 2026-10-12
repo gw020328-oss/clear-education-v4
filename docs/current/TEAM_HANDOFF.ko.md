@@ -1,5 +1,8 @@
 # CLEAR 팀원·LLM 인계
 
+B1 추가(2026-10-12): [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15), [제품 세션·영속 nonce 계약](PROOF_SESSIONS.ko.md). 생성/조회/지갑 승인/취소와 현재 예치 재검증을 구현했다. AUTHORIZED는 지갑 결합 승인이고 실제 증명 수락은 B2b, 시험 중복/outbox는 B4다. SQLite schema 3으로 v1/v2를 이관한다. 서준형의 F4는 이 계약과 기존 adapter의 오류 축약·proof 서명 helper 미구현을 확인한다. 병합 여부는 연결 PR을 따른다.
+
+
 이 문서는 새 팀원과 그 LLM이 같은 기준으로 개발을 시작하기 위한 입구다. **제품 코드 기준은 PR #8 병합 `841052a`, 문서 포함 기준은 PR #5 병합 `9397e62` (2026-10-12)**다. 이후 작업을 시작할 때는 원격 `develop`과 관련 PR을 다시 확인한다. 이 인계 문서 자체는 기능 구현이나 배포 승인이 아니다.
 
 C1 후속: [로컬 합성 HTTPS 실행 환경](LOCAL_SYNTHETIC.ko.md)이 추가됐다. 아래 제품 기능 표는 기존 기준이고, 실행 구성은 C1 안내를 따른다. F0 참가자 화면은 별도 작업이다.
@@ -28,6 +31,7 @@ CLEAR는 지갑으로 신청·동의하고, 교육 이수와 TOEIC 조건을 검
 | 정책 PR #6 | SYNTHETIC 정책 컴파일·해시·결정적 평가 | 실제 시드 API·검증된 실제 입력 |
 | 인증·신청 PR #7 | 지갑 인증, 신청 조건 동의, SQLite 영속 상태 | 실행 가능한 웹 UI·개발 서버 구성 |
 | 금고 PR #8 | 배포 설정 검증, 최종 계약 동의, 예치 준비·확인·재시도 | 현재 체인 상태 재동기화, 제품 증명/권한 발급 연결 |
+| B1 제품 증명 세션 | DB 영속 세션·지갑 결합 nonce 단회 소비, 현재 예치/제출 기간 재검증 | 실제 수집·검증 결과 수락, 시험 중복/outbox, F4 화면 |
 | 청구 | 금고 계약의 권한·청구·회수 합성 시험 | 제품 outbox, 청구 패킷·배포 manifest·독립 복구 클라이언트 |
 
 현재 정책은 `SYNTHETIC`, `publishable=false`; 제품 응답은 `paymentAllowed=false`다. 실제 YBM 진단 성공은 제품 자격·지급 성공이 아니다. 실제 전체 목록·최고점·자격·지급은 아직 확인되지 않았다. 실제 YBM 실행 근거와 단계별 시험 수는 [개발 현황](../status.md)과 [공개 검증 기록](../w02/ybm-proof-verification.json)에 있다. PR #8의 655개 통과는 당시 기록이며 새 checkout의 실행 결과로 보고하지 않는다.
@@ -61,6 +65,7 @@ Node **24.21.0**, npm **11.19.0**을 준비한다. 저장소의 `./tools/node`, 
 ./tools/npm run test:policy
 ./tools/npm run test:applications
 ./tools/npm run test:vault
+./tools/npm run test:proof-sessions
 ```
 
 수집·전체 합성 시험에는 별도 의존성 설치가 필요하다. 명령은 개발 가이드와 [CI](../../.github/workflows/public-synthetic.yml)를 확인한다. `verify:workspace:local`은 별도 로컬 준비·권한 검사다. Linux에서 Mac 시험이 생략된 것을 Mac 검증 통과로 쓰지 않는다. 프론트 실행 명령은 F0에서 추가하고 문서에 기록한다.

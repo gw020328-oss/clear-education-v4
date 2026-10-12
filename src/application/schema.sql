@@ -54,3 +54,25 @@ CREATE TABLE IF NOT EXISTS funding (
 ) STRICT;
 CREATE TRIGGER IF NOT EXISTS runtime_immutable BEFORE UPDATE ON runtime_configs
   BEGIN SELECT RAISE(ABORT,'IMMUTABLE_RUNTIME'); END;
+
+-- Only wallet binding authorization is consumed here; no proof acceptance or
+-- eligibility is implied. B2/B4 must add their own one-time result transition.
+CREATE TABLE IF NOT EXISTS proof_sessions (
+  id TEXT PRIMARY KEY, application_id TEXT NOT NULL REFERENCES applications(id),
+  session_digest TEXT NOT NULL REFERENCES sessions(digest),
+  runtime_hash TEXT NOT NULL REFERENCES runtime_configs(hash),
+  request_key TEXT NOT NULL, owner_address TEXT NOT NULL UNIQUE,
+  nonce_digest TEXT NOT NULL UNIQUE, typed_data TEXT NOT NULL,
+  state TEXT NOT NULL CHECK(state IN ('ISSUED','AUTHORIZED','CANCELLED','EXPIRED')),
+  issued_at INTEGER NOT NULL, expires_at INTEGER NOT NULL CHECK(expires_at > issued_at),
+  consumed_at INTEGER, signature_hash TEXT, binding_digest TEXT,
+  issuance_evidence TEXT NOT NULL, authorization_evidence TEXT,
+  UNIQUE(application_id,request_key),
+  CHECK((consumed_at IS NULL AND signature_hash IS NULL AND binding_digest IS NULL AND authorization_evidence IS NULL AND state!='AUTHORIZED')
+    OR (consumed_at IS NOT NULL AND signature_hash IS NOT NULL AND binding_digest IS NOT NULL AND authorization_evidence IS NOT NULL AND state!='ISSUED'))
+) STRICT;
+CREATE UNIQUE INDEX IF NOT EXISTS proof_session_active ON proof_sessions(application_id)
+  WHERE state IN ('ISSUED','AUTHORIZED');
+CREATE TRIGGER IF NOT EXISTS proof_session_identity_immutable
+  BEFORE UPDATE OF application_id,session_digest,runtime_hash,request_key,owner_address,nonce_digest,typed_data,issued_at,expires_at,issuance_evidence ON proof_sessions
+  BEGIN SELECT RAISE(ABORT,'IMMUTABLE_PROOF_SESSION'); END;
