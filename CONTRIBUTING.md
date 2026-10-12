@@ -1,5 +1,7 @@
 # 기여 안내
 
+팀원·LLM의 첫 참여는 [팀 인계](docs/current/TEAM_HANDOFF.ko.md)와 [역할·PR 계획](docs/current/TEAM_PLAN.ko.md)을 따릅니다. 화면·서버의 연결 기준은 [현재 API 계약](docs/current/API_CONTRACT.ko.md)에 있습니다. 계획 ID는 GitHub PR 번호가 아니며 담당 범위와 선행 PR을 확인한 뒤 착수합니다.
+
 ## 브랜치와 검토 흐름
 
 `main`은 검증된 제출·시연 기준, `develop`은 통합 개발 브랜치입니다. 현재 `main`은 완성 서비스가 아닌 개발 기준본입니다. 실제 YBM 증명부터 지급까지 전체 흐름이 완료되었다고 해석하지 않습니다.
