@@ -1,5 +1,14 @@
 # CLEAR v4 작업본 지침
 
+## 새 팀원·LLM의 시작점 (2026-10-12)
+
+- 먼저 [팀 인계](docs/current/TEAM_HANDOFF.ko.md), [역할·PR 계획](docs/current/TEAM_PLAN.ko.md), [현행 API 계약](docs/current/API_CONTRACT.ko.md)을 읽는다. 첫 작업용 메시지는 [팀원 시작 프롬프트](docs/current/TEAM_START_PROMPT.ko.md)에 있다.
+- 아래 날짜별 W01/W02·PR 메모는 당시 기록이다. 현재 사실은 최신 코드·검증 기록과 docs/status.md를 함께 확인한다. 승인된 Mac 관리형 저장 정책은 과거 필수 tmpfs/추가 TEE 조건보다 이 경로에서 우선한다. 합성/실제와 진단/제품 완료를 구분한다.
+- 역할·미래 PR은 제안이며 기능 구현 전체를 일괄 승인한 지시가 아니다. 요청받은 계획 ID의 범위와 의존 PR을 확인하고, 상태/API가 바뀌면 관련 현행 문서도 같은 PR에서 갱신한다.
+- 프론트 신규 경로는 web/를 제안한다. 공통 지갑 도구·API·DB schema·계약·CI 변경은 다른 담당자에게 미치는 영향을 PR에 기록한다. 다른 담당자 브랜치/DB/체인을 임의로 수정·초기화하지 않는다.
+
+## 공통 규칙과 개발 이력
+
 - 각 작업 단위 시작 전에 추천 모델·추론 수준·이유를 사용자에게 표시한다. 추천과 실제 실행 설정을 구분한다. W01: GPT-6.1 Sol / medium, W02: GPT-6 Astra / high. 이후 작업은 docs/reference/IMPLEMENTATION_PLAN.ko.md 표를 따른다.
 - 이 디렉터리만 Git 범위로 사용한다. 홈 디렉터리 Git 및 원본 프로젝트에는 쓰지 않는다. 원본과 과거 실험 경로는 docs/w01/source-copy.json 및 preservation-before.json에 있다.
 - legacy/는 변경하지 않는 코드 참고본이다. 자동 실행하지 않는다. 신규 구현은 src/, contracts/, tests/에 작성하고 v2/v3 데이터·서명·패킷을 v4로 재사용하지 않는다.
