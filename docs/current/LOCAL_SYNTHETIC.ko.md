@@ -48,9 +48,17 @@ F1에서 사용할 확장 지갑에는 별도 **개발용 프로필**을 사용�
 - API: 기존 `/auth/*`, `/policies/*`, `/applications/*`, `/runtimes/*` 경로. [API 계약](API_CONTRACT.ko.md)의 인증/CSRF/지갑 헤더 규칙을 그대로 사용한다.
 - 공개 개발 설정: `GET /__dev/config`. origin, rpcUrl, chainId, instanceId, 합성 주소, policyHash, vaultAddress, runtimeConfigHash와 합성/지급 차단 상태만 제공한다. 키·DB·내부 경로는 제공하지 않는다.
 - TEST RPC: 같은 HTTPS origin의 `POST /rpc`. 조회·gas 계산·서명된 거래 전송만 허용한다. 잠금 해제, 노드 서명, unsigned 전송, 시간 변경, snapshot/revert, 체인 reset은 거부한다. 거래의 chainId를 검사한다.
-- 프론트 빌드: `web/dist/index.html`과 JS/CSS/이미지/폰트만 서버 시작 시 읽는다. 소스맵·JSON·숨김 파일·저장소 소스는 제공하지 않고 심볼릭 링크가 있으면 시작을 거부한다. `/`가 진입점이고 SPA 주소는 `/ui/…`를 사용한다. API 경로와 `/rpc`, `/__dev/config`는 화면 라우트로 사용하지 않는다.
+- 프론트 빌드: `web/dist/index.html`과 JS/CSS/이미지/폰트만 서버 시작 시 읽는다. 소스맵·JSON·숨김 파일·저장소 소스는 제공하지 않고 심볼릭 링크가 있으면 시작을 거부한다. `/`가 진입점이고 해시 라우팅(`/\#/applications/…`)을 그대로 사용할 수 있다. history 기반 SPA에는 `/ui/…` fallback을 제공한다. 정적 파일의 query는 파일 선택에서 제외하므로 `/?scenario=empty` 같은 화면 시나리오도 지원한다. API 경로와 `/rpc`, `/__dev/config`는 화면 라우트로 사용하지 않는다.
 - `web/dist`가 없으면 준비 상태 안내만 제공한다. F0 빌드를 생성한 뒤 서버를 재시작하면 화면을 제공한다. F0/F1은 루트 기준 asset URL과 별도 CSS/JS 파일을 사용한다. CSP는 inline script/style 및 외부 연결을 허용하지 않는다.
 - 별도 HTTP 개발 서버에 인증 API를 CORS로 개방하지 않는다. C1은 빌드 제공 방식이며 HMR 프록시는 포함하지 않는다. 브라우저 API 요청은 동일 origin으로 보낸다. 지갑 RPC 클라이언트는 Origin 생략 또는 정확한 origin을 사용해야 하며 다른 Origin은 거부된다.
+
+F0처럼 번들러 없는 정적 ES 모듈 화면은 `index.html`, `styles.css`, 브라우저용 `src/`만 동일한 상대 경로로 `web/dist`에 패키징한다. F0 소스가 있는 checkout에서, 아직 `web/dist`가 없을 때 다음을 실행할 수 있다. 기존 산출물이 있으면 먼저 그 생성 방식을 확인한다. `web/tools`·`web/tests`·저장소 전체를 복사하지 않는다. 생성한 `web/dist`는 Git에서 제외된다.
+
+```sh
+mkdir web/dist && cp web/index.html web/styles.css web/dist/ && cp -R web/src web/dist/src
+```
+
+해시 라우팅 화면은 `/`에서 열고, history 기반 `/ui/…` 라우팅 화면은 asset URL을 루트 기준으로 구성한다. 정적 패키징은 합성 adapter를 실제 API adapter로 바꾸지 않으므로 F1의 지갑·API 연결 작업은 별도로 필요하다.
 
 신청/동의 API에는 기존 제한이 그대로 적용된다. 개발 서버도 HTTPS 연결과 Host를 확인하며, 프록시 헤더로 HTTP를 HTTPS로 인정하지 않는다. 네트워크 listener는 `127.0.0.1`에만 열린다. JSON-RPC는 요청 64 KiB, 배치 20개, 동시 요청 8개로 제한하고 내부 오류 내용은 반환하지 않는다.
 

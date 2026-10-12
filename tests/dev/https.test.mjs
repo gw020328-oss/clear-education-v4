@@ -29,6 +29,7 @@ test('HTTPS preserves auth, serves only compiled assets, and persists a funded a
   });
   await t.test('built frontend and public config are same origin; private paths and source maps are absent', async () => {
     assert.match((await f.request('/')).body, /Synthetic test build/);
+    assert.match((await f.request('/?scenario=empty')).body, /Synthetic test build/);
     assert.match((await f.request('/assets/app.js')).headers['content-type'], /javascript/);
     assert.equal((await f.request('/ui/applications')).status, 200);
     const response = await f.request('/__dev/config');

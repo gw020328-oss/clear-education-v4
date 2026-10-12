@@ -99,7 +99,8 @@ export async function startEnvironment({ directory, webRoot }) {
       if (!['GET', 'HEAD'].includes(req.method)) return json(res, 405, { code: 'METHOD' });
       if (path === '/__dev/config') return json(res, 200, publicConfig(env.config));
       // Exact compiled-file paths; SPA fallback is confined to /ui/ routes.
-      const asset = files.get(path) ?? (/^\/ui\/[a-zA-Z0-9/_-]*$/.test(path) ? files.get('/') : undefined);
+      const assetPath = path.split('?')[0];
+      const asset = files.get(assetPath) ?? (/^\/ui\/[a-zA-Z0-9/_-]*$/.test(assetPath) ? files.get('/') : undefined);
       if (!asset) return json(res, 404, { code: 'NOT_FOUND' });
       res.writeHead(200, { 'Content-Type': asset.type }); res.end(req.method === 'HEAD' ? undefined : asset.body);
     } catch (error) {

@@ -17,7 +17,7 @@
 
 **A: C1 개발 실행 기반 / B: F0 합성 화면 골격.** 둘 다 이 문서 PR 병합 후 시작할 수 있다. F0은 실제 API가 없어도 독립 검토 가능하다. C1과 F0 병합 뒤 F1에서 실제 합성 서버와 지갑을 연결한다. A의 다음 작업은 B1이다.
 
-C1 담당 오규원, [이슈 #10](https://github.com/gw020328-oss/clear-education-v4/issues/10): [개발 실행·프론트 연결 계약](LOCAL_SYNTHETIC.ko.md)을 따른다. F0 담당 서준형, [이슈 #11](https://github.com/gw020328-oss/clear-education-v4/issues/11): 빌드 출력은 `web/dist`, 실제 연결의 동일 origin과 `/ui/` 라우팅 조건은 C1 안내를 확인한다. 병합 여부는 해당 이슈와 연결 PR에서 확인한다.
+C1 담당 오규원, [이슈 #10](https://github.com/gw020328-oss/clear-education-v4/issues/10): [개발 실행·프론트 연결 계약](LOCAL_SYNTHETIC.ko.md)을 따른다. F0 담당 서준형, [이슈 #11](https://github.com/gw020328-oss/clear-education-v4/issues/11): 배포용 산출물은 `web/dist`에 둔다. 정적 ES 모듈의 패키징, 해시 라우팅 및 history 기반 `/ui/` fallback, 실제 연결의 동일 origin 조건은 C1 안내를 확인한다. 병합 여부는 해당 이슈와 연결 PR에서 확인한다.
 
 | ID / 담당 | 한 PR의 범위 | 선행 조건 | 완료 기준·필수 검증 |
 | --- | --- | --- | --- |
