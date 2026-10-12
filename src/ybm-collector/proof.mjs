@@ -17,10 +17,10 @@ export async function generateAndVerify({client,routeClient,diagnostic,secrets,s
     if(!createClaim){process.env.LOG_LEVEL='silent';({createClaimOnAttestor:createClaim}=await import('@reclaimprotocol/attestor-core'));}
     for(const role of ['registration','score']){
       guard();const request=diagnostic.collection.request(role,role==='score'?scoreIndex:0);
-      let secretParams=secrets.take(role),result;
+      let secretParams=secrets.take(role),result,lastStep;
       try{
         onStep({role,stage:'GENERATING'});
-        result=await diagnostic.generateClaim(createClaim,{name:'http',params:request.params,context:request.context,secretParams,client,onStep:step=>{if(proofSteps.has(step.name))onStep({role,stage:'SDK_STEP',step:step.name});},zkEngine:'stwo',zkProofConcurrency:1,maxRetries:1,logger:quiet});
+        result=await diagnostic.generateClaim(createClaim,{name:'http',params:request.params,context:request.context,secretParams,client,onStep:step=>{if(proofSteps.has(step.name)&&lastStep!==step.name){lastStep=step.name;onStep({role,stage:'SDK_STEP',step:step.name});}},zkEngine:'stwo',zkProofConcurrency:1,maxRetries:1,logger:quiet});
         guard();claims.push(minimalClaim(result));onStep({role,stage:'GENERATED'});
       }finally{secretParams=undefined;result=undefined;}
     }

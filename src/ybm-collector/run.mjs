@@ -23,7 +23,7 @@ export async function runYbmRoute(session, {signal, interactive = false, collect
   let connection, route, browser, lines,diagnostic,capture,collectionResult,removeAbort,proofSecrets,scoreIndex,proofResult,generating=false,userEnded=false;
   try {
     if(collecting)diagnostic=await prepareLocalDiagnostic(proofCheck?{attestorTrust:await loadTrust({signal:scope})}:{});
-    connection = await openClient({signal: scope});
+    connection = await openClient({signal: scope,proofMode:proofCheck});
     route = await createRoute({client: connection.client, signal: scope});
     const live = AbortSignal.any([scope, route.signal]);
     const publicCheck = await probe(route, {signal: live});

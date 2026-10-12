@@ -4,7 +4,7 @@ import { setMaxListeners } from 'node:events';
 export const quiet = {trace(){}, debug(){}, info(){}, warn(){}, error(){}, fatal(){}, child(){return this;}};
 let opened = false;
 
-export async function openOfficialClient({signal, socketFactory} = {}) {
+export async function openOfficialClient({signal, socketFactory, proofMode=false} = {}) {
   signal?.throwIfAborted();
   if (opened) throw new Error('NEW_WORKER_REQUIRED');
   opened = true;
@@ -19,7 +19,12 @@ export async function openOfficialClient({signal, socketFactory} = {}) {
   signal?.throwIfAborted();
   // 5.1.4 exposes only its pool factory. One worker owns exactly one session,
   // calls this factory once, and exits instead of replacing a closed client.
-  const client = getAttestorClientFromPool(ATTESTOR_URL, () => ({logger: quiet, makeWebSocket: socketFactory ?? makeSocket}));
+  const client = getAttestorClientFromPool(ATTESTOR_URL, () => ({logger: quiet, makeWebSocket: socketFactory ?? (url=>makeSocket(url,{proofMode}))}));
+  // SDK 5.1.4 creates its response Promise before awaiting the send. A send
+  // failure skips awaiting that Promise; observe its rejection without changing
+  // the original Promise/rejection seen by successful RPC sends.
+  const waitForResponse=client.waitForResponse.bind(client);
+  client.waitForResponse=(...args)=>{const pending=waitForResponse(...args);pending.catch(()=>{});return pending;};
   // Pinned SDK uses this EventTarget for pending RPC listeners. With <=32
   // tunnels, the default ten-listener warning is too small; change this target
   // only, retaining a finite limit and the SDK's per-RPC timeout cleanup.

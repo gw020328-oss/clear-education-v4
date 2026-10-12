@@ -7,14 +7,14 @@
     "model": "GPT-6 Astra",
     "reasoning": "high"
   },
-  "status": "FIRST_LIVE_ATTEMPT_FAILED_AWAITING_DIAGNOSTIC_RETRY",
+  "status": "UPLOAD_LIMIT_FIXED_AWAITING_LIVE_RETRY",
   "localTests": {
-    "ybmCollector": 140,
+    "ybmCollector": 144,
     "macIntegrityPublic": 48,
     "proofAdapter": 107,
     "collectorBoundary": 62,
     "storagePreparation": 37,
-    "total": 394,
+    "total": 398,
     "status": "PASS"
   },
   "runtimeStwoSyntheticProof": "PASS",
@@ -54,7 +54,25 @@
       "independentVerification": false,
       "remainingManagedSessions": 0,
       "exitCode": 1
+    },
+    {
+      "codeCommit": "63a1084",
+      "userLoginCompleted": true,
+      "localSourcePairMatched": true,
+      "failedPhase": "REGISTRATION_WAITING_FOR_VERIFICATION",
+      "safeFailureCode": "ATTESTOR_BACKPRESSURE_LIMIT",
+      "proofGenerated": false,
+      "independentVerification": false,
+      "remainingManagedSessions": 0,
+      "exitCode": 1
     }
   ],
-  "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/4"
+  "pullRequest": "https://github.com/gw020328-oss/clear-education-v4/pull/4",
+  "transportFix": {
+    "defaultOutboundBytes": 2097152,
+    "proofModeOutboundBytes": 33554432,
+    "inboundBytes": 4194304,
+    "proofSendTimeoutSeconds": 60,
+    "sdkOrphanResponseRejectionObserved": true
+  }
 }
