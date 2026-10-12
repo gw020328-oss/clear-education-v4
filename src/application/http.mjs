@@ -33,9 +33,18 @@ const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].inclu
 // The factory does not listen or deploy. HTTPS termination must preserve Host
 // and use an encrypted connection to this handler; proxy headers are not trusted.
 export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls } = {}) {
-  const expected = new URL(service.origin);
   const makeServer = tls ? createHttpsServer : createServer;
-  const server = makeServer({ ...tls, requestTimeout: 10000, headersTimeout: 10000, maxHeaderSize: 8192 }, async (req, res) => {
+  const server = makeServer({ ...tls, requestTimeout: 10000, headersTimeout: 10000, maxHeaderSize: 8192 },
+    createApplicationHandler(service, { allowLoopbackHttpForTests }));
+  server.maxConnections = 32;
+  return server;
+}
+
+// Composable handler; the same transport/origin/session checks apply when a
+// local development listener also serves a frontend build and synthetic RPC.
+export function createApplicationHandler(service, { allowLoopbackHttpForTests = false } = {}) {
+  const expected = new URL(service.origin);
+  return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -94,7 +103,5 @@ export function createApplicationServer(service, { allowLoopbackHttpForTests = f
       res.end(JSON.stringify({ code, message: '요청을 완료하지 못했습니다.', retryable: false,
         nextAction: res.statusCode === 401 ? 'SIGN_IN_AGAIN' : 'CHECK_REQUEST', requestId }));
     }
-  });
-  server.maxConnections = 32;
-  return server;
+  };
 }
