@@ -6,6 +6,8 @@
 
 ## 런타임
 
+B2b 합성 제품 수집·독립 검증·원자 수락 시험은 `./tools/npm run test:product-proof`다. [서버 원천 설정·schema 4·실경로 차단](current/PRODUCT_PROOF.ko.md)을 확인한다. 기본 C1 환경은 자동으로 제품 수집을 켜지 않으며 기존 DB/체인/키를 reset하거나 편집하지 않는다.
+
 B2a 전체 시험 증거 계약의 합성 검증은 `./tools/npm run test:exam-evidence`로 실행한다. [원천 신뢰 경계와 재현](current/EXAM_EVIDENCE.ko.md)을 먼저 확인한다. 실제 YBM 로그인·외부 RPC·기존 DB/체인을 사용하지 않는다.
 
 로컬 합성 HTTPS 서버·DB·TEST 체인의 초기화/실행/재시작은 [C1 개발 환경 안내](current/LOCAL_SYNTHETIC.ko.md)를 따릅니다. 프론트 `web/dist`를 같은 origin에서 제공하며, 기존 정책 선언용 환경 설정과 독립된 개발 환경을 만듭니다.

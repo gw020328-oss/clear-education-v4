@@ -76,3 +76,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS proof_session_active ON proof_sessions(applica
 CREATE TRIGGER IF NOT EXISTS proof_session_identity_immutable
   BEFORE UPDATE OF application_id,session_digest,runtime_hash,request_key,owner_address,nonce_digest,typed_data,issued_at,expires_at,issuance_evidence ON proof_sessions
   BEGIN SELECT RAISE(ABORT,'IMMUTABLE_PROOF_SESSION'); END;
+
+-- B2b: a separate one-time acceptance, not B1 wallet nonce consumption.
+-- Only verified synthetic minimal fields are persisted; never raw proof/signatures.
+CREATE TABLE IF NOT EXISTS proof_results (
+  proof_session_id TEXT PRIMARY KEY REFERENCES proof_sessions(id),
+  submission_hash TEXT NOT NULL, snapshot_hash TEXT NOT NULL,
+  verifier_version TEXT NOT NULL, source_signer TEXT NOT NULL,
+  accepted_at INTEGER NOT NULL, observed_at INTEGER NOT NULL,
+  snapshot TEXT NOT NULL, chain_evidence TEXT NOT NULL
+) STRICT;
+CREATE TRIGGER IF NOT EXISTS proof_result_immutable BEFORE UPDATE ON proof_results
+  BEGIN SELECT RAISE(ABORT,'IMMUTABLE_PROOF_RESULT'); END;

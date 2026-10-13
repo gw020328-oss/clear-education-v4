@@ -32,6 +32,8 @@ C1이 커지면 실행/HTTPS와 합성 체인 준비를 두 PR로 나눌 수 있
 
 ## 증명부터 지급까지
 
+B2b는 [이슈 #18](https://github.com/gw020328-oss/clear-education-v4/issues/18) 및 [제품 검증 결과 수락 계약](PRODUCT_PROOF.ko.md)을 따른다. 합성 제품 세션/수집 연결과 검증 자식 프로세스, DB 원자 단회 수락을 구현했다. 실제 YBM 전체성 차단은 유지하며 B3 학습 입력과 B4 시험 중복·grant/outbox는 후속이다. source trust 설정·schema 4 및 evidence/result API가 공통 변경이며 병합 상태는 연결 PR에서 확인한다.
+
 B2a는 [이슈 #12](https://github.com/gw020328-oss/clear-education-v4/issues/12)와 [증거 계약](EXAM_EVIDENCE.ko.md)을 따른다. 원천이 보증한 전체 inventory와 페이지·접수/성적 대조를 합성 구현했다. 실제 원천의 완전성 보증은 미확인으로 BLOCKED이며, B2b가 수집기 제공 hash를 신뢰한 manifest pin으로 승격해서는 안 된다. B1은 PR #16으로 병합됐고 B2a의 병합 상태는 연결 PR을 확인한다.
 
 B1은 [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15)로 오규원이 구현하며 [제품 세션 계약](PROOF_SESSIONS.ko.md)과 schema 3을 정의했다. 병합 상태는 연결 PR을 확인한다. 승인 nonce 소비는 proof 수락·시험 중복 예약과 구분한다. F4는 이 계약으로 화면을 준비하되 실제 수집 연결은 B2b 이후다.

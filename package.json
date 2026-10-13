@@ -16,7 +16,8 @@
     "prepare:workspace": "node tools/prepare-workspace.mjs",
     "verify:workspace:local": "node tools/verify-workspace.mjs --local",
     "test:proof-sessions": "node --test tests/proof-sessions/*.test.mjs",
-    "test:exam-evidence": "node --test tests/exam-evidence/*.test.mjs"
+    "test:exam-evidence": "node --test tests/exam-evidence/*.test.mjs",
+    "test:product-proof": "node --test tests/product-proof/*.test.mjs"
   },
   "dependencies": {
     "ethers": "6.17.0",

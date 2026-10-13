@@ -1,22 +1,21 @@
 import { computeAddress, SigningKey, TypedDataEncoder, verifyTypedData } from 'ethers';
-import { canonical, exactKeys, freeze, hash32, identifier, requireRule, RuleError } from '../policy/values.mjs';
+import { canonical, exactKeys, freeze, hash, hash32, identifier, requireRule, RuleError } from '../policy/values.mjs';
 import { vaultDomain } from '../vault/encoding.mjs';
+import { PRODUCT_PROOF_VERSION, validateSubmission } from '../product-proof/contract.mjs';
+import { verifyProductIndependently } from '../product-proof/independent.mjs';
+import { SOURCE_CONTRACT_HASH } from '../exam-evidence/synthetic-completeness.mjs';
 
-export const proofBindingTypes = freeze({ ProofSessionBindingV4: [
-  { name: 'applicationId', type: 'bytes32' }, { name: 'learner', type: 'address' },
-  { name: 'policyHash', type: 'bytes32' }, { name: 'runtimeConfigHash', type: 'bytes32' },
-  { name: 'proofSessionId', type: 'bytes32' }, { name: 'requestNonce', type: 'bytes32' },
-  { name: 'ownerPublicKey', type: 'bytes' }, { name: 'expiresAt', type: 'uint256' },
-] });
+import { proofBindingTypes } from './proof-binding.mjs';
+export { proofBindingTypes } from './proof-binding.mjs';
+
 function ownerKey(value) {
   requireRule(typeof value === 'string' && /^0x04[0-9a-fA-F]{128}$/.test(value), 'PROOF_OWNER_KEY');
   try { const key = SigningKey.computePublicKey(value, false); return { key, address: computeAddress(key) }; }
   catch { throw new RuleError('PROOF_OWNER_KEY'); }
 }
 
-// This module consumes wallet authorization, not a verified proof. No collector,
-// callback, grant, or proof-result acceptance route exists in B1.
-export function createProofSessionService({ db, transaction, session, owned, clock, digest, secret, signatureShape, vaultReader }) {
+// B1 wallet authorization and B2b synthetic result acceptance are separate.
+export function createProofSessionService({ db, transaction, session, owned, clock, digest, secret, signatureShape, vaultReader, policy, proofSourceSigner }) {
   const read = id => db.prepare('SELECT * FROM proof_sessions WHERE id=?').get(id);
   function applicant(context, applicationId, write = false) {
     const s = session(context, write), a = owned(applicationId, s);
@@ -59,7 +58,74 @@ export function createProofSessionService({ db, transaction, session, owned, clo
     requireRule(t >= started && t <= started + 30, 'PROOF_CHAIN_CHECK_EXPIRED');
     requireRule(t >= Number(record.config.normalSubmitFrom) && t <= Number(evidence.submitUntil), 'PROOF_SUBMISSION_CLOSED');
   }
+  const resultRow = id => db.prepare('SELECT * FROM proof_results WHERE proof_session_id=?').get(id);
+  const receipt = p => ({ proofSessionId: p.proof_session_id, state: 'ACCEPTED_SYNTHETIC',
+    submissionHash: p.submission_hash, snapshotHash: p.snapshot_hash, acceptedAt: String(p.accepted_at),
+    verifierVersion: p.verifier_version, dataMode: 'SYNTHETIC', liveSupported: false,
+    collectionEnabled: false, proofVerified: false, paymentAllowed: false });
+  function productContext(context, applicationId, proofSessionId, write = true) {
+    const { s, a } = applicant(context, applicationId, write), p = found(applicationId, proofSessionId);
+    active(p); requireRule(p.state === 'AUTHORIZED' && p.consumed_at !== null, 'PRODUCT_AUTHORIZATION_REQUIRED');
+    requireRule(s.digest === p.session_digest, 'PROOF_BROWSER_SESSION');
+    const compiled = policy(a.policy_hash);
+    requireRule(proofSourceSigner && compiled.policy.sourcePolicySetHash === SOURCE_CONTRACT_HASH, 'PROOF_SOURCE_INCOMPLETE');
+    return { a, p, compiled };
+  }
   return {
+    async acceptProofEvidence(context, applicationId, proofSessionId, body, { signal } = {}) {
+      // Fix a private validated copy before the first await. No caller-supplied
+      // verifier result, context, trust key, clock or raw cookie/key crosses IPC.
+      const initial = productContext(context, applicationId, proofSessionId);
+      validateSubmission(body); const submission = structuredClone(body), submissionHash = hash(submission);
+      signal?.throwIfAborted();
+      const previous = resultRow(proofSessionId), started = clock();
+      if (previous) requireRule(previous.submission_hash === submissionHash, 'PRODUCT_RESULT_CONFLICT');
+      let verified;
+      if (!previous) {
+        const { supplementEndAt, claimUntil, ...draft } = initial.compiled.policy;
+        verified = await verifyProductIndependently({ draft, session: view(initial.p), sourceSigner: proofSourceSigner,
+          submission, now: String(started) }, { signal });
+        requireRule(verified.submissionHash === submissionHash && verified.bindingDigest === initial.p.binding_digest
+          && verified.policyHash === initial.a.policy_hash && verified.snapshotHash === hash(verified.snapshot), 'PRODUCT_VERIFICATION_FAILED');
+      }
+      const observation = await observe(initial.a);
+      return transaction(() => {
+        signal?.throwIfAborted();
+        const current = productContext(context, applicationId, proofSessionId); recheck(current.a, observation);
+        const accepted = resultRow(proofSessionId);
+        if (accepted) {
+          requireRule(accepted.submission_hash === submissionHash, 'PRODUCT_RESULT_CONFLICT');
+          return receipt(accepted);
+        }
+        const t = clock();
+        requireRule(verified && t >= started && t <= started + 30 && t >= Number(verified.observedAt)
+          && t <= Number(verified.observedAt) + 300, 'PRODUCT_VERIFICATION_STALE');
+        db.prepare(`INSERT INTO proof_results VALUES(?,?,?,?,?,?,?,?,?)`).run(proofSessionId, submissionHash,
+          verified.snapshotHash, PRODUCT_PROOF_VERSION, proofSourceSigner, t, Number(verified.observedAt),
+          canonical(verified.snapshot), canonical(observation.evidence));
+        return receipt(resultRow(proofSessionId));
+      });
+    },
+    getProofResult(context, applicationId, proofSessionId) {
+      applicant(context, applicationId); found(applicationId, proofSessionId);
+      const accepted = resultRow(proofSessionId);
+      return accepted ? receipt(accepted) : { proofSessionId, state: 'NOT_ACCEPTED', dataMode: 'SYNTHETIC',
+        liveSupported: false, collectionEnabled: false, proofVerified: false, paymentAllowed: false };
+    },
+    // Internal only: no HTTP route exposes scores. B4 must perform its own final
+    // acceptance/issuance checks; this read is not a grant or exam reservation.
+    async getAcceptedExamSnapshot(context, applicationId, proofSessionId) {
+      const initial = productContext(context, applicationId, proofSessionId, false), observation = await observe(initial.a);
+      return transaction(() => {
+        const current = productContext(context, applicationId, proofSessionId, false); recheck(current.a, observation);
+        const accepted = resultRow(proofSessionId);
+        requireRule(accepted, 'PRODUCT_RESULT_MISSING');
+        requireRule(clock() >= accepted.observed_at && clock() <= accepted.observed_at + 300, 'PRODUCT_VERIFICATION_STALE');
+        const snapshot = JSON.parse(accepted.snapshot);
+        requireRule(hash(snapshot) === accepted.snapshot_hash, 'PRODUCT_RESULT_INTEGRITY');
+        return freeze(snapshot);
+      });
+    },
     async createProofSession(context, applicationId, body, key) {
       exactKeys(body, ['ownerPublicKey'], 'PROOF_SESSION_SCHEMA');
       const owner = ownerKey(body.ownerPublicKey); key = identifier(key, 'IDEMPOTENCY_KEY');

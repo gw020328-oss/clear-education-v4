@@ -1,5 +1,7 @@
 # B1 제품 증명 세션·영속 nonce
 
+B2b 후속(2026-10-13): [제품 수집·검증 결과 단회 수락](PRODUCT_PROOF.ko.md)이 schema 4와 별도 proof_results를 추가했다. 아래 schema 3/수락 미구현 설명은 B1 당시 범위다. B1 승인 nonce와 상태는 유지하며, 새 합성 결과 수락은 독립 검증 후 별도 transaction으로 처리한다. 실제 YBM 수집/원천 전체성/지급은 여전히 차단한다.
+
 2026-10-12, 담당 오규원. [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15), [역할·후속 계획](TEAM_PLAN.ko.md). 선행 C1은 [PR #14](https://github.com/gw020328-oss/clear-education-v4/pull/14)로 develop에 반영됐다. 이 문서는 B1 구현 브랜치 기준이며 병합 여부는 이슈의 연결 PR을 확인한다.
 
 제품 신청의 예치를 다시 확인하고, 수취 지갑이 특정 수집 owner 공개키와 세션 문맥을 승인한다. **AUTHORIZED는 지갑 결합 승인이다. proof 검증·자격 충족·권한 발급을 뜻하지 않는다.** 실제 YBM 수집기 연결은 아직 없으며 `dataMode=SYNTHETIC`, `collectionEnabled=false`, `proofVerified=false`, `paymentAllowed=false`를 유지한다.

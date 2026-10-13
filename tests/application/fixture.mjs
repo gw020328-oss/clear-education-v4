@@ -5,12 +5,12 @@ import { id, Wallet } from 'ethers';
 import { createApplicationService } from '../../src/application/service.mjs';
 import { draft, epoch } from '../policy/fixture.mjs';
 
-export async function fixture(t, { policyDraft = draft() } = {}) {
+export async function fixture(t, { policyDraft = draft(), proofSourceSigner = null } = {}) {
   const directory = realpathSync(mkdtempSync(join(tmpdir(), 'clear-application-test-')));
   const alice = Wallet.createRandom(), bob = Wallet.createRandom(), operator = Wallet.createRandom(), outsider = Wallet.createRandom();
   let time = Number(epoch('2020-02-01T12:00:00Z'));
   const config = { directory, origin: 'https://clear.example.invalid', chainId: 431701,
-    instanceId: id('SYNTHETIC_APPLICATION_INSTANCE'), participants: [alice.address, bob.address], operators: [operator.address] };
+    instanceId: id('SYNTHETIC_APPLICATION_INSTANCE'), participants: [alice.address, bob.address], operators: [operator.address], proofSourceSigner };
   let service = createApplicationService({ ...config, now: () => time });
   t.after(() => { service.close(); rmSync(directory, { recursive: true, force: true }); });
   async function login(wallet, target = service) {
