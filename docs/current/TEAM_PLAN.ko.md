@@ -1,5 +1,7 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
+
 공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.
 
 B3 provider 후속(2026-10-13): [이슈 #24](https://github.com/gw020328-oss/clear-education-v4/issues/24), 담당 A. 기존 수집/검사/평가 경계를 재사용하고 합성 시드 provider에 기관/강좌/계정·필수 활동 매핑·완료 의미를 고정한다. [Moodle 최소 연결 명세](LEARNING_PROVIDER.ko.md)의 실제 기관/권한/완전성/정정/완료 시각은 미확인으로 차단한다. 완료 기준은 합성 adapter·계약/오류 시험·공식 자료에 근거한 후속 명세까지이며, UI/실연동·grant/outbox·지급 구조 전환은 포함하지 않는다.
