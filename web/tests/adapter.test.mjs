@@ -72,8 +72,9 @@ test('모르는 오류 코드는 API_REQUEST_FAILED 로 줄인다', async () => 
 });
 
 test('없는 시나리오 이름은 기본값으로 떨어진다', async () => {
+  const { DEFAULT_SCENARIO } = await import('../src/fixtures/applications.js');
   const adapter = createSyntheticAdapter({ scenario: 'does-not-exist' });
-  assert.equal(adapter.describe().scenario, 'stage1');
+  assert.equal(adapter.describe().scenario, DEFAULT_SCENARIO);
   assert.equal((await adapter.listApplications()).length, 1);
 });
 

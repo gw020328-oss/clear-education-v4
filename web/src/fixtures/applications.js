@@ -96,4 +96,6 @@ export const SCENARIOS = Object.freeze({
   apiError: { label: '요청 실패', items: [AT_ENROLLED], delayMs: 200, failWith: 'API_REQUEST_FAILED' },
 });
 
-export const DEFAULT_SCENARIO = 'stage1';
+// 기본은 3단계다. 앞뒤 단계가 모두 보여 화면을 이해하기 쉽다.
+// 다른 상황은 주소의 ?scenario= 로 본다 — README 의 표를 참고한다.
+export const DEFAULT_SCENARIO = 'stage3';

@@ -49,11 +49,12 @@ origin HTTPS 서버는 [계획 C1](../docs/current/TEAM_PLAN.ko.md)에서 추가
 | `/?scenario=authError` | `AUTH_REQUIRED` 오류 |
 | `/?scenario=apiError` | `API_REQUEST_FAILED` 오류 |
 
-기본값은 `stage1` 이다. 같은 신청 하나가 다섯 단계를 거치는 것을 시나리오로 바꿔 본다.
-참가자는 한 반에 신청 하나이므로 목록에는 1건만 뜬다.
+기본값은 `stage3` 이다. 앞뒤 단계가 모두 보여 화면을 이해하기 쉽다. 같은 신청
+하나가 다섯 단계를 거치는 것을 시나리오로 바꿔 본다. 참가자는 한 반에 신청
+하나이므로 목록에는 1건만 뜬다.
 
-화면 위 선택 상자로도 바꿀 수 있다. 목록에서 항목을 누르면 `#/applications/<id>`
-상세로 간다.
+바꾸는 방법은 주소의 `?scenario=` 뿐이다. 지금 어떤 상황인지는 머리말 아래
+한 줄로만 알린다.
 
 ## 기술 선택과 이유
 
@@ -88,16 +89,38 @@ web/
       applications.js     다섯 상태 fixture와 시나리오
       policy.js           컴파일된 정책 fixture (동의한 조건)
     ui/
-      state-labels.js     상태별 '말할 수 있는 사실'과 '금지되는 추정'
-      views.js            목록·상세·로딩·빈 목록·오류
+      state-labels.js     상태별 '말할 수 있는 사실'과 '금지되는 추정', 누구 차례
+      views.js            목록·신청 전체·로딩·빈 목록·오류
+      timeline.js         다섯 단계 세로 타임라인과 단계 판정(statusOf)
+      step-detail.js      단계 하나만 — 남은 기록, 어떻게 끝나나
       policy-view.js      동의한 조건 구역
+      brand.js            머리말·자물쇠·봉인 표식
       dom.js              작은 DOM 도구
   tools/
     dev-server.mjs        개발용 정적 서버 (Node. 브라우저 번들 아님)
   tests/
     contract.test.mjs     view 계약 검사
     adapter.test.mjs      어댑터·상태 문구·개발 서버
+    policy.test.mjs       정책 계약과 조건 표시
+    steps.test.mjs        단계 판정·단계 번호·「어떻게 끝나나」 표
 ```
+
+### 화면과 주소
+
+한 반에 신청은 하나다. 그래서 목록은 1건이면 거치지 않고 바로 신청 전체로 보낸다.
+
+| 주소 | 화면 |
+| --- | --- |
+| `#/applications` | 신청 목록. 1건이면 아래로 넘긴다 |
+| `#/applications/<id>` | **신청 전체** — 지금 단계, 다섯 단계 타임라인, 동의한 조건과 기한 |
+| `#/applications/<id>/steps/<n>` | **단계 상세** — `n`번 단계만. 타임라인에서 단계 제목을 누르면 온다 |
+
+동의한 조건과 기한은 신청 전체에 공통이므로 첫 화면에 한 번만 둔다. 단계마다
+반복하면 어느 단계를 열어도 같은 화면처럼 보인다. 단계 상세에는 그 단계에서만
+달라지는 것 — 남은 기록, 어떻게 끝나는지, 다음에 누가 무엇을 하는지 — 만 둔다.
+
+화면 위에 상황을 고르는 칸은 두지 않는다. 참가자가 보는 제품에는 없을 장치이고
+검토용 전환이 화면을 복잡하게 만든다. 다른 상황은 위 표의 `?scenario=` 로 본다.
 
 ### 어댑터 경계
 

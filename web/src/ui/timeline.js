@@ -10,9 +10,16 @@ import { el, shortHex } from './dom.js';
 import { stateLabel, STEP_ORDER, actorFor, nextFor } from './state-labels.js';
 import { seoulText } from './policy-view.js';
 
-const DONE = 'done';
-const NOW = 'now';
-const TODO = 'todo';
+export const DONE = 'done';
+export const NOW = 'now';
+export const TODO = 'todo';
+
+/** 보려는 단계가 현재 상태 기준으로 완료인지 현재인지 아직인지 */
+export function statusOf(state, currentState) {
+  const step = stateLabel(state).step;
+  const current = stateLabel(currentState).step;
+  return step < current ? DONE : step === current ? NOW : TODO;
+}
 
 /** 해시 한 줄 — 짧게 보이고 전체 값은 title 로 남긴다 */
 const hashRow = (label, value) => el('div.rec', {}, [
@@ -31,7 +38,7 @@ const waitingRow = (text) => el('p.rec-wait', { text });
  * 단계마다 무엇을 보여줄지.
  * 완료된 단계에는 그 단계가 남긴 값을, 아직인 단계에는 무엇이 들어올 자리인지를 쓴다.
  */
-function recordsFor(state, view, status) {
+export function recordsFor(state, view, status) {
   const rows = [];
   if (state === 'DRAFT') {
     if (status === DONE || status === NOW) {
@@ -56,12 +63,15 @@ function recordsFor(state, view, status) {
     }
   }
   if (state === 'FUNDING_PENDING') {
+    // 3단계가 거래를 '발급'받는 자리이고 4단계가 '승인·전송'하는 자리다.
+    // 두 단계를 모두 '준비'라고 쓰면 어느 단계 이야기인지 알 수 없다.
     if (status === DONE) {
-      rows.push(waitingRow('예치 거래가 준비되었고 전송까지 끝났습니다.'));
+      rows.push(waitingRow('학원이 토큰 승인과 예치 전송을 마쳤습니다.'));
     } else if (status === NOW) {
       rows.push(waitingRow('학원이 토큰 승인과 예치 전송을 진행합니다. 아직 전송된 것은 아닙니다.'));
     } else {
-      rows.push(waitingRow('최종 동의 뒤 학원이 예치 거래를 준비합니다.'));
+      rows.push(waitingRow('환급금이 실제로 금고에 들어가는 자리입니다. '
+        + '학원이 발급받은 예치 거래를 승인하고 전송합니다.'));
     }
   }
   if (state === 'ENROLLED') {
@@ -92,7 +102,7 @@ export function recordTimeline(view, context = {}) {
 
     el('ol.tl', { 'aria-label': '신청 진행 기록' }, STEP_ORDER.map((state) => {
       const label = stateLabel(state);
-      const status = label.step < current ? DONE : label.step === current ? NOW : TODO;
+      const status = statusOf(state, view.state);
       const rows = recordsFor(state, view, status);
 
       return el('li.tl-item', {
@@ -102,7 +112,9 @@ export function recordTimeline(view, context = {}) {
         el('span.tl-dot', { 'aria-hidden': 'true', text: status === DONE ? '✓' : String(label.step) }),
         el('div.tl-body', {}, [
           el('div.tl-head', {}, [
-            el('span.tl-title', { text: label.title }),
+            el('a.tl-title', {
+              href: `#/applications/${view.applicationId}/steps/${label.step}`,
+            }, [el('span', { text: label.title }), el('span.tl-go', { 'aria-hidden': 'true', text: '›' })]),
             el('span.tl-state', {
               text: status === DONE ? '완료' : status === NOW ? '지금 여기' : '대기',
             }),

@@ -50,7 +50,7 @@ export function errorView(code, onRetry) {
 export function listView(items, context = {}) {
   return el('section', {}, [
     el('h2', { id: 'list-heading', text: '내 신청' }),
-    el('p.muted', { text: '한 반에 신청은 하나입니다. 아래에서 현재 단계를 확인하세요.' }),
+    el('p.muted', { text: '한 반에 신청은 하나입니다. 눌러서 진행 상황을 확인하세요.' }),
     el('ul.list', { 'aria-labelledby': 'list-heading' }, items.map((view) => {
       const label = stateLabel(view.state);
       return el('li', {}, [
@@ -77,13 +77,18 @@ export function listView(items, context = {}) {
 
 // ── 상세 ────────────────────────────────────────────────────────────────────
 
-export function detailView(view, policy, context = {}) {
+/**
+ * 신청 전체 화면 — 첫 화면.
+ *
+ * 동의한 조건과 기한은 신청 전체에 공통이므로 여기 한 번만 둔다.
+ * 단계마다 반복하면 어느 단계를 열어도 같은 화면처럼 보인다.
+ * 단계별로 달라지는 것은 타임라인에서 보고, 더 보려면 그 단계를 누른다.
+ */
+export function dashboardView(view, policy, context = {}) {
   const label = stateLabel(view.state);
   const actor = actorFor(view.state, context);
 
   return el('section', {}, [
-    el('p', {}, [el('a.back', { href: '#/applications', text: '← 신청 목록' })]),
-
     el('div.hero', {}, [
       el('div.hero-top', {}, [stepBadge(label), actorChip(actor)]),
       el('h2', { text: label.title }),
@@ -98,9 +103,9 @@ export function detailView(view, policy, context = {}) {
       ]),
     ]),
 
-    policy ? policySection(policy) : el('p.muted', { text: '조건을 불러오지 못했습니다.' }),
-
     recordTimeline(view, context),
+
+    policy ? policySection(policy) : el('p.muted', { text: '조건을 불러오지 못했습니다.' }),
 
     el('details.tech', {}, [
       el('summary', { text: '식별자 보기' }),
