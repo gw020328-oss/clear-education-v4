@@ -23,31 +23,40 @@ import { recordsFor, statusOf, DONE, NOW, TODO } from './timeline.js';
 export const STEP_TASKS = Object.freeze({
   DRAFT: {
     operator: null,
-    // 여기서 서명하는 것은 ApplicationTermsV4 — 환급 조건이다.
-    // 2단계의 TermsAcceptanceV4(금고 설정 포함)와 다른 서명이므로 구분해 적는다.
     learner: {
-      text: '신청 조건을 확인하고 지갑으로 서명합니다. 두 번 하는 동의 서명 중 첫 번째입니다.',
-      api: 'POST /applications/:id/consent',
+      text: '환급반 신청서를 냅니다. 이때 신청이 만들어지고 신청 번호가 생깁니다.',
+      api: 'POST /applications',
     },
   },
   TERMS_ACCEPTED: {
+    operator: null,
+    // 여기서 서명하는 것은 ApplicationTermsV4 — 환급 조건이다.
+    // 3단계의 TermsAcceptanceV4(금고 설정 포함)와 다른 서명이므로 구분해 적는다.
+    // 로그인 서명까지 세면 '첫 번째'가 아니므로 동의 서명만 센다고 밝힌다.
+    learner: {
+      text: '환급 조건을 읽고 지갑으로 서명합니다. 두 번 하는 동의 서명 중 첫 번째입니다.',
+      api: 'POST /applications/:id/consent',
+    },
+  },
+  CONSENTED: {
     // 금고(runtime)는 policyHash 하나에 하나다. VAULT_ENROLLMENT 의
     // '한 cohort 는 하나의 불변 runtime 만 연결한다' 를 따른다.
     // 신청마다 배포하는 것이 아니므로 이미 있으면 할 일이 없다.
     operator: {
-      text: '금고가 아직 없으면 배포합니다. 금고는 반마다 하나라서, 이미 있으면 할 일이 없습니다.',
+      text: '금고가 아직 없으면 먼저 배포합니다. 금고는 반마다 하나라서, 이미 있으면 '
+        + '할 일이 없습니다.',
       api: 'POST /runtimes',
     },
-    // 로그인 서명까지 세면 '두 번째'가 아니다. 동의 서명만 센다는 것을 밝힌다.
     learner: {
-      text: '금고 설정을 확인하고 최종 동의에 서명합니다. 동의 서명 중 두 번째이자 마지막입니다.',
+      text: '학원 금고 설정(어느 계약, 어느 토큰, 얼마, 언제까지)을 보고 한 번 더 서명합니다. '
+        + '동의 서명 중 두 번째이자 마지막입니다. 서명한 뒤에는 학원도 CLEAR도 바꿀 수 없습니다.',
       api: 'POST /applications/:id/final-consent',
     },
   },
-  CONSENTED: {
+  FUNDING_PENDING: {
     // funding-intent 는 enrollAndFund calldata 를 돌려줄 뿐이다.
     // 서버는 지갑 키도 송신 권한도 없다 (VAULT_ENROLLMENT). 실제 승인·전송은
-    // 다음 단계다. 여기를 '예치 거래를 준비' 라고 적으면 4단계와 구별되지 않는다.
+    // 5단계다. 여기를 '예치 거래를 준비' 라고 적으면 5단계와 구별되지 않는다.
     operator: {
       text: '서버에서 예치 거래를 받아옵니다. 받는 것은 「이 거래를 보내라」는 내용이고, '
         + '아직 돈은 움직이지 않습니다.',
@@ -55,34 +64,40 @@ export const STEP_TASKS = Object.freeze({
     },
     learner: null,
   },
-  FUNDING_PENDING: {
+  ENROLLED: {
     // VAULT_ENROLLMENT: 무승인 allowance·잔액 부족·revert·미채굴·다른 신청 거래·
     // 토큰 단순 송금은 ENROLLED 로 승격하지 않는다. 학원이 '넣었다'고 말하는 것과
     // 넣은 것의 차이가 이 단계에서 갈리므로 한 줄로 적는다.
     operator: {
       text: '토큰을 승인하고 예치 거래를 보낸 뒤 확인을 요청합니다. 환급금이 실제로 금고에 '
-        + '들어가는 자리입니다. 금고로 그냥 토큰을 보낸 것은 인정되지 않고, '
-        + '정해진 거래가 성공해야 합니다.',
+        + '들어가는 자리입니다. 서버가 체인에서 그 거래를 검증합니다. 금고로 그냥 토큰을 '
+        + '보낸 것은 인정되지 않고, 정해진 거래가 성공해야 합니다.',
       api: 'POST /applications/:id/funding-confirmation',
     },
     learner: null,
-  },
-  ENROLLED: {
-    operator: null,
-    learner: {
-      text: '정해진 기간 안에 수업을 듣고 시험에 응시합니다. 환급은 그 뒤의 별도 절차입니다.',
-      api: null,
-    },
     // VAULT_ENROLLMENT: ENROLLED 와 fundingEvidence 는 '해당 블록의' 예치 기록이고
     // 실시간 잔액/권리 상태가 아니다. '예치 확인'을 '지금 내 돈이 금고에 있다'로
     // 읽는 것이 가장 자연스러운 오독이라 여기서 끊는다.
-    note: '위 기록은 그 블록 시점에 확인된 예치입니다. 지금의 금고 잔액을 실시간으로 '
-      + '보여주는 것이 아닙니다.',
+    note: '여기까지 오면 신청 절차가 끝납니다. 이제 정해진 기간 안에 수업을 듣고 시험에 '
+      + '응시하면 되고, 환급은 그 뒤의 별도 절차입니다. 위 기록은 그 블록 시점에 확인된 '
+      + '예치이며, 지금의 금고 잔액을 실시간으로 보여주는 것이 아닙니다.',
   },
 });
 
 const chip = (status) => el('span.sd-status', { 'data-status': status, text:
-  status === DONE ? '완료' : status === NOW ? '지금 여기' : '아직 오지 않음' });
+  status === DONE ? '완료' : status === NOW ? '진행 중' : '아직 오지 않음' });
+
+/**
+ * 단계 머리의 한 줄.
+ *
+ * state-labels 의 fact 는 '그 상태에 도달했다'는 사실이라 완료된 단계에서만
+ * 참이다. 진행 중인 단계에 그걸 그대로 쓰면 아직 안 끝난 일을 끝난 것처럼
+ * 말하게 된다.
+ */
+const factText = (status, label) =>
+  status === DONE ? label.fact
+    : status === NOW ? '이 단계가 진행 중입니다. 아래 일이 끝나면 완료됩니다.'
+      : '아직 이 단계에 오지 않았습니다.';
 
 /** 한 쪽이 그 단계에서 하는 일. 없으면 x 로 적는다 — 빈 줄은 빠뜨린 것처럼 보인다 */
 function taskRow(who, task) {
@@ -123,10 +138,10 @@ export function stepDetailView(view, state, context = {}) {
       el('div.sd-top', {}, [
         el('span.sd-num', { text: `${label.step} / ${TOTAL_STEPS}` }),
         chip(status),
-        status === NOW ? el('span.tl-actor', { 'data-actor': actor.key, text: actor.label }) : null,
+        status === NOW ? el('span.actor', { 'data-actor': actor.key, text: actor.label }) : null,
       ]),
       el('h2', { text: label.title }),
-      el('p.sd-fact', { text: status === TODO ? '아직 이 단계에 오지 않았습니다.' : label.fact }),
+      el('p.sd-fact', { text: factText(status, label) }),
       el('p.forbidden', {}, [
         el('strong', { text: '이 단계가 말하지 않는 것 — ' }),
         el('span', { text: label.forbidden }),

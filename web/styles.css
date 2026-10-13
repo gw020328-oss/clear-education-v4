@@ -237,24 +237,22 @@ h3 {
 .back { color: var(--accent); font-size: 13.5px; text-decoration: none; }
 .back:hover { text-decoration: underline; }
 
-.hero {
+/* 지금 무엇을 기다리는지 한 문장. 조건 바로 아래, 단계 목록 바로 위에 둔다 */
+.now {
   background: var(--card); border: 1px solid var(--line);
-  border-top: 3px solid var(--navy);
-  border-radius: var(--radius); padding: 16px 18px; margin: 6px 0 0;
+  border-left: 3px solid var(--line);
+  border-radius: var(--radius); padding: 14px 16px; margin: 16px 0 0;
   box-shadow: var(--shadow);
 }
-.hero-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.hero h2 { margin: 10px 0 0; font-size: 21px; }
-.hero-fact { margin: 5px 0 0; font-size: 14.5px; }
-.hero-next {
-  display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline;
-  margin: 12px 0 0; padding: 10px 12px;
-  background: var(--navy-soft); border-radius: 8px; font-size: 13.5px;
-}
-.hero-next-tag {
+.now[data-actor="LEARNER"] { border-left-color: var(--accent); }
+.now[data-actor="DONE"] { border-left-color: var(--ok); }
+.now-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.now-tag {
   flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 0.5px;
   color: var(--navy); border: 1px solid var(--navy); border-radius: 4px; padding: 1px 6px;
 }
+.now-line { margin: 10px 0 0; font-size: 16px; font-weight: 700; line-height: 1.5; }
+.now-fact { margin: 5px 0 0; font-size: 13.5px; color: var(--muted); }
 .forbidden {
   margin: 11px 0 0; padding-top: 10px; border-top: 1px dashed var(--line);
   font-size: 12.5px; color: var(--muted); line-height: 1.55;
@@ -352,6 +350,19 @@ h3 {
   border-radius: 0; padding: 10px 0; box-shadow: none;
 }
 .cond-item + .cond-item { border-top: 1px solid var(--line-soft); }
+.cond-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* 값이 아니라 '아직 모른다'는 사실을 적는 자리. 판정된 것처럼 보이면 안 되므로
+   초록·빨강을 쓰지 않고 점선 테두리로 비어 있음을 드러낸다 */
+.cond-chk {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  border: 1px dashed var(--line); border-radius: 999px; padding: 2px 9px;
+}
+.cond-chk-box {
+  display: grid; place-items: center; width: 14px; height: 14px;
+  border: 1px dashed var(--muted); border-radius: 3px;
+  font-size: 9.5px; font-weight: 800; line-height: 1;
+}
 .cond-value {
   display: block; margin-top: 6px;
   font-size: 26px; font-weight: 800; letter-spacing: -0.8px; line-height: 1.25;
@@ -420,51 +431,13 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 
-.tl { list-style: none; margin: 10px 0 0; padding: 0; }
-.tl-item { position: relative; display: flex; gap: 12px; padding-bottom: 14px; }
-.tl-item::before {
-  content: ""; position: absolute; left: 13px; top: 28px; bottom: 0;
-  width: 2px; background: var(--line);
-}
-.tl-item:last-child::before { display: none; }
-.tl-item[data-status="done"]::before { background: var(--ok); }
 
-.tl-dot {
-  position: relative; z-index: 1; flex: none;
-  width: 28px; height: 28px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 12px; font-weight: 800;
-  background: var(--card); border: 2px solid var(--line); color: var(--muted);
-}
-.tl-item[data-status="done"] .tl-dot { background: var(--ok); border-color: var(--ok); color: var(--accent-ink); }
-.tl-item[data-status="now"] .tl-dot {
-  background: var(--card); border-color: var(--accent); color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
-}
 
-.tl-body { flex: 1 1 auto; min-width: 0; padding-top: 2px; }
-.tl-head { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
-.tl-title { font-weight: 800; font-size: 15px; }
-.tl-item[data-status="todo"] .tl-title { color: var(--muted); font-weight: 700; }
-.tl-state { font-size: 11px; color: var(--muted); }
-.tl-item[data-status="done"] .tl-state { color: var(--ok); font-weight: 700; }
-.tl-item[data-status="now"] .tl-state { color: var(--accent); font-weight: 800; }
-.tl-actor {
-  padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;
-  border: 1px solid transparent;
-}
-.tl-actor[data-actor="LEARNER"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-.tl-actor[data-actor="OPERATOR"] { background: var(--line-soft); color: var(--muted); border-color: var(--line); }
-.tl-actor[data-actor="DONE"] { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
 
-.tl-recs { margin-top: 7px; display: grid; gap: 4px; }
 .rec { display: grid; grid-template-columns: 112px 1fr; gap: 3px 10px; font-size: 12.5px; }
 .rec-key { color: var(--muted); }
 .rec-val { overflow-wrap: anywhere; }
 .rec-wait { margin: 7px 0 0; font-size: 12.5px; color: var(--muted); }
-.tl-next {
-  margin: 9px 0 0; padding: 9px 11px; background: var(--accent-soft);
-  border-radius: 8px; font-size: 13px;
-}
 
 /* 목록 미니 진행 막대 */
 .minibar { display: flex; gap: 3px; margin-top: 9px; }
@@ -475,16 +448,6 @@ body::before {
   .rec { grid-template-columns: 1fr; gap: 1px; }
   .rec-key { font-size: 11.5px; }
 }
-
-/* ── 타임라인 단계 링크 ─────────────────────────────────────────────────── */
-
-a.tl-title {
-  display: inline-flex; align-items: center; gap: 4px;
-  color: inherit; text-decoration: none; font-weight: 800; font-size: 15px;
-}
-a.tl-title:hover { color: var(--accent); text-decoration: underline; }
-.tl-go { color: var(--muted); font-size: 16px; line-height: 1; }
-.tl-item[data-status="todo"] a.tl-title { color: var(--muted); font-weight: 700; }
 
 /* ── 단계 상세 ──────────────────────────────────────────────────────────── */
 
@@ -514,6 +477,29 @@ a.tl-title:hover { color: var(--accent); text-decoration: underline; }
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 13px 16px; margin: 6px 0; display: grid; gap: 5px; box-shadow: var(--shadow);
 }
+/* 첫 화면의 다섯 단계 — 줄 하나씩. 기록은 단계 상세가 보여준다 */
+.sl { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.sl-link {
+  display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;
+  padding: 11px 13px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.sl-link:hover { border-color: var(--accent); }
+.sl-dot {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11.5px; font-weight: 800;
+  background: var(--card); border: 1px solid var(--line); color: var(--muted);
+}
+.sl-item[data-status="done"] .sl-dot { background: var(--ok); border-color: var(--ok); color: var(--accent-ink); }
+.sl-item[data-status="now"] .sl-dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.sl-item[data-status="now"] .sl-link { border-color: var(--accent); border-width: 2px; padding: 10px 12px; }
+.sl-title { font-weight: 800; font-size: 14.5px; flex: 1 1 auto; min-width: 0; }
+.sl-item[data-status="todo"] .sl-title { color: var(--muted); font-weight: 700; }
+.sl-state { flex: none; font-size: 11px; color: var(--muted); }
+.sl-item[data-status="done"] .sl-state { color: var(--ok); font-weight: 700; }
+.sl-item[data-status="now"] .sl-state { color: var(--accent); font-weight: 800; }
+.sl-go { flex: none; color: var(--muted); font-size: 16px; line-height: 1; }
+
 /* 그 단계에서 양쪽이 하는 일. 할 일이 없는 쪽도 x 로 남겨 둔다 */
 .sd-task { display: flex; gap: 11px; padding: 11px 0; border-top: 1px solid var(--line-soft); }
 .sd-task:first-child { padding-top: 0; border-top: 0; }

@@ -46,7 +46,9 @@ export const STATE_LABELS = Object.freeze({
     fact: '화면에서 보여준 배포 설정에 대한 최종 동의가 저장되었습니다.',
     forbidden: '예치가 끝났다고 읽지 않습니다.',
     actor: ACTOR.OPERATOR,
-    next: '학원이 환급금을 금고에 넣을 차례입니다.',
+    // 바로 다음은 '예치 거래 발급'이지 송금이 아니다. 돈이 실제로 움직이는
+    // 것은 그다음 단계다. 둘을 합쳐 쓰면 4·5단계가 구별되지 않는다.
+    next: '학원이 예치 거래를 받아올 차례입니다. 실제 송금은 그다음입니다.',
     step: 3,
   },
   FUNDING_PENDING: {

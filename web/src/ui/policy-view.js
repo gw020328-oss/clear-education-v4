@@ -38,6 +38,23 @@ export function seoulText(unixSeconds) {
   return `${parts} (KST)`;
 }
 
+/**
+ * 조건마다 붙는 '아직 확인 안 됨' 표식.
+ *
+ * 신청 view 에는 점수도 이수율도 없다(API_CONTRACT 의 기본 view 필드).
+ * 서버가 주지 않는 값을 화면이 지어내면, 판정 없이 충족을 말하는 것이 되어
+ * 이 제품이 없애려는 바로 그 문제를 우리가 만든다.
+ *
+ * 그래서 값은 비우되 자리는 보여준다. 자격 판정과 그 표시는 계획 F4 이고,
+ * 선행 API(B1·B2b·B3)가 생기면 이 표식이 실제 결과로 바뀐다.
+ */
+const unchecked = () => el('span.cond-chk', {
+  title: '증명 제출과 자격 판정이 연결되면 여기에 결과가 들어옵니다.',
+}, [
+  el('span.cond-chk-box', { 'aria-hidden': 'true', text: '?' }),
+  el('span', { text: '아직 확인 안 됨' }),
+]);
+
 export function policySection(compiled) {
   const p = compiled.policy;
   return el('section', {}, [
@@ -54,7 +71,10 @@ export function policySection(compiled) {
       el('div.cond-wrap-body', {}, [
         el('div.cond', {}, [
           el('div.cond-item', {}, [
-            el('span.cond-label', { text: '시험' }),
+            el('div.cond-top', {}, [
+              el('span.cond-label', { text: '시험' }),
+              unchecked(),
+            ]),
             el('strong.cond-value', {}, [
               el('em', { text: `${p.minScore}점` }), ' 이상',
             ]),
@@ -62,7 +82,10 @@ export function policySection(compiled) {
           ]),
           el('p.cond-and', { text: 'AND' }),
           el('div.cond-item', {}, [
-            el('span.cond-label', { text: '이수' }),
+            el('div.cond-top', {}, [
+              el('span.cond-label', { text: '이수' }),
+              unchecked(),
+            ]),
             el('strong.cond-value', {}, [
               el('em', { text: bpsText(p.minCompletionBps) }), ' 이상 완료',
             ]),
@@ -70,11 +93,15 @@ export function policySection(compiled) {
           ]),
           el('p.cond-and', { text: '충족 시' }),
           el('div.cond-item', {}, [
-            el('span.cond-label', { text: '지급' }),
+            el('div.cond-top', {}, [el('span.cond-label', { text: '지급' })]),
             el('strong.cond-value', {}, [
               el('em', { text: `${amountText(p.amount, p.tokenDecimals)} TEST` }), ' 1회',
             ]),
-            el('span.note', { text: '무가치 시험 단위입니다. 실제 수강료나 현금 환불이 아닙니다.' }),
+            // 금고가 다루는 것은 토큰이라 정책에 원화 금액이라는 개념이 없다.
+            // 숫자만 보면 와닿지 않으므로, 상용에서 무엇이 들어올 자리인지 밝힌다.
+            // 'TEST 50 = 얼마' 로 환산해 적는 것은 하지 않는다.
+            el('span.note', { text: '무가치 시험 단위입니다. 실제 수강료나 현금 환불이 아닙니다. '
+              + '상용에서는 이 자리에 학원이 약속한 실제 환급액이 들어갑니다.' }),
           ]),
         ]),
       ]),
@@ -84,7 +111,18 @@ export function policySection(compiled) {
       el('span.pending-dot', { 'aria-hidden': 'true', text: '○' }),
       el('span', { text: PROGRESS_NOT_YET }),
     ]),
+  ]);
+}
 
+/**
+ * 기한과 정책 식별.
+ *
+ * 조건과 함께 묶어 두었더니, 첫 화면에서 '지금 어디까지 왔나'가 이 표들
+ * 뒤로 밀렸다. 조건은 맨 위에 두되 이 둘은 단계 목록 아래로 내린다.
+ */
+export function policyDetailSection(compiled) {
+  const p = compiled.policy;
+  return el('section', {}, [
     el('h3', { text: '기한' }),
     el('dl.fields', {}, [
       field('신청 받는 기간', `${seoulText(p.enrollmentStart)} ~ ${seoulText(p.enrollmentUntil)}`),
@@ -95,15 +133,16 @@ export function policySection(compiled) {
         '제출 마감 +10일. 이후에는 청구할 수 없고 미정산 몫은 운영자가 회수합니다.'),
     ]),
 
-    el('h3', { text: '정책 식별' }),
-    el('dl.fields', {}, [
-      field('정책 해시', compiled.policyHash),
-      field('정책 버전', `${p.cohortId} · v${p.policyVersion}`),
-      field('이수 규칙 버전', p.completionRuleVersion),
-      field('게시 가능', boolTextLocal(compiled.publishable),
-        '합성 정책이라 게시 가능하지 않습니다.'),
+    el('details.tech', {}, [
+      el('summary', { text: '정책 식별 보기' }),
+      el('dl.fields', {}, [
+        field('정책 해시', compiled.policyHash),
+        field('정책 버전', `${p.cohortId} · v${p.policyVersion}`),
+        field('이수 규칙 버전', p.completionRuleVersion),
+        field('게시 가능', boolTextLocal(compiled.publishable),
+          '합성 정책이라 게시 가능하지 않습니다.'),
+      ]),
     ]),
-
   ]);
 }
 

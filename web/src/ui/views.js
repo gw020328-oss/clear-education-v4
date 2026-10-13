@@ -3,8 +3,8 @@
 // 어댑터를 직접 부르지 않는다. main.js 가 받은 결과만 그린다.
 
 import { el, clear, field, shortHex, boolText } from './dom.js';
-import { policySection } from './policy-view.js';
-import { recordTimeline } from './timeline.js';
+import { policySection, policyDetailSection } from './policy-view.js';
+import { stepList } from './timeline.js';
 import {
   stateLabel, STEP_ORDER, TOTAL_STEPS, actorFor, nextFor,
   SYNTHETIC_NOTICE, NOT_CLAIMED_HERE, errorText,
@@ -19,9 +19,14 @@ export const syntheticBanner = () => el('div.banner', { role: 'note' }, [
 
 const actorChip = (actor) => el('span.actor', { 'data-actor': actor.key, text: actor.label });
 
+/**
+ * 지금 상태의 단계 번호는 '거기까지 끝났다'는 뜻이다. 3단계에 있으면 3단계의
+ * 일까지 끝난 것이고 진행 중인 것은 4단계다. 그래서 '3단계'가 아니라
+ * '3 / 5 완료'로 적는다.
+ */
 const stepBadge = (label) => el('span.stepbadge', {}, [
   el('b', { text: String(label.step) }),
-  el('span', { text: `/${TOTAL_STEPS}` }),
+  el('span', { text: `/${TOTAL_STEPS} 완료` }),
 ]);
 
 export const loadingView = (what) => el('div.card.center', { 'aria-busy': 'true', role: 'status' }, [
@@ -89,23 +94,29 @@ export function dashboardView(view, policy, context = {}) {
   const actor = actorFor(view.state, context);
 
   return el('section', {}, [
-    el('div.hero', {}, [
-      el('div.hero-top', {}, [stepBadge(label), actorChip(actor)]),
-      el('h2', { text: label.title }),
-      el('p.hero-fact', { text: label.fact }),
-      el('p.hero-next', {}, [
-        el('span.hero-next-tag', { text: '다음' }),
-        el('span', { text: nextFor(view.state, context) }),
+    // 고정된 조건이 먼저다. 이 제품이 하는 일은 '조건을 못 바꾸게 만드는 것'이고,
+    // 참가자가 몇 달 뒤 다시 들어왔을 때 확인하려는 것도 등록 절차가 아니라
+    // '내가 뭘 받기로 했더라' 다. 등록 단계는 그 아래 줄 다섯 개면 된다.
+    policy ? policySection(policy) : el('p.muted', { text: '조건을 불러오지 못했습니다.' }),
+
+    // 지금 무슨 일을 기다리는지 한 문장. 단계 이름이 아니라 할 일로 적는다.
+    el('div.now', { 'data-actor': actor.key }, [
+      el('div.now-top', {}, [
+        el('span.now-tag', { text: '지금' }),
+        stepBadge(label),
+        actorChip(actor),
       ]),
+      el('p.now-line', { text: nextFor(view.state, context) }),
+      el('p.now-fact', { text: label.fact }),
       el('p.forbidden', {}, [
         el('strong', { text: '이 화면이 말하지 않는 것 — ' }),
         el('span', { text: label.forbidden }),
       ]),
     ]),
 
-    recordTimeline(view, context),
+    stepList(view, context),
 
-    policy ? policySection(policy) : el('p.muted', { text: '조건을 불러오지 못했습니다.' }),
+    policy ? policyDetailSection(policy) : null,
 
     el('details.tech', {}, [
       el('summary', { text: '식별자 보기' }),
