@@ -1,5 +1,7 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
+공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
+
 공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.
 
 학습 provider 추가(2026-10-13): [합성 시드 provider·Moodle 최소 연결 명세](LEARNING_PROVIDER.ko.md)는 기존 B3의 내부 driver와 평가기 입력을 재사용한다. 기관/강좌/필수 활동·완료 의미/수정 시각을 검사하며 HTTP·DB·UI·공통 지갑/오류 API를 변경하지 않는다. 활동 완료율을 시청률·출석률로 표시하지 않으며 실제 Moodle 연동/원천 검증은 계속 차단한다.
