@@ -1,4 +1,10 @@
-# 프론트·백엔드 연결 계약 — B2b 합성 수락 구현 기준
+# 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
+
+공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.
+
+학습 provider 추가(2026-10-13): [합성 시드 provider·Moodle 최소 연결 명세](LEARNING_PROVIDER.ko.md)는 기존 B3의 내부 driver와 평가기 입력을 재사용한다. 기관/강좌/필수 활동·완료 의미/수정 시각을 검사하며 HTTP·DB·UI·공통 지갑/오류 API를 변경하지 않는다. 활동 완료율을 시청률·출석률로 표시하지 않으며 실제 Moodle 연동/원천 검증은 계속 차단한다.
+
+공통 오류 복구 추가(2026-10-13): [브라우저 전송·복구 계약](API_RECOVERY.ko.md), [이슈 #22](https://github.com/gw020328-oss/clear-education-v4/issues/22). 안전한 상세 코드, 중단/시간 초과, 쓰기 결과 불확실성 안내를 추가한다. 서버 API/DB/화면 변경 및 grant/outbox 확대는 없다.
 
 B3 추가(2026-10-13): [학습 증거 계약·합성 adapter](LEARNING_EVIDENCE.ko.md)는 내부 입력 검증만 추가하며 HTTP/DB/UI 계약은 변경하지 않는다. 실제 제공자·인증·영속 snapshot 수락은 미구현이다. CLEAR 추가 지급 서명을 전제로 한 grant/outbox·관련 UI/API 확대는 [최신 작업 범위](TEAM_PLAN.ko.md)에 따라 구조 검증 전까지 보류한다.
 
@@ -57,7 +63,7 @@ B2b 추가(2026-10-13): [상세 제품 수락 계약](PRODUCT_PROOF.ko.md). sche
 
 `ISSUED → AUTHORIZED → CANCELLED/EXPIRED`이며 ISSUED에서 바로 취소/만료될 수도 있다. AUTHORIZED는 proof 검증 완료가 아니다. nonce는 승인 때 한 번 소비하고 동일 서명 재전송은 기존 기록만 반환한다. 이 경로의 **requestNonce는 0x를 포함**한다. 신청당 활성 세션은 하나, TTL 최대 30분, 승인에는 발급받은 동일 로그인 세션이 필요하다. 새 로그인에서는 조회·취소 후 새 owner/새 멱등 키로 다시 시작한다.
 
-생성/승인은 제출 기간·현재 예치·발급/정산 여부와 체인 지문을 재검증한다. C1 기본 정책은 초기화 14일 뒤 제출 시작이므로 즉시 생성이 가능하다고 가정하지 않는다. F4의 서명 helper·안전한 상세 오류 전달은 후속이다. `/callback` 등 proof 성공 수락 API는 없다.
+생성/승인은 제출 기간·현재 예치·발급/정산 여부와 체인 지문을 재검증한다. C1 기본 정책은 초기화 14일 뒤 제출 시작이므로 즉시 생성이 가능하다고 가정하지 않는다. F4는 [공통 승인 helper](PROOF_WALLET.ko.md)를 사용할 수 있으며 안전한 상세 오류 전달은 [공통 전송기](API_RECOVERY.ko.md)를 따른다. `/callback` 등 proof 성공 수락 API는 없다.
 
 ## 화면 상태
 
@@ -79,9 +85,9 @@ F0 mock은 이 상태와 필드의 합성 fixture를 사용한다. proof 성공�
 
 ## 지갑·오류 처리
 
-`createWalletClient({provider, api, chainId})`는 `connect`, `login`, `resume`, `request`, `consent`, `finalConsent`, `logout`, `dispose`를 제공한다. `finalConsent(id, reviewedRuntime)`에 넘길 runtime은 먼저 화면에서 사용자에게 보여준 전체 record다. challenge가 바뀌면 새 설정을 다시 확인해야 한다. 계정/체인 변경·disconnect는 진행 중 결과를 무효화한다.
+`createWalletClient({provider, api, chainId})`는 `connect`, `login`, `resume`, `request`, `consent`, `finalConsent`, `authorizeProofSession`, `logout`, `dispose`를 제공한다. `finalConsent(id, reviewedRuntime)`에 넘길 runtime은 먼저 화면에서 사용자에게 보여준 전체 record다. challenge가 바뀌면 새 설정을 다시 확인해야 한다. 계정/체인 변경·disconnect는 진행 중 결과를 무효화한다.
 
-HTTP 오류는 `{code, message, retryable, nextAction, requestId}`다. 현재 message는 고정 일반 문구, retryable은 false, 401의 nextAction은 `SIGN_IN_AGAIN`, 그 외는 `CHECK_REQUEST`다. **현재 브라우저 adapter는 401을 `AUTH_REQUIRED`, 나머지를 `API_REQUEST_FAILED`로 축약한다.** 상세 code가 화면에 전달된다고 가정하지 않는다. 확장한다면 허용 목록의 안전한 code만 전달하고 원문 서버/provider 오류·URL을 노출하지 않도록 별도 검증한다.
+서버 HTTP 오류는 `{code, message, retryable, nextAction, requestId}`다. 서버 message는 고정 일반 문구, retryable은 false, 401의 nextAction은 `SIGN_IN_AGAIN`, 그 외는 `CHECK_REQUEST`다. 브라우저 adapter는 기존 `.message`(401 `AUTH_REQUIRED`, 나머지 `API_REQUEST_FAILED`)를 유지하면서 상태와 일치하는 허용 목록 `.code` 및 제한된 `.requestId`만 전달한다. `.status/.outcome/.retryable/.nextAction`은 [공통 오류 복구 계약](API_RECOVERY.ko.md)에 따라 자체 계산한다. 서버/provider 원문과 임의 복구 지시를 전달하지 않는다. 쓰기 요청은 자동 재전송하지 않으며 timeout/취소가 서버 rollback을 뜻하지 않는다. `wallet.request`의 선택적 `signal`로 취소를 전달할 수 있다. 화면 적용은 별도 담당 범위다.
 
 B1은 proof 만료 410과 활성/취소/owner 재사용/예치 상태 충돌 409를 추가한다. 상세 코드는 B1 문서를 따른다.
 

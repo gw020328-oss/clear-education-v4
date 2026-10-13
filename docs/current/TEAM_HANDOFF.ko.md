@@ -1,5 +1,11 @@
 # CLEAR 팀원·LLM 인계
 
+공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.
+
+학습 provider 후속(2026-10-13): [이슈 #24](https://github.com/gw020328-oss/clear-education-v4/issues/24), [Moodle 연결 명세](LEARNING_PROVIDER.ko.md). PR #23 병합 `7ee183d` 위에서 기존 B3를 재사용하는 합성 시드 provider를 추가했다. 기관·강좌·계정·필수 활동 매핑 및 완료/수정 시각의 의미를 고정하며 실제 Moodle 취득은 구현하지 않는다. 800점 AND 80%·최고점과 기존 HTTP/DB/UI는 유지한다. 원천 검증 차단·grant/outbox 보류 및 별도 독립 청구/Windows 검증 범위를 변경하지 않는다.
+
+공통 오류 복구(2026-10-13): PR #20 병합 `4a0cdc6` 위에서 [이슈 #22](https://github.com/gw020328-oss/clear-education-v4/issues/22), [전송·복구 계약](API_RECOVERY.ko.md)을 추가했다. 기존 import/HTTP message를 유지하며 안전한 상세 코드·중단/시간 초과·쓰기 결과 확인 안내를 전달한다. 프론트 담당자는 공통 전송기의 새 필드를 확인한다. 서버/DB/화면·지급 기능을 추가하지 않으며 실제 원천 차단과 grant/outbox 보류를 유지한다.
+
 2026-10-13 범위 변경: [최신 계획](TEAM_PLAN.ko.md)에 따라 공통 개발을 계속하되 CLEAR 추가 지급 서명의 grant/outbox와 종속 UI/API 확대는 새 구조 검증 전까지 보류한다. 현 금고·HMAC 구조를 최종안으로 고정하거나 PRD의 800점 AND 80%/최고점 정책을 변경하지 않는다. PR #19는 develop에 병합 완료(`3f8ef79`)이며 보존한다. 별도 증거 기반 청구·Windows 검증 worktree는 이 작업에서 수정하지 않는다.
 
 B3의 현재 단위: [이슈 #13](https://github.com/gw020328-oss/clear-education-v4/issues/13), [학습 입력 계약·합성 adapter](LEARNING_EVIDENCE.ko.md). 필수 강의·기간·페이지/버전/출처 pin·정정/실패/중단을 검증하고 기존 평가기에 연결한다. 실제 제공자/API·인증·계정 매핑은 미확인으로 BLOCKED이며 제품 DB/HTTP/UI는 추가하지 않는다. 기존 실제 YBM 전체성 차단도 유지한다.
@@ -8,7 +14,7 @@ B2b 추가(2026-10-13): [이슈 #18](https://github.com/gw020328-oss/clear-educa
 
 B2a 추가(2026-10-13): [이슈 #12](https://github.com/gw020328-oss/clear-education-v4/issues/12), [전체 시험 목록·최고점 증거 계약](EXAM_EVIDENCE.ko.md). B1은 PR #16으로 develop에 병합됐다. 새 원천 inventory의 범위·페이지 지문·건수·종료·상태 대조와 최고점의 합성 검증을 구현했다. 실제 YBM inventory/계정·기간 포괄성은 미확인으로 실평가를 차단한다. B1 DB/HTTP나 기존 실수집기는 변경하지 않으며, B2b는 신뢰한 manifest pin의 실제 출처와 검증 결과 단회 수락을 먼저 해결해야 한다. B2a 병합 여부는 연결 PR을 확인한다.
 
-B1 추가(2026-10-12): [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15), [제품 세션·영속 nonce 계약](PROOF_SESSIONS.ko.md). 생성/조회/지갑 승인/취소와 현재 예치 재검증을 구현했다. AUTHORIZED는 지갑 결합 승인이고 실제 증명 수락은 B2b, 시험 중복/outbox는 B4다. SQLite schema 3으로 v1/v2를 이관한다. 서준형의 F4는 이 계약과 기존 adapter의 오류 축약·proof 서명 helper 미구현을 확인한다. 병합 여부는 연결 PR을 따른다.
+B1 추가(2026-10-12): [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15), [제품 세션·영속 nonce 계약](PROOF_SESSIONS.ko.md). 생성/조회/지갑 승인/취소와 현재 예치 재검증을 구현했다. AUTHORIZED는 지갑 결합 승인이고 실제 증명 수락은 B2b, 시험 중복/outbox는 B4다. SQLite schema 3으로 v1/v2를 이관한다. 서준형의 F4는 이 계약과 공통 오류 복구 계약과 이번에 추가한 [proof 승인 helper](PROOF_WALLET.ko.md)를 확인한다. 병합 여부는 연결 PR을 따른다.
 
 
 이 문서는 새 팀원과 그 LLM이 같은 기준으로 개발을 시작하기 위한 입구다. **제품 코드 기준은 PR #8 병합 `841052a`, 문서 포함 기준은 PR #5 병합 `9397e62` (2026-10-12)**다. 이후 작업을 시작할 때는 원격 `develop`과 관련 PR을 다시 확인한다. 이 인계 문서 자체는 기능 구현이나 배포 승인이 아니다.
@@ -52,7 +58,7 @@ CLEAR는 지갑으로 신청·동의하고, 교육 이수와 TOEIC 조건을 검
 | `src/policy/`, `src/eligibility/`, `tests/policy/` | 정책 정규화·컴파일·평가 / 백엔드 |
 | `src/vault/`, `contracts/`, `tests/vault/` | 배포 검증·서명 인코딩·금고 / 백엔드 |
 | `src/mac-collector/`, `src/ybm-collector/` | 민감 수집·프로세스 경계 / 백엔드 |
-| `src/application/wallet-client.mjs` | 기존 EIP-1193 지갑 연결 도구 / 공통 인터페이스, 변경 전 양쪽 영향 확인 |
+| `src/application/wallet-client.mjs`, `src/application/api-client.mjs` | EIP-1193 지갑·동일 origin API/복구 도구 / 공통 인터페이스, 변경 전 양쪽 영향 확인 |
 | `web/` (신설 제안) | 참가자·운영자 화면과 브라우저 시험 / 프론트엔드 |
 | `spikes/`, `docs/w01/`, `docs/w02/` | 실험·검증 이력. 제품 구현과 구분 |
 | `legacy/`, `docs/reference/` | 보존 대상. 새 기능 때문에 변경하거나 지문을 갱신하지 않음 |

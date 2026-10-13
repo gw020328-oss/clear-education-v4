@@ -1,11 +1,14 @@
-import { getAddress, hexlify, toUtf8Bytes, TypedDataEncoder } from 'ethers';
+import { getAddress, hexlify, toUtf8Bytes, TypedDataEncoder, verifyTypedData } from 'ethers';
 import { finalTermsTypes, runtimeHash, vaultDomain } from '../vault/encoding.mjs';
 import { canonical } from '../policy/values.mjs';
+import { awaitProofOperation, pinProofAuthorization, proofAuthorizationError, validateProofAuthorization } from './proof-authorization.mjs';
+export { createSameOriginApi } from './api-client.mjs';
 
 // EIP-1193 controller for the future UI. api(path, options) must use same-origin
 // credentials, must not persist signatures, and must reject non-2xx responses.
-export function createWalletClient({ provider, api, chainId }) {
+export function createWalletClient({ provider, api, chainId, clock = () => Math.floor(Date.now() / 1000) }) {
   let generation = 0, connected = null, authenticated = null, disposed = false;
+  let proofAuthorizationPending = false;
   const invalidate = () => { generation++; connected = null; authenticated = null; };
   for (const name of ['accountsChanged', 'chainChanged', 'disconnect']) provider.on(name, invalidate);
   const fail = code => { throw new Error(code); };
@@ -21,7 +24,9 @@ export function createWalletClient({ provider, api, chainId }) {
   async function check(stamp) {
     if (disposed || stamp !== generation || !connected) fail('WALLET_CONTEXT_CHANGED');
     const accounts = await rpc('eth_accounts'), chain = await rpc('eth_chainId');
-    if (disposed || stamp !== generation || !connected || !matches(accounts, chain, connected.wallet)) {
+    // A late check from an older connection must not clear a newer login.
+    if (disposed || stamp !== generation || !connected) fail('WALLET_CONTEXT_CHANGED');
+    if (!matches(accounts, chain, connected.wallet)) {
       invalidate(); fail('WALLET_CONTEXT_CHANGED');
     }
   }
@@ -61,10 +66,10 @@ export function createWalletClient({ provider, api, chainId }) {
       try { return await api('/auth/logout', { method: 'POST', body: {}, headers: headers() }); }
       finally { invalidate(); }
     },
-    async request(path, { method = 'GET', body, idempotencyKey } = {}) {
+    async request(path, { method = 'GET', body, idempotencyKey, signal } = {}) {
       const stamp = generation; await check(stamp);
       if (!authenticated) fail('AUTH_REQUIRED');
-      const result = await api(path, { method, body, headers: { ...headers(), ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) } });
+      const result = await api(path, { method, body, signal, headers: { ...headers(), ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) } });
       await check(stamp); return result;
     },
     async consent(applicationId, idempotencyKey) {
@@ -103,22 +108,48 @@ export function createWalletClient({ provider, api, chainId }) {
         body: { nonce: typed.message.nonce.slice(2), signature }, headers: headers() });
       await check(stamp); return result;
     },
+    // Display the session and runtime first. ownerPublicKey must come separately
+    // from the selected collector; never derive this expectation from the response.
+    async authorizeProofSession(applicationId, reviewedSession, reviewedRuntime, { ownerPublicKey, signal } = {}) {
+      if (proofAuthorizationPending) throw proofAuthorizationError('PROOF_AUTHORIZATION_BUSY');
+      if (signal !== undefined && !(signal instanceof AbortSignal)) throw proofAuthorizationError('API_REQUEST_INVALID');
+      const pin = pinProofAuthorization(applicationId, reviewedSession, reviewedRuntime, ownerPublicKey);
+      const stamp = generation;
+      let sent = false;
+      proofAuthorizationPending = true;
+      const step = run => awaitProofOperation(() => {
+        if (disposed || stamp !== generation || !connected) fail('WALLET_CONTEXT_CHANGED');
+        return run();
+      }, signal, sent);
+      const guard = async () => { await step(() => check(stamp)); if (!authenticated) fail('AUTH_REQUIRED'); };
+      try {
+        await guard();
+        validateProofAuthorization(pin, pin.session, connected.wallet, chainId, clock());
+        const path = `/applications/${applicationId}/proof-sessions/${pin.session.proofSessionId}`;
+        const current = await step(() => api(path, { headers: headers(), signal }));
+        await guard();
+        // Validation pins a private copy so a custom API cannot mutate the message
+        // while the wallet prompt is open.
+        const typed = structuredClone(validateProofAuthorization(pin, current, connected.wallet, chainId, clock()));
+        const signature = await step(() => rpc('eth_signTypedData_v4', [connected.wallet,
+          JSON.stringify(TypedDataEncoder.getPayload(typed.domain, typed.types, typed.message))]));
+        await guard();
+        validateProofAuthorization(pin, pin.session, connected.wallet, chainId, clock());
+        try {
+          if (typeof signature !== 'string' || verifyTypedData(typed.domain, typed.types, typed.message, signature) !== connected.wallet) throw new Error();
+        } catch { throw proofAuthorizationError('WALLET_SIGNATURE_INVALID'); }
+        const result = await step(() => {
+          sent = true;
+          return api(path + '/authorize', { method: 'POST', body: { requestNonce: typed.message.requestNonce, signature }, headers: headers(), signal });
+        });
+        await guard();
+        validateProofAuthorization(pin, result, connected.wallet, chainId, clock(), true);
+        return result;
+      } catch (error) {
+        if (sent && error.name !== 'ApiRequestError') Object.assign(error, { outcome: 'UNKNOWN', nextAction: 'CHECK_RESULT', retryable: false });
+        throw error;
+      } finally { proofAuthorizationPending = false; }
+    },
     dispose() { invalidate(); disposed = true; for (const name of ['accountsChanged', 'chainChanged', 'disconnect']) provider.removeListener(name, invalidate); },
-  };
-}
-
-export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetch }) {
-  if (new URL(origin).protocol !== 'https:' || new URL(origin).origin !== origin) throw new Error('ORIGIN_CONFIG');
-  return async (path, { method = 'GET', body, headers = {} } = {}) => {
-    if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')
-      || new URL(path, origin).origin !== origin) throw new Error('API_ORIGIN');
-    const response = await fetchImpl(new URL(path, origin).href, { method, credentials: 'same-origin', cache: 'no-store',
-      redirect: 'error', headers: { ...headers, ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
-      body: body === undefined ? undefined : JSON.stringify(body) });
-    if (!response.ok) {
-      // Do not propagate server bodies, URLs, or wallet/provider error messages.
-      throw new Error(response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
-    }
-    return response.json();
   };
 }

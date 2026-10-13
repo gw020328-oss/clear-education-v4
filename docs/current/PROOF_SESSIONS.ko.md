@@ -1,5 +1,7 @@
 # B1 제품 증명 세션·영속 nonce
 
+공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.
+
 B2b 후속(2026-10-13): [제품 수집·검증 결과 단회 수락](PRODUCT_PROOF.ko.md)이 schema 4와 별도 proof_results를 추가했다. 아래 schema 3/수락 미구현 설명은 B1 당시 범위다. B1 승인 nonce와 상태는 유지하며, 새 합성 결과 수락은 독립 검증 후 별도 transaction으로 처리한다. 실제 YBM 수집/원천 전체성/지급은 여전히 차단한다.
 
 2026-10-12, 담당 오규원. [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15), [역할·후속 계획](TEAM_PLAN.ko.md). 선행 C1은 [PR #14](https://github.com/gw020328-oss/clear-education-v4/pull/14)로 develop에 반영됐다. 이 문서는 B1 구현 브랜치 기준이며 병합 여부는 이슈의 연결 PR을 확인한다.
@@ -80,7 +82,7 @@ view 필드는 다음과 같다. 합성 실행 예제는 `tests/proof-sessions/h
 
 주요 오류: 인증/서명 401, 다른 로그인 세션의 승인 `PROOF_BROWSER_SESSION` 403, 타인/미존재 신청·세션 404, 활성 세션/owner 재사용/멱등 충돌·취소·소비 nonce·예치/제출 상태 409, `PROOF_SESSION_EXPIRED` 410, schema/owner/nonce 형식·체인 검증 등 나머지 규칙 위반 422, 내부/RPC 예외 500. 응답은 기존 고정 메시지 구조를 따르고 민감한 RPC 원문을 내보내지 않는다.
 
-기존 `createSameOriginApi`는 401 외 오류를 `API_REQUEST_FAILED`로 축약한다. `createWalletClient`에 proof 전용 서명 helper는 아직 없다. F4는 사용자에게 runtime/신청/owner/만료를 보여주고 서명 전·후 지갑 context와 정확한 types/domain/message를 확인하는 helper 및 허용된 오류 코드 전달을 함께 구현해야 한다. 지갑 서명 요청을 자동 재시도하거나 서명을 localStorage에 보관하지 않는다.
+`createSameOriginApi`는 기존 HTTP `.message` 축약을 유지하면서 [공통 오류 복구 계약](API_RECOVERY.ko.md)의 안전한 `.code`와 결과 확인 안내를 전달한다. `createWalletClient`의 [authorizeProofSession](PROOF_WALLET.ko.md)이 정확한 types/domain/message 및 서명 전·후 지갑 context를 검사한다. F4는 사용자에게 runtime/신청/owner/만료와 합성 제한을 보여주고 명시적 승인 동작 및 안전한 오류 표시를 연결해야 한다. 지갑 서명 요청을 자동 재시도하거나 서명을 localStorage에 보관하지 않는다.
 
 ## DB와 검증
 
