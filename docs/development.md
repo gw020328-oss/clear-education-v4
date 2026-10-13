@@ -1,5 +1,7 @@
 # 개발 가이드
 
+B3 후속의 [학습 provider·Moodle 연결 명세](current/LEARNING_PROVIDER.ko.md)는 기존 `./tools/npm run test:learning-evidence`로 검증한다. 새 합성 시드 provider는 B3 driver와 최소 evaluator snapshot을 유지하며 실제 Moodle 설치/토큰/외부 호출은 필요하지 않다.
+
 공통 브라우저 오류·요청 복구 시험은 기존 `./tools/npm run test:applications`에 포함된다. [안전한 오류/시간 초과/취소/응답 유실 계약](current/API_RECOVERY.ko.md)을 확인한다. loopback HTTPS와 합성 데이터만 쓰며 UI·실제 원천·지급 검증과 구분한다.
 
 ## 협업 절차
