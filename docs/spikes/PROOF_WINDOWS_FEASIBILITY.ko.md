@@ -49,6 +49,10 @@ Ganache는 Node24용 µWS/native bigint 바이너리가 없어 기존 JS fallbac
 
 A의 시험 PASS에는 결함 후보가 기대대로 재현됐다는 관찰도 포함된다. 따라서 합성 체크 수와 제품 관문 판정이 다르다. [A 실험과 상세 근거](../../spikes/direct-proof-feasibility/README.ko.md), [B 변경 지점·설계·공수](../../spikes/windows-compatibility/ASSESSMENT.ko.md)를 함께 읽는다.
 
+## 독립 청구 후속
+
+2026-10-13 [동일 시험 결합·안정 nullifier 후속](../../spikes/direct-proof-feasibility/SOURCE_BOUND_FOLLOWUP.ko.md): 연속 행 predicate와 공격 거부 17개, 실제 Mac native OPRF 9개 기대 관찰을 추가했다. 키 불일치 미거부 반례도 발견해 명시적 share pin을 넣었다. 공식 attestor 원천 결합·새 증명·온체인 통합은 미완료이고 제품 NO-GO는 유지한다. 기존 표/보고서는 첫 실행의 이력이다. 팀원에게 전달한 Windows ZIP은 변경하지 않았다.
+
 ## 일정과 GO / NO-GO
 
 **현재 근거로 11월 7일에 원래 정책·비공개 직접 청구·Windows를 동시에 제품 경로로 전환하는 결정은 NO-GO다.** 단일 성적 정책으로 축소해도 비공개 행 연결과 안정 식별값 문제가 사라지지 않는다. 공통 개발은 진행할 수 있으나 이번 보고서가 issuer 전용 작업 보류를 해제하거나 새 정책을 승인하지 않는다.

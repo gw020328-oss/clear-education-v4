@@ -1,0 +1,82 @@
+{
+  "mode": "LOCAL_GNARK_OPRF_AND_ATTESTOR_EXTENSION_PROTOTYPE",
+  "platform": "darwin-arm64",
+  "sdk": "zk-symmetric-crypto@5.1.6",
+  "artifactCommit": "394f777fa404ef184652b6efc5aa60884dd55c7e",
+  "artifacts": [
+    {
+      "path": "bin/gnark/darwin-arm64-libprove.so",
+      "gitBlob": "976c13e2270ea606de550010a0cebb1a3122e98f",
+      "sha256": "704416d00a82a42a6d28704e2c554b7700ad6d4ac9c338f7ed3717c873c239c0"
+    },
+    {
+      "path": "bin/gnark/darwin-arm64-libverify.so",
+      "gitBlob": "81597ceb79aa9f66c81dea4634004abf88e3913d",
+      "sha256": "8bf3687afc69197b98c607dcc6fa7a837336d9ff66b9bbc9b7e41b4860be8c0d"
+    },
+    {
+      "path": "resources/gnark/pk.chacha20_oprf",
+      "gitBlob": "6c33821abf28a37cf2c672dd48187a8c7fa7ed90",
+      "sha256": "94890204952ab6ed567c89bfd2fdbaae641a2053209782ab3e76b62e5b36263e"
+    },
+    {
+      "path": "resources/gnark/r1cs.chacha20_oprf",
+      "gitBlob": "d53bc6905fe614e23d8bbc250544358bdaf65cf6",
+      "sha256": "c89d658071cfa79df85264ff5dc729bd0867456fe7dc320240a23d4621e89c73"
+    }
+  ],
+  "tests": [
+    {
+      "name": "full native OPRF output has 32 bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "fresh blinding randomness preserves same exam/program output",
+      "status": "PASS"
+    },
+    {
+      "name": "different program scopes produce different outputs",
+      "status": "PASS"
+    },
+    {
+      "name": "different exam produces different output",
+      "status": "PASS"
+    },
+    {
+      "name": "changed OPRF key changes output: rotation is not dedup-safe",
+      "status": "PASS"
+    },
+    {
+      "name": "counterexample: pinned native binary does not reject mismatched finalize public key",
+      "status": "PASS"
+    },
+    {
+      "name": "explicit one-share pin rejects alternate key before native finalize",
+      "status": "PASS"
+    },
+    {
+      "name": "reproof/other wallet/application/disclosure metadata cannot change nullifier",
+      "status": "PASS"
+    },
+    {
+      "name": "attestor policy rejects rotated key instead of opening new spend namespace",
+      "status": "PASS"
+    }
+  ],
+  "checksPassed": 9,
+  "scope": "one exam once per fixed business program across wallets/applications; separate programs permitted",
+  "qualificationStatus": "NO_GO_OFFICIAL_EXTENSION_AND_PRIVATE_SOURCE_BINDING_NOT_DEPLOYED",
+  "realYbm": false,
+  "officialAttestor": false,
+  "tlsProof": false,
+  "oprfCircuitProof": false,
+  "onchain": false,
+  "live": false,
+  "trust": [
+    "Synthetic 1-of-2 OPRF setup generated in memory; one share used, not official key material or threshold resilience",
+    "Attestor extension assumes authenticated full plaintext and trusted transformation provenance",
+    "Attestor sees exam date/registration; public fact omits them",
+    "Existing stock HTTP provider does not execute this extension"
+  ],
+  "checkedAt": "2026-10-13T07:05:05.521Z"
+}
