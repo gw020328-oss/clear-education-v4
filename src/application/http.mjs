@@ -30,8 +30,9 @@ const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].inclu
       : code === 'PROOF_SESSION_EXPIRED' ? 410
       : ['IDEMPOTENCY_CONFLICT', 'POLICY_VERSION_CONFLICT', 'POLICY_SUPERSEDED', 'APPLICATION_STATE', 'CONSENT_CHALLENGE',
         'PROOF_SESSION_ACTIVE', 'PROOF_OWNER_REUSED', 'PROOF_NONCE_CONSUMED', 'PROOF_SESSION_CANCELLED', 'PROOF_ENROLLMENT_REQUIRED',
-        'PROOF_ENROLLMENT_CHANGED', 'PROOF_ENROLLMENT_SETTLED', 'PROOF_GRANT_EXISTS', 'PROOF_SUBMISSION_CLOSED'].includes(code) ? 409
-        : code === 'AUTH_RATE_LIMIT' ? 429 : code === 'BODY_SIZE' ? 413 : 422;
+        'PROOF_ENROLLMENT_CHANGED', 'PROOF_ENROLLMENT_SETTLED', 'PROOF_GRANT_EXISTS', 'PROOF_SUBMISSION_CLOSED',
+        'PRODUCT_RESULT_CONFLICT', 'PRODUCT_AUTHORIZATION_REQUIRED', 'PRODUCT_RESULT_MISSING', 'PRODUCT_VERIFICATION_STALE', 'PROOF_SOURCE_INCOMPLETE'].includes(code) ? 409
+        : ['AUTH_RATE_LIMIT', 'PRODUCT_VERIFIER_BUSY'].includes(code) ? 429 : ['BODY_SIZE', 'PRODUCT_SIZE'].includes(code) ? 413 : 422;
 
 // The factory does not listen or deploy. HTTPS termination must preserve Host
 // and use an encrypted connection to this handler; proxy headers are not trusted.
@@ -52,6 +53,10 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     const requestId = randomUUID();
+    const cancelled = new AbortController();
+    const abort = () => cancelled.abort();
+    const closed = () => { if (!res.writableEnded) abort(); };
+    req.once('aborted', abort); res.once('close', closed);
     try {
       const loopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
       requireRule(req.socket.encrypted || (allowLoopbackHttpForTests && loopback), 'TRANSPORT');
@@ -83,13 +88,15 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       else if (req.method === 'GET' && /^\/runtimes\/0x[0-9a-f]{64}$/.test(path)) result = service.getRuntime(context, path.split('/')[2]);
       else if (req.method === 'GET' && path === '/applications') result = service.listApplications(context);
       else if (req.method === 'POST' && path === '/applications') result = service.createApplication(context, body, key);
-      else if (/^\/applications\/0x[0-9a-f]{64}\/proof-sessions(?:\/0x[0-9a-f]{64}(?:\/(?:authorize|cancel))?)?$/.test(path)) {
+      else if (/^\/applications\/0x[0-9a-f]{64}\/proof-sessions(?:\/0x[0-9a-f]{64}(?:\/(?:authorize|cancel|evidence|result))?)?$/.test(path)) {
         const [, , appId, , proofId, action] = path.split('/');
         if (req.method === 'POST' && !proofId) result = await service.createProofSession(context, appId, body, key);
         else if (req.method === 'GET' && !proofId) result = service.listProofSessions(context, appId);
         else if (req.method === 'GET' && !action) result = service.getProofSession(context, appId, proofId);
         else if (req.method === 'POST' && action === 'authorize') result = await service.authorizeProofSession(context, appId, proofId, body);
         else if (req.method === 'POST' && action === 'cancel') result = service.cancelProofSession(context, appId, proofId, body);
+        else if (req.method === 'POST' && action === 'evidence') result = await service.acceptProofEvidence(context, appId, proofId, body, { signal: cancelled.signal });
+        else if (req.method === 'GET' && action === 'result') result = service.getProofResult(context, appId, proofId);
         else throw new RuleError('ROUTE');
       }
       else {
@@ -114,6 +121,6 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       res.statusCode = code === 'INTERNAL_ERROR' ? 500 : statusFor(code);
       res.end(JSON.stringify({ code, message: '요청을 완료하지 못했습니다.', retryable: false,
         nextAction: res.statusCode === 401 ? 'SIGN_IN_AGAIN' : 'CHECK_REQUEST', requestId }));
-    }
+    } finally { req.removeListener('aborted', abort); res.removeListener('close', closed); }
   };
 }

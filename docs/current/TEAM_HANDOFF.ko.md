@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+B2b 추가(2026-10-13): [이슈 #18](https://github.com/gw020328-oss/clear-education-v4/issues/18), [제품 수집·독립 검증·단회 수락 계약](PRODUCT_PROOF.ko.md). B2a는 PR #17로 병합됐다. 합성 driver의 제품 owner 연결, 서버 고정 합성 원천 서명/owner 서명의 별도 프로세스 검증, schema 4의 세션별 결과 단회 수락과 내부 snapshot 조회를 구현했다. 실제 YBM 원천 전체성·실수집·자격/지급은 계속 차단한다. proofSourceSigner는 서버/DB 환경에 고정하며 null인 기존 설정을 자동 활성화하지 않는다. 서준형의 F4는 새 evidence/result API와 과거 수락 영수증의 의미를 확인한다. B2b 병합 여부는 연결 PR을 따른다.
+
 B2a 추가(2026-10-13): [이슈 #12](https://github.com/gw020328-oss/clear-education-v4/issues/12), [전체 시험 목록·최고점 증거 계약](EXAM_EVIDENCE.ko.md). B1은 PR #16으로 develop에 병합됐다. 새 원천 inventory의 범위·페이지 지문·건수·종료·상태 대조와 최고점의 합성 검증을 구현했다. 실제 YBM inventory/계정·기간 포괄성은 미확인으로 실평가를 차단한다. B1 DB/HTTP나 기존 실수집기는 변경하지 않으며, B2b는 신뢰한 manifest pin의 실제 출처와 검증 결과 단회 수락을 먼저 해결해야 한다. B2a 병합 여부는 연결 PR을 확인한다.
 
 B1 추가(2026-10-12): [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15), [제품 세션·영속 nonce 계약](PROOF_SESSIONS.ko.md). 생성/조회/지갑 승인/취소와 현재 예치 재검증을 구현했다. AUTHORIZED는 지갑 결합 승인이고 실제 증명 수락은 B2b, 시험 중복/outbox는 B4다. SQLite schema 3으로 v1/v2를 이관한다. 서준형의 F4는 이 계약과 기존 adapter의 오류 축약·proof 서명 helper 미구현을 확인한다. 병합 여부는 연결 PR을 따른다.

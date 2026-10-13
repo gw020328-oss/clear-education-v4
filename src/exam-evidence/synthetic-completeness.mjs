@@ -1,7 +1,7 @@
 import { TypedDataEncoder, getAddress } from 'ethers';
 import { requireCompiledPolicy } from '../policy/compiler.mjs';
 import { array, calendarDate, canonical, exactKeys, freeze, hash, hash32, identifier, requireRule, RuleError, timestamp } from '../policy/values.mjs';
-import { proofBindingTypes } from '../application/proof-sessions.mjs';
+import { proofBindingTypes } from '../application/proof-binding.mjs';
 
 // A proposed source contract, NOT a description of YBM's current endpoints.
 export const SOURCE_CONTRACT = freeze({

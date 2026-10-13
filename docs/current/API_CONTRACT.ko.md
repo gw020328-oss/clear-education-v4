@@ -1,4 +1,6 @@
-# 프론트·백엔드 연결 계약 — B1 구현 기준
+# 프론트·백엔드 연결 계약 — B2b 합성 수락 구현 기준
+
+B2b 추가(2026-10-13): [상세 제품 수락 계약](PRODUCT_PROOF.ko.md). schema 4와 합성 증거의 단회 수락/영수증 API를 추가했다. 실제 원천 전체성·실제 proof/자격/지급은 차단 상태다. 아래 B1·신청 계약은 유지한다.
 
 2026-10-12, PR #8의 신청/예치와 C1의 HTTPS에 B1 제품 증명 세션 API를 추가했다. B1 병합 여부는 [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15)의 연결 PR을 확인한다. 실제 proof 수락·시드/outbox/청구 API는 아직 없다. 실행은 [C1 로컬 합성 HTTPS 안내](LOCAL_SYNTHETIC.ko.md)를 따른다. 개발 전용 `GET /__dev/config`와 제한된 `POST /rpc`, 정적 프론트 빌드가 같은 origin에서 제공된다. 개발 경로는 제품 proof·지급 API가 아니다.
 
@@ -56,6 +58,8 @@
 생성/승인은 제출 기간·현재 예치·발급/정산 여부와 체인 지문을 재검증한다. C1 기본 정책은 초기화 14일 뒤 제출 시작이므로 즉시 생성이 가능하다고 가정하지 않는다. F4의 서명 helper·안전한 상세 오류 전달은 후속이다. `/callback` 등 proof 성공 수락 API는 없다.
 
 ## 화면 상태
+
+B2b는 POST `/applications/:id/proof-sessions/:sid/evidence`의 `{profile,bundle,sourceSignature,ownerSignature}`를 독립 검증하고 `ACCEPTED_SYNTHETIC` 영수증만 반환한다. GET `/applications/:id/proof-sessions/:sid/result`는 `NOT_ACCEPTED` 또는 과거 수락 영수증이다. B1 AUTHORIZED 및 결과 영수증은 서로 다른 상태다. POST는 동일 로그인 세션·CSRF가 필요하며 GET은 본인 과거 결과만 읽는다. 시험키/점수 snapshot을 노출하는 HTTP API는 없다. 기본 서버 원천 키가 null이면 수락을 차단하며 상세 오류·필드·크기·재시도 규칙은 B2b 문서를 따른다.
 
 | state | 화면에서 말할 수 있는 사실 | 금지되는 추정 |
 | --- | --- | --- |

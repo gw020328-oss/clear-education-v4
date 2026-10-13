@@ -146,12 +146,12 @@ for (const change of ['cancel', 'expire', 'slow', 'funding']) test(`RPC response
 test('v2 migration preserves session, immutable runtime and funding', async t => {
   const f = await fixture(t);
   f.sql(db => {
-    db.exec('DROP TABLE proof_sessions');
-    const c = JSON.parse(db.prepare('SELECT config FROM metadata').get().config); c.schemaVersion = 2;
+    db.exec('DROP TABLE proof_results; DROP TABLE proof_sessions');
+    const c = JSON.parse(db.prepare('SELECT config FROM metadata').get().config); c.schemaVersion = 2; delete c.proofSourceSigner;
     db.prepare('UPDATE metadata SET config=?').run(canonical(c));
   });
   f.app.restart({ vaultReader: f.reader });
-  assert.equal(f.sql(db => JSON.parse(db.prepare('SELECT config FROM metadata').get().config).schemaVersion), 3);
+  assert.equal(f.sql(db => JSON.parse(db.prepare('SELECT config FROM metadata').get().config).schemaVersion), 4);
   assert.deepEqual(f.app.service.getApplication(f.context, f.applicationId), f.funded);
   assert.deepEqual(f.app.service.getRuntime(f.context, f.app.compiled.policyHash), f.record);
   assert.equal((await f.create()).state, 'ISSUED');
@@ -160,8 +160,8 @@ test('v2 migration preserves session, immutable runtime and funding', async t =>
 test('environment mismatch rolls back v2 migration without adding tables or changing metadata', async t => {
   const f = await fixture(t);
   const previous = f.sql(db => {
-    db.exec('DROP TABLE proof_sessions');
-    const c = JSON.parse(db.prepare('SELECT config FROM metadata').get().config); c.schemaVersion = 2;
+    db.exec('DROP TABLE proof_results; DROP TABLE proof_sessions');
+    const c = JSON.parse(db.prepare('SELECT config FROM metadata').get().config); c.schemaVersion = 2; delete c.proofSourceSigner;
     const encoded = canonical(c); db.prepare('UPDATE metadata SET config=?').run(encoded); return encoded;
   });
   const { createApplicationService } = await import('../../src/application/service.mjs');
