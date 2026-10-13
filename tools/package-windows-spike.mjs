@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url));
-const paths=['spikes/windows-compatibility','src/ybm-collector/package.json','src/ybm-collector/package-lock.json'];
+const paths=['spikes/windows-compatibility','src/ybm-collector/package.json','src/ybm-collector/package-lock.json','docs/spikes/PR21_REVIEW.ko.md'];
 const git=(args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:8*1024*1024});
 if(process.versions.node!=='24.21.0')throw Error('PINNED_NODE_REQUIRED');
 if(git(['status','--porcelain','--',...paths]).trim())throw Error('COMMIT_PACKAGE_SOURCES_FIRST');
