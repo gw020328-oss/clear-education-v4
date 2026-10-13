@@ -1,5 +1,7 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락 구현 기준
 
+B3 추가(2026-10-13): [학습 증거 계약·합성 adapter](LEARNING_EVIDENCE.ko.md)는 내부 입력 검증만 추가하며 HTTP/DB/UI 계약은 변경하지 않는다. 실제 제공자·인증·영속 snapshot 수락은 미구현이다. CLEAR 추가 지급 서명을 전제로 한 grant/outbox·관련 UI/API 확대는 [최신 작업 범위](TEAM_PLAN.ko.md)에 따라 구조 검증 전까지 보류한다.
+
 B2b 추가(2026-10-13): [상세 제품 수락 계약](PRODUCT_PROOF.ko.md). schema 4와 합성 증거의 단회 수락/영수증 API를 추가했다. 실제 원천 전체성·실제 proof/자격/지급은 차단 상태다. 아래 B1·신청 계약은 유지한다.
 
 2026-10-12, PR #8의 신청/예치와 C1의 HTTPS에 B1 제품 증명 세션 API를 추가했다. B1 병합 여부는 [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15)의 연결 PR을 확인한다. 실제 proof 수락·시드/outbox/청구 API는 아직 없다. 실행은 [C1 로컬 합성 HTTPS 안내](LOCAL_SYNTHETIC.ko.md)를 따른다. 개발 전용 `GET /__dev/config`와 제한된 `POST /rpc`, 정적 프론트 빌드가 같은 origin에서 제공된다. 개발 경로는 제품 proof·지급 API가 아니다.
@@ -89,4 +91,4 @@ B1은 proof 만료 410과 활성/취소/owner 재사용/예치 상태 충돌 409
 
 B2a의 [전체 시험 증거 계약](EXAM_EVIDENCE.ko.md)은 내부 합성 함수만 제공한다. `COMPLETE_SYNTHETIC`/`ON_HOLD`는 새 HTTP 상태나 B1 DB 상태가 아니다. 신뢰한 B1 AUTHORIZED view와 독립적으로 고정한 원천 manifest 지문을 입력으로 받아 완전성이 확인된 합성 exams snapshot 또는 보류를 반환한다. 실제 YBM 원천 인증·전체성·단회 proof 수락은 미구현이며 공개 `/verified`·`/consume` 경로를 추가하지 않았다. F4에서 세션 승인과 전체 시험 검증 완료를 구분한다.
 
-B2b 이후 실제 proof 수락·outbox를 연결할 때도 세션 식별자·상태 전이·만료·재개·권한과 응답의 합성 예제를 먼저 추가한다. 서버 구현과 시험이 없는 경로는 ‘제안’이라고 표시한다. 프론트와 mock은 이 변경을 따라가되, 서버 기능이 실제 병합되기 전에는 연결 완료로 보고하지 않는다.
+후속 공통 API를 연결할 때도 세션 식별자·상태 전이·만료·재개·권한과 응답의 합성 예제를 먼저 추가한다. grant/outbox 전용 확대는 현재 보류다. 서버 구현과 시험이 없는 경로는 ‘제안’이라고 표시한다. 프론트와 mock은 이 변경을 따라가되, 서버 기능이 실제 병합되기 전에는 연결 완료로 보고하지 않는다.

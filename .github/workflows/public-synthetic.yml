@@ -69,6 +69,8 @@ jobs:
         run: ./tools/npm run test:exam-evidence
       - name: Product collector, independent verification and atomic result acceptance
         run: ./tools/npm run test:product-proof
+      - name: Pinned synthetic learning inventories and provider failure boundaries
+        run: ./tools/npm run test:learning-evidence
       - name: Persistent synthetic HTTPS environment and restart isolation
         run: ./tools/npm run test:dev
       - name: Synthetic extraction and isolation tests (loopback only)

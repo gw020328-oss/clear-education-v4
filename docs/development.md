@@ -6,6 +6,8 @@
 
 ## 런타임
 
+B3 학습 입력의 합성 계약/adapter 시험은 `./tools/npm run test:learning-evidence`다. [제공자 미확인·버전/기간/완전성 경계](current/LEARNING_EVIDENCE.ko.md)를 따른다. 실제 endpoint·인증·제품 DB/HTTP/UI와 지급 구조를 추가하지 않는다. grant/outbox 전용 확대는 [최신 계획](current/TEAM_PLAN.ko.md)에 따라 보류한다.
+
 B2b 합성 제품 수집·독립 검증·원자 수락 시험은 `./tools/npm run test:product-proof`다. [서버 원천 설정·schema 4·실경로 차단](current/PRODUCT_PROOF.ko.md)을 확인한다. 기본 C1 환경은 자동으로 제품 수집을 켜지 않으며 기존 DB/체인/키를 reset하거나 편집하지 않는다.
 
 B2a 전체 시험 증거 계약의 합성 검증은 `./tools/npm run test:exam-evidence`로 실행한다. [원천 신뢰 경계와 재현](current/EXAM_EVIDENCE.ko.md)을 먼저 확인한다. 실제 YBM 로그인·외부 RPC·기존 DB/체인을 사용하지 않는다.
