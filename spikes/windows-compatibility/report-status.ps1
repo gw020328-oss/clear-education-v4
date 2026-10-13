@@ -11,3 +11,9 @@ function Get-ChromeProfileStatus($Report, [int]$ProcessExitCode, [bool]$CleanupC
   }
   return 'PASS'
 }
+
+function Get-WindowsTargetStatus([int]$ProductType, [int]$BuildNumber) {
+  if ($ProductType -ne 1) { return [PSCustomObject]@{status='NOT_RUN';code='SERVER_CI_IS_NOT_WINDOWS11'} }
+  if ($BuildNumber -lt 22000) { return [PSCustomObject]@{status='NOT_RUN';code='WINDOWS11_REQUIRED'} }
+  return [PSCustomObject]@{status='PASS';code=''}
+}

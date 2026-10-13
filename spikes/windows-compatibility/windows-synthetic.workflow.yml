@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+      - name: Bootstrap path and safe error regression
+        run: ./spikes/windows-compatibility/bootstrap-support.test.ps1
       - name: Bootstrap SHA256-pinned local Node and lockfile dependencies
         run: ./spikes/windows-compatibility/bootstrap.ps1
       - name: Diagnostic failure reporting regression

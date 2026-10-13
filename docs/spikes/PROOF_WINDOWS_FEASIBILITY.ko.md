@@ -1,5 +1,7 @@
 # 추가 지급 서명 없는 청구와 Windows 수집기 — 통합 기술 검증
 
+2026-10-13 팀원 Windows 11 결과 반영: **36 PASS / 0 FAIL / 2 BLOCKED / 5 NOT_RUN**. 실제 Win11 및 기존 Chrome 보존을 확인했다. [실기기 평가와 남은 관문](../../spikes/windows-compatibility/ASSESSMENT.ko.md)을 최신 B 근거로 사용한다. 아래 최초 실행 표는 이력이며 제품 NO-GO·실수집/지급 차단은 유지한다.
+
 최신 후속: [공식 attestor 소스 확장](../../spikes/direct-proof-feasibility/ATTESTOR_EXTENSION.ko.md)에서 로컬 실제 TLS→사업별 native OPRF→attestor 서명·공개 검증을 연결했다. 공식 운영 배포·실제 YBM·제품 지급은 미검증이며 NO-GO를 유지한다. 아래 초기 실험/Windows 판정은 보존한다.
 
 검증일: 2026-10-13 (Asia/Seoul). 기준: `3f8ef79` (B2b / PR #19), 독립 worktree의 `codex/proof-windows-feasibility`. 이번 변경은 격리 기술 실험이며 제품 정책, 지급 허용 상태, 운영 계약을 바꾸지 않는다.

@@ -56,4 +56,4 @@
 
 공통 spent registry·공식 verifier ABI에 맞춘 온체인 adapter·새 금고/동의·등록 상태에서 구성하는 독립 수집 경로도 미구현이다. CLEAR 없이 새 증명을 만드는 제품 전체 흐름이나 기존 예치의 이전을 완료했다고 기록하지 않는다. 외부 공식 배포 지원이 확인되기 전 제품 GO·일정 확약은 할 수 없다.
 
-PR #21은 Draft로 유지한다. 팀원 Windows11 결과를 기다리는 전달 ZIP과 그 소스 20개는 변경하지 않았다.
+이 확장 구현 당시 PR #21은 팀원 Windows11 결과 대기로 Draft였다. 이후 팀원 결과는 [Windows 평가](../windows-compatibility/ASSESSMENT.ko.md)에 반영했다. 당시 전달 ZIP은 보존하고 bootstrap/보고서 수정은 후속 소스로 구분한다. 제품 NO-GO는 유지한다.

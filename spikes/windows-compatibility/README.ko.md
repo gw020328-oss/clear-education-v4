@@ -4,12 +4,14 @@
 
 ## 실제 팀원 PC에서 실행
 
-Windows 11 x64 Intel/AMD, 설치된 Chrome, 일반 사용자 PowerShell을 사용한다. 관리자 실행은 필요 조건이 아니다. Chrome 기존 창을 하나 열어 두면 보존 검사를 할 수 있다. 먼저 받은 ZIP을 새 폴더에 풀고, 그 폴더에서 PowerShell을 연다. 경로에 한글·공백이 있어도 된다. 전체 저장소 clone을 사용해도 같은 명령이다.
+Windows 11 x64 Intel/AMD, 설치된 Chrome, 일반 사용자 PowerShell을 사용한다. 관리자 실행은 필요 조건이 아니다. Chrome 기존 창을 하나 열어 두면 보존 검사를 할 수 있다. 먼저 받은 ZIP을 **짧은 경로의 새 폴더**(예: `%USERPROFILE%\clear-diag`)에 풀고, 그 폴더에서 PowerShell을 연다. 한글·공백은 허용하지만 폴더를 깊게 중첩하지 않는다. Node ZIP 내부의 npm 경로가 길어 Windows PowerShell의 압축 해제 제한에 걸릴 수 있다. 전체 저장소 clone을 사용해도 같은 명령이다.
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\spikes\windows-compatibility\bootstrap.ps1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\spikes\windows-compatibility\diagnose.ps1
 ```
+
+bootstrap 실패 시 `BOOTSTRAP_FAIL [코드]`와 해결 안내를 확인한다. `ARCHIVE_PATH_TOO_LONG`은 SHA256 검증 뒤 ZIP 내부 경로 길이를 검사해 압축 해제 전에 차단한 결과다. `ARCHIVE_EXTRACTION_FAILED`는 압축 해제 단계 실패이며 짧은 경로·디스크 여유·쓰기 권한을 확인한다. `PARTIAL_RUNTIME_REMOVE_MANUALLY` 또는 불완전한 npm 안내가 나오면, 이미 실패한 폴더를 덮어쓰기보다 원래 진단 ZIP을 **새 짧은 폴더**에 다시 풀어 실행한다. `DOWNLOAD_FAILED`는 네트워크, `ARCHIVE_HASH_MISMATCH`/`NODE_HASH_MISMATCH`는 다운로드/실행 파일 검증 실패다. 원문 예외·개인 경로·npm 로그 대신 표시된 코드만 공유한다. 전역 긴 경로 정책이나 관리자 권한 변경은 필요하지 않다.
 
 `-ExecutionPolicy Bypass`는 해당 프로세스에만 적용하며 기기 정책을 변경하지 않는다. 조직 정책이 실행을 차단하면 우회 설정을 바꾸지 말고 `미실행`으로 남긴다. 첫 명령은 공식 고정 Node ZIP과 lockfile npm 의존성을 내려받는다. 전역 Node/npm을 바꾸지 않고 `.toolchain/` 및 `src/ybm-collector/node_modules/`만 사용하며 npm lifecycle script는 끈다. bootstrap의 네트워크 다운로드는 합성 진단 자체의 외부 요청과 구분한다.
 

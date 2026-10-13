@@ -19,3 +19,15 @@ $r=Fixture;$r.checks[2].status='FAIL';Expect $r 0 $true 'FAIL'
 $r=Fixture;$r.checks[2].id='chrome-private-pipe';Expect $r 0 $true 'FAIL'
 $r=Fixture;$r.scope='UNKNOWN';Expect $r 0 $true 'FAIL'
 Write-Output 'CHROME_REPORT_STATUS: 9 PASS (synthetic fixtures)'
+
+foreach ($case in @(
+  @(1,26200,'PASS',''),
+  @(1,22000,'PASS',''),
+  @(1,21999,'NOT_RUN','WINDOWS11_REQUIRED'),
+  @(3,20348,'NOT_RUN','SERVER_CI_IS_NOT_WINDOWS11'),
+  @(3,26200,'NOT_RUN','SERVER_CI_IS_NOT_WINDOWS11')
+)) {
+  $actual = Get-WindowsTargetStatus $case[0] $case[1]
+  if ($actual.status -cne $case[2] -or $actual.code -cne $case[3]) { throw 'WINDOWS_TARGET_STATUS_REGRESSION' }
+}
+Write-Output 'WINDOWS_TARGET_STATUS: 5 PASS (synthetic fixtures)'

@@ -39,7 +39,8 @@ try {
   $os=Get-CimInstance Win32_OperatingSystem
   $osBuild=[string]$os.BuildNumber
   $osKind=if ($os.ProductType -eq 1) {'CLIENT'} else {'SERVER'}
-  Check 'target-windows11-x64' $(if($os.ProductType -eq 1 -and [int]$os.BuildNumber -ge 22000){'PASS'}else{'NOT_RUN'}) 'SERVER_CI_IS_NOT_WINDOWS11'
+  $target = Get-WindowsTargetStatus $os.ProductType ([int]$os.BuildNumber)
+  Check 'target-windows11-x64' $target.status $target.code
   $node=Join-Path $repo '.toolchain/node-v24.21.0-win-x64/node.exe'
   $pin=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'runtime.json') -Raw | ConvertFrom-Json
   if ((Get-FileHash -LiteralPath $node -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pin.nodeExeSha256) { throw 'PINNED_NODE_REQUIRED' }
