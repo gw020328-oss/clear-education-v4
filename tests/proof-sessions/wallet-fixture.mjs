@@ -53,5 +53,5 @@ export async function browser(t) {
     approve: (options = {}) => client.authorizeProofSession(applicationId, session, runtime, { ownerPublicKey: owner.signingKey.publicKey, ...options }),
     setHook(fn) { hook = fn; }, setApiHook(fn) { apiHook = fn; }, mutate(fn) { fn(current); },
     setAccount(value) { account = value; }, setChain(value) { chain = value; }, advance(seconds) { now += seconds; },
-    get reads() { return reads; }, get signs() { return signs; }, get posts() { return posts; }, get lastBody() { return lastBody; } };
+    get time() { return now; }, get reads() { return reads; }, get signs() { return signs; }, get posts() { return posts; }, get lastBody() { return lastBody; } };
 }
