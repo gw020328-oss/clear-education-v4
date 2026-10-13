@@ -1,5 +1,9 @@
 # CLEAR 팀원·LLM 인계
 
+2026-10-13 범위 변경: [최신 계획](TEAM_PLAN.ko.md)에 따라 공통 개발을 계속하되 CLEAR 추가 지급 서명의 grant/outbox와 종속 UI/API 확대는 새 구조 검증 전까지 보류한다. 현 금고·HMAC 구조를 최종안으로 고정하거나 PRD의 800점 AND 80%/최고점 정책을 변경하지 않는다. PR #19는 develop에 병합 완료(`3f8ef79`)이며 보존한다. 별도 증거 기반 청구·Windows 검증 worktree는 이 작업에서 수정하지 않는다.
+
+B3의 현재 단위: [이슈 #13](https://github.com/gw020328-oss/clear-education-v4/issues/13), [학습 입력 계약·합성 adapter](LEARNING_EVIDENCE.ko.md). 필수 강의·기간·페이지/버전/출처 pin·정정/실패/중단을 검증하고 기존 평가기에 연결한다. 실제 제공자/API·인증·계정 매핑은 미확인으로 BLOCKED이며 제품 DB/HTTP/UI는 추가하지 않는다. 기존 실제 YBM 전체성 차단도 유지한다.
+
 B2b 추가(2026-10-13): [이슈 #18](https://github.com/gw020328-oss/clear-education-v4/issues/18), [제품 수집·독립 검증·단회 수락 계약](PRODUCT_PROOF.ko.md). B2a는 PR #17로 병합됐다. 합성 driver의 제품 owner 연결, 서버 고정 합성 원천 서명/owner 서명의 별도 프로세스 검증, schema 4의 세션별 결과 단회 수락과 내부 snapshot 조회를 구현했다. 실제 YBM 원천 전체성·실수집·자격/지급은 계속 차단한다. proofSourceSigner는 서버/DB 환경에 고정하며 null인 기존 설정을 자동 활성화하지 않는다. 서준형의 F4는 새 evidence/result API와 과거 수락 영수증의 의미를 확인한다. B2b 병합 여부는 연결 PR을 따른다.
 
 B2a 추가(2026-10-13): [이슈 #12](https://github.com/gw020328-oss/clear-education-v4/issues/12), [전체 시험 목록·최고점 증거 계약](EXAM_EVIDENCE.ko.md). B1은 PR #16으로 develop에 병합됐다. 새 원천 inventory의 범위·페이지 지문·건수·종료·상태 대조와 최고점의 합성 검증을 구현했다. 실제 YBM inventory/계정·기간 포괄성은 미확인으로 실평가를 차단한다. B1 DB/HTTP나 기존 실수집기는 변경하지 않으며, B2b는 신뢰한 manifest pin의 실제 출처와 검증 결과 단회 수락을 먼저 해결해야 한다. B2a 병합 여부는 연결 PR을 확인한다.

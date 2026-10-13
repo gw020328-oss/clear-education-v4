@@ -17,7 +17,8 @@
     "verify:workspace:local": "node tools/verify-workspace.mjs --local",
     "test:proof-sessions": "node --test tests/proof-sessions/*.test.mjs",
     "test:exam-evidence": "node --test tests/exam-evidence/*.test.mjs",
-    "test:product-proof": "node --test tests/product-proof/*.test.mjs"
+    "test:product-proof": "node --test tests/product-proof/*.test.mjs",
+    "test:learning-evidence": "node --test tests/learning-evidence/*.test.mjs"
   },
   "dependencies": {
     "ethers": "6.17.0",
