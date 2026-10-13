@@ -80,7 +80,7 @@ view 필드는 다음과 같다. 합성 실행 예제는 `tests/proof-sessions/h
 
 주요 오류: 인증/서명 401, 다른 로그인 세션의 승인 `PROOF_BROWSER_SESSION` 403, 타인/미존재 신청·세션 404, 활성 세션/owner 재사용/멱등 충돌·취소·소비 nonce·예치/제출 상태 409, `PROOF_SESSION_EXPIRED` 410, schema/owner/nonce 형식·체인 검증 등 나머지 규칙 위반 422, 내부/RPC 예외 500. 응답은 기존 고정 메시지 구조를 따르고 민감한 RPC 원문을 내보내지 않는다.
 
-기존 `createSameOriginApi`는 401 외 오류를 `API_REQUEST_FAILED`로 축약한다. `createWalletClient`에 proof 전용 서명 helper는 아직 없다. F4는 사용자에게 runtime/신청/owner/만료를 보여주고 서명 전·후 지갑 context와 정확한 types/domain/message를 확인하는 helper 및 허용된 오류 코드 전달을 함께 구현해야 한다. 지갑 서명 요청을 자동 재시도하거나 서명을 localStorage에 보관하지 않는다.
+`createSameOriginApi`는 기존 HTTP `.message` 축약을 유지하면서 [공통 오류 복구 계약](API_RECOVERY.ko.md)의 안전한 `.code`와 결과 확인 안내를 전달한다. `createWalletClient`에 proof 전용 서명 helper는 아직 없다. F4는 사용자에게 runtime/신청/owner/만료를 보여주고 서명 전·후 지갑 context와 정확한 types/domain/message를 확인하는 helper 및 안전한 오류 표시를 구현해야 한다. 지갑 서명 요청을 자동 재시도하거나 서명을 localStorage에 보관하지 않는다.
 
 ## DB와 검증
 

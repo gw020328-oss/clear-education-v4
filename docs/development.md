@@ -1,5 +1,7 @@
 # 개발 가이드
 
+공통 브라우저 오류·요청 복구 시험은 기존 `./tools/npm run test:applications`에 포함된다. [안전한 오류/시간 초과/취소/응답 유실 계약](current/API_RECOVERY.ko.md)을 확인한다. loopback HTTPS와 합성 데이터만 쓰며 UI·실제 원천·지급 검증과 구분한다.
+
 ## 협업 절차
 
 작업은 최신 `origin/develop`에서 만든 개별 브랜치에서 진행합니다. Codex 브랜치는 `codex/작업명`이며 검증 가능한 단위마다 커밋·푸시합니다. 작업 PR은 `develop`을 대상으로 하고, 통합 검증 뒤 별도 `develop` → `main` PR을 만듭니다. `main`은 현재 개발 기준본이며 완성 서비스가 아닙니다. [기여 안내](../CONTRIBUTING.md)

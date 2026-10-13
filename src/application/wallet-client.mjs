@@ -1,6 +1,7 @@
 import { getAddress, hexlify, toUtf8Bytes, TypedDataEncoder } from 'ethers';
 import { finalTermsTypes, runtimeHash, vaultDomain } from '../vault/encoding.mjs';
 import { canonical } from '../policy/values.mjs';
+export { createSameOriginApi } from './api-client.mjs';
 
 // EIP-1193 controller for the future UI. api(path, options) must use same-origin
 // credentials, must not persist signatures, and must reject non-2xx responses.
@@ -61,10 +62,10 @@ export function createWalletClient({ provider, api, chainId }) {
       try { return await api('/auth/logout', { method: 'POST', body: {}, headers: headers() }); }
       finally { invalidate(); }
     },
-    async request(path, { method = 'GET', body, idempotencyKey } = {}) {
+    async request(path, { method = 'GET', body, idempotencyKey, signal } = {}) {
       const stamp = generation; await check(stamp);
       if (!authenticated) fail('AUTH_REQUIRED');
-      const result = await api(path, { method, body, headers: { ...headers(), ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) } });
+      const result = await api(path, { method, body, signal, headers: { ...headers(), ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) } });
       await check(stamp); return result;
     },
     async consent(applicationId, idempotencyKey) {
@@ -104,21 +105,5 @@ export function createWalletClient({ provider, api, chainId }) {
       await check(stamp); return result;
     },
     dispose() { invalidate(); disposed = true; for (const name of ['accountsChanged', 'chainChanged', 'disconnect']) provider.removeListener(name, invalidate); },
-  };
-}
-
-export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetch }) {
-  if (new URL(origin).protocol !== 'https:' || new URL(origin).origin !== origin) throw new Error('ORIGIN_CONFIG');
-  return async (path, { method = 'GET', body, headers = {} } = {}) => {
-    if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')
-      || new URL(path, origin).origin !== origin) throw new Error('API_ORIGIN');
-    const response = await fetchImpl(new URL(path, origin).href, { method, credentials: 'same-origin', cache: 'no-store',
-      redirect: 'error', headers: { ...headers, ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
-      body: body === undefined ? undefined : JSON.stringify(body) });
-    if (!response.ok) {
-      // Do not propagate server bodies, URLs, or wallet/provider error messages.
-      throw new Error(response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
-    }
-    return response.json();
   };
 }

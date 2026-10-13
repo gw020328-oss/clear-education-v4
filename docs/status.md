@@ -1,5 +1,7 @@
 # 개발 현황
 
+공통 API 복구(2026-10-13): PR #20 병합 `4a0cdc6` 기준으로 [이슈 #22](https://github.com/gw020328-oss/clear-education-v4/issues/22)의 [안전한 오류·요청 복구 계약](current/API_RECOVERY.ko.md)을 구현했다. 기존 import/HTTP message 호환성, 허용 목록 code, 취소/timeout, 쓰기 응답 유실 후 결과 확인을 다룬다. 화면/서버 경로/DB·정책·금고는 유지하며 실제 원천 검증 차단과 grant/outbox 보류를 해제하지 않는다. 최신 head·CI·병합 상태는 연결 PR을 확인한다.
+
 B3 공통 작업(2026-10-13): PR #19의 develop 병합 `3f8ef79` 위에서 [학습 증거 계약과 합성 adapter](current/LEARNING_EVIDENCE.ko.md)를 구현했다. [이슈 #13](https://github.com/gw020328-oss/clear-education-v4/issues/13). 실제 제공자/API·인증·영속 연결은 BLOCKED이며 HTTP/DB/UI·정책·금고는 변경하지 않는다. CLEAR 추가 지급 서명 전용 grant/outbox 및 종속 확대는 별도 구조 검증 전까지 보류한다. 기존 실제 YBM 원천 전체성 차단을 유지하며, 최신 head/검증/병합 상태는 연결 PR을 확인한다.
 
 B2b 구현 추가(2026-10-13): [이슈 #18](https://github.com/gw020328-oss/clear-education-v4/issues/18), [제품 수집·검증 결과 수락](current/PRODUCT_PROOF.ko.md). B2a PR #17 병합 기준 `72b057a`에서 합성 driver/owner 결합·별도 검증 프로세스·schema 4의 세션별 단회 수락을 구현했다. 실제 YBM 전체 원천·실수집·자격/지급은 계속 차단한다. 아래 표는 과거 기록이며 최신 B2b PR의 head/CI/병합 상태를 확인한다.

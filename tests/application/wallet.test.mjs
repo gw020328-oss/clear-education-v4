@@ -105,10 +105,24 @@ test('dispose removes listeners and invalidates pending operations', async t => 
 test('browser API always uses same-origin credentials and forbids external URLs/redirects', async () => {
   let observed;
   const api = createSameOriginApi({ origin: 'https://clear.example.invalid', fetch: async (url, options) => {
-    observed = { url, options }; return { ok: true, json: async () => ({ ok: true }) };
+    observed = { url, options }; return Response.json({ ok: true });
   } });
   await api('/applications', { method: 'POST', body: { test: true } });
   assert.equal(observed.options.credentials, 'same-origin'); assert.equal(observed.options.redirect, 'error');
   assert.equal(observed.options.cache, 'no-store');
   for (const path of ['https://other.example.invalid', '//other.example.invalid', '/\\other.example.invalid']) await assert.rejects(() => api(path), { message: 'API_ORIGIN' });
+});
+
+test('authenticated request forwards the caller signal without losing wallet, CSRF or idempotency context', async t => {
+  const f = await walletFixture(t); await f.client.connect(); await f.client.login(); f.client.dispose();
+  let observed;
+  const client = createWalletClient({ provider: f.provider, chainId: f.config.chainId,
+    api: (path, options) => { observed = options; return f.api(path, options); } });
+  t.after(() => client.dispose()); await client.connect(); await client.resume();
+  const controller = new AbortController();
+  const app = await client.request('/applications', { method: 'POST', body: { policyHash: f.compiled.policyHash },
+    idempotencyKey: 'cancellable-create', signal: controller.signal });
+  assert.equal(app.state, 'DRAFT'); assert.equal(observed.signal, controller.signal);
+  assert.equal(observed.headers['x-wallet'], f.alice.address); assert.ok(observed.headers['x-csrf-token']);
+  assert.equal(observed.headers['idempotency-key'], 'cancellable-create');
 });
