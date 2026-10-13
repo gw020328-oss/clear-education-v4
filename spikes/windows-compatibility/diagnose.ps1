@@ -132,7 +132,7 @@ finally {
   $report=[ordered]@{schemaVersion=1;scope='SYNTHETIC_ONLY';platform='win32';arch='x64';osKind=$osKind;osBuild=$osBuild;ciRequested=[bool]$Ci;checks=@($checks.ToArray());realYbm=$false;productionReady=$false}
   New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
   $output=Join-Path $reportDir ('report-' + [Guid]::NewGuid().ToString() + '.json')
-  $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $output -Encoding UTF8
+  [IO.File]::WriteAllText($output,($report | ConvertTo-Json -Depth 8),(New-Object Text.UTF8Encoding($false)))
   Write-Output 'Synthetic diagnostic complete. Share only artifacts/windows-compatibility/report-*.json. No raw proof, cookies, keys, profile, paths, or process IDs are included.'
 }
 exit $exitCode
