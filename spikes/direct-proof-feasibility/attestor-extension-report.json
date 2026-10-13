@@ -1,0 +1,79 @@
+{
+  "mode": "LOCAL_PATCHED_OFFICIAL_CORE_REAL_TLS_NATIVE_OPRF_SIGNATURE",
+  "upstreamCommit": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+  "tests": [
+    {
+      "name": "loopback TLS authenticated, native source OPRF signed and independently verified",
+      "status": "PASS"
+    },
+    {
+      "name": "public projection excludes transcript, cookies, score/date/number/name and prehash",
+      "status": "PASS"
+    },
+    {
+      "name": "mixed ineligible source rows cannot acquire a signed qualifying claim",
+      "status": "PASS"
+    },
+    {
+      "name": "caller-supplied result/context fields rejected before signing",
+      "status": "PASS"
+    },
+    {
+      "name": "caller-selected disclosure/capture policy rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "stock HTTP claim with copied extension facts rejected despite valid witness signature",
+      "status": "PASS"
+    },
+    {
+      "name": "fresh proof with another owner/application keeps same business nullifier",
+      "status": "PASS"
+    },
+    {
+      "name": "binding, deployment, key, time and witness substitutions rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "modified nullifier with recomputed identifier fails real signature verification",
+      "status": "PASS"
+    },
+    {
+      "name": "additional private public-envelope fields rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "owner-resigned request policy substitution rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "owner-resigned ciphertext tampering rejected against recorded tunnel",
+      "status": "PASS"
+    },
+    {
+      "name": "owner-resigned missing server reveal rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "owner-resigned server transformation metadata rejected",
+      "status": "PASS"
+    }
+  ],
+  "checksPassed": 14,
+  "tlsCertificateVerification": true,
+  "tunnelTranscriptVerification": true,
+  "officialSignatureFormat": true,
+  "officialHostedAttestor": false,
+  "realYbm": false,
+  "publicChain": false,
+  "clearAdditionalPaymentSignature": false,
+  "attestorSeesPlaintext": true,
+  "qualificationStatus": "NO_GO_OFFICIAL_DEPLOYMENT_AND_REAL_SOURCE_NOT_VERIFIED",
+  "limits": [
+    "Ephemeral local test root, witness and OPRF keys; not a recognized hosted attestor",
+    "Candidate server hook requires upstream/official deployment",
+    "Synthetic source layout and identity semantics only",
+    "No enrollment/learning/inventory completeness or payment integration"
+  ],
+  "checkedAt": "2026-10-13T07:38:21.995Z"
+}

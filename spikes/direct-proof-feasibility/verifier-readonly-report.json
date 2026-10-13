@@ -1,0 +1,56 @@
+{
+  "scope": "PUBLIC_READ_ONLY",
+  "checkedAt": "2026-10-13T02:15:27.516Z",
+  "rpcUrl": "https://polygon-amoy.drpc.org",
+  "address": "0xcd94A4f7F85dFF1523269C52D0Ab6b85e9B22866",
+  "chainId": 80002,
+  "checks": [
+    {
+      "id": "deployed-code-and-epoch-read",
+      "status": "PASS"
+    },
+    {
+      "id": "verified-source-matches-observed-code",
+      "status": "PASS"
+    },
+    {
+      "id": "epoch-witness-registry-overlap",
+      "status": "PASS"
+    }
+  ],
+  "freshOfficialProofCompatibility": "NOT_RUN",
+  "liveClaimAllowed": false,
+  "block": 50035178,
+  "proxyCodeHash": "0x5e4dcb0bb1910f6429e5fe91678990088a51c6d1cfe1b31d05fb9d948cc7867c",
+  "eip1967Implementation": "0x4af7676dead1d21a6f157ff014bd088836659ec4",
+  "implementationCodeHash": "0x1fe96e949bc6c0e7fb55329f5af785e40c0393419cb4a572d69075fa4e3cf4c2",
+  "epoch": {
+    "id": 1,
+    "timestampStart": 1715191494,
+    "timestampEnd": 1715277894,
+    "minimumWitnesses": 1,
+    "witnesses": [
+      "0x244897572368eadf65bfbc5aec98d8e5443a9072"
+    ]
+  },
+  "verifiedSource": {
+    "url": "https://sourcify.dev/server/v2/contract/80002/0x4af7676dead1d21a6f157ff014bd088836659ec4?fields=abi,sources,runtimeBytecode",
+    "runtimeMatch": "exact_match",
+    "matchesObservedCode": true,
+    "verifyProofOutputs": [
+      "bool"
+    ],
+    "verifyProofMutability": "nonpayable",
+    "reclaimSourceKeccak256": "0x9c060b8313b54aa7252389978e7dc3423718c9114cc479487601726f9ba48454"
+  },
+  "registryWitnesses": [
+    "0x1be31a94361a391bbafb2a4ccd704f57dc04d4bb",
+    "0x244897572368eadf65bfbc5aec98d8e5443a9072",
+    "0x15ea90114bffea9bb996e8775bf6ca0a338e97e5"
+  ],
+  "epochWitnessesInRegistry": true,
+  "notes": [
+    "Metadata overlap does not validate any actual proof, source policy, epoch semantics or ABI return behavior.",
+    "Block/code fingerprints are observations, not an approved release manifest."
+  ]
+}
