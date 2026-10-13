@@ -1,0 +1,196 @@
+{
+  "sourceCommit": "4a8b0c3e64081bec07d9ba26e43c52e84baa85e8",
+  "runUrl": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/38336271261",
+  "report": {
+    "schemaVersion": 1,
+    "scope": "SYNTHETIC_ONLY",
+    "platform": "win32",
+    "arch": "x64",
+    "osKind": "SERVER",
+    "osBuild": "20348",
+    "ciRequested": true,
+    "checks": [
+      {
+        "id": "target-windows11-x64",
+        "status": "NOT_RUN",
+        "code": "SERVER_CI_IS_NOT_WINDOWS11"
+      },
+      {
+        "id": "pinned-windows-node-sha256",
+        "status": "PASS"
+      },
+      {
+        "id": "new-directory-private-acl",
+        "status": "PASS"
+      },
+      {
+        "id": "storage-ancestor-reparse-check",
+        "status": "PASS"
+      },
+      {
+        "id": "known-onedrive-path-exclusion",
+        "status": "PASS"
+      },
+      {
+        "id": "other-sync-backup-exclusion",
+        "status": "NOT_RUN",
+        "code": "DEVICE_OWNER_REVIEW_REQUIRED"
+      },
+      {
+        "id": "device-encryption-active",
+        "status": "BLOCKED"
+      },
+      {
+        "id": "exclusive-lock-second-open",
+        "status": "PASS"
+      },
+      {
+        "id": "exclusive-lock-release",
+        "status": "PASS"
+      },
+      {
+        "id": "junction-rejected",
+        "status": "PASS"
+      },
+      {
+        "id": "job-suspended-assign-tree-terminate-zero",
+        "status": "PASS"
+      },
+      {
+        "id": "job-host-forced-kill-close-recovery",
+        "status": "NOT_RUN",
+        "code": "PRODUCTION_LIFECYCLE_GATE"
+      },
+      {
+        "id": "pinned-node",
+        "status": "PASS"
+      },
+      {
+        "id": "locked-zk-package",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-128-ctr-prove-verify",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-128-ctr-reject-plaintext",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-128-ctr-reject-ciphertext",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-128-ctr-reject-nonce",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-128-ctr-reject-counter",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-128-ctr-reject-corrupt-proof",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-256-ctr-prove-verify",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-256-ctr-reject-plaintext",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-256-ctr-reject-ciphertext",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-256-ctr-reject-nonce",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-256-ctr-reject-counter",
+        "status": "PASS"
+      },
+      {
+        "id": "aes-256-ctr-reject-corrupt-proof",
+        "status": "PASS"
+      },
+      {
+        "id": "chacha20-prove-verify",
+        "status": "PASS"
+      },
+      {
+        "id": "chacha20-reject-plaintext",
+        "status": "PASS"
+      },
+      {
+        "id": "chacha20-reject-ciphertext",
+        "status": "PASS"
+      },
+      {
+        "id": "chacha20-reject-nonce",
+        "status": "PASS"
+      },
+      {
+        "id": "chacha20-reject-counter",
+        "status": "PASS"
+      },
+      {
+        "id": "chacha20-reject-corrupt-proof",
+        "status": "PASS"
+      },
+      {
+        "id": "gnark-windows-native-binary",
+        "status": "BLOCKED",
+        "code": "SEPARATE_OPRF_GATE"
+      },
+      {
+        "id": "installed-chrome-found",
+        "status": "PASS"
+      },
+      {
+        "id": "chrome-private-pipe",
+        "status": "PASS"
+      },
+      {
+        "id": "chrome-synthetic-cdp-roundtrip",
+        "status": "PASS"
+      },
+      {
+        "id": "chrome-normal-exit",
+        "status": "PASS"
+      },
+      {
+        "id": "existing-chrome-pid-start-preserved",
+        "status": "NOT_RUN"
+      },
+      {
+        "id": "unicode-space-profile-job-cleanup",
+        "status": "PASS"
+      },
+      {
+        "id": "pid-reuse-recovery-adversarial",
+        "status": "NOT_RUN",
+        "code": "PRODUCTION_LIFECYCLE_GATE"
+      },
+      {
+        "id": "active-24h-expiry-and-crash-restart-cleanup",
+        "status": "NOT_RUN",
+        "code": "PRODUCTION_LIFECYCLE_GATE"
+      },
+      {
+        "id": "reparse-race-and-hardlink-attack",
+        "status": "NOT_RUN",
+        "code": "PRODUCTION_STORAGE_GATE"
+      },
+      {
+        "id": "synthetic-normal-error-cleanup",
+        "status": "PASS"
+      }
+    ],
+    "realYbm": false,
+    "productionReady": false
+  }
+}

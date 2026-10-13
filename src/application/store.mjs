@@ -5,7 +5,9 @@ import { canonical, requireRule } from '../policy/values.mjs';
 
 // Dedicated local, single-host DB. No proofs, private keys or login signatures.
 // Final contract authorization is retained to recover sponsor funding.
+// Product binding challenges are public; only their signature hashes are kept.
 export function openStore(directory, config) {
+  config = { proofSourceSigner: null, ...config };
   const root = resolve(directory);
   mkdirSync(root, { recursive: true, mode: 0o700 });
   const info = lstatSync(root);
@@ -26,13 +28,22 @@ export function openStore(directory, config) {
   try {
     db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA trusted_schema=OFF;');
     transaction(() => {
+      const encoded = canonical({ schemaVersion: 4, ...config });
+      const hasMetadata = db.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name='metadata'").get();
+      const prior = hasMetadata ? db.prepare('SELECT config FROM metadata WHERE id=1').get() : null;
+      // Once migrated, a missing nonce table is data loss, not a new empty
+      // store. Do not silently reset replay protection during startup.
+      const version = prior ? JSON.parse(prior.config).schemaVersion : 0;
+      for (const name of version >= 4 ? ['proof_sessions', 'proof_results'] : version === 3 ? ['proof_sessions'] : []) {
+        requireRule(db.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name=?").get(name), 'DB_SCHEMA_INCOMPLETE');
+      }
       db.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
       const stored = db.prepare('SELECT config FROM metadata WHERE id=1').get();
-      const encoded = canonical({ schemaVersion: 2, ...config });
-      const previous = canonical({ schemaVersion: 1, ...config });
-      requireRule(!stored || stored.config === encoded || stored.config === previous, 'DB_ENVIRONMENT_MISMATCH');
+      const { proofSourceSigner, ...legacyConfig } = config;
+      const previous = [1, 2, 3].map(schemaVersion => canonical({ schemaVersion, ...legacyConfig }));
+      requireRule(!stored || stored.config === encoded || previous.includes(stored.config), 'DB_ENVIRONMENT_MISMATCH');
       if (!stored) db.prepare('INSERT INTO metadata VALUES(1,?)').run(encoded);
-      else if (stored.config === previous) db.prepare('UPDATE metadata SET config=? WHERE id=1').run(encoded);
+      else if (stored.config !== encoded) db.prepare('UPDATE metadata SET config=? WHERE id=1').run(encoded);
     });
   } catch (error) { db.close(); throw error; }
   return { db, transaction, close: () => db.close() };

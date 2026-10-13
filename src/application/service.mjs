@@ -4,6 +4,7 @@ import { compileSyntheticPolicy } from '../policy/compiler.mjs';
 import { RuleError, canonical, exactKeys, freeze, hash, hash32, identifier, requireRule } from '../policy/values.mjs';
 import { openStore } from './store.mjs';
 import { createFundingService } from './funding.mjs';
+import { createProofSessionService } from './proof-sessions.mjs';
 
 const secret = () => randomBytes(32).toString('hex');
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -20,14 +21,15 @@ export const applicationTermsTypes = freeze({ ApplicationTermsV4: [
   { name: 'nonce', type: 'bytes32' }, { name: 'signedAt', type: 'uint256' }, { name: 'expiresAt', type: 'uint256' },
 ] });
 
-export function createApplicationService({ directory, origin, chainId, instanceId, participants, operators, vaultReader, now = () => Math.floor(Date.now() / 1000) }) {
+export function createApplicationService({ directory, origin, chainId, instanceId, participants, operators, vaultReader, proofSourceSigner = null, now = () => Math.floor(Date.now() / 1000) }) {
   const url = new URL(origin);
   requireRule(url.protocol === 'https:' && url.origin === origin && !url.username && !url.password, 'ORIGIN_CONFIG');
   requireRule(Number.isSafeInteger(chainId) && chainId > 0, 'CHAIN_CONFIG');
   hash32(instanceId, 'INSTANCE_CONFIG');
   const participantSet = new Set(participants.map(address)), operatorSet = new Set(operators.map(address));
   requireRule(operatorSet.size > 0 && ![...operatorSet].some(a => participantSet.has(a)), 'ROLE_CONFIG');
-  const store = openStore(directory, { origin, chainId, instanceId, dataMode: 'SYNTHETIC', consentScope: 'APPLICATION_ONLY' });
+  if (proofSourceSigner !== null) proofSourceSigner = address(proofSourceSigner);
+  const store = openStore(directory, { origin, chainId, instanceId, dataMode: 'SYNTHETIC', consentScope: 'APPLICATION_ONLY', proofSourceSigner });
   const { db, transaction } = store;
   const clock = () => { const t = now(); requireRule(Number.isSafeInteger(t) && t > 0 && t < 253402290000, 'CLOCK'); return t; };
   const role = wallet => operatorSet.has(wallet) ? 'operator' : participantSet.has(wallet) ? 'participant' : null;
@@ -86,6 +88,7 @@ export function createApplicationService({ directory, origin, chainId, instanceI
     hexSecret, signatureShape, view, vaultReader, chainId, instanceId });
   return {
     ...funding.methods,
+    ...createProofSessionService({ db, transaction, session, owned, clock, digest, secret, signatureShape, vaultReader, policy, proofSourceSigner }),
     origin, chainId, close: store.close,
     challenge(body) {
       exactKeys(body, ['wallet', 'chainId'], 'AUTH_SCHEMA');

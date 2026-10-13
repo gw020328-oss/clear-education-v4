@@ -7,8 +7,8 @@ import { finalTerms, grantTypes, vaultDomain } from '../../src/vault/encoding.mj
 
 // Fresh isolated in-memory chain per test; ephemeral keys never leave memory.
 // No HTTP listener, external RPC, existing chain reset or valuable assets.
-export async function fixture(t, { config: overrides = {}, bind = true } = {}) {
-  const app = await applicationFixture(t), issuer = Wallet.createRandom(), outage = Wallet.createRandom();
+export async function fixture(t, { config: overrides = {}, bind = true, policyDraft, proofSourceSigner } = {}) {
+  const app = await applicationFixture(t, { policyDraft, proofSourceSigner }), issuer = Wallet.createRandom(), outage = Wallet.createRandom();
   const wallets = [app.operator, app.alice, app.bob, issuer, outage];
   const raw = ganache.provider({ logging: { quiet: true }, chain: { chainId: app.config.chainId, hardfork: 'shanghai', time: new Date(app.time * 1000) },
     miner: { timestampIncrement: 0 }, wallet: { accounts: wallets.map(w => ({ secretKey: w.privateKey, balance: '0x3635c9adc5dea00000' })) } });

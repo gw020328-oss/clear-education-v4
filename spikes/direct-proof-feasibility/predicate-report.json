@@ -1,0 +1,92 @@
+{
+  "mode": "SYNTHETIC_SDK_RECEIPT_ONLY",
+  "sdkVersion": "5.1.4",
+  "zkVersion": "5.1.6",
+  "tests": [
+    {
+      "name": "197 valid TOEIC totals: accept exactly 800..990, omit score/date/number captures",
+      "status": "PASS"
+    },
+    {
+      "name": "period includes September 1 and 30; rejects invalid and out-of-period dates",
+      "status": "PASS"
+    },
+    {
+      "name": "honest first row below threshold rejected even with eligible second row",
+      "status": "PASS"
+    },
+    {
+      "name": "counterexample: authentic bytes spliced across ineligible rows pass receipt predicate",
+      "status": "PASS"
+    },
+    {
+      "name": "stwo OPRF default maker unavailable",
+      "status": "PASS"
+    },
+    {
+      "name": "short hashed reveal output is truncated to input length",
+      "status": "PASS"
+    }
+  ],
+  "checksPassed": 6,
+  "checksFailed": 0,
+  "qualificationStatus": "NO_GO_ROW_INTEGRITY_COUNTEREXAMPLE",
+  "spliceAccepted": true,
+  "privacy": {
+    "signedExtractedFields": [
+      "exam_type"
+    ],
+    "scoreDateNumberCaptureOmitted": true,
+    "rawValuesStillVisibleToAttestor": true,
+    "sourceAuthenticityProved": false
+  },
+  "oprf": {
+    "stwo": "UNSUPPORTED_DEFAULT_MAKER",
+    "gnark": {
+      "status": "BLOCKED",
+      "reason": "NATIVE_LIBRARY_NOT_PACKAGED"
+    },
+    "truncation": [
+      {
+        "inputBytes": 6,
+        "outputCharacters": 6,
+        "maxOutputBits": 36,
+        "birthdayCollisionProbabilityAt100k": 0.0701749683502874
+      },
+      {
+        "inputBytes": 8,
+        "outputCharacters": 8,
+        "maxOutputBits": 48,
+        "birthdayCollisionProbabilityAt100k": 0.000017763232990227117
+      },
+      {
+        "inputBytes": 10,
+        "outputCharacters": 10,
+        "maxOutputBits": 60,
+        "birthdayCollisionProbabilityAt100k": 4.336765312451352e-9
+      },
+      {
+        "inputBytes": 16,
+        "outputCharacters": 16,
+        "maxOutputBits": 96,
+        "birthdayCollisionProbabilityAt100k": 6.310824132895677e-20
+      },
+      {
+        "inputBytes": 32,
+        "outputCharacters": 32,
+        "maxOutputBits": 192,
+        "birthdayCollisionProbabilityAt100k": 7.965379901066705e-49
+      }
+    ],
+    "domainSeparator": "reclaim-toprf",
+    "stableAcrossOfficialServersAndKeyRotation": "NOT_RUN"
+  },
+  "limits": [
+    "No real TLS or witness signature",
+    "Counterexample is receipt validation only, not a forged official proof",
+    "No attendance or inventory completeness",
+    "No proof that hidden exam identifier is stable or source-bound",
+    "No production policy changed"
+  ],
+  "checkedAt": "2026-10-13T02:20:28.310Z"
+}

@@ -1,6 +1,18 @@
-# 프론트·백엔드 연결 계약 — PR #8 기준
+# 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
-2026-10-12, 제품 코드 `841052a` 기준의 **현재 구현**이다. 후속 proof/시드/outbox/청구 API는 아직 없다. 이 문서는 실행 서버가 있다는 뜻이 아니며 개발 실행 구성은 [계획 C1](TEAM_PLAN.ko.md)에서 추가한다.
+공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
+
+공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.
+
+학습 provider 추가(2026-10-13): [합성 시드 provider·Moodle 최소 연결 명세](LEARNING_PROVIDER.ko.md)는 기존 B3의 내부 driver와 평가기 입력을 재사용한다. 기관/강좌/필수 활동·완료 의미/수정 시각을 검사하며 HTTP·DB·UI·공통 지갑/오류 API를 변경하지 않는다. 활동 완료율을 시청률·출석률로 표시하지 않으며 실제 Moodle 연동/원천 검증은 계속 차단한다.
+
+공통 오류 복구 추가(2026-10-13): [브라우저 전송·복구 계약](API_RECOVERY.ko.md), [이슈 #22](https://github.com/gw020328-oss/clear-education-v4/issues/22). 안전한 상세 코드, 중단/시간 초과, 쓰기 결과 불확실성 안내를 추가한다. 서버 API/DB/화면 변경 및 grant/outbox 확대는 없다.
+
+B3 추가(2026-10-13): [학습 증거 계약·합성 adapter](LEARNING_EVIDENCE.ko.md)는 내부 입력 검증만 추가하며 HTTP/DB/UI 계약은 변경하지 않는다. 실제 제공자·인증·영속 snapshot 수락은 미구현이다. CLEAR 추가 지급 서명을 전제로 한 grant/outbox·관련 UI/API 확대는 [최신 작업 범위](TEAM_PLAN.ko.md)에 따라 구조 검증 전까지 보류한다.
+
+B2b 추가(2026-10-13): [상세 제품 수락 계약](PRODUCT_PROOF.ko.md). schema 4와 합성 증거의 단회 수락/영수증 API를 추가했다. 실제 원천 전체성·실제 proof/자격/지급은 차단 상태다. 아래 B1·신청 계약은 유지한다.
+
+2026-10-12, PR #8의 신청/예치와 C1의 HTTPS에 B1 제품 증명 세션 API를 추가했다. B1 병합 여부는 [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15)의 연결 PR을 확인한다. 실제 proof 수락·시드/outbox/청구 API는 아직 없다. 실행은 [C1 로컬 합성 HTTPS 안내](LOCAL_SYNTHETIC.ko.md)를 따른다. 개발 전용 `GET /__dev/config`와 제한된 `POST /rpc`, 정적 프론트 빌드가 같은 origin에서 제공된다. 개발 경로는 제품 proof·지급 API가 아니다.
 
 원문: [HTTP](../../src/application/http.mjs), [서비스](../../src/application/service.mjs), [예치](../../src/application/funding.mjs), [지갑 도구](../../src/application/wallet-client.mjs). 변경 PR에서 소스·시험과 함께 이 문서를 갱신한다. 정책 전체 schema와 서명 필드는 기존 상세 문서와 소스를 따른다.
 
@@ -39,7 +51,25 @@
 
 예치 intent의 `transaction`은 `{to, from, chainId, value, data}`, `value`는 `"0x0"`, chainId는 숫자다. `approval`은 `{token, spender, amount}`이고 amount는 문자열이다. 지갑 RPC 입력 변환과 승인 거래는 프론트 연결에서 구현·검증해야 한다. intent 생성은 거래 전송이 아니며 approval 필요량과 현재 allowance를 확인해야 한다. 서버 응답을 임의 주소·금액으로 덮어쓰지 않는다.
 
+## B1 제품 증명 세션
+
+[상세 계약·상태·합성 재현](PROOF_SESSIONS.ko.md)을 따른다. 동일 origin·인증 헤더·POST CSRF는 위와 같다. 본인 참가자만 접근하며 운영자 조회는 없다.
+
+| 메서드·경로 | 입력 / 결과 |
+| --- | --- |
+| POST `/applications/:id/proof-sessions` | `{ownerPublicKey}` + Idempotency-Key → 세션 view |
+| GET `/applications/:id/proof-sessions` | 본인 세션 view 배열, 최대 100개 |
+| GET `/applications/:id/proof-sessions/:sid` | 세션 view |
+| POST `/applications/:id/proof-sessions/:sid/authorize` | `{requestNonce, signature}` → 지갑 결합 승인 view |
+| POST `/applications/:id/proof-sessions/:sid/cancel` | `{}` → 취소/종료 view |
+
+`ISSUED → AUTHORIZED → CANCELLED/EXPIRED`이며 ISSUED에서 바로 취소/만료될 수도 있다. AUTHORIZED는 proof 검증 완료가 아니다. nonce는 승인 때 한 번 소비하고 동일 서명 재전송은 기존 기록만 반환한다. 이 경로의 **requestNonce는 0x를 포함**한다. 신청당 활성 세션은 하나, TTL 최대 30분, 승인에는 발급받은 동일 로그인 세션이 필요하다. 새 로그인에서는 조회·취소 후 새 owner/새 멱등 키로 다시 시작한다.
+
+생성/승인은 제출 기간·현재 예치·발급/정산 여부와 체인 지문을 재검증한다. C1 기본 정책은 초기화 14일 뒤 제출 시작이므로 즉시 생성이 가능하다고 가정하지 않는다. F4는 [공통 승인 helper](PROOF_WALLET.ko.md)를 사용할 수 있으며 안전한 상세 오류 전달은 [공통 전송기](API_RECOVERY.ko.md)를 따른다. `/callback` 등 proof 성공 수락 API는 없다.
+
 ## 화면 상태
+
+B2b는 POST `/applications/:id/proof-sessions/:sid/evidence`의 `{profile,bundle,sourceSignature,ownerSignature}`를 독립 검증하고 `ACCEPTED_SYNTHETIC` 영수증만 반환한다. GET `/applications/:id/proof-sessions/:sid/result`는 `NOT_ACCEPTED` 또는 과거 수락 영수증이다. B1 AUTHORIZED 및 결과 영수증은 서로 다른 상태다. POST는 동일 로그인 세션·CSRF가 필요하며 GET은 본인 과거 결과만 읽는다. 시험키/점수 snapshot을 노출하는 HTTP API는 없다. 기본 서버 원천 키가 null이면 수락을 차단하며 상세 오류·필드·크기·재시도 규칙은 B2b 문서를 따른다.
 
 | state | 화면에서 말할 수 있는 사실 | 금지되는 추정 |
 | --- | --- | --- |
@@ -57,12 +87,16 @@ F0 mock은 이 상태와 필드의 합성 fixture를 사용한다. proof 성공�
 
 ## 지갑·오류 처리
 
-`createWalletClient({provider, api, chainId})`는 `connect`, `login`, `resume`, `request`, `consent`, `finalConsent`, `logout`, `dispose`를 제공한다. `finalConsent(id, reviewedRuntime)`에 넘길 runtime은 먼저 화면에서 사용자에게 보여준 전체 record다. challenge가 바뀌면 새 설정을 다시 확인해야 한다. 계정/체인 변경·disconnect는 진행 중 결과를 무효화한다.
+`createWalletClient({provider, api, chainId})`는 `connect`, `login`, `resume`, `request`, `consent`, `finalConsent`, `authorizeProofSession`, `logout`, `dispose`를 제공한다. `finalConsent(id, reviewedRuntime)`에 넘길 runtime은 먼저 화면에서 사용자에게 보여준 전체 record다. challenge가 바뀌면 새 설정을 다시 확인해야 한다. 계정/체인 변경·disconnect는 진행 중 결과를 무효화한다.
 
-HTTP 오류는 `{code, message, retryable, nextAction, requestId}`다. 현재 message는 고정 일반 문구, retryable은 false, 401의 nextAction은 `SIGN_IN_AGAIN`, 그 외는 `CHECK_REQUEST`다. **현재 브라우저 adapter는 401을 `AUTH_REQUIRED`, 나머지를 `API_REQUEST_FAILED`로 축약한다.** 상세 code가 화면에 전달된다고 가정하지 않는다. 확장한다면 허용 목록의 안전한 code만 전달하고 원문 서버/provider 오류·URL을 노출하지 않도록 별도 검증한다.
+서버 HTTP 오류는 `{code, message, retryable, nextAction, requestId}`다. 서버 message는 고정 일반 문구, retryable은 false, 401의 nextAction은 `SIGN_IN_AGAIN`, 그 외는 `CHECK_REQUEST`다. 브라우저 adapter는 기존 `.message`(401 `AUTH_REQUIRED`, 나머지 `API_REQUEST_FAILED`)를 유지하면서 상태와 일치하는 허용 목록 `.code` 및 제한된 `.requestId`만 전달한다. `.status/.outcome/.retryable/.nextAction`은 [공통 오류 복구 계약](API_RECOVERY.ko.md)에 따라 자체 계산한다. 서버/provider 원문과 임의 복구 지시를 전달하지 않는다. 쓰기 요청은 자동 재전송하지 않으며 timeout/취소가 서버 rollback을 뜻하지 않는다. `wallet.request`의 선택적 `signal`로 취소를 전달할 수 있다. 화면 적용은 별도 담당 범위다.
+
+B1은 proof 만료 410과 활성/취소/owner 재사용/예치 상태 충돌 409를 추가한다. 상세 코드는 B1 문서를 따른다.
 
 주요 HTTP 상태는 인증 실패 401, 권한/origin/CSRF/지갑 불일치 403, 미존재 404, 일부 멱등·신청 상태 충돌 409, 빈도 제한 429, 본문 크기 413, 나머지 규칙 위반 422, 내부 오류 500이다. 모든 상태 충돌이 409인 것은 아니다. 지갑 거절은 도구의 `WALLET_REJECTED`, 잘못된 체인은 `WRONG_CHAIN`, 변경은 `WALLET_CONTEXT_CHANGED`를 처리한다. 거절을 자동 재서명·재전송하지 않는다.
 
 ## 후속 계약 변경 절차
 
-B1 이후에는 세션 식별자·상태 전이·만료·재개·권한과 응답의 합성 예제를 먼저 추가한다. 서버 구현과 시험이 없는 경로는 ‘제안’이라고 표시한다. 프론트와 mock은 이 변경을 따라가되, 서버 기능이 실제 병합되기 전에는 연결 완료로 보고하지 않는다.
+B2a의 [전체 시험 증거 계약](EXAM_EVIDENCE.ko.md)은 내부 합성 함수만 제공한다. `COMPLETE_SYNTHETIC`/`ON_HOLD`는 새 HTTP 상태나 B1 DB 상태가 아니다. 신뢰한 B1 AUTHORIZED view와 독립적으로 고정한 원천 manifest 지문을 입력으로 받아 완전성이 확인된 합성 exams snapshot 또는 보류를 반환한다. 실제 YBM 원천 인증·전체성·단회 proof 수락은 미구현이며 공개 `/verified`·`/consume` 경로를 추가하지 않았다. F4에서 세션 승인과 전체 시험 검증 완료를 구분한다.
+
+후속 공통 API를 연결할 때도 세션 식별자·상태 전이·만료·재개·권한과 응답의 합성 예제를 먼저 추가한다. grant/outbox 전용 확대는 현재 보류다. 서버 구현과 시험이 없는 경로는 ‘제안’이라고 표시한다. 프론트와 mock은 이 변경을 따라가되, 서버 기능이 실제 병합되기 전에는 연결 완료로 보고하지 않는다.

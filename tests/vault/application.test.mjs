@@ -163,8 +163,8 @@ test('schema v1 migration preserves existing application/session/consent and rej
   const f = await fixture(t), one = await f.accepted(), filename = join(f.app.directory, 'applications.sqlite');
   // Emulate the previous schema without mutating any real user database.
   const db = new DatabaseSync(filename);
-  db.exec('DROP TABLE funding; DROP TABLE final_challenges; DROP TABLE runtime_configs;');
-  const metadata = JSON.parse(db.prepare('SELECT config FROM metadata').get().config); metadata.schemaVersion = 1;
+  db.exec('DROP TABLE proof_results; DROP TABLE proof_sessions; DROP TABLE funding; DROP TABLE final_challenges; DROP TABLE runtime_configs;');
+  const metadata = JSON.parse(db.prepare('SELECT config FROM metadata').get().config); metadata.schemaVersion = 1; delete metadata.proofSourceSigner;
   const { canonical } = await import('../../src/policy/values.mjs');
   db.prepare('UPDATE metadata SET config=?').run(canonical(metadata)); db.close();
   f.app.restart({ vaultReader: f.reader });
@@ -172,7 +172,7 @@ test('schema v1 migration preserves existing application/session/consent and rej
   assert.equal(restored.state, 'TERMS_ACCEPTED'); assert.ok(restored.consentDigest);
   assert.equal(f.app.service.whoami(f.app.operatorContext).role, 'operator');
   const next = new DatabaseSync(filename); const version = JSON.parse(next.prepare('SELECT config FROM metadata').get().config);
-  assert.equal(version.schemaVersion, 2); next.close();
+  assert.equal(version.schemaVersion, 4); next.close();
   const unknown = new DatabaseSync(filename); version.schemaVersion = 99;
   unknown.prepare('UPDATE metadata SET config=?').run(canonical(version)); unknown.close();
   assert.throws(() => createApplicationService(f.app.config), /DB_ENVIRONMENT_MISMATCH/);

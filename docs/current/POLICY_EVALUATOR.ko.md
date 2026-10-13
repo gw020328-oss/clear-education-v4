@@ -1,5 +1,9 @@
 # W04/W05 첫 구현 단위: 합성 정책과 결정적 평가
 
+B3 후속(2026-10-13): [학습 증거 계약·합성 adapter](LEARNING_EVIDENCE.ko.md)가 신뢰한 합성 pin의 학습 기간·필수 강의/페이지·버전·관측 신선도를 검사해 기존 learning snapshot 형식으로 전달한다. 아래 평가기와 정책 hash/800점 AND 80% 규칙은 변경하지 않았다. 실제 제공자 인증·영속 수락은 미구현이며 실제 학습 검증은 BLOCKED다.
+
+B2a 후속(2026-10-13): [전체 시험 목록·최고점 증거 계약](EXAM_EVIDENCE.ko.md)이 고정된 원천 inventory와 모든 페이지·접수/성적을 대조한 합성 exams snapshot을 생성한다. 아래 기존 평가기의 `completeSnapshot`은 여전히 신뢰 가능한 실제 증거가 아니다. 새 함수도 SYNTHETIC 전용이며 실제 원천 전체성은 BLOCKED다. 기존 평가기 입력·정책 해시를 소급 변경하지 않는다.
+
 2026-10-12, 기준 develop `366417e3fd7b0cc64ed905cd65a4880955313419`.
 승인 우선순위는 AGENTS의 최신 승인 → MAC_MVP → PRD/설계 → SESSION_HANDOFF다.
 이 문서는 이번 기능 브랜치의 범위이며 과거 실제 성공 보고서를 대체하지 않는다.

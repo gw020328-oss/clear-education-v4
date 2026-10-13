@@ -63,12 +63,27 @@ jobs:
         run: ./tools/npm run test:applications
       - name: Isolated in-memory vault, final consent and funding recovery
         run: ./tools/npm run test:vault
+      - name: Product proof sessions, durable nonce and current enrollment
+        run: ./tools/npm run test:proof-sessions
+      - name: Synthetic complete exam inventories and highest-score evidence
+        run: ./tools/npm run test:exam-evidence
+      - name: Product collector, independent verification and atomic result acceptance
+        run: ./tools/npm run test:product-proof
+      - name: Pinned synthetic learning inventories and provider failure boundaries
+        run: ./tools/npm run test:learning-evidence
+      - name: Persistent synthetic HTTPS environment and restart isolation
+        run: ./tools/npm run test:dev
       - name: Synthetic extraction and isolation tests (loopback only)
         run: ./tools/npm --prefix spikes/w02-collector-boundary test
       - name: Storage preparation tests
         run: ./tools/npm --prefix spikes/w02-storage-preparation test
       - name: YBM route with synthetic attestor and in-memory SDK socket
         run: ./tools/npm --prefix src/ybm-collector test
+      - name: Direct proof predicate and adapter feasibility (synthetic only)
+        run: |
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs spikes/direct-proof-feasibility/predicate-check.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs spikes/direct-proof-feasibility/adapter-check.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test spikes/direct-proof-feasibility/record-policy.test.mjs spikes/direct-proof-feasibility/attestor-extension.test.mjs
       - name: Verify original and published document fingerprints and legacy content
         run: ./tools/npm run verify:workspace
       - name: Fresh checkout integrity regression

@@ -1,10 +1,26 @@
 # 개발 가이드
 
+공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](current/PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
+
+공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](current/PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.
+
+B3 후속의 [학습 provider·Moodle 연결 명세](current/LEARNING_PROVIDER.ko.md)는 기존 `./tools/npm run test:learning-evidence`로 검증한다. 새 합성 시드 provider는 B3 driver와 최소 evaluator snapshot을 유지하며 실제 Moodle 설치/토큰/외부 호출은 필요하지 않다.
+
+공통 브라우저 오류·요청 복구 시험은 기존 `./tools/npm run test:applications`에 포함된다. [안전한 오류/시간 초과/취소/응답 유실 계약](current/API_RECOVERY.ko.md)을 확인한다. loopback HTTPS와 합성 데이터만 쓰며 UI·실제 원천·지급 검증과 구분한다.
+
 ## 협업 절차
 
 작업은 최신 `origin/develop`에서 만든 개별 브랜치에서 진행합니다. Codex 브랜치는 `codex/작업명`이며 검증 가능한 단위마다 커밋·푸시합니다. 작업 PR은 `develop`을 대상으로 하고, 통합 검증 뒤 별도 `develop` → `main` PR을 만듭니다. `main`은 현재 개발 기준본이며 완성 서비스가 아닙니다. [기여 안내](../CONTRIBUTING.md)
 
 ## 런타임
+
+B3 학습 입력의 합성 계약/adapter 시험은 `./tools/npm run test:learning-evidence`다. [제공자 미확인·버전/기간/완전성 경계](current/LEARNING_EVIDENCE.ko.md)를 따른다. 실제 endpoint·인증·제품 DB/HTTP/UI와 지급 구조를 추가하지 않는다. grant/outbox 전용 확대는 [최신 계획](current/TEAM_PLAN.ko.md)에 따라 보류한다.
+
+B2b 합성 제품 수집·독립 검증·원자 수락 시험은 `./tools/npm run test:product-proof`다. [서버 원천 설정·schema 4·실경로 차단](current/PRODUCT_PROOF.ko.md)을 확인한다. 기본 C1 환경은 자동으로 제품 수집을 켜지 않으며 기존 DB/체인/키를 reset하거나 편집하지 않는다.
+
+B2a 전체 시험 증거 계약의 합성 검증은 `./tools/npm run test:exam-evidence`로 실행한다. [원천 신뢰 경계와 재현](current/EXAM_EVIDENCE.ko.md)을 먼저 확인한다. 실제 YBM 로그인·외부 RPC·기존 DB/체인을 사용하지 않는다.
+
+로컬 합성 HTTPS 서버·DB·TEST 체인의 초기화/실행/재시작은 [C1 개발 환경 안내](current/LOCAL_SYNTHETIC.ko.md)를 따릅니다. 프론트 `web/dist`를 같은 origin에서 제공하며, 기존 정책 선언용 환경 설정과 독립된 개발 환경을 만듭니다.
 
 Node.js **24.21.0**, npm **11.19.0**을 사용합니다. `.nvmrc`, `.node-version`, `package.json`이 기준입니다. 런타임 바이너리는 저장소에 포함하지 않습니다.
 
@@ -112,3 +128,7 @@ Apple Silicon Mac에서 고정 Node 버전을 PATH에 준비한 뒤 실행합니
 새 `hard-kill.test.mjs`는 시작 허용 전/기록 도중/허용 후 SIGKILL과 이전 버전의 기록 없는 시작(5회)을 검사합니다. 각 재실행은 삭제 완료 출력 뒤에도 옛 프로필과 브라우저 프로세스가 남지 않는지 확인합니다. `recovery.test.mjs`는 조회 실패·다른 사용자/프로필·PID 재사용·종료 거부를 Linux CI에서도 검사합니다.
 
 Runner 구성 근거: [GitHub 표준 runner](https://docs.github.com/en/actions/reference/runners/github-hosted-runners), [Mac 15 Arm64 이미지](https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md).
+
+## B1 제품 증명 세션
+
+[세션·영속 nonce와 현재 예치 재검증](current/PROOF_SESSIONS.ko.md)을 확인한다. `./tools/npm run test:proof-sessions`는 새 격리 TEST 체인과 임시 DB/HTTPS로 실행하며 공개 합성 CI에도 포함된다. schema 3은 같은 환경의 v1/v2 DB를 원자 이관한다. 실제 proof 수집·검증 수락·outbox는 후속이다.
