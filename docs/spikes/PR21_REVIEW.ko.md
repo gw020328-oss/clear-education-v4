@@ -43,3 +43,5 @@
 - 새 Windows PowerShell 회귀는 실제 합성 ZIP의 짧은 경로 압축 해제, 긴 파일/디렉터리 경로 거부, 검사 중 대상 폴더 미생성, 오류 코드/안내와 비공개 문자열 누출 방지를 확인한다. 기존 Chrome 보고서 9개에 대상 OS 경계 5개를 추가했다. 공통 CI 영향은 Windows 합성 job의 bootstrap 전 회귀 추가다. HTTP/API/DB/금고 계약 변경은 없다.
 
 로컬 Chrome lifecycle 6개 및 workspace 보존 검사가 통과했다. 이 Mac에는 Windows PowerShell이 없어 PowerShell 회귀·실제 고정 Node bootstrap·Windows 전체 합성 진단은 변경 HEAD의 Windows CI로 확인한다. 최종 CI 결과와 병합 상태는 PR #21 본문/checks를 따른다. 이전 HEAD의 Chrome CI 간헐 실패는 원인 미확정 이력이며 이번 bootstrap 수정으로 해결했다고 주장하지 않는다.
+
+Windows CI 최초 후속 실행에서 새 ZIP fixture가 PowerShell 5.1의 `ZipArchiveMode` 형식을 찾지 못했다. `System.IO.Compression`을 명시적으로 로드하도록 helper와 시험을 수정했다. [실패 이력](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38369336612)은 보존하며 수정 커밋의 CI로 다시 확인한다.

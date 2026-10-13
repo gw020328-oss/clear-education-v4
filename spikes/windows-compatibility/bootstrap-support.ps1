@@ -1,6 +1,7 @@
 # Windows PowerShell 5.1 extraction uses legacy path limits. Inspect the
 # verified archive before extraction so a long destination leaves no partial runtime.
 function Test-BootstrapArchivePath([string]$ArchivePath, [string]$Destination) {
+  Add-Type -AssemblyName System.IO.Compression
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   $archive = [IO.Compression.ZipFile]::OpenRead($ArchivePath)
   try {
