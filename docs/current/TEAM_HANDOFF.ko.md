@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+학습 provider 후속(2026-10-13): [이슈 #24](https://github.com/gw020328-oss/clear-education-v4/issues/24), [Moodle 연결 명세](LEARNING_PROVIDER.ko.md). PR #23 병합 `7ee183d` 위에서 기존 B3를 재사용하는 합성 시드 provider를 추가했다. 기관·강좌·계정·필수 활동 매핑 및 완료/수정 시각의 의미를 고정하며 실제 Moodle 취득은 구현하지 않는다. 800점 AND 80%·최고점과 기존 HTTP/DB/UI는 유지한다. 원천 검증 차단·grant/outbox 보류 및 별도 독립 청구/Windows 검증 범위를 변경하지 않는다.
+
 공통 오류 복구(2026-10-13): PR #20 병합 `4a0cdc6` 위에서 [이슈 #22](https://github.com/gw020328-oss/clear-education-v4/issues/22), [전송·복구 계약](API_RECOVERY.ko.md)을 추가했다. 기존 import/HTTP message를 유지하며 안전한 상세 코드·중단/시간 초과·쓰기 결과 확인 안내를 전달한다. 프론트 담당자는 공통 전송기의 새 필드를 확인한다. 서버/DB/화면·지급 기능을 추가하지 않으며 실제 원천 차단과 grant/outbox 보류를 유지한다.
 
 2026-10-13 범위 변경: [최신 계획](TEAM_PLAN.ko.md)에 따라 공통 개발을 계속하되 CLEAR 추가 지급 서명의 grant/outbox와 종속 UI/API 확대는 새 구조 검증 전까지 보류한다. 현 금고·HMAC 구조를 최종안으로 고정하거나 PRD의 800점 AND 80%/최고점 정책을 변경하지 않는다. PR #19는 develop에 병합 완료(`3f8ef79`)이며 보존한다. 별도 증거 기반 청구·Windows 검증 worktree는 이 작업에서 수정하지 않는다.

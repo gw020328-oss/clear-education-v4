@@ -1,5 +1,7 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
+학습 provider 추가(2026-10-13): [합성 시드 provider·Moodle 최소 연결 명세](LEARNING_PROVIDER.ko.md)는 기존 B3의 내부 driver와 평가기 입력을 재사용한다. 기관/강좌/필수 활동·완료 의미/수정 시각을 검사하며 HTTP·DB·UI·공통 지갑/오류 API를 변경하지 않는다. 활동 완료율을 시청률·출석률로 표시하지 않으며 실제 Moodle 연동/원천 검증은 계속 차단한다.
+
 공통 오류 복구 추가(2026-10-13): [브라우저 전송·복구 계약](API_RECOVERY.ko.md), [이슈 #22](https://github.com/gw020328-oss/clear-education-v4/issues/22). 안전한 상세 코드, 중단/시간 초과, 쓰기 결과 불확실성 안내를 추가한다. 서버 API/DB/화면 변경 및 grant/outbox 확대는 없다.
 
 B3 추가(2026-10-13): [학습 증거 계약·합성 adapter](LEARNING_EVIDENCE.ko.md)는 내부 입력 검증만 추가하며 HTTP/DB/UI 계약은 변경하지 않는다. 실제 제공자·인증·영속 snapshot 수락은 미구현이다. CLEAR 추가 지급 서명을 전제로 한 grant/outbox·관련 UI/API 확대는 [최신 작업 범위](TEAM_PLAN.ko.md)에 따라 구조 검증 전까지 보류한다.
