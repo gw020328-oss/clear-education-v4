@@ -1,0 +1,29 @@
+# Windows Server runner is not evidence of a teammate Windows 11 PC run.
+name: Windows collector synthetic spike
+on:
+  pull_request:
+    branches: [develop]
+    paths: ['spikes/windows-compatibility/**', 'src/ybm-collector/package*.json', '.github/workflows/windows-synthetic.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-synthetic:
+    name: Windows Server x64 synthetic collector gates
+    runs-on: windows-2022
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Bootstrap SHA256-pinned local Node and lockfile dependencies
+        run: ./spikes/windows-compatibility/bootstrap.ps1
+      - name: Public synthetic crypto, Job Object, ACL, locking and Chrome probes
+        run: ./spikes/windows-compatibility/diagnose.ps1 -Ci
+      - name: Print minimal synthetic reports
+        if: always()
+        run: |
+          Get-ChildItem artifacts/windows-compatibility/report-*.json -ErrorAction SilentlyContinue | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }

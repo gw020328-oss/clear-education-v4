@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "scope": "SYNTHETIC_ONLY",
+  "platform": "darwin",
+  "arch": "arm64",
+  "node": "24.21.0",
+  "zkPackage": "5.1.6",
+  "checks": [
+    {
+      "id": "pinned-node",
+      "status": "PASS"
+    },
+    {
+      "id": "locked-zk-package",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-128-ctr-prove-verify",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-128-ctr-reject-plaintext",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-128-ctr-reject-ciphertext",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-128-ctr-reject-nonce",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-128-ctr-reject-counter",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-128-ctr-reject-corrupt-proof",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-256-ctr-prove-verify",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-256-ctr-reject-plaintext",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-256-ctr-reject-ciphertext",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-256-ctr-reject-nonce",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-256-ctr-reject-counter",
+      "status": "PASS"
+    },
+    {
+      "id": "aes-256-ctr-reject-corrupt-proof",
+      "status": "PASS"
+    },
+    {
+      "id": "chacha20-prove-verify",
+      "status": "PASS"
+    },
+    {
+      "id": "chacha20-reject-plaintext",
+      "status": "PASS"
+    },
+    {
+      "id": "chacha20-reject-ciphertext",
+      "status": "PASS"
+    },
+    {
+      "id": "chacha20-reject-nonce",
+      "status": "PASS"
+    },
+    {
+      "id": "chacha20-reject-counter",
+      "status": "PASS"
+    },
+    {
+      "id": "chacha20-reject-corrupt-proof",
+      "status": "PASS"
+    },
+    {
+      "id": "gnark-windows-native-binary",
+      "status": "BLOCKED",
+      "code": "SEPARATE_OPRF_GATE"
+    }
+  ],
+  "realYbm": false,
+  "windowsCryptoSuccess": false
+}
