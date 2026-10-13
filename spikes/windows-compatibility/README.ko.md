@@ -31,6 +31,6 @@ tools/node spikes/windows-compatibility/crypto-probe.mjs
 
 ## ZIP 구조 / CI
 
-ZIP에는 `spikes/windows-compatibility/`의 이 소스들과 `src/ybm-collector/package.json`, `src/ybm-collector/package-lock.json`만 필요하다. `node_modules`, `.toolchain`, 개인 데이터, 기존 증명은 포함하지 않는다. 루트 상대 구조를 유지한다. `windows-synthetic.workflow.yml`은 부모 세션이 `.github/workflows/windows-synthetic.yml`에 통합할 초안이다. Windows Server 2022 CI의 성공과 팀원 Windows 11 PC 성공을 별도로 기록한다. 이 검사는 branch protection을 자동 변경하지 않는다.
+ZIP에는 `spikes/windows-compatibility/`의 이 소스들과 `src/ybm-collector/package.json`, `src/ybm-collector/package-lock.json`만 필요하다. `node_modules`, `.toolchain`, 개인 데이터, 기존 증명은 포함하지 않는다. 루트 상대 구조를 유지한다. 실행 workflow는 `.github/workflows/windows-synthetic.yml`에 통합했다. 이 폴더의 `windows-synthetic.workflow.yml`은 대응 참고본이다. Windows Server CI 관찰은 `windows-server-ci-report.json`에 있다. Windows Server 2022 CI의 성공과 팀원 Windows 11 PC 성공을 별도로 기록한다. 이 검사는 branch protection을 자동 변경하지 않는다.
 
 수정 범위·검증 상태·제품 이식 gate는 [ASSESSMENT.ko.md](ASSESSMENT.ko.md)를 따른다.

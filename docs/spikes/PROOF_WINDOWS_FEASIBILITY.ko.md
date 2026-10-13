@@ -43,8 +43,8 @@ Ganache는 Node24용 µWS/native bigint 바이너리가 없어 기존 JS fallbac
 | A: 사업 내 시험 중복 | 동일 제공 nullifier 거부; 변경 값 수락 재현 | 원천 결합/재발급/다른 지갑의 안정값 미구현 **NO-GO** |
 | A: 현 verifier | Amoy 코드·epoch·registry·Sourcify exact-match 읽기 관찰 PASS | 공식 새 proof의 정확한 ABI/epoch/witness 호환성 NOT_RUN |
 | A: CLEAR 중단 후 새 수집 | 현 collection authority 의존 코드 확인 | 독립 수집 NOT_RUN |
-| B: STWO 엔진 | Mac 20항목 PASS | Windows 결과는 CI 및 팀원 PC를 별도 기록 |
-| B: Windows 저장/프로세스 | 진단 패키지와 Windows Server CI 추가 | Win11 일반 사용자·강제 종료/재시작·24h·race 경계 NOT_RUN |
+| B: STWO 엔진 | Mac 및 Windows Server에서 각20항목 PASS | 팀원 Windows11 미실행 |
+| B: Windows 저장/프로세스 | Windows Server CI 전체34 PASS / 2 BLOCKED / 7 NOT_RUN | 암호화/gnark BLOCKED; Win11·기존 Chrome창·강제 종료/재시작·24h·race 경계 NOT_RUN |
 | 기존 Mac | 관련 회귀322개 PASS | 기존 실수집 성공 기록을 이번 실험 성공으로 재집계하지 않음 |
 
 A의 시험 PASS에는 결함 후보가 기대대로 재현됐다는 관찰도 포함된다. 따라서 합성 체크 수와 제품 관문 판정이 다르다. [A 실험과 상세 근거](../../spikes/direct-proof-feasibility/README.ko.md), [B 변경 지점·설계·공수](../../spikes/windows-compatibility/ASSESSMENT.ko.md)를 함께 읽는다.
@@ -83,3 +83,7 @@ B의 GO에는 일반 사용자 Win11에서 3종 STWO/독립 verifier IPC/Chrome 
 ZIP은 `artifacts/windows-compatibility/CLEAR-Windows-Synthetic-Diagnostic.zip`, 지문/커밋/파일 목록은 같은 폴더의 `package-manifest.json`에 기록한다. 런타임·의존성은 포함하지 않고 bootstrap이 고정 공개 배포를 받는다. 외부 배포 업로드는 하지 않는다.
 
 수정 파일 범위는 `spikes/direct-proof-feasibility/` 8개, `spikes/windows-compatibility/`의 진단·보고서, `tools/package-windows-spike.mjs`, 이 통합 보고서, 두 CI workflow다. 제품 `src/`, `contracts/`, API/DB schema, 기존 Mac 패키지와 정책 파일에는 변경이 없다. 상세 목록은 PR diff가 기준이다. 각 작은 커밋은 Draft PR에서 검토하며 병합은 별도다.
+
+## 검토와 CI 근거
+
+[Draft PR #21](https://github.com/gw020328-oss/clear-education-v4/pull/21)에 작은 커밋으로 정리했다. `4a8b0c3`에서 [공개 합성/Mac CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38336271152) 및 [Windows Server 진단](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38336271261)이 성공했다. 이후 패키징/보고서 변경은 PR의 최신 검사 상태를 따른다. `windows-server-ci-report.json`은 단계별 미실행/차단을 그대로 보존한다. CI 성공은 제품 준비 완료를 뜻하지 않는다.

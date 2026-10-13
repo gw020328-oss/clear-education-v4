@@ -1,6 +1,6 @@
 # Windows 수집 도구 기술 검증 — 2026-10-13
 
-**판정: Windows 이식 후보는 유지하되 제품 GO는 보류한다.** 현재 STWO의 Node WASM은 재작성 없이 사용할 가능성을 뒷받침하는 Mac 합성 결과가 있다. Windows의 실제 로딩·prove/verify, ACL/Job/Chrome 실행은 이 Mac 세션에서 미실행이다. Windows용 실행 가능한 합성 진단 소스를 준비했으며 결과가 와야 첫 gate를 판정할 수 있다. Windows 수집 도구만 대상이고 서버/DB/체인의 Windows 호환성을 주장하지 않는다.
+**판정: Windows 이식 후보는 유지하되 제품 GO는 보류한다.** 현재 STWO의 Node WASM은 재작성 없이 사용할 가능성을 뒷받침하는 Mac 합성 결과가 있다. Windows Server 2022 CI에서 STWO 로딩·prove/verify, ACL/Job/Chrome 실행까지 34 PASS를 확인했다. BLOCKED 2개와 NOT_RUN 7개는 남아 있으며 팀원 Windows11 일반 계정의 제품 gate는 아직 판정할 수 없다. Windows 수집 도구만 대상이고 서버/DB/체인의 Windows 호환성을 주장하지 않는다.
 
 기준: `3f8ef79` worktree, Node 24.21.0/npm 11.19.0, attestor-core 5.1.4, lockfile의 zk-symmetric-crypto 5.1.6. 실제 계정·기존 쿠키·증명·브라우저 프로필을 사용하지 않았다. 기존 Mac 제품 모듈 수정은 없다.
 
@@ -12,8 +12,8 @@
 | 각 알고리즘 plaintext/ciphertext/nonce/counter/proof 변조 거부 | PASS, Mac arm64 | 총 15개 거부; 원천 HTTP/YBM 자격 증명 아님 |
 | 고정 Node/zk 패키지 | PASS, Mac | 합계 20 PASS, `mac-synthetic-report.json` |
 | Windows 고정 ZIP/EXE SHA256 원천 확인 | PASS, 공개 원천 읽기 | 공식 SHASUMS256을 읽어 `runtime.json`에 고정. Windows 다운로드·실행은 미실행 |
-| Windows STWO·Chrome pipe·Job·ACL·lock·junction 합성 진단 | NOT_RUN | `bootstrap.ps1`, `diagnose.ps1`, `JobRunner.cs`, `chrome-probe.mjs` 준비. 이 Mac에는 pwsh/dotnet/Windows 연결이 없어 PS/C# 컴파일도 미검증 |
-| Windows Server CI | NOT_RUN | workflow 초안 준비. 부모 세션이 통합·실행한 후 별도 결과로 기록 |
+| Windows STWO·Chrome pipe·Job·ACL·lock·junction 합성 진단 | PASS, Windows Server 2022 x64 | CI에서 PS/C# 컴파일·실행 포함 확인. 한글/공백 프로필 정리도 PASS |
+| Windows Server CI | 34 PASS / 2 BLOCKED / 7 NOT_RUN | `windows-server-ci-report.json`; 암호화/gnark BLOCKED, Win11·기존 Chrome 보존·강제종료/TTL 등 NOT_RUN |
 | 팀원 Windows 11 PC | NOT_RUN | 원격 실행 권한/연결 없음. README의 두 명령으로 최소 보고서 생성 |
 | gnark/OPRF Windows | BLOCKED | 현재 설치 graph에 gnark 네이티브 bin 없음. STWO PASS를 OPRF PASS로 해석하지 않음 |
 | 실제 Windows YBM 수집·공식 proof·지급 | NOT_RUN | 제품 저장/수명 경계와 실제 참여 필요 |
@@ -46,7 +46,7 @@
 
 첫 gate는 팀원 Windows 11에서 고정 Node/3개 STWO 알고리즘/독립 검증기 IPC/Chrome pipe가 통과하는지다. 현재 진단은 앞의 STWO·Chrome·기본 OS 기능을 자동화했고, 실제 `independent-verifier`의 Windows 최소 환경/IPC는 다음 adapter 단계에서 추가한다. ACL·암호화 확인 방법과 Job/Chrome sandbox 조합이 일반 계정에서 성립해야 제품 이식 GO다. 어떤 gate도 단순 권한 검사 삭제로 통과시키지 않는다.
 
-Windows 이식만 집중 개발 10~15작업일이라는 기존 추정은 **첫 gate가 바로 통과하고 기존 STWO를 유지하는 경우**에만 유지할 수 있다. 현재 실제 Windows 미실행과 native 저장/복구 요구를 반영하면 **12~18 엔지니어 작업일**을 계획 범위로 잡는 편이 타당하다: 기반 gate/adapter 1~2일, 저장/ACL/handle 경계 3~4일, Chrome/Job/lifecycle 3~4일, verifier·패키징·CI 2~3일, 팀원/비개발자·강제종료 회귀와 수정 3~5일. 일부 작업은 겹칠 수 있으나 외부 기기 대기시간은 별도다. 현재 spike는 이 공수 전체의 완료가 아니다.
+Windows 이식만 집중 개발 10~15작업일이라는 기존 추정은 **첫 gate가 바로 통과하고 기존 STWO를 유지하는 경우**에만 유지할 수 있다. Windows Server 합성 성공 후에도 남은 Windows11 실기기 미실행과 native 저장/복구 요구를 반영하면 **12~18 엔지니어 작업일**을 계획 범위로 잡는 편이 타당하다: 기반 gate/adapter 1~2일, 저장/ACL/handle 경계 3~4일, Chrome/Job/lifecycle 3~4일, verifier·패키징·CI 2~3일, 팀원/비개발자·강제종료 회귀와 수정 3~5일. 일부 작업은 겹칠 수 있으나 외부 기기 대기시간은 별도다. 현재 spike는 이 공수 전체의 완료가 아니다.
 
 10월 14일~11월 6일에는 평일 18일이 있다. 따라서 Windows 담당이 전담하고 10월 15~16일에 첫 Windows gate가 통과하며, 10월 23일 전후에 저장/프로세스 실패 복구가 준비되면 Windows 합성 배포·제한된 실제 참여 검증을 11월 7일 목표에 포함하는 것은 조건부 가능하다. 반대로 10월 16일에도 STWO/Chrome/암호화 검사가 막히거나 gnark/OPRF Windows native 개발이 새로 필요하면 Windows 제품 약속은 NO-GO로 두고 Mac 경로와 Windows 합성 진단만 유지한다.
 
@@ -63,3 +63,7 @@ Windows 이식만 집중 개발 10~15작업일이라는 기존 추정은 **첫 g
 - 설치된 `zk-symmetric-crypto/lib/stwo/operator.js`, `s2circuits-wrapper.js`, `gnark/utils.js`, `lib/config.js`: STWO Node WASM 로드 및 gnark의 플랫폼 binary 요구를 소스에서 확인. gnark loader는 `win32-x86_64-libprove.so`/`libverify.so` 형식 경로와 `import.meta.url.replace('file://','')`를 사용하며 별도 URL/path 및 binary 호환성 검증이 필요하다. 설치 graph에 bin이 없다는 사실은 upstream에 Windows 구현이 영원히 없다는 주장이 아니다.
 
 소스 파일 목록은 이 폴더의 `runtime.json`, `bootstrap.ps1`, `diagnose.ps1`, `JobRunner.cs`, `job-tree-probe.mjs`, `crypto-probe.mjs`, `chrome-probe.mjs`, `network-guard.mjs`, workflow 초안, README, 이 보고서와 Mac 합성 결과다. 부모 세션이 공통 CI/통합 문서를 별도로 검토·커밋한다.
+
+## Windows Server 실행 근거
+
+[GitHub 실행 38336271261](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38336271261), 소스 `4a8b0c3`, Windows Server build20348. 정제된 실제 JSON을 `windows-server-ci-report.json`에 보관한다. CI 시작 때 기존 Chrome 프로세스가 없어 기존 창 보존은 NOT_RUN이다. `device-encryption-active`와 `gnark-windows-native-binary`가 BLOCKED인 상태의 합성 검사 성공이며 실제 로그인 허가가 아니다.
