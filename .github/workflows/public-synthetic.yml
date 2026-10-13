@@ -65,6 +65,8 @@ jobs:
         run: ./tools/npm run test:vault
       - name: Product proof sessions, durable nonce and current enrollment
         run: ./tools/npm run test:proof-sessions
+      - name: Synthetic complete exam inventories and highest-score evidence
+        run: ./tools/npm run test:exam-evidence
       - name: Persistent synthetic HTTPS environment and restart isolation
         run: ./tools/npm run test:dev
       - name: Synthetic extraction and isolation tests (loopback only)

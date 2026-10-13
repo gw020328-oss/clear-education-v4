@@ -1,5 +1,7 @@
 # 개발 현황
 
+B2a 구현 추가(2026-10-13): [이슈 #12](https://github.com/gw020328-oss/clear-education-v4/issues/12), [전체 시험 증거 계약](current/EXAM_EVIDENCE.ko.md). B1 PR #16 병합 기준 `2c51823`에서 범위/페이지/종료/건수·접수/성적 대조와 최고점 합성 검증을 구현했다. 실제 원천 inventory와 계정/기간 전체성은 미확인으로 실제 자격 판정 차단을 유지한다. 아래 표는 과거 기록이며 새 B2a 병합·CI 상태는 연결 PR을 따른다.
+
 B1 구현 추가(2026-10-12): [이슈 #15](https://github.com/gw020328-oss/clear-education-v4/issues/15)와 [제품 증명 세션 문서](current/PROOF_SESSIONS.ko.md)를 확인한다. C1은 PR #14로 develop에 병합됐으며 B1은 세션·승인 nonce·현재 예치 재검증을 추가한다. 아래 과거 표의 제품 proof 미구현 표시는 당시 기준이다. B1의 AUTHORIZED는 지갑 결합 승인만 의미하며 실제 proof 수락·시험 중복 차단·outbox는 미연결이다. 최신 병합/CI 상태는 연결 PR을 따른다.
 
 공개 근거 확인: **2026-10-12 14:11 KST**. 원격 main/develop·PR·정확한 커밋의 CI와 공개 비민감 보고서를 대조했다. 아래 시험 수와 실제 증명 결과는 저장된 실행 기록이며 이번 문서 작업에서 재실행한 결과가 아니다.

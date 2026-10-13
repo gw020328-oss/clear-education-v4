@@ -3,8 +3,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { fixture as vaultFixture } from '../vault/fixture.mjs';
 
-export async function fixture(t, { advance = true } = {}) {
-  const f = await vaultFixture(t), accepted = await f.accepted(), applicationId = accepted.a.applicationId;
+export async function fixture(t, { advance = true, policyDraft } = {}) {
+  const f = await vaultFixture(t, { policyDraft }), accepted = await f.accepted(), applicationId = accepted.a.applicationId;
   await (await f.token.approve(f.pin.vaultAddress, f.config.amount)).wait();
   const intent = await f.app.service.fundingIntent(f.app.operatorContext, applicationId);
   const tx = await f.signer.sendTransaction(intent.transaction); await tx.wait();
