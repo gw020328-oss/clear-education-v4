@@ -21,6 +21,11 @@ jobs:
           persist-credentials: false
       - name: Bootstrap SHA256-pinned local Node and lockfile dependencies
         run: ./spikes/windows-compatibility/bootstrap.ps1
+      - name: Diagnostic failure reporting regression
+        run: |
+          & ./.toolchain/node-v24.21.0-win-x64/node.exe --test ./spikes/windows-compatibility/chrome-session.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./spikes/windows-compatibility/report-status.test.ps1
       - name: Public synthetic crypto, Job Object, ACL, locking and Chrome probes
         run: ./spikes/windows-compatibility/diagnose.ps1 -Ci
       - name: Print minimal synthetic reports

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param([switch]$Ci)
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'report-status.ps1')
 $checks = New-Object System.Collections.Generic.List[object]
 function Check([string]$Id,[string]$Status,[string]$Code = '') {
   $item = [ordered]@{id=$Id;status=$Status}
@@ -32,6 +33,7 @@ $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $reportDir=Join-Path $repo 'artifacts/windows-compatibility'
 $run=$null;$safeToDelete=$true;$exitCode=0;$osBuild=$null;$osKind='UNKNOWN'
 $oldJob=$env:CLEAR_SYNTHETIC_JOB
+$chromeAttempted=$false;$chromeProbeReport=$null;$chromeExitCode=1;$cleanupConfirmed=$false
 try {
   if (-not [Environment]::Is64BitProcess -or $env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { throw 'WIN_X64_REQUIRED' }
   $os=Get-CimInstance Win32_OperatingSystem
@@ -107,16 +109,17 @@ try {
     $before=@(Get-Process chrome -ErrorAction SilentlyContinue | ForEach-Object {try{[PSCustomObject]@{Id=$_.Id;Start=$_.StartTime.ToUniversalTime().Ticks}}catch{}})
     $unicodeSpace='synthetic space ' + [char]0xD55C + [char]0xAE00
     $browserRoot=Join-Path $run $unicodeSpace;New-Item -ItemType Directory -Path $browserRoot | Out-Null
+    $chromeAttempted=$true
     $chromeReport=Join-Path $run 'chrome.json'
     try {$code=[ClearSpikeJob]::Run($node,@((Join-Path $PSScriptRoot 'chrome-probe.mjs'),$chrome,$browserRoot,$chromeReport),$run,90000)}
     catch {$safeToDelete=$false;throw 'JOB_TREE_NOT_CONFIRMED'}
-    if(Test-Path -LiteralPath $chromeReport){foreach($check in (Get-Content -LiteralPath $chromeReport -Raw | ConvertFrom-Json).checks){Check $check.id $check.status}}
+    $chromeExitCode=$code
+    if(Test-Path -LiteralPath $chromeReport){$chromeProbeReport=Get-Content -LiteralPath $chromeReport -Raw | ConvertFrom-Json;foreach($check in $chromeProbeReport.checks){Check $check.id $check.status}}
     else{Check 'chrome-probe-completed' 'FAIL' 'NO_REPORT'}
     if($code -ne 0){Check 'chrome-process-exit' 'FAIL'}
     $preserved=$true
     foreach($existing in $before){$p=Get-Process -Id $existing.Id -ErrorAction SilentlyContinue;if(-not $p -or $p.StartTime.ToUniversalTime().Ticks -ne $existing.Start){$preserved=$false}}
     Check 'existing-chrome-pid-start-preserved' $(if($before.Count -eq 0){'NOT_RUN'}elseif($preserved){'PASS'}else{'FAIL'})
-    Check 'unicode-space-profile-job-cleanup' 'PASS'
   }else {Check 'installed-chrome-found' 'BLOCKED'}
   Check 'pid-reuse-recovery-adversarial' 'NOT_RUN' 'PRODUCTION_LIFECYCLE_GATE'
   Check 'active-24h-expiry-and-crash-restart-cleanup' 'NOT_RUN' 'PRODUCTION_LIFECYCLE_GATE'
@@ -125,9 +128,10 @@ try {
 finally {
   $env:CLEAR_SYNTHETIC_JOB=$oldJob
   if($run -and (Test-Path -LiteralPath $run)){
-    if($safeToDelete){try{Remove-SyntheticTree $run;Check 'synthetic-normal-error-cleanup' 'PASS'}catch{Check 'synthetic-normal-error-cleanup' 'FAIL';$exitCode=1}}
+    if($safeToDelete){try{Remove-SyntheticTree $run;$cleanupConfirmed=-not (Test-Path -LiteralPath $run);if(-not $cleanupConfirmed){throw 'CLEANUP_NOT_CONFIRMED'};Check 'synthetic-normal-error-cleanup' 'PASS'}catch{Check 'synthetic-normal-error-cleanup' 'FAIL';$exitCode=1}}
     else{Check 'synthetic-normal-error-cleanup' 'BLOCKED' 'PROCESS_TREE_NOT_CONFIRMED';$exitCode=1}
   }
+  if($chromeAttempted){Check 'unicode-space-profile-job-cleanup' (Get-ChromeProfileStatus $chromeProbeReport $chromeExitCode $cleanupConfirmed)}
   if(@($checks | Where-Object {$_.status -eq 'FAIL'}).Count -gt 0){$exitCode=1}
   $report=[ordered]@{schemaVersion=1;scope='SYNTHETIC_ONLY';platform='win32';arch='x64';osKind=$osKind;osBuild=$osBuild;ciRequested=[bool]$Ci;checks=@($checks.ToArray());realYbm=$false;productionReady=$false}
   New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
