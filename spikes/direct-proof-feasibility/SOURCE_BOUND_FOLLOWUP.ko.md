@@ -1,5 +1,7 @@
 # 동일 시험 결합·안정 nullifier 후속
 
+후속: [공식 attestor 소스 확장 통합 시험](ATTESTOR_EXTENSION.ko.md)에서 로컬 TLS 원천부터 native OPRF·attestor 서명까지 연결했다. 아래는 그 전 단계의 결과와 키/정규화 신뢰 가정이다. 공식 hosted 배포·실제 YBM은 여전히 미검증이다.
+
 2026-10-13. 최신 develop `77d1c4b`(PR #27까지)를 `f75c5b9`로 반영했다. **합성 검증과 로컬 OPRF 구현은 전진했지만, 실제 공식 증명으로 두 문제를 해결한 상태는 아니다. 제품 NO-GO를 유지한다.** 기존 반례 보고서와 `BoundedAdapter.sol`은 당시 한계를 재현하는 자료로 보존한다.
 
 ## 문제별 결과

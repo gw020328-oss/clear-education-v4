@@ -83,7 +83,7 @@ jobs:
         run: |
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs spikes/direct-proof-feasibility/predicate-check.mjs
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs spikes/direct-proof-feasibility/adapter-check.mjs
-          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test spikes/direct-proof-feasibility/record-policy.test.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test spikes/direct-proof-feasibility/record-policy.test.mjs spikes/direct-proof-feasibility/attestor-extension.test.mjs
       - name: Verify original and published document fingerprints and legacy content
         run: ./tools/npm run verify:workspace
       - name: Fresh checkout integrity regression
