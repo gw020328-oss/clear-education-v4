@@ -1,0 +1,77 @@
+{
+  "mode": "LOCAL_EVM_SYNTHETIC_FACT_MODEL",
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "tests": [
+    {
+      "name": "model verifier returns false without revert for valid fabricated signature",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong fixed recipient rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong source policy rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong epoch rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "expired proof rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "future proof rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "zero nullifier rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "different learner cannot delegate owner for application",
+      "status": "PASS"
+    },
+    {
+      "name": "owner alteration without fresh learner delegation rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "unsigned proof facts rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "API-free local relayer payout reaches fixed recipient",
+      "status": "PASS"
+    },
+    {
+      "name": "same application cannot claim twice",
+      "status": "PASS"
+    },
+    {
+      "name": "same supplied business nullifier rejected for another wallet/application",
+      "status": "PASS"
+    },
+    {
+      "name": "counterexample: changed supplied nullifier accepted for another application",
+      "status": "PASS"
+    }
+  ],
+  "checksPassed": 14,
+  "checksFailed": 0,
+  "localPayout": true,
+  "qualificationStatus": "NO_GO_SOURCE_BOUND_NULLIFIER_UNIMPLEMENTED",
+  "realReclaimProof": false,
+  "privacyCircuit": false,
+  "independentCollection": false,
+  "limits": [
+    "Fixture verifier trusts fabricated test witness facts: not a Reclaim verifier or replacement CLEAR pass signature proposal",
+    "Initial enrollment assumed; existing vault has no upgrade/migration path",
+    "Same nullifier dedup works, same exam dedup remains unproved",
+    "No actual score/date relation is verified in this adapter",
+    "No inventory/attendance/real YBM/Windows/public transaction"
+  ],
+  "checkedAt": "2026-10-13T02:11:37.182Z"
+}
