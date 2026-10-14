@@ -1,5 +1,10 @@
 # MVP 공통 인터페이스 초안
 
+2026-10-14 H2 승인 후속: [등록 접수·원천 경계](HISTORY_INTAKE.ko.md)에 변경점과 단위별 완료 기준을 정의한다. H2a 원천 범위 검토 → H2b 영속 단회 접수 → H2c 수집기 연결 순서다. 실제 미확인 전체성/실명/공식 기간은 UNKNOWN이고 기존 지급·Moodle·400%·NO-GO 차단을 유지한다. H1 합성과 기존 HTTP/DB를 바꾸지 않는 별도 로컬 접수 경계다.
+
+2026-10-14 H1 후속: [등록 이력 → 목표 성적 계약](EXAM_LIFECYCLE.ko.md)의 합성 전용 스키마·검증·메모리 영수증을 추가했다. PR #32의 실제 표 공증 보고와 전체성/신청자 결합 미완료를 구분한다. 기존 M0 명세 전용 범위는 유지하고 H1만 별도 실행 가능한 합성 단위다. 실제 수집 통합·영구 보존·제품 자격/지급은 미구현이며 기존 차단을 유지한다.
+
+
 2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
 
 버전 `mvp-interface.20261014.draft.2`, 상태 **DRAFT_INTERFACE / NOT_IMPLEMENTED / NOT_FROZEN**. 기준 develop `6d941a1fe0669b89730da1472d23ecd7caab22f4`. [정본 PRD](MVP_PRD_20261014.ko.md)의 설계 계약이며 [현재 API](API_CONTRACT.ko.md)·DB schema 4·EIP-712 V4를 변경하지 않는다. 아래 타입/명령은 제안이며 호출 가능한 새 API가 아니다. 이름·wire encoding·limits·서명/ABI는 freeze 관문에서 확정한다.
@@ -46,7 +51,11 @@ SourceDocument의 raw 지문과 모델에 실제 제공한 정제본 지문은 �
 
 단일 시험 존재용 증거는 동일 원천 행의 시험 종류/일자/점수/유효 상태와 신청자/owner 결합을 검증한다. `EXISTS_QUALIFYING_EXAM`, `HIGHEST_IN_PERIOD`, `NO_EXAM_IN_PERIOD`, `NO_SCORE_ABOVE_IN_PERIOD`는 서로 다른 조건이다. 존재 증거만으로 나머지 세 조건을 승인하지 않는다. 최고점/부재는 원천이 보증한 계정·기간·시험 상태 범위, 페이지 전부, 종료/건수, 정정·취소 정보가 필요하다. 기존 B2a는 이 부분의 합성 경계이며 실제 원천 보증은 계속 BLOCKED다.
 
+[과거 이력 근거 보강](EXAM_HISTORY_REQUIREMENTS.ko.md)에 따라 YBM/Reclaim 계정 전체 조회의 후보를 먼저 조사한다. 원천 전체성이 확인된 단일 서버 응답의 공증 또는 동일 계정/기간/스냅샷에 결합된 모든 페이지가 후보이며, 별도 서명 manifest API의 부재만으로 불가능하다고 단정하지 않는다. 클라이언트 complete/count/hash는 원천 보증을 대체하지 않는다. 현행 2개 증거 쌍은 전체 이력/무응시 검증이 아니며 실제 검증 전 차단한다. Moodle의 별도 export 요건은 유지한다.
+
 사업별 중복키는 동일 원천 시험의 재발급·다른 지갑·신청에서도 안정적이어야 한다. 신청 ID/발급시각으로 키를 바꿔 재사용을 허용하지 않는다. 개인식별값의 단순 공개 hash를 쓰지 않는다. PR #21의 로컬 native OPRF 결과를 공식 hosted 제품 증거로 사용하지 않는다. trustProfile에는 witness/verifier 배포 지문·epoch/키 정책·원천 parser revision을 pin하고 알 수 없는 변경은 보류한다.
+
+H1의 별도 `LifecycleSession/Submission/Receipt/Evaluation`은 [계약](EXAM_LIFECYCLE.ko.md)의 목적/정책/참가자/수령인·기간·세션 결합을 따른다. 기존 Evidence.validUntil을 baseline의 영구적인 사후 평가 TTL로 해석하지 않는다. 수집 시 신선도와 보존 영수증의 무결성/revision 확인은 별도다. 새 HTTP/DB·기존 Evidence 자동 변환은 미구현이다.
 
 ### Moodle 일별 기록
 
@@ -57,6 +66,8 @@ SourceDocument의 raw 지문과 모델에 실제 제공한 정제본 지문은 �
 한 날짜의 여러 강의는 정책에 따라 일수 1일로 집계하며 이미 인정된 강의를 다시 열어 새 날짜를 만들지 않는다. lastaccess·마지막 수정시각을 출석일로 추정하지 않는다. 누락일은 전체 조회가 검증된 경우에만 미충족, 조회 실패/페이지 불완전/정정 중은 보류다. 출처 revision이 바뀌면 재평가하되 중복 적립하지 않는다. `humanAttentionProven=false`, 원천 단독 `paymentAuthorized=false`를 유지한다. 세부 명세는 담당 검토와 freeze 때 확정한다.
 
 ### 제출 파일·Vision
+
+후기/블로그의 상세 정본은 [REVIEW_PRECHECK](REVIEW_PRECHECK.ko.md)다. 새 ReviewRuleCheckDraft 필드는 문서 제안이며 현재 HTTP/schema에 전송하지 않는다. 현행 5장 제한으로 글당 8장/14글을 처리할 수 없으므로 글 단위 묶음·전체 자원/비용 한도를 별도 버전에서 확정해야 한다. 실제 WORD 양식 필드 미확인을 DOCX 지원으로 해결했다고 하지 않는다.
 
 `DocumentSubmission`: applicationId/policyHash/requirementId/documentType, fileId/revision, privateFileHash, mimeType, size, pageCount, submittedAt, dataMode. 제출 파일/파일 지문은 공개 체인에 올리지 않는다. 허용 파일형식·size/page 제한, 격리·저장/삭제·접근권한을 구현 전에 고정한다. 모델이 URL을 임의로 fetch하거나 파일 내 코드를 실행하지 않는다. 첫 합성 업로드는 PNG/JPEG 후보이며 공식 제출 형식이 아니다. 8MiB/20MP/5장/decode 30초는 담당의 시험 전 상한 제안으로, freeze 때 메모리/비용 검증 후 확정한다. magic bytes·실제 decode·위장 MIME·회전/리사이즈·EXIF 제거를 검사하고 원본/모델입력 지문과 표시 좌표 변환을 연결한다. 기존 JSON 64KiB API에 이미지 base64를 밀어 넣지 않으며 업로드 권한·비공개 저장·클라우드 전송 동의/보존/삭제는 별도 API 설계 대상이다.
 
@@ -103,7 +114,7 @@ allocate(applicationId)는 유효한 자격 자료를 가진 누구나 호출 �
 
 후속 실행 타입은 tier별 조건 결과·필요 증거 신뢰와 미확정 질문, 산술 견적/최종 entitlement를 분리해야 한다. selectedTier/selectionRevision, 최초/평가 성적 ref, factsRevision/hash, amountRuleVersion/input hash, entitlementAmount를 policy/subject/recipient/instance와 함께 결합한다. 다른 제출로 최초 성적을 교체하거나 같은 revision의 내용을 바꾸지 않는다. 복수 충족의 선택/우선순위가 OPEN이면 정산 보류이며 상위 UNKNOWN에서 하위 금액 자동 확정 금지다. 하위 정산 뒤 상위 차액 자동 지급도 지원하지 않는다.
 
-금액 profile에는 기준액, 교재/기기 공제, 정확한 수수료 입력, 응시료 가산의 적용/금액, 세금, 정수 반올림·상한을 따로 둔다. M0의 TEST 고정 수수료 예제는 ‘약 3%’ 공식의 구현이 아니다. 미확정은 null/AMOUNT_OPEN. 400%는 금액/최종 자격 profile에 넣지 않고 별도 ChallengePrecheck에서 내용 관찰만 한다. 가이드 미확보·게시 원천 미검증을 VERIFIED로 바꾸지 않는다. 실제 최종성/동의/원자 배정 구현은 M1/M2/M3/C1/C2에서 소비자 검토 후 진행한다.
+금액 profile에는 기준액, 교재/기기 공제, 정확한 수수료 입력, 응시료 가산의 적용/금액, 세금, 정수 반올림·상한을 따로 둔다. M0의 TEST 고정 수수료 예제는 ‘약 3%’ 공식의 구현이 아니다. 미확정은 null/AMOUNT_OPEN. 400%는 금액/최종 자격 profile에 넣지 않고 별도 ChallengePrecheck에서 내용 관찰만 한다. 가이드 본문 확보는 정책 해석/적용·게시 원천 검증 완료가 아니다. [후기 검토 DTO 제안](REVIEW_PRECHECK.ko.md)에 따라 ruleId/policyVersion/sourceReference/evidenceReference·검토/보완/원천 상태를 분리하며, 미결/원천 미검증을 VERIFIED로 바꾸지 않는다. 기존 ChallengePrecheck의 가이드 미확보 상태는 과거 fixture로만 유지한다. 실제 최종성/동의/원자 배정 구현은 M1/M2/M3/C1/C2에서 소비자 검토 후 진행한다.
 
 ## 명령·권한·오류의 경계
 
