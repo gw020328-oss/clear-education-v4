@@ -1,5 +1,5 @@
 {
-  "contractVersion": "clear-m0.1",
+  "contractVersion": "clear-m0.2",
   "status": "FIXED_FOR_M0_FIXTURES",
   "consumerAgreement": "PENDING",
   "sourceCommit": "7bf622901919199ff6aaf00aaf077ef64a704a79",
@@ -97,7 +97,7 @@
       "id": "draft-created",
       "type": "PolicyDraft",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "draftId": "draft-ybm-created",
@@ -299,7 +299,7 @@
       "id": "draft-reviewed",
       "type": "PolicyDraft",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "draftId": "draft-ybm-demo",
@@ -501,7 +501,7 @@
       "id": "approved-mock",
       "type": "ApprovedPolicy",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
@@ -706,7 +706,7 @@
       "id": "official-questions",
       "type": "PolicyDraft",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "draftId": "draft-ybm-official-open",
@@ -910,7 +910,7 @@
       "id": "siwon-questions",
       "type": "PolicyDraft",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "draftId": "draft-siwon-open",
@@ -1123,7 +1123,7 @@
       "id": "application",
       "type": "Application",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1146,7 +1146,7 @@
       "id": "application-draft",
       "type": "Application",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1169,7 +1169,7 @@
       "id": "evidence-exam",
       "type": "Evidence",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1210,7 +1210,7 @@
       "id": "evidence-learning",
       "type": "Evidence",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1251,7 +1251,7 @@
       "id": "evidence-mock-test",
       "type": "Evidence",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1287,7 +1287,7 @@
       "id": "evidence-review",
       "type": "Evidence",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1323,7 +1323,7 @@
       "id": "vision-readable-held",
       "type": "DocumentPrecheck",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-siwon-precheck",
@@ -1387,7 +1387,7 @@
       "id": "vision-cut",
       "type": "DocumentPrecheck",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-siwon-precheck",
@@ -1445,7 +1445,7 @@
       "id": "vision-late",
       "type": "DocumentPrecheck",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-siwon-precheck",
@@ -1508,7 +1508,7 @@
       "id": "vision-cancelled",
       "type": "DocumentPrecheck",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-siwon-precheck",
@@ -1546,7 +1546,7 @@
       "id": "eligible-final",
       "type": "Eligibility",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1623,7 +1623,7 @@
       "id": "eligibility-held",
       "type": "Eligibility",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1704,7 +1704,7 @@
       "id": "subject-binding",
       "type": "SubjectBinding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "subjectBindingId": "subject-demo-1",
@@ -1722,7 +1722,7 @@
       "id": "document",
       "type": "DocumentSubmission",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-siwon-precheck",
@@ -1753,7 +1753,7 @@
       "id": "document-revision-2",
       "type": "DocumentSubmission",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-siwon-precheck",
@@ -1784,7 +1784,7 @@
       "id": "model-run",
       "type": "ModelRun",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "aiRunId": "run-mock-1",
@@ -1805,7 +1805,7 @@
       "id": "funding-unfunded",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1836,7 +1836,7 @@
       "id": "funding-partial",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1867,7 +1867,7 @@
       "id": "funding-funded",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1898,7 +1898,7 @@
       "id": "funding-allocated",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1929,7 +1929,7 @@
       "id": "funding-paid",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1960,7 +1960,7 @@
       "id": "funding-reclaimed",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -1991,7 +1991,7 @@
       "id": "application-cancelled",
       "type": "Application",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2014,7 +2014,7 @@
       "id": "funding-cancelled",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2045,7 +2045,7 @@
       "id": "funding-returned-cancelled",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2076,7 +2076,7 @@
       "id": "funding-expired",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2107,7 +2107,7 @@
       "id": "funding-returned-unallocated",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2138,7 +2138,7 @@
       "id": "funding-paid-excess-returned",
       "type": "Funding",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2169,7 +2169,7 @@
       "id": "claim-not-claimable",
       "type": "Claim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2193,7 +2193,7 @@
       "id": "claim-claimable",
       "type": "Claim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2217,7 +2217,7 @@
       "id": "claim-pending",
       "type": "Claim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2241,7 +2241,7 @@
       "id": "claim-unknown",
       "type": "Claim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2265,7 +2265,7 @@
       "id": "claim-paid",
       "type": "Claim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2289,7 +2289,7 @@
       "id": "claim-expired",
       "type": "Claim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "applicationId": "app-demo-1",
@@ -2335,7 +2335,7 @@
       "id": "command-createdraft",
       "type": "CreateDraft",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "CreateDraft",
@@ -2354,7 +2354,7 @@
       "id": "command-answerquestion",
       "type": "AnswerQuestion",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "AnswerQuestion",
@@ -2373,7 +2373,7 @@
       "id": "command-approvedraft",
       "type": "ApproveDraft",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "ApproveDraft",
@@ -2389,7 +2389,7 @@
       "id": "command-publishmockpolicy",
       "type": "PublishMockPolicy",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "PublishMockPolicy",
@@ -2405,7 +2405,7 @@
       "id": "command-createapplication",
       "type": "CreateApplication",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "CreateApplication",
@@ -2421,7 +2421,7 @@
       "id": "command-agreemockterms",
       "type": "AgreeMockTerms",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "AgreeMockTerms",
@@ -2438,7 +2438,7 @@
       "id": "command-submitmockevidence",
       "type": "SubmitMockEvidence",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "SubmitMockEvidence",
@@ -2456,7 +2456,7 @@
       "id": "command-submitmockdocument",
       "type": "SubmitMockDocument",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "SubmitMockDocument",
@@ -2475,7 +2475,7 @@
       "id": "command-startmockprecheck",
       "type": "StartMockPrecheck",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "StartMockPrecheck",
@@ -2494,7 +2494,7 @@
       "id": "command-canceloperation",
       "type": "CancelOperation",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "CancelOperation",
@@ -2510,7 +2510,7 @@
       "id": "command-evaluatemock",
       "type": "EvaluateMock",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "EvaluateMock",
@@ -2526,7 +2526,7 @@
       "id": "command-simulatetopup",
       "type": "SimulateTopUp",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "SimulateTopUp",
@@ -2543,7 +2543,7 @@
       "id": "command-simulateallocate",
       "type": "SimulateAllocate",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "SimulateAllocate",
@@ -2560,7 +2560,7 @@
       "id": "command-simulateclaim",
       "type": "SimulateClaim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "SimulateClaim",
@@ -2576,7 +2576,7 @@
       "id": "command-cancelapplication",
       "type": "CancelApplication",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "CancelApplication",
@@ -2592,7 +2592,7 @@
       "id": "command-simulatereclaim",
       "type": "SimulateReclaim",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "SimulateReclaim",
@@ -2608,7 +2608,7 @@
       "id": "command-getapplication",
       "type": "GetApplication",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "GetApplication",
@@ -2624,7 +2624,7 @@
       "id": "command-getdraft",
       "type": "GetDraft",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "GetDraft",
@@ -2640,7 +2640,7 @@
       "id": "command-getoperation",
       "type": "GetOperation",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "GetOperation",
@@ -2656,7 +2656,7 @@
       "id": "command-listmockpolicies",
       "type": "ListMockPolicies",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "name": "ListMockPolicies",
@@ -2673,7 +2673,7 @@
       "id": "reply-createdraft",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-createdraft",
@@ -2692,7 +2692,7 @@
       "id": "reply-answerquestion",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-answerquestion",
@@ -2711,7 +2711,7 @@
       "id": "reply-approvedraft",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-approvedraft",
@@ -2730,7 +2730,7 @@
       "id": "reply-publishmockpolicy",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-publishmockpolicy",
@@ -2749,7 +2749,7 @@
       "id": "reply-createapplication",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-createapplication",
@@ -2768,7 +2768,7 @@
       "id": "reply-agreemockterms",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-agreemockterms",
@@ -2787,7 +2787,7 @@
       "id": "reply-submitmockevidence",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-submitmockevidence",
@@ -2806,7 +2806,7 @@
       "id": "reply-submitmockdocument",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-submitmockdocument",
@@ -2826,7 +2826,7 @@
       "id": "reply-startmockprecheck",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-startmockprecheck",
@@ -2845,7 +2845,7 @@
       "id": "reply-canceloperation",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-canceloperation",
@@ -2864,7 +2864,7 @@
       "id": "reply-evaluatemock",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-evaluatemock",
@@ -2883,7 +2883,7 @@
       "id": "reply-simulatetopup",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-simulatetopup",
@@ -2902,7 +2902,7 @@
       "id": "reply-simulateallocate",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-simulateallocate",
@@ -2921,7 +2921,7 @@
       "id": "reply-simulateclaim",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-simulateclaim",
@@ -2940,7 +2940,7 @@
       "id": "reply-cancelapplication",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-cancelapplication",
@@ -2959,7 +2959,7 @@
       "id": "reply-simulatereclaim",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-simulatereclaim",
@@ -2978,7 +2978,7 @@
       "id": "reply-getapplication",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-getapplication",
@@ -3000,7 +3000,7 @@
       "id": "reply-getdraft",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-getdraft",
@@ -3019,7 +3019,7 @@
       "id": "reply-getoperation",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-getoperation",
@@ -3044,7 +3044,7 @@
       "id": "reply-listmockpolicies",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-listmockpolicies",
@@ -3063,7 +3063,7 @@
       "id": "reply-allocation-blocked",
       "type": "MockReply",
       "value": {
-        "contractVersion": "clear-m0.1",
+        "contractVersion": "clear-m0.2",
         "mode": "SYNTHETIC",
         "authority": "MOCK_ONLY",
         "requestId": "request-simulateallocate",

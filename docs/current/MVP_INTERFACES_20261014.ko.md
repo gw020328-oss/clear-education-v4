@@ -2,7 +2,7 @@
 
 2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
 
-버전 `mvp-interface.20261014.draft.1`, 상태 **DRAFT_INTERFACE / NOT_IMPLEMENTED / NOT_FROZEN**. 기준 develop `6d941a1fe0669b89730da1472d23ecd7caab22f4`. [정본 PRD](MVP_PRD_20261014.ko.md)의 설계 계약이며 [현재 API](API_CONTRACT.ko.md)·DB schema 4·EIP-712 V4를 변경하지 않는다. 아래 타입/명령은 제안이며 호출 가능한 새 API가 아니다. 이름·wire encoding·limits·서명/ABI는 freeze 관문에서 확정한다.
+버전 `mvp-interface.20261014.draft.2`, 상태 **DRAFT_INTERFACE / NOT_IMPLEMENTED / NOT_FROZEN**. 기준 develop `6d941a1fe0669b89730da1472d23ecd7caab22f4`. [정본 PRD](MVP_PRD_20261014.ko.md)의 설계 계약이며 [현재 API](API_CONTRACT.ko.md)·DB schema 4·EIP-712 V4를 변경하지 않는다. 아래 타입/명령은 제안이며 호출 가능한 새 API가 아니다. 이름·wire encoding·limits·서명/ABI는 freeze 관문에서 확정한다.
 
 ## 버전과 값의 규칙
 
@@ -96,6 +96,14 @@ allocate(applicationId)는 유효한 자격 자료를 가진 누구나 호출 �
 기한 후보는 evidenceSubmitUntil≤supplementUntil≤eligibilityFinalizeUntil≤allocationUntil≤claimUntil−minClaimWindow다. 실제 길이·동등 경계는 원문/약정 검토 후 확정한다. minClaimWindow 없이 마지막 순간 배정해 청구 기회를 없애지 않는다. 확정할 때 증거 freshness를 검사하고 배정 후 이미 고정된 권리에는 짧은 proof TTL을 다시 적용하지 않는다. 버전별 비업그레이드형 계약 또는 기존 신청에 영향을 못 주는 별도 배포가 후보이며, 관리자 sweep/pause/verifier 교체로 기존 청구를 막는 숨은 권한을 넣지 않는다.
 
 신규 계약은 policyHash 외에도 amountRule/입력 결합, 검증기와 rule profile, trust config, consent 및 evidenceSet commitment를 검증 경로에 결합해야 한다. 오프체인 결과만 서명한다면 결과 서명자를 신뢰한다는 한계를 명시한다. 검증기의 규칙 실행 또는 적합한 증거 검증 없이 해시만 비교하는 것으로 독립 청구를 달성하지 못한다.
+
+## M0.2 benefit 확장과 기존 타입의 관계
+
+[확정된 M0 합성 profile](M0_CONTRACT.ko.md)의 BenefitPolicy/BenefitCase/ChallengePrecheck를 먼저 따른다. 750점반 50~300% 조건·금액 계산은 개발 목표, 400%는 조건 구조화·서류 사전검토만이다. 제품 API·ABI는 계속 미구현이다. 기존 YBM형 PolicyBody의 대안 수를 환급률 개수로 사용하지 않으며 공통 요구 + tier별 제한된 대안/금액 profile로 분리한다. 500%·전강좌반·토스/오픽은 제외한다.
+
+후속 실행 타입은 tier별 조건 결과·필요 증거 신뢰와 미확정 질문, 산술 견적/최종 entitlement를 분리해야 한다. selectedTier/selectionRevision, 최초/평가 성적 ref, factsRevision/hash, amountRuleVersion/input hash, entitlementAmount를 policy/subject/recipient/instance와 함께 결합한다. 다른 제출로 최초 성적을 교체하거나 같은 revision의 내용을 바꾸지 않는다. 복수 충족의 선택/우선순위가 OPEN이면 정산 보류이며 상위 UNKNOWN에서 하위 금액 자동 확정 금지다. 하위 정산 뒤 상위 차액 자동 지급도 지원하지 않는다.
+
+금액 profile에는 기준액, 교재/기기 공제, 정확한 수수료 입력, 응시료 가산의 적용/금액, 세금, 정수 반올림·상한을 따로 둔다. M0의 TEST 고정 수수료 예제는 ‘약 3%’ 공식의 구현이 아니다. 미확정은 null/AMOUNT_OPEN. 400%는 금액/최종 자격 profile에 넣지 않고 별도 ChallengePrecheck에서 내용 관찰만 한다. 가이드 미확보·게시 원천 미검증을 VERIFIED로 바꾸지 않는다. 실제 최종성/동의/원자 배정 구현은 M1/M2/M3/C1/C2에서 소비자 검토 후 진행한다.
 
 ## 명령·권한·오류의 경계
 

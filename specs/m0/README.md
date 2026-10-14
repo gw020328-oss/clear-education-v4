@@ -6,7 +6,8 @@ Read [the Korean contract](../../docs/current/M0_CONTRACT.ko.md), [decision regi
 
 - `schema.mjs` exports a bounded JSON Schema 2020-12 subset. All declared object fields are required; nullable fields are explicit. No new dependency or production import.
 - `fixtures.json` contains public, invented data and metadata of public source snapshots, independent request/reply snapshots, UI scenario sequences, and mutations expected to fail. References resolve inside the catalog. No real documents, keys, proofs or transactions.
-- `check.mjs` is an offline consistency checker for those examples. It accepts only the schema keywords actually used. It checks references, selected fixed invariants and the expected rejection category. It does not implement an evaluator, trusted source, model, command dispatcher, authorization service, funding engine or general JSON Schema validator.
+- `benefits.json` adds bounded Siwon 750-course tier/amount cases and 400% blog-precheck stubs. `benefits-check.mjs` checks hand-authored outcomes with limited reference logic and integer arithmetic; it is not a production evaluator or settlement service.
+- `check.mjs` is an offline consistency checker for those examples. It accepts only the schema keywords actually used. It checks references, selected fixed invariants and the expected rejection category. It does not implement a production evaluator, trusted source, model, command dispatcher, authorization service, funding engine or general JSON Schema validator.
 
 Run from the repository root:
 

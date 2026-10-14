@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
+import { checkBenefits } from './benefits-check.mjs';
 import { schema, commandNames, readCommands } from './schema.mjs';
 
 const fixtures = JSON.parse(readFileSync(new URL('./fixtures.json', import.meta.url), 'utf8'));
@@ -239,5 +240,6 @@ for (const test of fixtures.rejectCases) {
   target[test.path.at(-1)] = test.value;
   assert.throws(() => check(sample), error => error.code === test.error, test.id);
 }
+checkBenefits({ schema, shape, canonical, ensure, source: valueOf('siwon-snapshot') });
 console.log(`M0 fixture consistency PASS: ${fixtures.objects.length} objects, ${fixtures.exchanges.length} exchanges, ${fixtures.scenarios.length} scenarios, ${fixtures.rejectCases.length} rejected mutations.`);
-console.log('Scope: public SYNTHETIC examples only; no execution, source proof, AI, funding or product authorization.');
+console.log('Scope: public SYNTHETIC examples only; no production execution, source proof, AI, funding or product authorization.');

@@ -1,6 +1,6 @@
 # M0 공통 합성 계약과 인수 예제
 
-`clear-m0.1`, **FIXED_FOR_M0_FIXTURES / NOT_RUNTIME / CONSUMER_AGREEMENT_PENDING**. 기준 제품 commit `6d941a1fe0669b89730da1472d23ecd7caab22f4`, 선행 설계 commit `7bf622901919199ff6aaf00aaf077ef64a704a79`. PR #30의 M0 추가분이다. [결정 등록부](M0_DECISIONS.ko.md) · [프런트 시작점](FRONTEND_M0_HANDOFF.ko.md).
+`clear-m0.2`, **FIXED_FOR_M0_FIXTURES / NOT_RUNTIME / CONSUMER_AGREEMENT_PENDING**. 기준 제품 commit `6d941a1fe0669b89730da1472d23ecd7caab22f4`, 선행 설계 commit `7bf622901919199ff6aaf00aaf077ef64a704a79`. PR #30의 M0 추가분이다. [결정 등록부](M0_DECISIONS.ko.md) · [프런트 시작점](FRONTEND_M0_HANDOFF.ko.md).
 
 이 문서와 [schema.mjs](../../specs/m0/schema.mjs), [fixtures.json](../../specs/m0/fixtures.json)이 **첫 합성 mock의 필드·예제 기준**이다. 더 넓은 [인터페이스 초안](MVP_INTERFACES_20261014.ko.md)의 모든 후보를 구현/동결한 것이 아니다. 기존 [HTTP API](API_CONTRACT.ko.md), DB, 서명, `CourseRefundVaultV4`, proof flow와 서로 다른 namespace다. 새 API URL·배포 계약·컴파일러·평가기·명령 실행기는 없다.
 
@@ -10,7 +10,7 @@
 
 | 공통 표현 | 고정 범위 / 의미 |
 | --- | --- |
-| marker | 상태 객체/명령/응답은 `contractVersion=clear-m0.1`, `mode=SYNTHETIC`, `authority=MOCK_ONLY`. Source·하위 규칙에는 자체 origin/basis와 상위 문맥이 있음 |
+| marker | 상태 객체/명령/응답은 `contractVersion=clear-m0.2`, `mode=SYNTHETIC`, `authority=MOCK_ONLY`. Source·하위 규칙에는 자체 origin/basis와 상위 문맥이 있음 |
 | ID / revision | 소문자 영문 시작, 영문·숫자·점·하이픈 1~64자. revision 정수 1~2147483647. 운영 주소/지갑이 아닌 mock 참조 |
 | hash | `0x`+소문자 hex64. 합성 데이터 외에 개인정보 단순 hash를 공개하지 않음 |
 | 시간 | UTC 정수 초 0~4102444800, 기간 `[from,until)` + `Asia/Seoul`. 달력일과 기한 포함 여부는 아래 절 참조 |
@@ -68,9 +68,54 @@ ApprovedPolicy의 예제 hash는 `SHA256(prefix + canonical({body,policyVersion,
 
 VERSION_CONFLICT는 최신 상태 재조회·다시 검토, BINDING_MISMATCH/FORBIDDEN은 중단, MISSING_DOCUMENT/MISSING_FIELD/UNREADABLE은 보완, SOURCE_UNVERIFIED/HISTORY_INCOMPLETE/UNSUPPORTED_RULE/QUESTION_OPEN은 해당 근거 확보까지 보류다. FUNDING_INSUFFICIENT는 충전 확인 대기, DEADLINE_EXPIRED/ALREADY_SETTLED는 terminal 조회, C0_BLOCKED는 제품 경로 비활성이다. OUTCOME_UNKNOWN은 operation 조회이며 새 키 생성·자동 서명/유료 호출/재송금 금지다. 모든 Fault는 autoRetry=false. INVALID_INPUT/MISMATCH/STALE_RESULT/AUTHENTICITY_UNVERIFIED의 상세 안전 code는 schema enum을 따른다. 원천·모델 raw 오류/PII는 표시하지 않는다.
 
-## 시원스쿨의 제한 시연과 금액 미결
+## 시원스쿨 benefit tier 계약 — M0.2
 
-시원스쿨 750점반 100% 경로는 `(출석 100일 AND 후기) OR (750점 이상 성적 AND 과거 2년 관련 이력 AND 후기)`의 질문/문서 사전검토 시연이다. Vision 판독으로 진위·전체 이력·주체를 확인하지 못하면 보류한다. **상품 전체 환급액 판정이 아니며 다른 환급률 가능성을 자동으로 100% 최종 정산으로 낮추지 않는다.** 최초 제출 성적·다른 혜택/비중복·선택/우선순위·상위 tier 미확인 처리는 [Q-TIER](M0_DECISIONS.ko.md)에 남긴다. 단순 OR/max로 최종액을 정하지 않으며 해당 범위가 확정될 때 최종 금액과 배정액의 결합을 다시 검토한다. 현재 확장은 미승인이고 새 타입/금액 계산기를 추가하지 않는다. 아래 100 TEST는 별도 가상 YBM형 주 예제의 약정으로, 시원스쿨 공식 환급률이나 원화 환급액이 아니다.
+지원 목표는 750점반 50/100/200/300%의 **조건·계산 지원**, 400%의 **구조화·서류 사전검토만**이다. 공식 조건 매핑은 [O-S4~O-S8](M0_DECISIONS.ko.md)을 따른다. 실제 정책 미확정/제품 미구현/합성 결과를 분리한다. 500%·전강좌반·토스/오픽은 schema에도 추가하지 않는다. 원래 YBM 고정 100 TEST profile과 다른 정책·신청/instance이며 기존 금고/동의로 이관하지 않는다.
+
+[benefits.json](../../specs/m0/benefits.json)의 `BenefitPolicy`는 공통 요구와 5개 tier를 분리하며, 각 tier에는 최대 2개 대안만 둔다. 대안은 출석 필요 여부, 점수 연산(LT/GTE/EQ/NONE)·경계, 이력/챌린지 필요 여부만 가진다. 기존 PolicyBody의 최대 4개 대안에 5개 환급률을 억지로 넣지 않는다. tier는 조건별 금액 후보이지 하나의 OR 전체 자격이나 합산 지급 목록이 아니다. 모든 tier의 공통 후기/주체/기간·기한을 별도로 확인한다. 무관한 경로의 과거 이력을 출석 전용 경로의 필수 증거로 추가하지 않는다.
+
+| 새 타입 | 필수 결합/검사 |
+| --- | --- |
+| BenefitPolicy | version·product·원천 ID/hash·공통 요구·5개 tier/한정 대안·지원 수준·응시료 표기·금액 profile·실제 선택 규칙 OPEN·합성 단일 선택. executable=false |
+| BenefitCase | 신청/정책/주체/수령인/instance, factsRevision, 점수와 assurance, 최초/평가 대상 제출 ref, 후기/출석/이력 상태와 assurance, 기간/결합 확인, tier 선택/revision/확인, amountInputs와 기대 결과 |
+| amountInputs | basis, TEST/decimals=6, paid/book/device/fixedFee/examCredit atoms, taxBps, capAtoms, rounding, formulaVersion. 미확정 수치는 null. OFFICIAL_OPEN은 실제 계산 확정 불가 |
+| 기대 결과/entitlement | tier별 MET/NOT_MET/UNKNOWN/IN_PROGRESS, 계산 견적과 최종 정산 상태 분리. 확정 예제만 아래 불변 entitlement를 가짐; 그 외 null |
+| ChallengePrecheck | 400, 별도 requirement/submission/route revision/run/input binding, FieldObservation, 가이드 미확보, 판독/보완 사유. 진위/전체성/주체·연속 게시·공개 상태 UNVERIFIED, automaticEligibility=false |
+
+BenefitCase의 VERIFIED_SYNTHETIC은 인공 원천 assertion이다. Reclaim의 단일 성적 존재와 과거 이력 전체성은 각각 scoreAssurance와 history assurance로 분리한다. 진위가 미확인인 Vision을 history의 VERIFIED_SYNTHETIC으로 올리지 않는다. 기간/주체 결합 실패는 모든 후보를 UNKNOWN으로 만든다. 인공 facts를 사용한 조건 계산 통과는 실제 환급 자격 검증 성공이 아니다.
+
+선택/정정/확정 규칙은 다음과 같이 제한한다.
+
+- 실제 상품의 선택·우선순위는 OPEN이다. 합성 profile `EXPLICIT_SINGLE_TIER_NO_TOPUP`은 후보 결과를 검토한 뒤 한 tier를 명시 선택하고 revision/확인을 기록한다. 복수 MET에서 자동 max/합산하지 않는다. 합성 선택은 실제 약관의 선택권을 주장하지 않는다.
+- 더 높은 tier가 UNKNOWN/IN_PROGRESS이면 낮은 tier의 조건과 견적은 표시하되 FINAL_SYNTHETIC을 만들지 않는다. 990점에서 400% 원천 검증이 미확인이면 300%로 조용히 정산하지 않는다. 더 높은 조건이 검증된 사실로 NOT_MET인 경우에는 불필요한 자료 수집 없이 해당 불충족을 사용할 수 있다.
+- 최초 제출 성적의 ID/revision을 고정하고 동일한 성적·기간을 기준으로 비교한다. 보완 업로드가 다른 성적표를 최초 제출로 바꾸지 않는다. 평가 대상 ref가 바뀌면 FIRST_SCORE_MISMATCH로 보류한다. 공식 정정/재제출 규칙이 확정되기 전 자동 교체·기수 재신청·spent 해제는 금지다.
+- 배정 전 정정은 새 facts/selection/decision revision으로 다시 검토하고 구 판정의 배정을 막는다. 정정 가능한 기간 종료·확정된 선택·필수 증거·전체 금액이 고정될 때에만 최종 entitlement를 만들도록 설계한다. M0은 이 시점의 인공 스냅샷 검사이며 영속/경합 처리가 없다.
+- entitlement는 policy hash/version·선택 tier/selection revision·facts revision/hash·최초 성적 ref·amount rule/input hash·정확한 금액·신청/주체/수령인/instance·decision을 결합한다. 해시는 해당 payload를 고정할 뿐 검증/서명 권한을 만들지 않는다. `reservedAtoms=paidAtoms=0`, `allocationImplemented=false`, `paymentAllowed=false`다.
+- 후속 배정은 그 고정 금액 전체를 단회 예약해야 한다. YBM fixture의 고정 100 TEST 금액을 시원스쿨에 복사하지 않는다. 배정/지급 뒤 상위 차액을 추가 청구하거나 기존 예약을 금액 변경으로 덮는 구조는 지원하지 않는다.
+
+### 금액의 공식 근거와 합성 계산
+
+공식 산정 안내는 교재 공제 뒤 비율 적용, 결제 수수료 차감, 해당 성적 혜택의 응시료 가산, 세금 반영 순서를 설명한다. 기기 결합 공제·약 3% 수수료의 실제 기준액/정확한 값, 응시료 혜택의 적용/금액, 출석 전용 계산, 반올림·상한은 Q-TIER다. 표의 응시료 ‘0원’을 가산액 0으로 대입하지 않는다. 기수/결제 옵션/할인/기기 포함 여부가 미확인이면 실제 계산도 AMOUNT_OPEN이다. [공식 산정 안내](https://lab.siwonschool.com/?s=event&t=refundhalf3)
+
+M0의 `siwon-demo-amount.1`은 **별도 합성 가정**이다. 입력은 100 TEST 결제, 10 TEST 교재, 기기 0, 고정 수수료 2 TEST(3% 아님), 응시료 가산 제외 0, taxBps=2200, 상한 300 TEST다. 상한·공제·가산 제외·반올림은 공식 상품 약정으로 표시하지 않는다. 수수료를 결제액의 고정 비율로 역추론하지 않는다.
+
+`base = paid - book - device`; `net = floor(((base × ratePercent) - fixedFee × 100 + examCredit × 100) × (10000 - taxBps) / 1000000)`를 atoms 정수로 계산한다. 중간 반올림 없이 마지막 한 번만 내린다. 음수 기준액/공제 초과/0 이하 순액/상한 초과는 INVALID_AMOUNT이며 조용히 0이나 상한으로 자르지 않는다. null 또는 OFFICIAL_OPEN은 AMOUNT_OPEN이다. 400%는 이 계산 함수의 대상이 아니다.
+
+| 합성 예제 | 조건/계산 인수 기준 |
+| --- | --- |
+| tier-50 / tier-50-at-750 | 745에서 50% 조건 충족, 750에서는 해당 조건 불충족. 산술 견적이 있어도 조건 불충족이면 확정 불가 |
+| tier-100-attendance / tier-100-score | 출석과 성적 대안을 각각 확인. 출석 대안은 이력 미검증을 자체 필수 조건으로 삼지 않음 |
+| tier-200-at-750 / tier-200-below-850 / tier-300-at-850 | 750·845·850 경계와 누적 조건, 각각의 선택 tier 금액. 기준 입력의 순액은 33.54/68.64/138.84/209.04 TEST |
+| explicit-lower-choice / multiple-no-choice / higher-unknown / history-unverified | 모든 상위 상태를 확인한 합성 명시 선택과 선택 미확정 대기, 상위 UNKNOWN 보류, 필수 원천 미검증 보류. max나 합산 없음 |
+| official-fee-open / official-selection-open / first-score-replaced | 금액 미정·실제 선택 규칙 미정·최초 성적 바꿔치기를 FINAL로 만들지 않음 |
+| round-once / deductions-over-base / cap-exceeded | 분수 atoms의 단회 내림, 공제 초과·상한 초과 거부 |
+| tier-400-precheck-only / blog-unknown-no-lower-settlement | 400% 최종 자격/지급 제외. 400% 가능성이 미확인인 990점 사용자를 300%로 자동 확정하지 않음 |
+
+### 400% Vision 범위
+
+기존 과거 이력 `vision-*` 예제를 유지하고 별도 `blog-*` 예제를 추가한다. 합성 이미지 안의 URL/게시일 표기·내용 조각·누락/잘림·상충을 관찰해 보완을 안내하는 설계다. 날짜 14개가 읽혀도 실제 14일 연속 게시·공개 유지·작성자·내용 진위·공식 가이드 준수를 보증하지 않는다. 공식 가이드 미확보는 UNDETERMINED, 잘림/누락/표기 불일치는 NEEDS_SUPPLEMENT다. 형식 체크리스트 자체도 SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE로 표시한다. 이미지를 근거로 웹 URL을 자동 방문하거나 ‘챌린지 성공’으로 판정하지 않는다. 현재는 실제 이미지/모델 호출 없이 관찰 결과 stub만 있다.
+
+clear-m0.2는 원래 YBM body/정책 hash 의미를 보존하면서 M0 envelope 버전과 별도 benefit profile을 추가한다. 기존 main fixture의 marker만 .2로 올렸고 과거 이력/Vision·보류 사례를 유지했다. 제품 migration은 없다. 검사기 `benefits-check.mjs`의 제한된 reference 논리/정수 산술은 위 hand-authored 기대 사례 대조용이며 공개 runtime 평가기·금액 API로 import하지 않는다. 기존 HTTP/지갑/CI는 그대로다.
 
 ## 자격·재원·청구 합성 약정
 
@@ -116,4 +161,4 @@ job의 고정 키는 application/policyHash·version/subject binding revision/re
 | 공식 조건·원천 계정/전체성·실제 모델 | OPEN / BLOCKED | 등록부 질문별 공식 근거와 실제 검증 |
 | 독립 청구·실제 지급 | NO-GO, grant/outbox 보류 | C0 통과 및 별도 구현·검증 승인 |
 
-검사 명령은 `./tools/node specs/m0/check.mjs`. 구조, 참조, 예제 hash/결합·금액 회계·FINAL 입력·명령 모양과 변조 거부를 검사한다. 지정 JSON Schema 키워드만 지원하며 범용 validator·정책 평가·원격 인증·경합/멱등 원장·실제 AI/지급을 검증하지 않는다. 기존 CI에는 이 명령을 추가하지 않았으므로 M0 변경 시 수동 필수 검사로 실행한다. 실행 결과와 최종 HEAD는 PR 검증 기록에 남긴다.
+검사 명령은 `./tools/node specs/m0/check.mjs`. 구조, 참조, 예제 hash/결합·금액 회계·FINAL 입력·명령 모양과 변조 거부, 제한된 tier 조건과 정수 계산 기대값을 검사한다. 지정 JSON Schema 키워드만 지원하며 범용 validator·제품 정책 평가·원격 인증·경합/멱등 원장·실제 AI/지급을 검증하지 않는다. benefits 검사는 check.mjs에서 함께 실행한다. 기존 CI에는 이 명령을 추가하지 않았으므로 M0 변경 시 수동 필수 검사로 실행한다. 실행 결과와 최종 HEAD는 PR 검증 기록에 남긴다.

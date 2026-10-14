@@ -43,7 +43,22 @@ fixtures의 `exchanges`는 명령 request와 MockReply의 정상/실패 예제�
 
 시원스쿨 문서 예제의 `app-siwon-precheck`는 **미게시 초안의 사전검토를 그리는 별도 가상 문맥**이다. 게시된 Application이나 실동의가 존재하지 않는다. 가상 policyHash는 초안 격리용 표식이며 실제 승인 hash로 쓰지 않는다. 실제 신청에 연결할 계약은 M1/M3 검토가 필요하다.
 
-시원스쿨 화면에는 ‘750점반 100% 경로 제한 시연·상품 전체 환급액 판정 아님’을 표시한다. 다른 혜택/상위 환급률 가능성을 확인하지 않은 사용자를 자동으로 100% 최종 정산하지 않는다. 최초 제출 성적·비중복·선택/우선순위는 Q-TIER OPEN이며 임의 max/OR로 금액을 고르지 않는다. 50/200/300/400% 등의 추가 화면·schema·계산기는 이번 범위에 포함하지 않는다.
+## M0.2 시원스쿨 화면 범위
+
+최신 승인 목표는 **750점반 50~300% 조건·계산 지원**, **400% 조건 구조화·서류 사전검토만**이다. 100% 전용 제한 안내는 이 범위로 대체한다. 실제 정책 미확정·제품 미구현을 항상 표시한다. 500%/전강좌반/토스·오픽으로 확장하지 않는다. YBM 주 시연과 기존 과거 이력 Vision 예제를 유지한다.
+
+[benefits.json](../../specs/m0/benefits.json)의 cases는 `EvaluateMock`/`GetApplication`의 후속 화면 모델 설계에 참고하는 스냅샷이며 새 API 응답이 아니다. 실제 메시지 wire의 변경은 공통 PR 전까지 하지 않는다.
+
+| 화면 / 예제 | 구분할 표시·동작 |
+| --- | --- |
+| tier별 조건 / tier-50, tier-100-attendance, tier-100-score, tier-200-at-750, tier-300-at-850 | 각 조건 결과·필요 증거와 신뢰를 표시. 100% 두 대안과 200/300의 추가 필수 조건을 혼동하지 않음 |
+| 금액 견적 | 기준액·교재/기기·고정 수수료·응시료·세금·반올림·상한과 SYNTHETIC 가정을 표시. 산술 계산값은 자격/확정액 아님 |
+| 선택 / multiple-no-choice, higher-unknown | 복수 충족의 자동 max/합산 금지, 상위 미확인은 보류. 명시 선택의 revision/확인 필요 |
+| 최종 금액 / official-fee-open, official-selection-open, first-score-replaced | 실제 금액/선택 규칙 미정, 최초 성적 변경은 확정 불가. 하위 지급 후 상위 차액 자동 지급 없음 |
+| 합성 entitlement | policy/tier/선택·증거 revision/금액 결합 확인. allocationImplemented=false, reserved/paid=0; 현재 지급 버튼 없음 |
+| 400% / tier-400-precheck-only, blog-* | URL/날짜 등 관찰·잘림/불일치/보완만. 실제 14일 연속·공개 상태·진위/가이드 준수 확인 아님. 최종 자격/계산·지급 제외 |
+
+첫 산출물은 이 화면별 차이 분석·상태표·mock 설계다. 실제 웹 코드·공통 API/DB·계약·유료 AI를 이번 M0 인계만으로 구현하지 않는다. 새 금액을 기존 고정 100 TEST funding fixture나 V4 서명에 연결하지 않는다. Q-TIER/Q-BLOG와 소비자 합의는 PENDING/OPEN으로 남긴다.
 
 ## 공통 코드 재사용 경계
 

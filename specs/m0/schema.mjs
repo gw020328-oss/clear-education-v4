@@ -14,7 +14,7 @@ const hash = { type: 'string', pattern: '^0x[0-9a-f]{64}$' };
 const flag = value => ({ const: value });
 const binding = { applicationId: id, policyHash: hash, policyVersion: id, subjectBindingId: id,
   bindingRevision: revision, recipientRef: id, instanceId: id };
-const marker = { contractVersion: flag('clear-m0.1'), mode: flag('SYNTHETIC'), authority: flag('MOCK_ONLY') };
+const marker = { contractVersion: flag('clear-m0.2'), mode: flag('SYNTHETIC'), authority: flag('MOCK_ONLY') };
 const reason = e('INVALID_INPUT', 'FORBIDDEN', 'VERSION_CONFLICT', 'IDEMPOTENCY_CONFLICT', 'BINDING_MISMATCH',
   'SOURCE_UNVERIFIED', 'HISTORY_INCOMPLETE', 'UNSUPPORTED_RULE', 'QUESTION_OPEN', 'MISSING_DOCUMENT',
   'MISSING_FIELD', 'UNREADABLE', 'MISMATCH', 'AUTHENTICITY_UNVERIFIED', 'STALE_RESULT', 'OUTCOME_UNKNOWN',
@@ -130,6 +130,47 @@ const args = {
 };
 for (const [name, body] of Object.entries(args)) defs[name] = obj({ ...marker, name: flag(name),
   requestId: id, expectedRevision: nullable(revision), idempotencyKey: nullable(id), args: body });
+
+// M0.2: bounded Siwon 750-course benefit design; no general expression/runtime engine.
+const tier = e(50, 100, 200, 300, 400);
+const fact = obj({ status: e('MET', 'NOT_MET', 'UNKNOWN', 'IN_PROGRESS'), assurance: e('VERIFIED_SYNTHETIC', 'UNVERIFIED') });
+const scoreRef = nullable(obj({ submissionId: id, revision }));
+const benefitInputs = obj({ basis: e('SYNTHETIC_ASSUMPTION', 'OFFICIAL_OPEN'), token: flag('TEST'), decimals: flag(6),
+  paidAtoms: nullable(uint), bookAtoms: nullable(uint), deviceAtoms: nullable(uint), fixedFeeAtoms: nullable(uint),
+  examCreditAtoms: nullable(uint), taxBps: nullable({ type: 'integer', minimum: 0, maximum: 10000 }), capAtoms: nullable(uint),
+  rounding: flag('FLOOR_ONCE_DEMO'), formulaVersion: flag('siwon-demo-amount.1') });
+defs.BenefitPolicy = obj({ ...marker, policyId: id, policyVersion: id, product: flag('siwon-start-750'),
+  sourceId: id, sourceHash: hash, officialApplicability: flag('OPEN'), executable: flag(false),
+  commonRequirements: list(id, 8, 1), tiers: list(obj({ ratePercent: tier, support: e('CONDITION_AMOUNT', 'PRECHECK_ONLY'),
+    sourceLocator: str(240), examBenefitLabel: e('NONE', 'ZERO_FEE_LABEL_UNRESOLVED', 'DOUBLE_FEE_LABEL_UNRESOLVED'),
+    alternatives: list(obj({ attendanceRequired: { type: 'boolean' }, scoreOperator: e('NONE', 'LT', 'GTE', 'EQ'),
+      scoreThreshold: nullable({ type: 'integer', minimum: 0, maximum: 990 }), historyRequired: { type: 'boolean' },
+      blogRequired: { type: 'boolean' } }), 2, 1) }), 5, 5), amountFormula: flag('siwon-demo-amount.1'),
+  realSelectionRule: flag('OPEN'), syntheticSelectionRule: flag('EXPLICIT_SINGLE_TIER_NO_TOPUP'),
+  unsupportedProducts: list(str(80), 4, 3) });
+defs.BenefitCase = obj({ ...marker, ...binding, caseId: id, factsRevision: revision,
+  score: nullable({ type: 'integer', minimum: 0, maximum: 990 }), scoreAssurance: e('VERIFIED_SYNTHETIC', 'UNVERIFIED'),
+  firstScoreRef: scoreRef, evaluatedScoreRef: scoreRef,
+  review: fact, attendance: fact, history: fact, bindingVerified: { type: 'boolean' }, periodAndDeadlineVerified: { type: 'boolean' },
+  selection: obj({ tier: nullable(tier), revision, rule: e('EXPLICIT_SINGLE_TIER_NO_TOPUP', 'OFFICIAL_OPEN'),
+    acknowledged: { type: 'boolean' } }), amountInputs: benefitInputs,
+  expected: obj({ conditions: obj(Object.fromEntries([50, 100, 200, 300, 400].map(n => ['t' + n, e('MET', 'NOT_MET', 'UNKNOWN', 'IN_PROGRESS')]))),
+    quoteState: e('CALCULATED_SYNTHETIC', 'AMOUNT_OPEN', 'INVALID_AMOUNT', 'PRECHECK_ONLY', 'NO_SELECTION'),
+    quoteAtoms: nullable(uint), settlement: e('FINAL_SYNTHETIC', 'ON_HOLD', 'NOT_MET', 'PRECHECK_ONLY'),
+    reason: e('NONE', 'SELECTION_OPEN', 'HIGHER_TIER_UNKNOWN', 'SOURCE_UNVERIFIED', 'AMOUNT_OPEN', 'INVALID_AMOUNT', 'CONDITION_NOT_MET', 'PRECHECK_ONLY', 'FIRST_SCORE_MISMATCH'),
+    entitlement: nullable(obj({ ...binding, decisionId: id, factsRevision: revision, selectedTier: tier, selectionRevision: revision,
+      firstScoreRef: scoreRef, factsHash: hash, amountRuleVersion: flag('siwon-demo-amount.1'), amountInputsHash: hash,
+      entitlementAtoms: uint, settlementHash: hash, reservedAtoms: flag('0'), paidAtoms: flag('0'),
+      allocationImplemented: flag(false), paymentAllowed: flag(false) })) }) });
+defs.ChallengePrecheck = obj({ ...marker, ...binding, requirementId: flag('req-blog-challenge'), tier: flag(400),
+  submissionId: id, submissionRevision: revision, routeRevision: revision, aiRunId: id, inputHash: hash,
+  modelExecution: flag('MOCK'), guidelineVersion: { type: 'null' }, guideStatus: flag('UNAVAILABLE'),
+  observationBasis: flag('SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE'), observations: list(ref('FieldObservation'), 32),
+  outcome: e('UNDETERMINED', 'NEEDS_SUPPLEMENT'), reasons: list(e('GUIDE_UNAVAILABLE', 'SOURCE_UNVERIFIED', 'MISSING_FIELD', 'MISMATCH'), 4, 1),
+  authenticity: flag('UNVERIFIED'), completeness: flag('UNVERIFIED'), subject: flag('UNVERIFIED'),
+  continuousPublication: flag('UNVERIFIED'), publicAvailability: flag('UNVERIFIED'),
+  automaticEligibility: flag(false), paymentAllowed: flag(false) });
+
 export const schema = { $schema: 'https://json-schema.org/draft/2020-12/schema', $defs: defs };
 export const commandNames = Object.keys(args);
 export const readCommands = ['GetApplication', 'GetDraft', 'GetOperation', 'ListMockPolicies'];
