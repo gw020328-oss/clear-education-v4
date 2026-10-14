@@ -65,6 +65,8 @@ H1의 별도 `LifecycleSession/Submission/Receipt/Evaluation`은 [계약](EXAM_L
 
 ### 제출 파일·Vision
 
+후기/블로그의 상세 정본은 [REVIEW_PRECHECK](REVIEW_PRECHECK.ko.md)다. 새 ReviewRuleCheckDraft 필드는 문서 제안이며 현재 HTTP/schema에 전송하지 않는다. 현행 5장 제한으로 글당 8장/14글을 처리할 수 없으므로 글 단위 묶음·전체 자원/비용 한도를 별도 버전에서 확정해야 한다. 실제 WORD 양식 필드 미확인을 DOCX 지원으로 해결했다고 하지 않는다.
+
 `DocumentSubmission`: applicationId/policyHash/requirementId/documentType, fileId/revision, privateFileHash, mimeType, size, pageCount, submittedAt, dataMode. 제출 파일/파일 지문은 공개 체인에 올리지 않는다. 허용 파일형식·size/page 제한, 격리·저장/삭제·접근권한을 구현 전에 고정한다. 모델이 URL을 임의로 fetch하거나 파일 내 코드를 실행하지 않는다. 첫 합성 업로드는 PNG/JPEG 후보이며 공식 제출 형식이 아니다. 8MiB/20MP/5장/decode 30초는 담당의 시험 전 상한 제안으로, freeze 때 메모리/비용 검증 후 확정한다. magic bytes·실제 decode·위장 MIME·회전/리사이즈·EXIF 제거를 검사하고 원본/모델입력 지문과 표시 좌표 변환을 연결한다. 기존 JSON 64KiB API에 이미지 base64를 밀어 넣지 않으며 업로드 권한·비공개 저장·클라우드 전송 동의/보존/삭제는 별도 API 설계 대상이다.
 
 `VisionObservation`: submission binding, modelRunId/model/version/promptVersion, executionMode(`MOCK / ACTUAL_MODEL`), fieldSchemaVersion, fields[{name,value|null,readStatus,sourcePage,bbox}], extractionReasons. bbox는 원본 좌표계/정규화 단위를 명시하고 범위·페이지·입력 지문을 검증한다. 근거 좌표가 유효해도 내용 정확성은 평가해야 한다. 이름 유사도를 동일인 판정으로 사용하지 않는다.
@@ -110,7 +112,7 @@ allocate(applicationId)는 유효한 자격 자료를 가진 누구나 호출 �
 
 후속 실행 타입은 tier별 조건 결과·필요 증거 신뢰와 미확정 질문, 산술 견적/최종 entitlement를 분리해야 한다. selectedTier/selectionRevision, 최초/평가 성적 ref, factsRevision/hash, amountRuleVersion/input hash, entitlementAmount를 policy/subject/recipient/instance와 함께 결합한다. 다른 제출로 최초 성적을 교체하거나 같은 revision의 내용을 바꾸지 않는다. 복수 충족의 선택/우선순위가 OPEN이면 정산 보류이며 상위 UNKNOWN에서 하위 금액 자동 확정 금지다. 하위 정산 뒤 상위 차액 자동 지급도 지원하지 않는다.
 
-금액 profile에는 기준액, 교재/기기 공제, 정확한 수수료 입력, 응시료 가산의 적용/금액, 세금, 정수 반올림·상한을 따로 둔다. M0의 TEST 고정 수수료 예제는 ‘약 3%’ 공식의 구현이 아니다. 미확정은 null/AMOUNT_OPEN. 400%는 금액/최종 자격 profile에 넣지 않고 별도 ChallengePrecheck에서 내용 관찰만 한다. 가이드 미확보·게시 원천 미검증을 VERIFIED로 바꾸지 않는다. 실제 최종성/동의/원자 배정 구현은 M1/M2/M3/C1/C2에서 소비자 검토 후 진행한다.
+금액 profile에는 기준액, 교재/기기 공제, 정확한 수수료 입력, 응시료 가산의 적용/금액, 세금, 정수 반올림·상한을 따로 둔다. M0의 TEST 고정 수수료 예제는 ‘약 3%’ 공식의 구현이 아니다. 미확정은 null/AMOUNT_OPEN. 400%는 금액/최종 자격 profile에 넣지 않고 별도 ChallengePrecheck에서 내용 관찰만 한다. 가이드 본문 확보는 정책 해석/적용·게시 원천 검증 완료가 아니다. [후기 검토 DTO 제안](REVIEW_PRECHECK.ko.md)에 따라 ruleId/policyVersion/sourceReference/evidenceReference·검토/보완/원천 상태를 분리하며, 미결/원천 미검증을 VERIFIED로 바꾸지 않는다. 기존 ChallengePrecheck의 가이드 미확보 상태는 과거 fixture로만 유지한다. 실제 최종성/동의/원자 배정 구현은 M1/M2/M3/C1/C2에서 소비자 검토 후 진행한다.
 
 ## 명령·권한·오류의 경계
 

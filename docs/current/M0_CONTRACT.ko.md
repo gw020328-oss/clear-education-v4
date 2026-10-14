@@ -83,7 +83,7 @@ VERSION_CONFLICT는 최신 상태 재조회·다시 검토, BINDING_MISMATCH/FOR
 | BenefitCase | 신청/정책/주체/수령인/instance, factsRevision, 점수와 assurance, 최초/평가 대상 제출 ref, 후기/출석/이력 상태와 assurance, 기간/결합 확인, tier 선택/revision/확인, amountInputs와 기대 결과 |
 | amountInputs | basis, TEST/decimals=6, paid/book/device/fixedFee/examCredit atoms, taxBps, capAtoms, rounding, formulaVersion. 미확정 수치는 null. OFFICIAL_OPEN은 실제 계산 확정 불가 |
 | 기대 결과/entitlement | tier별 MET/NOT_MET/UNKNOWN/IN_PROGRESS, 계산 견적과 최종 정산 상태 분리. 확정 예제만 아래 불변 entitlement를 가짐; 그 외 null |
-| ChallengePrecheck | 400, 별도 requirement/submission/route revision/run/input binding, FieldObservation, 가이드 미확보, 판독/보완 사유. 진위/전체성/주체·연속 게시·공개 상태 UNVERIFIED, automaticEligibility=false |
+| ChallengePrecheck | 400, 별도 requirement/submission/route revision/run/input binding, FieldObservation, 과거 가이드 미확보 fixture, 판독/보완 사유. 진위/전체성/주체·연속 게시·공개 상태 UNVERIFIED, automaticEligibility=false |
 
 BenefitCase의 VERIFIED_SYNTHETIC은 인공 원천 assertion이다. Reclaim의 단일 성적 존재와 과거 이력 전체성은 각각 scoreAssurance와 history assurance로 분리한다. 진위가 미확인인 Vision을 history의 VERIFIED_SYNTHETIC으로 올리지 않는다. 기간/주체 결합 실패는 모든 후보를 UNKNOWN으로 만든다. 인공 facts를 사용한 조건 계산 통과는 실제 환급 자격 검증 성공이 아니다.
 
@@ -116,7 +116,7 @@ M0의 `siwon-demo-amount.1`은 **별도 합성 가정**이다. 입력은 100 TES
 
 ### 400% Vision 범위
 
-기존 과거 이력 `vision-*` 예제를 유지하고 별도 `blog-*` 예제를 추가한다. 합성 이미지 안의 URL/게시일 표기·내용 조각·누락/잘림·상충을 관찰해 보완을 안내하는 설계다. 날짜 14개가 읽혀도 실제 14일 연속 게시·공개 유지·작성자·내용 진위·공식 가이드 준수를 보증하지 않는다. 공식 가이드 미확보는 UNDETERMINED, 잘림/누락/표기 불일치는 NEEDS_SUPPLEMENT다. 형식 체크리스트 자체도 SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE로 표시한다. 이미지를 근거로 웹 URL을 자동 방문하거나 ‘챌린지 성공’으로 판정하지 않는다. 현재는 실제 이미지/모델 호출 없이 관찰 결과 stub만 있다.
+기존 과거 이력 `vision-*` 예제를 유지하고 별도 `blog-*` 예제를 추가한다. 합성 이미지 안의 URL/게시일 표기·내용 조각·누락/잘림·상충을 관찰해 보완을 안내하는 설계다. 날짜 14개가 읽혀도 실제 14일 연속 게시·공개 유지·작성자·내용 진위·공식 가이드 준수를 보증하지 않는다. 이 과거 fixture에서는 공식 가이드 미확보를 UNDETERMINED, 잘림/누락/표기 불일치를 NEEDS_SUPPLEMENT로 모델링했다. 후속 [후기·챌린지 명세](REVIEW_PRECHECK.ko.md)는 가이드 본문 확보와 정책 충돌을 반영하지만 기존 schema/fixture를 변경하지 않는다. 새 rule별 근거·보완/원천 상태와 8장/14개 묶음 입력은 후속 버전/한도 검토 대상이다. 형식 체크리스트 자체도 SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE로 표시한다. 이미지를 근거로 웹 URL을 자동 방문하거나 ‘챌린지 성공’으로 판정하지 않는다. 현재는 실제 이미지/모델 호출 없이 관찰 결과 stub만 있다.
 
 clear-m0.2는 원래 YBM body/정책 hash 의미를 보존하면서 M0 envelope 버전과 별도 benefit profile을 추가한다. 기존 main fixture의 marker만 .2로 올렸고 과거 이력/Vision·보류 사례를 유지했다. 제품 migration은 없다. 검사기 `benefits-check.mjs`의 제한된 reference 논리/정수 산술은 위 hand-authored 기대 사례 대조용이며 공개 runtime 평가기·금액 API로 import하지 않는다. 기존 HTTP/지갑/CI는 그대로다.
 
