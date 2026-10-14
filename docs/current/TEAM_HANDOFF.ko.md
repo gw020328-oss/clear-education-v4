@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+2026-10-14 H2 후속: [격리 등록 접수](HISTORY_INTAKE.ko.md)는 H1의 두 목적을 별도 영속 ledger/독립 검증/관리형 수집기에 연결한다. 기존 H1 SYNTHETIC 및 HTTP/DB 계약은 보존한다. 로컬 모듈 연결과 실제 웹/기관 등록·자격 완료를 구분하며 미확인 전체성/신원/공식 기간은 UNKNOWN이다.
+
 2026-10-14 후기/블로그 문서 후속: [사전검토 명세](REVIEW_PRECHECK.ko.md)에 확인된 공식 조건, 미결 해석, 코드/텍스트/Vision/원천 역할, 후속 DTO와 수용 기준을 모았다. 가이드 본문은 확보했지만 정책 적용/게시 검증은 미확인이다. AI/Vision 주 시연은 합성 블로그 자료, 400%는 구조화/사전검토만이다. 이번 후속은 코드/schema 변경 없이 PRD·계획·인계만 갱신하며 기존 H1·Moodle·지급 차단을 보존한다.
 
 2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.

@@ -1,5 +1,7 @@
 # 등록 이력 → 목표 성적: 합성 계약과 구현 경계
 
+2026-10-14 H2 후속: [격리 등록 접수](HISTORY_INTAKE.ko.md)는 H1의 두 목적을 별도 영속 ledger/독립 검증/관리형 수집기에 연결한다. 기존 H1 SYNTHETIC 및 HTTP/DB 계약은 보존한다. 로컬 모듈 연결과 실제 웹/기관 등록·자격 완료를 구분하며 미확인 전체성/신원/공식 기간은 UNKNOWN이다.
+
 2026-10-14, `clear-exam-lifecycle.1`. 기준 develop `cd21b95d463305424532efe014834c3ae01a8745`. [PR #31](https://github.com/gw020328-oss/clear-education-v4/pull/31)의 공식 요구사항 보강을 이 흐름으로 확장한다. [PR #32](https://github.com/gw020328-oss/clear-education-v4/pull/32)는 별도 Draft 연구 의존성이다. 이 PR은 #32 코드를 복사·병합하거나 실제 수집기를 연결하지 않는다.
 
 승인된 작은 구현 단위 **H1**은 스키마·용도/기간/문맥 검증·합성 영수증/상태 결합이다. [순수 합성 구현](../../src/exam-evidence/lifecycle.mjs), [스키마](../../src/exam-evidence/lifecycle-schema.mjs), [시험](../../tests/exam-evidence/lifecycle.test.mjs)이 정본이다. 기존 HTTP/DB/서명/금고 계약과 M0 `clear-m0.2` 예제는 대체하지 않는다. 실제 Moodle 연동·원천 검증 BLOCKED, grant/outbox HOLD, 독립 청구 제품 NO-GO, 소비자 합의 PENDING을 유지한다.

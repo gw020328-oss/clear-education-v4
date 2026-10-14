@@ -132,8 +132,10 @@ export function openHistoryIntake({ directory, instanceId, mode, verifierProfile
       });
     },
     registration: applicationId => copy(getRegistration(applicationId)),
-    openSession(applicationId, purpose, ownerAddress) {
+    openSession(applicationId, purpose, ownerAddress, scoreIndex = null) {
       check(['BASELINE_HISTORY', 'ACHIEVEMENT'].includes(purpose), 'INTAKE_PURPOSE');
+      if (purpose === 'ACHIEVEMENT') integer(scoreIndex, 0, 15);
+      else check(scoreIndex === null, 'INTAKE_SELECTION');
       check(typeof ownerAddress === 'string' && /^0x[0-9a-f]{40}$/.test(ownerAddress), 'INTAKE_OWNER');
       return transaction(() => {
         const r = getRegistration(applicationId), p = r.policy, t = now();
@@ -148,7 +150,7 @@ export function openHistoryIntake({ directory, instanceId, mode, verifierProfile
         const revision = (db.prepare('SELECT MAX(revision) AS n FROM sessions WHERE application=? AND purpose=?').get(applicationId, purpose).n ?? 0) + 1;
         const context = { version: INTAKE_VERSION, instanceId, mode, verifierProfile, verifierConfigDigest, binding: r.binding, policyDigest: r.policyDigest,
           consentVersion: p.consentVersion, registeredAt: r.registeredAt, officialBoundary: 'OPEN', purpose,
-          period: { ...period, boundaries: '[from,until)', timeZone: 'Asia/Seoul' }, revision,
+          scoreIndex, period: { ...period, boundaries: '[from,until)', timeZone: 'Asia/Seoul' }, revision,
           sessionId: 's-' + randomUUID(), nonce: randomBytes(32).toString('hex'), ownerAddress,
           createdAt: t, expiresAt: Math.min(t + p.sessionSeconds, until, r.deleteAt), deleteAt: r.deleteAt };
         const s = { ...context, contextDigest: hash(context), state: 'OPEN' };
@@ -188,7 +190,7 @@ export function openHistoryIntake({ directory, instanceId, mode, verifierProfile
         const { s, r } = ready, t = now();
         exactKeys(verified, ['contextDigest', 'collectedAt', 'proofVerified', 'wholeHistoryTableClaim', 'independentProcess', 'claimIdentifier'], 'INTAKE_VERIFIER_RESULT');
         check(verified.contextDigest === s.contextDigest && verified.independentProcess === true && verified.proofVerified === true
-          && verified.wholeHistoryTableClaim === true, 'INTAKE_VERIFIER_RESULT');
+          && verified.wholeHistoryTableClaim === (s.purpose === 'BASELINE_HISTORY'), 'INTAKE_VERIFIER_RESULT');
         time(verified.collectedAt);
         check(verified.collectedAt >= s.createdAt && verified.collectedAt <= t && verified.collectedAt < s.expiresAt
           && t - verified.collectedAt <= r.policy.acceptanceMaxAgeSeconds, 'INTAKE_ACQUISITION_TIME');
@@ -197,7 +199,7 @@ export function openHistoryIntake({ directory, instanceId, mode, verifierProfile
         check(!db.prepare('SELECT 1 FROM replays WHERE commitment=?').get(replay), 'INTAKE_SOURCE_REUSE');
         const receipt = { version: INTAKE_VERSION, mode, sessionId, purpose: s.purpose, revision: s.revision,
           contextDigest: s.contextDigest, verifierProfile, collectedAt: verified.collectedAt, acceptedAt: t, deleteAt: r.deleteAt,
-          proofVerified: mode === 'LIVE_SOURCE', wholeHistoryTableClaim: mode === 'LIVE_SOURCE',
+          proofVerified: mode === 'LIVE_SOURCE', wholeHistoryTableClaim: mode === 'LIVE_SOURCE' && verified.wholeHistoryTableClaim,
           syntheticSignatureVerified: mode === 'SYNTHETIC', freshAtAcceptance: true,
           state: 'RECEIVED_UNVERIFIED_COVERAGE', ...unresolvedHistoryCoverage() };
         receipt.version = INTAKE_VERSION;

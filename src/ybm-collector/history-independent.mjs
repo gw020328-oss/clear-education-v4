@@ -5,11 +5,11 @@ const rejected=reason=>{
   const error=new Error('PROOF_VERIFICATION_FAILED');
   error.verificationCode=verificationFailureCode({message:reason});return error;
 };
-export async function verifyIndependently(input,{signal,forkChild=fork}={}){
+export async function verifyIndependently(input,{signal,forkChild=fork,workerUrl=new URL('./history-verifier-worker.mjs',import.meta.url)}={}){
   signal?.throwIfAborted();
   requireValue(Buffer.byteLength(JSON.stringify(input))<=2*1024*1024,'PROOF_SIZE');
   let child;
-  try{child=forkChild(new URL('./history-verifier-worker.mjs',import.meta.url),[],{execArgv:[],env:{PATH:'/usr/bin:/bin',LOG_LEVEL:'silent'},stdio:['ignore','ignore','ignore','ipc']});}
+  try{child=forkChild(workerUrl,[],{execArgv:[],env:{PATH:'/usr/bin:/bin',LOG_LEVEL:'silent'},stdio:['ignore','ignore','ignore','ipc']});}
   catch{throw rejected();}
   return new Promise((resolve,reject)=>{
     let response,failed=false,stopping=false;

@@ -10,7 +10,7 @@ if(seq==='crash'){
  process.kill(process.pid,'SIGKILL');
 }
 const store=openHistoryIntake({directory,instanceId:'synthetic-intake',mode:'SYNTHETIC',verifierProfile:'synthetic-test.1',verifierConfigDigest:hash({synthetic:true}),clock:()=>1791954000,
-  verify:async(p,s)=>({contextDigest:s.contextDigest,collectedAt:s.createdAt,proofVerified:true,wholeHistoryTableClaim:true,independentProcess:true,claimIdentifier:hash(p)})});
+  verify:async(p,s)=>({contextDigest:s.contextDigest,collectedAt:s.createdAt,proofVerified:true,wholeHistoryTableClaim:s.purpose==='BASELINE_HISTORY',independentProcess:true,claimIdentifier:hash(p)})});
 try{await store.accept(sessionId,{seq});console.log('ACCEPTED');}
 catch(e){if(e.message!=='INTAKE_REPLAY_CONFLICT')throw e;console.log('CONFLICT');}
 finally{store.close();}
