@@ -10,7 +10,7 @@ import { stopRecordedBrowser } from '../../src/mac-collector/chrome.mjs';
 const launcher=fileURLToPath(new URL('../../src/mac-collector/launch.mjs',import.meta.url));
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function setup(t){const parent=await fs.mkdtemp(join(await fs.realpath(tmpdir()),'clear-lifecycle-'));await fs.chmod(parent,0o700);t.after(()=>fs.rm(parent,{recursive:true,force:true}));const root=join(parent,'app');await prepareRoot(root,{synthetic:true});return root;}
-function run(root,args=[]){const child=spawn(process.execPath,[launcher,...args],{env:{...process.env,CLEAR_TEST_ROOT:root},stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',b=>output+=b);child.stderr.on('data',b=>output+=b);const exited=new Promise(r=>child.once('exit',(code,signal)=>r({code,signal,output})));return {child,exited};}
+function run(root,args=[]){const child=spawn(process.execPath,[launcher,...args],{env:{...process.env,CLEAR_TEST_ROOT:root},stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',b=>output+=b);child.stderr.on('data',b=>output+=b);const exited=new Promise((resolve,reject)=>{child.once('close',(code,signal)=>resolve({code,signal,output}));child.once('error',reject);});return {child,exited};}
 async function ready(root){for(let i=0;i<200;i++){try{return Number(await fs.readFile(join(root,'test-ready'),'utf8'));}catch{}await delay(25);}throw new Error('WORKER_TIMEOUT');}
 async function sessions(root){return (await fs.readdir(root)).filter(n=>n.startsWith('session-'));}
 test('real Chrome cookie round trip; profile deleted; output is summary only',async t=>{
@@ -23,7 +23,8 @@ test('concurrent launcher cannot delete active session; SIGTERM removes it',asyn
  for(let i=0;i<100&&(await sessions(root)).length;i++)await delay(25);
  assert.deepEqual(await sessions(root),[]);
 });
-test('SIGKILL leaves profile; next launcher stops owned Chrome and deletes old session first',async t=>{
+// Exercise independent launches repeatedly; a single pass hid CI-only recovery races.
+for(let trial=1;trial<=5;trial++)test(`SIGKILL leaves profile; next launcher stops owned Chrome and deletes old session first (${trial}/5)`,async t=>{
  const root=await setup(t);const first=run(root,['--test-browser-hold']);const pid=await ready(root);t.after(()=>{try{process.kill(pid,'SIGKILL');}catch{}});
  const [old]=await sessions(root);assert.ok(old);process.kill(pid,'SIGKILL');await first.exited;assert.ok(await fs.stat(join(root,old)));
  const second=await run(root).exited;assert.equal(second.code,0,second.output);assert.match(second.output,/"staleSessionsRemoved":1/);assert.deepEqual(await sessions(root),[]);
