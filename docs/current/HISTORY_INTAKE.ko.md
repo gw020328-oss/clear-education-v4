@@ -45,3 +45,37 @@ H1 `clear-exam-lifecycle.1`은 SYNTHETIC 그대로 유지한다. H2는 별도 �
 등록/세션/receipt의 private HMAC pin은 저장 손상 검출이며 호스트 관리자·DB와 키를 함께 장악한 공격자에 대한 발행자 서명이 아니다. nonce 소비·receipt·replay는 원자적이다. 키는 같은 전용 0600 DB에 있고 새 키로 과거 중복 범위를 초기화하는 API가 없다. 삭제 후에는 비공개 claim commitment와 등록 tombstone만 인스턴스 폐기까지 보존한다. 호스트/백업 전체 삭제·다중 호스트 복제는 별도다.
 
 H2b 검증: 합성 18개에 별도 프로세스 동시 접수, transaction 도중 SIGKILL 후 rollback/재접수, 응답 유실/재시작, 취소/만료/구 revision 결과 거부, 무결성/설정/누락 schema 거부, 기한 삭제와 원문 미보존을 포함한다. 실제 cryptographic verifier·Chrome 연결은 H2c에서 검증한다. 기존 HTTP·application DB schema 4·금고·M0/H1 입력은 변경하지 않는다. CI 기존 exam-evidence glob이 새 검사를 포함한다.
+
+## H2c 수집 연결과 보안 검토
+
+검토용 의존 그래프는 #33(H2a) → #34(H2b), 그리고 #32(기존 수집 spike)와 #34 → H2c다. #32 `534bf56` 이력을 H2c feature 브랜치에서만 병합했다. develop/원 작업본/PR #32는 변경하지 않았다. 최종 PR은 선행 diff를 포함하므로 고유 변경은 feature 병합 커밋 이후로 검토한다. 실제 적용 전 선행 PR 검토/통합이 필요하며 Mac 미확정 원인도 그대로 남는다.
+
+`collectIntakeHistory(managedSession,{intake,applicationId,purpose,scoreIndex,...})`가 기존 관리형 Chrome·동일 Attestor client·secret scope·SnarkJS 자식 프로세스와 새 접수 코어를 연결한다. BASELINE_HISTORY는 고정 표 전체 recipe, ACHIEVEMENT는 명시적인 scoreIndex(0~15)를 고정해 기존 최소 한 행 recipe를 사용한다. 최고점 자동 선택은 없다. 로컬 HTML은 임시 메모리에서만 관찰하며 한 행 증명에는 그 행의 최소 시험/날짜/수험번호/성적만 드러난다. ACHIEVEMENT에서 표의 16행 초과·선택 없음·빈/로그인 응답은 실패/보류한다. 목표 시험일과 인정 기간이 겹치지 않으면 거부하고, 경계일의 정확한 시각·발표일/계정 동일성은 UNKNOWN이다.
+
+추가된 scoreIndex는 접수 session context에 포함된다. 원천 recipe 두 종류와 SDK/엔진·로그인 전 registry 신뢰 목록의 digest도 context에 묶인다. 서명 claim은 고정 목적 `CLEAR_HISTORY_INTAKE_ONLY`, 세션 context digest와 원천 정책을 포함한다. 이전 진단 purpose/nonce의 proof는 수락하지 않는다. 독립 child에는 claim·서버 기대 문맥·공개 trust만 보내며 env 최소화, stdout/stderr 비활성, 네트워크 금지, 2MiB IPC·30초 상한·자식 종료 확인을 적용한다. 검증 반환은 필수 최소 필드만 허용한다. 검증 플래그/전체성/신원 값을 외부 제출에서 받아 승격하지 않는다.
+
+공식 registry TLS 신뢰와 1개 공증자 서명, SDK 5.1.4·SnarkJS/Groth16 회로/키의 upstream 고정 commit은 기존 신뢰 가정이다. trusted setup 독립 감사·실제 배포 버전 pin·다중 공증자 합의·OS 전체 침해 방어를 완료했다고 주장하지 않는다. prefix/suffix의 가림 때문에 표 외 페이지/필터/총량은 인증되지 않는다. 생성 중 행 가림은 공식 provider 합성 시험, 실제 서명 후 변조는 #32 저장 결과이며 새 실제 악성 생성 시험과 구분한다.
+
+전용 명령 `./tools/node src/mac-collector/launch.mjs --ybm-registration-intake`는 **로컬 등록 접수 시험**이다. 신뢰 목록을 먼저 고정하고 이력 필요 테스트 정책/가명 등록/동의 사건을 만든 뒤 전용 Chrome 로그인을 기다린다. ready 이후 새 문맥으로 증명하며 서버 검증·DB 수락·재개봉 조회까지 연결한다. 새 CLI는 baseline 경로의 리허설이며 제품 웹 등록/실제 지갑 동의/기관 등록 시점 검증 완료가 아니다. ACHIEVEMENT는 모듈 계약/합성 연결까지이고 실제 수강 후 새 시험 시연은 미실행이다.
+
+메타데이터는 기존 Time Machine 제외 관리형 root 아래 `history-intake-v1`의 전용 DB에 보관한다. 이 CLI 정책은 등록부터 24시간 보존 후 다음 실행에서 정리하며 원본 proof/성적/쿠키/키는 보존하지 않는다. 재사용 방지 commitment/tombstone은 인스턴스 폐기까지 남는다. 원문은 공증/연산/검증 프로세스 메모리에 들어가며 JS/SDK 복사·swap 흔적 완전 삭제 보장은 없다. 정상·취소·오류에서 자식 연산/캡처/비밀값/Chrome/route/client 정리를 기다린다. 정리 실패는 성공으로 보고하지 않는다.
+
+검토 당시 로컬 회귀는 YBM 205개(이후 취소/정리 실패 2개 추가), exam-evidence 123개, Mac 51개가 통과했다. #33 CI 6개는 통과했지만 #34 PR CI의 Mac 검사에서 BROWSER_TIMEOUT 2건이 발생했고 push CI는 통과했다. 최초 #32 실패와 같은 원인인지 확정되지 않았으며 이력 접수 코드가 원인을 수정했다고 기록하지 않는다. 실패 기록은 PR #34에 보존하고 후속 실행 결과를 별도로 기록한다.
+
+## 실제 실행 결과 — 2026-10-14
+
+실행 commit `bca6568`, [비식별 검증 기록](history-intake-verification.json). 원본/점수/날짜/수험번호/계정/서명/nonce/DB 내용은 보고서에 넣지 않는다.
+
+- 성적이 있는 기존 계정: 사용자가 새 관리형 Chrome에 로그인한 뒤 새 로컬 등록 문맥의 표 증명 생성, 공식 공증자 서명·독립 오프라인 검증, 영속 접수 및 DB 재개봉 후 같은 receipt 조회가 실제 성공했다. 결과는 RECEIVED_UNVERIFIED_COVERAGE/UNKNOWN이며 wholeHistoryTableClaim/proofVerified만 true다. 정상 종료와 프로필 삭제를 확인했다.
+- 사용자가 지정한 응시 이력 없는 계정: 별도 새 Chrome 로그인 후 TOEIC 행이 없는 응답을 실제 관찰했다. 고정된 표 recipe가 지원하지 않는 형식으로 SOURCE_LAYOUT_UNSUPPORTED/UNKNOWN 종료했다. 새 서명 생성/receipt 수락/미응시 승인은 하지 않았다. 로그인했다고 사용자가 확인한 사실과 암호학적으로 계정/빈 응답을 인증한 사실을 구분한다. 프로필을 삭제했고 두 실행 후 관리형 session 디렉터리는 0개다.
+- 두 응답 모두 고정 URL 요청, 페이지 표시 미탐지, 일반 필터 control/동적 로딩 징후/외부 script 존재를 관찰했다. 이 탐지는 사이트 공통 메뉴/검색에도 반응할 수 있어 성적 목록 전용 필터라고 확정하지 않는다. 표 밖 의미·총량은 여전히 UNKNOWN이다. 미탐지는 페이지가 없다는 인증이 아니다.
+- 신규 실제 악성 선택 누락 생성·다건 계정·인증된 빈 응답·계정 실명 결합·공식 기간 확정·실제 수강 후 ACHIEVEMENT는 미실행/미확인이다. ACHIEVEMENT 한 행 연결은 합성 서명으로만 검증했다.
+- #35 구현 head의 원격 CI 6개는 통과했다. #34의 동일 커밋 Mac 1회 재실행도 통과했으나 최초 timeout 원인은 미확정이다. 정리·원천·자격 차단을 완화하거나 성공 재실행을 원인 해결로 쓰지 않는다.
+
+이번 연결 완료 범위는 **신뢰한 로컬 등록 서비스 모듈과 관리형 실제 수집기, 독립 검증, 최소 영속 접수/복구**다. 기존 제품 웹 신청·지갑 동의·기관 등록·자격/금액 확정·지급 전체가 완료된 것은 아니다. 실제 성공에 대한 전체 이력 승격은 계속 금지한다.
+
+### 재사용/시험 선택의 남은 경계
+
+현재 replay는 동일 signed claim/같은 제출의 중복 접수와 다른 등록 문맥으로의 이전 proof 재사용을 막는다. 다른 owner/nonce로 새로 증명한 동일 원천 시험을 기관/사업 전체에서 중복 사용하지 못하게 하는 안정 nullifier는 아직 없다. 계정 실명 결합 및 최초 시험 확정과 함께 별도 검토한다. 현재 모든 결과는 UNKNOWN이므로 이 한계를 자격/재원 예약에 사용하지 않는다.
+
+ACHIEVEMENT의 scoreIndex는 고정 recipe 선택이며 서버 정렬이 바뀌어도 같은 시험이라는 보장은 아니다. 실제 사용자 시험 선택/정정·발표일·안정 시험 commitment를 소비하는 제품 어댑터는 후속이다. 합성 H1의 최초 시험 고정 규칙을 실제 접수 결과가 충족했다고 표시하지 않는다.

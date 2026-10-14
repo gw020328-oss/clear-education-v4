@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-14",
+  "executionCommit": "bca6568",
+  "scope": "LOCAL_REGISTRATION_INTAKE_NO_ELIGIBILITY",
+  "nonemptyAccount": {
+    "userLoginCompleted": true,
+    "newContextProofGenerated": true,
+    "officialAttestorSignatureVerified": true,
+    "independentOfflineVerification": true,
+    "durableReceiptAccepted": true,
+    "databaseReopenedReceiptRecovered": true,
+    "state": "RECEIVED_UNVERIFIED_COVERAGE",
+    "status": "UNKNOWN",
+    "profilesDeleted": true
+  },
+  "userDesignatedNoExamAccount": {
+    "userLoginCompleted": true,
+    "toeicRowsAbsentObserved": true,
+    "observationAssurance": "UNTRUSTED_BROWSER_OBSERVATION",
+    "state": "SOURCE_LAYOUT_UNSUPPORTED",
+    "newProofGenerated": false,
+    "receiptAccepted": false,
+    "absenceEstablished": false,
+    "emptyMeaning": "UNKNOWN",
+    "profilesDeleted": true
+  },
+  "browserObservationsBothSessions": {
+    "requestPinned": true,
+    "paginationObserved": false,
+    "genericFilterControlObserved": true,
+    "sortControlObserved": false,
+    "genericDynamicLoadingObserved": true,
+    "externalScriptsUninspected": true,
+    "historySpecificMeaningConfirmed": false
+  },
+  "unverified": [
+    "source total/count/period coverage",
+    "server-side filters and sort semantics",
+    "many-record pagination/load-more",
+    "authenticated empty-response meaning",
+    "live selective omission during proof generation",
+    "calendar two-year registration event/boundaries",
+    "account owner and applicant identity",
+    "actual post-course achievement submission",
+    "production web consent and registration integration",
+    "Groth16 trusted setup independent audit"
+  ],
+  "fullHistoryProven": false,
+  "sourceCoverageConfirmed": false,
+  "accountIdentityBound": false,
+  "productEligible": false,
+  "paymentAllowed": false,
+  "rawProofPersisted": false,
+  "scoreOrExamNumberLogged": false,
+  "managedSessionsAfterRuns": 0,
+  "synthetic": {
+    "intakeCoreTests": 18,
+    "intakeIntegrationTests": 23,
+    "examEvidenceSuite": 123,
+    "ybmSuiteBeforeLastTwoIntegrationTests": 205,
+    "macSuite": 51
+  },
+  "restrictions": {
+    "moodle": "BLOCKED",
+    "sourceEligibility": "BLOCKED",
+    "grantOutbox": "HOLD",
+    "independentClaimProduct": "NO_GO",
+    "automatic400PercentEligibilityOrPayment": false
+  },
+  "macCi": {
+    "pr34InitialAttempt": "BROWSER_TIMEOUT_IN_TWO_TESTS",
+    "pr34SameCommitRetry": "PASS",
+    "rootCause": "UNCONFIRMED",
+    "pr35InitialHeadSixChecks": "PASS"
+  }
+}

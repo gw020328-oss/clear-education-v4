@@ -16,7 +16,7 @@ const policy = { policyVersion:'policy-one',consentVersion:'consent-one',baselin
   achievementUntilSeconds:3600,acceptanceMaxAgeSeconds:300,sessionSeconds:600,retentionSeconds:7200 };
 const proof = { fabricated:'SYNTHETIC_SCORE_AND_PRIVATE_DATA', seq:1 };
 const verified = async (p, s) => ({contextDigest:s.contextDigest,collectedAt:s.createdAt,
-  proofVerified:true,wholeHistoryTableClaim:true,independentProcess:true,claimIdentifier:hash(p)});
+  proofVerified:true,wholeHistoryTableClaim:s.purpose==='BASELINE_HISTORY',independentProcess:true,claimIdentifier:hash(p)});
 function fixture(t, overrides = {}) {
   const directory = realpathSync(mkdtempSync(join(tmpdir(),'clear-intake-'))); let current = start, store;
   const config = {directory,instanceId:'synthetic-intake',mode:'SYNTHETIC',verifierProfile:'synthetic-test.1',verifierConfigDigest:hash({synthetic:true}),verify:verified,clock:()=>current,...overrides};
@@ -32,7 +32,7 @@ test('fixed registration, purpose separation, same-input recovery and restart re
   assert.deepEqual(await f.store.accept(s.sessionId,proof),r);
   assert.equal(f.store.register({binding,policy}).registeredAt,start);
   f.store.close();f.open(); assert.deepEqual(f.store.receipt(s.sessionId),r);
-  const a=f.store.openSession(binding.applicationId,'ACHIEVEMENT',owner);
+  const a=f.store.openSession(binding.applicationId,'ACHIEVEMENT',owner,0);
   assert.notEqual(a.nonce,s.nonce);assert.notEqual(a.contextDigest,s.contextDigest);
   assert.equal(r.proofVerified,false); assert.equal(r.syntheticSignatureVerified,true);
   for(const flag of ['fullHistoryProven','accountIdentityBound','productEligible','paymentAllowed','baselineBelowThreshold','absenceEstablished']) assert.equal(r[flag],false);
@@ -50,7 +50,7 @@ test('different proof conflicts; verified claim cannot be reused across purpose/
   const f=fixture(t),s=f.store.openSession(binding.applicationId,'BASELINE_HISTORY',owner);
   await f.store.accept(s.sessionId,proof);
   await assert.rejects(f.store.accept(s.sessionId,{...proof,seq:2}),/CONFLICT/);
-  const a=f.store.openSession(binding.applicationId,'ACHIEVEMENT',owner);
+  const a=f.store.openSession(binding.applicationId,'ACHIEVEMENT',owner,0);
   await assert.rejects(f.store.accept(a.sessionId,proof),/SOURCE_REUSE/);
 });
 test('concurrent same-proof calls return one receipt and one replay record', async t => {

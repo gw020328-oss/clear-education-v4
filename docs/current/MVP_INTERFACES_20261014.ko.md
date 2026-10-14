@@ -1,5 +1,7 @@
 # MVP 공통 인터페이스 초안
 
+H2 실행 결과: [검증 기록](history-intake-verification.json)에 새 실제 등록 문맥 증명·독립 검증·영속 접수/재개봉 성공과 빈 계정 응답 미지원/UNKNOWN을 분리했다. 로컬 모듈 연결은 완료했고 웹/기관 동의·원천 완전성/동일인·자격/지급은 미완료다. 검토 PR: [#33](https://github.com/gw020328-oss/clear-education-v4/pull/33), [#34](https://github.com/gw020328-oss/clear-education-v4/pull/34), [#35](https://github.com/gw020328-oss/clear-education-v4/pull/35).
+
 2026-10-14 H2 승인 후속: [등록 접수·원천 경계](HISTORY_INTAKE.ko.md)에 변경점과 단위별 완료 기준을 정의한다. H2a 원천 범위 검토 → H2b 영속 단회 접수 → H2c 수집기 연결 순서다. 실제 미확인 전체성/실명/공식 기간은 UNKNOWN이고 기존 지급·Moodle·400%·NO-GO 차단을 유지한다. H1 합성과 기존 HTTP/DB를 바꾸지 않는 별도 로컬 접수 경계다.
 
 2026-10-14 H1 후속: [등록 이력 → 목표 성적 계약](EXAM_LIFECYCLE.ko.md)의 합성 전용 스키마·검증·메모리 영수증을 추가했다. PR #32의 실제 표 공증 보고와 전체성/신청자 결합 미완료를 구분한다. 기존 M0 명세 전용 범위는 유지하고 H1만 별도 실행 가능한 합성 단위다. 실제 수집 통합·영구 보존·제품 자격/지급은 미구현이며 기존 차단을 유지한다.

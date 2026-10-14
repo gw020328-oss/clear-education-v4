@@ -33,7 +33,7 @@ try{
       signal.addEventListener('abort',()=>{clearInterval(timer);resolve();},{once:true});
     });
   }else if(options.network){
-    const {runYbmRoute}=await import(options.historyCheck?'../ybm-collector/history-run.mjs':'../ybm-collector/run.mjs');
+    const {runYbmRoute}=await import(options.intakeCheck?'../ybm-collector/intake-run.mjs':options.historyCheck?'../ybm-collector/history-run.mjs':'../ybm-collector/run.mjs');
     const result=await runYbmRoute(session,{signal,interactive:options.interactive,collectionCheck:options.collectionCheck,proofCheck:options.proofCheck});
     await stopRecordedBrowser(session.path);await removeSession(root,session.path);session=null;
     console.log(JSON.stringify({...result,staleSessionsRemoved:removed,profilesDeleted:true}));
