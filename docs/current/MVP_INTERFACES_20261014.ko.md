@@ -46,6 +46,8 @@ SourceDocument의 raw 지문과 모델에 실제 제공한 정제본 지문은 �
 
 단일 시험 존재용 증거는 동일 원천 행의 시험 종류/일자/점수/유효 상태와 신청자/owner 결합을 검증한다. `EXISTS_QUALIFYING_EXAM`, `HIGHEST_IN_PERIOD`, `NO_EXAM_IN_PERIOD`, `NO_SCORE_ABOVE_IN_PERIOD`는 서로 다른 조건이다. 존재 증거만으로 나머지 세 조건을 승인하지 않는다. 최고점/부재는 원천이 보증한 계정·기간·시험 상태 범위, 페이지 전부, 종료/건수, 정정·취소 정보가 필요하다. 기존 B2a는 이 부분의 합성 경계이며 실제 원천 보증은 계속 BLOCKED다.
 
+[과거 이력 근거 보강](EXAM_HISTORY_REQUIREMENTS.ko.md)에 따라 YBM/Reclaim 계정 전체 조회의 후보를 먼저 조사한다. 원천 전체성이 확인된 단일 서버 응답의 공증 또는 동일 계정/기간/스냅샷에 결합된 모든 페이지가 후보이며, 별도 서명 manifest API의 부재만으로 불가능하다고 단정하지 않는다. 클라이언트 complete/count/hash는 원천 보증을 대체하지 않는다. 현행 2개 증거 쌍은 전체 이력/무응시 검증이 아니며 실제 검증 전 차단한다. Moodle의 별도 export 요건은 유지한다.
+
 사업별 중복키는 동일 원천 시험의 재발급·다른 지갑·신청에서도 안정적이어야 한다. 신청 ID/발급시각으로 키를 바꿔 재사용을 허용하지 않는다. 개인식별값의 단순 공개 hash를 쓰지 않는다. PR #21의 로컬 native OPRF 결과를 공식 hosted 제품 증거로 사용하지 않는다. trustProfile에는 witness/verifier 배포 지문·epoch/키 정책·원천 parser revision을 pin하고 알 수 없는 변경은 보류한다.
 
 ### Moodle 일별 기록

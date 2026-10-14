@@ -9,7 +9,8 @@
 1. [AGENTS](../../AGENTS.md), [협업 절차](../../CONTRIBUTING.md), [팀 인계](TEAM_HANDOFF.ko.md), [담당 계획](TEAM_PLAN.ko.md), [현재 API](API_CONTRACT.ko.md)를 읽는다. 날짜별 과거 상태를 현재 구현과 구분한다.
 2. [새 PRD](MVP_PRD_20261014.ko.md)와 [현재 구현 차이](MVP_GAP_20261014.ko.md)를 대조한다. 목표 750+·OR·후입금과 현재 800 AND 80%·선예치 경로는 다르다.
 3. [M0 결정/질문](M0_DECISIONS.ko.md) → [M0 계약](M0_CONTRACT.ko.md) → [schema](../../specs/m0/schema.mjs)·[fixture](../../specs/m0/fixtures.json) → [단계별 계획](MVP_PLAN_20261014.ko.md) 순서로 읽는다.
-4. `./tools/node specs/m0/check.mjs`로 받은 예제의 일관성을 확인한다. 실패를 무시하거나 예제의 차단값을 true로 바꾸지 않는다.
+4. [과거 성적 요구사항 보강](EXAM_HISTORY_REQUIREMENTS.ko.md)을 읽는다. 시원스쿨 전체 성적·계정/이름 화면과 수강 신청일 기준 안내는 확인됐지만 정확한 경계와 원천 검증은 미결이다. 50%·100% 출석 경로에 과거 이력을 추가하지 않는다. 기존 Vision 예제는 공식 전체 제출 요건의 충족 예제가 아니다.
+5. `./tools/node specs/m0/check.mjs`로 받은 예제의 일관성을 확인한다. 실패를 무시하거나 예제의 차단값을 true로 바꾸지 않는다.
 
 이 M0 작성 시 기준 저장소에는 `web/`가 없다. 팀원의 별도 브랜치에 화면이 있으면 그 브랜치와 기준 commit을 먼저 기록하고 차이만 분석한다. 다른 checkout을 읽거나 수정하는 권한을 이 문서에서 추정하지 않는다. 이슈 #11 F0 범위를 확인하고 M0 계획과 충돌을 기록한다. 새 프레임워크·공통 schema·패키지 선택을 몰래 확정하지 않는다.
 

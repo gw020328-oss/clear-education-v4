@@ -140,6 +140,8 @@ funding.observation의 UNKNOWN/REORG_PENDING과 claim PENDING/UNKNOWN은 송금 
 
 ## 원천·AI·개인정보 경계
 
+[과거 성적 공식 근거 보강](EXAM_HISTORY_REQUIREMENTS.ko.md): 시원스쿨은 수강 신청일 기준 최근 2년 전체 성적과 계정/이름 대조 화면을 안내한다. 기존 `req-history`의 시험일/점수와 Vision 예제는 최소 합성 체크리스트이며 공식 제출 요건 전체가 아니다. 정확한 날짜 경계·tier 적용 및 원천 전체성은 OPEN이고 이번 보강으로 schema/지원 상태를 변경하지 않는다.
+
 SubjectBinding은 인증된 원천 계정 주체와 신청의 연결이다. 사용자가 제출한 userId, 화면의 로그인 표시, 동일 이름·지갑만으로 VERIFIED가 되지 않는다. 변경/해제는 새 bindingRevision을 만들고 진행 job을 무효화한다. 기존 evidence를 새 계정에 재결합하지 않는다. 별도 Moodle 실험의 `$USER` 기반 읽기를 운영자 토큰+임의 학생 ID로 바꾸지 않는다. 실제 인증/동의/토큰·신뢰 registry/기관 매핑은 Q-L이 열릴 때까지 미구현이다.
 
 Vision의 판독은 내용 관찰이다. 문서 진위, 빠진 페이지/과거 이력 전체성, 실제 신청자의 것인지는 별도다. 읽을 수 있는 합성 745점이 있더라도 세 assertion은 UNVERIFIED이며 paymentAllowed=false다. 파일 속 지시·URL·스크립트는 정책/도구 권한이 될 수 없다. 실제 모델 입력에는 최소 필요한 부분만 승인된 경로로 보내야 하며 원문과 변환본 hash/transform version을 분리한다.
