@@ -1,6 +1,6 @@
 # 과거 성적 요구사항과 원천 검증 경계
 
-2026-10-14. 기준 develop `cd21b95d463305424532efe014834c3ae01a8745`(PR #30). 이번 보강은 공식 근거와 현재 구현의 차이를 정리한다. 새 수집기·정책 평가기·API·Vision 실행을 구현하거나 승인하지 않는다. **실제 Moodle 연동·원천 검증 BLOCKED, grant/outbox HOLD, 독립 청구 제품 NO-GO**를 유지한다. M0 소비자 합의도 PENDING이다.
+2026-10-14. 기준 develop `cd21b95d463305424532efe014834c3ae01a8745`(PR #30). 초기 보강은 공식 근거와 현재 구현의 차이를 정리했다. 후속 H1은 [등록 이력 → 목표 성적](EXAM_LIFECYCLE.ko.md)의 독립 합성 검증을 추가한다. 실제 수집기·정책 평가기·API·Vision 연결은 추가하지 않는다. **실제 Moodle 연동·원천 검증 BLOCKED, grant/outbox HOLD, 독립 청구 제품 NO-GO**를 유지한다. M0 소비자 합의도 PENDING이다.
 
 ## 공식 안내에서 확인한 범위
 
@@ -18,7 +18,9 @@
 
 확인된 기준일의 **표현**은 수강 신청일이다. 신청일이 결제/접수/승인 중 어떤 사건인지, 양 끝 날짜의 포함 여부·시간대, 상위 tier에 적용되는 과거 목표 점수의 정확한 기준, 해당 기수/구매 옵션 적용과 대체 증거의 학원 수용 여부는 OPEN이다. 이를 수강 시작일이나 환급 신청일로 치환하지 않는다. 안내 화면에 이름이 맞는다는 사실만으로 제품의 인증된 신청자 결합을 VERIFIED로 올리지 않는다.
 
-## 현재 수집기가 증명하는 것
+## 현재 제품 수집기와 별도 실험이 증명하는 것
+
+아래는 develop 제품의 단일 시험 경로다. 이후 Draft [PR #32](https://github.com/gw020328-oss/clear-education-v4/pull/32)는 실제 계정의 반환 표 전체 공증·독립 검증 성공을 보고했다. 이 코드는 아직 develop에 통합되지 않았고 기간 전체성/계정 결합은 false다. [H1의 근거 대조](EXAM_LIFECYCLE.ko.md)에서 성공 범위와 남은 관문을 구분한다.
 
 [source-policy](../../src/ybm-collector/source-policy.mjs)는 `ybm-minimal-candidate.3 / AWAITING_CURRENT_YBM_LAYOUT`이다. 최대 16행은 파서/선택 정책의 한도이며 계정 전체 조회 보장이 아니다. 빈 성적 목록은 `SCORE_ROW_COUNT`로 거부한다. 추출 필드는 시험 종류·일자·수험번호·점수이며 내 정보의 이름/계정 연결 화면을 수집하는 현재 정책은 없다.
 
@@ -38,8 +40,8 @@
 
 ## M0·Vision 소비자에게 주는 의미
 
-[합성 계약](M0_CONTRACT.ko.md)의 `req-history`와 `vision-readable-held`는 시험일/점수만 보는 최소 합성 체크리스트다. 공식 전체 제출 요건을 충족하는 예제가 아니다. 이름·계정·전체 이력 화면의 존재/판독 같은 후속 관찰 항목은 M1/V1 소비자 검토에서 설계해야 하며 이번 변경에서 실제 필드·파일 수집을 추가하지 않는다. Vision 판독이나 화면 캡처는 진위·빠진 이력·주체 인증을 대체하지 않는다. 문서 판독 성공도 원천 assertions는 UNVERIFIED다.
+[합성 계약](M0_CONTRACT.ko.md)의 `req-history`와 `vision-readable-held`는 시험일/점수만 보는 최소 합성 체크리스트다. 공식 전체 제출 요건을 충족하는 예제가 아니다. 이름·계정·전체 이력 화면의 존재/판독 같은 후속 관찰 항목은 M1/V1 소비자 검토에서 설계해야 하며 H1은 별도 합성 Lifecycle 스키마를 추가하지만 실제 필드·파일 수집은 추가하지 않는다. Vision 판독이나 화면 캡처는 진위·빠진 이력·주체 인증을 대체하지 않는다. 문서 판독 성공도 원천 assertions는 UNVERIFIED다.
 
-기존 M0 schema/version·조건/금액 예제는 유지하고 `siwon-questions`의 질문 문구만 확인된 안내와 남은 미결을 구분하도록 정정한다. 상태 OPEN, 지원 UNSUPPORTED, 기간 null과 모든 지급 차단은 유지한다. [프런트 인계](FRONTEND_M0_HANDOFF.ko.md)는 이 구분을 화면에 반영하는 설계 참고이며 실제 구현 착수 승인이 아니다.
+기존 M0 envelope/version·조건/금액 예제는 유지하고 `siwon-questions`의 질문 문구만 확인된 안내와 남은 미결을 구분하도록 정정한다. 상태 OPEN, 지원 UNSUPPORTED, 기간 null과 모든 지급 차단은 유지한다. [프런트 인계](FRONTEND_M0_HANDOFF.ko.md)는 이 구분을 화면에 반영하는 설계 참고이며 실제 구현 착수 승인이 아니다.
 
 제공 보고서 `CLEAR_과거성적_요구사항_Reclaim검토_2026-10-14.txt`의 SHA256은 `68d93f91aeb617897115c5dddbca048925a87b88aa1442bf5e4ef761670a42b3`다. 보고서, 공식 공개 안내, 현재 코드를 대조했으며 지문 자체를 발행자 인증이나 원천 검증으로 사용하지 않는다. 실제 로그인·증명 생성·Moodle/유료 모델/체인 실행은 하지 않았다.

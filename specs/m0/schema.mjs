@@ -1,3 +1,4 @@
+import {lifecycleSchemas} from '../../src/exam-evidence/lifecycle-schema.mjs';
 // M0 design artifacts only. No server, verifier, policy evaluator or contract runtime.
 // JSON Schema 2020-12 subset; check.mjs validates only the keywords used here.
 const str = maxLength => ({ type: 'string', minLength: 1, maxLength });
@@ -171,6 +172,8 @@ defs.ChallengePrecheck = obj({ ...marker, ...binding, requirementId: flag('req-b
   continuousPublication: flag('UNVERIFIED'), publicAvailability: flag('UNVERIFIED'),
   automaticEligibility: flag(false), paymentAllowed: flag(false) });
 
+// Additive contract with its own version; existing clear-m0.2 envelopes/hashes are unchanged.
+Object.assign(defs,lifecycleSchemas);
 export const schema = { $schema: 'https://json-schema.org/draft/2020-12/schema', $defs: defs };
 export const commandNames = Object.keys(args);
 export const readCommands = ['GetApplication', 'GetDraft', 'GetOperation', 'ListMockPolicies'];

@@ -1,5 +1,8 @@
 # M0 공통 합성 계약과 인수 예제
 
+2026-10-14 H1 후속: [등록 이력 → 목표 성적 계약](EXAM_LIFECYCLE.ko.md)의 합성 전용 스키마·검증·메모리 영수증을 추가했다. PR #32의 실제 표 공증 보고와 전체성/신청자 결합 미완료를 구분한다. 기존 M0 명세 전용 범위는 유지하고 H1만 별도 실행 가능한 합성 단위다. 실제 수집 통합·영구 보존·제품 자격/지급은 미구현이며 기존 차단을 유지한다.
+
+
 `clear-m0.2`, **FIXED_FOR_M0_FIXTURES / NOT_RUNTIME / CONSUMER_AGREEMENT_PENDING**. 기준 제품 commit `6d941a1fe0669b89730da1472d23ecd7caab22f4`, 선행 설계 commit `7bf622901919199ff6aaf00aaf077ef64a704a79`. PR #30의 M0 추가분이다. [결정 등록부](M0_DECISIONS.ko.md) · [프런트 시작점](FRONTEND_M0_HANDOFF.ko.md).
 
 이 문서와 [schema.mjs](../../specs/m0/schema.mjs), [fixtures.json](../../specs/m0/fixtures.json)이 **첫 합성 mock의 필드·예제 기준**이다. 더 넓은 [인터페이스 초안](MVP_INTERFACES_20261014.ko.md)의 모든 후보를 구현/동결한 것이 아니다. 기존 [HTTP API](API_CONTRACT.ko.md), DB, 서명, `CourseRefundVaultV4`, proof flow와 서로 다른 namespace다. 새 API URL·배포 계약·컴파일러·평가기·명령 실행기는 없다.

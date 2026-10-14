@@ -1,5 +1,8 @@
 # MVP 공통 인터페이스 초안
 
+2026-10-14 H1 후속: [등록 이력 → 목표 성적 계약](EXAM_LIFECYCLE.ko.md)의 합성 전용 스키마·검증·메모리 영수증을 추가했다. PR #32의 실제 표 공증 보고와 전체성/신청자 결합 미완료를 구분한다. 기존 M0 명세 전용 범위는 유지하고 H1만 별도 실행 가능한 합성 단위다. 실제 수집 통합·영구 보존·제품 자격/지급은 미구현이며 기존 차단을 유지한다.
+
+
 2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
 
 버전 `mvp-interface.20261014.draft.2`, 상태 **DRAFT_INTERFACE / NOT_IMPLEMENTED / NOT_FROZEN**. 기준 develop `6d941a1fe0669b89730da1472d23ecd7caab22f4`. [정본 PRD](MVP_PRD_20261014.ko.md)의 설계 계약이며 [현재 API](API_CONTRACT.ko.md)·DB schema 4·EIP-712 V4를 변경하지 않는다. 아래 타입/명령은 제안이며 호출 가능한 새 API가 아니다. 이름·wire encoding·limits·서명/ABI는 freeze 관문에서 확정한다.
@@ -49,6 +52,8 @@ SourceDocument의 raw 지문과 모델에 실제 제공한 정제본 지문은 �
 [과거 이력 근거 보강](EXAM_HISTORY_REQUIREMENTS.ko.md)에 따라 YBM/Reclaim 계정 전체 조회의 후보를 먼저 조사한다. 원천 전체성이 확인된 단일 서버 응답의 공증 또는 동일 계정/기간/스냅샷에 결합된 모든 페이지가 후보이며, 별도 서명 manifest API의 부재만으로 불가능하다고 단정하지 않는다. 클라이언트 complete/count/hash는 원천 보증을 대체하지 않는다. 현행 2개 증거 쌍은 전체 이력/무응시 검증이 아니며 실제 검증 전 차단한다. Moodle의 별도 export 요건은 유지한다.
 
 사업별 중복키는 동일 원천 시험의 재발급·다른 지갑·신청에서도 안정적이어야 한다. 신청 ID/발급시각으로 키를 바꿔 재사용을 허용하지 않는다. 개인식별값의 단순 공개 hash를 쓰지 않는다. PR #21의 로컬 native OPRF 결과를 공식 hosted 제품 증거로 사용하지 않는다. trustProfile에는 witness/verifier 배포 지문·epoch/키 정책·원천 parser revision을 pin하고 알 수 없는 변경은 보류한다.
+
+H1의 별도 `LifecycleSession/Submission/Receipt/Evaluation`은 [계약](EXAM_LIFECYCLE.ko.md)의 목적/정책/참가자/수령인·기간·세션 결합을 따른다. 기존 Evidence.validUntil을 baseline의 영구적인 사후 평가 TTL로 해석하지 않는다. 수집 시 신선도와 보존 영수증의 무결성/revision 확인은 별도다. 새 HTTP/DB·기존 Evidence 자동 변환은 미구현이다.
 
 ### Moodle 일별 기록
 

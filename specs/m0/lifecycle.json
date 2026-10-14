@@ -1,0 +1,84 @@
+{
+  "scope": "SYNTHETIC_ONLY_NOT_WIRE",
+  "registeredAt": 1898521200,
+  "policy": {
+    "version": "clear-exam-lifecycle.1",
+    "mode": "SYNTHETIC",
+    "paymentAllowed": false,
+    "policyVersion": "demo-history.1",
+    "sourceTrustProfile": "synthetic-lifecycle-verifier.1",
+    "officialBoundary": "OPEN",
+    "registrationEvent": "SYNTHETIC_TERMS_ACCEPTED",
+    "baselineRequired": true,
+    "baselineLookbackSeconds": 63072000,
+    "baselineMaxScoreExclusive": 750,
+    "baselineCollectionLagSeconds": 600,
+    "acceptanceMaxAgeSeconds": 300,
+    "achievementFromOffsetSeconds": 86400,
+    "achievementUntilOffsetSeconds": 8640000,
+    "achievementSubmitUntilOffsetSeconds": 9849600,
+    "achievementMinScore": 750
+  },
+  "binding": {
+    "applicationId": "application-history-demo",
+    "policyVersion": "demo-history.1",
+    "participantRef": "synthetic-participant-a",
+    "bindingRevision": 1,
+    "recipientRef": "synthetic-recipient-a",
+    "instanceId": "synthetic-instance-a"
+  },
+  "baselineRows": [
+    {
+      "examRef": "synthetic-old-exam",
+      "examAt": 1895929200,
+      "availableAt": 1896793200,
+      "score": 700
+    }
+  ],
+  "achievementRows": [
+    {
+      "examRef": "synthetic-new-exam",
+      "examAt": 1905433200,
+      "availableAt": 1906297200,
+      "score": 750
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "baseline-then-achievement",
+      "baselineStatus": "MET_SYNTHETIC",
+      "achievementStatus": "MET_SYNTHETIC",
+      "status": "MET_SYNTHETIC"
+    },
+    {
+      "id": "baseline-missing",
+      "baselineStatus": "UNKNOWN",
+      "achievementStatus": "MET_SYNTHETIC",
+      "status": "UNKNOWN"
+    },
+    {
+      "id": "empty-unconfirmed",
+      "baselineStatus": "UNKNOWN",
+      "achievementStatus": "MET_SYNTHETIC",
+      "status": "UNKNOWN"
+    },
+    {
+      "id": "whole-table-only",
+      "baselineStatus": "UNKNOWN",
+      "achievementStatus": "MET_SYNTHETIC",
+      "status": "UNKNOWN"
+    },
+    {
+      "id": "history-not-required",
+      "baselineStatus": "NOT_REQUIRED",
+      "achievementStatus": "MET_SYNTHETIC",
+      "status": "MET_SYNTHETIC"
+    },
+    {
+      "id": "retained-baseline",
+      "baselineStatus": "MET_SYNTHETIC",
+      "achievementStatus": "MET_SYNTHETIC",
+      "status": "MET_SYNTHETIC"
+    }
+  ]
+}

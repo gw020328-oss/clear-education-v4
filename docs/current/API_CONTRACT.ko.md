@@ -1,5 +1,8 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
+2026-10-14 H1 후속: [등록 이력 → 목표 성적 계약](EXAM_LIFECYCLE.ko.md)의 합성 전용 스키마·검증·메모리 영수증을 추가했다. PR #32의 실제 표 공증 보고와 전체성/신청자 결합 미완료를 구분한다. 기존 M0 명세 전용 범위는 유지하고 H1만 별도 실행 가능한 합성 단위다. 실제 수집 통합·영구 보존·제품 자격/지급은 미구현이며 기존 차단을 유지한다.
+
+
 2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
 
 2026-10-14: 이 문서는 **현재 실행 API**를 설명한다. 새 목표의 [DRAFT_INTERFACE](MVP_INTERFACES_20261014.ko.md)는 미구현·미동결이며 이 HTTP/DB/EIP-712 계약을 변경하지 않는다. 새 등록/재원 분리를 위해서는 proof 세션의 ENROLLED 의존성을 포함한 별도 전환 PR이 필요하다. 현재 코드 기준 develop `6d941a1`, 실제 원천 차단·grant/outbox 보류·독립청구 NO-GO 유지.
