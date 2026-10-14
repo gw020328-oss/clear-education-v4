@@ -4,6 +4,15 @@ import { join } from 'node:path';
 const mkdir=fs.mkdir.bind(fs),open=fs.open.bind(fs),writeFile=fs.writeFile.bind(fs);
 const pause=()=>new Promise(r=>setTimeout(r,300));
 const mode=process.env.CLEAR_FAULT;
+const readdir=fs.readdir.bind(fs);
+fs.readdir=async function(path,...args){
+  if(path===process.env.CLEAR_TEST_ROOT && mode?.startsWith('recovery-')){
+    const error=new Error('SYNTHETIC_PRIVATE_DETAIL_DO_NOT_LOG');
+    error.code=mode.slice('recovery-'.length);
+    throw error;
+  }
+  return readdir(path,...args);
+};
 fs.mkdir=async function(path,...args){
   const result=await mkdir(path,...args);
   if(String(path).endsWith('/profile')){

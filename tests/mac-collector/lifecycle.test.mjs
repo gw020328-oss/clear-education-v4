@@ -10,7 +10,7 @@ import { stopRecordedBrowser } from '../../src/mac-collector/chrome.mjs';
 const launcher=fileURLToPath(new URL('../../src/mac-collector/launch.mjs',import.meta.url));
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function setup(t){const parent=await fs.mkdtemp(join(await fs.realpath(tmpdir()),'clear-lifecycle-'));await fs.chmod(parent,0o700);t.after(()=>fs.rm(parent,{recursive:true,force:true}));const root=join(parent,'app');await prepareRoot(root,{synthetic:true});return root;}
-function run(root,args=[]){const child=spawn(process.execPath,[launcher,...args],{env:{...process.env,CLEAR_TEST_ROOT:root},stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',b=>output+=b);child.stderr.on('data',b=>output+=b);const exited=new Promise(r=>child.once('exit',(code,signal)=>r({code,signal,output})));return {child,exited};}
+function run(root,args=[]){const child=spawn(process.execPath,[launcher,...args],{env:{...process.env,CLEAR_TEST_ROOT:root},stdio:['ignore','pipe','pipe']});let output='';child.stdout.on('data',b=>output+=b);child.stderr.on('data',b=>output+=b);const exited=new Promise((resolve,reject)=>{child.once('close',(code,signal)=>resolve({code,signal,output}));child.once('error',reject);});return {child,exited};}
 async function ready(root){for(let i=0;i<200;i++){try{return Number(await fs.readFile(join(root,'test-ready'),'utf8'));}catch{}await delay(25);}throw new Error('WORKER_TIMEOUT');}
 async function sessions(root){return (await fs.readdir(root)).filter(n=>n.startsWith('session-'));}
 test('real Chrome cookie round trip; profile deleted; output is summary only',async t=>{
