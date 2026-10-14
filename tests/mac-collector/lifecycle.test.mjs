@@ -23,7 +23,8 @@ test('concurrent launcher cannot delete active session; SIGTERM removes it',asyn
  for(let i=0;i<100&&(await sessions(root)).length;i++)await delay(25);
  assert.deepEqual(await sessions(root),[]);
 });
-test('SIGKILL leaves profile; next launcher stops owned Chrome and deletes old session first',async t=>{
+// Exercise independent launches repeatedly; a single pass hid CI-only recovery races.
+for(let trial=1;trial<=5;trial++)test(`SIGKILL leaves profile; next launcher stops owned Chrome and deletes old session first (${trial}/5)`,async t=>{
  const root=await setup(t);const first=run(root,['--test-browser-hold']);const pid=await ready(root);t.after(()=>{try{process.kill(pid,'SIGKILL');}catch{}});
  const [old]=await sessions(root);assert.ok(old);process.kill(pid,'SIGKILL');await first.exited;assert.ok(await fs.stat(join(root,old)));
  const second=await run(root).exited;assert.equal(second.code,0,second.output);assert.match(second.output,/"staleSessionsRemoved":1/);assert.deepEqual(await sessions(root),[]);
