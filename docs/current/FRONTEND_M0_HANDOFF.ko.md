@@ -43,6 +43,8 @@ fixtures의 `exchanges`는 명령 request와 MockReply의 정상/실패 예제�
 
 시원스쿨 문서 예제의 `app-siwon-precheck`는 **미게시 초안의 사전검토를 그리는 별도 가상 문맥**이다. 게시된 Application이나 실동의가 존재하지 않는다. 가상 policyHash는 초안 격리용 표식이며 실제 승인 hash로 쓰지 않는다. 실제 신청에 연결할 계약은 M1/M3 검토가 필요하다.
 
+시원스쿨 화면에는 ‘750점반 100% 경로 제한 시연·상품 전체 환급액 판정 아님’을 표시한다. 다른 혜택/상위 환급률 가능성을 확인하지 않은 사용자를 자동으로 100% 최종 정산하지 않는다. 최초 제출 성적·비중복·선택/우선순위는 Q-TIER OPEN이며 임의 max/OR로 금액을 고르지 않는다. 50/200/300/400% 등의 추가 화면·schema·계산기는 이번 범위에 포함하지 않는다.
+
 ## 공통 코드 재사용 경계
 
 현재 공통 도구는 [wallet-client](../../src/application/wallet-client.mjs), [api-client](../../src/application/api-client.mjs), [proof-session-flow](../../src/application/proof-session-flow.mjs)다. 기존 로그인·지갑 문맥 변경·동의·안전 오류·세션 승인에 대해 [지갑 계약](PROOF_WALLET.ko.md), [흐름 계약](PROOF_FLOW.ko.md), [오류 복구](API_RECOVERY.ko.md)를 따른다.

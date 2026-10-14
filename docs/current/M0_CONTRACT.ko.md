@@ -68,6 +68,10 @@ ApprovedPolicy의 예제 hash는 `SHA256(prefix + canonical({body,policyVersion,
 
 VERSION_CONFLICT는 최신 상태 재조회·다시 검토, BINDING_MISMATCH/FORBIDDEN은 중단, MISSING_DOCUMENT/MISSING_FIELD/UNREADABLE은 보완, SOURCE_UNVERIFIED/HISTORY_INCOMPLETE/UNSUPPORTED_RULE/QUESTION_OPEN은 해당 근거 확보까지 보류다. FUNDING_INSUFFICIENT는 충전 확인 대기, DEADLINE_EXPIRED/ALREADY_SETTLED는 terminal 조회, C0_BLOCKED는 제품 경로 비활성이다. OUTCOME_UNKNOWN은 operation 조회이며 새 키 생성·자동 서명/유료 호출/재송금 금지다. 모든 Fault는 autoRetry=false. INVALID_INPUT/MISMATCH/STALE_RESULT/AUTHENTICITY_UNVERIFIED의 상세 안전 code는 schema enum을 따른다. 원천·모델 raw 오류/PII는 표시하지 않는다.
 
+## 시원스쿨의 제한 시연과 금액 미결
+
+시원스쿨 750점반 100% 경로는 `(출석 100일 AND 후기) OR (750점 이상 성적 AND 과거 2년 관련 이력 AND 후기)`의 질문/문서 사전검토 시연이다. Vision 판독으로 진위·전체 이력·주체를 확인하지 못하면 보류한다. **상품 전체 환급액 판정이 아니며 다른 환급률 가능성을 자동으로 100% 최종 정산으로 낮추지 않는다.** 최초 제출 성적·다른 혜택/비중복·선택/우선순위·상위 tier 미확인 처리는 [Q-TIER](M0_DECISIONS.ko.md)에 남긴다. 단순 OR/max로 최종액을 정하지 않으며 해당 범위가 확정될 때 최종 금액과 배정액의 결합을 다시 검토한다. 현재 확장은 미승인이고 새 타입/금액 계산기를 추가하지 않는다. 아래 100 TEST는 별도 가상 YBM형 주 예제의 약정으로, 시원스쿨 공식 환급률이나 원화 환급액이 아니다.
+
 ## 자격·재원·청구 합성 약정
 
 가상 시계 T=`1898521200`(2030-03-01 00:00 KST), 학습 창 `[T,T+90일)`. 이 고정 KST 예제의 하루는 86400초다. 다른 지역 달력 규칙으로 일반화하지 않는다. evidenceUntil=T+90일, supplementUntil=T+91일, finalizeUntil=T+92일, allocationUntil=T+93일, claimUntil=T+100일. 제출/보완/배정/청구 명령은 각 기한 **이하**에 허용, 회수는 기한 **초과**에 허용. 학습 기록의 endExclusive와 제출 마감 포함은 별개다. 최소 청구 창 604800초를 요구한다. 이는 학원 공식 규정과 무관한 S-3 합성 선택이다.
