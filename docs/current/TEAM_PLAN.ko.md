@@ -1,5 +1,7 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-14 최신 제안은 [MVP 단계별 계획](MVP_PLAN_20261014.ko.md)이다. YBM 한 경로 합성 E2E를 우선하고 AI/Vision·Moodle을 공통 interface freeze 후 병렬 연결한다. 기준 develop `6d941a1`. 아래 C/F/B 계획은 이전 구현 이력/의존성 참고이며 자동 착수 대상이 아니다. 800점 AND 80%·최고점·선예치는 보존할 기존 코드이며 [새 PRD](MVP_PRD_20261014.ko.md)의 정책/재원 설계로 대체할 대상이다. 기능 구현·차단 해제·자동 병합은 이번 문서 범위 밖이다.
+
 공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
 
 공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.

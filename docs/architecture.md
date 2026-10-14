@@ -1,5 +1,7 @@
 # 아키텍처
 
+2026-10-14: 아래는 기존 v4 구조의 기록입니다. 새 목표는 [정본 PRD](current/MVP_PRD_20261014.ko.md)와 [DRAFT_INTERFACE](current/MVP_INTERFACES_20261014.ko.md)를 따릅니다. 등록과 재원 분리·경로별 증거·AI/Vision·직접 청구는 새 설계/검증 대상이며 현재 코드와 실제 차단은 변경하지 않았습니다.
+
 이 문서는 v4의 목표 설계를 요약합니다. [구현 상태](status.md)와 [상세 설계](reference/DESIGN.ko.md)를 구분해서 읽으세요.
 
 ## 기술별 역할

@@ -1,5 +1,7 @@
 # 개발 가이드
 
+2026-10-14 목표/작업 순서는 [새 정본 PRD](current/MVP_PRD_20261014.ko.md), [차이표](current/MVP_GAP_20261014.ko.md), [개발 계획](current/MVP_PLAN_20261014.ko.md)을 우선한다. 기존 실행법·API·합성 코드와 차단은 그대로다. 새 인터페이스는 DRAFT_INTERFACE이며 아직 호출하거나 기존 DB/체인에 적용할 수 없다.
+
 공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](current/PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
 
 공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](current/PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.

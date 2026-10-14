@@ -1,5 +1,7 @@
 # CLEAR 문서
 
+2026-10-14 목표 설계의 시작점: [정본 PRD](current/MVP_PRD_20261014.ko.md) → [현재 구현 차이·근거](current/MVP_GAP_20261014.ko.md) → [DRAFT_INTERFACE](current/MVP_INTERFACES_20261014.ko.md) → [단계별 개발 계획](current/MVP_PLAN_20261014.ko.md). 기준 develop `6d941a1`. 새 요구는 설계이며 현재 코드·실제 수집/지급 차단을 변경하지 않습니다. 과거 reference와 아래 날짜별 기록을 최신 목표/완료 사실로 혼동하지 않습니다.
+
 새 팀원과 LLM은 [팀 인계](current/TEAM_HANDOFF.ko.md) → [역할·PR 계획](current/TEAM_PLAN.ko.md) → [현재 API 계약](current/API_CONTRACT.ko.md) 순서로 시작합니다. [첫 작업 프롬프트](current/TEAM_START_PROMPT.ko.md)는 F0 합성 화면 PR을 위한 복사용 메시지입니다. 인계 기준은 PR #8 제품 코드와 PR #5 문서가 병합된 `9397e62`이며, 아래 날짜가 있는 현황은 당시 스냅샷입니다.
 
 2026-10-12 14:11 KST 확인: PR #1~#4·#6~#8은 develop (`841052a`)에 병합됐고 main (`375051e`)에는 아직 반영되지 않았습니다. 최신 상태·정확한 근거 커밋·CI는 [개발 현황](status.md)을 먼저 확인하세요. 실제 YBM 증명 1쌍의 생성·독립 검증 기록과 제품 자격·지급 완료를 구분합니다.
