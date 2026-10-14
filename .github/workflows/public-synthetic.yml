@@ -65,6 +65,8 @@ jobs:
         run: ./tools/npm run test:vault
       - name: Product proof sessions, durable nonce and current enrollment
         run: ./tools/npm run test:proof-sessions
+      - name: M0 contracts and two-stage exam lifecycle examples
+        run: ./tools/node specs/m0/check.mjs
       - name: Synthetic complete exam inventories and highest-score evidence
         run: ./tools/npm run test:exam-evidence
       - name: Product collector, independent verification and atomic result acceptance

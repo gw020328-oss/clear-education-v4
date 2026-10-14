@@ -1,5 +1,8 @@
 # M0 공통 합성 계약과 인수 예제
 
+2026-10-14 H1 후속: [등록 이력 → 목표 성적 계약](EXAM_LIFECYCLE.ko.md)의 합성 전용 스키마·검증·메모리 영수증을 추가했다. PR #32의 실제 표 공증 보고와 전체성/신청자 결합 미완료를 구분한다. 기존 M0 명세 전용 범위는 유지하고 H1만 별도 실행 가능한 합성 단위다. 실제 수집 통합·영구 보존·제품 자격/지급은 미구현이며 기존 차단을 유지한다.
+
+
 `clear-m0.2`, **FIXED_FOR_M0_FIXTURES / NOT_RUNTIME / CONSUMER_AGREEMENT_PENDING**. 기준 제품 commit `6d941a1fe0669b89730da1472d23ecd7caab22f4`, 선행 설계 commit `7bf622901919199ff6aaf00aaf077ef64a704a79`. PR #30의 M0 추가분이다. [결정 등록부](M0_DECISIONS.ko.md) · [프런트 시작점](FRONTEND_M0_HANDOFF.ko.md).
 
 이 문서와 [schema.mjs](../../specs/m0/schema.mjs), [fixtures.json](../../specs/m0/fixtures.json)이 **첫 합성 mock의 필드·예제 기준**이다. 더 넓은 [인터페이스 초안](MVP_INTERFACES_20261014.ko.md)의 모든 후보를 구현/동결한 것이 아니다. 기존 [HTTP API](API_CONTRACT.ko.md), DB, 서명, `CourseRefundVaultV4`, proof flow와 서로 다른 namespace다. 새 API URL·배포 계약·컴파일러·평가기·명령 실행기는 없다.
@@ -80,7 +83,7 @@ VERSION_CONFLICT는 최신 상태 재조회·다시 검토, BINDING_MISMATCH/FOR
 | BenefitCase | 신청/정책/주체/수령인/instance, factsRevision, 점수와 assurance, 최초/평가 대상 제출 ref, 후기/출석/이력 상태와 assurance, 기간/결합 확인, tier 선택/revision/확인, amountInputs와 기대 결과 |
 | amountInputs | basis, TEST/decimals=6, paid/book/device/fixedFee/examCredit atoms, taxBps, capAtoms, rounding, formulaVersion. 미확정 수치는 null. OFFICIAL_OPEN은 실제 계산 확정 불가 |
 | 기대 결과/entitlement | tier별 MET/NOT_MET/UNKNOWN/IN_PROGRESS, 계산 견적과 최종 정산 상태 분리. 확정 예제만 아래 불변 entitlement를 가짐; 그 외 null |
-| ChallengePrecheck | 400, 별도 requirement/submission/route revision/run/input binding, FieldObservation, 가이드 미확보, 판독/보완 사유. 진위/전체성/주체·연속 게시·공개 상태 UNVERIFIED, automaticEligibility=false |
+| ChallengePrecheck | 400, 별도 requirement/submission/route revision/run/input binding, FieldObservation, 과거 가이드 미확보 fixture, 판독/보완 사유. 진위/전체성/주체·연속 게시·공개 상태 UNVERIFIED, automaticEligibility=false |
 
 BenefitCase의 VERIFIED_SYNTHETIC은 인공 원천 assertion이다. Reclaim의 단일 성적 존재와 과거 이력 전체성은 각각 scoreAssurance와 history assurance로 분리한다. 진위가 미확인인 Vision을 history의 VERIFIED_SYNTHETIC으로 올리지 않는다. 기간/주체 결합 실패는 모든 후보를 UNKNOWN으로 만든다. 인공 facts를 사용한 조건 계산 통과는 실제 환급 자격 검증 성공이 아니다.
 
@@ -113,7 +116,7 @@ M0의 `siwon-demo-amount.1`은 **별도 합성 가정**이다. 입력은 100 TES
 
 ### 400% Vision 범위
 
-기존 과거 이력 `vision-*` 예제를 유지하고 별도 `blog-*` 예제를 추가한다. 합성 이미지 안의 URL/게시일 표기·내용 조각·누락/잘림·상충을 관찰해 보완을 안내하는 설계다. 날짜 14개가 읽혀도 실제 14일 연속 게시·공개 유지·작성자·내용 진위·공식 가이드 준수를 보증하지 않는다. 공식 가이드 미확보는 UNDETERMINED, 잘림/누락/표기 불일치는 NEEDS_SUPPLEMENT다. 형식 체크리스트 자체도 SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE로 표시한다. 이미지를 근거로 웹 URL을 자동 방문하거나 ‘챌린지 성공’으로 판정하지 않는다. 현재는 실제 이미지/모델 호출 없이 관찰 결과 stub만 있다.
+기존 과거 이력 `vision-*` 예제를 유지하고 별도 `blog-*` 예제를 추가한다. 합성 이미지 안의 URL/게시일 표기·내용 조각·누락/잘림·상충을 관찰해 보완을 안내하는 설계다. 날짜 14개가 읽혀도 실제 14일 연속 게시·공개 유지·작성자·내용 진위·공식 가이드 준수를 보증하지 않는다. 이 과거 fixture에서는 공식 가이드 미확보를 UNDETERMINED, 잘림/누락/표기 불일치를 NEEDS_SUPPLEMENT로 모델링했다. 후속 [후기·챌린지 명세](REVIEW_PRECHECK.ko.md)는 가이드 본문 확보와 정책 충돌을 반영하지만 기존 schema/fixture를 변경하지 않는다. 새 rule별 근거·보완/원천 상태와 8장/14개 묶음 입력은 후속 버전/한도 검토 대상이다. 형식 체크리스트 자체도 SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE로 표시한다. 이미지를 근거로 웹 URL을 자동 방문하거나 ‘챌린지 성공’으로 판정하지 않는다. 현재는 실제 이미지/모델 호출 없이 관찰 결과 stub만 있다.
 
 clear-m0.2는 원래 YBM body/정책 hash 의미를 보존하면서 M0 envelope 버전과 별도 benefit profile을 추가한다. 기존 main fixture의 marker만 .2로 올렸고 과거 이력/Vision·보류 사례를 유지했다. 제품 migration은 없다. 검사기 `benefits-check.mjs`의 제한된 reference 논리/정수 산술은 위 hand-authored 기대 사례 대조용이며 공개 runtime 평가기·금액 API로 import하지 않는다. 기존 HTTP/지갑/CI는 그대로다.
 
@@ -139,6 +142,8 @@ clear-m0.2는 원래 YBM body/정책 hash 의미를 보존하면서 M0 envelope 
 funding.observation의 UNKNOWN/REORG_PENDING과 claim PENDING/UNKNOWN은 송금 완료가 아니다. 후속 체인 adapter의 확인 블록 수·최종성·blockHash/reorg 처리는 OPEN이며 M0에서 임의로 1블록 확인을 채택하지 않는다. C1을 시작하려면 격리 TEST 신뢰 모형과 계약 검증 계획을 먼저 승인해야 한다. 해시/서명만 붙여 독립 청구가 완성됐다고 주장하지 않는다.
 
 ## 원천·AI·개인정보 경계
+
+[과거 성적 공식 근거 보강](EXAM_HISTORY_REQUIREMENTS.ko.md): 시원스쿨은 수강 신청일 기준 최근 2년 전체 성적과 계정/이름 대조 화면을 안내한다. 기존 `req-history`의 시험일/점수와 Vision 예제는 최소 합성 체크리스트이며 공식 제출 요건 전체가 아니다. 정확한 날짜 경계·tier 적용 및 원천 전체성은 OPEN이고 이번 보강으로 schema/지원 상태를 변경하지 않는다.
 
 SubjectBinding은 인증된 원천 계정 주체와 신청의 연결이다. 사용자가 제출한 userId, 화면의 로그인 표시, 동일 이름·지갑만으로 VERIFIED가 되지 않는다. 변경/해제는 새 bindingRevision을 만들고 진행 job을 무효화한다. 기존 evidence를 새 계정에 재결합하지 않는다. 별도 Moodle 실험의 `$USER` 기반 읽기를 운영자 토큰+임의 학생 ID로 바꾸지 않는다. 실제 인증/동의/토큰·신뢰 registry/기관 매핑은 Q-L이 열릴 때까지 미구현이다.
 
