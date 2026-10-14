@@ -1,6 +1,8 @@
 # CLEAR
 
-2026-10-14 새 MVP 설계 기준: [정본 PRD](docs/current/MVP_PRD_20261014.ko.md) · [구현 차이](docs/current/MVP_GAP_20261014.ko.md) · [인터페이스 초안](docs/current/MVP_INTERFACES_20261014.ko.md) · [개발 계획](docs/current/MVP_PLAN_20261014.ko.md). 최신 확인 develop은 `6d941a1`(PR #21·#29 병합)입니다. 새 목표는 YBM 750+ 주 시연, 시원스쿨 출석 OR 성적 확장, AI/Vision 사전검토와 등록·재원 분리입니다. **문서 설계만 추가했으며 아래 기존 800점 AND 80%·선예치 구현/실험은 보존합니다.** 실제 Moodle 제품 연동·원천 검증 차단, grant/outbox 보류, 독립 청구 제품 전환 NO-GO를 유지합니다. 아래 날짜별 상태는 당시 기록입니다.
+2026-10-14 M0 추가: [합성 계약](docs/current/M0_CONTRACT.ko.md)·[결정/미결 질문](docs/current/M0_DECISIONS.ko.md)·[프런트 시작 문서](docs/current/FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
+2026-10-14 새 MVP 설계 기준: [정본 PRD](docs/current/MVP_PRD_20261014.ko.md) · [구현 차이](docs/current/MVP_GAP_20261014.ko.md) · [인터페이스 초안](docs/current/MVP_INTERFACES_20261014.ko.md) · [개발 계획](docs/current/MVP_PLAN_20261014.ko.md). 최신 확인 develop은 `6d941a1`(PR #21·#29 병합)입니다. 새 목표는 YBM 750+ 주 시연, 시원스쿨 출석 OR 성적 확장, AI/Vision 사전검토와 등록·재원 분리입니다. **문서·M0 합성 명세/검사만 추가했으며 아래 기존 800점 AND 80%·선예치 구현/실험은 보존합니다.** 실제 Moodle 제품 연동·원천 검증 차단, grant/outbox 보류, 독립 청구 제품 전환 NO-GO를 유지합니다. 아래 날짜별 상태는 당시 기록입니다.
 
 **교육 환급 프로그램을 위한 조건 구조화 · 외부 기록 검증 · 조건부 지급 모듈**
 

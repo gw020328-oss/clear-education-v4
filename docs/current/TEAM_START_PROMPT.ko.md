@@ -1,5 +1,7 @@
 # 팀원 LLM에게 처음 보낼 프롬프트
 
+2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
 2026-10-14 주의: 아래 프롬프트는 과거 F0 작업용이다. 새 작업은 [정본 PRD](MVP_PRD_20261014.ko.md)·[구현 차이표](MVP_GAP_20261014.ko.md)·[소유경로와 PR 계획](MVP_PLAN_20261014.ko.md)을 먼저 읽고 요청받은 단위만 수행한다. 최신 기준 develop `6d941a1`. 문서 계획만으로 기능 개발·실제 수집·지급·병합이 승인되지 않는다.
 
 이 문서 PR이 `develop`에 병합된 뒤, 팀원이 자신의 CLEAR checkout에서 아래 내용을 새 대화의 첫 메시지로 보낸다. 첫 작업은 [계획 F0](TEAM_PLAN.ko.md)이다. 저장소 접근 권한·고정 Node 버전은 [인계 문서](TEAM_HANDOFF.ko.md)를 참고한다.

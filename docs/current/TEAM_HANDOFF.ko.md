@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
 2026-10-14 인계 우선순위: [새 정본 PRD](MVP_PRD_20261014.ko.md) → [구현 차이/근거](MVP_GAP_20261014.ko.md) → [인터페이스 초안](MVP_INTERFACES_20261014.ko.md) → [단계별 계획·소유경로](MVP_PLAN_20261014.ko.md). 현재 구현 기준은 develop `6d941a1`(PR #21·#29 포함)이다. 아래 800점 AND 80%/최고점·선예치 보존 요구는 기존 코드/검증의 사실이며 새 MVP 변경 설계를 금지하지 않는다. 이번 문서는 기능 착수 지시가 아니다. 실제 Moodle 제품 연동·원천 검증 차단, grant/outbox 보류, 독립 청구 제품 NO-GO를 유지한다. 아래 역할/다음 작업/입구 프롬프트는 과거 계획이며 새 승인 단위에 맞춰 사용한다.
 
 공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.

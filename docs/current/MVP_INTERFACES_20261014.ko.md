@@ -1,5 +1,7 @@
 # MVP 공통 인터페이스 초안
 
+2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
 버전 `mvp-interface.20261014.draft.1`, 상태 **DRAFT_INTERFACE / NOT_IMPLEMENTED / NOT_FROZEN**. 기준 develop `6d941a1fe0669b89730da1472d23ecd7caab22f4`. [정본 PRD](MVP_PRD_20261014.ko.md)의 설계 계약이며 [현재 API](API_CONTRACT.ko.md)·DB schema 4·EIP-712 V4를 변경하지 않는다. 아래 타입/명령은 제안이며 호출 가능한 새 API가 아니다. 이름·wire encoding·limits·서명/ABI는 freeze 관문에서 확정한다.
 
 ## 버전과 값의 규칙
