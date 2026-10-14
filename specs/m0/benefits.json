@@ -1,0 +1,2551 @@
+{
+  "contractVersion": "clear-m0.2",
+  "consumerAgreement": "PENDING",
+  "policy": {
+    "contractVersion": "clear-m0.2",
+    "mode": "SYNTHETIC",
+    "authority": "MOCK_ONLY",
+    "policyId": "siwon-benefits-demo",
+    "policyVersion": "m0-siwon-benefits.2",
+    "product": "siwon-start-750",
+    "sourceId": "siwon-snapshot-20261014",
+    "sourceHash": "0x093c3e3f2f12cf46cd3c048ff837fb01a30c58f8b6e575faef58fd405dbff651",
+    "officialApplicability": "OPEN",
+    "executable": false,
+    "commonRequirements": [
+      "review",
+      "subject-binding",
+      "eligible-period",
+      "submission-deadline"
+    ],
+    "tiers": [
+      {
+        "ratePercent": 50,
+        "support": "CONDITION_AMOUNT",
+        "sourceLocator": "750-course column; 50% row; local HTML 3667-3755",
+        "examBenefitLabel": "NONE",
+        "alternatives": [
+          {
+            "attendanceRequired": false,
+            "scoreOperator": "LT",
+            "scoreThreshold": 750,
+            "historyRequired": false,
+            "blogRequired": false
+          }
+        ]
+      },
+      {
+        "ratePercent": 100,
+        "support": "CONDITION_AMOUNT",
+        "sourceLocator": "750-course column; 100% row; local HTML 3667-3755",
+        "examBenefitLabel": "ZERO_FEE_LABEL_UNRESOLVED",
+        "alternatives": [
+          {
+            "attendanceRequired": true,
+            "scoreOperator": "NONE",
+            "scoreThreshold": null,
+            "historyRequired": false,
+            "blogRequired": false
+          },
+          {
+            "attendanceRequired": false,
+            "scoreOperator": "GTE",
+            "scoreThreshold": 750,
+            "historyRequired": true,
+            "blogRequired": false
+          }
+        ]
+      },
+      {
+        "ratePercent": 200,
+        "support": "CONDITION_AMOUNT",
+        "sourceLocator": "750-course column; 200% row; local HTML 3667-3755",
+        "examBenefitLabel": "ZERO_FEE_LABEL_UNRESOLVED",
+        "alternatives": [
+          {
+            "attendanceRequired": true,
+            "scoreOperator": "GTE",
+            "scoreThreshold": 750,
+            "historyRequired": true,
+            "blogRequired": false
+          }
+        ]
+      },
+      {
+        "ratePercent": 300,
+        "support": "CONDITION_AMOUNT",
+        "sourceLocator": "750-course column; 300% row; local HTML 3667-3755",
+        "examBenefitLabel": "ZERO_FEE_LABEL_UNRESOLVED",
+        "alternatives": [
+          {
+            "attendanceRequired": true,
+            "scoreOperator": "GTE",
+            "scoreThreshold": 850,
+            "historyRequired": true,
+            "blogRequired": false
+          }
+        ]
+      },
+      {
+        "ratePercent": 400,
+        "support": "PRECHECK_ONLY",
+        "sourceLocator": "750-course column; 400% row; local HTML 3667-3755",
+        "examBenefitLabel": "DOUBLE_FEE_LABEL_UNRESOLVED",
+        "alternatives": [
+          {
+            "attendanceRequired": true,
+            "scoreOperator": "EQ",
+            "scoreThreshold": 990,
+            "historyRequired": true,
+            "blogRequired": true
+          }
+        ]
+      }
+    ],
+    "amountFormula": "siwon-demo-amount.1",
+    "realSelectionRule": "OPEN",
+    "syntheticSelectionRule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+    "unsupportedProducts": [
+      "500-percent",
+      "all-course",
+      "tos-opic"
+    ]
+  },
+  "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+  "binding": {
+    "applicationId": "app-siwon-demo",
+    "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+    "policyVersion": "m0-siwon-benefits.2",
+    "subjectBindingId": "subject-siwon-demo",
+    "bindingRevision": 1,
+    "recipientRef": "recipient-siwon-demo",
+    "instanceId": "mock-siwon-instance"
+  },
+  "cases": [
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 745,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "NOT_MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "UNKNOWN",
+        "assurance": "UNVERIFIED"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 50,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-50",
+      "expected": {
+        "conditions": {
+          "t50": "MET",
+          "t100": "NOT_MET",
+          "t200": "NOT_MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "33540000",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-tier-50",
+          "factsRevision": 1,
+          "selectedTier": 50,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0xd3435c8f7b1c9308d7dbde4f4bc9de604538c74fd90016aef4043800b058e166",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0xca556256c59ed879f838c6d91950b8e72ccedbf16d39ddb03c678bfb46e7dafe",
+          "entitlementAtoms": "33540000",
+          "settlementHash": "0xe28c08f39d2b030a81d37feab9961c764f001e07bdbfc7f754e6046a5f2e329c",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 745,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "UNKNOWN",
+        "assurance": "UNVERIFIED"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 100,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-100-attendance",
+      "expected": {
+        "conditions": {
+          "t50": "MET",
+          "t100": "MET",
+          "t200": "NOT_MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "68640000",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-tier-100-attendance",
+          "factsRevision": 1,
+          "selectedTier": 100,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0x0be8302526249c8812518a0f234c5f10bc45793460c4fa2555ce8d245ff19ba9",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0xca556256c59ed879f838c6d91950b8e72ccedbf16d39ddb03c678bfb46e7dafe",
+          "entitlementAtoms": "68640000",
+          "settlementHash": "0x4334c05dd95e92dbde0fa6a684d12abc767d84d7dcf292dad3335bb0a96814a9",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 750,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "NOT_MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 100,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-100-score",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "NOT_MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "68640000",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-tier-100-score",
+          "factsRevision": 1,
+          "selectedTier": 100,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0xf0134ee5eafce50b480e08f93e9ce5bf6acff84ce2409bbafd0bca697a2a3511",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0xca556256c59ed879f838c6d91950b8e72ccedbf16d39ddb03c678bfb46e7dafe",
+          "entitlementAtoms": "68640000",
+          "settlementHash": "0xa9d7856f6eb4be4224984f2089b6f8ebd0ef93de114f892be81b67a4fb154db6",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 750,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 200,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-200-at-750",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "138840000",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-tier-200-at-750",
+          "factsRevision": 1,
+          "selectedTier": 200,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0x8ea4b6d9756614931b958877f57aef14aba37f18aab4e32132b9ae0d65bdffe0",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0xca556256c59ed879f838c6d91950b8e72ccedbf16d39ddb03c678bfb46e7dafe",
+          "entitlementAtoms": "138840000",
+          "settlementHash": "0xcc6cb488f54277eb012f0649c58007e0ceeae2765c69487ea03d3e98d33d9f59",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 845,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 200,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-200-below-850",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "138840000",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-tier-200-below-850",
+          "factsRevision": 1,
+          "selectedTier": 200,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0x149c5753d71a6bb10f9d02d63495b8116ae34b4a5ce44bd46e518fde65664945",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0xca556256c59ed879f838c6d91950b8e72ccedbf16d39ddb03c678bfb46e7dafe",
+          "entitlementAtoms": "138840000",
+          "settlementHash": "0x3bf7133dca4b21c3faf083ca088fbd1fe7435fe351c183c72e34ac767c779cee",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 300,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-300-at-850",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "209040000",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-tier-300-at-850",
+          "factsRevision": 1,
+          "selectedTier": 300,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0x7946cf7f819d6ed8422d0077785fb5f026da2c6da20b76b21e67bb7cdf71a08d",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0xca556256c59ed879f838c6d91950b8e72ccedbf16d39ddb03c678bfb46e7dafe",
+          "entitlementAtoms": "209040000",
+          "settlementHash": "0x7ee52290842aecba7497ea58977cc7785cf9a5ac98b7f271915f583049da5cc5",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 200,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "explicit-lower-choice",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "138840000",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-explicit-lower-choice",
+          "factsRevision": 1,
+          "selectedTier": 200,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0x7946cf7f819d6ed8422d0077785fb5f026da2c6da20b76b21e67bb7cdf71a08d",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0xca556256c59ed879f838c6d91950b8e72ccedbf16d39ddb03c678bfb46e7dafe",
+          "entitlementAtoms": "138840000",
+          "settlementHash": "0x5755975754234d9de00ed1612e0c3901eaa7a7f06d6c3dc72062ab575d766743",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": null,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "multiple-no-choice",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "NO_SELECTION",
+        "quoteAtoms": null,
+        "settlement": "ON_HOLD",
+        "reason": "SELECTION_OPEN",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "UNKNOWN",
+        "assurance": "UNVERIFIED"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 100,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "higher-unknown",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "UNKNOWN",
+          "t300": "UNKNOWN",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "68640000",
+        "settlement": "ON_HOLD",
+        "reason": "HIGHER_TIER_UNKNOWN",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "UNKNOWN",
+        "assurance": "UNVERIFIED"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 300,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "history-unverified",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "UNKNOWN",
+          "t300": "UNKNOWN",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "209040000",
+        "settlement": "ON_HOLD",
+        "reason": "SOURCE_UNVERIFIED",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 745,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "NOT_MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "UNKNOWN",
+        "assurance": "UNVERIFIED"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 50,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "OFFICIAL_OPEN",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": null,
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "official-fee-open",
+      "expected": {
+        "conditions": {
+          "t50": "MET",
+          "t100": "NOT_MET",
+          "t200": "NOT_MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "AMOUNT_OPEN",
+        "quoteAtoms": null,
+        "settlement": "ON_HOLD",
+        "reason": "AMOUNT_OPEN",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 300,
+        "revision": 1,
+        "rule": "OFFICIAL_OPEN",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "official-selection-open",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "209040000",
+        "settlement": "ON_HOLD",
+        "reason": "SELECTION_OPEN",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 990,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 400,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-400-precheck-only",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "MET",
+          "t400": "UNKNOWN"
+        },
+        "quoteState": "PRECHECK_ONLY",
+        "quoteAtoms": null,
+        "settlement": "PRECHECK_ONLY",
+        "reason": "PRECHECK_ONLY",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "later-score",
+        "revision": 2
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 300,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "first-score-replaced",
+      "expected": {
+        "conditions": {
+          "t50": "UNKNOWN",
+          "t100": "UNKNOWN",
+          "t200": "UNKNOWN",
+          "t300": "UNKNOWN",
+          "t400": "UNKNOWN"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "209040000",
+        "settlement": "ON_HOLD",
+        "reason": "FIRST_SCORE_MISMATCH",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 745,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "NOT_MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "UNKNOWN",
+        "assurance": "UNVERIFIED"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 50,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000003",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "round-once",
+      "expected": {
+        "conditions": {
+          "t50": "MET",
+          "t100": "NOT_MET",
+          "t200": "NOT_MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "33540001",
+        "settlement": "FINAL_SYNTHETIC",
+        "reason": "NONE",
+        "entitlement": {
+          "applicationId": "app-siwon-demo",
+          "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+          "policyVersion": "m0-siwon-benefits.2",
+          "subjectBindingId": "subject-siwon-demo",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-siwon-demo",
+          "instanceId": "mock-siwon-instance",
+          "decisionId": "decision-round-once",
+          "factsRevision": 1,
+          "selectedTier": 50,
+          "selectionRevision": 1,
+          "firstScoreRef": {
+            "submissionId": "first-score",
+            "revision": 1
+          },
+          "factsHash": "0xd3435c8f7b1c9308d7dbde4f4bc9de604538c74fd90016aef4043800b058e166",
+          "amountRuleVersion": "siwon-demo-amount.1",
+          "amountInputsHash": "0x556f2535acb748c92239f12f57a013781853cac3554f0ae74dbdbe906cd118d2",
+          "entitlementAtoms": "33540001",
+          "settlementHash": "0x50e6ced30bf5d85023a69f7e3a86543d07af5d2013bc2d5b5dd4942caa7dd31b",
+          "reservedAtoms": "0",
+          "paidAtoms": "0",
+          "allocationImplemented": false,
+          "paymentAllowed": false
+        }
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 745,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "NOT_MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "UNKNOWN",
+        "assurance": "UNVERIFIED"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 50,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "100000001",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "deductions-over-base",
+      "expected": {
+        "conditions": {
+          "t50": "MET",
+          "t100": "NOT_MET",
+          "t200": "NOT_MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "INVALID_AMOUNT",
+        "quoteAtoms": null,
+        "settlement": "ON_HOLD",
+        "reason": "INVALID_AMOUNT",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 850,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 300,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "100000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "cap-exceeded",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "INVALID_AMOUNT",
+        "quoteAtoms": null,
+        "settlement": "ON_HOLD",
+        "reason": "INVALID_AMOUNT",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 750,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "NOT_MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 50,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "tier-50-at-750",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "NOT_MET",
+          "t300": "NOT_MET",
+          "t400": "NOT_MET"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "33540000",
+        "settlement": "NOT_MET",
+        "reason": "CONDITION_NOT_MET",
+        "entitlement": null
+      }
+    },
+    {
+      "contractVersion": "clear-m0.2",
+      "mode": "SYNTHETIC",
+      "authority": "MOCK_ONLY",
+      "applicationId": "app-siwon-demo",
+      "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+      "policyVersion": "m0-siwon-benefits.2",
+      "subjectBindingId": "subject-siwon-demo",
+      "bindingRevision": 1,
+      "recipientRef": "recipient-siwon-demo",
+      "instanceId": "mock-siwon-instance",
+      "factsRevision": 1,
+      "score": 990,
+      "scoreAssurance": "VERIFIED_SYNTHETIC",
+      "firstScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "evaluatedScoreRef": {
+        "submissionId": "first-score",
+        "revision": 1
+      },
+      "review": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "attendance": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "history": {
+        "status": "MET",
+        "assurance": "VERIFIED_SYNTHETIC"
+      },
+      "bindingVerified": true,
+      "periodAndDeadlineVerified": true,
+      "selection": {
+        "tier": 300,
+        "revision": 1,
+        "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+        "acknowledged": true
+      },
+      "amountInputs": {
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "paidAtoms": "100000000",
+        "bookAtoms": "10000000",
+        "deviceAtoms": "0",
+        "fixedFeeAtoms": "2000000",
+        "examCreditAtoms": "0",
+        "taxBps": 2200,
+        "capAtoms": "300000000",
+        "rounding": "FLOOR_ONCE_DEMO",
+        "formulaVersion": "siwon-demo-amount.1"
+      },
+      "caseId": "blog-unknown-no-lower-settlement",
+      "expected": {
+        "conditions": {
+          "t50": "NOT_MET",
+          "t100": "MET",
+          "t200": "MET",
+          "t300": "MET",
+          "t400": "UNKNOWN"
+        },
+        "quoteState": "CALCULATED_SYNTHETIC",
+        "quoteAtoms": "209040000",
+        "settlement": "ON_HOLD",
+        "reason": "HIGHER_TIER_UNKNOWN",
+        "entitlement": null
+      }
+    }
+  ],
+  "blogPrechecks": [
+    {
+      "id": "blog-readable-unverified",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-demo",
+        "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+        "policyVersion": "m0-siwon-benefits.2",
+        "subjectBindingId": "subject-siwon-demo",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-siwon-demo",
+        "instanceId": "mock-siwon-instance",
+        "requirementId": "req-blog-challenge",
+        "tier": 400,
+        "submissionId": "blog-submission",
+        "submissionRevision": 1,
+        "routeRevision": 1,
+        "aiRunId": "blog-run-mock",
+        "inputHash": "0x56cd2a99ea02814b2dbca08057830f3648193fdb646d9065c1a03680e0a3a3c6",
+        "modelExecution": "MOCK",
+        "guidelineVersion": null,
+        "guideStatus": "UNAVAILABLE",
+        "observationBasis": "SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE",
+        "observations": [
+          {
+            "fieldId": "blog-url",
+            "value": "https://example.invalid/synthetic-blog",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.02,
+              0.9,
+              0.07
+            ]
+          },
+          {
+            "fieldId": "post-date-1",
+            "value": "2030-03-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.13,
+              0.9,
+              0.16
+            ]
+          },
+          {
+            "fieldId": "post-date-2",
+            "value": "2030-03-02",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.18,
+              0.9,
+              0.21
+            ]
+          },
+          {
+            "fieldId": "post-date-3",
+            "value": "2030-03-03",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.23,
+              0.9,
+              0.26
+            ]
+          },
+          {
+            "fieldId": "post-date-4",
+            "value": "2030-03-04",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.28,
+              0.9,
+              0.31
+            ]
+          },
+          {
+            "fieldId": "post-date-5",
+            "value": "2030-03-05",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.33,
+              0.9,
+              0.36
+            ]
+          },
+          {
+            "fieldId": "post-date-6",
+            "value": "2030-03-06",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.38,
+              0.9,
+              0.41
+            ]
+          },
+          {
+            "fieldId": "post-date-7",
+            "value": "2030-03-07",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.43,
+              0.9,
+              0.46
+            ]
+          },
+          {
+            "fieldId": "post-date-8",
+            "value": "2030-03-08",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.48,
+              0.9,
+              0.51
+            ]
+          },
+          {
+            "fieldId": "post-date-9",
+            "value": "2030-03-09",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.53,
+              0.9,
+              0.56
+            ]
+          },
+          {
+            "fieldId": "post-date-10",
+            "value": "2030-03-10",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.58,
+              0.9,
+              0.61
+            ]
+          },
+          {
+            "fieldId": "post-date-11",
+            "value": "2030-03-11",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.63,
+              0.9,
+              0.66
+            ]
+          },
+          {
+            "fieldId": "post-date-12",
+            "value": "2030-03-12",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.68,
+              0.9,
+              0.71
+            ]
+          },
+          {
+            "fieldId": "post-date-13",
+            "value": "2030-03-13",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.73,
+              0.9,
+              0.76
+            ]
+          },
+          {
+            "fieldId": "post-date-14",
+            "value": "2030-03-14",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.78,
+              0.9,
+              0.81
+            ]
+          },
+          {
+            "fieldId": "post-title",
+            "value": "Synthetic study day",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.83,
+              0.9,
+              0.87
+            ]
+          },
+          {
+            "fieldId": "post-snippet",
+            "value": "Invented listening practice note, not a verified blog post.",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.89,
+              0.9,
+              0.96
+            ]
+          }
+        ],
+        "outcome": "UNDETERMINED",
+        "reasons": [
+          "GUIDE_UNAVAILABLE",
+          "SOURCE_UNVERIFIED"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "subject": "UNVERIFIED",
+        "continuousPublication": "UNVERIFIED",
+        "publicAvailability": "UNVERIFIED",
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "blog-cut",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-demo",
+        "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+        "policyVersion": "m0-siwon-benefits.2",
+        "subjectBindingId": "subject-siwon-demo",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-siwon-demo",
+        "instanceId": "mock-siwon-instance",
+        "requirementId": "req-blog-challenge",
+        "tier": 400,
+        "submissionId": "blog-submission",
+        "submissionRevision": 2,
+        "routeRevision": 1,
+        "aiRunId": "blog-run-mock",
+        "inputHash": "0x56cd2a99ea02814b2dbca08057830f3648193fdb646d9065c1a03680e0a3a3c6",
+        "modelExecution": "MOCK",
+        "guidelineVersion": null,
+        "guideStatus": "UNAVAILABLE",
+        "observationBasis": "SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE",
+        "observations": [
+          {
+            "fieldId": "blog-url",
+            "value": null,
+            "readStatus": "NOT_VISIBLE",
+            "page": null,
+            "bbox": null
+          },
+          {
+            "fieldId": "post-date-1",
+            "value": "2030-03-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.13,
+              0.9,
+              0.16
+            ]
+          },
+          {
+            "fieldId": "post-date-2",
+            "value": "2030-03-02",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.18,
+              0.9,
+              0.21
+            ]
+          },
+          {
+            "fieldId": "post-date-3",
+            "value": "2030-03-03",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.23,
+              0.9,
+              0.26
+            ]
+          },
+          {
+            "fieldId": "post-date-4",
+            "value": "2030-03-04",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.28,
+              0.9,
+              0.31
+            ]
+          },
+          {
+            "fieldId": "post-date-5",
+            "value": "2030-03-05",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.33,
+              0.9,
+              0.36
+            ]
+          },
+          {
+            "fieldId": "post-date-6",
+            "value": "2030-03-06",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.38,
+              0.9,
+              0.41
+            ]
+          },
+          {
+            "fieldId": "post-date-7",
+            "value": "2030-03-07",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.43,
+              0.9,
+              0.46
+            ]
+          },
+          {
+            "fieldId": "post-date-8",
+            "value": "2030-03-08",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.48,
+              0.9,
+              0.51
+            ]
+          },
+          {
+            "fieldId": "post-date-9",
+            "value": "2030-03-09",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.53,
+              0.9,
+              0.56
+            ]
+          },
+          {
+            "fieldId": "post-date-10",
+            "value": "2030-03-10",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.58,
+              0.9,
+              0.61
+            ]
+          },
+          {
+            "fieldId": "post-date-11",
+            "value": "2030-03-11",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.63,
+              0.9,
+              0.66
+            ]
+          },
+          {
+            "fieldId": "post-date-12",
+            "value": "2030-03-12",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.68,
+              0.9,
+              0.71
+            ]
+          },
+          {
+            "fieldId": "post-date-13",
+            "value": "2030-03-13",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.73,
+              0.9,
+              0.76
+            ]
+          },
+          {
+            "fieldId": "post-date-14",
+            "value": "2030-03-14",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.78,
+              0.9,
+              0.81
+            ]
+          },
+          {
+            "fieldId": "post-title",
+            "value": "Synthetic study day",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.83,
+              0.9,
+              0.87
+            ]
+          },
+          {
+            "fieldId": "post-snippet",
+            "value": "Invented listening practice note, not a verified blog post.",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.89,
+              0.9,
+              0.96
+            ]
+          }
+        ],
+        "outcome": "NEEDS_SUPPLEMENT",
+        "reasons": [
+          "GUIDE_UNAVAILABLE",
+          "MISSING_FIELD"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "subject": "UNVERIFIED",
+        "continuousPublication": "UNVERIFIED",
+        "publicAvailability": "UNVERIFIED",
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "blog-date-mismatch",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-demo",
+        "policyHash": "0x158a4f19d2dfa3ab03555cfaff819b7b35d82df0ebeb52cc9df6b112e8ac6ff5",
+        "policyVersion": "m0-siwon-benefits.2",
+        "subjectBindingId": "subject-siwon-demo",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-siwon-demo",
+        "instanceId": "mock-siwon-instance",
+        "requirementId": "req-blog-challenge",
+        "tier": 400,
+        "submissionId": "blog-submission",
+        "submissionRevision": 3,
+        "routeRevision": 1,
+        "aiRunId": "blog-run-mock",
+        "inputHash": "0x56cd2a99ea02814b2dbca08057830f3648193fdb646d9065c1a03680e0a3a3c6",
+        "modelExecution": "MOCK",
+        "guidelineVersion": null,
+        "guideStatus": "UNAVAILABLE",
+        "observationBasis": "SYNTHETIC_CHECKLIST_NOT_OFFICIAL_GUIDE",
+        "observations": [
+          {
+            "fieldId": "blog-url",
+            "value": "https://example.invalid/synthetic-blog",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.02,
+              0.9,
+              0.07
+            ]
+          },
+          {
+            "fieldId": "post-date-1",
+            "value": "2030-03-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.13,
+              0.9,
+              0.16
+            ]
+          },
+          {
+            "fieldId": "post-date-2",
+            "value": "2030-03-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.18,
+              0.9,
+              0.21
+            ]
+          },
+          {
+            "fieldId": "post-date-3",
+            "value": "2030-03-03",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.23,
+              0.9,
+              0.26
+            ]
+          },
+          {
+            "fieldId": "post-date-4",
+            "value": "2030-03-04",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.28,
+              0.9,
+              0.31
+            ]
+          },
+          {
+            "fieldId": "post-date-5",
+            "value": "2030-03-05",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.33,
+              0.9,
+              0.36
+            ]
+          },
+          {
+            "fieldId": "post-date-6",
+            "value": "2030-03-06",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.38,
+              0.9,
+              0.41
+            ]
+          },
+          {
+            "fieldId": "post-date-7",
+            "value": "2030-03-07",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.43,
+              0.9,
+              0.46
+            ]
+          },
+          {
+            "fieldId": "post-date-8",
+            "value": "2030-03-08",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.48,
+              0.9,
+              0.51
+            ]
+          },
+          {
+            "fieldId": "post-date-9",
+            "value": "2030-03-09",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.53,
+              0.9,
+              0.56
+            ]
+          },
+          {
+            "fieldId": "post-date-10",
+            "value": "2030-03-10",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.58,
+              0.9,
+              0.61
+            ]
+          },
+          {
+            "fieldId": "post-date-11",
+            "value": "2030-03-11",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.63,
+              0.9,
+              0.66
+            ]
+          },
+          {
+            "fieldId": "post-date-12",
+            "value": "2030-03-12",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.68,
+              0.9,
+              0.71
+            ]
+          },
+          {
+            "fieldId": "post-date-13",
+            "value": "2030-03-13",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.73,
+              0.9,
+              0.76
+            ]
+          },
+          {
+            "fieldId": "post-date-14",
+            "value": "2030-03-14",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.78,
+              0.9,
+              0.81
+            ]
+          },
+          {
+            "fieldId": "post-title",
+            "value": "Synthetic study day",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.83,
+              0.9,
+              0.87
+            ]
+          },
+          {
+            "fieldId": "post-snippet",
+            "value": "Invented listening practice note, not a verified blog post.",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.89,
+              0.9,
+              0.96
+            ]
+          }
+        ],
+        "outcome": "NEEDS_SUPPLEMENT",
+        "reasons": [
+          "GUIDE_UNAVAILABLE",
+          "MISMATCH"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "subject": "UNVERIFIED",
+        "continuousPublication": "UNVERIFIED",
+        "publicAvailability": "UNVERIFIED",
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      }
+    }
+  ],
+  "rejectCases": [
+    {
+      "base": "tier-300-at-850",
+      "path": [
+        "expected",
+        "entitlement",
+        "entitlementAtoms"
+      ],
+      "value": "68640000",
+      "error": "ENTITLEMENT"
+    },
+    {
+      "base": "higher-unknown",
+      "path": [
+        "expected",
+        "settlement"
+      ],
+      "value": "FINAL_SYNTHETIC",
+      "error": "SETTLEMENT"
+    },
+    {
+      "base": "tier-400-precheck-only",
+      "path": [
+        "expected",
+        "settlement"
+      ],
+      "value": "FINAL_SYNTHETIC",
+      "error": "SETTLEMENT"
+    },
+    {
+      "base": "multiple-no-choice",
+      "path": [
+        "expected",
+        "quoteAtoms"
+      ],
+      "value": "209040000",
+      "error": "AMOUNT"
+    },
+    {
+      "base": "round-once",
+      "path": [
+        "expected",
+        "quoteAtoms"
+      ],
+      "value": "33540000",
+      "error": "AMOUNT"
+    },
+    {
+      "base": "tier-200-at-750",
+      "path": [
+        "expected",
+        "entitlement",
+        "selectedTier"
+      ],
+      "value": 100,
+      "error": "ENTITLEMENT"
+    },
+    {
+      "base": "tier-100-score",
+      "path": [
+        "recipientRef"
+      ],
+      "value": "other-recipient",
+      "error": "BINDING"
+    },
+    {
+      "base": "official-fee-open",
+      "path": [
+        "expected",
+        "quoteState"
+      ],
+      "value": "CALCULATED_SYNTHETIC",
+      "error": "AMOUNT"
+    },
+    {
+      "base": "tier-50",
+      "path": [
+        "selection",
+        "tier"
+      ],
+      "value": 500,
+      "error": "SCHEMA"
+    },
+    {
+      "base": "tier-50",
+      "path": [
+        "mode"
+      ],
+      "value": "LIVE_SOURCE",
+      "error": "SCHEMA"
+    },
+    {
+      "base": "first-score-replaced",
+      "path": [
+        "expected",
+        "reason"
+      ],
+      "value": "NONE",
+      "error": "SETTLEMENT"
+    },
+    {
+      "base": "tier-100-attendance",
+      "path": [
+        "expected",
+        "entitlement",
+        "firstScoreRef",
+        "revision"
+      ],
+      "value": 2,
+      "error": "ENTITLEMENT"
+    },
+    {
+      "base": "blog-readable-unverified",
+      "path": [
+        "publicAvailability"
+      ],
+      "value": "VERIFIED",
+      "error": "SCHEMA"
+    },
+    {
+      "base": "blog-readable-unverified",
+      "path": [
+        "automaticEligibility"
+      ],
+      "value": true,
+      "error": "SCHEMA"
+    }
+  ]
+}

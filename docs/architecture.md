@@ -1,5 +1,9 @@
 # 아키텍처
 
+2026-10-14 M0 추가: [합성 계약](current/M0_CONTRACT.ko.md)·[결정/미결 질문](current/M0_DECISIONS.ko.md)·[프런트 시작 문서](current/FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
+2026-10-14: 아래는 기존 v4 구조의 기록입니다. 새 목표는 [정본 PRD](current/MVP_PRD_20261014.ko.md)와 [DRAFT_INTERFACE](current/MVP_INTERFACES_20261014.ko.md)를 따릅니다. 등록과 재원 분리·경로별 증거·AI/Vision·직접 청구는 새 설계/검증 대상이며 현재 코드와 실제 차단은 변경하지 않았습니다.
+
 이 문서는 v4의 목표 설계를 요약합니다. [구현 상태](status.md)와 [상세 설계](reference/DESIGN.ko.md)를 구분해서 읽으세요.
 
 ## 기술별 역할

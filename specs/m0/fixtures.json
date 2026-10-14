@@ -1,0 +1,3740 @@
+{
+  "contractVersion": "clear-m0.2",
+  "status": "FIXED_FOR_M0_FIXTURES",
+  "consumerAgreement": "PENDING",
+  "sourceCommit": "7bf622901919199ff6aaf00aaf077ef64a704a79",
+  "productCommit": "6d941a1fe0669b89730da1472d23ecd7caab22f4",
+  "virtualClock": 1898521200,
+  "objects": [
+    {
+      "id": "synthetic-source",
+      "type": "Source",
+      "value": {
+        "sourceId": "synthetic-terms",
+        "institution": "synthetic-ybm-demo",
+        "product": "ybm-750-demo",
+        "cohort": "SYNTHETIC-COHORT-1",
+        "capturedAt": 1898521200,
+        "rawHash": "0xb5d2202ec5fa1297db3afdca3e097643c108691c459d9d0638f73278929beb23",
+        "normalizedHash": "0xb5d2202ec5fa1297db3afdca3e097643c108691c459d9d0638f73278929beb23",
+        "normalizerVersion": "m0-text.1",
+        "origin": "SYNTHETIC_ASSUMPTION",
+        "sourceUrl": null,
+        "locator": "Synthetic agreement in M0_CONTRACT.ko.md; not an academy contract",
+        "applicability": "CONFIRMED_FOR_SNAPSHOT",
+        "contentIncluded": false
+      }
+    },
+    {
+      "id": "ybm-snapshot",
+      "type": "Source",
+      "value": {
+        "sourceId": "ybm-snapshot-20261014",
+        "institution": "ybm",
+        "product": "ybm-750",
+        "cohort": null,
+        "capturedAt": 1791945020,
+        "rawHash": "0x98133f30b03d1ac7ebcd125caa321527beeae9e08af8fc27137139c258b26b18",
+        "normalizedHash": null,
+        "normalizerVersion": null,
+        "origin": "OFFICIAL_SNAPSHOT",
+        "sourceUrl": "https://toeic.ybmclass.com/toeic/refundclass/index_v5.asp",
+        "locator": "03/04/05/06 and 750+ table; snapshot lines 2024-2077,2206-2222",
+        "applicability": "OPEN",
+        "contentIncluded": false
+      }
+    },
+    {
+      "id": "siwon-snapshot",
+      "type": "Source",
+      "value": {
+        "sourceId": "siwon-snapshot-20261014",
+        "institution": "siwon",
+        "product": "siwon-750-100",
+        "cohort": "466-SNAPSHOT-NOT-AGREED",
+        "capturedAt": 1791945020,
+        "rawHash": "0x093c3e3f2f12cf46cd3c048ff837fb01a30c58f8b6e575faef58fd405dbff651",
+        "normalizedHash": null,
+        "normalizerVersion": null,
+        "origin": "OFFICIAL_SNAPSHOT",
+        "sourceUrl": "https://lab.siwonschool.com/?s=event&t=refundhalf3",
+        "locator": "100% 750+ row; snapshot lines 3613-3630,3654-3697,3770-3804",
+        "applicability": "OPEN",
+        "contentIncluded": false
+      }
+    },
+    {
+      "id": "requirement",
+      "type": "Requirement",
+      "value": {
+        "requirementId": "req-score",
+        "routeIds": [
+          "ybm-route"
+        ],
+        "kind": "EXAM",
+        "coverage": "EXISTENTIAL",
+        "authenticityRequired": true,
+        "subjectRequired": true,
+        "period": {
+          "until": 1906297200,
+          "boundaries": "[from,until)",
+          "timezone": "Asia/Seoul",
+          "from": 1898521200
+        },
+        "maxAgeSeconds": 86400,
+        "sourceTrustProfile": "synthetic-fixture-verifier.1",
+        "requiredFields": [
+          "score"
+        ],
+        "sourceIds": [
+          "synthetic-terms"
+        ],
+        "support": "SYNTHETIC_ONLY",
+        "questionIds": []
+      }
+    },
+    {
+      "id": "draft-created",
+      "type": "PolicyDraft",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "draftId": "draft-ybm-created",
+        "revision": 1,
+        "state": "DRAFT",
+        "body": {
+          "policyId": "ybm-synthetic.1",
+          "institution": "synthetic-ybm-demo",
+          "product": "ybm-750-demo",
+          "cohort": "SYNTHETIC-COHORT-1",
+          "ruleVersion": "m0-limited-rules.1",
+          "sourceIds": [
+            "synthetic-terms"
+          ],
+          "commonRuleIds": [
+            "rule-mock-test",
+            "rule-review"
+          ],
+          "anyRoutes": [
+            {
+              "routeId": "ybm-route",
+              "allRuleIds": [
+                "rule-score",
+                "rule-learning"
+              ]
+            }
+          ],
+          "rules": [
+            {
+              "ruleId": "rule-score",
+              "requirementId": "req-score",
+              "predicate": "EXAM_GTE",
+              "threshold": 750,
+              "unit": "SCORE",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-learning",
+              "requirementId": "req-learning",
+              "predicate": "DAILY_TIME",
+              "threshold": 9000,
+              "unit": "BPS",
+              "days": 90,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-mock-test",
+              "requirementId": "req-mock-test",
+              "predicate": "COMPLETED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-review",
+              "requirementId": "req-review",
+              "predicate": "REVIEW_ACCEPTED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            }
+          ],
+          "requirements": [
+            {
+              "requirementId": "req-score",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "score"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-learning",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "effective-ms"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-mock-test",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "MOCK_TEST",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "completed"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-review",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "review-status"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            }
+          ],
+          "questions": [],
+          "amount": {
+            "token": "TEST",
+            "decimals": 6,
+            "rule": "FIXED_SYNTHETIC_NET",
+            "netAtoms": "100000000",
+            "deductions": "NOT_OFFICIAL_ZERO_DEMO",
+            "inputBasis": "SYNTHETIC_AGREEMENT"
+          },
+          "deadlines": {
+            "evidenceUntil": 1906297200,
+            "supplementUntil": 1906383600,
+            "finalizeUntil": 1906470000,
+            "allocationUntil": 1906556400,
+            "claimUntil": 1907161200,
+            "minClaimWindowSeconds": 604800
+          },
+          "trustProfile": "synthetic-fixture-verifier.1",
+          "paymentEnabled": false
+        },
+        "reviewerRef": null,
+        "aiRunId": null
+      }
+    },
+    {
+      "id": "draft-reviewed",
+      "type": "PolicyDraft",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "draftId": "draft-ybm-demo",
+        "revision": 2,
+        "state": "REVIEWED",
+        "body": {
+          "policyId": "ybm-synthetic.1",
+          "institution": "synthetic-ybm-demo",
+          "product": "ybm-750-demo",
+          "cohort": "SYNTHETIC-COHORT-1",
+          "ruleVersion": "m0-limited-rules.1",
+          "sourceIds": [
+            "synthetic-terms"
+          ],
+          "commonRuleIds": [
+            "rule-mock-test",
+            "rule-review"
+          ],
+          "anyRoutes": [
+            {
+              "routeId": "ybm-route",
+              "allRuleIds": [
+                "rule-score",
+                "rule-learning"
+              ]
+            }
+          ],
+          "rules": [
+            {
+              "ruleId": "rule-score",
+              "requirementId": "req-score",
+              "predicate": "EXAM_GTE",
+              "threshold": 750,
+              "unit": "SCORE",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-learning",
+              "requirementId": "req-learning",
+              "predicate": "DAILY_TIME",
+              "threshold": 9000,
+              "unit": "BPS",
+              "days": 90,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-mock-test",
+              "requirementId": "req-mock-test",
+              "predicate": "COMPLETED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-review",
+              "requirementId": "req-review",
+              "predicate": "REVIEW_ACCEPTED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            }
+          ],
+          "requirements": [
+            {
+              "requirementId": "req-score",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "score"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-learning",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "effective-ms"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-mock-test",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "MOCK_TEST",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "completed"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-review",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "review-status"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            }
+          ],
+          "questions": [],
+          "amount": {
+            "token": "TEST",
+            "decimals": 6,
+            "rule": "FIXED_SYNTHETIC_NET",
+            "netAtoms": "100000000",
+            "deductions": "NOT_OFFICIAL_ZERO_DEMO",
+            "inputBasis": "SYNTHETIC_AGREEMENT"
+          },
+          "deadlines": {
+            "evidenceUntil": 1906297200,
+            "supplementUntil": 1906383600,
+            "finalizeUntil": 1906470000,
+            "allocationUntil": 1906556400,
+            "claimUntil": 1907161200,
+            "minClaimWindowSeconds": 604800
+          },
+          "trustProfile": "synthetic-fixture-verifier.1",
+          "paymentEnabled": false
+        },
+        "reviewerRef": "synthetic-operator",
+        "aiRunId": null
+      }
+    },
+    {
+      "id": "approved-mock",
+      "type": "ApprovedPolicy",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "draftId": "draft-ybm-demo",
+        "draftRevision": 2,
+        "body": {
+          "policyId": "ybm-synthetic.1",
+          "institution": "synthetic-ybm-demo",
+          "product": "ybm-750-demo",
+          "cohort": "SYNTHETIC-COHORT-1",
+          "ruleVersion": "m0-limited-rules.1",
+          "sourceIds": [
+            "synthetic-terms"
+          ],
+          "commonRuleIds": [
+            "rule-mock-test",
+            "rule-review"
+          ],
+          "anyRoutes": [
+            {
+              "routeId": "ybm-route",
+              "allRuleIds": [
+                "rule-score",
+                "rule-learning"
+              ]
+            }
+          ],
+          "rules": [
+            {
+              "ruleId": "rule-score",
+              "requirementId": "req-score",
+              "predicate": "EXAM_GTE",
+              "threshold": 750,
+              "unit": "SCORE",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-learning",
+              "requirementId": "req-learning",
+              "predicate": "DAILY_TIME",
+              "threshold": 9000,
+              "unit": "BPS",
+              "days": 90,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-mock-test",
+              "requirementId": "req-mock-test",
+              "predicate": "COMPLETED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-review",
+              "requirementId": "req-review",
+              "predicate": "REVIEW_ACCEPTED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            }
+          ],
+          "requirements": [
+            {
+              "requirementId": "req-score",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "score"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-learning",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "effective-ms"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-mock-test",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "MOCK_TEST",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "completed"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-review",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "review-status"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            }
+          ],
+          "questions": [],
+          "amount": {
+            "token": "TEST",
+            "decimals": 6,
+            "rule": "FIXED_SYNTHETIC_NET",
+            "netAtoms": "100000000",
+            "deductions": "NOT_OFFICIAL_ZERO_DEMO",
+            "inputBasis": "SYNTHETIC_AGREEMENT"
+          },
+          "deadlines": {
+            "evidenceUntil": 1906297200,
+            "supplementUntil": 1906383600,
+            "finalizeUntil": 1906470000,
+            "allocationUntil": 1906556400,
+            "claimUntil": 1907161200,
+            "minClaimWindowSeconds": 604800
+          },
+          "trustProfile": "synthetic-fixture-verifier.1",
+          "paymentEnabled": false
+        },
+        "approvedBy": "synthetic-operator",
+        "compilerVersion": "M0_NOT_IMPLEMENTED",
+        "publication": "MOCK_CATALOG_ONLY",
+        "executable": false
+      }
+    },
+    {
+      "id": "official-questions",
+      "type": "PolicyDraft",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "draftId": "draft-ybm-official-open",
+        "revision": 1,
+        "state": "QUESTIONS_OPEN",
+        "body": {
+          "policyId": "ybm-official-open",
+          "institution": "ybm",
+          "product": "ybm-750-demo",
+          "cohort": "UNCONFIRMED",
+          "ruleVersion": "m0-limited-rules.1",
+          "sourceIds": [
+            "synthetic-terms"
+          ],
+          "commonRuleIds": [
+            "rule-mock-test",
+            "rule-review"
+          ],
+          "anyRoutes": [
+            {
+              "routeId": "ybm-route",
+              "allRuleIds": [
+                "rule-score",
+                "rule-learning"
+              ]
+            }
+          ],
+          "rules": [
+            {
+              "ruleId": "rule-score",
+              "requirementId": "req-score",
+              "predicate": "EXAM_GTE",
+              "threshold": 750,
+              "unit": "SCORE",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-learning",
+              "requirementId": "req-learning",
+              "predicate": "DAILY_TIME",
+              "threshold": 9000,
+              "unit": "BPS",
+              "days": 90,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-mock-test",
+              "requirementId": "req-mock-test",
+              "predicate": "COMPLETED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-review",
+              "requirementId": "req-review",
+              "predicate": "REVIEW_ACCEPTED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            }
+          ],
+          "requirements": [
+            {
+              "requirementId": "req-score",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "score"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-learning",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "effective-ms"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-mock-test",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "MOCK_TEST",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "completed"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-review",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "review-status"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            }
+          ],
+          "questions": [
+            {
+              "questionId": "ybm-fee-open",
+              "category": "EXTERNAL",
+              "field": "amount",
+              "routeIds": [
+                "ybm-route"
+              ],
+              "text": "Which payment option and cohort does the displayed net amount apply to?",
+              "choices": [
+                "Confirm official scope and net amount",
+                "Keep this route on hold"
+              ],
+              "status": "OPEN",
+              "resolution": null
+            }
+          ],
+          "amount": null,
+          "deadlines": null,
+          "trustProfile": "synthetic-fixture-verifier.1",
+          "paymentEnabled": false
+        },
+        "reviewerRef": null,
+        "aiRunId": null
+      }
+    },
+    {
+      "id": "siwon-questions",
+      "type": "PolicyDraft",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "draftId": "draft-siwon-open",
+        "revision": 1,
+        "state": "QUESTIONS_OPEN",
+        "body": {
+          "policyId": "siwon-official-open",
+          "institution": "siwon",
+          "product": "siwon-750-100",
+          "cohort": "466-SNAPSHOT-NOT-AGREED",
+          "ruleVersion": "m0-limited-rules.1",
+          "sourceIds": [
+            "synthetic-terms"
+          ],
+          "commonRuleIds": [
+            "rule-review"
+          ],
+          "anyRoutes": [
+            {
+              "routeId": "attendance",
+              "allRuleIds": [
+                "rule-learning"
+              ]
+            },
+            {
+              "routeId": "score-history",
+              "allRuleIds": [
+                "rule-score",
+                "rule-history"
+              ]
+            }
+          ],
+          "rules": [
+            {
+              "ruleId": "rule-score",
+              "requirementId": "req-score",
+              "predicate": "EXAM_GTE",
+              "threshold": 750,
+              "unit": "SCORE",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-learning",
+              "requirementId": "req-learning",
+              "predicate": "DAILY_PROGRESS",
+              "threshold": 6000,
+              "unit": "BPS",
+              "days": 100,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-review",
+              "requirementId": "req-review",
+              "predicate": "REVIEW_ACCEPTED",
+              "threshold": null,
+              "unit": "BOOLEAN",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            },
+            {
+              "ruleId": "rule-history",
+              "requirementId": "req-history",
+              "predicate": "HISTORY_NO_HIGH_SCORE",
+              "threshold": 750,
+              "unit": "SCORE",
+              "days": null,
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "basis": "SYNTHETIC_ASSUMPTION"
+            }
+          ],
+          "requirements": [
+            {
+              "requirementId": "req-score",
+              "routeIds": [
+                "score-history"
+              ],
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "score"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-learning",
+              "routeIds": [
+                "attendance"
+              ],
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": {
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timezone": "Asia/Seoul",
+                "from": 1898521200
+              },
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "effective-ms"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-review",
+              "routeIds": [
+                "attendance",
+                "score-history"
+              ],
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "review-status"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "SYNTHETIC_ONLY",
+              "questionIds": []
+            },
+            {
+              "requirementId": "req-history",
+              "routeIds": [
+                "score-history"
+              ],
+              "kind": "DOCUMENT",
+              "coverage": "COMPLETE_PERIOD",
+              "authenticityRequired": true,
+              "subjectRequired": true,
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "sourceTrustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "exam-date",
+                "score"
+              ],
+              "sourceIds": [
+                "synthetic-terms"
+              ],
+              "support": "UNSUPPORTED",
+              "questionIds": [
+                "siwon-history-open"
+              ]
+            }
+          ],
+          "questions": [
+            {
+              "questionId": "siwon-history-open",
+              "category": "EXTERNAL",
+              "field": "historyCoverageAndAuthenticity",
+              "routeIds": [
+                "score-history"
+              ],
+              "text": "Official format, two-year anchor and complete source verification are unresolved.",
+              "choices": [
+                "Obtain an authoritative complete history source",
+                "Keep score-history on hold"
+              ],
+              "status": "OPEN",
+              "resolution": null
+            }
+          ],
+          "amount": null,
+          "deadlines": null,
+          "trustProfile": "synthetic-fixture-verifier.1",
+          "paymentEnabled": false
+        },
+        "reviewerRef": null,
+        "aiRunId": null
+      }
+    },
+    {
+      "id": "application",
+      "type": "Application",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 2,
+        "state": "AGREED",
+        "selectedRouteId": "ybm-route",
+        "termsHash": "0x8123ecf84ab961cff050cdf90a12896d03b2ec6a863f10592530de2e8cd32359",
+        "consentRef": "mock-consent-1",
+        "consentKind": "MOCK_NO_SIGNATURE",
+        "fundingNotGuaranteed": true
+      }
+    },
+    {
+      "id": "application-draft",
+      "type": "Application",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "state": "DRAFT",
+        "selectedRouteId": null,
+        "termsHash": "0x8123ecf84ab961cff050cdf90a12896d03b2ec6a863f10592530de2e8cd32359",
+        "consentRef": null,
+        "consentKind": "MOCK_NO_SIGNATURE",
+        "fundingNotGuaranteed": true
+      }
+    },
+    {
+      "id": "evidence-exam",
+      "type": "Evidence",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "evidenceId": "evidence-exam",
+        "revision": 1,
+        "requirementId": "req-score",
+        "kind": "EXAM",
+        "sourceId": "synthetic-terms",
+        "sourceRevision": "synthetic-source.1",
+        "sourceTrustProfile": "synthetic-fixture-verifier.1",
+        "observedAt": 1906469400,
+        "validUntil": 1906470600,
+        "coverage": "EXISTENTIAL",
+        "coveredPeriod": {
+          "until": 1906297200,
+          "boundaries": "[from,until)",
+          "timezone": "Asia/Seoul",
+          "from": 1898521200
+        },
+        "authenticity": "VERIFIED",
+        "completeness": "NOT_REQUIRED",
+        "subject": "VERIFIED",
+        "payloadHash": "0xbb86f6ac87986ae1e5c420ee82a911c5473444bdd34a0c2c679eb0ae904bae43",
+        "verifierRef": "synthetic-verifier",
+        "supersedes": null,
+        "collectionEnabled": false,
+        "proofVerified": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "evidence-learning",
+      "type": "Evidence",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "evidenceId": "evidence-learning",
+        "revision": 1,
+        "requirementId": "req-learning",
+        "kind": "LEARNING",
+        "sourceId": "synthetic-terms",
+        "sourceRevision": "synthetic-source.1",
+        "sourceTrustProfile": "synthetic-fixture-verifier.1",
+        "observedAt": 1906469400,
+        "validUntil": 1906470600,
+        "coverage": "COMPLETE_PERIOD",
+        "coveredPeriod": {
+          "until": 1906297200,
+          "boundaries": "[from,until)",
+          "timezone": "Asia/Seoul",
+          "from": 1898521200
+        },
+        "authenticity": "VERIFIED",
+        "completeness": "VERIFIED",
+        "subject": "VERIFIED",
+        "payloadHash": "0x241e4db6fb2c76ce8b8c7921a632467067f032330dc034a9a434425817a683f1",
+        "verifierRef": "synthetic-verifier",
+        "supersedes": null,
+        "collectionEnabled": false,
+        "proofVerified": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "evidence-mock-test",
+      "type": "Evidence",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "evidenceId": "evidence-mock-test",
+        "revision": 1,
+        "requirementId": "req-mock-test",
+        "kind": "MOCK_TEST",
+        "sourceId": "synthetic-terms",
+        "sourceRevision": "synthetic-source.1",
+        "sourceTrustProfile": "synthetic-fixture-verifier.1",
+        "observedAt": 1906469400,
+        "validUntil": 1906470600,
+        "coverage": "NOT_REQUIRED",
+        "coveredPeriod": null,
+        "authenticity": "VERIFIED",
+        "completeness": "NOT_REQUIRED",
+        "subject": "VERIFIED",
+        "payloadHash": "0xcf38c1a8057e5d5b45a19c139d90b70c68243605ad3db24c6f0cb78d55aab5f7",
+        "verifierRef": "synthetic-verifier",
+        "supersedes": null,
+        "collectionEnabled": false,
+        "proofVerified": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "evidence-review",
+      "type": "Evidence",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "evidenceId": "evidence-review",
+        "revision": 1,
+        "requirementId": "req-review",
+        "kind": "REVIEW",
+        "sourceId": "synthetic-terms",
+        "sourceRevision": "synthetic-source.1",
+        "sourceTrustProfile": "synthetic-fixture-verifier.1",
+        "observedAt": 1906469400,
+        "validUntil": 1906470600,
+        "coverage": "NOT_REQUIRED",
+        "coveredPeriod": null,
+        "authenticity": "VERIFIED",
+        "completeness": "NOT_REQUIRED",
+        "subject": "VERIFIED",
+        "payloadHash": "0x182e499256bea391f0891e85aa5d782074934150b986e530eb4a4170f073312e",
+        "verifierRef": "synthetic-verifier",
+        "supersedes": null,
+        "collectionEnabled": false,
+        "proofVerified": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "vision-readable-held",
+      "type": "DocumentPrecheck",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-precheck",
+        "policyHash": "0x084fd45ae4999861e89aa57a793fa70ef1eb35357862a6098f78f7127268b1d6",
+        "policyVersion": "siwon-precheck-only.1",
+        "subjectBindingId": "subject-siwon-precheck",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "submissionId": "submission-1",
+        "submissionRevision": 1,
+        "routeRevision": 1,
+        "requirementId": "req-history",
+        "inputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "modelInputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "transformVersion": "identity.1",
+        "jobId": "job-1",
+        "aiRunId": "run-mock-1",
+        "jobState": "SUCCEEDED",
+        "modelExecution": "MOCK",
+        "actualModelVersion": null,
+        "observations": [
+          {
+            "fieldId": "score",
+            "value": "745",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.2,
+              0.3,
+              0.4
+            ]
+          },
+          {
+            "fieldId": "exam-date",
+            "value": "2029-08-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.5,
+              0.6,
+              0.6
+            ]
+          }
+        ],
+        "outcome": "PRECHECK_REQUIREMENTS_MET",
+        "reasons": [
+          "AUTHENTICITY_UNVERIFIED",
+          "HISTORY_INCOMPLETE"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "subject": "UNVERIFIED",
+        "current": true,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "vision-cut",
+      "type": "DocumentPrecheck",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-precheck",
+        "policyHash": "0x084fd45ae4999861e89aa57a793fa70ef1eb35357862a6098f78f7127268b1d6",
+        "policyVersion": "siwon-precheck-only.1",
+        "subjectBindingId": "subject-siwon-precheck",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "submissionId": "submission-1",
+        "submissionRevision": 2,
+        "routeRevision": 1,
+        "requirementId": "req-history",
+        "inputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "modelInputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "transformVersion": "identity.1",
+        "jobId": "job-2",
+        "aiRunId": "run-mock-1",
+        "jobState": "SUCCEEDED",
+        "modelExecution": "MOCK",
+        "actualModelVersion": null,
+        "observations": [
+          {
+            "fieldId": "score",
+            "value": null,
+            "readStatus": "NOT_VISIBLE",
+            "page": null,
+            "bbox": null
+          },
+          {
+            "fieldId": "exam-date",
+            "value": "2029-08-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.5,
+              0.6,
+              0.6
+            ]
+          }
+        ],
+        "outcome": "NEEDS_SUPPLEMENT",
+        "reasons": [
+          "MISSING_FIELD"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "subject": "UNVERIFIED",
+        "current": true,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "vision-late",
+      "type": "DocumentPrecheck",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-precheck",
+        "policyHash": "0x084fd45ae4999861e89aa57a793fa70ef1eb35357862a6098f78f7127268b1d6",
+        "policyVersion": "siwon-precheck-only.1",
+        "subjectBindingId": "subject-siwon-precheck",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "submissionId": "submission-1",
+        "submissionRevision": 1,
+        "routeRevision": 1,
+        "requirementId": "req-history",
+        "inputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "modelInputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "transformVersion": "identity.1",
+        "jobId": "job-1",
+        "aiRunId": "run-mock-1",
+        "jobState": "SUCCEEDED",
+        "modelExecution": "MOCK",
+        "actualModelVersion": null,
+        "observations": [
+          {
+            "fieldId": "score",
+            "value": "745",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.2,
+              0.3,
+              0.4
+            ]
+          },
+          {
+            "fieldId": "exam-date",
+            "value": "2029-08-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.5,
+              0.6,
+              0.6
+            ]
+          }
+        ],
+        "outcome": "PRECHECK_REQUIREMENTS_MET",
+        "reasons": [
+          "STALE_RESULT"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "subject": "UNVERIFIED",
+        "current": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "vision-cancelled",
+      "type": "DocumentPrecheck",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-precheck",
+        "policyHash": "0x084fd45ae4999861e89aa57a793fa70ef1eb35357862a6098f78f7127268b1d6",
+        "policyVersion": "siwon-precheck-only.1",
+        "subjectBindingId": "subject-siwon-precheck",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "submissionId": "submission-1",
+        "submissionRevision": 1,
+        "routeRevision": 1,
+        "requirementId": "req-history",
+        "inputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "modelInputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "transformVersion": "identity.1",
+        "jobId": "job-1",
+        "aiRunId": "run-mock-1",
+        "jobState": "CANCELLED",
+        "modelExecution": "MOCK",
+        "actualModelVersion": null,
+        "observations": [],
+        "outcome": "UNDETERMINED",
+        "reasons": [
+          "STALE_RESULT"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "subject": "UNVERIFIED",
+        "current": false,
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "eligible-final",
+      "type": "Eligibility",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "decisionId": "decision-1",
+        "revision": 1,
+        "evaluatedAt": 1906470000,
+        "evidenceRefs": [
+          {
+            "evidenceId": "evidence-exam",
+            "revision": 1
+          },
+          {
+            "evidenceId": "evidence-learning",
+            "revision": 1
+          },
+          {
+            "evidenceId": "evidence-mock-test",
+            "revision": 1
+          },
+          {
+            "evidenceId": "evidence-review",
+            "revision": 1
+          }
+        ],
+        "selectedRouteId": "ybm-route",
+        "ruleResults": [
+          {
+            "ruleId": "rule-score",
+            "status": "MET",
+            "evidenceIds": [
+              "evidence-exam"
+            ],
+            "reasons": []
+          },
+          {
+            "ruleId": "rule-learning",
+            "status": "MET",
+            "evidenceIds": [
+              "evidence-learning"
+            ],
+            "reasons": []
+          },
+          {
+            "ruleId": "rule-mock-test",
+            "status": "MET",
+            "evidenceIds": [
+              "evidence-mock-test"
+            ],
+            "reasons": []
+          },
+          {
+            "ruleId": "rule-review",
+            "status": "MET",
+            "evidenceIds": [
+              "evidence-review"
+            ],
+            "reasons": []
+          }
+        ],
+        "status": "ELIGIBLE",
+        "finality": "FINAL",
+        "amountAtoms": "100000000",
+        "reasons": [],
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "eligibility-held",
+      "type": "Eligibility",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "decisionId": "decision-held",
+        "revision": 1,
+        "evaluatedAt": 1906470000,
+        "evidenceRefs": [
+          {
+            "evidenceId": "evidence-exam",
+            "revision": 1
+          },
+          {
+            "evidenceId": "evidence-learning",
+            "revision": 1
+          },
+          {
+            "evidenceId": "evidence-mock-test",
+            "revision": 1
+          },
+          {
+            "evidenceId": "evidence-review",
+            "revision": 1
+          }
+        ],
+        "selectedRouteId": "ybm-route",
+        "ruleResults": [
+          {
+            "ruleId": "rule-score",
+            "status": "UNKNOWN",
+            "evidenceIds": [
+              "evidence-exam"
+            ],
+            "reasons": [
+              "SOURCE_UNVERIFIED"
+            ]
+          },
+          {
+            "ruleId": "rule-learning",
+            "status": "MET",
+            "evidenceIds": [
+              "evidence-learning"
+            ],
+            "reasons": []
+          },
+          {
+            "ruleId": "rule-mock-test",
+            "status": "MET",
+            "evidenceIds": [
+              "evidence-mock-test"
+            ],
+            "reasons": []
+          },
+          {
+            "ruleId": "rule-review",
+            "status": "MET",
+            "evidenceIds": [
+              "evidence-review"
+            ],
+            "reasons": []
+          }
+        ],
+        "status": "ON_HOLD",
+        "finality": "PROVISIONAL",
+        "amountAtoms": null,
+        "reasons": [
+          "SOURCE_UNVERIFIED"
+        ],
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "subject-binding",
+      "type": "SubjectBinding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "applicationId": "app-demo-1",
+        "providerInstanceId": "provider-demo-1",
+        "sourceAccountRef": "source-account-demo-1",
+        "state": "VERIFIED",
+        "authorityProfile": "synthetic-fixture-verifier.1",
+        "verifiedAt": 1898521200,
+        "expiresAt": 1906470001
+      }
+    },
+    {
+      "id": "document",
+      "type": "DocumentSubmission",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-precheck",
+        "policyHash": "0x084fd45ae4999861e89aa57a793fa70ef1eb35357862a6098f78f7127268b1d6",
+        "policyVersion": "siwon-precheck-only.1",
+        "subjectBindingId": "subject-siwon-precheck",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "submissionId": "submission-1",
+        "submissionRevision": 1,
+        "routeRevision": 1,
+        "requirementId": "req-history",
+        "fileRef": "synthetic-no-file",
+        "privateFileHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "mimeType": "image/png",
+        "byteLength": 1024,
+        "pixels": 10000,
+        "pageCount": 1,
+        "submittedAt": 1898521200,
+        "retentionUntil": 1898607600,
+        "transferConsent": "MOCK_ONLY",
+        "actualFilePresent": false,
+        "externalTransferAllowed": false
+      }
+    },
+    {
+      "id": "document-revision-2",
+      "type": "DocumentSubmission",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-siwon-precheck",
+        "policyHash": "0x084fd45ae4999861e89aa57a793fa70ef1eb35357862a6098f78f7127268b1d6",
+        "policyVersion": "siwon-precheck-only.1",
+        "subjectBindingId": "subject-siwon-precheck",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "submissionId": "submission-1",
+        "submissionRevision": 2,
+        "routeRevision": 1,
+        "requirementId": "req-history",
+        "fileRef": "synthetic-no-file",
+        "privateFileHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "mimeType": "image/png",
+        "byteLength": 1024,
+        "pixels": 10000,
+        "pageCount": 1,
+        "submittedAt": 1898521200,
+        "retentionUntil": 1898607600,
+        "transferConsent": "MOCK_ONLY",
+        "actualFilePresent": false,
+        "externalTransferAllowed": false
+      }
+    },
+    {
+      "id": "model-run",
+      "type": "ModelRun",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "aiRunId": "run-mock-1",
+        "jobId": "job-1",
+        "inputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "modelInputHash": "0x6f252e1d85c9df6308cbb574aa764fcb8d35d477e9cca0adfa6257617f1fffd7",
+        "transformVersion": "identity.1",
+        "promptVersion": "precheck-mock.1",
+        "extractorProfile": "precheck-mock.1",
+        "modelVersion": null,
+        "attempt": 1,
+        "execution": "MOCK",
+        "costAtoms": "0",
+        "state": "SUCCEEDED"
+      }
+    },
+    {
+      "id": "funding-unfunded",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "UNFUNDED",
+        "releaseReason": "NONE",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "0",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "0",
+        "totalDepositedAtoms": "0",
+        "allocationId": null,
+        "decisionId": null,
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556400,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-partial",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "PARTIAL",
+        "releaseReason": "NONE",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "40000000",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "0",
+        "totalDepositedAtoms": "40000000",
+        "allocationId": null,
+        "decisionId": null,
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556400,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-funded",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "FUNDED",
+        "releaseReason": "NONE",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "100000000",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "0",
+        "totalDepositedAtoms": "100000000",
+        "allocationId": null,
+        "decisionId": null,
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556400,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-allocated",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "ALLOCATED",
+        "releaseReason": "NONE",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "100000000",
+        "reservedAtoms": "100000000",
+        "paidAtoms": "0",
+        "returnedAtoms": "0",
+        "totalDepositedAtoms": "100000000",
+        "allocationId": "allocation-1",
+        "decisionId": "decision-1",
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556400,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-paid",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "PAID",
+        "releaseReason": "NONE",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "0",
+        "reservedAtoms": "0",
+        "paidAtoms": "100000000",
+        "returnedAtoms": "0",
+        "totalDepositedAtoms": "100000000",
+        "allocationId": "allocation-1",
+        "decisionId": "decision-1",
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556400,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-reclaimed",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "RECLAIMED",
+        "releaseReason": "CLAIM_EXPIRED",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "0",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "100000000",
+        "totalDepositedAtoms": "100000000",
+        "allocationId": "allocation-1",
+        "decisionId": "decision-1",
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1907161201,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "application-cancelled",
+      "type": "Application",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 3,
+        "state": "CANCELLED",
+        "selectedRouteId": "ybm-route",
+        "termsHash": "0x8123ecf84ab961cff050cdf90a12896d03b2ec6a863f10592530de2e8cd32359",
+        "consentRef": "mock-consent-1",
+        "consentKind": "MOCK_NO_SIGNATURE",
+        "fundingNotGuaranteed": true
+      }
+    },
+    {
+      "id": "funding-cancelled",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "CANCELLED",
+        "releaseReason": "STUDENT_CANCELLED",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "100000000",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "0",
+        "totalDepositedAtoms": "100000000",
+        "allocationId": null,
+        "decisionId": null,
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906470000,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-returned-cancelled",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "RECLAIMED",
+        "releaseReason": "STUDENT_CANCELLED",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "0",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "100000000",
+        "totalDepositedAtoms": "100000000",
+        "allocationId": null,
+        "decisionId": null,
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906470000,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-expired",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "EXPIRED",
+        "releaseReason": "ALLOCATION_EXPIRED",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "40000000",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "0",
+        "totalDepositedAtoms": "40000000",
+        "allocationId": null,
+        "decisionId": null,
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556401,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-returned-unallocated",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "RECLAIMED",
+        "releaseReason": "ALLOCATION_EXPIRED",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "0",
+        "reservedAtoms": "0",
+        "paidAtoms": "0",
+        "returnedAtoms": "40000000",
+        "totalDepositedAtoms": "40000000",
+        "allocationId": null,
+        "decisionId": null,
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556401,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "funding-paid-excess-returned",
+      "type": "Funding",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "revision": 1,
+        "status": "PAID",
+        "releaseReason": "ALLOCATION_EXPIRED",
+        "entitlementAtoms": "100000000",
+        "balanceAtoms": "0",
+        "reservedAtoms": "0",
+        "paidAtoms": "100000000",
+        "returnedAtoms": "20000000",
+        "totalDepositedAtoms": "120000000",
+        "allocationId": "allocation-1",
+        "decisionId": "decision-1",
+        "refundRecipientRef": "sponsor-demo-1",
+        "observedAt": 1906556401,
+        "observation": "MOCK_CONFIRMED",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "claim-not-claimable",
+      "type": "Claim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "claimId": "claim-1",
+        "allocationId": null,
+        "state": "NOT_CLAIMABLE",
+        "amountAtoms": "100000000",
+        "canSimulateClaim": false,
+        "chainAuthority": "NO_CHAIN_MOCK",
+        "independentProduct": "NO_GO",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "claim-claimable",
+      "type": "Claim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "claimId": "claim-1",
+        "allocationId": "allocation-1",
+        "state": "CLAIMABLE",
+        "amountAtoms": "100000000",
+        "canSimulateClaim": true,
+        "chainAuthority": "NO_CHAIN_MOCK",
+        "independentProduct": "NO_GO",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "claim-pending",
+      "type": "Claim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "claimId": "claim-1",
+        "allocationId": "allocation-1",
+        "state": "PENDING",
+        "amountAtoms": "100000000",
+        "canSimulateClaim": false,
+        "chainAuthority": "NO_CHAIN_MOCK",
+        "independentProduct": "NO_GO",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "claim-unknown",
+      "type": "Claim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "claimId": "claim-1",
+        "allocationId": "allocation-1",
+        "state": "UNKNOWN",
+        "amountAtoms": "100000000",
+        "canSimulateClaim": false,
+        "chainAuthority": "NO_CHAIN_MOCK",
+        "independentProduct": "NO_GO",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "claim-paid",
+      "type": "Claim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "claimId": "claim-1",
+        "allocationId": "allocation-1",
+        "state": "PAID",
+        "amountAtoms": "100000000",
+        "canSimulateClaim": false,
+        "chainAuthority": "NO_CHAIN_MOCK",
+        "independentProduct": "NO_GO",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "claim-expired",
+      "type": "Claim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "applicationId": "app-demo-1",
+        "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d",
+        "policyVersion": "m0-ybm-demo.1",
+        "subjectBindingId": "subject-demo-1",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-demo-1",
+        "instanceId": "mock-instance-1",
+        "claimId": "claim-1",
+        "allocationId": "allocation-1",
+        "state": "EXPIRED",
+        "amountAtoms": "100000000",
+        "canSimulateClaim": false,
+        "chainAuthority": "NO_CHAIN_MOCK",
+        "independentProduct": "NO_GO",
+        "paymentAllowed": false
+      }
+    },
+    {
+      "id": "fault-unknown",
+      "type": "Fault",
+      "value": {
+        "code": "OUTCOME_UNKNOWN",
+        "operationId": "op-claim-1",
+        "outcome": "UNKNOWN",
+        "nextAction": "QUERY_OPERATION",
+        "autoRetry": false
+      }
+    },
+    {
+      "id": "fault-history",
+      "type": "Fault",
+      "value": {
+        "code": "HISTORY_INCOMPLETE",
+        "operationId": null,
+        "outcome": "REJECTED",
+        "nextAction": "WAIT_FOR_SOURCE",
+        "autoRetry": false
+      }
+    },
+    {
+      "id": "command-createdraft",
+      "type": "CreateDraft",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "CreateDraft",
+        "requestId": "request-createdraft",
+        "expectedRevision": null,
+        "idempotencyKey": "intent-createdraft",
+        "args": {
+          "sourceIds": [
+            "synthetic-terms"
+          ],
+          "product": "ybm-750-demo"
+        }
+      }
+    },
+    {
+      "id": "command-answerquestion",
+      "type": "AnswerQuestion",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "AnswerQuestion",
+        "requestId": "request-answerquestion",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-answerquestion",
+        "args": {
+          "draftId": "draft-ybm-official-open",
+          "questionId": "ybm-fee-open",
+          "answer": "Keep real amount unresolved",
+          "basis": "EXTERNAL_REFERENCE"
+        }
+      }
+    },
+    {
+      "id": "command-approvedraft",
+      "type": "ApproveDraft",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "ApproveDraft",
+        "requestId": "request-approvedraft",
+        "expectedRevision": 2,
+        "idempotencyKey": "intent-approvedraft",
+        "args": {
+          "draftId": "draft-ybm-demo"
+        }
+      }
+    },
+    {
+      "id": "command-publishmockpolicy",
+      "type": "PublishMockPolicy",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "PublishMockPolicy",
+        "requestId": "request-publishmockpolicy",
+        "expectedRevision": 2,
+        "idempotencyKey": "intent-publishmockpolicy",
+        "args": {
+          "draftId": "draft-ybm-demo"
+        }
+      }
+    },
+    {
+      "id": "command-createapplication",
+      "type": "CreateApplication",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "CreateApplication",
+        "requestId": "request-createapplication",
+        "expectedRevision": null,
+        "idempotencyKey": "intent-createapplication",
+        "args": {
+          "policyHash": "0x919a9797b69f208d1e01d9edccbcedf80db03b69a1c3a90e228eff8dc683225d"
+        }
+      }
+    },
+    {
+      "id": "command-agreemockterms",
+      "type": "AgreeMockTerms",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "AgreeMockTerms",
+        "requestId": "request-agreemockterms",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-agreemockterms",
+        "args": {
+          "applicationId": "app-demo-1",
+          "termsHash": "0x8123ecf84ab961cff050cdf90a12896d03b2ec6a863f10592530de2e8cd32359"
+        }
+      }
+    },
+    {
+      "id": "command-submitmockevidence",
+      "type": "SubmitMockEvidence",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "SubmitMockEvidence",
+        "requestId": "request-submitmockevidence",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-submitmockevidence",
+        "args": {
+          "applicationId": "app-demo-1",
+          "requirementId": "req-score",
+          "fixtureId": "evidence-exam"
+        }
+      }
+    },
+    {
+      "id": "command-submitmockdocument",
+      "type": "SubmitMockDocument",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "SubmitMockDocument",
+        "requestId": "request-submitmockdocument",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-submitmockdocument",
+        "args": {
+          "applicationId": "app-siwon-precheck",
+          "requirementId": "req-history",
+          "fixtureId": "vision-cut",
+          "submissionRevision": 2
+        }
+      }
+    },
+    {
+      "id": "command-startmockprecheck",
+      "type": "StartMockPrecheck",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "StartMockPrecheck",
+        "requestId": "request-startmockprecheck",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-startmockprecheck",
+        "args": {
+          "applicationId": "app-siwon-precheck",
+          "submissionId": "submission-1",
+          "submissionRevision": 1,
+          "routeRevision": 1
+        }
+      }
+    },
+    {
+      "id": "command-canceloperation",
+      "type": "CancelOperation",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "CancelOperation",
+        "requestId": "request-canceloperation",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-canceloperation",
+        "args": {
+          "operationId": "op-precheck-1"
+        }
+      }
+    },
+    {
+      "id": "command-evaluatemock",
+      "type": "EvaluateMock",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "EvaluateMock",
+        "requestId": "request-evaluatemock",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-evaluatemock",
+        "args": {
+          "applicationId": "app-demo-1"
+        }
+      }
+    },
+    {
+      "id": "command-simulatetopup",
+      "type": "SimulateTopUp",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "SimulateTopUp",
+        "requestId": "request-simulatetopup",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-simulatetopup",
+        "args": {
+          "applicationId": "app-demo-1",
+          "amountAtoms": "40000000"
+        }
+      }
+    },
+    {
+      "id": "command-simulateallocate",
+      "type": "SimulateAllocate",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "SimulateAllocate",
+        "requestId": "request-simulateallocate",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-simulateallocate",
+        "args": {
+          "applicationId": "app-demo-1",
+          "decisionId": "decision-1"
+        }
+      }
+    },
+    {
+      "id": "command-simulateclaim",
+      "type": "SimulateClaim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "SimulateClaim",
+        "requestId": "request-simulateclaim",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-simulateclaim",
+        "args": {
+          "applicationId": "app-demo-1"
+        }
+      }
+    },
+    {
+      "id": "command-cancelapplication",
+      "type": "CancelApplication",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "CancelApplication",
+        "requestId": "request-cancelapplication",
+        "expectedRevision": 2,
+        "idempotencyKey": "intent-cancelapplication",
+        "args": {
+          "applicationId": "app-demo-1"
+        }
+      }
+    },
+    {
+      "id": "command-simulatereclaim",
+      "type": "SimulateReclaim",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "SimulateReclaim",
+        "requestId": "request-simulatereclaim",
+        "expectedRevision": 1,
+        "idempotencyKey": "intent-simulatereclaim",
+        "args": {
+          "applicationId": "app-demo-1"
+        }
+      }
+    },
+    {
+      "id": "command-getapplication",
+      "type": "GetApplication",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "GetApplication",
+        "requestId": "request-getapplication",
+        "expectedRevision": null,
+        "idempotencyKey": null,
+        "args": {
+          "applicationId": "app-demo-1"
+        }
+      }
+    },
+    {
+      "id": "command-getdraft",
+      "type": "GetDraft",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "GetDraft",
+        "requestId": "request-getdraft",
+        "expectedRevision": null,
+        "idempotencyKey": null,
+        "args": {
+          "draftId": "draft-ybm-demo"
+        }
+      }
+    },
+    {
+      "id": "command-getoperation",
+      "type": "GetOperation",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "GetOperation",
+        "requestId": "request-getoperation",
+        "expectedRevision": null,
+        "idempotencyKey": null,
+        "args": {
+          "operationId": "op-claim-1"
+        }
+      }
+    },
+    {
+      "id": "command-listmockpolicies",
+      "type": "ListMockPolicies",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "name": "ListMockPolicies",
+        "requestId": "request-listmockpolicies",
+        "expectedRevision": null,
+        "idempotencyKey": null,
+        "args": {
+          "cursor": null,
+          "limit": 20
+        }
+      }
+    },
+    {
+      "id": "reply-createdraft",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-createdraft",
+        "operationId": "op-createdraft",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "draft-created"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-answerquestion",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-answerquestion",
+        "operationId": "op-answerquestion",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "official-questions"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-approvedraft",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-approvedraft",
+        "operationId": "op-approvedraft",
+        "state": "SUCCEEDED",
+        "revision": 2,
+        "viewIds": [
+          "draft-reviewed"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-publishmockpolicy",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-publishmockpolicy",
+        "operationId": "op-publishmockpolicy",
+        "state": "SUCCEEDED",
+        "revision": 2,
+        "viewIds": [
+          "approved-mock"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-createapplication",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-createapplication",
+        "operationId": "op-createapplication",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "application-draft"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-agreemockterms",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-agreemockterms",
+        "operationId": "op-agreemockterms",
+        "state": "SUCCEEDED",
+        "revision": 2,
+        "viewIds": [
+          "application"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-submitmockevidence",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-submitmockevidence",
+        "operationId": "op-submitmockevidence",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "evidence-exam"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-submitmockdocument",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-submitmockdocument",
+        "operationId": "op-submitmockdocument",
+        "state": "SUCCEEDED",
+        "revision": 2,
+        "viewIds": [
+          "document-revision-2",
+          "vision-cut"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-startmockprecheck",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-startmockprecheck",
+        "operationId": "op-startmockprecheck",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "vision-readable-held"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-canceloperation",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-canceloperation",
+        "operationId": "op-canceloperation",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "vision-cancelled"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-evaluatemock",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-evaluatemock",
+        "operationId": "op-evaluatemock",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "eligible-final"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-simulatetopup",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-simulatetopup",
+        "operationId": "op-simulatetopup",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "funding-partial"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-simulateallocate",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-simulateallocate",
+        "operationId": "op-simulateallocate",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "funding-allocated"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-simulateclaim",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-simulateclaim",
+        "operationId": "op-claim-1",
+        "state": "PENDING",
+        "revision": 1,
+        "viewIds": [
+          "claim-pending"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-cancelapplication",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-cancelapplication",
+        "operationId": "op-cancelapplication",
+        "state": "SUCCEEDED",
+        "revision": 3,
+        "viewIds": [
+          "application-cancelled"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-simulatereclaim",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-simulatereclaim",
+        "operationId": "op-simulatereclaim",
+        "state": "SUCCEEDED",
+        "revision": 1,
+        "viewIds": [
+          "funding-reclaimed"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-getapplication",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-getapplication",
+        "operationId": null,
+        "state": "SUCCEEDED",
+        "revision": 2,
+        "viewIds": [
+          "application",
+          "eligibility-held",
+          "funding-funded",
+          "claim-not-claimable"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-getdraft",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-getdraft",
+        "operationId": null,
+        "state": "SUCCEEDED",
+        "revision": 2,
+        "viewIds": [
+          "draft-reviewed"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-getoperation",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-getoperation",
+        "operationId": "op-claim-1",
+        "state": "UNKNOWN",
+        "revision": null,
+        "viewIds": [
+          "claim-unknown"
+        ],
+        "fault": {
+          "code": "OUTCOME_UNKNOWN",
+          "operationId": "op-claim-1",
+          "outcome": "UNKNOWN",
+          "nextAction": "QUERY_OPERATION",
+          "autoRetry": false
+        },
+        "nextCursor": null,
+        "complete": false
+      }
+    },
+    {
+      "id": "reply-listmockpolicies",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-listmockpolicies",
+        "operationId": null,
+        "state": "SUCCEEDED",
+        "revision": 2,
+        "viewIds": [
+          "approved-mock"
+        ],
+        "fault": null,
+        "nextCursor": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "reply-allocation-blocked",
+      "type": "MockReply",
+      "value": {
+        "contractVersion": "clear-m0.2",
+        "mode": "SYNTHETIC",
+        "authority": "MOCK_ONLY",
+        "requestId": "request-simulateallocate",
+        "operationId": null,
+        "state": "REJECTED",
+        "revision": 1,
+        "viewIds": [
+          "eligibility-held",
+          "funding-funded",
+          "claim-not-claimable"
+        ],
+        "fault": {
+          "code": "SOURCE_UNVERIFIED",
+          "operationId": null,
+          "outcome": "REJECTED",
+          "nextAction": "WAIT_FOR_SOURCE",
+          "autoRetry": false
+        },
+        "nextCursor": null,
+        "complete": false
+      }
+    }
+  ],
+  "exchanges": [
+    {
+      "command": "command-createdraft",
+      "reply": "reply-createdraft"
+    },
+    {
+      "command": "command-answerquestion",
+      "reply": "reply-answerquestion"
+    },
+    {
+      "command": "command-approvedraft",
+      "reply": "reply-approvedraft"
+    },
+    {
+      "command": "command-publishmockpolicy",
+      "reply": "reply-publishmockpolicy"
+    },
+    {
+      "command": "command-createapplication",
+      "reply": "reply-createapplication"
+    },
+    {
+      "command": "command-agreemockterms",
+      "reply": "reply-agreemockterms"
+    },
+    {
+      "command": "command-submitmockevidence",
+      "reply": "reply-submitmockevidence"
+    },
+    {
+      "command": "command-submitmockdocument",
+      "reply": "reply-submitmockdocument"
+    },
+    {
+      "command": "command-startmockprecheck",
+      "reply": "reply-startmockprecheck"
+    },
+    {
+      "command": "command-canceloperation",
+      "reply": "reply-canceloperation"
+    },
+    {
+      "command": "command-evaluatemock",
+      "reply": "reply-evaluatemock"
+    },
+    {
+      "command": "command-simulatetopup",
+      "reply": "reply-simulatetopup"
+    },
+    {
+      "command": "command-simulateallocate",
+      "reply": "reply-simulateallocate"
+    },
+    {
+      "command": "command-simulateclaim",
+      "reply": "reply-simulateclaim"
+    },
+    {
+      "command": "command-cancelapplication",
+      "reply": "reply-cancelapplication"
+    },
+    {
+      "command": "command-simulatereclaim",
+      "reply": "reply-simulatereclaim"
+    },
+    {
+      "command": "command-getapplication",
+      "reply": "reply-getapplication"
+    },
+    {
+      "command": "command-getdraft",
+      "reply": "reply-getdraft"
+    },
+    {
+      "command": "command-getoperation",
+      "reply": "reply-getoperation"
+    },
+    {
+      "command": "command-listmockpolicies",
+      "reply": "reply-listmockpolicies"
+    },
+    {
+      "command": "command-simulateallocate",
+      "reply": "reply-allocation-blocked"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ybm-happy",
+      "states": [
+        "funding-unfunded",
+        "funding-partial",
+        "funding-funded",
+        "funding-allocated",
+        "funding-paid"
+      ],
+      "decision": "eligible-final",
+      "claim": "claim-claimable"
+    },
+    {
+      "id": "source-hold",
+      "states": [
+        "funding-funded"
+      ],
+      "decision": "eligibility-held",
+      "claim": "claim-not-claimable"
+    },
+    {
+      "id": "vision-readable-not-authentic",
+      "states": [
+        "vision-readable-held"
+      ],
+      "decision": null,
+      "claim": null
+    },
+    {
+      "id": "deadline-reclaim",
+      "states": [
+        "funding-allocated",
+        "funding-reclaimed"
+      ],
+      "decision": "eligible-final",
+      "claim": "claim-expired"
+    },
+    {
+      "id": "student-cancel-before-allocation",
+      "states": [
+        "funding-funded",
+        "application-cancelled",
+        "funding-cancelled",
+        "funding-returned-cancelled"
+      ],
+      "decision": null,
+      "claim": "claim-not-claimable"
+    },
+    {
+      "id": "unallocated-expiry",
+      "states": [
+        "funding-partial",
+        "funding-expired",
+        "funding-returned-unallocated"
+      ],
+      "decision": "eligible-final",
+      "claim": "claim-not-claimable"
+    },
+    {
+      "id": "claim-timeout",
+      "states": [
+        "claim-pending",
+        "claim-unknown",
+        "claim-paid"
+      ],
+      "decision": "eligible-final",
+      "claim": null
+    }
+  ],
+  "rejectCases": [
+    {
+      "id": "live-mode",
+      "base": "eligible-final",
+      "path": [
+        "mode"
+      ],
+      "value": "LIVE_SOURCE",
+      "error": "SCHEMA"
+    },
+    {
+      "id": "extra-payout-authority",
+      "base": "vision-readable-held",
+      "path": [
+        "paymentAllowed"
+      ],
+      "value": true,
+      "error": "SCHEMA"
+    },
+    {
+      "id": "vision-authenticity-upgrade",
+      "base": "vision-readable-held",
+      "path": [
+        "authenticity"
+      ],
+      "value": "VERIFIED",
+      "error": "SCHEMA"
+    },
+    {
+      "id": "fabricated-cropped-value",
+      "base": "vision-cut",
+      "path": [
+        "observations",
+        0,
+        "value"
+      ],
+      "value": "750",
+      "error": "OBSERVATION"
+    },
+    {
+      "id": "reversed-box",
+      "base": "vision-readable-held",
+      "path": [
+        "observations",
+        0,
+        "bbox"
+      ],
+      "value": [
+        0.8,
+        0.2,
+        0.1,
+        0.4
+      ],
+      "error": "OBSERVATION"
+    },
+    {
+      "id": "unknown-field",
+      "base": "evidence-exam",
+      "path": [
+        "privateKey"
+      ],
+      "value": "SYNTHETIC_NOT_A_KEY",
+      "error": "SCHEMA"
+    },
+    {
+      "id": "missing-revision",
+      "base": "application",
+      "path": [
+        "revision"
+      ],
+      "value": null,
+      "error": "SCHEMA"
+    },
+    {
+      "id": "partial-reserve",
+      "base": "funding-partial",
+      "path": [
+        "reservedAtoms"
+      ],
+      "value": "40000000",
+      "error": "ACCOUNTING"
+    },
+    {
+      "id": "invented-balance",
+      "base": "funding-funded",
+      "path": [
+        "balanceAtoms"
+      ],
+      "value": "100000001",
+      "error": "ACCOUNTING"
+    },
+    {
+      "id": "double-paid",
+      "base": "funding-paid",
+      "path": [
+        "paidAtoms"
+      ],
+      "value": "200000000",
+      "error": "ACCOUNTING"
+    },
+    {
+      "id": "alter-recipient",
+      "base": "funding-allocated",
+      "path": [
+        "recipientRef"
+      ],
+      "value": "attacker",
+      "error": "BINDING"
+    },
+    {
+      "id": "alter-policy",
+      "base": "evidence-exam",
+      "path": [
+        "policyHash"
+      ],
+      "value": "0x8810ad581e59f2bc3928b261707a71308f7e139eb04820366dc4d5c18d980225",
+      "error": "BINDING"
+    },
+    {
+      "id": "client-verification-injection",
+      "base": "command-submitmockevidence",
+      "path": [
+        "args",
+        "verified"
+      ],
+      "value": true,
+      "error": "SCHEMA"
+    },
+    {
+      "id": "query-idempotency",
+      "base": "command-getapplication",
+      "path": [
+        "idempotencyKey"
+      ],
+      "value": "bad-key",
+      "error": "COMMAND"
+    },
+    {
+      "id": "write-no-idempotency",
+      "base": "command-simulateclaim",
+      "path": [
+        "idempotencyKey"
+      ],
+      "value": null,
+      "error": "COMMAND"
+    },
+    {
+      "id": "write-no-revision",
+      "base": "command-simulateallocate",
+      "path": [
+        "expectedRevision"
+      ],
+      "value": null,
+      "error": "COMMAND"
+    },
+    {
+      "id": "insufficient-claim-window",
+      "base": "approved-mock",
+      "path": [
+        "body",
+        "deadlines",
+        "minClaimWindowSeconds"
+      ],
+      "value": 604801,
+      "error": "SCHEMA"
+    },
+    {
+      "id": "claim-window-order",
+      "base": "approved-mock",
+      "path": [
+        "body",
+        "deadlines",
+        "allocationUntil"
+      ],
+      "value": 1907161200,
+      "error": "DEADLINES"
+    },
+    {
+      "id": "unresolved-approved",
+      "base": "approved-mock",
+      "path": [
+        "body",
+        "questions"
+      ],
+      "value": [
+        {
+          "questionId": "ybm-fee-open",
+          "category": "EXTERNAL",
+          "field": "amount",
+          "routeIds": [
+            "ybm-route"
+          ],
+          "text": "Which payment option and cohort does the displayed net amount apply to?",
+          "choices": [
+            "Confirm official scope and net amount",
+            "Keep this route on hold"
+          ],
+          "status": "OPEN",
+          "resolution": null
+        }
+      ],
+      "error": "PUBLICATION"
+    },
+    {
+      "id": "amount-change-after-approval",
+      "base": "approved-mock",
+      "path": [
+        "body",
+        "amount",
+        "netAtoms"
+      ],
+      "value": "1",
+      "error": "POLICY_HASH"
+    },
+    {
+      "id": "route-unknown-rule",
+      "base": "approved-mock",
+      "path": [
+        "body",
+        "anyRoutes",
+        0,
+        "allRuleIds"
+      ],
+      "value": [
+        "missing-rule"
+      ],
+      "error": "REFERENCES"
+    },
+    {
+      "id": "eligible-with-unknown",
+      "base": "eligible-final",
+      "path": [
+        "ruleResults",
+        0,
+        "status"
+      ],
+      "value": "UNKNOWN",
+      "error": "ELIGIBILITY"
+    },
+    {
+      "id": "evidence-future",
+      "base": "evidence-exam",
+      "path": [
+        "observedAt"
+      ],
+      "value": 1906470601,
+      "error": "FRESHNESS"
+    },
+    {
+      "id": "document-unverified-complete",
+      "base": "vision-readable-held",
+      "path": [
+        "completeness"
+      ],
+      "value": "VERIFIED",
+      "error": "SCHEMA"
+    },
+    {
+      "id": "claim-button-on-unknown",
+      "base": "claim-unknown",
+      "path": [
+        "canSimulateClaim"
+      ],
+      "value": true,
+      "error": "CLAIM_STATE"
+    },
+    {
+      "id": "model-execution-fabrication",
+      "base": "vision-readable-held",
+      "path": [
+        "modelExecution"
+      ],
+      "value": "ACTUAL_MODEL",
+      "error": "SCHEMA"
+    },
+    {
+      "id": "source-raw-metadata-is-normalized",
+      "base": "ybm-snapshot",
+      "path": [
+        "normalizerVersion"
+      ],
+      "value": "invented",
+      "error": "SOURCE"
+    },
+    {
+      "id": "file-over-limit",
+      "base": "document",
+      "path": [
+        "byteLength"
+      ],
+      "value": 8388609,
+      "error": "SCHEMA"
+    },
+    {
+      "id": "document-retention",
+      "base": "document",
+      "path": [
+        "retentionUntil"
+      ],
+      "value": 1898607601,
+      "error": "RETENTION"
+    },
+    {
+      "id": "external-model-transfer",
+      "base": "document",
+      "path": [
+        "externalTransferAllowed"
+      ],
+      "value": true,
+      "error": "SCHEMA"
+    },
+    {
+      "id": "successful-reply-with-fault",
+      "base": "reply-simulateallocate",
+      "path": [
+        "fault"
+      ],
+      "value": {
+        "code": "C0_BLOCKED",
+        "operationId": null,
+        "outcome": "REJECTED",
+        "nextAction": "NONE",
+        "autoRetry": false
+      },
+      "error": "REPLY"
+    },
+    {
+      "id": "unbound-model-input",
+      "base": "model-run",
+      "path": [
+        "modelInputHash"
+      ],
+      "value": "0x80c3ae8d2ad0ac37615bc3156bb73fa8b94a713921b5c0a537b72250048aac32",
+      "error": "MODEL_BINDING"
+    },
+    {
+      "id": "wrong-rule-unit",
+      "base": "draft-reviewed",
+      "path": [
+        "body",
+        "rules",
+        0,
+        "unit"
+      ],
+      "value": "BPS",
+      "error": "RULE"
+    },
+    {
+      "id": "zero-approved-amount",
+      "base": "approved-mock",
+      "path": [
+        "body",
+        "amount",
+        "netAtoms"
+      ],
+      "value": "0",
+      "error": "PUBLICATION"
+    },
+    {
+      "id": "evidence-too-old",
+      "base": "eligible-final",
+      "path": [
+        "evaluatedAt"
+      ],
+      "value": 1906470001,
+      "error": "ELIGIBILITY"
+    },
+    {
+      "id": "claim-without-allocation",
+      "base": "claim-claimable",
+      "path": [
+        "allocationId"
+      ],
+      "value": null,
+      "error": "CLAIM_STATE"
+    },
+    {
+      "id": "readable-without-location",
+      "base": "vision-readable-held",
+      "path": [
+        "observations",
+        0,
+        "bbox"
+      ],
+      "value": null,
+      "error": "OBSERVATION"
+    },
+    {
+      "id": "old-result-current",
+      "base": "vision-late",
+      "path": [
+        "reasons"
+      ],
+      "value": [],
+      "error": "JOB"
+    },
+    {
+      "id": "refund-recipient-change",
+      "base": "funding-reclaimed",
+      "path": [
+        "refundRecipientRef"
+      ],
+      "value": "attacker",
+      "error": "BINDING"
+    },
+    {
+      "id": "early-reserved-reclaim",
+      "base": "funding-reclaimed",
+      "path": [
+        "observedAt"
+      ],
+      "value": 1907161200,
+      "error": "ACCOUNTING"
+    },
+    {
+      "id": "claim-amount-change",
+      "base": "claim-claimable",
+      "path": [
+        "amountAtoms"
+      ],
+      "value": "1",
+      "error": "CLAIM_STATE"
+    },
+    {
+      "id": "unfunded-with-allocation",
+      "base": "funding-unfunded",
+      "path": [
+        "allocationId"
+      ],
+      "value": "allocation-1",
+      "error": "ACCOUNTING"
+    },
+    {
+      "id": "minimum-claim-window-violated",
+      "base": "approved-mock",
+      "path": [
+        "body",
+        "deadlines",
+        "allocationUntil"
+      ],
+      "value": 1906556401,
+      "error": "DEADLINES"
+    },
+    {
+      "id": "reviewed-without-reviewer",
+      "base": "draft-reviewed",
+      "path": [
+        "reviewerRef"
+      ],
+      "value": null,
+      "error": "APPROVAL"
+    },
+    {
+      "id": "binding-other-application",
+      "base": "subject-binding",
+      "path": [
+        "applicationId"
+      ],
+      "value": "other-app",
+      "error": "BINDING"
+    },
+    {
+      "id": "operation-result-mismatch",
+      "base": "reply-getoperation",
+      "path": [
+        "fault",
+        "operationId"
+      ],
+      "value": "other-op",
+      "error": "REPLY"
+    },
+    {
+      "id": "precheck-missing-required-field",
+      "base": "vision-readable-held",
+      "path": [
+        "observations"
+      ],
+      "value": [
+        {
+          "fieldId": "score",
+          "value": "745",
+          "readStatus": "READABLE",
+          "page": 1,
+          "bbox": [
+            0.1,
+            0.2,
+            0.3,
+            0.4
+          ]
+        }
+      ],
+      "error": "OBSERVATION"
+    }
+  ]
+}
