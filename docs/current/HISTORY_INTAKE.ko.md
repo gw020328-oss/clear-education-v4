@@ -35,3 +35,13 @@ H1 `clear-exam-lifecycle.1`은 SYNTHETIC 그대로 유지한다. H2는 별도 �
 접수 성공은 `proofVerified`와 `wholeHistoryTableClaim`만 표시할 수 있다. 미검증 범위는 `fullHistoryProven=false`, `sourceCoverageConfirmed=false`, `accountIdentityBound=false`, `productEligible=false`, `paymentAllowed=false`다. baseline의 없음/미달·목표 달성/최초 시험 고정 판단은 수행하지 않는다. ACHIEVEMENT는 별도 목적·기간의 수집 접수이며 최종 단일 시험 선택/발표일/실명 결합은 후속이다.
 
 실제 Moodle/원천 자격 검증 BLOCKED, grant/outbox HOLD, 독립 청구 제품 NO-GO와 400% 사전검토만/자동 자격·지급 금지를 유지한다. PR #32 Mac 복구 CI 최초 실패 원인은 미확정이며 후속 진단·시험·CI 통과를 원인 해결로 해석하지 않는다.
+
+## H2b 구현 결과와 소비자 영향
+
+`src/exam-evidence/intake.mjs`의 `openHistoryIntake`는 별도 `history-intake.sqlite`를 사용한다. 시작 시 instanceId/mode/verifierProfile/verifierConfigDigest를 pin하고 바뀐 설정·불완전 schema를 거부한다. `register`는 내부 가명 binding과 확정한 접수 정책을 받아 clock 시각을 한 번 고정한다. 같은 입력 재호출은 같은 등록, 다른 입력은 충돌이다. `openSession`은 목적별 현재 revision·nonce·owner·기간·기한을 생성하며 `accept(sessionId, proof)`가 독립 검증 콜백을 직접 실행한다. 브라우저가 verifier result를 전달하는 API는 없다. 검증 콜백은 서버 구성 권한이며 외부 입력으로 주입하지 않는다.
+
+`registration/session/receipt`는 소유한 로컬 서비스만 조회하며 `cancel/purge/close`가 정리 경계다. 수락 전후 현재 revision/취소/만료를 transaction 안에서 재검사한다. 응답 유실 재접수는 같은 proof commitment일 때만 기존 결과를 반환한다. `register/openSession`은 실제 웹 동의 서명/인증 구현을 대신하지 않는다. 명시한 로컬 동의 사건을 학원의 공식 수강 신청 사건으로 주장하지 않는다.
+
+등록/세션/receipt의 private HMAC pin은 저장 손상 검출이며 호스트 관리자·DB와 키를 함께 장악한 공격자에 대한 발행자 서명이 아니다. nonce 소비·receipt·replay는 원자적이다. 키는 같은 전용 0600 DB에 있고 새 키로 과거 중복 범위를 초기화하는 API가 없다. 삭제 후에는 비공개 claim commitment와 등록 tombstone만 인스턴스 폐기까지 보존한다. 호스트/백업 전체 삭제·다중 호스트 복제는 별도다.
+
+H2b 검증: 합성 18개에 별도 프로세스 동시 접수, transaction 도중 SIGKILL 후 rollback/재접수, 응답 유실/재시작, 취소/만료/구 revision 결과 거부, 무결성/설정/누락 schema 거부, 기한 삭제와 원문 미보존을 포함한다. 실제 cryptographic verifier·Chrome 연결은 H2c에서 검증한다. 기존 HTTP·application DB schema 4·금고·M0/H1 입력은 변경하지 않는다. CI 기존 exam-evidence glob이 새 검사를 포함한다.
