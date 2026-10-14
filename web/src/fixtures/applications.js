@@ -15,6 +15,8 @@ const hash = (tag) => '0x' + tag.repeat(32).slice(0, 64);
 const LEARNER = '0x' + '7a'.repeat(20);
 const APPLICATION_ID = hash('31');
 const POLICY_HASH = hash('a1');
+/** 선택 경로가 있는 반. fixtures/policy.js 의 ALTERNATIVE_POLICY 와 같은 값 */
+const ALT_POLICY_HASH = hash('b2');
 
 /** APPLICATION_ONLY 단계 공통 */
 const base = (state, extra = {}) => ({
@@ -90,6 +92,15 @@ export const SCENARIOS = Object.freeze({
   stage3: { label: '3단계 — 최종 동의 저장', items: [AT_CONSENTED], delayMs: 200, runtimeReady: true },
   stage4: { label: '4단계 — 예치 준비', items: [AT_FUNDING], delayMs: 200, runtimeReady: true },
   stage5: { label: '5단계 — 예치 확인 (완료)', items: [AT_ENROLLED], delayMs: 200, runtimeReady: true },
+  // 같은 화면에 다른 반의 정책을 넣어 본다. 화면 코드는 그대로고 정책만
+  // 바뀐다 — 조건의 개수도 종류도 묶이는 방식도 반이 정한다.
+  // 이 반은 환급받는 길이 둘이고 수강생이 미리 고르지 않는다.
+  altPath: {
+    label: '다른 반 — 선택 경로가 있는 정책',
+    items: [{ ...AT_CONSENTED, policyHash: ALT_POLICY_HASH }],
+    delayMs: 200,
+    runtimeReady: true,
+  },
   empty: { label: '신청 없음', items: [], delayMs: 200 },
   slow: { label: '느린 응답', items: [AT_ENROLLED], delayMs: 2400 },
   authError: { label: '로그인 필요', items: [AT_ENROLLED], delayMs: 200, failWith: 'AUTH_REQUIRED' },

@@ -9,7 +9,7 @@
 
 import { AdapterError, checkApplicationView, checkPolicyView } from './contract.js';
 import { SCENARIOS, DEFAULT_SCENARIO } from '../fixtures/applications.js';
-import { SYNTHETIC_POLICY } from '../fixtures/policy.js';
+import { POLICIES } from '../fixtures/policy.js';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -75,12 +75,15 @@ export function createSyntheticAdapter({ scenario = DEFAULT_SCENARIO, validate =
     // 참가자가 그 조건을 충족했는지는 말하지 않는다 — 그 판정은 아직 제품에 없다.
     async getPolicy(policyHash) {
       await settle();
-      if (policyHash !== SYNTHETIC_POLICY.policyHash) throw new AdapterError('API_REQUEST_FAILED');
+      // 반마다 정책이 다르다. 신청이 가리키는 해시로 찾는다 — 화면이 반을
+      // 고르는 것이 아니라, 그 신청에 묶인 정책을 그대로 보여준다.
+      const policy = POLICIES[policyHash];
+      if (!policy) throw new AdapterError('API_REQUEST_FAILED');
       if (validate) {
-        const problems = checkPolicyView(SYNTHETIC_POLICY);
+        const problems = checkPolicyView(policy);
         if (problems.length > 0) throw new Error(`정책 fixture 가 계약과 다르다: ${problems.join(' / ')}`);
       }
-      return SYNTHETIC_POLICY;
+      return policy;
     },
   };
 }

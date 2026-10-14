@@ -351,6 +351,84 @@ h3 {
 }
 .cond-item + .cond-item { border-top: 1px solid var(--line-soft); }
 .cond-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* 그 조건을 무엇으로 확인하는가. 경로마다 필요 자료가 다른 것이 요지다 */
+.cond-ev {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px;
+}
+/* 선택 경로 — 그중 하나만 충족하면 된다 */
+.cond-group { display: grid; gap: 0; }
+.cond-path {
+  margin: 0; padding: 7px 0 2px; font-size: 12px; font-weight: 800;
+  color: var(--navy); letter-spacing: -0.2px;
+}
+.cond-or {
+  text-align: center; margin: 0; padding: 9px 0; font-size: 12px; font-weight: 800;
+  color: var(--accent); letter-spacing: 1px;
+  border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft);
+}
+.cond-none { margin: 0; padding: 10px 0; font-size: 13px; color: var(--muted); }
+
+/* 환급률 구간 — 고르는 장치가 아니라 읽을 구간을 바꾸는 것이다.
+   라디오·체크 모양을 쓰지 않는 이유다 */
+/* 합성 배너 안의 반 전환. 참가자 제품에는 없을 자리라 여기에만 둔다 */
+.scenario-swap {
+  font: inherit; font-size: 12px; font-weight: 700;
+  color: var(--accent); background: transparent;
+  border: 1px solid var(--accent); border-radius: 999px;
+  padding: 2px 10px; margin-left: 6px; cursor: pointer;
+}
+.scenario-swap:hover { background: var(--accent-soft); }
+
+.tier-help { margin: 8px 0 0; }
+.tier-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 9px 0 0; }
+.tier-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 13px; font: inherit; font-size: 13px; font-weight: 800;
+  color: var(--muted); background: var(--card);
+  border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
+}
+.tier-tab:hover { border-color: var(--accent); color: var(--fg); }
+.tier-rate { font-variant-numeric: tabular-nums; }
+.tier-tab[aria-selected="true"] {
+  background: var(--navy); border-color: var(--navy); color: var(--accent-ink);
+}
+/* 집행하지 않는 구간도 숨기지 않는다. 안내문에 있는 것을 화면이 빠뜨리면
+   참가자가 원래 그 구간뿐인 줄 안다 */
+.tier-tab[data-supported="no"] { border-style: dashed; }
+/* 받을 금액의 내역. 합계 하나만 적으면 광고 금액과 실수령의 차이가 안 보인다 */
+.pay-rate {
+  font-size: 11px; font-weight: 800; color: var(--accent);
+  background: var(--accent-soft); border-radius: 999px; padding: 2px 9px;
+}
+.pay-table { margin: 8px 0 0; display: grid; gap: 0; }
+.pay-line {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 7px 0; font-size: 13.5px; border-bottom: 1px solid var(--line-soft);
+}
+.pay-line > span:first-child { min-width: 0; }
+.pay-num { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; }
+.pay-line.minus { color: var(--muted); }
+.pay-line.net {
+  border-bottom: none; border-top: 2px solid var(--line);
+  padding-top: 10px; font-size: 17px; font-weight: 800;
+}
+.pay-line.net .pay-num { color: var(--accent); font-size: 21px; letter-spacing: -0.5px; }
+.pay-warn {
+  margin-left: 6px; font-size: 10.5px; font-weight: 800;
+  color: var(--warn-tag-fg); background: var(--warn-tag-bg);
+  border-radius: 4px; padding: 1px 6px;
+}
+.pay-token { margin-top: 9px; }
+
+/* 집행 범위 밖 구간은 테두리를 점선으로 바꿔 한눈에 구분한다 */
+.cond-wrap[data-out="yes"] { border-style: dashed; }
+.cond-out {
+  margin: 10px 0 0; padding: 11px 13px;
+  background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: var(--radius);
+}
+.cond-out strong { display: block; font-size: 13px; color: var(--warn-tag-fg); }
+.cond-out p { margin: 5px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--warn-tag-fg); }
 /* 값이 아니라 '아직 모른다'는 사실을 적는 자리. 판정된 것처럼 보이면 안 되므로
    초록·빨강을 쓰지 않고 점선 테두리로 비어 있음을 드러낸다 */
 .cond-chk {

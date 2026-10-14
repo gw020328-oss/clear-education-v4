@@ -63,6 +63,52 @@ export const isAddress = (value) => typeof value === 'string' && /^0x[0-9a-fA-F]
  * 화면이 없는 필드를 추측하거나 미래 상태를 만들어 쓰지 않도록 여기서 먼저 막는다.
  * @returns {string[]} 문제 목록. 빈 배열이면 통과
  */
+/** 조건을 무엇으로 확인하는가. 경로마다 필요 자료가 달라지는 것이 요지다 */
+const EVIDENCE_KINDS = Object.freeze(['EXAM', 'LEARNING', 'DOCUMENT']);
+
+/**
+ * 조건 그룹의 모양만 본다.
+ *
+ * 빈 그룹이나 빈 조건을 통과시키면 화면이 '충족할 것이 없는 경로'를 그리고,
+ * 참가자는 아무것도 안 해도 되는 것처럼 읽는다.
+ */
+function checkConditionGroups(groups) {
+  const problems = [];
+  if (!Array.isArray(groups) || groups.length === 0) {
+    return ['policy.conditionGroups 가 비었다'];
+  }
+  const seen = new Set();
+  groups.forEach((group, gi) => {
+    const at = `policy.conditionGroups[${gi}]`;
+    if (group === null || typeof group !== 'object') { problems.push(`${at} 가 객체가 아니다`); return; }
+    if (typeof group.id !== 'string' || group.id === '') problems.push(`${at}.id 가 없다`);
+    if (seen.has(group.id)) problems.push(`${at}.id 가 중복이다`);
+    seen.add(group.id);
+    if (!Array.isArray(group.items) || group.items.length === 0) {
+      problems.push(`${at}.items 가 비었다`);
+      return;
+    }
+    group.items.forEach((item, ii) => {
+      const where = `${at}.items[${ii}]`;
+      if (item === null || typeof item !== 'object') { problems.push(`${where} 가 객체가 아니다`); return; }
+      for (const field of ['label', 'value']) {
+        if (typeof item[field] !== 'string' || item[field] === '') problems.push(`${where}.${field} 가 없다`);
+      }
+      if (item.evidence !== undefined && item.evidence !== null
+        && !EVIDENCE_KINDS.includes(item.evidence)) {
+        problems.push(`${where}.evidence 가 ${EVIDENCE_KINDS.join('/')} 가 아니다`);
+      }
+    });
+  });
+  // 경로가 여럿이면 어느 경로인지 알아볼 이름이 있어야 한다.
+  if (groups.length > 1) {
+    groups.forEach((group, gi) => {
+      if (!group?.label) problems.push(`policy.conditionGroups[${gi}].label 이 없다 — 경로가 여럿이다`);
+    });
+  }
+  return problems;
+}
+
 export function checkPolicyView(compiled) {
   const problems = [];
   if (compiled === null || typeof compiled !== 'object') return ['정책이 객체가 아니다'];
@@ -87,6 +133,35 @@ export function checkPolicyView(compiled) {
   }
   // 금액은 문자열이다. 부동소수점으로 다루지 않는다.
   if (typeof p.amount !== 'string') problems.push('policy.amount 가 문자열이 아니다');
+
+  // conditionGroups 는 선택 필드다. 그룹 안은 AND, 그룹끼리는 OR 이고,
+  // 반마다 환급받는 길이 여럿일 수 있어서 둔다. 없으면 기존처럼 동작한다.
+  // 있으면 모양만 본다 — 내용(값·문구)은 정책이 정하고 화면은 그대로 그린다.
+  if ('conditionGroups' in p) problems.push(...checkConditionGroups(p.conditionGroups));
+
+  // conditionTiers 도 선택 필드다. 환급률 구간이 여럿인 반에서 쓴다.
+  // 집행하는 구간이 정확히 하나여야 한다 — 정책의 amount 가 하나뿐이라
+  // 집행 구간이 둘이면 어느 금액을 지급하는지 화면이 말할 수 없다.
+  if ('conditionTiers' in p) {
+    const tiers = p.conditionTiers;
+    if (!Array.isArray(tiers) || tiers.length === 0) {
+      problems.push('policy.conditionTiers 가 비었다');
+    } else {
+      const ids = new Set();
+      tiers.forEach((tier, ti) => {
+        const at = `policy.conditionTiers[${ti}]`;
+        if (tier === null || typeof tier !== 'object') { problems.push(`${at} 가 객체가 아니다`); return; }
+        if (typeof tier.id !== 'string' || tier.id === '') problems.push(`${at}.id 가 없다`);
+        if (ids.has(tier.id)) problems.push(`${at}.id 가 중복이다`);
+        ids.add(tier.id);
+        if (typeof tier.rate !== 'string' || tier.rate === '') problems.push(`${at}.rate 가 없다`);
+        if (typeof tier.supported !== 'boolean') problems.push(`${at}.supported 가 boolean 이 아니다`);
+        problems.push(...checkConditionGroups(tier.groups).map((m) => m.replace('policy.conditionGroups', `${at}.groups`)));
+      });
+      const supported = tiers.filter((t) => t?.supported === true).length;
+      if (supported !== 1) problems.push(`집행하는 구간이 ${supported}개다 — 정확히 하나여야 한다`);
+    }
+  }
 
   // 컴파일러가 강제하는 기간 순서를 화면에서도 확인한다
   const n = (v) => BigInt(v);

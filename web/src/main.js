@@ -38,16 +38,43 @@ function parseRoute() {
 }
 
 /**
- * 화면 위에는 고르는 칸을 두지 않는다. 참가자가 보는 제품에는 없을 장치이고,
- * 검토용 전환이 화면을 복잡하게 만든다. 다른 상황은 주소의 ?scenario= 로 본다.
- * 지금 어떤 합성 상황인지는 한 줄로만 알린다.
+ * 지금 어떤 합성 상황인지 알리고, 비교할 반을 바꾼다.
+ *
+ * 이 줄은 합성 데모 배너 영역에 있다. 참가자가 보는 제품에는 없을 자리다.
+ * 참가자 화면 안에 반 고르는 칸을 두면, 제품이 반을 고르게 하는 것처럼
+ * 보인다. 실제로 수강생은 자기가 신청한 반의 정책을 볼 뿐이다.
+ *
+ * 그래서 전환 장치는 배너에만 둔다. 같은 화면 코드가 다른 정책을 받아
+ * 다르게 그려지는 것을 발표에서 클릭 한 번으로 보이기 위한 것이다.
  */
+const COMPARE = Object.freeze([
+  { key: 'stage3', label: '반 A — 조건 둘, 단일 환급률' },
+  { key: 'altPath', label: '반 B — 환급률 구간 다섯, 선택 경로' },
+]);
+
 function scenarioNote() {
   const info = adapter.describe();
+  const current = currentScenario();
+  const other = COMPARE.find((c) => c.key !== current);
+  const known = COMPARE.some((c) => c.key === current);
+
+  const goTo = (key) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('scenario', key);
+    url.hash = '#/applications';
+    window.location.href = url.href;
+  };
+
   return el('p.scenario-note', {}, [
     el('span.scenario-tag', { text: '합성 상황' }),
     el('span', { text: info.label }),
-    el('span.muted', { text: ' · 다른 상황은 주소에 ?scenario= 를 붙여 봅니다 (web/README.ko.md)' }),
+    known && other
+      ? el('button.scenario-swap', {
+        type: 'button',
+        title: '같은 화면에 다른 반의 정책을 넣어 봅니다',
+        onClick: () => goTo(other.key),
+      }, [el('span', { text: `${other.label} 로 바꿔 보기` })])
+      : el('span.muted', { text: ' · 다른 상황은 주소에 ?scenario= 를 붙여 봅니다 (web/README.ko.md)' }),
   ]);
 }
 
