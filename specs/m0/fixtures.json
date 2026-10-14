@@ -1357,6 +1357,18 @@
               0.3,
               0.4
             ]
+          },
+          {
+            "fieldId": "exam-date",
+            "value": "2029-08-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.5,
+              0.6,
+              0.6
+            ]
           }
         ],
         "outcome": "PRECHECK_REQUIREMENTS_MET",
@@ -1404,6 +1416,18 @@
             "readStatus": "NOT_VISIBLE",
             "page": null,
             "bbox": null
+          },
+          {
+            "fieldId": "exam-date",
+            "value": "2029-08-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.5,
+              0.6,
+              0.6
+            ]
           }
         ],
         "outcome": "NEEDS_SUPPLEMENT",
@@ -1454,6 +1478,18 @@
               0.2,
               0.3,
               0.4
+            ]
+          },
+          {
+            "fieldId": "exam-date",
+            "value": "2029-08-01",
+            "readStatus": "READABLE",
+            "page": 1,
+            "bbox": [
+              0.1,
+              0.5,
+              0.6,
+              0.6
             ]
           }
         ],
@@ -3677,6 +3713,28 @@
       ],
       "value": "other-op",
       "error": "REPLY"
+    },
+    {
+      "id": "precheck-missing-required-field",
+      "base": "vision-readable-held",
+      "path": [
+        "observations"
+      ],
+      "value": [
+        {
+          "fieldId": "score",
+          "value": "745",
+          "readStatus": "READABLE",
+          "page": 1,
+          "bbox": [
+            0.1,
+            0.2,
+            0.3,
+            0.4
+          ]
+        }
+      ],
+      "error": "OBSERVATION"
     }
   ]
 }

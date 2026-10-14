@@ -194,6 +194,11 @@ function check({type, value: v}) {
       ensure(o.readStatus === 'READABLE' ? o.value !== null && o.page !== null && o.bbox !== null : o.value === null, 'OBSERVATION', o.fieldId);
       if (o.bbox) ensure(o.bbox[0] < o.bbox[2] && o.bbox[1] < o.bbox[3], 'OBSERVATION', o.fieldId);
     }
+    unique(v.observations.map(o => o.fieldId), 'observation fields');
+    if (v.outcome === 'PRECHECK_REQUIREMENTS_MET') {
+      const requirement = valueOf('siwon-questions').body.requirements.find(r => r.requirementId === v.requirementId);
+      ensure(requirement && requirement.requiredFields.every(field => v.observations.some(o => o.fieldId === field && o.readStatus === 'READABLE')), 'OBSERVATION', v.requirementId);
+    }
     ensure(v.current || v.reasons.includes('STALE_RESULT'), 'JOB', v.jobId);
     if (v.jobState !== 'SUCCEEDED') ensure(v.outcome === 'UNDETERMINED', 'JOB', v.jobId);
   }
