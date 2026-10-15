@@ -1,7 +1,7 @@
 {
   "version": "clear-mvp-document-http-verification.1",
   "date": "2026-10-15",
-  "status": "IMPLEMENTED_SYNTHETIC_DRAFT_REVIEW",
+  "status": "FINAL_SUBSTANTIVE_REVIEW_CI_PENDING",
   "issue": 62,
   "parentIssue": 55,
   "baseDevelop": "0590fd0728ce3a4525129cbad753c3ba9b2f781b",
@@ -17,7 +17,7 @@
   "requestedContractSetting": "GPT-6.1 Sol / High",
   "requestedNextImplementationSetting": "GPT-6.1 Sol / Medium",
   "runtimeModelIdIndependentlyVerified": false,
-  "newPrMergeAuthorized": false,
+  "newPrMergeAuthorized": true,
   "imageDecodeReady": false,
   "realDataAllowed": false,
   "realConsentImplemented": false,
@@ -38,8 +38,8 @@
   "rawDiskPersistence": false,
   "boundPolicyHash": "0xbcbb9e96ec6e27ebdc9784c447e9ff5d8026f8a8384df87331e92471b3ed777e",
   "tests": {
-    "combinedRelated": 309,
-    "newC2Http": 21,
+    "combinedRelated": 312,
+    "newC2Http": 24,
     "newC2HttpsIncluded": 2,
     "newSharedDeleteTransportIncluded": 1,
     "existingDevelopment": 33,
@@ -47,11 +47,12 @@
     "workspaceOriginalLegacyFiles": 191,
     "dependencies": "PASS",
     "diff": "PASS",
-    "publicHistory": "PENDING_FINAL_HEAD",
+    "publicHistory": "PASS_BEFORE_FINAL_REVIEW_PUSH",
     "remoteCi": "SEE_PR63_FINAL_HEAD_CHECKS",
     "startupCleanupIncluded": true,
     "expiryAndHttpsFocusedAfterSourceFix": 3,
-    "latestCodeRelated": "309_OF_309_PASS"
+    "latestCodeRelated": "312_OF_312_PASS",
+    "rawExpiryObserverRegressions": 3
   },
   "requestedImplementationSetting": "GPT-6.1 Sol / Medium",
   "priorPr61AdditionalMac": {
@@ -70,5 +71,7 @@
   ],
   "lifetimeFixCommit": "24e75f2f467805162aac814c921f1c1c50bfd802",
   "publicSourceExpiryFixCommit": "43ffe3243e70d6db10213cc5fe82fab1d0e897a9",
-  "readinessFixCommit": "f5873062293fef4a4c3a1decb9fd6ada3701a71d"
+  "readinessFixCommit": "f5873062293fef4a4c3a1decb9fd6ada3701a71d",
+  "requestedFinalReviewSetting": "GPT-6 Astra / High",
+  "finalReviewFinding": "RAW_TTL_DID_NOT_ABORT_OBSERVER_COPIES_REPRODUCED_AND_FIXED"
 }

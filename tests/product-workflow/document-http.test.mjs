@@ -97,6 +97,20 @@ test('TTL and clock reversal cannot expose or run expired/future raw',async t=>{
  f.setTime(sub.expiresAt);assert.equal((await f.request(path(app)+'/submissions/'+sub.submissionId)).body.rawAvailable,false);assert.equal((await start(f,app,sub)).body.code,'DOC_RAW_UNAVAILABLE');
 });
 
+for(const trigger of ['submission-read','run-read','timer'])test('raw expiry interrupts an in-flight observer via '+trigger,async t=>{
+ let copies,signal;const f=await documentHttpFixture(t,{timeoutMs:30000,adapter:{execution:'MOCK',modelVersion:'mock-document.1',observe(request,options){copies=request.assets;signal=options.signal;return new Promise(()=>{});}}});
+ const app=await f.create();await f.acknowledge(app);if(trigger==='timer')t.mock.timers.enable({apis:['setTimeout']});
+ const sub=(await f.submit(app,'image')).body.result;if(trigger==='timer')t.mock.timers.tick(1799000);
+ f.setTime(sub.expiresAt-1);const run=await start(f,app,sub,'VISION');assert.equal(run.status,200);assert.ok(copies.some(x=>x.bytes.some(b=>b!==0)));
+ f.setTime(sub.expiresAt);
+ if(trigger==='timer')t.mock.timers.tick(1000);
+ else if(trigger==='run-read')await f.request(path(app)+'/review-runs/'+run.body.result.runId);
+ else assert.equal((await f.request(path(app)+'/submissions/'+sub.submissionId)).body.rawAvailable,false);
+ assert.equal(signal.aborted,true);await f.documents.idle();assert.ok(copies.every(x=>x.bytes.every(b=>b===0)));
+ const result=(await f.request(path(app)+'/review-runs/'+run.body.result.runId)).body;assert.equal(result.current,false);assert.equal(result.summary,null);
+ if(trigger==='timer')t.mock.timers.reset();
+});
+
 test('two-DB crash markers recover an existing receipt and interrupt an unstarted reservation without observation',async t=>{
  let calls=0;const base=(await import('../../specs/m3/document-http-example.mjs')).documentHttpExample().adapter;
  const f=await documentHttpFixture(t,{adapter:{...base,observe(request){calls++;return base.observe(request);}}}),app=await f.create();await f.acknowledge(app);

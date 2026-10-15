@@ -31,7 +31,7 @@ API version `clear-mvp-document-http.1`, capability는 `documentHttpVersion`, `s
 | POST `/review-runs` | expectedWorkflowRevision, submissionId, expectedSubmissionRevision, 허용 method(CODE/TEXT_AI/VISION). 최신 resolver에서 context/attempt/runId 생성, 새 작업은 새 key. body 결과/pin 거부 |
 | GET `/review-runs/:runId` | 현재 run/보류 이유·최소 ReviewSummary. old receipt는 immutable 이력이며 current=false일 때 현재 결과를 채우지 않음 |
 | POST `/review-runs/:runId/cancel` | 빈 body. 본인·CSRF. RUNNING만 취소, 이미 수락한 receipt를 취소로 재작성하지 않음 |
-| GET `/document-operations/:operationId` 및 `/document-operations/:kind/:key` | actor/route/key 복구. kind는 document-agreement/submissions/review-runs/cancel의 고정 allowlist. POST 자동 재호출·새 key 생성 없음 |
+| GET `/document-operations/:operationId` 및 `/document-operations/:kind/:key` | actor/route/key 복구. kind는 document-agreement/submissions/review-runs/cancel/delete의 고정 allowlist. POST 자동 재호출·새 key 생성 없음 |
 | DELETE `/submissions/:submissionId/raw` | 본인·CSRF 및 멱등 key. 보유 메모리 폐기/작업 중단. 제출/receipt/중복 방지 tombstone은 보존하며 다음 수락을 차단 |
 
 정확한 JSON keys는 document-http-service의 exactKeys가 정본이며, 실행 합성 request 파일 document-http-fixtures.json과 검증 HTTPS 응답 document-http-responses.json을 같은 버전으로 제공한다. path/UUID를 body에서 대체하거나 임의 파일 경로를 받지 않는다. 문서 파일 다운로드/공개 blob·운영자 개인파일 조회 API는 제공하지 않는다.
@@ -85,3 +85,5 @@ C2 실행은 새 합성 환경을 명시 생성하는 별도 개발 진입점을
 공개 원문 만료 보완 `43ffe3243e70d6db10213cc5fe82fab1d0e897a9`: C2 archive 시작/인증된 source 조회에서 기존 purge를 호출해 만료 artifact bytes를 논리 정리한다. 원문 만료 시 요약은 현재로 노출하지 않고 metadata/버전 이력은 보존한다. 이 보완은 학생 raw의 디스크 저장을 추가하지 않으며 SQLite/디스크 잔재 완전 삭제를 보장하지 않는다. 만료/이력 회귀와 HTTPS·시작 정리3개를 재검사했다.
 
 준비 표시 보완 `f5873062293fef4a4c3a1decb9fd6ada3701a71d`: 정책/원문이 준비되지 않은 이력 응답은 syntheticDocumentSubmissionReady=false이며 summary/current 차단과 일치한다. 최신 코드의 관련309/309를 다시 확인했다. 최종 원격 CI는 정확한 PR63 head의 Checks/본문·이슈55/62를 정본으로 한다.
+
+최종 실질 리뷰 보완: 원본 TTL 만료는 접수 캐시뿐 아니라 같은 submission의 진행 중 worker/observer도 AbortSignal로 중단해 소유 복사본을 정리한다. 인증된 resolver의 접근 시 만료 확인과 타이머 경로가 같은 wipe를 사용한다. 브라우저 연결 지침은 [단계별 복붙 문서](MVP_FRONTEND_CONNECTION_PROMPT.ko.md)를 따른다.

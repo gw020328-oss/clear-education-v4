@@ -1,6 +1,8 @@
 <!-- 최신 C2 구현 절이 아래의 과거 계약/미구현 상태보다 우선한다. -->
 # MVP HTTP 연결·서준형 프론트 인계
 
+**최신 리뷰/연결 지침:** [Claude Code 복붙용 단계별 프론트 지침](MVP_FRONTEND_CONNECTION_PROMPT.ko.md). PR63 최종 실질 리뷰에서 TTL 만료가 진행 중 관측의 복사본까지 중단하도록 보완했다. 아래 Draft/자동 병합 불가 표기는 이전 권한의 기록이며, 이번에는 사용자 승인 아래 최종 head CI/보호 규칙 확인 후 develop 정상 병합한다. 실제 병합 SHA는 후속 최신 병합 기록을 따른다.
+
 버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **원문 PR59·C1 PR61 develop 병합 완료 / C2 PR63 합성 구현·Draft**.
 C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 쓰기 transaction 내부 세션 재검사 코드 `922ada6fe45dde53135ece116e90531aa0b662a9`, 최초 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`에서 출발했으며, PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 develop merge `2bb6d291b77ba397f8544995557db78b3ce54724`를 정상 merge로 포함했다. 병합 완료 [PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
 현재 기반 develop `0590fd0728ce3a4525129cbad753c3ba9b2f781b`(#56/#58/#57/#59/#61 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 병합 완료 [PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
@@ -338,3 +340,9 @@ Claude Code 후속: 최신 origin/develop·PR63의 exact head/Checks 및 이 문
 공개 원문 만료 보완 `43ffe3243e70d6db10213cc5fe82fab1d0e897a9`: C2 archive 시작/인증된 source 조회에서 기존 purge를 호출해 만료 artifact bytes를 논리 정리한다. 원문 만료 시 요약은 현재로 노출하지 않고 metadata/버전 이력은 보존한다. 이 보완은 학생 raw의 디스크 저장을 추가하지 않으며 SQLite/디스크 잔재 완전 삭제를 보장하지 않는다. 만료/이력 회귀와 HTTPS·시작 정리3개를 재검사했다.
 
 준비 표시 보완 `f5873062293fef4a4c3a1decb9fd6ada3701a71d`: 정책/원문이 준비되지 않은 이력 응답은 syntheticDocumentSubmissionReady=false이며 summary/current 차단과 일치한다. 최신 코드의 관련309/309를 다시 확인했다. 최종 원격 CI는 정확한 PR63 head의 Checks/본문·이슈55/62를 정본으로 한다.
+
+## PR63 최종 실질 리뷰 보완
+
+요청 설정 GPT-6 Astra / High. 런타임 모델 ID는 독립 확인하지 못했다. 접수 원본의 TTL 만료가 캐시만 지우고 진행 중 observer 복사본을 최대 worker timeout까지 남기는 문제를 새 합성 시험에서 재현했다. wipe가 해당 worker AbortSignal도 중단하며, 인증된 resolver 접근과 타이머가 같은 만료 정리를 사용한다. 자료 GET·run GET·타이머 세 경로에서 observer 중단/소유 bytes zero·늦은 결과 비수락을 검사한다. raw 1800초 상한과 JS/OS 잔재 보장 제외는 유지한다. 최종 검증/정확 head·병합 근거는 PR63 기록을 따른다.
+
+최종 리뷰 수정 뒤 관련312/312(새 TTL3개 포함), diff 검사가 통과했다. 개발환경33/33·원본191개/의존성의 기존 성공은 해당 코드/설정 변경이 없어 근거 없이 반복하지 않았다. 최신 push/PR CI는 변경 head에서 새로 확인한다. 프론트 복붙 문서는 PR60 리뷰의 정책·UX·레퍼런스를 반영하며 web/·PR60의 코드/상태는 변경하지 않는다.

@@ -53,14 +53,18 @@ export function createDocumentWorkflowService({directory,authentication,student,
  }catch(e){ledger?.close();archive?.close();store.close();throw e;}
  const actor=(context,write=false)=>{check(!closed,'MVP_CLOSED');const s=authentication.authorizeWorkflow(context,write);check(s.role==='participant','FORBIDDEN');return s;};
  const head=app=>db.prepare('SELECT * FROM heads WHERE app=?').get(app);
- function wipe(sub){const value=raw.get(sub);if(value){clearTimeout(value.timer);for(const f of value.files)f.bytes.fill(0);value.posts=[];raw.delete(sub);}}
+ function wipe(sub){const value=raw.get(sub);if(value){clearTimeout(value.timer);for(const f of value.files)f.bytes.fill(0);value.posts=[];raw.delete(sub);
+   // Expiry must also release worker/observer copies, not just the upload cache.
+   for(const work of active.values())if(work.submission===sub)work.controller.abort();
+  }}
  function stopApp(app,supersede=false){for(const slot of slots)if(slot.app===app)slot.controller.abort();for(const [run,value]of active)if(value.app===app){value.controller.abort();if(!supersede)try{ledger.cancel(run);}catch{}}for(const s of db.prepare('SELECT id FROM submissions WHERE app=?').all(app))wipe(s.id);}
  function sourceCurrent(){archive.purgeExpired();const b=archive.getBundle(configuration.sourceBundleHash);for(const entry of b.entries){const s=archive.getSnapshot(entry.snapshotHash);for(const a of s.artifacts)archive.getArtifact(entry.snapshotHash,a.artifactId);}return b;}
  function resolve(context,app,write=false){
   const s=actor(context,write),a=student.get(context,app),c1=student.preview(context,app); // ownership before configuration/clock details
+  const t=clock();for(const [sub,value]of raw)if(t>=value.expiresAt)wipe(sub);
   check(a.state==='ACKNOWLEDGED_SYNTHETIC'&&a.policyCurrent&&a.acknowledgment?.current,'DOC_CONFIGURATION_REQUIRED');
   check(a.policyHash===policy.compiled.policyHash,'DOC_CONFIGURATION_REQUIRED');const b=sourceCurrent(),review=createReviewPreview(policy,c1.binding);
-  check(review.status==='READY_SYNTHETIC','DOC_CONFIGURATION_REQUIRED');const t=clock(),fingerprint=digest('CLEAR-DOC-CURRENT.1',{c1Revision:a.workflowRevision,c1Ack:a.acknowledgment.acknowledgmentHash,
+  check(review.status==='READY_SYNTHETIC','DOC_CONFIGURATION_REQUIRED');const fingerprint=digest('CLEAR-DOC-CURRENT.1',{c1Revision:a.workflowRevision,c1Ack:a.acknowledgment.acknowledgmentHash,
    binding:c1.binding,manifest:policy.manifestHash,preview:review.previewHash,source:configuration.sourceBundleHash});
   transaction(()=>{const h=head(app);if(h){check(t>=h.updated,'MVP_CLOCK');if(h.fingerprint!==fingerprint){
     db.prepare('UPDATE heads SET revision=revision+1,fingerprint=?,ack=NULL,submission=NULL,updated=? WHERE app=?').run(fingerprint,t,app);stopApp(app,true);ledger.invalidate(app);
@@ -144,7 +148,7 @@ export function createDocumentWorkflowService({directory,authentication,student,
     const sub=id('submission'),n=h.submission_revision+1,submission={submissionId:sub,revision:n,routeRevision:n,posts:structuredClone(fixture.posts)},manifest=createDocumentManifest(submission,files),t=clock();
     stopApp(app,true);ledger.invalidate(app);db.prepare('INSERT INTO submissions VALUES(?,?,?,?,?,?,?,?,?,?,?,?,0)').run(sub,app,s.wallet,n,h.revision+1,h.fingerprint,h.ack,fixture.fixtureId,canonical(manifest),submissionHash(submission),t,t+1800);
     db.prepare('UPDATE heads SET revision=revision+1,submission=?,submission_revision=?,updated=? WHERE app=?').run(sub,n,t,app);
-    const value={posts:submission.posts,files,wallet:s.wallet,timer:setTimeout(()=>wipe(sub),1800000)};value.timer.unref();raw.set(sub,value);adopted=true;adoptedId=sub;return sub;
+    const value={posts:submission.posts,files,wallet:s.wallet,expiresAt:t+1800,timer:setTimeout(()=>wipe(sub),1800000)};value.timer.unref();raw.set(sub,value);adopted=true;adoptedId=sub;return sub;
    });}catch(e){if(adoptedId)wipe(adoptedId);throw e;}finally{if(!adopted)for(const f of files)f.bytes.fill(0);}},
   submissions(context,app){const s=actor(context),v=currentOrInvalidate(context,app);return db.prepare('SELECT * FROM submissions WHERE app=? AND actor=? ORDER BY revision DESC LIMIT 50').all(app,s.wallet).map(r=>submissionView(r,v));},
   submission(context,app,sub){const s=actor(context);student.get(context,app);const row=loadSubmission(app,sub,s);return submissionView(row,currentOrInvalidate(context,app));},
