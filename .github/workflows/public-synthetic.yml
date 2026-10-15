@@ -99,7 +99,7 @@ jobs:
       - name: Fresh checkout integrity regression
         run: ./tools/node --test tests/workspace-integrity.test.mjs
       - name: Managed storage and initialization regression (synthetic only)
-        run: ./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs tests/mac-collector/recovery.test.mjs
+        run: ./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs tests/mac-collector/recovery.test.mjs tests/mac-collector/synthetic.test.mjs
 
   mac-recovery:
     name: Mac synthetic recovery

@@ -43,3 +43,5 @@
 portable8 + 실제 Chrome3의 집중11개와 기존 강제 종료/복구·패키징을 포함한 전체 Mac62개가 모두 통과했다(실패/skip0). 전체 실행은 약37.8초였으며 반복 성공을 원인 증거로 사용하지 않는다. 최종head 원격CI 결과는 PR에 기록한다. 새 파일은 기존 `tests/mac-collector/*.test.mjs` glob에 포함되므로 Mac CI가 자동 실행한다. portable 시험은 다른 플랫폼에서 단독 실행할 수 있고, 실제 Chrome3개는 darwin/arm64 밖에서는 skip이며 그 skip을 실제 검증으로 세지 않는다. 추가 root CI 편입은 공통 담당 소유다.
 
 Moodle #41→#45→#48→#52의 자체 평가/원천 코드와 이 변경은 독립적이다. 실제 로컬 Moodle15+6 성공은 그대로 보존한다. 기관/실신원·장기이력·운영 HTTPS·제품 자격/지급 완료로 승격하지 않는다. 정책OPEN,400% 자동자격/지급 금지,500% 제외,grant/outboxHOLD·독립claimNO_GO·원천신뢰 gate를 유지한다. 관련 PR 최종 병합은 공통 담당의 최신 develop/전용시험/CI/리뷰 판단에 따른다.
+
+공통 최종 리뷰 후 CI 편입: portable synthetic.test.mjs 8개를 Linux Public synthetic tests의 managed-storage 단계에도 포함했다. 실제 Chrome3개는 기존 Mac glob에서 실행하며, Linux의 skip을 실제 Chrome 성공으로 세지 않는다.
