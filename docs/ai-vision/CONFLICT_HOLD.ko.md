@@ -19,7 +19,7 @@
 
 `proposePolicy`의 wrapper 버전은 `ai-policy-proposal.2`다. OPEN 질문의 rule/requirement ID, rule.questionIds, threshold/days 범위를 결정적으로 대조한다. 관련 Rule의 threshold/days를 null로 만들고 OFFICIAL_OPEN 및 questionIds를 유지한다. 범위를 알 수 없는 질문은 모든 Rule의 값 필드를 보류한다. 모델이 questionIds 연결을 빠뜨려도 명시된 rule/requirement 질문을 보류한다. 모델 실패/거부 시 템플릿에 이미 있는 OPEN 질문도 처리하여 숫자가 fallback으로 복구되지 않는다. 원래 후보와 인용은 `grounds`, 원래 숫자는 `heldRuleFields.observedValues`에 남는다. 운영자 의견을 기록해도 OPEN/null이 풀리지 않는다.
 
-`precheckObservation`은 기존 두 필드 출력과 새 `questions/flags`를 포함한 출력을 모두 검증한다. 관찰 위치·TEXT_AI 인용 일치 검증을 먼저 하고 후처리를 거쳐 `record.observations`에 넣는다. 충돌이 있는데 모델이 CHECKED로 표시해도 NEEDS_REVIEW로 내린다. 대상이 없는 NEEDS_REVIEW/UNREADABLE 등은 전체 보류다. 원문 인용을 포함한 관찰 후보는 wrapper의 `observationEvidence`에 보존한다. `markPrecheckCurrent`는 최신 binding/revision/inputHash/runId와 다르면 current=false와 함께 소비 값을 모두 null로 만들며, 원래 wrapper를 변형하지 않는다.
+`precheckObservation`은 기존 두 필드 출력과 새 `questions/flags`를 포함한 출력을 모두 검증한다. 관찰 위치·TEXT_AI 인용 일치 검증을 먼저 하고 후처리를 거쳐 `record.observations`에 넣는다. 충돌이 있는데 모델이 CHECKED로 표시해도 NEEDS_REVIEW로 내린다. 대상이 없는 NEEDS_REVIEW/UNREADABLE 등은 전체 보류다. 원문 인용을 포함한 관찰 후보는 wrapper의 `observationEvidence`에 보존한다. `markPrecheckCurrent`는 최신 binding/revision/inputHash/runId와 다르면 current=false/NEEDS_REVIEW와 함께 소비 값을 모두 null로 만들며, 원래 wrapper를 변형하지 않는다.
 
 Gemini 평가 연결은 prompt `clear-gemini-eval.3`와 필드 범위가 있는 구조화 질문/flag를 사용한다. `result.fields`는 후처리 값만 반환하고 원래 관찰값/위치는 `fieldReview.provenance`에 남긴다. `fieldReview.publishable/automaticEligibility/paymentAllowed`는 항상 false다. v1 실제 기록 및 v2 지시문만의 mock 결과와 구분한다.
 

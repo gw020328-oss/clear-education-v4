@@ -235,6 +235,9 @@ export function markPrecheckCurrent(record, latestContext) {
   check(keys.every(key => Object.hasOwn(latestContext, key)), 'DOCUMENT_LATEST_CONTEXT');
   const current = record.current && keys.every(key => same(record[key], latestContext[key]));
   const result = { ...structuredClone(record), current };
-  if (!current) result.observations = result.observations.map(field => ({ ...field, value: null }));
+  if (!current) {
+    result.observations = result.observations.map(field => ({ ...field, value: null }));
+    result.reviewStatus = 'NEEDS_REVIEW';
+  }
   validateContract('DocumentPrecheck', result); return freeze(result);
 }
