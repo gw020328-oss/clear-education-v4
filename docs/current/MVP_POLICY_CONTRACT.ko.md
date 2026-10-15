@@ -1,5 +1,7 @@
 # M1 공통 정책·증거 소비 계약
 
+2026-10-15 M2: [경로·증거·금액 후보 평가](MVP_EVALUATOR.ko.md)의 `clear-mvp-evaluation.1`은 M1 계약을 소비하는 별도 순수 합성 모듈이다. 증거 상태·OR·명시 선택·최초 제출·정정/최종성과 금액 후보를 분리하며 실제 자격/지급은 false다. HTTP/DB/금고와 기존 차단 조건을 유지한다.
+
 2026-10-15, `clear-mvp.1` / `clear-mvp-compiler.1`. 기준 develop `21776f53d7660597b94a37c89139316e43eeb673`, 이슈 [#37](https://github.com/gw020328-oss/clear-education-v4/issues/37)·[#38](https://github.com/gw020328-oss/clear-education-v4/issues/38). M0 mock·기존 800점/8000bps 정책·HTTP·DB·동의·금고와 다른 namespace다. 소비자 적합성 검토는 PENDING이며 이 문서 병합만으로 동의를 얻었다고 기록하지 않는다.
 
 목표는 여러 환급반에서 이미 지원하는 규칙을 설정으로 조합하는 모듈이다. YBM형·시원스쿨형은 첫 두 합성 프로필이며 엔진에 브랜드 분기가 없다. 제3 프로필은 700점·14일/8000bps·42 TEST 정액을 설정만 추가해 실행한다. 새 원천·새 연산은 별도 어댑터/버전·시험이 필요하다. 모든 환급 조건을 지원한다는 주장이 아니다.
