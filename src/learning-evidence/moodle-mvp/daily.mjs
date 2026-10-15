@@ -20,7 +20,16 @@ const msValue = value => {
 
 // The synthetic source/export verifier, not a participant or response, supplies
 // trusted pins. This pure function never accepts live evidence or issues grants.
-export function assessMvpDailyLearning(compiled, ruleId, trusted, input, now) {
+const syntheticProfile = { mode: 'SYNTHETIC', dataMode: 'SYNTHETIC', assurance: 'SYNTHETIC_TEST_PIN', binding: 'SYNTHETIC_TEST_PIN',
+  authenticity: 'VERIFIED_SYNTHETIC', subject: 'VERIFIED_SYNTHETIC', semantics: 'VERIFIED_SYNTHETIC', completeness: 'COMPLETE_SYNTHETIC',
+  metricVersion: 'synthetic-metric.1', dateVersion: 'synthetic-finish-kst.1' };
+const localProfile = { mode: 'LOCAL_LAB', dataMode: 'LOCAL_LMS_RECORD', assurance: 'SERVER_BOUNDED_CLIENT_TELEMETRY', binding: 'SOURCE_ACCOUNT_CONTROL_VERIFIED',
+  authenticity: 'LOCAL_API_AUTHENTICATED', subject: 'LOCAL_TEST_ACCOUNT_BOUND', semantics: 'LOCAL_LAB_MEANING', completeness: 'LOCAL_CURRENT_EXPORT_COMPLETE',
+  metricVersion: 'local-clearwatch-effective-ms.1', dateVersion: 'local-clearwatch-finish-kst.1' };
+export const assessMvpDailyLearning = (compiled, ruleId, trusted, input, now) => assessDaily(compiled, ruleId, trusted, input, now, syntheticProfile);
+// Local acquisition and a synthetic demo policy, never a common Evidence grant.
+export const assessLocalLabDailyLearning = (compiled, ruleId, trusted, input, now) => assessDaily(compiled, ruleId, trusted, input, now, localProfile);
+function assessDaily(compiled, ruleId, trusted, input, now, profile) {
   const p = requireMvpPolicy(compiled);
   const rule = p.rules.find(r => r.ruleId === ruleId);
   check(rule && ['DAILY_TIME', 'DAILY_PROGRESS'].includes(rule.predicate), 'LEARNING_RULE_REQUIRED');
@@ -32,7 +41,7 @@ export function assessMvpDailyLearning(compiled, ruleId, trusted, input, now) {
   const req = p.requirements.find(r => r.requirementId === rule.requirementId);
   const period = req.period;
   const base = { evaluatorVersion: DAILY_VERSION, policyHash: compiled.policyHash, ruleHash: compiled.ruleHashes[ruleId],
-    mode: 'SYNTHETIC', productConnected: false, humanAttentionProven: false, paymentAllowed: false };
+    mode: profile.mode, productConnected: false, humanAttentionProven: false, paymentAllowed: false };
   const result = (status, reason, creditedDates = [], missingDates = [], minBps = null) => {
     const observation = { ruleId, ruleHash: compiled.ruleHashes[ruleId],
       status: status === 'ON_HOLD' ? 'UNKNOWN' : status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OBSERVED',
@@ -44,19 +53,20 @@ export function assessMvpDailyLearning(compiled, ruleId, trusted, input, now) {
   try {
     validateLearningFactsShape(input);
     const f = input, s = f.snapshot, b = f.binding, sb = trusted.sourceBinding, cap = f.inventory.capabilities;
-    check(f.dataMode === 'SYNTHETIC' && f.trust.assurance === 'SYNTHETIC_TEST_PIN', 'LEARNING_LIVE_BLOCKED');
+    check(f.dataMode === profile.dataMode && f.trust.assurance === profile.assurance, 'LEARNING_LIVE_BLOCKED');
     check(same(b, trusted.rawBinding) && b.applicationId === trusted.binding.applicationId
       && b.subjectRef === trusted.binding.subjectRef && b.policyHash === compiled.policyHash
       && b.policyVersion === p.policyVersion && b.cohortId === p.cohortId && b.timeZone === 'Asia/Seoul'
       && b.institutionId === sb.institutionId && b.providerInstanceId === sb.providerInstanceId
       && b.courseId === sb.courseId && b.accountBindingId === sb.accountBindingId
-      && b.accountBindingVersion === sb.accountBindingVersion && b.bindingAssurance === 'SYNTHETIC_TEST_PIN', 'LEARNING_BINDING');
-    check(trusted.verification?.authenticity === 'VERIFIED_SYNTHETIC'
-      && trusted.verification.subject === 'VERIFIED_SYNTHETIC' && trusted.verification.semantics === 'VERIFIED_SYNTHETIC'
-      && trusted.verification.completeness === 'COMPLETE_SYNTHETIC' && trusted.verification.correction === 'CURRENT', 'LEARNING_SOURCE_UNVERIFIED');
+      && b.accountBindingVersion === sb.accountBindingVersion && b.bindingAssurance === profile.binding, 'LEARNING_BINDING');
+    check(trusted.verification?.authenticity === profile.authenticity
+      && trusted.verification.subject === profile.subject && trusted.verification.semantics === profile.semantics
+      && trusted.verification.completeness === profile.completeness && trusted.verification.correction === 'CURRENT', 'LEARNING_SOURCE_UNVERIFIED');
     check(same(f.inventory, trusted.inventory) && f.inventory.activitySetHash === l.activitySetHash
       && f.inventory.providerRuleVersion === l.metricRuleVersion, 'LEARNING_INVENTORY');
-    check(l.metricRuleVersion === 'synthetic-metric.1' && l.dateAttributionRuleVersion === 'synthetic-finish-kst.1', 'LEARNING_SEMANTICS_UNSUPPORTED');
+    check(l.metricRuleVersion === profile.metricVersion && l.dateAttributionRuleVersion === profile.dateVersion, 'LEARNING_SEMANTICS_UNSUPPORTED');
+    if (profile.mode === 'LOCAL_LAB') check(l.metric === 'EFFECTIVE_TIME_RATIO' && l.speedPolicy === 'NOT_REQUIRED', 'LEARNING_SEMANTICS_UNSUPPORTED');
     check(cap.currentRevision && cap.atomicExport && cap.correctionHistory && cap.normalClose && cap.creditDay
       && (l.metric === 'EFFECTIVE_TIME_RATIO' ? cap.effectiveTime : cap.officialProgress && cap.speedCompliance), 'LEARNING_CAPABILITY_UNKNOWN');
     check(factsDigest(f) === trusted.factsHash && s.normalizedDigest === trusted.factsHash, 'LEARNING_FACTS_PIN');
