@@ -1,5 +1,7 @@
 # MVP 공통 인터페이스 초안
 
+2026-10-15 M1: [공통 정책·증거 계약](MVP_POLICY_CONTRACT.ko.md)의 `clear-mvp.1`은 별도 버전 합성 컴파일/소비자 준비 계약이다. YBM형·시원스쿨형·제3 합성 프로필을 같은 제한된 엔진에서 설정으로 실행한다. 기존 M0·HTTP/DB/금고를 보존한다. M1/M2 승인으로 이번 범위 구현을 진행하되 아래 과거 미착수 문구는 당시 기록이다. 공식 조건·예치 정책 OPEN, Moodle/원천 BLOCKED·grant/outbox HOLD·독립 청구 NO-GO·Mac 원인 미확정은 유지한다.
+
 2026-10-15 [TEST 재원 실험 계약](TEST_FUNDING_LAB.ko.md)에서 PER_APPLICATION_TEST_ADAPTER의 고정 fixture/직접 거래 동의·충전 operation·전액 배정·단회 지급·확인 블록 조회를 구현한다. 별도 실험 ABI이며 제품 wire/DB/ABI나 PG 보관 어댑터로 채택한 것이 아니다. 기존 v4 API는 보존한다. 공통 금액은 약정/누적 충전/현재 확보/배정/현재 예약/부족/지급/회수를 구분한다.
 
 H2 실행 결과: [검증 기록](history-intake-verification.json)에 새 실제 등록 문맥 증명·독립 검증·영속 접수/재개봉 성공과 빈 계정 응답 미지원/UNKNOWN을 분리했다. 로컬 모듈 연결은 완료했고 웹/기관 동의·원천 완전성/동일인·자격/지급은 미완료다. 검토 PR: [#33](https://github.com/gw020328-oss/clear-education-v4/pull/33), [#34](https://github.com/gw020328-oss/clear-education-v4/pull/34), [#35](https://github.com/gw020328-oss/clear-education-v4/pull/35).
