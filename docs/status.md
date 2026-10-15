@@ -1,4 +1,11 @@
+<!-- PR59 review update: historical entries below retain their original dates. -->
+2026-10-15 PR59 최종 실질 검토: `7402f7f`에서 COMMITTING 첫 preview 혼합, 시계 역행 시 미만료 draft 조기 삭제, 생성/검토 시각 이전 결과 노출을 보완했다. 관련272·기존 개발환경33·합성 HTTPS 재시작·의존성/원본 보존 PASS. 최종 원격 CI 후 사용자 승인된 develop 정상 병합 예정이며, C1 PR61은 `2354b70`으로 보존해 그 뒤 기반 갱신한다. C2/실동의·PR60/web은 이 검토 범위 밖이다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md).
+
 # 개발 현황
+
+## 2026-10-15 원문 HTTP 연결 Draft #59
+
+[프론트 인계·API 정본](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), 코드032215f, 기준develop7f60965. A/B의초대지갑세션·operator/CSRF/loopbackHTTPS·새DB 원문등록/조회→mock초안→정확표시검토·취소/멱등/CAS·GET복구/재시작을 연결했다. 관련267개(신규HTTP/HTTPS15포함)·기존dev33개·새합성HTTPS데모·보존/공개검사PASS. 실제사이트/유료모델0, 기존사용자DB/키/체인접근0. 서준형이web/소유자이며 통합세션은web/를편집하지않았다. 학생신청/실동의/업로드·문서검토/보완HTTP(C)와실제화면·운영Evidence/재원은미구현이다. Draft59는미병합이며최종head원격CI는PR을따른다. 예치/배정/충전OPEN·400%자동자격/지급금지·500%제외·grant/outboxHOLD·독립claimNO-GO를유지한다.
 
 ## 2026-10-15 PR56 → PR58 → PR57 통합 검토
 
