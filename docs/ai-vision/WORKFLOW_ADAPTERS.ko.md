@@ -1,6 +1,8 @@
-# M3 AI 소비 adapter — 의존 Draft
+# M3 AI 소비 adapter — 합성 모듈
 
-기준 develop `4ae548b`(PR #54)와 공통 계약 `4018e32693efe990d70cef5f2524984efab5f977`·후속 `91430c6`·consumer export 동결 `48d211774d6c78bd2332738c500cc590264c1a48`을 정상 이력 반영한 의존 구현이다. 공통 `src/product-workflow`·API/DB/collector/정본문서/CI는 담당의 직접 수정 없이 의존 이력만 반영했다. #55/#39 연결 범위이며 계약 병합 상태는 공통 PR의 최신 기록을 따른다.
+통합 검토: 공통 PR #58 병합 `5f902dc38f5f050e7907f815d7e98b0d8d028aaf`를 이력 반영했다. 누적 응답 수신 예산 보정을 포함한 공통38개와 AI/정책 회귀를 함께 실행해308/308(실패·skip0), 새 합성 DB 호스트 연결·데모·mock7/7·binding 예제 byte 대조·workspace 보존이 통과했다. 실제 유료/모델/URL 호출은0이다. PR #57의 최종 head/CI·병합 상태는 GitHub PR을 따른다. 아래 최초 의존 이력과 구현 경계를 보존한다.
+
+최초 기준 develop `4ae548b`(PR #54)와 공통 계약 `4018e32693efe990d70cef5f2524984efab5f977`·후속 `91430c6`·consumer export 동결 `48d211774d6c78bd2332738c500cc590264c1a48`을 정상 이력 반영한 의존 구현이다. 공통 `src/product-workflow`·API/DB/collector/정본문서/CI는 담당의 직접 수정 없이 의존 이력만 반영했다. #55/#39 연결 범위이며 계약 병합 상태는 공통 PR의 최신 기록을 따른다.
 
 ## 문서 bytes/run → 최소 ReviewSummary
 

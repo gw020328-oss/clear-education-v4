@@ -1,5 +1,13 @@
 # 개발 현황
 
+## 2026-10-15 PR56 → PR58 → PR57 통합 검토
+
+- Moodle #56은 develop `edb3efcdc2af0ff045a24dc95b6957f54818e3de`에 병합됐다. 정확 head202ce35의 PR Mac 취소 job을1회 재실행해62/62·실패/취소/skip0, PR/push6checks SUCCESS를 확인했다. 최초 실행은 Chrome lifecycle/hard-kill 단계 후15분상한 CANCELLED이며 구체 정체 원인은 미확정이다. capacity notice로 원인을 단정하지 않는다. 실제1502 재시험은 반복하지 않았고 기존6+새3행/토큰·세션 정리/중지 컨테이너·볼륨 보존 기록을 유지했다. 새 오프라인99개와 workspace/공개검사가 통과했다.
+- 공통 #58은 develop `5f902dc38f5f050e7907f815d7e98b0d8d028aaf`에 병합됐다. 실질 리뷰에서 보관합계와 별개인 누적 수신량 제한을 보완했다(`39379ec`). HTTPS stream이16MiB를 공유하고 실패읽기도 차감·소진후 후속dispatch를 차단한다. 최종head39379ec의 PR/push6checks SUCCESS, 공통38개·새합성DB데모·원본/legacy191개·의존성·공개검사 PASS다.
+- AI #57은 공통 병합 이력을 반영했고, 차분은 두 consumer adapter·전용tests/docs와 이번 통합 현행 문서 정리다. 결합 상태에서 관련308개 PASS(공통38개/호스트3개 포함, 중복합산 금지), 데모·mock7/7·binding 예제 byte 대조·workspace PASS를 확인했다. 최종 head의 원격CI와 병합 여부는 [PR57](https://github.com/gw020328-oss/clear-education-v4/pull/57)의 최종 리뷰를 정본으로 삼는다. 기존306개 기록은 수정 전 검사 범위다.
+
+실제 유료 AI/URL 수집/개인자료·기존 DB/키·체인 접근0. HTTP·실제 동의·업로드/완전decode·운영 Evidence·영속 M2 판정·재원/화면은 미구현이다. 예치·배정·충전정책OPEN,자격/재원분리,400%사전검토만/자동자격·지급금지,500%제외,원천/동일인미확인보류,grant/outbox HOLD·독립claim NO-GO를 유지한다. 세 담당 채팅은 completed/idle을 확인했고 추가 구현·아카이브/삭제를 요청하지 않았다. 아래 Draft/실패/검사 기록은 이전 시점의 이력이다.
+
 ## 2026-10-15 M3-0 연결 준비 (Draft)
 
 PR #54가 develop `4ae548b`에 병합됐다. 새 v4의 정상 T01 개선과 충돌 T04/누락 V02 유지, 합성3사례·5생성+5count/HTTP오류0은 [새 평가 기록](ai-vision/GEMINI_RECOVERY_EVALUATION.ko.md)을 따른다. 프로젝트/기존 환경 키/Tier1 복구는 조정 세션이 사용자와 확인했으며 식별자는 공개하지 않는다. 실제 청구액은 미확인이다. 아래 v3 과잉 보류 기록은 당시 상태다.

@@ -1,6 +1,6 @@
 # CLEAR 팀원·LLM 인계
 
-2026-10-15 M3-0 진행: [제품 API·저장 계약](PRODUCT_WORKFLOW_CONTRACT.ko.md)은 clear-product-workflow.1의 **Draft 의존 계약**이다. 기존 v4 API/DB·프론트 view는 유지하며 새 /mvp 경로는 아직 HTTP에 등록하지 않았다. bytes manifest·원문 snapshot/bundle lookup과 별도 검토 run 영속 경계를 먼저 구현한다. 확정 정책/동의·운영 Evidence·판정/재원 표시의 전체 연결은 단계별 후속이다.
+2026-10-15 통합 검토: [제품 API·저장 계약](PRODUCT_WORKFLOW_CONTRACT.ko.md)의 M3-0 합성 모듈은 PR #58로 develop `5f902dc`에 병합됐다. Moodle1502 실측 인계 PR #56은 `edb3efc`로 병합됐다. AI 소비자 PR #57은 이 기준을 이력 반영했으며 최신 병합 여부·CI는 해당 PR을 따른다. 기존 v4 API/DB·프론트 view는 유지하고 새 /mvp HTTP·실제 정책/동의·업로드/decode·운영 Evidence·M2 판정 저장·재원/화면 연결은 후속이다. 통합 검증 근거는 [현황](../status.md)의 최신 절을 우선한다.
 
 2026-10-15 최종 소비자 통합: M1/M2 #43/#46, AI 준비/소비자 #42/#47, Moodle 준비/일별/export/로컬 #41/#45/#48/#52, Mac 보정 #53은 develop에 병합됐다. 이 변경 #51은 충돌 필드 보류·정확한 계획/표시 기준의 정책 해시 결합·평가 원장과 실제 소규모 재평가를 추가한다. [최신 통합 현황](../status.md)과 [결합 경계](../ai-vision/POLICY_BINDING.ko.md)를 따른다. 합성 소비자 적합성은 확인했으나 운영 동의·Evidence 수락/DB·실제 기관 연결은 완료되지 않았다. clearapi1502 실제 재검증·AI 정상 자료 과잉 보류와 기존 정책/자격/지급 차단을 유지한다. 아래 날짜별 계획은 당시 범위다.
 
