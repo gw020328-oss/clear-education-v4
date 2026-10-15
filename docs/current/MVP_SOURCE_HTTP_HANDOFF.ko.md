@@ -1,8 +1,11 @@
+<!-- 최신 C2 구현 절이 아래의 과거 계약/미구현 상태보다 우선한다. -->
 # MVP HTTP 연결·서준형 프론트 인계
 
-버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **원문 PR59 develop 병합 완료 / C1 PR61 Draft**.
-C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 쓰기 transaction 내부 세션 재검사 코드 `922ada6fe45dde53135ece116e90531aa0b662a9`, 최초 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`에서 출발했으며, PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 develop merge `2bb6d291b77ba397f8544995557db78b3ce54724`를 정상 merge로 포함했다. 후속 [Draft PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
-현재 기반 develop `2bb6d291b77ba397f8544995557db78b3ce54724`(#56/#58/#57/#59 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 병합 완료 [PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
+**최신 리뷰/연결 지침:** [Claude Code 복붙용 단계별 프론트 지침](MVP_FRONTEND_CONNECTION_PROMPT.ko.md). PR63 최종 실질 리뷰에서 TTL 만료가 진행 중 관측의 복사본까지 중단하도록 보완했다. 아래 Draft/자동 병합 불가 표기는 이전 권한의 기록이며, 이번에는 사용자 승인 아래 최종 head CI/보호 규칙 확인 후 develop 정상 병합한다. 실제 병합 SHA는 후속 최신 병합 기록을 따른다.
+
+버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **원문 PR59·C1 PR61 develop 병합 완료 / C2 PR63 합성 구현·Draft**.
+C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 쓰기 transaction 내부 세션 재검사 코드 `922ada6fe45dde53135ece116e90531aa0b662a9`, 최초 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`에서 출발했으며, PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 develop merge `2bb6d291b77ba397f8544995557db78b3ce54724`를 정상 merge로 포함했다. 병합 완료 [PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
+현재 기반 develop `0590fd0728ce3a4525129cbad753c3ba9b2f781b`(#56/#58/#57/#59/#61 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 병합 완료 [PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
 
 ## 현재 구현과 다음 의존
 
@@ -10,8 +13,8 @@ C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c556
 | --- | --- |
 | A: 기존 서명 로그인·역할/CSRF, 별도 저장소·멱등/CAS·개발 listener | PR59 develop 병합 완료 |
 | B: 등록 URL ID→원문 archive/부분 상태→조회→mock 초안→정확 표시 확인 기록 | PR59 develop 병합 완료. 실행 예시는 **MOCK**, 실제 URL/유료 모델 호출0 |
-| C1: 학생 본인 신청·서버 합성 조건 표시·합성 확인/정책 변경 재확인 | 후속 Draft 구현. `clear-mvp-student-http.1`, 아래 C1 API만 가용. **실제 동의 아님** |
-| C2: 파일 접수/bytes·문서 검토run·보완/재제출 | **미구현**. `documentSubmissionReady:false`, 업로드/검토 API 호출 금지 |
+| C1: 학생 본인 신청·서버 합성 조건 표시·합성 확인/정책 변경 재확인 | PR61 develop 병합 완료. `clear-mvp-student-http.1`, 아래 C1 API만 가용. **실제 동의 아님** |
+| C2: 합성 fixture 실bytes 접수·검토run·보완/재제출 | PR63 Draft 구현. 명시 documentMode만. `syntheticDocumentSubmissionReady:true`, 운영 `documentSubmissionReady:false` |
 | D: 새 원문 HTTP용 브라우저 adapter·예제·검사 | PR59 develop에 제공. 실제 `web/` 연결은 서준형 담당/미연결 |
 | 운영 원천 진위/적용성/동일인·정책 게시·실동의·Evidence/M2 영속 판정·재원 | **미완료**. mock/검토 기록은 운영 보장이 아님 |
 
@@ -147,7 +150,7 @@ const sourceClient = createWorkflowSourceClient({ request: walletClient.request.
 
 ## C1 학생 신청·합성 확인 HTTP
 
-버전 `clear-mvp-student-http.1`, displayVersion `clear-mvp-student-display.1`, previewVersion `clear-mvp-student-preview.1`. 선행 PR59 원문 API는 develop에 병합됐으며 C1의 선행 의존은 해소됐다. C1은 최신 develop2bb6d29를 포함하는 **별도 후속 Draft PR**이고 PR59 승인/병합 권한을 자동 승계하지 않는다.
+버전 `clear-mvp-student-http.1`, displayVersion `clear-mvp-student-display.1`, previewVersion `clear-mvp-student-preview.1`. 선행 PR59 원문 API는 develop에 병합됐으며 C1의 선행 의존은 해소됐다. C1은 PR61에서 별도 실질 검토 후 develop0590fd0으로 병합됐다. C2 PR에는 자동 병합 권한이 없다.
 
 같은 전용 CLI9443에서 기존 초대 participant의 서명 로그인·HttpOnly 세션·Origin/CSRF를 재사용한다. `/__dev/config.studentHttpVersion`과 `studentApplicationHttpImplemented:true`로 가용성을 확인한다. 기존 C1 `tools/dev.mjs`/8443에 이 namespace를 자동 추가하지 않는다. source API는 operator, student API는 participant로 분리하며 학생은 자기 신청만 볼 수 있다. 다른 학생 신청/operation은404, operator의 학생 API 호출은403이다.
 
@@ -255,3 +258,91 @@ PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 [push](https://gi
 사용자 추가 승인에 따라 PR61을 GPT-6.1 Sol / High 요청 단위에서 검토했다. 보완 코드 `8c5411bebf42a2aa61aa8c37db5f352ca84475c6`은 저장된 학생 확인/신청 시각 이전의 clock에서 get/list/preview/이력·operation/GET복구/POST재생을 `422 MVP_CLOCK`으로 차단한다. 다른 학생404·operator403을 먼저 유지하므로 시간 오류로 타인 신청 존재를 드러내지 않는다. 같은 actor/route/key의 POST 재생도 BEGIN IMMEDIATE 뒤 세션·CSRF를 재검사하도록 공통 command 안으로 검사를 옮겼다. 시계 복원 후 저장된 결과를 재사용하고 새 합성 확인을 만들지 않는다. 두 문제는 새 합성 DB에서 실패를 재현한 뒤 회귀2개를 추가했다.
 
 관련285/285(학생 HTTP/HTTPS13 포함), 학생 HTTPS 서명 지갑/재시작 데모·원본/legacy191개·diff PASS. C1 명령은 동기 단일 DB transaction이며 대기 중 취소할 별도 worker/cancel API가 없다. 응답 유실/연결 종료는 POST 자동 재전송 대신 actor/route/key GET으로 복구한다. 실제 지갑 동의/서명·정책 게시·C2 파일·운영 Evidence/재원은 이 수정에 포함하지 않았다. PR61은 최종 head CI·대화·최신 base 확인 후 사용자 승인된 정상 develop merge를 진행하며 PR60/web·main·배포·유료는 범위 밖이다. 기존2354b70·82c3f2d 이력은 보존한다.
+
+
+## 최신: PR61 병합·C2 계약/다음 구현 (2026-10-15)
+
+PR61 최종 head `95b397cc662b255fc777afc898e7b56cc6a444d9`는 두 회귀 수정 뒤 관련285/285·학생 HTTPS재시작·보존/공개 검사를 통과했다. 보호 규칙의 필수 Public content history/Public synthetic tests는 [push38724292331](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38724292331)·[PR38724301462](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38724301462) 양쪽4/4 SUCCESS, 추가 Mac은 PR쪽SUCCESS·push쪽IN_PROGRESS(종료/원인 미확정)로 확인했다. 필수strict/admin/검토대화 규칙을 유지한 정상 PR merge `0590fd0728ce3a4525129cbad753c3ba9b2f781b`이며, 추가 Mac까지6/6 성공이나 병합커밋 자체 CI 성공을 주장하지 않는다. 진행 중 작업 취소·보호 우회는 없다. 위 Draft 유지/CI대기 문구는 이전 시점의 기록이다.
+
+C2 [하위 이슈62](https://github.com/gw020328-oss/clear-education-v4/issues/62), 브랜치 `codex/mvp-document-http`는 이 최신 develop에서 시작했다. [C2 구현 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)에 입출력·표시/plan/source/bytes·저장/동시성/재시작 경계를 고정했다. 현재 단계는 **계약 문서만**이며 새 endpoint·파일 접수·browser document adapter는 미구현이다. 제안 version `clear-mvp-document-http.1`은 아직 실행 버전이 아니고 기존 `/__dev/config`의 studentSubmissionHttpImplemented=false와 C1 documentSubmissionReady=false를 유지한다.
+
+예정 흐름: 본인 현재 C1 합성확인→서버의 bound 문서 기준 preview/별도 합성확인→등록된 공개 합성 fixture의 실제 file bytes 접수/manifest→CODE/mock TEXT_AI/VISION run/보류 이유→명시 보완 재제출→옛결과stale→단회 수락/actor-route-key GET/이미 저장된 요약의 재시작 복구. `document-preview`, `document-agreement`, `submissions`, `review-runs`, `document-operations`, 본인 raw 삭제가 제안 경로다. 지금 이 경로를 호출하는 UI를 만들지 않는다.
+
+C1 displayHash/previewHash와 기존 AI 문서 plan의 displayHash/previewHash는 서로 다른 표시 DTO다. C2는 새 host 검토 bound 합성 policy revision/C1 재선택·재확인 및 문서 기준의 별도 SYNTHETIC_DOCUMENT_ACK_ONLY를 요구한다. 기존 ACK를 실동의/새문서 기준 확인으로 승격하지 않는다. Binding/context/plan/source/합성 fixture pins는 서버 전용 resolver가 구성하며 body의 score/verified/PASS·actor/Binding/runContext는 거부한다.
+
+첫 구현은 등록된 합성 텍스트·정확 bytes만 검증 수락,4파일·64KiB/파일·256KiB합계·384KiB body/수신10초·전역2/actor1·raw전역1MiB/최대1800초 및 검토종료/logout/취소/대체/삭제시 폐기다. 학생 raw는 디스크·DB에 쓰지 않고 지문/manifest/최소summary만 영속화한다. 이미지 full decode 미도입으로 method와 무관하게 IMAGE_NOT_DECODED 보류, 재시작 raw유실 미완료는 INTERRUPTED/재제출이며 모델/업로드를 자동 재호출하지 않는다. 안전한 실제 개인자료 수명·decode·실동의/원천진위/동일인·Evidence/M2·재원/실제화면은 미완료 관문이다.
+
+예정 오류/표시: 기존401/403/404·MVP_STALE/IDEMPOTENCY_CONFLICT/MVP_CLOCK에 DOC_CONFIGURATION_REQUIRED/DOC_DISPLAY_CHANGED/DOC_SYNTHETIC_ONLY/DOC_MEDIA/DOC_FILE_NAME/DOC_FILE_SET/DOC_RAW_UNAVAILABLE/DOC_BUSY/DOC_LIMIT/DOC_CANCELLED를 더한다. JSON DTO/정확 enum·생성 합성 응답은 실제 구현과 시험 후 같은 문서/전용 예제로 확정한다. status와 reason을 mock·부분/판독불가·보완·이력/stale로 표시하고 완료/실동의·자격·재원·지급을 구분한다.
+
+Claude Code 추가 지침: PR61은 develop0590fd0에 병합됐지만 C2는 계약 단계다. 최신 PR/정확 backend SHA/Checks/capability를 다시 확인하고 구현 전 C2 endpoint를 가정하거나 합성 성공 UI를 만들지 않는다. web/·지갑/F0/화면은 서준형 소유로 유지하고 백엔드 질문은 사용자 경유로 전달한다. C2 별도 adapter가 제공된 후 같은 검증 HTTPS9443·기존 signed session/CSRF에서만 연결한다. localStorage/sessionStorage에 파일·텍스트·token/서명·모델 출력/키를 저장하지 않는다. 실제 제출/유료 모델/외부 사이트 호출을 켜지 않는다.
+
+이번 PR61 실질리뷰·C2 계약 단위의 요청 설정은 GPT-6.1 Sol / High이며 런타임 모델 ID는 별도 검증하지 못했다. 일반 endpoint/adapter 구현은 다음 실제 후속 설정 GPT-6.1 Sol / Medium으로 요청한다. 문구 출력만으로 설정이 바뀌었다고 주장하지 않는다. 새 C2 PR은 develop 대상 Draft·검토/CI 준비까지만이며 자동 병합하지 않는다. 예치/보관/배정/충전OPEN·자격재원분리·400%자동자격지급금지·500%제외·원천동일인보류·grant/outboxHOLD·독립claimNO_GO를 유지한다.
+
+
+## 최신 C2 실행·프론트 연결 인계 (2026-10-15)
+
+C2 버전 `clear-mvp-document-http.1`, 구현 코드 `0a9945b98a190ae43abeedd15d169be91c2eb988`, 시작 실패 정리/공개 fixture 시험 `04efb92acf7ad890f3571fc8ef443d8e0498fde4`, [Draft PR63](https://github.com/gw020328-oss/clear-education-v4/pull/63), 상위55/하위62. 선행 PR61은 develop0590fd0에 병합됐다. PR61 추가 push Mac은 최종 **cancelled**(2026-10-15 11:20:52 UTC)로 확인했으며 종료 원인을 추정하거나 재실행하지 않았다. 필수CI4/4·추가PR Mac 성공과 구분한다. 아래 이 C2 절이 위 계약 단계/미구현 과거 기록보다 최신이다.
+
+실행은 새 공개 TEST 지갑 주소와 **새 이름**의 별도 합성 환경에서만 한다. 기존 source-demo/C1/개인 DB/키/체인을 가져오거나 변환하지 않는다.
+
+```sh
+./tools/node tools/mvp-document-dev.mjs init --name document-demo --port 9443 --chain-id 431701 --operator "$CLEAR_MVP_OPERATOR" --participant "$CLEAR_MVP_PARTICIPANT"
+./tools/node tools/mvp-document-dev.mjs start --name document-demo
+# 자동 합성 demo: 새 임시 CA/DB/TEST 지갑, CA 검증 HTTPS, 종료 후 정리
+./tools/node --import ./tests/ybm-collector/network-guard.mjs specs/m3/document-http-demo.mjs
+```
+
+일반 CLI의 baseURL은 https://127.0.0.1:9443이며 기존 same-origin signed wallet 세션/HttpOnly Secure cookie·wallet/chain/CSRF·명시 Idempotency-Key를 사용한다. 등록한 공개 주소만으로 로그인되는 것은 아니며 그 새 TEST 지갑의 서명이 필요하다. 새 `var/mvp-documents/document-demo/ca.pem`만 검토/신뢰하고 TLS 검증을 끄지 않는다. 별도5173/CORS 우회는 없다. web/dist가 준비돼 있으면 기존 공개 자산 규칙으로만 제공하며 web/를 수정하지 않았다. 백엔드/Node·키·DB/specs 예제 모듈을 브라우저 번들에 복사하지 않는다.
+
+`/__dev/config`는 documentHttpVersion/명시 합성 capability를 알려준다. 일반 source/C1 host는 C2를 설치하지 않으므로 해당 route는404다. C2 host의 studentSubmissionHttpImplemented와 syntheticDocumentSubmissionReady는 합성 기능만 뜻하며 documentSubmissionReady/realDataAllowed/imageDecodeReady는 false다. 신청의 현재 bound 합성 정책·C1 ACK와 별도 문서 ACK가 준비돼야 파일을 수락한다. 지원 requirement/method는 document-preview.documentRequirements에 명시한다. 성적/학습·실동의·자격·재원 기능의 완료 표시가 아니다.
+
+브라우저는 별도 `src/product-workflow/document-http-client.mjs` 한 파일에 인증된 walletClient.request를 주입한다. F0 ApplicationView/기존 학생·원문 adapter는 유지한다. 파일 접수는 다음 순서다.
+
+1. C1 본인 신청과 정확 조건 SYNTHETIC_ACK_ONLY를 확인한다. 기존 정책이면 명시 정책 선택→새 C1 표시/확인이 먼저다.
+2. document-preview의 C1 확인 hash/Binding·문서 기준 전체/plan/source·합성/미확인 표시를 보여준다. exact documentPreviewHash로 SYNTHETIC_DOCUMENT_ACK_ONLY를 기록한다. C1 previewHash를 대체해서 보내지 않는다.
+3. `specs/m3/document-http-fixtures.json`의 공개 합성 fixtureId/files만 접수한다. 이 JSON은 브라우저용 공개 샘플이며 서버의 권한 pin이 아니다. 임의 텍스트/실학생 파일을 받지 않는다. name은 basename만 허용되며 저장하지 않는다. 실제 bytes/base64·MIME·file set·서버 fixture hash를 검사한다.
+4. 현재 expectedWorkflowRevision/expectedSubmissionRevision·documentAcknowledgmentHash로 submit하고, 반환된 submissionId/revision/workflowRevision으로 review-runs를 시작한다. POST 응답 유실은 같은 actor/route/key GET 복구만 사용한다.
+5. GET run의 RUNNING/ACCEPTED/CANCELLED/TIMED_OUT/INTERRUPTED/SUPERSEDED·current/summary/reasons를 표시한다. 보완은 새 key의 명시 submit→새 revision/run이며 옛 결과는 이력/current=false다. 브라우저 network abort는 이미 기록된 run 취소와 다르며 cancel endpoint로 명시 취소한다.
+
+정확한 payload는 [상세 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)의 표와 [검증 HTTPS 생성 응답](../../specs/m3/document-http-responses.json)을 따른다. 생성 응답의 임시 포트/TEST 주소·ID는 예시이며 고정9443 실운영 계정이 아니다. 최소 호출 형태는 다음과 같다.
+
+```js
+const preview = await documentClient.preview(applicationId);
+const ack = await documentClient.acknowledge(applicationId, {
+  expectedWorkflowRevision: preview.expectedWorkflowRevision,
+  documentPreviewHash: preview.documentPreviewHash,
+  acknowledgement: 'SYNTHETIC_DOCUMENT_ACK_ONLY'
+}, { idempotencyKey: 'explicit-document-confirmation-1' });
+const current = await documentClient.preview(applicationId);
+const accepted = await documentClient.submit(applicationId, {
+  expectedWorkflowRevision: current.expectedWorkflowRevision,
+  expectedSubmissionRevision: 0, // 보완 시 직전 submissionRevision
+  documentAcknowledgmentHash: ack.result.documentAcknowledgmentHash,
+  fixtureId: syntheticFixture.fixtureId, files: syntheticFixture.files
+}, { idempotencyKey: 'explicit-synthetic-submission-1' });
+```
+
+오류는401 재로그인,403 역할/CSRF/동일출처,404 없음/범위밖,409 MVP_STALE/IDEMPOTENCY_CONFLICT·DOC_CONFIGURATION_REQUIRED/DOC_DISPLAY_CHANGED/DOC_RAW_UNAVAILABLE/DOC_BUSY/DOC_LIMIT,410 SOURCE_EXPIRED,413 BODY_SIZE,408 DOC_RECEIVE_TIMEOUT,422 DOC_SYNTHETIC_ONLY/DOC_MEDIA/DOC_FILE_NAME/DOC_FILE_SET/DOC_CANCELLED/MVP_CLOCK으로 구분한다. timeout/network 실패를 성공이나 빈 목록으로 만들지 않는다. 서버는 raw/provider/파일명/경로/stack을 오류에 넣지 않으며 POST/DELETE는 자동 재전송하지 않는다.
+
+raw는 디스크에 저장하지 않고 최대1800초·run 종료/logout/취소/대체/명시 삭제/종료 때 메모리 소유 buffer를 폐기한다. 파일4/각64KiB/합계256KiB·body384KiB/수신10초·수신전역2/actor1·원본전역1MiB, 동시 worker2로 복사본도 제한한다. 받아들인 raw가 없으면 새 제출이 필요하며, 이미 저장된 최소 요약은 재시작 뒤 같은 지문으로 재조회할 수 있다. hard-kill/GC/OS 잔재나 JS 문자열의 물리 삭제를 보장하지 않는다. full image decode가 없으므로 어떤 method든 이미지가 있으면 IMAGE_NOT_DECODED 보류이며 CODE 텍스트 통과를 문서 전체 판독 완료로 표시하지 않는다. ACCEPTED는 요약 저장이지 진위/동일인·실동의·자격/재원·지급 승인이 아니다.
+
+공개 원문 fixture는2026-10-15 00:00 UTC부터30일이며 일반 CLI는 현재 시각으로 만료를 검사한다. 만료/정책·fixture·model 설정 변경은 새 검토 버전/새 합성 환경이 필요하고 자동 repin/기존 DB 이관을 하지 않는다. TLS demo/회귀는 고정 합성 시계를 명시 주입한 재생으로 실제 원문 신선도 증거가 아니다.
+
+검증: 관련309/309(C2 HTTP21+TLS2+공통DELETE1 포함), 기존 개발환경33/33·TLS 데모 통과, 원본legacy191개·의존성·diff PASS. 권한/입력/정확두표시·bytes/유실응답·보완/stale·cancel/logout/late·TTL/clock·10초수신제한·부분업로드/슬롯·두DB중간상태·최소DB/불변이력을 검사했다. 최종 exact head의 원격 CI는 PR63/이슈55·62를 확인한다. PR63은 Draft·자동 병합하지 않는다. 실제 개인서류/사이트/유료/기존DB키체인접근0, web/수정·외부연락0이다.
+
+Claude Code 후속: 최신 origin/develop·PR63의 exact head/Checks 및 이 문서 최신 C2절을 읽는다. API가 develop에 이미 병합됐다고 가정하지 않는다. 자신의 web/ 미커밋 변경을 보존하고 사용자 승인 범위의 정상 merge만 한다. 제공된 별도 document client와 공개 합성 fixture JSON을 같은9443 출처에 연결하며 server-only example/pins/DB/Node 모듈은 번들에 넣지 않는다. 확인 기준과 미확인/보완 이유를 사용자 언어로 표시하고 hash/DB/모델 내부값을 일반 화면의 설명으로 강요하지 않는다. 파일/텍스트·token/서명·키/모델 출력은 브라우저 저장소/로그에 넣지 않는다. 스스로 실제 업로드/개인자료/유료/학교·Moodle/YBM 호출이나 지급 기능을 켜지 않는다. 경로/DTO 의미가 애매하면 사용자 경유로 백엔드에 질문한다. 좁은 화면/키보드·로딩/없음/오류/보완·지갑 거절/변경/만료·동일출처·중복/취소·restart·stale 수용 시험과 남은 미연결을 기록한다.
+
+이번 일반 구현의 요청 설정은 GPT-6.1 Sol / Medium이며 런타임 모델ID는 별도 검증하지 못했다. 미해결 민감정보/동시성 설계 충돌은 발견되지 않았고 실제 운영의 개인자료/동의/decode 관문을 추정해 열지 않았다. 예치/보관/배정/충전OPEN·자격재원분리·400%PRECHECK_ONLY/자동자격지급금지·500%제외·원천동일인보류·grant/outboxHOLD·독립claimNO_GO를 유지한다.
+
+
+최종 수명 보완 코드 `24e75f2f467805162aac814c921f1c1c50bfd802`: 대기 중인 업로드도 logout/정상 종료/C1 정책·확인 변경 시 AbortSignal로 즉시 중단하고 고정 DOC_CANCELLED를 반환한다. C1 같은키 확인 재생에서 현재 기준이 그대로면 보유 raw를 지우지 않는다. 완료 뒤 재인증/CAS와 별개로 수신 중 메모리 경계도 검사했다. 새 회귀2개 포함 관련309/309가 통과했다. 공개 합성 fixture JSON은 프론트 빌드에 필요한 부분만 넣거나 로컬 샘플 생성에 사용한다. 서버가 specs/*.json을 정적 URL로 제공한다는 뜻이 아니며 private 설정/Node 예제/pins는 번들에 포함하지 않는다.
+
+공개 원문 만료 보완 `43ffe3243e70d6db10213cc5fe82fab1d0e897a9`: C2 archive 시작/인증된 source 조회에서 기존 purge를 호출해 만료 artifact bytes를 논리 정리한다. 원문 만료 시 요약은 현재로 노출하지 않고 metadata/버전 이력은 보존한다. 이 보완은 학생 raw의 디스크 저장을 추가하지 않으며 SQLite/디스크 잔재 완전 삭제를 보장하지 않는다. 만료/이력 회귀와 HTTPS·시작 정리3개를 재검사했다.
+
+준비 표시 보완 `f5873062293fef4a4c3a1decb9fd6ada3701a71d`: 정책/원문이 준비되지 않은 이력 응답은 syntheticDocumentSubmissionReady=false이며 summary/current 차단과 일치한다. 최신 코드의 관련309/309를 다시 확인했다. 최종 원격 CI는 정확한 PR63 head의 Checks/본문·이슈55/62를 정본으로 한다.
+
+## PR63 최종 실질 리뷰 보완
+
+요청 설정 GPT-6 Astra / High. 런타임 모델 ID는 독립 확인하지 못했다. 접수 원본의 TTL 만료가 캐시만 지우고 진행 중 observer 복사본을 최대 worker timeout까지 남기는 문제를 새 합성 시험에서 재현했다. wipe가 해당 worker AbortSignal도 중단하며, 인증된 resolver 접근과 타이머가 같은 만료 정리를 사용한다. 자료 GET·run GET·타이머 세 경로에서 observer 중단/소유 bytes zero·늦은 결과 비수락을 검사한다. raw 1800초 상한과 JS/OS 잔재 보장 제외는 유지한다. 최종 검증/정확 head·병합 근거는 PR63 기록을 따른다.
+
+최종 리뷰 수정 뒤 관련312/312(새 TTL3개 포함), diff 검사가 통과했다. 개발환경33/33·원본191개/의존성의 기존 성공은 해당 코드/설정 변경이 없어 근거 없이 반복하지 않았다. 최신 push/PR CI는 변경 head에서 새로 확인한다. 프론트 복붙 문서는 PR60 리뷰의 정책·UX·레퍼런스를 반영하며 web/·PR60의 코드/상태는 변경하지 않는다.

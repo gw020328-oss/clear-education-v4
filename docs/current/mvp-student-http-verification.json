@@ -16,7 +16,7 @@
     "680bce36c2306b38615a3731da611fececa71a7b",
     "922ada6fe45dde53135ece116e90531aa0b662a9"
   ],
-  "status": "DRAFT_REVIEW",
+  "status": "MERGED_TO_DEVELOP",
   "requestedExecution": {
     "model": "gpt-6.1-sol",
     "thinking": "medium",
@@ -57,7 +57,7 @@
   "existingUserDatabaseChainKeyAccess": false,
   "actualWebsiteFetches": 0,
   "paidModelCalls": 0,
-  "newPrMerged": false,
+  "newPrMerged": true,
   "gates": {
     "depositStorageAllocationTopup": "OPEN",
     "eligibilityAndFunding": "SEPARATE",
@@ -100,7 +100,19 @@
     ],
     "studentHttpsRestartDemo": "PASS",
     "workspace": "PASS",
-    "finalHeadCi": "SEE_PR61_FINAL_HEAD_CHECKS",
-    "merge": "PENDING_FINAL_HEAD_CHECKS"
-  }
+    "finalHeadCi": {
+      "requiredChecks": "4_OF_4_SUCCESS_PR_AND_PUSH",
+      "pullRequestRun": 38724301462,
+      "pushRun": 38724292331,
+      "additionalMacPr": "SUCCESS",
+      "additionalMacPush": "CANCELLED_ROOT_CAUSE_UNKNOWN",
+      "sixOfSixClaimed": false,
+      "additionalMacPushCompletedAt": "2026-10-15T11:20:52Z"
+    },
+    "merge": "0590fd0728ce3a4525129cbad753c3ba9b2f781b",
+    "finalHead": "95b397cc662b255fc777afc898e7b56cc6a444d9",
+    "protectionBypassed": false,
+    "mergedCommitCiClaimed": false
+  },
+  "mergeCommit": "0590fd0728ce3a4525129cbad753c3ba9b2f781b"
 }
