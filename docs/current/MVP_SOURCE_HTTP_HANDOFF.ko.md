@@ -1,7 +1,7 @@
 # MVP HTTP 연결·서준형 프론트 인계
 
 버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **develop 미병합 Draft 의존**.
-C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 정확한 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`를 정상 이력으로 포함한다. 후속 [Draft PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
+C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 쓰기 transaction 내부 세션 재검사 코드 `922ada6fe45dde53135ece116e90531aa0b662a9`, 정확한 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`를 정상 이력으로 포함한다. 후속 [Draft PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
 기준 develop `7f6096552f06492b4add8bd5653a2ff390cf7d3c`(#56/#58/#57 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 검토 [Draft PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
 
 ## 현재 구현과 다음 의존
