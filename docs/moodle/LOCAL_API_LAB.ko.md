@@ -85,3 +85,5 @@ Video Checkpoints upstream URL은 제공 패키지의 provenance를 사용한다
 LOCAL 평가만 이 확정된 coverage prefix로 날짜 누락과 기간 완료를 판정한다. SELECT가 종료 1초 이내에 시작됐거나 처리 도중 자정을 넘더라도 새 관측 하한이 경계를 포함하기 전에는 최종 PASS/NOT_MET로 승격하지 않는다. 정상 종료 기록의 밀리초 시각은 observedAt 상한으로 검사하므로 같은 초의 유효 기록을 버리지 않는다. 전체 하한은 신뢰한 localExpectation에서 전달하며 maxAge도 하한으로 검사한다. SYNTHETIC의 관측 의미는 유지한다.
 
 공통 보정 후 LOCAL39개와 일별/driver/M2 bridge60개, 총99개 오프라인 회귀 PASS. 변경 PHP는 기존 고정 이미지의 네트워크 없는 일회성 컨테이너에서 syntax PASS를 확인했다. 실제 Moodle DB/기존 컨테이너·토큰·키에는 접근하지 않았다. 위 실제15+6 기록은 clearapi2026101501의 과거 근거다. 새 버전의 실제 재생/DB 실행은 아직 재검증하지 않았으며, 이 차이를 실제 완료로 표시하지 않는다.
+
+원시 wall clock 역행은 floor/ceil 전에 검사하고, monotonic hrtime으로 SELECT/행 처리 300초 상한도 검사한다. 검사는 캐시 반환보다 먼저 실행한다. 순수 PHP clock helper의 종료 -1ms/정확/ +1ms, 처리 중 경계 통과, 반올림에 숨는 역행·wall/monotonic 초과·잘못된 값 9개를 오프라인 검증하고 필수 CI에 포함했다. 이 회귀 역시 실제 Moodle DB/재생 검증을 대신하지 않는다.

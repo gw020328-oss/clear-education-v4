@@ -53,7 +53,7 @@ class exporter {
                     WHERE component='mod_videocheck' AND filearea='video' AND itemid=0 AND filename<>'.' GROUP BY contextid) files ON files.contextid=ctx.id
                 WHERE cm.id $insql";
             // Lower bound precedes the atomic SQL observation; completion time is only an upper bound.
-            $queryStarted=microtime(true); $coverageObserved=(int)floor($queryStarted);
+            $queryStarted=microtime(true); $queryMonotonic=hrtime(true);
             $source=$DB->get_records_sql($query,$params);
             foreach($c['activities'] as $a) {
                 $base=['activityId'=>$a['activityId'],'lectureId'=>$a['lectureId'],'cmid'=>$a['cmid'],'activityType'=>$a['activityType']];
@@ -84,6 +84,9 @@ class exporter {
             }
             $versions=['clearwatch'=>(string)get_config('local_clearwatch','version'),'clearapi'=>(string)get_config('local_clearapi','version')];
             $fingerprint=self::hash('CLEAR-LOCAL-STATE',['config'=>$c,'versions'=>$versions,'rows'=>$rows]);
+            // Validate raw wall-clock direction and monotonic duration before
+            // any cached return. A cache retains its own original bounds.
+            $window=observation_clock::bounds($queryStarted,microtime(true),(hrtime(true)-$queryMonotonic)/1000000000);
             $head=$DB->get_record('local_clearapi_head',compact('userid','courseid'));
             if (!$head) { self::changed($userid,$courseid,'INITIAL_EXPORT'); $head=$DB->get_record('local_clearapi_head',compact('userid','courseid')); }
             if ($head->artifact!=='' && $head->fingerprint===$fingerprint) {
@@ -93,8 +96,7 @@ class exporter {
             if ($head->artifact!=='') { self::changed($userid,$courseid,$head->fingerprint===$fingerprint?'CACHE_REFRESH':'OBSERVED_CHANGE'); $head=$DB->get_record('local_clearapi_head',compact('userid','courseid')); }
             // Upper-second observation bound is explicit; client must wait until
             // that second before freshness checks. Record milliseconds stay exact.
-            $queryFinished=microtime(true); $observed=(int)ceil($queryFinished);
-            if ($queryFinished<$queryStarted || $coverageObserved>$observed || $observed>$coverageObserved+300) throw new \invalid_parameter_exception('EXPORT_OBSERVATION_WINDOW');
+            $coverageObserved=$window['lower']; $observed=$window['upper'];
             $revision='r'.$head->generation; $pages=[];
             foreach($rows as &$row) $row['recordRevision']=$revision; unset($row);
             $pageSize=$c['pageSize'];
