@@ -7,10 +7,10 @@ export const SOURCE_LIMITS=freeze({maxBodyBytes:2097152,maxImageBytes:8388608,ma
   requestTimeoutMs:10000,totalTimeoutMs:30000,retentionSeconds:2592000,scriptsExecuted:false,automaticLinkFollowing:false});
 export const SOURCE_LIMITATIONS=freeze(['JS_NOT_EXECUTED','IMAGES_NOT_COLLECTED','HEURISTIC_TEXT','RESOURCE_FAILED','MANUAL_SUPPLEMENT','COMPLETENESS_UNVERIFIED','EXTRACTION_FAILED']);
 export function validateSourceSnapshot(s){
-  exactKeys(s,['version','sourceId','revision','sourceType','productId','cohortId','requestedUrl','finalUrl','collectedAt','expiresAt',
+  exactKeys(s,['version','sourceId','revision','sourceType','institutionId','productId','cohortId','requestedUrl','finalUrl','collectedAt','expiresAt',
     'retrievalStatus','httpStatus','artifacts','textArtifactId','extractionVersion','limitations'],'SOURCE_SNAPSHOT');
   check(s.version===SOURCE_VERSION&&['PUBLIC_URL','PASTE','FILE'].includes(s.sourceType),'SOURCE_VERSION');
-  for(const k of ['sourceId','productId','cohortId','extractionVersion'])identifier(s[k]);revision(s.revision);
+  for(const k of ['sourceId','institutionId','productId','cohortId','extractionVersion'])identifier(s[k]);revision(s.revision);
   check(Number.isSafeInteger(s.collectedAt)&&s.collectedAt>=0&&s.expiresAt===s.collectedAt+SOURCE_LIMITS.retentionSeconds,'SOURCE_TIME');
   for(const value of [s.requestedUrl,s.finalUrl])check(value===null||typeof value==='string'&&value.length<=2048,'SOURCE_URL');
   check(s.sourceType==='PUBLIC_URL'?s.requestedUrl!==null:s.requestedUrl===null&&s.finalUrl===null,'SOURCE_TYPE');
@@ -26,12 +26,14 @@ export function validateSourceSnapshot(s){
   check(s.limitations.every(v=>SOURCE_LIMITATIONS.includes(v))&&new Set(s.limitations).size===s.limitations.length,'SOURCE_LIMITATIONS');
   check(s.limitations.includes('COMPLETENESS_UNVERIFIED'),'SOURCE_COMPLETENESS');
   check(s.textArtifactId===null||s.artifacts.some(a=>a?.artifactId===s.textArtifactId&&a.role==='EXTRACTED_TEXT'&&a.mediaType==='text/plain'),'SOURCE_TEXT');
+  check(s.artifacts.filter(a=>a.role==='RESPONSE_BODY').length<2,'SOURCE_RAW_BODY');
+  if(s.retrievalStatus!=='FAILED')check(s.artifacts.some(a=>a.role==='RESPONSE_BODY'),'SOURCE_RAW_BODY');
   if(s.retrievalStatus==='FAILED')check(s.textArtifactId===null,'SOURCE_STATUS');return s;
 }
 export const sourceSnapshotHash=s=>{validateSourceSnapshot(s);return digest('CLEAR-SOURCE-SNAPSHOT.1',s);};
 export function validateSourceBundle(b){
-  exactKeys(b,['version','bundleId','revision','productId','cohortId','requiredSourceIds','entries'],'SOURCE_BUNDLE');
-  check(b.version==='clear-source-bundle.1','SOURCE_VERSION');for(const k of ['bundleId','productId','cohortId'])identifier(b[k]);revision(b.revision);
+  exactKeys(b,['version','bundleId','revision','institutionId','productId','cohortId','requiredSourceIds','entries'],'SOURCE_BUNDLE');
+  check(b.version==='clear-source-bundle.1','SOURCE_VERSION');for(const k of ['bundleId','institutionId','productId','cohortId'])identifier(b[k]);revision(b.revision);
   array(b.requiredSourceIds,8,'SOURCE_LIMIT');check(b.requiredSourceIds.length>0,'SOURCE_REQUIRED');b.requiredSourceIds.forEach(identifier);
   array(b.entries,8,'SOURCE_LIMIT');check(new Set(b.requiredSourceIds).size===b.requiredSourceIds.length&&new Set(b.entries.map(e=>e?.sourceId)).size===b.entries.length,'SOURCE_DUPLICATE');
   for(const e of b.entries){exactKeys(e,['sourceId','revision','snapshotHash'],'SOURCE_ENTRY');identifier(e.sourceId);revision(e.revision);hash32(e.snapshotHash);}return b;
@@ -41,17 +43,18 @@ export const sourceBundleHash=b=>{validateSourceBundle(b);return digest('CLEAR-S
 export async function resolveSourceBundle(bundle,{getSnapshot,getArtifact,now}){
   validateSourceBundle(bundle);const b=structuredClone(bundle),clock=now();check(Number.isSafeInteger(clock)&&clock>=0,'SOURCE_TIME');
   const sources=[],missing=b.requiredSourceIds.filter(id=>!b.entries.some(e=>e?.sourceId===id));
-  for(const entry of b.entries){const snapshot=await getSnapshot(entry.snapshotHash);validateSourceSnapshot(snapshot);
+  for(const entry of b.entries){const snapshot=structuredClone(await getSnapshot(entry.snapshotHash));validateSourceSnapshot(snapshot);
     check(sourceSnapshotHash(snapshot)===entry.snapshotHash&&snapshot.sourceId===entry.sourceId&&snapshot.revision===entry.revision
-      &&snapshot.productId===b.productId&&snapshot.cohortId===b.cohortId,'SOURCE_SCOPE');
+      &&snapshot.institutionId===b.institutionId&&snapshot.productId===b.productId&&snapshot.cohortId===b.cohortId,'SOURCE_SCOPE');
     check(snapshot.collectedAt<=clock&&clock<snapshot.expiresAt,'SOURCE_EXPIRED');const blocks=[],images=[];
-    for(const a of snapshot.artifacts){const raw=await getArtifact(entry.snapshotHash,a.artifactId);check(raw instanceof Uint8Array&&raw.byteLength===a.byteLength&&bytesDigest(raw)===a.sha256,'SOURCE_BYTES_CHANGED');
+    for(const a of snapshot.artifacts){const value=await getArtifact(entry.snapshotHash,a.artifactId);check(value instanceof Uint8Array,'SOURCE_BYTES_CHANGED');const raw=Buffer.from(value);check(raw instanceof Uint8Array&&raw.byteLength===a.byteLength&&bytesDigest(raw)===a.sha256,'SOURCE_BYTES_CHANGED');
       if(a.role==='EXTRACTED_TEXT'){const value=new TextDecoder('utf-8',{fatal:true}).decode(raw);let line=0;
         for(const text of value.split('\n')){line++;if(text.length){check(text.length<=16000&&blocks.length<4096,'SOURCE_TEXT_LIMIT');blocks.push({sourceId:entry.sourceId,artifactId:a.artifactId,locator:a.locator+'/line/'+line,text});}}}
-      if(a.role==='IMAGE')images.push({sourceId:entry.sourceId,artifactId:a.artifactId,locator:a.locator,sha256:a.sha256,mediaType:a.mediaType,bytes:Buffer.from(raw)});
+      if(a.role==='IMAGE'||a.role==='RESPONSE_BODY'&&a.mediaType.startsWith('image/'))images.push({sourceId:entry.sourceId,artifactId:a.artifactId,locator:a.locator,sha256:a.sha256,mediaType:a.mediaType,bytes:Buffer.from(raw)});
     }
     sources.push({snapshot:structuredClone(snapshot),blocks,images});
   }
+  const finished=now();check(Number.isSafeInteger(finished)&&finished>=clock&&sources.every(s=>finished<s.snapshot.expiresAt),'SOURCE_EXPIRED');
   // Retrieved pages still have unknown official applicability/completeness.
   return {version:'clear-source-resolved.1',purpose:'POLICY_DRAFT',bundleHash:sourceBundleHash(b),bundle:freeze(b),sources,missingSourceIds:missing,
     status:missing.length||sources.some(s=>s.snapshot.retrievalStatus!=='COLLECTED'||!s.blocks.length)?'NEEDS_SUPPLEMENT':'READABLE_UNVERIFIED',
