@@ -351,7 +351,7 @@ Claude Code 후속: 최신 origin/develop·PR63의 exact head/Checks 및 이 문
 
 ## 최신 C3 증거 수락·평가 저장 연결 (2026-10-15, Draft)
 
-선행 C2 PR63은 develop `890ad93cfb3677c5b4107428095c6f0b15efa9a4`에 정상 병합 완료다. 이후 이슈65·`codex/mvp-evidence-evaluation-http`에서 별도 `clear-mvp-evidence-http.1` 합성 수락→기존 M2→불변 결과/근거·금액 계산·보완/재시작 조회를 구현했다. **새 C3 PR의 병합은 승인되지 않았으며 Draft다.** 최신 PR/정확 head/CI에서 가용 기반을 확인한다.
+선행 C2 PR63은 develop `890ad93cfb3677c5b4107428095c6f0b15efa9a4`에 정상 병합 완료다. 이후 이슈65·`codex/mvp-evidence-evaluation-http`에서 별도 `clear-mvp-evidence-http.1` 합성 수락→기존 M2→불변 결과/근거·금액 계산·보완/재시작 조회를 구현했다. **PR67은 사용자 승인으로 최종 실질 리뷰·검사 후 develop 정상 병합 대상이다.** 최신 PR/정확 head/CI에서 가용 기반을 확인한다.
 
 [상세 C3 계약/DTO/오류/실행](MVP_EVIDENCE_HTTP_CONTRACT.ko.md), [Claude 복붙 지침](MVP_FRONTEND_CONNECTION_PROMPT.ko.md)의 C3 추가 절, [검증 HTTPS 생성 응답](../../specs/m3/evaluation-http-responses.json)을 따른다. C1의 본인 합성 조건 ACK를 먼저 요구한다. C2 문서 ACK/plan/third policy를 YBM·시원스쿨 C3로 바꿔 끼우지 않는다. C2 CHECKED/ACCEPTED import API는 없으며 실제 Reclaim/Moodle/Vision 결과 자동 수락도 없다.
 
@@ -367,4 +367,7 @@ C3 최종 리뷰 보완: 인증된 요청에서 정책/ACK 문맥 불가 또는 
 
 C3 최종 로컬 검증은 관련361/361(C3 HTTP19+HTTPS3 포함), 기존 개발환경33/33·원본legacy191개/의존성graph보존·diff PASS다. 검토 기록과 정확 head CI는 이슈65의 연결 Draft PR에서 확인한다. 현재는 화면 연결/사용성 시험 완료를 주장하지 않는다.
 
-C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https://github.com/gw020328-oss/clear-education-v4/pull/67), 상위55/하위65. 최종 문서 head의 원격 CI/검토 근거는 PR67을 따른다. 이 PR은 develop 미병합이며 자동 병합하지 않는다.
+C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https://github.com/gw020328-oss/clear-education-v4/pull/67), 상위55/하위65. 최종 문서 head의 원격 CI/검토 근거는 PR67을 따른다. 최신 가용 여부와 실제 merge SHA는 PR67 완료 기록을 따른다.
+
+
+최신 PR67 검토: [Mac 원인·영속 무효화 rollback 수정·검증 근거](PR67_FINAL_REVIEW.ko.md)를 따른다. 쿠키 변조는 실제 서버403까지 가로채기를 유지한다. C3 정책 무효화는 거부된 transaction 뒤에도 남아 과거 결과가 되살아나지 않는다. 관련363/363·Mac62/62 로컬 통과이며 최종 head CI/대화 및 실제 develop merge SHA는 [PR67 완료 기록](https://github.com/gw020328-oss/clear-education-v4/pull/67)을 확인한다. 위 Draft/미승인·원인 미확정 문구는 이전 시점 기록이다. DTO/version과 합성 전용 제약은 유지된다.

@@ -79,4 +79,7 @@ C3 최종 리뷰 보완: 인증된 요청에서 정책/ACK 문맥 불가 또는 
 
 검증: 최종 관련361/361(M1/M2 27·C3 HTTP19/TLS3 포함), 기존 개발환경33/33, 원본legacy191개 지문/의존성 graph 보존·diff PASS. C3의 HTTPS 두 profile은 새 TEST 지갑 서명과 CA 검증을 사용한다. 원자 rollback은 새 합성 DB의 중간 INSERT 실패 주입이며 실제 사용자 DB 강제종료 실측이 아니다. 최종 원격 CI는 연결 Draft PR의 exact head를 따른다.
 
-C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https://github.com/gw020328-oss/clear-education-v4/pull/67), 상위55/하위65. 최종 문서 head의 원격 CI/검토 근거는 PR67을 따른다. 이 PR은 develop 미병합이며 자동 병합하지 않는다.
+C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https://github.com/gw020328-oss/clear-education-v4/pull/67), 상위55/하위65. 최종 문서 head의 원격 CI/검토 근거는 PR67을 따른다. 최신 가용 여부와 실제 merge SHA는 PR67 완료 기록을 따른다.
+
+
+최신 PR67 검토: [Mac 원인·영속 무효화 rollback 수정·검증 근거](PR67_FINAL_REVIEW.ko.md)를 따른다. 쿠키 변조는 실제 서버403까지 가로채기를 유지한다. C3 정책 무효화는 거부된 transaction 뒤에도 남아 과거 결과가 되살아나지 않는다. 관련363/363·Mac62/62 로컬 통과이며 최종 head CI/대화 및 실제 develop merge SHA는 [PR67 완료 기록](https://github.com/gw020328-oss/clear-education-v4/pull/67)을 확인한다. 위 Draft/미승인·원인 미확정 문구는 이전 시점 기록이다. DTO/version과 합성 전용 제약은 유지된다.

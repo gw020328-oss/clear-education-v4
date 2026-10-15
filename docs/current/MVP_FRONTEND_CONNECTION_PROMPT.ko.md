@@ -99,7 +99,7 @@ PR60 리뷰에 따라 정책 오류부터 수정하고 진행 현황·서류 보
 
 ## C3 후속 연결 추가 — 별도 Draft의 제공 범위 확인 후 적용
 
-C2 PR63은 develop890ad93cfb3677c5b4107428095c6f0b15efa9a4에 병합됐다. 새 C3는 이슈65의 Draft 단위이므로 develop 가용성을 따로 확인한다. 위 C1/C2 범위·PR60 정책/UX 지침은 그대로 유지하며 C3 명령을 기존 F0/C2 DTO로 치환하지 않는다.
+C2 PR63은 develop890ad93cfb3677c5b4107428095c6f0b15efa9a4에 병합됐다. C3는 이슈65·PR67의 최종 검토/정상 병합 대상이며 PR67의 실제 merge SHA를 develop 가용 기준으로 확인한다. 위 C1/C2 범위·PR60 정책/UX 지침은 그대로 유지하며 C3 명령을 기존 F0/C2 DTO로 치환하지 않는다.
 
 읽는 순서에 `docs/current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md`→`src/product-workflow/evaluation-http-client.mjs`→`specs/m3/evaluation-http-responses.json`을 추가한다. YBM/시원스쿨 host fixture는 서버 전용이므로 example/pins 모듈을 번들에 넣지 않는다. `evaluation-preview.requirements[].fixtures`의 ID와 의미만 화면에 표시한다.
 
@@ -112,3 +112,6 @@ C2 PR63은 develop890ad93cfb3677c5b4107428095c6f0b15efa9a4에 병합됐다. 새 
 7. 유실 응답은 evaluation-operations의 명령명/동일 key GET으로 복구한다. 목록 최근100 receipts/50 decisions는 전체 이력이 아니다. 새로고침/재시작은 저장 결과를 읽으며 POST/모델/평가를 자동 재실행하지 않는다. C3 cancel API는 없다.
 
 수용 검사에 YBM 합성 보류→보완→후보/명시 최종화→재시작 동일 저장결과, 시원스쿨 OR·이력UNKNOWN·200/300 계산 후보·400 PRECHECK_ONLY·500 거부, 최초 시험 교체 거부/같은 시험 정정, 중복/응답유실·새 선택/정책 변경에 따른stale를 추가한다. 실제 Reclaim/Moodle/Vision 연결·프론트 사용성 완료로 표현하지 않는다. C3 파일/프론트 구현은 백엔드 담당이 대신 수정하지 않는다.
+
+
+최신 PR67 검토: [Mac 원인·영속 무효화 rollback 수정·검증 근거](PR67_FINAL_REVIEW.ko.md)를 따른다. 쿠키 변조는 실제 서버403까지 가로채기를 유지한다. C3 정책 무효화는 거부된 transaction 뒤에도 남아 과거 결과가 되살아나지 않는다. 관련363/363·Mac62/62 로컬 통과이며 최종 head CI/대화 및 실제 develop merge SHA는 [PR67 완료 기록](https://github.com/gw020328-oss/clear-education-v4/pull/67)을 확인한다. 위 Draft/미승인·원인 미확정 문구는 이전 시점 기록이다. DTO/version과 합성 전용 제약은 유지된다.

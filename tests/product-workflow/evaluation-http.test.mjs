@@ -141,3 +141,26 @@ test('a policy becoming unavailable cannot silently resurrect an old decision wh
  await f.restart(f.configuration.studentPolicies);const old=(await f.request(path(app)+'/evaluations/'+result.body.result.decisionId)).body;
  assert.equal(old.current,false);assert.equal(old.result,null);assert.equal(old.syntheticEvidenceAcceptanceReady,false);
 });
+
+test('policy invalidation observed inside a rejected transaction survives rollback and restart',async t=>{
+ const f=await evaluationHttpFixture(t),app=await f.create();await f.accept(app,'score-ready');const result=await f.evaluate(app);
+ const db=new DatabaseSync(join(f.directory,'../student/mvp-student.sqlite'));t.after(()=>db.close());
+ const original=f.student.get;let reads=0;
+ // HTTP pre-body authorization observes the active policy; transaction recheck
+ // observes its removal. No timing assumption or external account is involved.
+ f.student.get=(...args)=>{if(++reads===2)db.exec('UPDATE policy_heads SET active=0');return original(...args);};
+ const rejected=await f.post(path(app)+'/evaluations',{expectedWorkflowRevision:result.body.result.workflowRevision},'after-policy-removal');
+ assert.equal(rejected.body.code,'EVAL_CONFIGURATION_REQUIRED');f.student.get=original;
+ db.exec('UPDATE policy_heads SET active=1');await f.restart();
+ const old=(await f.request(path(app)+'/evaluations/'+result.body.result.decisionId)).body;
+ assert.equal(old.current,false);assert.equal(old.result,null);assert.equal(old.syntheticEvidenceAcceptanceReady,false);
+ assert.equal((await f.request(path(app)+'/evaluation-operations/evaluations/after-policy-removal')).status,404);
+});
+
+test('direct service preview also retains invalidation when its readiness check throws',async t=>{
+ const f=await evaluationHttpFixture(t),app=await f.create();await f.accept(app,'score-ready');const result=await f.evaluate(app);
+ await f.restart([]);assert.throws(()=>f.evaluation.preview(f.aliceContext,app),/EVAL_CONFIGURATION_REQUIRED/);
+ await f.restart(f.configuration.studentPolicies);
+ const old=f.evaluation.decision(f.aliceContext,app,result.body.result.decisionId);
+ assert.equal(old.current,false);assert.equal(old.result,null);assert.equal(old.syntheticEvidenceAcceptanceReady,false);
+});

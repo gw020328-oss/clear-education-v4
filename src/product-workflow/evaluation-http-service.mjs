@@ -26,8 +26,20 @@ export function createEvaluationWorkflowService({directory,authentication,studen
  check(p.mode==='SYNTHETIC'&&fixtures.length>0&&fixtures.length<=32&&new Set(fixtures.map(f=>f.fixtureId)).size===fixtures.length,'EVAL_CONFIGURATION_REQUIRED');
  for(const f of fixtures){identifier(f.fixtureId);validateContract('Evidence',f.evidence);check(f.provenance==='PUBLIC_SYNTHETIC_ASSERTION'&&f.evidence.binding.policyHash===compiled.policyHash,'EVAL_CONFIGURATION_REQUIRED');}
  const store=openPrivateDb(directory,'evaluation-http.sqlite',{instanceId,origin:authentication.origin,mode:'SYNTHETIC_EVALUATION_HTTP',
-  configHash:digest('CLEAR-EVALUATION-HOST.1',{policyHash:compiled.policyHash,fixtures})},schema,tables),{db,transaction}=store;
- let closed=false;
+  configHash:digest('CLEAR-EVALUATION-HOST.1',{policyHash:compiled.policyHash,fixtures})},schema,tables),{db}=store;
+ let closed=false,invalidations=null;
+ const latchInvalidation=({app,epoch,t})=>db.prepare('UPDATE heads SET invalidated=1,revision=revision+1,facts=facts+1,selection_revision=selection_revision+1,latest=NULL,updated=MAX(updated,?) WHERE app=? AND epoch=? AND invalidated=0').run(t,app,epoch);
+ function transaction(fn){
+  const observed=[];invalidations=observed;
+  try{return store.transaction(fn);}
+  catch(error){
+   // Rejected commands must roll back facts/results, but an authenticated
+   // observation that invalidated an existing epoch must remain durable.
+   // Reapply only the monotonic latch after rollback, never command writes.
+   if(observed.length)store.transaction(()=>{for(const value of observed)latchInvalidation(value);});
+   throw error;
+  }finally{invalidations=null;}
+ }
  const clock=()=>{const t=now();check(Number.isSafeInteger(t)&&t>=0&&t<=4102444800,'MVP_CLOCK');return t;};
  const actor=(c,write=false)=>{check(!closed,'MVP_CLOSED');const s=authentication.authorizeWorkflow(c,write);check(s.role==='participant','FORBIDDEN');return s;};
  const head=app=>db.prepare('SELECT * FROM heads WHERE app=?').get(app);
@@ -37,7 +49,7 @@ export function createEvaluationWorkflowService({directory,authentication,studen
   const configured=a.state==='ACKNOWLEDGED_SYNTHETIC'&&a.policyCurrent&&a.acknowledgment?.current&&a.policyHash===compiled.policyHash;
   const epoch=configured?digest('CLEAR-EVALUATION-EPOCH.1',{binding:preview.binding,c1Revision:a.workflowRevision,ack:a.acknowledgment.acknowledgmentHash}):null;
   // Once observed invalid, a fixed development environment cannot revive old facts by re-enabling a policy.
-  if(h&&!h.invalidated&&(!configured||h.epoch!==epoch)){db.prepare('UPDATE heads SET invalidated=1,revision=revision+1,facts=facts+1,selection_revision=selection_revision+1,latest=NULL,updated=? WHERE app=?').run(t,app);h.invalidated=1;h.revision++;h.facts++;h.selection_revision++;h.latest=null;h.updated=t;}
+  if(h&&!h.invalidated&&(!configured||h.epoch!==epoch)){const observed={app,epoch:h.epoch,t};invalidations?.push(observed);latchInvalidation(observed);h.invalidated=1;h.revision++;h.facts++;h.selection_revision++;h.latest=null;h.updated=t;}
   return {s,a,preview,t,h,epoch,ready:!!configured&&!h?.invalidated};
  }
  function sync(v){check(v.ready,'EVAL_CONFIGURATION_REQUIRED');
