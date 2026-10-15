@@ -1,5 +1,9 @@
 # CLEAR
 
+2026-10-15 11:22 KST 원격 확인: `develop`은 [PR #36 병합 `21776f5`](https://github.com/gw020328-oss/clear-education-v4/commit/21776f53d7660597b94a37c89139316e43eeb673)이며, `main`은 `375051e`로 아래 개발 결과가 미반영입니다. [최신 진행·PR·정확한 커밋의 CI](docs/status.md#2026-10-15-원격-확인)를 먼저 확인하세요. 아래 날짜별 안내는 당시 기준입니다.
+
+`develop`에는 제품 증명 세션·합성 결과 단회 수락, 등록 이력의 별도 영속 접수와 실제 수집기 연결, [격리 TEST 부분 충전·전액 배정·단회 지급 실험](docs/current/TEST_FUNDING_LAB.ko.md)이 병합됐습니다. [등록 이력의 저장된 실제 실행](docs/current/history-intake-verification.json)은 표 증명·독립 검증·접수 복구 범위이며 전체성·신원·제품 자격·지급은 미확인입니다. TEST 지급은 인공 자격 fixture와 새 인메모리 체인의 합성 결과입니다. 실제 Moodle·원천 자격 검증 차단, grant/outbox 보류, 독립 청구 제품 전환 NO-GO를 유지합니다.
+
 2026-10-14 M0 추가: [합성 계약](docs/current/M0_CONTRACT.ko.md)·[결정/미결 질문](docs/current/M0_DECISIONS.ko.md)·[프런트 시작 문서](docs/current/FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
 
 2026-10-14 새 MVP 설계 기준: [정본 PRD](docs/current/MVP_PRD_20261014.ko.md) · [구현 차이](docs/current/MVP_GAP_20261014.ko.md) · [인터페이스 초안](docs/current/MVP_INTERFACES_20261014.ko.md) · [개발 계획](docs/current/MVP_PLAN_20261014.ko.md). 최신 확인 develop은 `6d941a1`(PR #21·#29 병합)입니다. 새 목표는 YBM 750+ 주 시연, 시원스쿨 출석 OR 성적 확장, AI/Vision 사전검토와 등록·재원 분리입니다. **문서·M0 합성 명세/검사만 추가했으며 아래 기존 800점 AND 80%·선예치 구현/실험은 보존합니다.** 실제 Moodle 제품 연동·원천 검증 차단, grant/outbox 보류, 독립 청구 제품 전환 NO-GO를 유지합니다. 아래 날짜별 상태는 당시 기록입니다.
@@ -18,7 +22,7 @@ CLEAR는 어학원 환급 안내를 검토 가능한 규칙으로 정리하고, 
 
 현재 Mac의 관리형 임시 저장과 종료·재시작 정리 정책을 승인된 MVP 기준으로 적용했습니다. [변경된 PRD·설계와 일정](docs/current/MAC_MVP.ko.md), [저장 경계 시험 결과](docs/w02/MAC_STORAGE_REPORT.ko.md), [합성 ZIP 사용 안내](docs/current/MAC_TOOL_GUIDE.ko.md)를 참고하세요. 기존 ZIP과 기본 실행은 합성 저장 경계 시험용입니다.
 
-별도 진단 모드에서는 공식 Attestor의 동일 client로 새 증명을 생성하고, 별도 프로세스에서 공증자 서명·신청/수취 지갑 결합·원천 정책·신선도·같은 시험 연결을 검증했습니다. [공개 보고서](docs/w02/YBM_PROOF_REPORT.ko.md)와 [검증 기록](docs/w02/ybm-proof-verification.json)의 실제 성공 실행은 `1a99de4`이며, 이번 문서 확인에서 재실행한 결과가 아닙니다. 이 실제 증명 기록은 메모리의 로컬 진단 신청·테스트 지갑 범위입니다. 이후 develop에는 [합성 정책·최고점/800점 AND 시드 80% 평가](docs/current/POLICY_EVALUATOR.ko.md), [지갑 인증·SQLite 영속 신청/동의](docs/current/WALLET_APPLICATIONS.ko.md), [금고 설정·최종 동의·예치 확인](docs/current/VAULT_ENROLLMENT.ko.md)이 추가됐습니다. 금고 권한·청구·회수는 메모리 EVM과 무가치 TEST 토큰의 합성 계약 시험까지이며, 제품 proof 세션·영속 proof nonce·시험 중복·발급 outbox·독립 청구와 실제 자격/지급 통합은 미완료입니다. 타 사용자 자기 PC/계정의 실제 수집과 비개발자 2명의 합성 사용성 시험도 남아 있습니다.
+별도 진단 모드에서는 공식 Attestor의 동일 client로 새 증명을 생성하고, 별도 프로세스에서 공증자 서명·신청/수취 지갑 결합·원천 정책·신선도·같은 시험 연결을 검증했습니다. [공개 보고서](docs/w02/YBM_PROOF_REPORT.ko.md)와 [검증 기록](docs/w02/ybm-proof-verification.json)의 실제 성공 실행은 `1a99de4`이며, 이번 문서 확인에서 재실행한 결과가 아닙니다. 이 실제 증명 기록은 메모리의 로컬 진단 신청·테스트 지갑 범위입니다. 이후 develop에는 [합성 정책·최고점/800점 AND 시드 80% 평가](docs/current/POLICY_EVALUATOR.ko.md), [지갑 인증·SQLite 영속 신청/동의](docs/current/WALLET_APPLICATIONS.ko.md), [금고 설정·최종 동의·예치 확인](docs/current/VAULT_ENROLLMENT.ko.md)이 추가됐습니다. [제품 proof 세션·영속 nonce](docs/current/PROOF_SESSIONS.ko.md)와 [합성 결과 단회 수락](docs/current/PRODUCT_PROOF.ko.md)도 병합됐지만 실제 원천 자격 검증은 차단돼 있습니다. [등록 접수](docs/current/HISTORY_INTAKE.ko.md)는 별도 로컬 모듈 범위이며 제품 웹 신청·지갑 동의·전체 시험의 사업 단위 재사용 방지·grant/outbox·독립 청구·실제 자격/지급 통합 완료를 뜻하지 않습니다. 타 사용자 자기 PC/계정의 실제 수집과 비개발자 2명의 합성 사용성 시험도 남아 있습니다.
 
 ```sh
 ./tools/node --test tests/mac-collector/*.test.mjs
@@ -125,7 +129,9 @@ cd clear-education-v4
 - [x] develop: Mac 관리형 저장·복구 및 본인 새 YBM 증명 1쌍 생성·독립 검증
 - [x] develop: 합성 정책·결정적 자격 평가와 지갑 인증·영속 신청/동의
 - [x] develop: 메모리 EVM의 금고 설정·최종 동의·예치 확인 및 복구
-- [ ] 제품 proof 세션·영속 proof nonce·시험 중복·발급 outbox 연결
+- [x] develop: 제품 proof 세션·영속 nonce와 합성 결과 단회 수락
+- [x] develop: 별도 로컬 등록 접수·독립 검증 연결 및 격리 TEST 재원 실험
+- [ ] 사업 단위 시험 재사용 방지·제품 자격/지급 통합 (grant/outbox 보류)
 - [ ] 새 실제 성적 증명 + 시드 학습 기록 + 로컬 지급 연결
 - [ ] 삭제·장애·중복·직접 청구 검증
 - [ ] 타 사용자 자기 PC·계정 실제 수집 최소 1건
