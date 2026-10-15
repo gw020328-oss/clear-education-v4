@@ -36,20 +36,21 @@ const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].inclu
 
 // The factory does not listen or deploy. HTTPS termination must preserve Host
 // and use an encrypted connection to this handler; proxy headers are not trusted.
-export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow, studentWorkflow } = {}) {
+export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow, studentWorkflow, documentWorkflow } = {}) {
   const makeServer = tls ? createHttpsServer : createServer;
   const server = makeServer({ ...tls, requestTimeout: 10000, headersTimeout: 10000, maxHeaderSize: 8192 },
-    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow, studentWorkflow }));
+    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow, studentWorkflow, documentWorkflow }));
   server.maxConnections = 32;
   return server;
 }
 
 // Composable handler; the same transport/origin/session checks apply when a
 // local development listener also serves a frontend build and synthetic RPC.
-export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow, studentWorkflow } = {}) {
+export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow, studentWorkflow, documentWorkflow } = {}) {
   const expected = new URL(service.origin);
   requireRule(!workflow || workflow.origin === service.origin, 'ORIGIN_CONFIG');
   requireRule(!studentWorkflow || studentWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
+  requireRule(!documentWorkflow || documentWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -59,6 +60,7 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
     const abort = () => cancelled.abort();
     const closed = () => { if (!res.writableEnded) abort(); };
     req.once('aborted', abort); res.once('close', closed);
+    let releaseUpload;
     try {
       const loopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
       requireRule(req.socket.encrypted || (allowLoopbackHttpForTests && loopback), 'TRANSPORT');
@@ -66,15 +68,23 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       const origin = req.headers.origin;
       requireRule(origin === service.origin || (req.method === 'GET' && origin === undefined && req.headers['sec-fetch-site'] === 'same-origin'), 'ORIGIN');
       requireRule(!req.headers['sec-fetch-site'] || req.headers['sec-fetch-site'] === 'same-origin', 'ORIGIN');
-      const c = cookies(req.headers.cookie), body = req.method === 'POST' ? await jsonBody(req) : null;
+      const c = cookies(req.headers.cookie);
       const chain = req.headers['x-chain-id'];
       const context = { token: c[SESSION], wallet: req.headers['x-wallet'],
         chainId: typeof chain === 'string' && /^[1-9][0-9]{0,15}$/.test(chain) ? Number(chain) : null,
         csrf: req.headers['x-csrf-token'] ?? null };
       const path = req.url, key = req.headers['idempotency-key']; let result;
+      const document = /^\/mvp\/applications\/(0x[0-9a-f]{64})\/(document-preview|document-agreement|submissions|review-runs|document-operations)(?:\/|$)/.exec(path);
+      const documentUpload=document&&req.method==='POST'&&document[2]==='submissions'&&path.endsWith('/submissions');
+      if(document){
+        requireRule(documentWorkflow && loopback,'ROUTE');documentWorkflow.authorize(context,document[1],req.method!=='GET');
+        if(documentUpload)releaseUpload=documentWorkflow.acquireUpload(context,document[1]);
+      }
+      const body=req.method==='POST'?(documentUpload?await documentJsonBody(req):await jsonBody(req)):null;
+      if(document&&req.method==='DELETE')requireRule(!req.headers['transfer-encoding']&&(!req.headers['content-length']||req.headers['content-length']==='0'),'DOC_FILE_SET');
       if (/^\/mvp(?:\/|\?|$)/.test(path)) {
-        requireRule((workflow || studentWorkflow) && loopback, 'FORBIDDEN');
-        result = /^\/mvp\/(policies|applications|student-operations)(?:\/|$)/.test(path)
+        requireRule((workflow || studentWorkflow || documentWorkflow) && loopback, 'FORBIDDEN');
+        result = document ? dispatchDocument(documentWorkflow,context,req.method,path,body,key) : /^\/mvp\/(policies|applications|student-operations)(?:\/|$)/.test(path)
           ? dispatchStudent(studentWorkflow, context, req.method, path, body, key)
           : await dispatchWorkflow(workflow, context, req.method, path, body, key, cancelled.signal);
       } else if (req.method === 'POST' && path === '/auth/nonce') {
@@ -88,6 +98,7 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       } else if (req.method === 'GET' && path === '/auth/session') result = service.whoami(context);
       else if (req.method === 'POST' && path === '/auth/logout') {
         exactKeys(body, [], 'LOGOUT_SCHEMA');
+        documentWorkflow?.logout(context);
         result = service.logout(context); res.setHeader('Set-Cookie', cookie(SESSION, '', 0));
       } else if (req.method === 'POST' && path === '/policies') result = service.registerPolicy(context, body);
       else if (req.method === 'GET' && /^\/policies\/0x[0-9a-f]{64}$/.test(path)) result = service.getPolicy(context, path.split('/')[2]);
@@ -125,12 +136,13 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       res.end(JSON.stringify(result));
     } catch (error) {
       const code = error instanceof RuleError ? error.message : 'INTERNAL_ERROR';
-      res.statusCode = code === 'INTERNAL_ERROR' ? 500 : code === 'MVP_NOT_FOUND' ? 404
-        : ['MVP_STALE','MVP_TEMPLATE_REQUIRED','MVP_BUSY','MVP_CLOSED','MVP_POLICY_UNAVAILABLE','MVP_APPLICATION_EXISTS'].includes(code) ? 409
+      res.statusCode = code === 'DOC_RECEIVE_TIMEOUT' ? 408 : code === 'INTERNAL_ERROR' ? 500 : code === 'MVP_NOT_FOUND' ? 404
+        : ['MVP_STALE','MVP_TEMPLATE_REQUIRED','MVP_BUSY','MVP_CLOSED','MVP_POLICY_UNAVAILABLE','MVP_APPLICATION_EXISTS','DOC_CONFIGURATION_REQUIRED','DOC_DISPLAY_CHANGED','DOC_RAW_UNAVAILABLE','DOC_BUSY','DOC_LIMIT'].includes(code) ? 409
         : code === 'SOURCE_EXPIRED' ? 410 : statusFor(code);
+      if(['DOC_RECEIVE_TIMEOUT','DOC_CANCELLED'].includes(code)){res.setHeader('Connection','close');res.once('finish',()=>req.destroy());}
       res.end(JSON.stringify({ code, message: '요청을 완료하지 못했습니다.', retryable: false,
         nextAction: res.statusCode === 401 ? 'SIGN_IN_AGAIN' : 'CHECK_REQUEST', requestId }));
-    } finally { req.removeListener('aborted', abort); res.removeListener('close', closed); }
+    } finally { releaseUpload?.(); req.removeListener('aborted', abort); res.removeListener('close', closed); }
   };
 }
 
@@ -179,4 +191,39 @@ function dispatchStudent(service, context, method, path, body, key) {
     if(method==='POST'&&action==='policy-selection')return service.selectPolicy(context,id,body,key);
   }
   throw new RuleError('ROUTE');
+}
+
+
+// Bounded C2-only body reader. Existing routes retain their 64KiB limit.
+async function documentJsonBody(req){
+ requireRule(req.headers['content-type']==='application/json','CONTENT_TYPE');
+ requireRule(!req.headers['content-length']||(/^[0-9]+$/.test(req.headers['content-length'])&&Number(req.headers['content-length'])<=393216),'BODY_SIZE');
+ return new Promise((resolve,reject)=>{
+  let size=0;const chunks=[];
+  const cleanup=()=>{clearTimeout(timer);req.removeListener('data',data);req.removeListener('end',end);req.removeListener('error',fail);req.removeListener('aborted',abort);};
+  const fail=error=>{cleanup();for(const b of chunks)b.fill(0);req.pause();reject(error);};
+  const abort=()=>fail(new RuleError('DOC_CANCELLED'));
+  const data=chunk=>{size+=chunk.length;if(size>393216)return fail(new RuleError('BODY_SIZE'));chunks.push(Buffer.from(chunk));};
+  const end=()=>{cleanup();try{const bytes=Buffer.concat(chunks);try{resolve(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));}finally{bytes.fill(0);}}catch{reject(new RuleError('JSON'));}finally{for(const b of chunks)b.fill(0);}};
+  const timer=setTimeout(()=>fail(new RuleError('DOC_RECEIVE_TIMEOUT')),10000);timer.unref();
+  req.on('data',data);req.once('end',end);req.once('error',fail);req.once('aborted',abort);
+ });
+}
+function dispatchDocument(service,context,method,path,body,key){
+ const m=/^\/mvp\/applications\/(0x[0-9a-f]{64})\/(document-preview|document-agreement|submissions|review-runs|document-operations)(?:\/([a-z][a-z0-9.-]{0,63}))?(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
+ requireRule(m,'ROUTE');const [,app,kind,target,action]=m;
+ if(kind==='document-preview'&&method==='GET'&&!target)return service.preview(context,app);
+ if(kind==='document-agreement'&&method==='POST'&&!target)return service.acknowledge(context,app,body,key);
+ if(kind==='submissions'){
+  if(method==='POST'&&!target)return service.submit(context,app,body,key);
+  if(method==='GET'&&!action)return target?service.submission(context,app,target):service.submissions(context,app);
+  if(method==='DELETE'&&target&&action==='raw')return service.deleteRaw(context,app,target,key);
+ }
+ if(kind==='review-runs'){
+  if(method==='POST'&&!target)return service.startRun(context,app,body,key);
+  if(method==='GET'&&target&&!action)return service.run(context,app,target);
+  if(method==='POST'&&target&&action==='cancel')return service.cancel(context,app,target,body,key);
+ }
+ if(kind==='document-operations'&&method==='GET'&&target)return action?service.recover(context,app,target,action):service.operation(context,app,target);
+ throw new RuleError('ROUTE');
 }

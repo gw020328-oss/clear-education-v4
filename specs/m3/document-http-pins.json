@@ -1,0 +1,46 @@
+{
+  "approvedManifestHash": "0xe143138d73ba81da6127b51c4e25750b0d0832638fee273eacb93fc5df1c44cd",
+  "sourcePins": [
+    {
+      "sourceId": "third-synthetic-terms",
+      "institutionId": "synthetic-third",
+      "productId": "third-synthetic-700",
+      "cohortId": "demo-2030",
+      "capturedAt": 1792022400,
+      "origin": "SYNTHETIC_ASSUMPTION",
+      "rawHash": "0xea05294575b8b53b6f887b80277628b916adf546ca0d319152bc02c8c0a0220b",
+      "normalizedHash": "0xea05294575b8b53b6f887b80277628b916adf546ca0d319152bc02c8c0a0220b",
+      "normalizerVersion": "manual-text.1",
+      "applicability": "SYNTHETIC_ONLY",
+      "locators": [
+        "artifact/text/line/1"
+      ]
+    },
+    {
+      "sourceId": "review-plan.1.34e30099a585abcf5d469f5f77e4adfb580e3c4c",
+      "institutionId": "synthetic-third",
+      "productId": "third-synthetic-700",
+      "cohortId": "demo-2030",
+      "capturedAt": 1792022400,
+      "origin": "SYNTHETIC_ASSUMPTION",
+      "rawHash": "0xd8b5183d4e993da35f10f43c4a6b0d87b810c0fd5d93168e59fd88dfe0a85b36",
+      "normalizedHash": "0x0902a6619eb361e2649d40b90a00e0b3072997c2f9b3030430bd207dd60dec1a",
+      "normalizerVersion": "clear-review-display.1",
+      "applicability": "SYNTHETIC_ONLY",
+      "locators": [
+        "clear-review-plan.1/34e30099a585abcf5d469f5f77e4adfb580e3c4c983911f9fa7a9df921cd98a6"
+      ]
+    }
+  ],
+  "capabilityPins": {
+    "profileVersion": "third-demo-capabilities.1",
+    "conditionAmountTiers": [
+      75
+    ],
+    "precheckOnlyTiers": [],
+    "excludedTiers": [
+      500
+    ]
+  },
+  "sourceBlockPin": "0x1027e4fa13efe9963699ff81b3af7e98f6c2511958c970f0af39eb1fde119630"
+}
