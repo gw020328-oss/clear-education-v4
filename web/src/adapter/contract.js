@@ -35,7 +35,41 @@ export const BASE_VIEW_FIELDS = Object.freeze([
 
 export const OPTIONAL_VIEW_FIELDS = Object.freeze([
   'finalConsentDigest', 'runtimeConfigHash', 'fundingEvidence',
+  // 조건이 지금 어디까지 왔는가. 정책이 아니라 신청에 붙는다 —
+  // 정책은 '무엇을 충족해야 하는가' 이고 이쪽은 '이 수강생이 어디까지 왔는가' 다.
+  'conditionProgress',
 ]);
+
+/** 조건 진행 상태. 화면이 아는 것만 받는다 */
+const PROGRESS_STATES = Object.freeze([
+  'MET', 'UNMET', 'IN_PROGRESS', 'WAITING', 'UNAVAILABLE',
+]);
+
+/**
+ * 진행 상황의 모양만 본다.
+ *
+ * 모르는 상태가 오면 화면이 '아직 확인 안 됨' 으로 떨어뜨려 그린다. 충족한
+ * 것을 안 했다고 보여주게 되므로 여기서 먼저 깨뜨린다.
+ */
+function checkConditionProgress(progress) {
+  if (progress === null || typeof progress !== 'object' || Array.isArray(progress)) {
+    return ['conditionProgress 가 객체가 아니다'];
+  }
+  const problems = [];
+  for (const [id, entry] of Object.entries(progress)) {
+    const at = `conditionProgress.${id}`;
+    if (entry === null || typeof entry !== 'object') { problems.push(`${at} 가 객체가 아니다`); continue; }
+    if (!PROGRESS_STATES.includes(entry.state)) {
+      problems.push(`${at}.state 가 ${PROGRESS_STATES.join('/')} 가 아니다`);
+    }
+    for (const field of ['value', 'note', 'at']) {
+      if (entry[field] !== undefined && typeof entry[field] !== 'string') {
+        problems.push(`${at}.${field} 가 문자열이 아니다`);
+      }
+    }
+  }
+  return problems;
+}
 
 export const APPLICATION_STATES = Object.freeze([
   'DRAFT', 'TERMS_ACCEPTED', 'CONSENTED', 'FUNDING_PENDING', 'ENROLLED',
@@ -64,7 +98,12 @@ export const isAddress = (value) => typeof value === 'string' && /^0x[0-9a-fA-F]
  * @returns {string[]} 문제 목록. 빈 배열이면 통과
  */
 /** 조건을 무엇으로 확인하는가. 경로마다 필요 자료가 달라지는 것이 요지다 */
-const EVIDENCE_KINDS = Object.freeze(['EXAM', 'LEARNING', 'DOCUMENT']);
+const EVIDENCE_KINDS = Object.freeze(['EXAM', 'LEARNING', 'RECORD', 'DOCUMENT']);
+/** 그 조건을 어떻게 확인하는가. 화면이 아는 코드만 받는다 — 모르는 코드가
+    오면 확인 방법 없이 그려져서 참가자가 할 일을 못 본다 */
+const VERIFY_KINDS = Object.freeze([
+  'SELF_LOGIN', 'SELF_LOGIN_SHARED', 'AUTO', 'AUTO_REVIEWED', 'SUBMIT',
+]);
 
 /**
  * 조건 그룹의 모양만 본다.
@@ -98,7 +137,13 @@ function checkConditionGroups(groups) {
         && !EVIDENCE_KINDS.includes(item.evidence)) {
         problems.push(`${where}.evidence 가 ${EVIDENCE_KINDS.join('/')} 가 아니다`);
       }
+      if (item.verify !== undefined && item.verify !== null
+        && !VERIFY_KINDS.includes(item.verify)) {
+        problems.push(`${where}.verify 가 ${VERIFY_KINDS.join('/')} 가 아니다`);
+      }
     });
+    // 경로마다 금액이 다를 수 있다. 붙어 있으면 산수를 본다.
+    if (group.payout) problems.push(...checkPayoutAmounts(group.payout, `${at}.payout`));
   });
   // 경로가 여럿이면 어느 경로인지 알아볼 이름이 있어야 한다.
   if (groups.length > 1) {
@@ -107,6 +152,58 @@ function checkConditionGroups(groups) {
     });
   }
   return problems;
+}
+
+/**
+ * 받을 금액과 보낼 토큰이 맞는가.
+ *
+ * 시연은 1 TEST 를 1원으로 둔다. 둘이 어긋나면 화면이 말한 금액과 계약이
+ * 보내는 양이 달라지고, 그건 이 제품이 없애려는 바로 그 문제다.
+ * 공제 합계가 안 맞는 경우도 같이 본다 — 산수가 틀린 내역을 보여주면
+ * 참가자가 실수령을 잘못 안다.
+ */
+function checkPayoutAmounts(money, where = 'policy.payoutBreakdown') {
+  if (!money) return [`${where} 가 없다`];
+  const problems = [];
+  const { net } = money;
+  const gross = money.gross?.amount;
+  const sum = (list) => (list ?? []).reduce((acc, x) => acc + (x?.amount ?? 0), 0);
+  // 환급금은 공제만 되는 것이 아니다. 응시료처럼 더해지는 항목이 있고
+  // 그 가산분에도 세금이 붙는다. 가산을 빼먹으면 산수가 맞지 않는다.
+  const added = sum(money.additions);
+  const taken = sum(money.deductions);
+  if (!Number.isInteger(gross) || !Number.isInteger(net)) {
+    return [`${where} 의 금액이 정수가 아니다`];
+  }
+  if (gross + added - taken !== net) {
+    problems.push(`${where} 의 내역이 맞지 않는다 — ${gross} + ${added} − ${taken} ≠ ${net}`);
+  }
+  // 가산이 없으면 실수령이 표시 금액을 넘을 수 없다. 넘는다면 공제가
+  // 음수이거나 내역이 잘못된 것이다.
+  if (added === 0 && net > gross) problems.push(`${where} 의 실수령이 표시 금액보다 크다`);
+  return problems;
+}
+
+/**
+ * 한 구간에서 받을 수 있는 가장 큰 실수령.
+ *
+ * 금액은 구간에 붙기도 하고 경로마다 붙기도 한다. 어느 쪽이든 예치는 그
+ * 구간에서 나갈 수 있는 최대 금액을 감당해야 한다.
+ */
+function tierTopNet(tier) {
+  const nets = [
+    tier?.payout?.net,
+    ...(tier?.groups ?? []).map((group) => group?.payout?.net),
+  ].filter(Number.isInteger);
+  return nets.length ? Math.max(...nets) : null;
+}
+
+/** 시연은 1 TEST 를 1원으로 둔다. 예치 수량이 금액과 어긋나면 안 된다 */
+function checkTokenMatchesNet(net, p, message) {
+  if (!Number.isInteger(net)) return [];
+  const expected = String(BigInt(net) * 10n ** BigInt(p.tokenDecimals ?? 0));
+  return String(p.amount) === expected ? []
+    : [`${message} — amount 가 ${expected} 여야 한다`];
 }
 
 export function checkPolicyView(compiled) {
@@ -140,8 +237,8 @@ export function checkPolicyView(compiled) {
   if ('conditionGroups' in p) problems.push(...checkConditionGroups(p.conditionGroups));
 
   // conditionTiers 도 선택 필드다. 환급률 구간이 여럿인 반에서 쓴다.
-  // 집행하는 구간이 정확히 하나여야 한다 — 정책의 amount 가 하나뿐이라
-  // 집행 구간이 둘이면 어느 금액을 지급하는지 화면이 말할 수 없다.
+  // 구간은 판정 때 갈리므로 전부 한 계약 안에 있고, 예치는 그중 가장
+  // 높은 경로를 감당해야 한다.
   if ('conditionTiers' in p) {
     const tiers = p.conditionTiers;
     if (!Array.isArray(tiers) || tiers.length === 0) {
@@ -155,12 +252,33 @@ export function checkPolicyView(compiled) {
         if (ids.has(tier.id)) problems.push(`${at}.id 가 중복이다`);
         ids.add(tier.id);
         if (typeof tier.rate !== 'string' || tier.rate === '') problems.push(`${at}.rate 가 없다`);
-        if (typeof tier.supported !== 'boolean') problems.push(`${at}.supported 가 boolean 이 아니다`);
         problems.push(...checkConditionGroups(tier.groups).map((m) => m.replace('policy.conditionGroups', `${at}.groups`)));
+        // 금액은 구간에 붙거나 경로마다 붙는다. 둘 다 없으면 화면이 그
+        // 구간의 금액을 말할 수 없고, 일부 경로에만 있으면 나머지 경로가
+        // 금액 없이 그려진다.
+        if (tier.payout) {
+          problems.push(...checkPayoutAmounts(tier.payout, `${at}.payout`));
+        } else if (!(tier.groups ?? []).every((group) => group?.payout)) {
+          problems.push(`${at} 에 금액이 없다 — 구간에 payout 이 있거나 모든 경로에 있어야 한다`);
+        }
       });
-      const supported = tiers.filter((t) => t?.supported === true).length;
-      if (supported !== 1) problems.push(`집행하는 구간이 ${supported}개다 — 정확히 하나여야 한다`);
+      // 구간 순서가 뒤집히면 어느 구간이 더 높은지 화면이 잘못 말한다.
+      // 비교 기준은 그 구간에서 나갈 수 있는 최대 금액이다.
+      for (let i = 1; i < tiers.length; i += 1) {
+        const prev = tierTopNet(tiers[i - 1]), now = tierTopNet(tiers[i]);
+        if (Number.isInteger(prev) && Number.isInteger(now) && now <= prev) {
+          problems.push(`구간이 오름차순이 아니다 — ${tiers[i].rate} 가 ${tiers[i - 1].rate} 보다 크지 않다`);
+        }
+      }
+      // 예치는 가장 높은 구간의 가장 높은 경로 기준이어야 한다. 그보다
+      // 적으면 그 경로로 달성한 사람에게 지급할 재원이 없다.
+      problems.push(...checkTokenMatchesNet(tierTopNet(tiers[tiers.length - 1]), p,
+        '예치액이 가장 높은 경로의 실수령과 다르다'));
     }
+  }
+  if ('payoutBreakdown' in p) {
+    problems.push(...checkPayoutAmounts(p.payoutBreakdown));
+    problems.push(...checkTokenMatchesNet(p.payoutBreakdown.net, p, '실수령과 토큰 수량이 다르다'));
   }
 
   // 컴파일러가 강제하는 기간 순서를 화면에서도 확인한다
@@ -185,6 +303,8 @@ export function checkApplicationView(view) {
       problems.push(`${key} 는 계약에 없는 필드다`);
     }
   }
+
+  if ('conditionProgress' in view) problems.push(...checkConditionProgress(view.conditionProgress));
 
   if (!isHash32(view.applicationId)) problems.push('applicationId 형식이 0x+소문자 hex 64자리가 아니다');
   if (!isHash32(view.policyHash)) problems.push('policyHash 형식이 0x+소문자 hex 64자리가 아니다');

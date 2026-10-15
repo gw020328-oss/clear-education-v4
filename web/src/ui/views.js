@@ -97,7 +97,15 @@ export function dashboardView(view, policy, context = {}) {
     // 고정된 조건이 먼저다. 이 제품이 하는 일은 '조건을 못 바꾸게 만드는 것'이고,
     // 참가자가 몇 달 뒤 다시 들어왔을 때 확인하려는 것도 등록 절차가 아니라
     // '내가 뭘 받기로 했더라' 다. 등록 단계는 그 아래 줄 다섯 개면 된다.
-    policy ? policySection(policy) : el('p.muted', { text: '조건을 불러오지 못했습니다.' }),
+    // 조건은 정책에서, 어디까지 왔는지는 신청에서 온다. 둘을 조건 id 로 맞춘다.
+    policy
+      ? policySection(policy, {
+        progress: view.conditionProgress ?? null,
+        // 최종 동의 전에는 고정된 것이 아니다. consentScope 가 CONTRACT 로
+        // 바뀌는 자리가 그 경계다(3단계).
+        fixed: view.consentScope === 'CONTRACT',
+      })
+      : el('p.muted', { text: '조건을 불러오지 못했습니다.' }),
 
     // 지금 무슨 일을 기다리는지 한 문장. 단계 이름이 아니라 할 일로 적는다.
     el('div.now', { 'data-actor': actor.key }, [

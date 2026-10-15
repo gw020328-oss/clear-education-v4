@@ -47,16 +47,35 @@ function parseRoute() {
  * 그래서 전환 장치는 배너에만 둔다. 같은 화면 코드가 다른 정책을 받아
  * 다르게 그려지는 것을 발표에서 클릭 한 번으로 보이기 위한 것이다.
  */
+// 짝을 지어 둔다. 같은 상황에서 반만 바뀌어야 비교가 된다 — 수강 중 화면에서
+// 계약 직후 화면으로 건너뛰면 무엇이 달라진 것인지 알 수 없다.
 const COMPARE = Object.freeze([
-  { key: 'stage3', label: '반 A — 조건 둘, 단일 환급률' },
-  { key: 'altPath', label: '반 B — 환급률 구간 다섯, 선택 경로' },
+  { key: 'ybm', label: 'YBM 750+ 환급코스', pair: 'altPath' },
+  { key: 'altPath', label: '시원스쿨 시작이반 750점반', pair: 'ybm' },
+  { key: 'ybmProgress', label: 'YBM 750+ 환급코스', pair: 'altProgress' },
+  { key: 'altProgress', label: '시원스쿨 시작이반 750점반', pair: 'ybmProgress' },
 ]);
+
+/**
+ * '로' 와 '으로' 를 고른다.
+ *
+ * 반 이름이 데이터에서 오므로 조사를 글자로 박아둘 수 없다.
+ * 받침이 없거나 ㄹ 받침이면 '로', 그 밖에는 '으로' 다
+ * (코스 → 코스로, 750점반 → 750점반으로).
+ */
+function ro(word) {
+  const last = word.codePointAt(word.length - 1);
+  if (!Number.isInteger(last) || last < 0xac00 || last > 0xd7a3) return '로';
+  const jong = (last - 0xac00) % 28;
+  return jong === 0 || jong === 8 ? '로' : '으로';
+}
 
 function scenarioNote() {
   const info = adapter.describe();
   const current = currentScenario();
-  const other = COMPARE.find((c) => c.key !== current);
-  const known = COMPARE.some((c) => c.key === current);
+  const here = COMPARE.find((c) => c.key === current);
+  const other = here ? COMPARE.find((c) => c.key === here.pair) : null;
+  const known = Boolean(here);
 
   const goTo = (key) => {
     const url = new URL(window.location.href);
@@ -73,7 +92,7 @@ function scenarioNote() {
         type: 'button',
         title: '같은 화면에 다른 반의 정책을 넣어 봅니다',
         onClick: () => goTo(other.key),
-      }, [el('span', { text: `${other.label} 로 바꿔 보기` })])
+      }, [el('span', { text: `${other.label}${ro(other.label)} 바꿔 보기` })])
       : el('span.muted', { text: ' · 다른 상황은 주소에 ?scenario= 를 붙여 봅니다 (web/README.ko.md)' }),
   ]);
 }

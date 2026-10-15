@@ -13,7 +13,8 @@ import { readFileSync } from 'node:fs';
 
 import { statusOf, DONE, NOW, TODO } from '../src/ui/timeline.js';
 import { STEP_TASKS } from '../src/ui/step-detail.js';
-import { STEP_ORDER, TOTAL_STEPS } from '../src/ui/state-labels.js';
+import { STEP_ORDER, TOTAL_STEPS, actorFor } from '../src/ui/state-labels.js';
+import { SYNTHETIC_APPLICATIONS } from '../src/fixtures/applications.js';
 
 /** 현재 상태를 기준으로 다섯 단계의 판정을 순서대로 늘어놓는다 */
 const line = (currentState) => STEP_ORDER.map((state) => statusOf(state, currentState));
@@ -181,4 +182,28 @@ test('단계 설명이 자격·청구·지급을 말하지 않는다', () => {
       }
     }
   }
+});
+
+test('진행 중인 단계의 차례는 지금 상태에서 나온다', () => {
+  // actorFor 는 '지금 상태에서 다음에 움직일 쪽' 을 준다. 단계의 상태를
+  // 넣으면 한 칸 밀린 답이 나온다 — DRAFT 인데 2단계가 '학원 차례' 로
+  // 나오던 것이 그것이다. 조건 동의 서명은 참가자가 한다.
+  assert.equal(actorFor('DRAFT').key, 'LEARNER');
+  // 금고가 연결되면 최종 동의 서명도 참가자 차례다.
+  assert.equal(actorFor('TERMS_ACCEPTED', { runtimeReady: true }).key, 'LEARNER');
+  assert.equal(actorFor('TERMS_ACCEPTED', { runtimeReady: false }).key, 'OPERATOR');
+  assert.equal(actorFor('CONSENTED').key, 'OPERATOR');
+});
+
+test('최종 동의 전에는 고정되었다고 말하지 않는다', () => {
+  // 'CONTRACT' 로 바뀌는 자리가 고정의 경계다. 그 전에 '고정됨' 이라고
+  // 적으면 아직 바꿀 수 있는 것을 못 바꾼다고 말하게 된다.
+  const fixedOf = (view) => view.consentScope === 'CONTRACT';
+  const byState = Object.fromEntries(
+    SYNTHETIC_APPLICATIONS.map((view) => [view.state, fixedOf(view)]));
+  assert.equal(byState.DRAFT, false);
+  assert.equal(byState.TERMS_ACCEPTED, false);
+  assert.equal(byState.CONSENTED, true);
+  assert.equal(byState.FUNDING_PENDING, true);
+  assert.equal(byState.ENROLLED, true);
 });

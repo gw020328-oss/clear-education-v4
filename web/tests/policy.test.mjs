@@ -69,10 +69,17 @@ test('모르는 정책 해시는 API_REQUEST_FAILED', async () => {
   );
 });
 
-test('신청의 policyHash 가 정책 해시와 같다', async () => {
-  const adapter = createSyntheticAdapter();
-  const items = await adapter.listApplications();
-  for (const view of items) assert.equal(view.policyHash, SYNTHETIC_POLICY.policyHash);
+test('신청의 policyHash 로 그 정책을 받을 수 있다', async () => {
+  // 신청이 가리키는 해시와 돌려받는 정책이 어긋나면, 참가자가 동의한 것과
+  // 다른 조건을 화면이 보여주게 된다. 어느 반이든 성립해야 하므로 특정
+  // 정책에 묶지 않는다.
+  for (const scenario of ['ybm', 'altPath', 'stage3']) {
+    const adapter = createSyntheticAdapter({ scenario });
+    for (const view of await adapter.listApplications()) {
+      const got = await adapter.getPolicy(view.policyHash);
+      assert.equal(got.policyHash, view.policyHash, scenario);
+    }
+  }
 });
 
 test('베이시스포인트를 퍼센트로 바꾼다', () => {

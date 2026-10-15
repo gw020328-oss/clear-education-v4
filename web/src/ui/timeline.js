@@ -118,7 +118,11 @@ export function stepList(view, context = {}) {
     el('ol.sl', { 'aria-label': '신청 진행 단계' }, STEP_ORDER.map((state) => {
       const label = stateLabel(state);
       const status = statusOf(state, view.state);
-      const actor = status === NOW ? actorFor(state, context) : null;
+      // 진행 중인 단계를 끝내는 쪽이 누구인가. actorFor 는 '지금 상태에서
+      // 다음에 움직일 쪽' 을 주므로 지금 상태를 넣어야 한다. 단계의 상태를
+      // 넣으면 한 칸 밀린 답이 나온다 — DRAFT 에서 2단계가 '학원 차례' 로
+      // 나오던 것이 그것이다. 조건 동의 서명은 참가자가 한다.
+      const actor = status === NOW ? actorFor(view.state, context) : null;
 
       return el('li.sl-item', {
         'data-status': status,

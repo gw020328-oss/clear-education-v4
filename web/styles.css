@@ -393,9 +393,6 @@ h3 {
 .tier-tab[aria-selected="true"] {
   background: var(--navy); border-color: var(--navy); color: var(--accent-ink);
 }
-/* 집행하지 않는 구간도 숨기지 않는다. 안내문에 있는 것을 화면이 빠뜨리면
-   참가자가 원래 그 구간뿐인 줄 안다 */
-.tier-tab[data-supported="no"] { border-style: dashed; }
 /* 받을 금액의 내역. 합계 하나만 적으면 광고 금액과 실수령의 차이가 안 보인다 */
 .pay-rate {
   font-size: 11px; font-weight: 800; color: var(--accent);
@@ -409,6 +406,16 @@ h3 {
 .pay-line > span:first-child { min-width: 0; }
 .pay-num { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; }
 .pay-line.minus { color: var(--muted); }
+/* 환급금은 공제만 되는 것이 아니다. 응시료처럼 더해지는 항목도 있다 */
+.pay-line.plus { color: var(--navy); }
+/* 우리가 만든 식이 아니라 안내문에 적힌 식이라는 출처.
+   위 표가 어디서 나온 숫자인지 말하므로 표에 붙여 두고, 아래 시연 안내와는
+   선으로 끊는다 */
+.pay-basis {
+  margin: 8px 0 0; padding-bottom: 9px;
+  border-bottom: 1px dashed var(--line-soft);
+  font-variant-numeric: tabular-nums;
+}
 .pay-line.net {
   border-bottom: none; border-top: 2px solid var(--line);
   padding-top: 10px; font-size: 17px; font-weight: 800;
@@ -421,8 +428,6 @@ h3 {
 }
 .pay-token { margin-top: 9px; }
 
-/* 집행 범위 밖 구간은 테두리를 점선으로 바꿔 한눈에 구분한다 */
-.cond-wrap[data-out="yes"] { border-style: dashed; }
 .cond-out {
   margin: 10px 0 0; padding: 11px 13px;
   background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: var(--radius);
@@ -431,10 +436,40 @@ h3 {
 .cond-out p { margin: 5px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--warn-tag-fg); }
 /* 값이 아니라 '아직 모른다'는 사실을 적는 자리. 판정된 것처럼 보이면 안 되므로
    초록·빨강을 쓰지 않고 점선 테두리로 비어 있음을 드러낸다 */
-.cond-chk {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 700; color: var(--muted);
-  border: 1px dashed var(--line); border-radius: 999px; padding: 2px 9px;
+.cond-how {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 7px;
+  margin: 7px 0 0; padding: 7px 10px;
+  font-size: 12.5px; line-height: 1.6; color: var(--muted);
+  border: 1px dashed var(--line); border-radius: 8px;
+}
+.cond-how-state { font-weight: 800; }
+.cond-how-value {
+  font-weight: 800; font-variant-numeric: tabular-nums; color: var(--fg);
+}
+.cond-how-note { flex: 1 1 220px; min-width: 0; }
+/* 판정 결과가 들어오면 그제야 색을 준다. 결과가 없는데 색을 쓰면 판정된
+   것처럼 보이고, 그게 이 제품이 없애려는 문제다 */
+.cond-how[data-tone="met"] {
+  border-style: solid; border-color: var(--accent); color: var(--fg);
+}
+.cond-how[data-tone="met"] .cond-how-state { color: var(--accent); }
+.cond-how[data-tone="met"] .cond-chk-box { border-style: solid; border-color: var(--accent); color: var(--accent); }
+.cond-how[data-tone="unmet"] {
+  border-style: solid; border-color: var(--warn-tag-fg); color: var(--fg);
+}
+.cond-how[data-tone="unmet"] .cond-how-state { color: var(--warn-tag-fg); }
+.cond-how[data-tone="unmet"] .cond-chk-box { border-style: solid; border-color: var(--warn-tag-fg); color: var(--warn-tag-fg); }
+.cond-how[data-tone="doing"] { border-style: solid; color: var(--fg); }
+.cond-how[data-tone="doing"] .cond-how-state { color: var(--navy); }
+/* 구간 탭의 '몇 개 충족'. 세는 것이지 그 구간을 통과했다는 뜻이 아니다 */
+.tier-count {
+  font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+/* 참가자가 직접 움직여야 하는 줄. 이 화면에서 참가자가 알아야 할 것은
+   '내가 할 일이 어느 줄인가' 라서 그 줄만 색을 준다 */
+.cond-verify[data-actor="yes"] {
+  color: var(--accent); border-color: var(--accent);
 }
 .cond-chk-box {
   display: grid; place-items: center; width: 14px; height: 14px;
@@ -488,6 +523,13 @@ h3 {
   font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px;
 }
 .seal-icon { display: grid; place-items: center; }
+/* 아직 고정 전. 자물쇠도 초록색도 쓰지 않는다 — 고정된 것과 같아 보이면
+   바꿀 수 있는 값을 못 바꾼다고 말하게 된다 */
+.seal-open {
+  padding: 2px 8px;
+  border-style: dashed; border-color: var(--line);
+  color: var(--muted); background: transparent;
+}
 
 /* 해시·식별자는 원장처럼 — 고정폭, 숫자 정렬 */
 .value, .row-id, code {
@@ -615,3 +657,4 @@ body::before {
   border-radius: 4px; padding: 2px 7px;
 }
 .scenario-note .muted { margin: 0; font-size: 11.5px; }
+
