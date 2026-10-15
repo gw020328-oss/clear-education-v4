@@ -44,6 +44,7 @@ export function validateManifest(m) {
 export function createDocumentManifest(submission,files) {
   validateSubmission(submission);array(files,112,'WORKFLOW_LIMIT');
   const ordered=[],expected=submission.posts.flatMap(p=>p.images.map(i=>({postId:p.postId,...i})));check(files.length===expected.length,'WORKFLOW_FILE_SET');
+  files.forEach(f=>exactKeys(f,['postId','imageId','mediaType','bytes'],'WORKFLOW_FILE'));
   unique(files.map(f=>f?.postId+'/'+f?.imageId));let total=0;
   for(const image of expected){const f=files.find(f=>f.postId===image.postId&&f.imageId===image.imageId);check(f,'WORKFLOW_FILE_SET');
     exactKeys(f,['postId','imageId','mediaType','bytes'],'WORKFLOW_FILE');check(f.bytes instanceof Uint8Array,'WORKFLOW_BYTES');

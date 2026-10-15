@@ -74,6 +74,7 @@ export function openReviewLedger({directory,environment,now=()=>Math.floor(Date.
       return transaction(()=>{let r=load(runId);check(r.context_hash===summary.runContextHash,'WORKFLOW_RESULT_CONTEXT');
         if(r.state==='ACCEPTED'){check(r.summary_hash===resultHash,'WORKFLOW_RESULT_CONFLICT');return inspect(r);}
         const view=inspect(r);check(view.current&&view.state==='RUNNING','WORKFLOW_RESULT_STALE');
+        if(view.context.snapshot.method==='VISION'&&view.context.snapshot.manifest.files.length)check(summary.reviewStatus!=='CHECKED','WORKFLOW_IMAGE_NOT_DECODED');
         db.prepare("UPDATE runs SET state='ACCEPTED',summary=?,summary_hash=? WHERE id=? AND state='RUNNING'").run(encoded,resultHash,runId);
         return inspect(load(runId));
       });

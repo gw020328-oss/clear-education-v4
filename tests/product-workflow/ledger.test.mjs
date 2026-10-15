@@ -69,3 +69,13 @@ test('an application revision change also invalidates a pending run in another m
  assert.equal(f.ledger.get('run-a').current,false);assert.throws(()=>f.ledger.complete('run-a',summary(old)),/RESULT_STALE/);
  assert.throws(()=>f.ledger.begin(f.snapshot,{idempotencyKey:'another',runId:'run-b'}),/STALE/);
 });
+
+test('signature-only image input cannot be recorded as checked by a mistaken worker',t=>{
+ const f=setup(t),run=f.ledger.begin(f.snapshot,{idempotencyKey:'a',runId:'run-a'});
+ assert.throws(()=>f.ledger.complete('run-a',{...summary(run),reviewStatus:'CHECKED',outcome:'PRECHECK_REQUIREMENTS_MET',reasons:[]}),/IMAGE_NOT_DECODED/);
+ assert.equal(f.ledger.get('run-a').state,'RUNNING');
+});
+test('clock reversal cannot accept a result before the stored run was issued',t=>{
+ const f=setup(t),run=f.ledger.begin(f.snapshot,{idempotencyKey:'a',runId:'run-a'});f.setTime(99);
+ assert.throws(()=>f.ledger.complete('run-a',summary(run)),/CLOCK/);f.setTime(101);assert.equal(f.ledger.get('run-a').state,'RUNNING');
+});

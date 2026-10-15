@@ -58,3 +58,8 @@ test('source archives are immutable, private, recoverable and expired bytes cann
  const different=createSourceSupplement({...input,sourceType:'PASTE',bytes:Buffer.from('SYNTHETIC changed'),collectedAt:100});assert.throws(()=>store.putSnapshot(different.snapshot,different.blobs),/VERSION_CONFLICT/);
  time=collected.snapshot.expiresAt;assert.equal(store.purgeExpired().deletedArtifacts,2);assert.throws(()=>store.getArtifact(hash,'body'),/EXPIRED/);assert.throws(()=>store.putSnapshot(collected.snapshot,collected.blobs),/EXPIRED/);
 });
+test('cancellation during DNS does not dispatch a late resolved request',async()=>{
+ const c=new AbortController();let finish,calls=0;
+ const pending=fetchPublicResource(url,{signal:c.signal,lookup:()=>new Promise(r=>{finish=r;}),request:async()=>{calls++;return page();}});
+ c.abort();await assert.rejects(pending,/CANCELLED/);finish([publicIp]);await Promise.resolve();assert.equal(calls,0);
+});
