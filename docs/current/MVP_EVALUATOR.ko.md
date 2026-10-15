@@ -1,6 +1,6 @@
 # M2 경로·증거·금액 후보 평가
 
-2026-10-15, `clear-mvp-evaluation.1`, 이슈 [#38](https://github.com/gw020328-oss/clear-education-v4/issues/38). 선행 [M1 계약](MVP_POLICY_CONTRACT.ko.md) PR [#43](https://github.com/gw020328-oss/clear-education-v4/pull/43), feature `3961b09cbcb71c028d2dae6be2889a39849ee7c7`. develop에 미병합인 의존 PR이며 M2도 develop 대상으로 제출한다. 검토는 #43 이후 M2 고유 diff를 기준으로 한다. 기존 M0/H1/H2·HTTP·DB·금고 경로는 보존한다.
+2026-10-15, `clear-mvp-evaluation.1`, 이슈 [#38](https://github.com/gw020328-oss/clear-education-v4/issues/38). 선행 [M1 계약](MVP_POLICY_CONTRACT.ko.md) PR [#43](https://github.com/gw020328-oss/clear-education-v4/pull/43), feature `3961b09cbcb71c028d2dae6be2889a39849ee7c7`. M1은 develop `3781f5831f4482b62a928407ce432a2eaebb7ad8`에 병합되었고 M2는 이 기준 위의 고유 diff다. 기존 M0/H1/H2·HTTP·DB·금고 경로는 보존한다.
 
 ## 모듈 소비
 
@@ -36,7 +36,7 @@ FINAL_SYNTHETIC의 고정 후보 entitlement는 binding·policy·선택 tier/rev
 
 ## 검증과 소비자 후속
 
-`./tools/npm run test:mvp-policy`: M1 10개+M2 15개, 총 25개 통과. M0의 19개 조건/금액 벡터를 실행 평가와 대조하며 불가능한 음수/상한 산술은 컴파일에서 먼저 거부한다. 새 평가는 출석 OR 성적/이력, 경계 점수, 여러 미확인 조합, 400/500, 바꿔치기·최초 시험·기간 끝·금액/정정 상태·입력 불변·context hash를 검사한다. `./tools/node specs/m2/demo.mjs`는 두 프로필 정상/이력 UNKNOWN/400 사전검토와 제3 프로필을 합성으로 출력한다. 기존 정책 112개, 학습 131개 및 M0/workspace 보존 검사를 통과했다. 원격 CI는 PR의 최종 head 결과를 따른다.
+`./tools/npm run test:mvp-policy`: M1 10개+M2 17개, 총 27개 통과. M0의 19개 조건/금액 벡터를 실행 평가와 대조하며 불가능한 음수/상한 산술은 컴파일에서 먼저 거부한다. 새 평가는 출석 OR 성적/이력, 경계 점수, 여러 미확인 조합, 400/500, 바꿔치기·최초 시험·기간 끝·금액/정정 상태·입력 불변·context hash를 검사한다. `./tools/node specs/m2/demo.mjs`는 두 프로필 정상/이력 UNKNOWN/400 사전검토와 제3 프로필을 합성으로 출력한다. 기존 정책 112개, 학습 131개 및 M0/workspace 보존 검사를 통과했다. 원격 CI는 PR의 최종 head 결과를 따른다.
 
 AI/Vision·Moodle에는 M1 최소 feature commit과 소유 경계·예제·착수 신호를 전달했다. AI의 세부 review plan/planDigest는 아직 policyHash에 포함된 실행 규칙이 아니며 별도 합성 사전검토 wrapper로만 소비한다. 세부 문서 필수항목의 정본 hash 결합은 소비자 적합성 OPEN이다. Moodle L1의 OBSERVED BPS/days 및 UNKNOWN/IN_PROGRESS의 null 조합은 schema 의미와 맞지만 실제 소비 bridge/원천 검증 완료를 뜻하지 않는다. 두 소비자의 후속 PR과 공통 통합 검증을 별도로 확인한다. 준비/소비자 PR의 자동 병합은 하지 않는다.
 
@@ -45,3 +45,5 @@ AI/Vision·Moodle에는 M1 최소 feature commit과 소유 경계·예제·착�
 소비자 bridge 피드백으로 현재 기간의 FUTURE_DAYS가 관찰 UNKNOWN/MISSING/NEEDS_SUPPLEMENT를 가리는 우선순위를 보정했다. 원천/진위·전체성 차단을 먼저 확인하고, 누락·미확인 관찰을 보존한 뒤 OBSERVED 자료에만 현재 기간 IN_PROGRESS를 적용한다. 신규 회귀는 제3 프로필의 다섯 상태를 재현한다. 지급 gate는 보정 전후 모두 false다.
 
 최종 리뷰 보정: 전체 기간 증거는 기간 종료 시점 이후에 수집해야 한다. 진행 중 학습 관찰은 IN_PROGRESS일 수 있지만, 종료 전 snapshot을 그대로 둔 채 평가 시각만 뒤로 옮기면 COVERAGE_UNKNOWN으로 보류한다. 과거 이력의 NO_RECORD도 기간 끝 이전 수집으로는 확정하지 않는다. 같은 시험/이력 Evidence의 여러 OBSERVED 점수 규칙이 서로 다른 값을 가지면 MVP_SCORE_CONFLICT로 거부한다. 두 회귀를 추가해 M1 10개+M2 17개, 총 27개가 통과했다. 예제의 완료 학습 snapshot도 기간 종료 후 취득·수락으로 보정했다.
+
+최종 소비 대조: Moodle #48 `441d71b`의 fixture/일별 core/bridge를 별도 임시 시험 구성에서 M2 보정 `413bfaa`와 연결해 6개 PASS를 직접 확인했다. 실제 Moodle API·제품 수락 검증은 아니다. AI #47 `d46d612`의 DocumentPrecheck는 별도 planHash·UNVERIFIED·자동 자격 false를 유지하고 Evidence로 변환하지 않는다. reviewPlan→policyHash 결합과 실제 원천/소비자 통합은 계속 OPEN이다.
