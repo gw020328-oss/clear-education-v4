@@ -248,3 +248,10 @@ PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 [push](https://gi
 
 
 기반 merge `c19a10fc85216e5428b6434ac9c09d85096ea7d2` 뒤 관련283/283(학생11개와 PR59 보완5개 포함), 기존 개발환경33/33, source·student 합성 HTTPS 서명 지갑/재시작 데모, 의존성·원본/legacy191개·diff PASS. source HTTP/store는 develop과 동일하며 기존 C1 코드와 원문 보완을 함께 보존했다. 최종 원격 CI는 PR61 정확 head의 Checks/본문·이슈55에서 확인한다. PR61은 Draft·미병합, C2/실동의 미완료다. 다음 C2 일반 구현은 별도 작업 단위에서 GPT-6.1 Sol / Medium으로 선정한다.
+
+
+## PR61 실질 검토 보완 (2026-10-15)
+
+사용자 추가 승인에 따라 PR61을 GPT-6.1 Sol / High 요청 단위에서 검토했다. 보완 코드 `8c5411bebf42a2aa61aa8c37db5f352ca84475c6`은 저장된 학생 확인/신청 시각 이전의 clock에서 get/list/preview/이력·operation/GET복구/POST재생을 `422 MVP_CLOCK`으로 차단한다. 다른 학생404·operator403을 먼저 유지하므로 시간 오류로 타인 신청 존재를 드러내지 않는다. 같은 actor/route/key의 POST 재생도 BEGIN IMMEDIATE 뒤 세션·CSRF를 재검사하도록 공통 command 안으로 검사를 옮겼다. 시계 복원 후 저장된 결과를 재사용하고 새 합성 확인을 만들지 않는다. 두 문제는 새 합성 DB에서 실패를 재현한 뒤 회귀2개를 추가했다.
+
+관련285/285(학생 HTTP/HTTPS13 포함), 학생 HTTPS 서명 지갑/재시작 데모·원본/legacy191개·diff PASS. C1 명령은 동기 단일 DB transaction이며 대기 중 취소할 별도 worker/cancel API가 없다. 응답 유실/연결 종료는 POST 자동 재전송 대신 actor/route/key GET으로 복구한다. 실제 지갑 동의/서명·정책 게시·C2 파일·운영 Evidence/재원은 이 수정에 포함하지 않았다. PR61은 최종 head CI·대화·최신 base 확인 후 사용자 승인된 정상 develop merge를 진행하며 PR60/web·main·배포·유료는 범위 밖이다. 기존2354b70·82c3f2d 이력은 보존한다.

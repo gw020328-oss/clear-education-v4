@@ -1,3 +1,5 @@
+2026-10-15 PR61 실질 검토: 코드8c5411b에서 시계 역행 중 저장된 확인/신청 조회와 POST재생의 transaction 내부 session 재검사 누락을 보완. 관련285·학생HTTPS재시작·원본보존 PASS. 사용자 승인된 develop 정상병합은 정확 최종head CI 뒤 진행한다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 상태 기록이다.
+
 2026-10-15 최신 통합: PR59 최종head112e93a·CI6/6 성공 후 develop `2bb6d291b77ba397f8544995557db78b3ce54724` 정상 병합 완료. C1 기존2354b70을 보존하고 최신develop을 정상 merge(c19a10f), 선행 의존 해소. 관련283/기존dev33·source/student HTTPS재시작·보존/의존성 PASS. PR61은 Draft·미병합, 최종headCI 확인은 PR61/이슈55. C2·실동의 미완료, PR60/web은 별도 소유다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 시점 기록이다.
 
 <!-- PR59 review update: historical entries below retain their original dates. -->
