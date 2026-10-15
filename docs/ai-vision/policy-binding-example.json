@@ -1,0 +1,288 @@
+{
+  "kind": "SYNTHETIC_REVIEW_POLICY_BINDING_EXAMPLE",
+  "actualModelCalls": 0,
+  "basePolicyHash": "0xadeaa47459a4b34af16585d8750c7ee97f9f1edb06d73168d966dc9fca76225b",
+  "boundPolicyHash": "0x7ef9570799ea1116c6f6f5152db951e5d2eb2e43f047bc0a986ec2a2d2c93a26",
+  "ruleHash": "0xa1f5df0f5ae6aa387487110d24c6b7846d0c0f341b4301eeb9fdf61515584a07",
+  "planHash": "0xe422665d4eb605e7df7661de856ecdd5a1323ef71f629bf1ff7b84577f7ab17a",
+  "displayHash": "0x29aafd60f13af7f5c114e5ee1396666a18b4c372419d6eeb047a9e72afc33501",
+  "manifestHash": "0x4936eda1ccd3df2fe72e6a6c87e9e8194288b9cb3e65dbf45ee23fdb52e4e36e",
+  "preview": {
+    "version": "clear-review-preview.1",
+    "status": "READY_SYNTHETIC",
+    "snapshot": {
+      "version": "clear-review-preview.1",
+      "binding": {
+        "applicationId": "0x2ff7b4a1b3bfcf63a33dc103a97da442a7ef71856fc993ab07299c73becb16b4",
+        "subjectRef": "0x2787301e0d8813bbb48f8947793cf728f2b0e580cfbd4f6e5f4e9c13943afed5",
+        "subjectBindingId": "synthetic-binding",
+        "bindingRevision": 1,
+        "recipientRef": "synthetic-recipient",
+        "instanceId": "synthetic-instance",
+        "policyHash": "0x7ef9570799ea1116c6f6f5152db951e5d2eb2e43f047bc0a986ec2a2d2c93a26",
+        "policyVersion": "m1-third-demo.1",
+        "productId": "third-synthetic-700",
+        "cohortId": "demo-2030"
+      },
+      "manifestHash": "0x4936eda1ccd3df2fe72e6a6c87e9e8194288b9cb3e65dbf45ee23fdb52e4e36e",
+      "sourceSetHash": "0x727b648d0676daca58720ee10d0a9e957621a6e1e7a4b10fff90c638ffb1a0c4",
+      "sourceBlocksDigest": "0x2db8684544dfd7586d55733ba3dba3d4f4ec372cf6e859f4f192e8f56e8b86ab",
+      "criteria": [
+        {
+          "ruleId": "review-accepted",
+          "ruleHash": "0xa1f5df0f5ae6aa387487110d24c6b7846d0c0f341b4301eeb9fdf61515584a07",
+          "planHash": "0xe422665d4eb605e7df7661de856ecdd5a1323ef71f629bf1ff7b84577f7ab17a",
+          "displayHash": "0x29aafd60f13af7f5c114e5ee1396666a18b4c372419d6eeb047a9e72afc33501",
+          "display": {
+            "version": "clear-review-display.1",
+            "scope": {
+              "institutionId": "synthetic-third",
+              "productId": "third-synthetic-700",
+              "cohortId": "demo-2030",
+              "policyVersion": "m1-third-demo.1"
+            },
+            "rule": {
+              "ruleId": "review-accepted",
+              "requirementId": "review",
+              "predicate": "BOOLEAN",
+              "unit": "BOOLEAN",
+              "threshold": null,
+              "days": null,
+              "basis": "SYNTHETIC_ASSUMPTION",
+              "sourceRefs": [
+                {
+                  "sourceId": "third-synthetic-terms",
+                  "locator": "S-1/S-2/S-3 synthetic agreement"
+                }
+              ],
+              "questionIds": []
+            },
+            "requirement": {
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "maxAgeSeconds": 86400,
+              "trustProfile": "synthetic-fixture-verifier.1",
+              "requiredFields": [
+                "accepted-review"
+              ]
+            },
+            "plan": {
+              "version": "synthetic-review.1",
+              "requirementId": "review",
+              "ruleId": "review-accepted",
+              "checks": [
+                {
+                  "checkId": "length",
+                  "kind": "CHAR_COUNT",
+                  "scope": "POST",
+                  "basis": "SYNTHETIC_ASSUMPTION",
+                  "questionId": null,
+                  "sourceRefs": [
+                    {
+                      "sourceId": "third-synthetic-terms",
+                      "locator": "S-1/S-2/S-3 synthetic agreement"
+                    }
+                  ],
+                  "options": {
+                    "minimum": 4,
+                    "unit": "CODEPOINTS",
+                    "space": "INCLUDE",
+                    "normalization": "NONE"
+                  }
+                }
+              ]
+            },
+            "kernelVersion": "clear-document-precheck.2",
+            "observationPlans": [],
+            "sourceBlocks": [
+              {
+                "sourceId": "third-synthetic-terms",
+                "locator": "S-1/S-2/S-3 synthetic agreement",
+                "text": "SYNTHETIC: at least four Unicode codepoints, spaces included, normalization NONE. No real consent or official source verification."
+              }
+            ],
+            "notice": "SYNTHETIC_PRECHECK_ONLY_UNVERIFIED_SOURCE"
+          }
+        }
+      ]
+    },
+    "previewHash": "0x28edb377dafa81bf1a046e2f000fb17a4205b463952e073cd39fc1244a8638ca",
+    "userConsentVerified": false,
+    "paymentAllowed": false
+  },
+  "envelope": {
+    "version": "clear-review-envelope.1",
+    "context": {
+      "binding": {
+        "applicationId": "0x2ff7b4a1b3bfcf63a33dc103a97da442a7ef71856fc993ab07299c73becb16b4",
+        "subjectRef": "0x2787301e0d8813bbb48f8947793cf728f2b0e580cfbd4f6e5f4e9c13943afed5",
+        "subjectBindingId": "synthetic-binding",
+        "bindingRevision": 1,
+        "recipientRef": "synthetic-recipient",
+        "instanceId": "synthetic-instance",
+        "policyHash": "0x7ef9570799ea1116c6f6f5152db951e5d2eb2e43f047bc0a986ec2a2d2c93a26",
+        "policyVersion": "m1-third-demo.1",
+        "productId": "third-synthetic-700",
+        "cohortId": "demo-2030"
+      },
+      "requirementId": "review",
+      "ruleId": "review-accepted",
+      "ruleVersion": "synthetic-review.1",
+      "submissionId": "synthetic-submission",
+      "submissionRevision": 1,
+      "routeRevision": 1,
+      "inputHash": "0xb5b081bd2c4914f4e38ef403114d81e057ad92fe909f6454b2b17b2e3571484b",
+      "runId": "synthetic-run-1"
+    },
+    "policyHash": "0x7ef9570799ea1116c6f6f5152db951e5d2eb2e43f047bc0a986ec2a2d2c93a26",
+    "ruleHash": "0xa1f5df0f5ae6aa387487110d24c6b7846d0c0f341b4301eeb9fdf61515584a07",
+    "manifestHash": "0x4936eda1ccd3df2fe72e6a6c87e9e8194288b9cb3e65dbf45ee23fdb52e4e36e",
+    "planVersion": "synthetic-review.1",
+    "planHash": "0xe422665d4eb605e7df7661de856ecdd5a1323ef71f629bf1ff7b84577f7ab17a",
+    "displayHash": "0x29aafd60f13af7f5c114e5ee1396666a18b4c372419d6eeb047a9e72afc33501",
+    "method": "CODE",
+    "methodSpecHash": "0xa5dd8a40d1594efd4d4a154641fe7f3d6f191bf0548034ef4f6baecbc6b5ab6d",
+    "sourceBlocksDigest": "0x2db8684544dfd7586d55733ba3dba3d4f4ec372cf6e859f4f192e8f56e8b86ab",
+    "previewHash": "0x28edb377dafa81bf1a046e2f000fb17a4205b463952e073cd39fc1244a8638ca",
+    "inputHash": "0xb5b081bd2c4914f4e38ef403114d81e057ad92fe909f6454b2b17b2e3571484b",
+    "result": {
+      "planHash": "0xe422665d4eb605e7df7661de856ecdd5a1323ef71f629bf1ff7b84577f7ab17a",
+      "records": [
+        {
+          "contractVersion": "clear-mvp.1",
+          "binding": {
+            "applicationId": "0x2ff7b4a1b3bfcf63a33dc103a97da442a7ef71856fc993ab07299c73becb16b4",
+            "subjectRef": "0x2787301e0d8813bbb48f8947793cf728f2b0e580cfbd4f6e5f4e9c13943afed5",
+            "subjectBindingId": "synthetic-binding",
+            "bindingRevision": 1,
+            "recipientRef": "synthetic-recipient",
+            "instanceId": "synthetic-instance",
+            "policyHash": "0x7ef9570799ea1116c6f6f5152db951e5d2eb2e43f047bc0a986ec2a2d2c93a26",
+            "policyVersion": "m1-third-demo.1",
+            "productId": "third-synthetic-700",
+            "cohortId": "demo-2030"
+          },
+          "requirementId": "review",
+          "ruleId": "review-accepted",
+          "ruleVersion": "synthetic-review.1",
+          "submissionId": "synthetic-submission",
+          "submissionRevision": 1,
+          "routeRevision": 1,
+          "inputHash": "0xb5b081bd2c4914f4e38ef403114d81e057ad92fe909f6454b2b17b2e3571484b",
+          "runId": "synthetic-run-1",
+          "method": "CODE",
+          "execution": "MOCK",
+          "current": true,
+          "reviewStatus": "CHECKED",
+          "questionId": null,
+          "sourceRefs": [
+            {
+              "sourceId": "third-synthetic-terms",
+              "locator": "S-1/S-2/S-3 synthetic agreement"
+            }
+          ],
+          "observations": [
+            {
+              "fieldId": "length",
+              "value": "4",
+              "locator": "post/post-a"
+            }
+          ],
+          "sourceVerification": {
+            "publication": "UNVERIFIED",
+            "author": "UNVERIFIED",
+            "publishedAt": "UNVERIFIED",
+            "modifiedAt": "UNVERIFIED",
+            "publicAvailability": "UNVERIFIED"
+          },
+          "automaticEligibility": false,
+          "paymentAllowed": false
+        }
+      ],
+      "details": [
+        {
+          "locator": "post/post-a",
+          "checks": [
+            {
+              "checkId": "length",
+              "questionId": null,
+              "status": "CHECKED",
+              "value": "4"
+            }
+          ]
+        }
+      ],
+      "outcome": "PRECHECK_REQUIREMENTS_MET",
+      "execution": "MOCK",
+      "automaticEligibility": false,
+      "paymentAllowed": false
+    },
+    "automaticEligibility": false,
+    "paymentAllowed": false
+  },
+  "review": {
+    "version": "clear-review-acceptance.1",
+    "current": true,
+    "status": "CURRENT_PRECHECK_ONLY",
+    "outcome": "PRECHECK_REQUIREMENTS_MET",
+    "records": [
+      {
+        "contractVersion": "clear-mvp.1",
+        "binding": {
+          "applicationId": "0x2ff7b4a1b3bfcf63a33dc103a97da442a7ef71856fc993ab07299c73becb16b4",
+          "subjectRef": "0x2787301e0d8813bbb48f8947793cf728f2b0e580cfbd4f6e5f4e9c13943afed5",
+          "subjectBindingId": "synthetic-binding",
+          "bindingRevision": 1,
+          "recipientRef": "synthetic-recipient",
+          "instanceId": "synthetic-instance",
+          "policyHash": "0x7ef9570799ea1116c6f6f5152db951e5d2eb2e43f047bc0a986ec2a2d2c93a26",
+          "policyVersion": "m1-third-demo.1",
+          "productId": "third-synthetic-700",
+          "cohortId": "demo-2030"
+        },
+        "requirementId": "review",
+        "ruleId": "review-accepted",
+        "ruleVersion": "synthetic-review.1",
+        "submissionId": "synthetic-submission",
+        "submissionRevision": 1,
+        "routeRevision": 1,
+        "inputHash": "0xb5b081bd2c4914f4e38ef403114d81e057ad92fe909f6454b2b17b2e3571484b",
+        "runId": "synthetic-run-1",
+        "method": "CODE",
+        "execution": "MOCK",
+        "current": true,
+        "reviewStatus": "CHECKED",
+        "questionId": null,
+        "sourceRefs": [
+          {
+            "sourceId": "third-synthetic-terms",
+            "locator": "S-1/S-2/S-3 synthetic agreement"
+          }
+        ],
+        "observations": [
+          {
+            "fieldId": "length",
+            "value": "4",
+            "locator": "post/post-a"
+          }
+        ],
+        "sourceVerification": {
+          "publication": "UNVERIFIED",
+          "author": "UNVERIFIED",
+          "publishedAt": "UNVERIFIED",
+          "modifiedAt": "UNVERIFIED",
+          "publicAvailability": "UNVERIFIED"
+        },
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      }
+    ],
+    "userConsentVerified": false,
+    "automaticEligibility": false,
+    "paymentAllowed": false
+  },
+  "userConsentVerified": false,
+  "paymentAllowed": false
+}

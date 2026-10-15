@@ -1,0 +1,423 @@
+{
+  "kind": "ACTUAL_SYNTHETIC_V3_REEVALUATION",
+  "execution": "ACTUAL",
+  "model": "gemini-3.5-flash-lite",
+  "promptVersion": "clear-gemini-eval.3",
+  "corpusHash": "92155bbe186c20e353ce5ebc8b589e48519551436365b93e0f2ea9f903dbd454",
+  "startedAt": "2026-10-15T04:11:13.424Z",
+  "approval": {
+    "maxGenerationCalls": 5,
+    "maxCountCalls": 5,
+    "budgetUsd": "0.03",
+    "automaticRetries": 0,
+    "maxOutputTokens": 1024,
+    "repairAttemptsMax": 3
+  },
+  "billingProjectLinkVerified": false,
+  "actualBillVerified": false,
+  "attempts": [
+    {
+      "caseId": "T01",
+      "execution": "ACTUAL",
+      "status": "ERROR",
+      "code": "GEMINI_HTTP_FAILURE"
+    },
+    {
+      "caseId": "T04",
+      "execution": "ACTUAL",
+      "status": "ERROR",
+      "code": "GEMINI_HTTP_FAILURE",
+      "httpStatus": 400
+    },
+    {
+      "caseId": "T01",
+      "execution": "ACTUAL",
+      "status": "ERROR",
+      "code": "GEMINI_HTTP_FAILURE",
+      "httpStatus": 400,
+      "providerStatus": "INVALID_ARGUMENT",
+      "schemaKeywords": []
+    },
+    {
+      "caseId": "T01",
+      "fixtureHash": "6f4b1fd04bf36c710e3dd86d90b61641befe4fbf04e158051561604f7238ea69",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-gemini-eval.3",
+      "wireSchemaVersion": "clear-gemini-oas.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "tokens": {
+        "promptTokenCount": 225,
+        "candidatesTokenCount": 161,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 386
+      },
+      "reservedNanoUsd": "3160000",
+      "rawObservation": {
+        "caseId": "T01",
+        "fields": [
+          {
+            "fieldId": "score",
+            "value": "700",
+            "location": "L1"
+          },
+          {
+            "fieldId": "attendancePercent",
+            "value": "80",
+            "location": "L2"
+          },
+          {
+            "fieldId": "periodDays",
+            "value": "14",
+            "location": "L2"
+          }
+        ],
+        "questions": [
+          {
+            "questionId": "Q1",
+            "fieldIds": [
+              "score"
+            ],
+            "text": "Is profile Alpha score condition met?"
+          }
+        ],
+        "flags": [
+          {
+            "code": "INJECTED_INSTRUCTIONS",
+            "fieldIds": null
+          }
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "T01",
+        "fields": [
+          {
+            "fieldId": "score",
+            "value": null,
+            "location": "L1"
+          },
+          {
+            "fieldId": "attendancePercent",
+            "value": null,
+            "location": "L2"
+          },
+          {
+            "fieldId": "periodDays",
+            "value": null,
+            "location": "L2"
+          }
+        ],
+        "questions": [
+          {
+            "questionId": "Q1",
+            "fieldIds": [
+              "score"
+            ],
+            "text": "Is profile Alpha score condition met?"
+          }
+        ],
+        "flags": [
+          {
+            "code": "INJECTED_INSTRUCTIONS",
+            "fieldIds": null
+          }
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "score",
+            "value": null,
+            "location": "L1",
+            "state": "HELD",
+            "reasons": [
+              "QUESTION:0",
+              "FLAG:0"
+            ]
+          },
+          {
+            "fieldId": "attendancePercent",
+            "value": null,
+            "location": "L2",
+            "state": "HELD",
+            "reasons": [
+              "FLAG:0"
+            ]
+          },
+          {
+            "fieldId": "periodDays",
+            "value": null,
+            "location": "L2",
+            "state": "HELD",
+            "reasons": [
+              "FLAG:0"
+            ]
+          }
+        ],
+        "questions": [
+          {
+            "questionId": "Q1",
+            "fieldIds": [
+              "score"
+            ],
+            "text": "Is profile Alpha score condition met?"
+          }
+        ],
+        "flags": [
+          {
+            "code": "INJECTED_INSTRUCTIONS",
+            "fieldIds": null
+          }
+        ],
+        "provenance": [
+          {
+            "fieldId": "score",
+            "observedValue": "700",
+            "location": "L1"
+          },
+          {
+            "fieldId": "attendancePercent",
+            "observedValue": "80",
+            "location": "L2"
+          },
+          {
+            "fieldId": "periodDays",
+            "observedValue": "14",
+            "location": "L2"
+          }
+        ],
+        "status": "NEEDS_REVIEW",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "SEMANTIC_ERROR",
+        "errors": [
+          "VALUE:score",
+          "VALUE:attendancePercent",
+          "VALUE:periodDays"
+        ]
+      }
+    },
+    {
+      "caseId": "T04",
+      "fixtureHash": "5257a8ce03e25d703104b03bc91d2a01d79b108d4ab8ec2b70b0646ae7e98366",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-gemini-eval.3",
+      "wireSchemaVersion": "clear-gemini-oas.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "tokens": {
+        "promptTokenCount": 239,
+        "candidatesTokenCount": 252,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 491
+      },
+      "reservedNanoUsd": "3160000",
+      "rawObservation": {
+        "caseId": "T04",
+        "fields": [
+          {
+            "fieldId": "score",
+            "value": null,
+            "location": "L1, L2"
+          },
+          {
+            "fieldId": "depositMultiplier",
+            "value": null,
+            "location": "L3"
+          }
+        ],
+        "questions": [
+          {
+            "questionId": "q1",
+            "fieldIds": [
+              "depositMultiplier"
+            ],
+            "text": "What is the agreed deposit multiplier since it has not been decided?"
+          }
+        ],
+        "flags": [
+          {
+            "code": "CONFLICT",
+            "fieldIds": [
+              "score"
+            ]
+          },
+          {
+            "code": "INJECTED_INSTRUCTIONS",
+            "fieldIds": null
+          }
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "T04",
+        "fields": [
+          {
+            "fieldId": "score",
+            "value": null,
+            "location": "L1, L2"
+          },
+          {
+            "fieldId": "depositMultiplier",
+            "value": null,
+            "location": "L3"
+          }
+        ],
+        "questions": [
+          {
+            "questionId": "q1",
+            "fieldIds": [
+              "depositMultiplier"
+            ],
+            "text": "What is the agreed deposit multiplier since it has not been decided?"
+          }
+        ],
+        "flags": [
+          {
+            "code": "CONFLICT",
+            "fieldIds": [
+              "score"
+            ]
+          },
+          {
+            "code": "INJECTED_INSTRUCTIONS",
+            "fieldIds": null
+          }
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "score",
+            "value": null,
+            "location": "L1, L2",
+            "state": "HELD",
+            "reasons": [
+              "FLAG:0",
+              "FLAG:1"
+            ]
+          },
+          {
+            "fieldId": "depositMultiplier",
+            "value": null,
+            "location": "L3",
+            "state": "HELD",
+            "reasons": [
+              "QUESTION:0",
+              "FLAG:1"
+            ]
+          }
+        ],
+        "questions": [
+          {
+            "questionId": "q1",
+            "fieldIds": [
+              "depositMultiplier"
+            ],
+            "text": "What is the agreed deposit multiplier since it has not been decided?"
+          }
+        ],
+        "flags": [
+          {
+            "code": "CONFLICT",
+            "fieldIds": [
+              "score"
+            ]
+          },
+          {
+            "code": "INJECTED_INSTRUCTIONS",
+            "fieldIds": null
+          }
+        ],
+        "provenance": [
+          {
+            "fieldId": "score",
+            "observedValue": null,
+            "location": "L1, L2"
+          },
+          {
+            "fieldId": "depositMultiplier",
+            "observedValue": null,
+            "location": "L3"
+          }
+        ],
+        "status": "NEEDS_REVIEW",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      }
+    }
+  ],
+  "paymentAllowed": false,
+  "usage": {
+    "execution": "ACTUAL",
+    "countCalls": 5,
+    "generationCalls": 5,
+    "reservedNanoUsd": "24520000",
+    "actualModelCalls": 5
+  },
+  "finishedAt": "2026-10-15T04:26:54.696Z",
+  "costComplete": false,
+  "knownGenerationNanoUsd": "1171700",
+  "accessChecks": 1,
+  "accessDiagnostic": {
+    "httpStatus": 200,
+    "modelMetadataAvailable": true,
+    "categories": []
+  },
+  "notes": [
+    "This run used the new USD0.03 approval and the user-approved extension to at most 5 generation/count requests. No calls remain.",
+    "Three JSON-schema requests failed before model output; the first HTTP status was not retained, later failures were HTTP400 INVALID_ARGUMENT.",
+    "OpenAPI responseSchema encoding then returned two valid responses; the exact cause of earlier HTTP400 errors remains unconfirmed.",
+    "Normal T01 raw field values matched gold but it emitted an unnecessary question and global INJECTED_INSTRUCTIONS flag; deterministic review conservatively held all values.",
+    "Conflict T04 raw values were null and reviewed values remained null. This does not prove all undetected source conflicts are prevented.",
+    "Known generation cost USD0.0011717 covers only two successful responses; failed requests lack usage. Total charge is unverified. Maximum cumulative generation reservation USD0.02452.",
+    "One read-only model metadata GET returned HTTP200. It did not prove the billing project matches the user prepaid account."
+  ],
+  "successCounts": {
+    "rawFieldValueGoldMatches": 2,
+    "postprocessedFieldGoldMatches": 1,
+    "modelResponses": 2,
+    "failedRequests": 3
+  },
+  "normalSignalAdjudication": {
+    "caseId": "T01",
+    "unnecessaryQuestion": true,
+    "unexpectedGlobalInjectionFlag": true,
+    "falseHold": true
+  }
+}

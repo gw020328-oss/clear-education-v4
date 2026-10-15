@@ -1,7 +1,10 @@
 import { array, exactKeys, freeze, requireRule as check, RuleError } from '../policy/values.mjs';
 import { validateContract, digest, same, DOCUMENT_LIMITS } from '../policy/mvp/contract.mjs';
 import { requireMvpPolicy } from '../policy/mvp/compiler.mjs';
+import { reviewFields } from '../ai-policy/field-review.mjs';
 import { invokeMockObservation } from '../ai-policy/model-boundary.mjs';
+
+export const DOCUMENT_OBSERVATION_PROMPT_VERSION = 'clear-document-observe.1';
 
 const identifier = value => check(typeof value === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(value), 'DOCUMENT_IDENTIFIER');
 const unique = values => check(new Set(values).size === values.length, 'DOCUMENT_DUPLICATE');
@@ -61,7 +64,7 @@ const optionKeys = {
   IMAGE_COUNT: ['minimum', 'duplicatePolicy'], LINK: ['url'], TEXT: ['value', 'position'],
   KEYWORDS: ['values', 'minimumDistinct', 'field'],
 };
-function validatePlan(plan, pinnedPlanHash, context, policy) {
+export function validateReviewPlan(plan, pinnedPlanHash, context, policy) {
   exactKeys(plan, ['version', 'requirementId', 'ruleId', 'checks'], 'DOCUMENT_PLAN'); identifier(plan.version);
   check(plan.version === context.ruleVersion && plan.ruleId === context.ruleId && plan.requirementId === context.requirementId
     && reviewPlanDigest(plan) === pinnedPlanHash, 'DOCUMENT_PLAN_PIN');
@@ -128,7 +131,7 @@ function checkContent(item, posts) {
 // Submitted text and image metadata only. No file decode or real publication checks.
 export function precheckCode(compiled, context, input, { plan, pinnedPlanHash }) {
   const submission = structuredClone(input), { policy, rule } = contextFor(compiled, context, submission);
-  validatePlan(plan, pinnedPlanHash, context, policy);
+  validateReviewPlan(plan, pinnedPlanHash, context, policy);
   const groups = submission.posts.map(post => ({ posts: [post], locator: 'post/' + post.postId,
     checks: plan.checks.filter(item => item.scope === 'POST') }));
   const bundleChecks = plan.checks.filter(item => item.scope === 'BUNDLE');
@@ -190,13 +193,14 @@ export async function precheckObservation(compiled, context, input, { method, fi
     return freeze({ record, runStatus: 'SKIPPED_MISSING_INPUT', reason: 'MISSING_INPUT', actualModelCall: false, outcome: 'NEEDS_SUPPLEMENT' });
   }
   const requested = [...fieldIds];
-  const run = await invokeMockObservation(adapter, { instruction: 'Observe submitted data only. No authenticity, author, completeness or payment authority.',
+  const run = await invokeMockObservation(adapter, { promptVersion: DOCUMENT_OBSERVATION_PROMPT_VERSION, instruction: 'Observe submitted data only. No authenticity, author, completeness or payment authority.',
     method, requestedFields: requested, submission }, options);
-  let status = 'NEEDS_REVIEW', observations = [], reason = run.status;
+  let status = 'NEEDS_REVIEW', observations = [], reason = run.status, fieldReview = null, observationEvidence = null;
   if (run.status === 'SUCCEEDED') {
     try {
       const output = run.output;
-      exactKeys(output, ['reviewStatus', 'observations'], 'DOCUMENT_MODEL_OUTPUT');
+      const scoped = Object.hasOwn(output ?? {}, 'questions') || Object.hasOwn(output ?? {}, 'flags');
+      exactKeys(output, scoped ? ['reviewStatus', 'observations', 'questions', 'flags'] : ['reviewStatus', 'observations'], 'DOCUMENT_MODEL_OUTPUT');
       check(['CHECKED', 'MISSING', 'NEEDS_REVIEW', 'UNREADABLE'].includes(output.reviewStatus), 'DOCUMENT_MODEL_OUTPUT');
       array(output.observations, 64, 'DOCUMENT_MODEL_OUTPUT'); unique(output.observations.map(item => item?.fieldId));
       for (const observation of output.observations) {
@@ -208,7 +212,14 @@ export async function precheckObservation(compiled, context, input, { method, fi
         } else check(observation.locator === null && observation.quote === null, 'DOCUMENT_MODEL_OUTPUT');
       }
       check(output.reviewStatus !== 'CHECKED' || requested.every(fieldId => output.observations.some(item => item.fieldId === fieldId && item.value !== null)), 'DOCUMENT_MODEL_OUTPUT');
-      observations = output.observations.map(({ fieldId, value, locator }) => ({ fieldId, value, locator })); status = output.reviewStatus; reason = null;
+      const reviewInput = { fields: output.observations.map(({ fieldId, value, locator }) => ({ fieldId, value, location: locator })),
+        questions: scoped ? output.questions : [], flags: scoped ? output.flags : [] };
+      if (output.reviewStatus !== 'CHECKED' && Array.isArray(reviewInput.questions) && Array.isArray(reviewInput.flags)
+        && !reviewInput.questions.length && !reviewInput.flags.length) reviewInput.flags = ['REVIEW_STATUS_' + output.reviewStatus];
+      fieldReview = reviewFields(reviewInput, requested);
+      observations = fieldReview.fields.map(({ fieldId, value, location }) => ({ fieldId, value, locator: location }));
+      status = output.reviewStatus === 'CHECKED' && fieldReview.status === 'NEEDS_REVIEW' ? 'NEEDS_REVIEW' : output.reviewStatus;
+      observationEvidence = structuredClone(output); reason = null;
     } catch (error) {
       if (!(error instanceof RuleError)) throw error;
       reason = 'MODEL_OUTPUT_REJECTED';
@@ -216,7 +227,7 @@ export async function precheckObservation(compiled, context, input, { method, fi
   }
   const record = makeRecord(capturedContext, rule.sourceRefs, method, status, observations, null);
   validateContract('DocumentPrecheck', record);
-  return freeze({ record, runStatus: run.status, reason, actualModelCall: false, outcome: outcome(status) });
+  return freeze({ record, fieldReview, observationEvidence, runStatus: run.status, reason, actualModelCall: false, outcome: outcome(status) });
 }
 
 // Latest context comes from the caller's resolver. This does not save/accept results.
@@ -226,5 +237,9 @@ export function markPrecheckCurrent(record, latestContext) {
   check(keys.every(key => Object.hasOwn(latestContext, key)), 'DOCUMENT_LATEST_CONTEXT');
   const current = record.current && keys.every(key => same(record[key], latestContext[key]));
   const result = { ...structuredClone(record), current };
+  if (!current) {
+    result.observations = result.observations.map(field => ({ ...field, value: null }));
+    result.reviewStatus = 'NEEDS_REVIEW';
+  }
   validateContract('DocumentPrecheck', result); return freeze(result);
 }

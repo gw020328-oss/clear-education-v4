@@ -73,6 +73,9 @@ jobs:
         run: |
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/ai-policy/*.test.mjs tests/document-precheck/*.test.mjs
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs tests/ai-policy/evaluate-mock.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs tests/ai-policy/replay-field-review.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs tests/document-precheck/bound-policy-example.mjs > "$RUNNER_TEMP/review-policy-example.json"
+          cmp docs/ai-vision/policy-binding-example.json "$RUNNER_TEMP/review-policy-example.json"
       - name: Synthetic Moodle daily evaluation and export boundaries
         run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/moodle-mvp/*.test.mjs
       - name: Offline AI evaluation preparation

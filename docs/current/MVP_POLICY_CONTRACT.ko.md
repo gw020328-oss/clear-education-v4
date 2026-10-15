@@ -1,5 +1,7 @@
 # M1 공통 정책·증거 소비 계약
 
+2026-10-15 소비자 최종 검토: AI의 세 합성 프로필 소비·M2 직접 Evidence 승격 거부와 Moodle의 합성 일별/M2 bridge 적합성은 확인했다. 아래 최초 PENDING은 당시 기록이다. [AI 계획 결합](../ai-vision/POLICY_BINDING.ko.md)과 [격리 로컬 Moodle](../moodle/LOCAL_API_LAB.ko.md)은 별도 모듈 범위이며 운영 원천/동의/영속 수락의 합의·검증을 대신하지 않는다.
+
 2026-10-15 M2: [경로·증거·금액 후보 평가](MVP_EVALUATOR.ko.md)의 `clear-mvp-evaluation.1`은 M1 계약을 소비하는 별도 순수 합성 모듈이다. 증거 상태·OR·명시 선택·최초 제출·정정/최종성과 금액 후보를 분리하며 실제 자격/지급은 false다. HTTP/DB/금고와 기존 차단 조건을 유지한다.
 
 2026-10-15, `clear-mvp.1` / `clear-mvp-compiler.1`. 기준 develop `21776f53d7660597b94a37c89139316e43eeb673`, 이슈 [#37](https://github.com/gw020328-oss/clear-education-v4/issues/37)·[#38](https://github.com/gw020328-oss/clear-education-v4/issues/38). M0 mock·기존 800점/8000bps 정책·HTTP·DB·동의·금고와 다른 namespace다. 소비자 적합성 검토는 PENDING이며 이 문서 병합만으로 동의를 얻었다고 기록하지 않는다.
@@ -18,6 +20,12 @@
 | `specs/m1/learning.schema.json`, `learning-example.json` | Moodle 기존 초안 필드를 보존한 `clear-learning-facts.1` 준비 계약. `validateLearningFactsShape`는 구조 검사만 수행. 수정된 source revision/manifest가 실제로 신뢰 가능한지 검사하는 adapter 아님 |
 
 `PolicyDraft`는 OFFICIAL_DRAFT를 표현하지만 실행 컴파일은 거부한다. unresolved question, OFFICIAL_OPEN rule, 없는 근거 locator·다른 상품/기수·누락/중복/미참조 규칙·잘못된 단위/기간/금액도 거부한다. 근거 locator는 고정한 source 목록에 존재하는지 검사하며 의미 지지·발행자 진위·적용성은 자동 입증하지 않는다. 정규화 지문/버전은 둘 다 null이거나 둘 다 있어야 한다. sourceSetHash와 policyHash는 지문이며 서명/승인권이 아니다.
+
+## 사전검토 계획의 내부 Source 결합
+
+[AI 정책 결합 모듈](../ai-vision/POLICY_BINDING.ko.md)은 기존 Source 스키마의 별도 `review-plan.1.*` namespace를 사용한다. origin/applicability는 SYNTHETIC_ASSUMPTION/SYNTHETIC_ONLY이며 rawHash는 계획·규칙·요구·원천 집합·표시 원문 manifest의 digest, normalizedHash는 정확한 표시 DTO digest다. 이는 공식 원문이나 서명된 원천의 의미로 사용할 수 없다. locator에 전체 manifest digest를 포함하여 실제 공통 policyHash/ruleHash에도 계획 변경이 반영된다.
+
+외부에서 고정한 승인 manifest/source/capability/원문 pins를 요구하고, 내부 Source 추가 전 원래 정책부터 컴파일한다. 내부 합성 근거로 잘못된 원래 규칙을 통과시키거나 OPEN 공식 원천을 승인하지 않는다. 정확한 preview DTO acknowledgment와 최신 정책/입력/revision 검사도 in-process 합성 모듈이며 실제 동의·서명·HTTP·DB·Evidence 수락이 아니다. 이미지 inputHash는 제출 메타데이터 DTO만 묶으며 원본 bytes·작성자·게시 진위를 검증하지 않는다. 원문 bytes↔공식 rawHash·의미 적용성은 별도 신뢰 resolver의 미구현 경계다.
 
 ## 제한된 규칙과 범위
 
