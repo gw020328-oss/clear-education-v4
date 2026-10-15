@@ -47,7 +47,7 @@
 
 ## 적합성 미결과 후속
 
-1. M1 BOOLEAN Rule보다 세부적인 review plan의 해시를 policyHash/동의에 결합할 정본 필드는 없다. 현재 wrapper의 planHash만 반환하고, 이를 정책에 이미 결합됐다고 주장하거나 Evidence/M2 자격 입력으로 전환하지 않는다. 공통 담당에게 전달한 미결이다.
+1. 초기 소비자는 별도 wrapper planHash만 반환했다. 후속 #51은 별도 내부 합성 Source를 사용해 실제 M1 policyHash/ruleHash와 정확한 표시 DTO에 결합하는 [순수 모듈](POLICY_BINDING.ko.md)을 추가한다. 공통 스키마 변경·실제 동의·Evidence/M2 자격 연결은 여전히 없다.
 2. `DocumentPrecheck.locator`는 문자열이므로 이 소비자는 text span 또는 post/image ID를 사용한다. 실제 bbox·변환 이미지 hash·provider run metadata/보존은 실제 모델/업로드 계약에서 확정해야 한다.
 3. sourceTextDigest는 caller 제공 텍스트 지문이다. 고정 Source rawHash/normalizer와의 바이트 연결·의미 검토는 별도 원문 조립 책임이다.
 4. M2 경로/후보/최초 제출/금액 확정 연결, 운영자 확정 후 실행 정책 게시·학생 동의, 인증된 수락·영속 revision/멱등성은 아직 없다. M2를 기다리느라 위 독립 소비 작업 전체를 미루지는 않았다.
@@ -78,4 +78,4 @@
 
 공통 M1 #43의 최종 develop merge `3781f5831f4482b62a928407ce432a2eaebb7ad8`를 수신하여 이력 반영했다. 최종 M1의 schema/API 필드는 같으며 후속 로컬 회귀 193개가 통과했다. M2 #46 최종 병합과 운영 Evidence 소비는 아직 별도다.
 
-M2 #46 최종 develop merge `1f98d5f26dfcea34af769e5b74528241224702fc`도 이력 반영했다. 공통 M1/M2 27개와 전용/기존 소비 회귀를 함께 실행해 211 PASS이며, 세 프로필의 CHECKED DocumentPrecheck→M2 Evidence 직접 투입은 거부한다. 정본 hash 결합과 검증된 Evidence adapter는 여전히 없다.
+M2 #46 최종 develop merge `1f98d5f26dfcea34af769e5b74528241224702fc`도 이력 반영했다. 공통 M1/M2 27개와 전용/기존 소비 회귀를 함께 실행해 당시 211 PASS이며, 세 프로필의 CHECKED DocumentPrecheck→M2 Evidence 직접 투입은 거부한다. 후속 순수 모듈의 실제 hash 결합과 운영 Evidence adapter 미구현은 [결합 기록](POLICY_BINDING.ko.md)에서 구분한다. [v3 실제 Gemini 평가](GEMINI_V3_REEVALUATION.ko.md)는 mock 회귀와 별도다.

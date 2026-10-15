@@ -4,6 +4,8 @@ import { requireMvpPolicy } from '../policy/mvp/compiler.mjs';
 import { reviewFields } from '../ai-policy/field-review.mjs';
 import { invokeMockObservation } from '../ai-policy/model-boundary.mjs';
 
+export const DOCUMENT_OBSERVATION_PROMPT_VERSION = 'clear-document-observe.1';
+
 const identifier = value => check(typeof value === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(value), 'DOCUMENT_IDENTIFIER');
 const unique = values => check(new Set(values).size === values.length, 'DOCUMENT_DUPLICATE');
 const boundedText = (value, max) => check(typeof value === 'string' && value.length <= max, 'DOCUMENT_TEXT');
@@ -62,7 +64,7 @@ const optionKeys = {
   IMAGE_COUNT: ['minimum', 'duplicatePolicy'], LINK: ['url'], TEXT: ['value', 'position'],
   KEYWORDS: ['values', 'minimumDistinct', 'field'],
 };
-function validatePlan(plan, pinnedPlanHash, context, policy) {
+export function validateReviewPlan(plan, pinnedPlanHash, context, policy) {
   exactKeys(plan, ['version', 'requirementId', 'ruleId', 'checks'], 'DOCUMENT_PLAN'); identifier(plan.version);
   check(plan.version === context.ruleVersion && plan.ruleId === context.ruleId && plan.requirementId === context.requirementId
     && reviewPlanDigest(plan) === pinnedPlanHash, 'DOCUMENT_PLAN_PIN');
@@ -129,7 +131,7 @@ function checkContent(item, posts) {
 // Submitted text and image metadata only. No file decode or real publication checks.
 export function precheckCode(compiled, context, input, { plan, pinnedPlanHash }) {
   const submission = structuredClone(input), { policy, rule } = contextFor(compiled, context, submission);
-  validatePlan(plan, pinnedPlanHash, context, policy);
+  validateReviewPlan(plan, pinnedPlanHash, context, policy);
   const groups = submission.posts.map(post => ({ posts: [post], locator: 'post/' + post.postId,
     checks: plan.checks.filter(item => item.scope === 'POST') }));
   const bundleChecks = plan.checks.filter(item => item.scope === 'BUNDLE');
@@ -191,7 +193,7 @@ export async function precheckObservation(compiled, context, input, { method, fi
     return freeze({ record, runStatus: 'SKIPPED_MISSING_INPUT', reason: 'MISSING_INPUT', actualModelCall: false, outcome: 'NEEDS_SUPPLEMENT' });
   }
   const requested = [...fieldIds];
-  const run = await invokeMockObservation(adapter, { instruction: 'Observe submitted data only. No authenticity, author, completeness or payment authority.',
+  const run = await invokeMockObservation(adapter, { promptVersion: DOCUMENT_OBSERVATION_PROMPT_VERSION, instruction: 'Observe submitted data only. No authenticity, author, completeness or payment authority.',
     method, requestedFields: requested, submission }, options);
   let status = 'NEEDS_REVIEW', observations = [], reason = run.status, fieldReview = null, observationEvidence = null;
   if (run.status === 'SUCCEEDED') {
