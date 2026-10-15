@@ -1,4 +1,5 @@
 // Separate namespace from M0 fixtures and the v4 HTTP/DB/consent contracts.
+import { freeze } from '../values.mjs';
 export const CONTRACT_VERSION = 'clear-mvp.1';
 const str = (pattern, maxLength = 128) => ({ type: 'string', pattern, maxLength });
 const id = str('^[a-z][a-z0-9.-]{0,63}$', 64);
@@ -84,3 +85,4 @@ export const schema = {
 export const DOCUMENT_LIMITS = Object.freeze({ profile: 'clear-document-preparation.1', maxBytesPerFile: 8388608,
   maxPixelsPerImage: 20000000, maxImagesPerPost: 8, maxPosts: 14, decodeTimeoutMs: 30000,
   uploadImplemented: false, externalTransferAllowed: false, automaticEligibility400: false });
+freeze(schema);

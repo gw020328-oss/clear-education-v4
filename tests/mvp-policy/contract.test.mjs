@@ -72,6 +72,8 @@ test('unit, threshold, days, period, normalizer, source scope and activity pins 
   reject(d => { d.learningRules[0].days = 99; }, 'MVP_LEARNING_RULE');
   reject(d => { d.requirements[1].period.from++; }, 'MVP_LEARNING_PERIOD');
   reject(d => { d.requirements[0].period.until = d.requirements[0].period.from; }, 'MVP_PERIOD');
+  reject(d => { d.requirements[0].period = null; }, 'MVP_COVERAGE');
+  reject(d => { d.requirements[0].coverage = 'NOT_REQUIRED'; }, 'MVP_COVERAGE');
   reject(d => { d.sources[0].normalizerVersion = 'normalizer.1'; }, 'MVP_NORMALIZER');
   reject(d => { d.sources[0].productId = 'other-product'; }, 'MVP_SOURCE_SCOPE');
   reject(d => { d.learningRules[0].allowedActivityIds.pop(); }, 'MVP_ACTIVITY_HASH');
