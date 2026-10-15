@@ -420,7 +420,7 @@ test('수강후기는 학원 기록이라 자동으로 확인한다', () => {
   // 주소를 내는 것이 아니다 — 안내문도 블로그 챌린지에만 URL 인증을 적었다.
   const r200 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r200');
   const review = r200.groups[0].items.find((i) => i.id === 'review');
-  assert.equal(review.evidence, EVIDENCE.RECORD);
+  assert.equal(review.evidence, EVIDENCE.REVIEW);
   assert.equal(verifyOf(review).actor, false, '참가자가 따로 낼 것이 없다');
 });
 
@@ -439,7 +439,7 @@ test('블로그 챌린지만 참가자가 직접 낸다', () => {
   // 유일한 조건이기도 하다.
   const r400 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r400');
   const challenge = r400.groups[0].items.find((i) => i.id === 'challenge14');
-  assert.equal(challenge.evidence, EVIDENCE.DOCUMENT);
+  assert.equal(challenge.evidence, EVIDENCE.BLOG);
   assert.equal(verifyOf(challenge), VERIFY.SUBMIT);
 
   // 이 구간에서 참가자가 직접 움직여야 하는 것은 성적 조회와 챌린지뿐이다.
@@ -478,4 +478,30 @@ test('기한까지 남은 날을 적는다', () => {
   assert.equal(daysLeftText(at, at * 1000), '오늘까지');
   assert.equal(daysLeftText(at, at * 1000 + day), '지났습니다');
   assert.equal(daysLeftText('없음', Date.now()), null, '모르는 값은 지어내지 않는다');
+});
+
+test('조건 종류 이름이 서버 스키마와 같다', () => {
+  // 화면이 따로 이름을 만들면 나중에 둘을 맞추는 일이 생긴다.
+  // src/policy/mvp/schema.mjs 의 Requirement.kind 와 같아야 한다.
+  const fromServer = ['EXAM', 'BASELINE', 'LEARNING', 'MOCK_TEST', 'REVIEW', 'BLOG'];
+  for (const kind of fromServer) {
+    assert.ok(kind in EVIDENCE, `${kind} 가 화면에 없다`);
+  }
+  const used = new Set();
+  for (const policy of [ALTERNATIVE_POLICY, YBM_POLICY]) {
+    const groups = policy.policy.conditionTiers
+      ? policy.policy.conditionTiers.flatMap((t) => t.groups)
+      : policy.policy.conditionGroups;
+    for (const group of groups) for (const item of group.items) used.add(item.kind);
+  }
+  for (const kind of used) assert.ok(fromServer.includes(kind), `${kind} 는 서버에 없는 종류다`);
+});
+
+test('종류만으로 확인 방법이 정해져 덮어쓸 일이 없다', () => {
+  // 과거 이력은 BASELINE 이라 '함께 확인' 이 저절로 나온다. 조건마다
+  // verify 를 적어 주던 것을 없앴다.
+  const groups = ALTERNATIVE_POLICY.policy.conditionTiers.flatMap((t) => t.groups);
+  const history = groups.flatMap((g) => g.items).find((i) => i.id === 'history2y');
+  assert.equal(history.verify, null, '덮어쓰기가 남아 있다');
+  assert.equal(verifyOf(history), VERIFY.SELF_LOGIN_SHARED);
 });

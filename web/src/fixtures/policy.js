@@ -265,7 +265,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
       tier('r50', '50%', [
         path(null, [
           cond('examBelow', 'EXAM', '시험', '목표 점수 미달성', null, '성적표 제출'),
-          cond('review', 'RECORD', '후기', '200byte', '이상',
+          cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
             + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
         ]),
@@ -277,7 +277,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
         path('경로 1 · 출석', [
           cond('attend100', 'LEARNING', '출석', '100일', '연속',
             '매일 다른 강의로 진도율 60% 이상 수강 · 자정 기준 당일 인정'),
-          cond('review', 'RECORD', '후기', '200byte', '이상',
+          cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
             + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
         ], siwon(100)),
@@ -288,9 +288,9 @@ export const ALTERNATIVE_POLICY = Object.freeze({
           // 그 보증이 아직 없다(EXAM_EVIDENCE.ko.md, listComplete=false).
           // 무엇을 근거로 판정하는지만 적고, 확인하지 않은 것을 한계라고
           // 단정해 적지도, 전부라고 말하지도 않는다.
-          cond('history2y', 'EXAM', '과거 이력', '2년 내 750점 미만', null,
-            '본인 계정의 성적 조회 결과로 판정합니다.', 'SELF_LOGIN_SHARED'),
-          cond('review', 'RECORD', '후기', '200byte', '이상',
+          cond('history2y', 'BASELINE', '과거 이력', '2년 내 750점 미만', null,
+            '본인 계정의 성적 조회 결과로 판정합니다.'),
+          cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
             + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
         ], siwon(100, 1)),
@@ -300,9 +300,9 @@ export const ALTERNATIVE_POLICY = Object.freeze({
           cond('attend100', 'LEARNING', '출석', '100일', '연속', '매일 다른 강의로 진도율 60% 이상'),
           cond('exam750', 'EXAM', '시험', '750점', '이상',
             'TOEIC_LR 총점 · 수강시작일 +100일 이내 응시분만 인정'),
-          cond('history2y', 'EXAM', '과거 이력', '2년 내 750점 미만', null,
-            '본인 계정의 성적 조회 결과', 'SELF_LOGIN_SHARED'),
-          cond('review', 'RECORD', '후기', '200byte', '이상',
+          cond('history2y', 'BASELINE', '과거 이력', '2년 내 750점 미만', null,
+            '본인 계정의 성적 조회 결과'),
+          cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
             + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
         ]),
@@ -312,9 +312,9 @@ export const ALTERNATIVE_POLICY = Object.freeze({
           cond('attend100', 'LEARNING', '출석', '100일', '연속', '매일 다른 강의로 진도율 60% 이상'),
           cond('exam850', 'EXAM', '시험', '850점', '이상',
             'TOEIC_LR 총점 · 수강시작일 +100일 이내 응시분만 인정'),
-          cond('history2y', 'EXAM', '과거 이력', '2년 내 750점 미만', null,
-            '본인 계정의 성적 조회 결과', 'SELF_LOGIN_SHARED'),
-          cond('review', 'RECORD', '후기', '200byte', '이상',
+          cond('history2y', 'BASELINE', '과거 이력', '2년 내 750점 미만', null,
+            '본인 계정의 성적 조회 결과'),
+          cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
             + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
         ]),
@@ -324,14 +324,14 @@ export const ALTERNATIVE_POLICY = Object.freeze({
           cond('attend100', 'LEARNING', '출석', '100일', '연속', '매일 다른 강의로 진도율 60% 이상'),
           cond('exam990', 'EXAM', '시험', '990점', null,
             'TOEIC_LR 만점 · 수강시작일 +100일 이내 응시분만 인정'),
-          cond('history2y', 'EXAM', '과거 이력', '2년 내 750점 미만', null,
-            '본인 계정의 성적 조회 결과', 'SELF_LOGIN_SHARED'),
-          cond('review', 'RECORD', '후기', '200byte', '이상',
+          cond('history2y', 'BASELINE', '과거 이력', '2년 내 750점 미만', null,
+            '본인 계정의 성적 조회 결과'),
+          cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
             + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
           // 외부 블로그 게시물은 자동으로 확인할 수단이 없다. 지원 여부와
           // 무관하게, 안내문에 있으므로 빠뜨리지 않고 적는다.
-          cond('challenge14', 'DOCUMENT', '2주 열공챌린지', '블로그 14회', '연속 포스팅',
+          cond('challenge14', 'BLOG', '2주 열공챌린지', '블로그 14회', '연속 포스팅',
             '개인 네이버 블로그에 1일 1개씩 · 수강시작일 +100일 내 · 정해진 포스팅 '
             + '가이드를 지켜야 인정 · 검수 전 삭제·비공개한 글은 인정되지 않습니다.'),
         ]),
@@ -408,11 +408,11 @@ export const YBM_POLICY = Object.freeze({
       path(null, [
         cond('attend90', 'LEARNING', '출석', '90일', '매일 1강 이상 완강',
           '강의 레슨 러닝타임의 90% 이상 수강 · 자정 이전 완료해야 당일 인정'),
-        cond('mock1', 'LEARNING', '모의테스트', '1회', '응시 완료',
+        cond('mock1', 'MOCK_TEST', '모의테스트', '1회', '응시 완료',
           '수료 조건 · 코스에 포함된 토익 모의테스트'),
         cond('exam750', 'EXAM', '시험', '750점', '이상',
           'TOEIC_LR 총점 · 수강시작일 이후 응시한 시험만 인정'),
-        cond('review', 'RECORD', '후기', '수강후기', '작성',
+        cond('review', 'REVIEW', '후기', '수강후기', '작성',
           '환급 신청 시 필수 · 신청은 수강종료 후 30일 이내'),
       ]),
     ]),

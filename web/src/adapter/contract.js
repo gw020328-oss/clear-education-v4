@@ -98,7 +98,10 @@ export const isAddress = (value) => typeof value === 'string' && /^0x[0-9a-fA-F]
  * @returns {string[]} 문제 목록. 빈 배열이면 통과
  */
 /** 조건을 무엇으로 확인하는가. 경로마다 필요 자료가 달라지는 것이 요지다 */
-const EVIDENCE_KINDS = Object.freeze(['EXAM', 'LEARNING', 'RECORD', 'DOCUMENT']);
+// 서버 스키마의 Requirement.kind 와 같은 목록이다(src/policy/mvp/schema.mjs)
+const EVIDENCE_KINDS = Object.freeze([
+  'EXAM', 'BASELINE', 'LEARNING', 'MOCK_TEST', 'REVIEW', 'BLOG',
+]);
 /** 그 조건을 어떻게 확인하는가. 화면이 아는 코드만 받는다 — 모르는 코드가
     오면 확인 방법 없이 그려져서 참가자가 할 일을 못 본다 */
 const VERIFY_KINDS = Object.freeze([

@@ -20,14 +20,22 @@
 import { bpsText, amountText, seoulText } from './policy-view.js';
 
 /** 조건 하나가 어떤 자료로 확인되는가. 경로마다 필요 자료가 다른 것이 요지다 */
+// 종류 이름은 서버 스키마를 따른다(src/policy/mvp/schema.mjs 의 Requirement.kind).
+// 화면이 따로 만들면 나중에 둘을 맞추는 일이 생긴다.
+//
+// 종류는 여섯인데 보여줄 이름은 넷이다. 'MOCK_TEST' 를 '모의테스트' 라고
+// 적으면 바로 옆 조건 이름과 같은 말이 두 번 나온다.
 export const EVIDENCE = Object.freeze({
   EXAM: '성적 증명',
+  // 과거에 목표 점수를 못 넘겼다는 기록. 같은 성적 조회에서 함께 나온다.
+  BASELINE: '성적 증명',
   LEARNING: '학습 기록',
+  MOCK_TEST: '학습 기록',
   // 학원 시스템 안에 남는 기록. 수강후기가 여기다 — 참가자가 내는 것이
   // 아니라 학원 사이트에 쓴 글이라, 출석과 같은 경로로 가져온다.
-  RECORD: '학원 기록',
+  REVIEW: '학원 기록',
   // 학원 밖에 있어서 참가자가 주소를 내야 하는 것. 개인 블로그 챌린지가 여기다.
-  DOCUMENT: '제출 서류',
+  BLOG: '제출 서류',
   NONE: null,
 });
 
@@ -84,7 +92,14 @@ export const VERIFY = Object.freeze({
  * 학원 밖이라 직접 제출. 예외가 생기면 정책이 verify 로 덮어쓴다.
  */
 const VERIFY_BY_KIND = Object.freeze({
-  EXAM: 'SELF_LOGIN', LEARNING: 'AUTO', RECORD: 'AUTO', DOCUMENT: 'SUBMIT',
+  EXAM: 'SELF_LOGIN',
+  // 과거 이력은 성적 조회와 같은 로그인에서 나온다. 종류가 따로 있으니
+  // 조건마다 적어 줄 필요가 없다.
+  BASELINE: 'SELF_LOGIN_SHARED',
+  LEARNING: 'AUTO',
+  MOCK_TEST: 'AUTO',
+  REVIEW: 'AUTO',
+  BLOG: 'SUBMIT',
 });
 
 /** 그 조건의 확인 방법. 모르면 null 이고, 화면은 없는 설명을 지어내지 않는다 */
