@@ -44,3 +44,5 @@ Gemini 평가 연결은 prompt `clear-gemini-eval.3`와 필드 범위가 있는 
 공통 #43/#46은 확인 시점에 미병합이다. 병합 commit 수신 후 소비 검증을 이어가며, 이번 변경으로 M2 또는 정본 결합이 완료됐다고 기록하지 않는다. reviewPlan→policyHash OPEN, 운영 Evidence 연결 차단을 유지한다. 예치 정책 미확정,400% 사전검토만,500% 제외, grant/outbox HOLD·독립청구 NO-GO·원천/동일인 미확인 보류도 유지한다. 브랜드별 특례가 없다.
 
 이번 로컬 검증은 192 tests PASS(공통 M1 10 포함), 소비자 mock 7/7, 저장 ACTUAL T04 오프라인 재생2/2, M0 3종·workspace local PASS다. 새 구조화 Gemini 응답은 fake transport로 검증했다. 기존 #51 d3c1736 원격 CI 6개 PASS를 확인했으며, 후속 head의 CI는 별도 결과로 기록한다.
+
+추가 검증으로 Gemini 입력 fixture에 `requestedFieldIds`를 독립 pin했다. 모델이 반환한 필드로 허용 목록을 만들지 않고, 잘못된 필드/질문 대상은 거부한다. renderer는 이 ID 목록만 prompt에 전달하며 gold 값은 보내지 않는다. 과거 v1 corpus/ledger를 덮거나 초기화해 승인 한도를 재사용하지 않는다. 새 corpus 준비는 별도 ignored 디렉터리에서 진행해야 한다. 최종 전용·기존 회귀는 193 PASS다.

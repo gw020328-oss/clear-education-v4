@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGeminiEvaluation, developerTransport, EVALUATION_SCHEMA, GEMINI_EVALUATION_MODEL as model } from '../../src/ai-policy/gemini-evaluation.mjs';
-const fixtures = Array.from({length:12},(_,i)=>({caseId:'T'+i,synthetic:true,task:'TEXT_POLICY',text:'SYNTHETIC DEMO',imageBase64:null,maxInputTokens:8000}));
+const fixtures = Array.from({length:12},(_,i)=>({caseId:'T'+i,synthetic:true,task:'TEXT_POLICY',text:'SYNTHETIC DEMO',imageBase64:null,maxInputTokens:8000,requestedFieldIds:['score']}));
 const approved = {approved:true,service:'GEMINI_DEVELOPER_API_PAID_STANDARD',model,syntheticOnly:true,maxGenerationCalls:14,maxCountCalls:14,budgetNanoUsd:'250000000'};
 const output = id=>({caseId:id,fields:[{fieldId:'score',value:'700',location:'L1'}],questions:[],flags:[],authenticity:'UNVERIFIED',completeness:'UNVERIFIED',author:'UNVERIFIED',paymentAllowed:false});
 function fake(transform=x=>x) { return {execution:'MOCK',calls:[],async request(_model,method,body){this.calls.push(method);return method==='countTokens'?{totalTokens:100}:transform({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(output(body.contents[0].parts[0].text.split('\n')[0].slice(7)))}]}}],usageMetadata:{promptTokenCount:100,candidatesTokenCount:40}});}}; }
@@ -23,4 +23,9 @@ test('revised prompt explicitly requires null for conflicting fields',async()=>{
 test('Gemini result boundary withholds a scoped conflict even if the model returns a number',async()=>{
  const transport=fake(r=>{const value=JSON.parse(r.candidates[0].content.parts[0].text);value.questions=[{questionId:'score-open',fieldIds:['score'],text:'700 or 800?'}];value.flags=[{code:'CONFLICT',fieldIds:['score']}];r.candidates[0].content.parts[0].text=JSON.stringify(value);return r;});
  const result=await createGeminiEvaluation({fixtures,approval:approved,transport}).evaluate(fixtures[0]);assert.equal(result.result.fields[0].value,null);assert.equal(result.fieldReview.provenance[0].observedValue,'700');assert.equal(result.result.questions[0].text,'700 or 800?');assert.equal(result.fieldReview.publishable,false);
+});
+
+test('model cannot invent the field allowlist or redirect a question to an undeclared field',async()=>{
+ const transport=fake(r=>{const value=JSON.parse(r.candidates[0].content.parts[0].text);value.fields.push({fieldId:'invented',value:'1',location:'L1'});value.questions=[{questionId:'redirect',fieldIds:['invented'],text:'Is this certain?'}];r.candidates[0].content.parts[0].text=JSON.stringify(value);return r;});
+ await assert.rejects(createGeminiEvaluation({fixtures,approval:approved,transport}).evaluate(fixtures[0]),/GEMINI_OUTPUT_REVIEW/);
 });
