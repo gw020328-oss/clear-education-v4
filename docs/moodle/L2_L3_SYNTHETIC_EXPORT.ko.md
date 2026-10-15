@@ -24,7 +24,7 @@
 1. JSON body 256KiB, 고정 두 겹 JSON decode, raw shape·binding/inventory/source revision·독립 facts pin 확인.
 2. manifest의 고정 pageId만 조회. offset/count/ID/중복/각 page 지문/최대100페이지·10000행과 terminal 대조. 원천 URL/redirect를 따라가지 않는다.
 3. 모든 페이지 뒤 manifest 재조회, 같은 revision의 내용 변경도 거부. 부분 결과·raw provider 오류를 반환하지 않음.
-4. 읽기별 timeout·abort, 정상/오류/중단 모두 close를 한 번 시도. close도 timeout/실패이면 보류. close timeout은 자원 정리 완료 보장이 아니며, 실제 transport의 취소/자원 수명 구현은 후속이다.
+4. 읽기별 timeout·abort, 설정 검사를 통과한 client는 정상/오류/중단 모두 close를 한 번 시도. 차단한 transport는 메서드를 실행하지 않는다. close도 timeout/실패이면 보류. close timeout은 자원 정리 완료 보장이 아니며, 실제 transport의 취소/자원 수명 구현은 후속이다.
 5. 정리 뒤 서버 시계/만료를 재검사하고 immutable facts 반환. 응답 유실 재조회에 적립·DB 쓰기가 없어 중복 학습/지급을 생성하지 않음. 자동 재시도 없음. 취소/timeout 이후 늦은 응답은 이미 반환한 결과를 바꾸지 못한다.
 
 `COLLECTED_SYNTHETIC`은 고정 합성 artifact의 취득/무결성 결과다. 진위·계정 인증·기관 승인·학습 조건·제품 수락이 아니다. collectionEnabled/sourceAuthenticityVerified/productConnected/humanAttentionProven/paymentAllowed는 모두 false다. L1과 M2도 별도 신뢰 검사를 유지한다.

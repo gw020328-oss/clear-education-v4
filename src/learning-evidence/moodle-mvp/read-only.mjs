@@ -76,9 +76,10 @@ export async function collectSyntheticMoodleFacts(trusted, client, { now, signal
   } catch (error) {
     const allowed = new Set(['LEARNING_CANCELLED', 'LEARNING_TIMEOUT', 'LEARNING_RESPONSE_LIMIT', 'LEARNING_RESPONSE_SHAPE',
       'LEARNING_EXPORT_SCHEMA', 'LEARNING_EXPORT_SCOPE', 'LEARNING_EXPORT_PIN', 'LEARNING_PAGE_CHAIN', 'LEARNING_EXPORT_CHANGED']);
-    result = fail(error.message === 'EXPORT_REVISION_CHANGED' ? 'LEARNING_SOURCE_REVISION_CHANGED'
-      : error.message === 'EXPORT_SCOPE' ? 'LEARNING_EXPORT_SCOPE'
-      : allowed.has(error.message) ? error.message : 'LEARNING_SOURCE_UNAVAILABLE');
+    const code = error instanceof Error ? error.message : '';
+    result = fail(code === 'EXPORT_REVISION_CHANGED' ? 'LEARNING_SOURCE_REVISION_CHANGED'
+      : code === 'EXPORT_SCOPE' ? 'LEARNING_EXPORT_SCOPE'
+      : allowed.has(code) ? code : 'LEARNING_SOURCE_UNAVAILABLE');
   } finally {
     let closeTimer;
     try {

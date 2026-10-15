@@ -110,9 +110,11 @@ test('malformed/oversized/one-layer response is not exposed in an error', async 
   }
 });
 test('source exceptions are fixed reasons, never provider text', async () => {
-  const { f, client } = labFixture(); client.readPage = async () => { throw Error('SYNTHETIC_PRIVATE_ERROR'); };
-  const r = await f.collect(); assert.equal(r.reason, 'LEARNING_SOURCE_UNAVAILABLE');
-  assert.ok(!JSON.stringify(r).includes('SYNTHETIC_PRIVATE_ERROR'));
+  for (const error of [Error('SYNTHETIC_PRIVATE_ERROR'), null, 'SYNTHETIC_PRIVATE_ERROR']) {
+    const { f, client } = labFixture(); client.readPage = async () => { throw error; };
+    const r = await f.collect(); assert.equal(r.reason, 'LEARNING_SOURCE_UNAVAILABLE');
+    assert.ok(!JSON.stringify(r).includes('SYNTHETIC_PRIVATE_ERROR'));
+  }
 });
 test('pre-abort and timeout close once without returning partial facts', async () => {
   const a = labFixture(), controller = new AbortController(); controller.abort();
