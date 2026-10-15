@@ -69,6 +69,10 @@ jobs:
         run: ./tools/npm run test:mvp-policy
       - name: Offline Moodle preparation vectors and package checks
         run: ./tools/node --test tests/moodle-preparation/*.test.mjs
+      - name: Offline AI policy and document prechecks
+        run: |
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/ai-policy/*.test.mjs tests/document-precheck/*.test.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs tests/ai-policy/evaluate-mock.mjs
       - name: Synthetic Moodle daily evaluation and export boundaries
         run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/moodle-mvp/*.test.mjs
       - name: Offline AI evaluation preparation
