@@ -1,5 +1,7 @@
 # 추가 지급 서명 없는 청구: 격리 검증
 
+2026-10-15 후속: [다중 조건·ABI·중단 의존성 검증](../independent-claim-boundaries/README.ko.md). 최신 M1/M2 합성 정책을 읽기 전용으로 소비하며 아래 800점 원형을 최신 상품 정책으로 사용하지 않는다. 제품 independentClaim=NO_GO 유지.
+
 최신 판정: [공식 attestor 소스 확장 통합 시험](ATTESTOR_EXTENSION.ko.md). 로컬 실제 TLS→native OPRF→attestor 서명·독립 검증 14개와 오프라인 25개가 통과했다. 공식 hosted 배포·실제 YBM 적용·제품 전환은 NO-GO다. [동일 시험 결합·안정 nullifier](SOURCE_BOUND_FOLLOWUP.ko.md)는 그 전 단계이며 아래는 첫 실험 보존 기록이다.
 
 2026-10-13, 기준 `3f8ef79`. **현 제품 전환 NO-GO**다. 로컬 모델의 추가 issuer 서명 없는 지급은 가능하지만, 원천에 결합된 비공개 조건과 안정 nullifier는 해결되지 않았다. 기존 20개 exact-match Reclaim 지급 시험과 197점 predicate 시험은 사용자 제공 `output/clear-direct-proof-feasibility-2026-10-13`의 과거 근거로 읽었으며 재실행 결과로 세지 않았다. 새 실험은 이 worktree의 의존성만 사용한다.

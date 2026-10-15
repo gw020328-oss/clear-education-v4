@@ -1,0 +1,762 @@
+{
+  "schemaVersion": "independent-claim-boundary-inventory.1",
+  "mode": "SYNTHETIC_RESEARCH_ONLY",
+  "officialTermsFixed": false,
+  "fundingPolicy": "OPEN",
+  "actualOfficialProofOnchain": "NOT_RUN",
+  "independentNewCollection": "NOT_IMPLEMENTED",
+  "sourcePrivacyCircuit": "NOT_IMPLEMENTED",
+  "grantOutbox": "HOLD",
+  "independentClaim": "NO_GO",
+  "productEligible": false,
+  "paymentAllowed": false,
+  "graphs": [
+    {
+      "profile": "ybm",
+      "scope": "RESEARCH_ONLY_SYNTHETIC_POLICY_GRAPH",
+      "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+      "tier": 100,
+      "support": "CONDITION_AMOUNT",
+      "quote": {
+        "state": "CALCULATED_SYNTHETIC",
+        "amountAtoms": "100000000"
+      },
+      "routes": [
+        {
+          "routeId": "single-route",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "mock-completed",
+              "ruleHash": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+              "requirementId": "mock",
+              "kind": "MOCK_TEST",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "MOCK_COMPLETION_SOURCE_UNINTEGRATED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "daily-learning",
+              "ruleHash": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+              "requirementId": "learning",
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1898521200,
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "DAILY_TIME",
+              "threshold": 9000,
+              "blockers": [
+                "LMS_INSTITUTION_ACCOUNT_BINDING_UNVERIFIED",
+                "LMS_FACTS_ONCHAIN_VERIFIER_UNIMPLEMENTED",
+                "LMS_OPERATOR_TRUST_REMAINS"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "score-target",
+              "ruleHash": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e",
+              "requirementId": "score",
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "period": {
+                "from": 1898521200,
+                "until": 1906297200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "SCORE_GTE",
+              "threshold": 750,
+              "blockers": [
+                "PRIVATE_SOURCE_PREDICATE_NOT_DEPLOYED",
+                "SOURCE_BOUND_STABLE_NULLIFIER_NOT_DEPLOYED",
+                "FRESH_OFFICIAL_PROOF_ONCHAIN_NOT_TESTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        }
+      ],
+      "amountAuthority": "SYNTHETIC_QUOTE_NOT_CLAIM_AUTHORITY",
+      "selectionAuthority": "NOT_ONCHAIN_VERIFIED",
+      "fundingPolicy": "OPEN",
+      "independentClaim": "NO_GO",
+      "claimAuthority": false,
+      "paymentAllowed": false,
+      "globalBlockers": [
+        "POLICY_EXECUTION_ONCHAIN_UNBOUND",
+        "SOURCE_SUBJECT_BINDING_UNVERIFIED",
+        "FIRST_SUBMISSION_SELECTION_FINALITY_UNPROVEN_ONCHAIN",
+        "COMMON_SPENT_REGISTRY_UNIMPLEMENTED",
+        "INDEPENDENT_NEW_EVIDENCE_COLLECTION_UNIMPLEMENTED"
+      ]
+    },
+    {
+      "profile": "siwon",
+      "scope": "RESEARCH_ONLY_SYNTHETIC_POLICY_GRAPH",
+      "policyHash": "0xd660a9730be78bd8021864ae3e03722cf8496276fedf5fb1bb85d80fb9b506c4",
+      "tier": 50,
+      "support": "CONDITION_AMOUNT",
+      "quote": {
+        "state": "CALCULATED_SYNTHETIC",
+        "amountAtoms": "33540000"
+      },
+      "routes": [
+        {
+          "routeId": "below-target",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0xc35d48676eb4c262905552e648ea5708c874326f2ab94166b1e2d8a0ab5cac7c",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "score-below-750",
+              "ruleHash": "0xf55e63721ee7233e255d39f53732093a48d87301c05056b31dcf9f4c3bc0250c",
+              "requirementId": "score",
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "SCORE_LT",
+              "threshold": 750,
+              "blockers": [
+                "PRIVATE_SOURCE_PREDICATE_NOT_DEPLOYED",
+                "SOURCE_BOUND_STABLE_NULLIFIER_NOT_DEPLOYED",
+                "FRESH_OFFICIAL_PROOF_ONCHAIN_NOT_TESTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        }
+      ],
+      "amountAuthority": "SYNTHETIC_QUOTE_NOT_CLAIM_AUTHORITY",
+      "selectionAuthority": "NOT_ONCHAIN_VERIFIED",
+      "fundingPolicy": "OPEN",
+      "independentClaim": "NO_GO",
+      "claimAuthority": false,
+      "paymentAllowed": false,
+      "globalBlockers": [
+        "POLICY_EXECUTION_ONCHAIN_UNBOUND",
+        "SOURCE_SUBJECT_BINDING_UNVERIFIED",
+        "FIRST_SUBMISSION_SELECTION_FINALITY_UNPROVEN_ONCHAIN",
+        "COMMON_SPENT_REGISTRY_UNIMPLEMENTED",
+        "INDEPENDENT_NEW_EVIDENCE_COLLECTION_UNIMPLEMENTED"
+      ]
+    },
+    {
+      "profile": "siwon",
+      "scope": "RESEARCH_ONLY_SYNTHETIC_POLICY_GRAPH",
+      "policyHash": "0xd660a9730be78bd8021864ae3e03722cf8496276fedf5fb1bb85d80fb9b506c4",
+      "tier": 100,
+      "support": "CONDITION_AMOUNT",
+      "quote": {
+        "state": "CALCULATED_SYNTHETIC",
+        "amountAtoms": "68640000"
+      },
+      "routes": [
+        {
+          "routeId": "attendance",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0xc35d48676eb4c262905552e648ea5708c874326f2ab94166b1e2d8a0ab5cac7c",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "daily-learning",
+              "ruleHash": "0x311998ae548e7fb3a81810e9eb1720af0720c04240bfd1a9856c9b7f5d6a5588",
+              "requirementId": "learning",
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "DAILY_PROGRESS",
+              "threshold": 6000,
+              "blockers": [
+                "LMS_INSTITUTION_ACCOUNT_BINDING_UNVERIFIED",
+                "LMS_FACTS_ONCHAIN_VERIFIER_UNIMPLEMENTED",
+                "LMS_OPERATOR_TRUST_REMAINS"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        },
+        {
+          "routeId": "achievement",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0xc35d48676eb4c262905552e648ea5708c874326f2ab94166b1e2d8a0ab5cac7c",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "score-750",
+              "ruleHash": "0xf3b67cb553900898dc2eda1bcf8bb2df0b5503fda18311af77cc0adea335d5bf",
+              "requirementId": "score",
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "SCORE_GTE",
+              "threshold": 750,
+              "blockers": [
+                "PRIVATE_SOURCE_PREDICATE_NOT_DEPLOYED",
+                "SOURCE_BOUND_STABLE_NULLIFIER_NOT_DEPLOYED",
+                "FRESH_OFFICIAL_PROOF_ONCHAIN_NOT_TESTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "baseline-below-750",
+              "ruleHash": "0xba0206d3637478163ba6cd9bb34e586ed1e27fd9126461f09d0ccd2b18592dab",
+              "requirementId": "history",
+              "kind": "BASELINE",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1835449200,
+                "until": 1898521200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "BASELINE_LT",
+              "threshold": 750,
+              "blockers": [
+                "SOURCE_ACCOUNT_PERIOD_COVERAGE_UNKNOWN",
+                "AUTHENTICATED_ABSENCE_UNKNOWN",
+                "PRIVATE_HISTORY_VERIFIER_UNIMPLEMENTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        }
+      ],
+      "amountAuthority": "SYNTHETIC_QUOTE_NOT_CLAIM_AUTHORITY",
+      "selectionAuthority": "NOT_ONCHAIN_VERIFIED",
+      "fundingPolicy": "OPEN",
+      "independentClaim": "NO_GO",
+      "claimAuthority": false,
+      "paymentAllowed": false,
+      "globalBlockers": [
+        "POLICY_EXECUTION_ONCHAIN_UNBOUND",
+        "SOURCE_SUBJECT_BINDING_UNVERIFIED",
+        "FIRST_SUBMISSION_SELECTION_FINALITY_UNPROVEN_ONCHAIN",
+        "COMMON_SPENT_REGISTRY_UNIMPLEMENTED",
+        "INDEPENDENT_NEW_EVIDENCE_COLLECTION_UNIMPLEMENTED"
+      ]
+    },
+    {
+      "profile": "siwon",
+      "scope": "RESEARCH_ONLY_SYNTHETIC_POLICY_GRAPH",
+      "policyHash": "0xd660a9730be78bd8021864ae3e03722cf8496276fedf5fb1bb85d80fb9b506c4",
+      "tier": 200,
+      "support": "CONDITION_AMOUNT",
+      "quote": {
+        "state": "CALCULATED_SYNTHETIC",
+        "amountAtoms": "138840000"
+      },
+      "routes": [
+        {
+          "routeId": "attendance-score-750",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0xc35d48676eb4c262905552e648ea5708c874326f2ab94166b1e2d8a0ab5cac7c",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "daily-learning",
+              "ruleHash": "0x311998ae548e7fb3a81810e9eb1720af0720c04240bfd1a9856c9b7f5d6a5588",
+              "requirementId": "learning",
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "DAILY_PROGRESS",
+              "threshold": 6000,
+              "blockers": [
+                "LMS_INSTITUTION_ACCOUNT_BINDING_UNVERIFIED",
+                "LMS_FACTS_ONCHAIN_VERIFIER_UNIMPLEMENTED",
+                "LMS_OPERATOR_TRUST_REMAINS"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "score-750",
+              "ruleHash": "0xf3b67cb553900898dc2eda1bcf8bb2df0b5503fda18311af77cc0adea335d5bf",
+              "requirementId": "score",
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "SCORE_GTE",
+              "threshold": 750,
+              "blockers": [
+                "PRIVATE_SOURCE_PREDICATE_NOT_DEPLOYED",
+                "SOURCE_BOUND_STABLE_NULLIFIER_NOT_DEPLOYED",
+                "FRESH_OFFICIAL_PROOF_ONCHAIN_NOT_TESTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "baseline-below-750",
+              "ruleHash": "0xba0206d3637478163ba6cd9bb34e586ed1e27fd9126461f09d0ccd2b18592dab",
+              "requirementId": "history",
+              "kind": "BASELINE",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1835449200,
+                "until": 1898521200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "BASELINE_LT",
+              "threshold": 750,
+              "blockers": [
+                "SOURCE_ACCOUNT_PERIOD_COVERAGE_UNKNOWN",
+                "AUTHENTICATED_ABSENCE_UNKNOWN",
+                "PRIVATE_HISTORY_VERIFIER_UNIMPLEMENTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        }
+      ],
+      "amountAuthority": "SYNTHETIC_QUOTE_NOT_CLAIM_AUTHORITY",
+      "selectionAuthority": "NOT_ONCHAIN_VERIFIED",
+      "fundingPolicy": "OPEN",
+      "independentClaim": "NO_GO",
+      "claimAuthority": false,
+      "paymentAllowed": false,
+      "globalBlockers": [
+        "POLICY_EXECUTION_ONCHAIN_UNBOUND",
+        "SOURCE_SUBJECT_BINDING_UNVERIFIED",
+        "FIRST_SUBMISSION_SELECTION_FINALITY_UNPROVEN_ONCHAIN",
+        "COMMON_SPENT_REGISTRY_UNIMPLEMENTED",
+        "INDEPENDENT_NEW_EVIDENCE_COLLECTION_UNIMPLEMENTED"
+      ]
+    },
+    {
+      "profile": "siwon",
+      "scope": "RESEARCH_ONLY_SYNTHETIC_POLICY_GRAPH",
+      "policyHash": "0xd660a9730be78bd8021864ae3e03722cf8496276fedf5fb1bb85d80fb9b506c4",
+      "tier": 300,
+      "support": "CONDITION_AMOUNT",
+      "quote": {
+        "state": "CALCULATED_SYNTHETIC",
+        "amountAtoms": "209040000"
+      },
+      "routes": [
+        {
+          "routeId": "attendance-score-850",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0xc35d48676eb4c262905552e648ea5708c874326f2ab94166b1e2d8a0ab5cac7c",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "daily-learning",
+              "ruleHash": "0x311998ae548e7fb3a81810e9eb1720af0720c04240bfd1a9856c9b7f5d6a5588",
+              "requirementId": "learning",
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "DAILY_PROGRESS",
+              "threshold": 6000,
+              "blockers": [
+                "LMS_INSTITUTION_ACCOUNT_BINDING_UNVERIFIED",
+                "LMS_FACTS_ONCHAIN_VERIFIER_UNIMPLEMENTED",
+                "LMS_OPERATOR_TRUST_REMAINS"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "score-850",
+              "ruleHash": "0xd27080365eb1695981b97ab32359389f2146d549899b124d1fc14e538c92c43b",
+              "requirementId": "score",
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "SCORE_GTE",
+              "threshold": 850,
+              "blockers": [
+                "PRIVATE_SOURCE_PREDICATE_NOT_DEPLOYED",
+                "SOURCE_BOUND_STABLE_NULLIFIER_NOT_DEPLOYED",
+                "FRESH_OFFICIAL_PROOF_ONCHAIN_NOT_TESTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "baseline-below-750",
+              "ruleHash": "0xba0206d3637478163ba6cd9bb34e586ed1e27fd9126461f09d0ccd2b18592dab",
+              "requirementId": "history",
+              "kind": "BASELINE",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1835449200,
+                "until": 1898521200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "BASELINE_LT",
+              "threshold": 750,
+              "blockers": [
+                "SOURCE_ACCOUNT_PERIOD_COVERAGE_UNKNOWN",
+                "AUTHENTICATED_ABSENCE_UNKNOWN",
+                "PRIVATE_HISTORY_VERIFIER_UNIMPLEMENTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        }
+      ],
+      "amountAuthority": "SYNTHETIC_QUOTE_NOT_CLAIM_AUTHORITY",
+      "selectionAuthority": "NOT_ONCHAIN_VERIFIED",
+      "fundingPolicy": "OPEN",
+      "independentClaim": "NO_GO",
+      "claimAuthority": false,
+      "paymentAllowed": false,
+      "globalBlockers": [
+        "POLICY_EXECUTION_ONCHAIN_UNBOUND",
+        "SOURCE_SUBJECT_BINDING_UNVERIFIED",
+        "FIRST_SUBMISSION_SELECTION_FINALITY_UNPROVEN_ONCHAIN",
+        "COMMON_SPENT_REGISTRY_UNIMPLEMENTED",
+        "INDEPENDENT_NEW_EVIDENCE_COLLECTION_UNIMPLEMENTED"
+      ]
+    },
+    {
+      "profile": "siwon",
+      "scope": "RESEARCH_ONLY_SYNTHETIC_POLICY_GRAPH",
+      "policyHash": "0xd660a9730be78bd8021864ae3e03722cf8496276fedf5fb1bb85d80fb9b506c4",
+      "tier": 400,
+      "support": "PRECHECK_ONLY",
+      "quote": {
+        "state": "PRECHECK_ONLY",
+        "amountAtoms": null
+      },
+      "routes": [
+        {
+          "routeId": "challenge-precheck",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0xc35d48676eb4c262905552e648ea5708c874326f2ab94166b1e2d8a0ab5cac7c",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "daily-learning",
+              "ruleHash": "0x311998ae548e7fb3a81810e9eb1720af0720c04240bfd1a9856c9b7f5d6a5588",
+              "requirementId": "learning",
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "DAILY_PROGRESS",
+              "threshold": 6000,
+              "blockers": [
+                "LMS_INSTITUTION_ACCOUNT_BINDING_UNVERIFIED",
+                "LMS_FACTS_ONCHAIN_VERIFIER_UNIMPLEMENTED",
+                "LMS_OPERATOR_TRUST_REMAINS"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "score-990",
+              "ruleHash": "0x05f48ad87ddf915d38ec0be92ae1f33c9b117cb8fc8b10f49d927624309b96d3",
+              "requirementId": "score",
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "SCORE_EQ",
+              "threshold": 990,
+              "blockers": [
+                "PRIVATE_SOURCE_PREDICATE_NOT_DEPLOYED",
+                "SOURCE_BOUND_STABLE_NULLIFIER_NOT_DEPLOYED",
+                "FRESH_OFFICIAL_PROOF_ONCHAIN_NOT_TESTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "baseline-below-750",
+              "ruleHash": "0xba0206d3637478163ba6cd9bb34e586ed1e27fd9126461f09d0ccd2b18592dab",
+              "requirementId": "history",
+              "kind": "BASELINE",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1835449200,
+                "until": 1898521200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "BASELINE_LT",
+              "threshold": 750,
+              "blockers": [
+                "SOURCE_ACCOUNT_PERIOD_COVERAGE_UNKNOWN",
+                "AUTHENTICATED_ABSENCE_UNKNOWN",
+                "PRIVATE_HISTORY_VERIFIER_UNIMPLEMENTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "blog-verified",
+              "ruleHash": "0xe7c08c5babe515579083ed9aee5f2d702bc5a76944f313f334c37511522dca4f",
+              "requirementId": "blog",
+              "kind": "BLOG",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1898521200,
+                "until": 1907161200,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "BLOG_PUBLICATION_AUTHOR_CONTINUITY_UNVERIFIED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        }
+      ],
+      "amountAuthority": "SYNTHETIC_QUOTE_NOT_CLAIM_AUTHORITY",
+      "selectionAuthority": "NOT_ONCHAIN_VERIFIED",
+      "fundingPolicy": "OPEN",
+      "independentClaim": "NO_GO",
+      "claimAuthority": false,
+      "paymentAllowed": false,
+      "globalBlockers": [
+        "POLICY_EXECUTION_ONCHAIN_UNBOUND",
+        "SOURCE_SUBJECT_BINDING_UNVERIFIED",
+        "FIRST_SUBMISSION_SELECTION_FINALITY_UNPROVEN_ONCHAIN",
+        "COMMON_SPENT_REGISTRY_UNIMPLEMENTED",
+        "INDEPENDENT_NEW_EVIDENCE_COLLECTION_UNIMPLEMENTED"
+      ]
+    },
+    {
+      "profile": "third",
+      "scope": "RESEARCH_ONLY_SYNTHETIC_POLICY_GRAPH",
+      "policyHash": "0xadeaa47459a4b34af16585d8750c7ee97f9f1edb06d73168d966dc9fca76225b",
+      "tier": 75,
+      "support": "CONDITION_AMOUNT",
+      "quote": {
+        "state": "CALCULATED_SYNTHETIC",
+        "amountAtoms": "42000000"
+      },
+      "routes": [
+        {
+          "routeId": "single-route",
+          "predicates": [
+            {
+              "ruleId": "review-accepted",
+              "ruleHash": "0x89baa36753bec18b7c4e46dcac40481eb21d5de06918d47081f42e842b213d1e",
+              "requirementId": "review",
+              "kind": "REVIEW",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "REVIEW_SOURCE_AUTHORITY_UNRESOLVED",
+                "PRECHECK_IS_NOT_SOURCE_EVIDENCE"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "mock-completed",
+              "ruleHash": "0x09a3763b3c76e85fe55af47c61e6aac4e33923b05a0252f875ee0c3c9078ec4d",
+              "requirementId": "mock",
+              "kind": "MOCK_TEST",
+              "coverage": "NOT_REQUIRED",
+              "period": null,
+              "predicate": "BOOLEAN",
+              "threshold": null,
+              "blockers": [
+                "MOCK_COMPLETION_SOURCE_UNINTEGRATED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "daily-learning",
+              "ruleHash": "0x986223717fd609c77f8907bffb8bc09339c907e0734e713de66cd2481ac62a46",
+              "requirementId": "learning",
+              "kind": "LEARNING",
+              "coverage": "COMPLETE_PERIOD",
+              "period": {
+                "from": 1898521200,
+                "until": 1899730800,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "DAILY_TIME",
+              "threshold": 8000,
+              "blockers": [
+                "LMS_INSTITUTION_ACCOUNT_BINDING_UNVERIFIED",
+                "LMS_FACTS_ONCHAIN_VERIFIER_UNIMPLEMENTED",
+                "LMS_OPERATOR_TRUST_REMAINS"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            },
+            {
+              "ruleId": "score-target",
+              "ruleHash": "0x27031a1c7b8b20310f43a40a6858bf812689b4e1f78fe6d7cf8db06b87c41aae",
+              "requirementId": "score",
+              "kind": "EXAM",
+              "coverage": "EXISTENTIAL",
+              "period": {
+                "from": 1898521200,
+                "until": 1899730800,
+                "boundaries": "[from,until)",
+                "timeZone": "Asia/Seoul"
+              },
+              "predicate": "SCORE_GTE",
+              "threshold": 700,
+              "blockers": [
+                "PRIVATE_SOURCE_PREDICATE_NOT_DEPLOYED",
+                "SOURCE_BOUND_STABLE_NULLIFIER_NOT_DEPLOYED",
+                "FRESH_OFFICIAL_PROOF_ONCHAIN_NOT_TESTED"
+              ],
+              "onchainFactVerifier": "NOT_IMPLEMENTED"
+            }
+          ]
+        }
+      ],
+      "amountAuthority": "SYNTHETIC_QUOTE_NOT_CLAIM_AUTHORITY",
+      "selectionAuthority": "NOT_ONCHAIN_VERIFIED",
+      "fundingPolicy": "OPEN",
+      "independentClaim": "NO_GO",
+      "claimAuthority": false,
+      "paymentAllowed": false,
+      "globalBlockers": [
+        "POLICY_EXECUTION_ONCHAIN_UNBOUND",
+        "SOURCE_SUBJECT_BINDING_UNVERIFIED",
+        "FIRST_SUBMISSION_SELECTION_FINALITY_UNPROVEN_ONCHAIN",
+        "COMMON_SPENT_REGISTRY_UNIMPLEMENTED",
+        "INDEPENDENT_NEW_EVIDENCE_COLLECTION_UNIMPLEMENTED"
+      ]
+    }
+  ]
+}
