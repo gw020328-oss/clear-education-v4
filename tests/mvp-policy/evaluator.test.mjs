@@ -96,6 +96,18 @@ test('OR is NOT_MET only when every route is definitely false; unknown higher ti
   challenge.input.selection.tier = 400; assert.equal(run(challenge).settlement, 'PRECHECK_ONLY'); assert.equal(run(challenge).entitlement, null);
   challenge.input.selection.tier = 500; assert.throws(() => run(challenge), { message: 'MVP_TIER_CAPABILITY' });
 });
+test('consumer regression: future days never hide unknown, missing or supplement observations', () => {
+  for (const status of ['UNKNOWN', 'MISSING', 'NEEDS_SUPPLEMENT', 'IN_PROGRESS', 'ABSENT']) {
+    const v = evaluationExample('third'), e = record(v.input, 'learning');
+    const now = v.compiled.policy.requirements.find(r => r.kind === 'LEARNING').period.from + 3600;
+    v.input.context.evaluatedAt = now; e.collectedAt = now - 10; e.acceptedAt = now - 9;
+    if (status === 'ABSENT') e.observations = [];
+    else fact(v.input, 'learning', status);
+    const r = rule(run(v), 'daily-learning');
+    assert.equal(r.state, status === 'ABSENT' ? 'MISSING' : status);
+    assert.notEqual(r.reason, 'FUTURE_DAYS');
+  }
+});
 test('all binding fields, source account, evidence revision and rule hash are pinned', () => {
   for (const key of ['applicationId', 'subjectRef', 'subjectBindingId', 'bindingRevision', 'recipientRef', 'instanceId', 'policyHash', 'policyVersion', 'productId', 'cohortId']) {
     const v = evaluationExample(), e = record(v.input, 'score'); e.binding[key] = typeof e.binding[key] === 'number' ? 2 : key.endsWith('Hash') || ['applicationId', 'subjectRef'].includes(key) ? digest('OTHER', key) : 'other-ref';

@@ -66,11 +66,11 @@ export function evaluateMvpEligibility(compiled, { context, evidence, selection 
         firstScoreMismatch = true; evaluated = state('UNKNOWN', 'FIRST_SCORE_MISMATCH');
       } else if (exam && req.period && (exam.eventAt < req.period.from || exam.eventAt >= req.period.until || exam.eventAt > e.collectedAt))
         evaluated = state('UNKNOWN', 'EXAM_PERIOD');
-      else if (req.kind === 'LEARNING' && context.evaluatedAt < req.period.until) evaluated = state('IN_PROGRESS', 'FUTURE_DAYS');
       else if (e.sourceStatus === 'NO_RECORD') evaluated = req.kind === 'BASELINE' && e.completeness === 'COMPLETE_SYNTHETIC'
         ? state('MET', 'NO_RECORD_SYNTHETIC') : state('UNKNOWN', 'ABSENCE_UNCONFIRMED');
       else if (!o) evaluated = state('MISSING', 'OBSERVATION_MISSING');
       else if (o.status !== 'OBSERVED') evaluated = state(o.status, o.status === 'UNKNOWN' ? 'SEMANTICS_UNKNOWN' : o.status);
+      else if (req.kind === 'LEARNING' && context.evaluatedAt < req.period.until) evaluated = state('IN_PROGRESS', 'FUTURE_DAYS');
       else if (req.kind === 'BLOG') evaluated = state('UNKNOWN', 'BLOG_SOURCE_UNVERIFIED'); // precheck observation is never publication proof
       else {
         const met = r.predicate === 'BOOLEAN' ? o.value : r.predicate === 'SCORE_LT' || r.predicate === 'BASELINE_LT' ? o.value < r.threshold
