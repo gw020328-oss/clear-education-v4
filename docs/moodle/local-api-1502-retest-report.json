@@ -1,0 +1,342 @@
+{
+  "kind": "CLEARAPI_1502_REAL_LOCAL_RETEST_EVIDENCE",
+  "baseDevelop": "4ae548b",
+  "successfulExecutionCommit": "3d73b45a3ef4c58ab51e42a3ebd74ed9f33f9516",
+  "successfulRun": {
+    "kind": "ACTUAL_LOCAL_MOODLE_API_SYNTHETIC_TEST_ACCOUNTS",
+    "mode": "LOCAL_LAB",
+    "startedAt": "2026-10-15T07:31:41.429Z",
+    "executionCommit": "3d73b45a3ef4c58ab51e42a3ebd74ed9f33f9516",
+    "runRef": "run4",
+    "sourceVersions": {
+      "moodle": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+      "videocheck": "67fb5233070f49653c0bd8209338c34b8fe61177",
+      "clearwatch": "2026101501",
+      "clearapi": "2026101502"
+    },
+    "transport": "LOOPBACK_HTTP_NOT_PRODUCTION_HTTPS",
+    "videoMs": 30000,
+    "policy": "EXPLICIT_LOCAL_DEMO_ONE_DAY_9000BPS",
+    "actual90or100DayHistory": false,
+    "academyIntegration": false,
+    "humanAttentionProven": false,
+    "productEligible": false,
+    "paymentAllowed": false,
+    "cases": [
+      {
+        "name": "authenticated_three_page_explicit_absence",
+        "status": "PASS",
+        "sourceRows": 5,
+        "sourcePages": 3
+      },
+      {
+        "name": "actual_1502_observation_window_and_open_period",
+        "status": "PASS"
+      },
+      {
+        "name": "actual_cache_keeps_original_observation_bounds",
+        "status": "PASS"
+      },
+      {
+        "name": "other_account_is_not_applicant",
+        "status": "PASS"
+      },
+      {
+        "name": "invalid_token_rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "read_token_cannot_call_playback_write",
+        "status": "PASS"
+      },
+      {
+        "name": "real_double_browser_db_api_facts_daily",
+        "status": "PASS",
+        "wallMs": 17456,
+        "effectiveMs": "14991",
+        "mediaCoveredMs": "30000",
+        "normalClose": true,
+        "creditDay": null,
+        "dailyStatus": "IN_PROGRESS",
+        "creditedDays": 0
+      },
+      {
+        "name": "real_normal_browser_db_api_facts_daily",
+        "status": "PASS",
+        "wallMs": 31729,
+        "effectiveMs": "29955",
+        "mediaCoveredMs": "30000",
+        "normalClose": true,
+        "creditDay": "2026-10-15",
+        "dailyStatus": "IN_PROGRESS",
+        "creditedDays": 1
+      },
+      {
+        "name": "pause_no_effective_time_added",
+        "status": "PASS",
+        "pausedDeltaMs": 0
+      },
+      {
+        "name": "real_pause_browser_db_api_facts_daily",
+        "status": "PASS",
+        "wallMs": 36759,
+        "effectiveMs": "29980",
+        "mediaCoveredMs": "30000",
+        "normalClose": true,
+        "creditDay": "2026-10-15",
+        "dailyStatus": "IN_PROGRESS",
+        "creditedDays": 1
+      },
+      {
+        "name": "reopen_does_not_create_new_day",
+        "status": "PASS"
+      },
+      {
+        "name": "lost_response_requery_no_credit_change",
+        "status": "PASS"
+      },
+      {
+        "name": "concurrent_correction_discards_partial_export",
+        "status": "PASS"
+      },
+      {
+        "name": "unavailable_not_no_record",
+        "status": "PASS"
+      },
+      {
+        "name": "approved_correction_new_revision_no_duplicate_day",
+        "status": "PASS"
+      },
+      {
+        "name": "actual_snapshot_synthetic_clock_expiry",
+        "status": "PASS"
+      },
+      {
+        "name": "expired_moodle_read_token_rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "actual_other_course_rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "actual_api_async_registry_and_pin_detached",
+        "status": "PASS"
+      },
+      {
+        "name": "actual_api_cleanup_cancellation_discards_facts",
+        "status": "PASS"
+      },
+      {
+        "name": "actual_plugin_read_deadline_rejected_without_extension",
+        "status": "PASS"
+      }
+    ],
+    "initialObservation": {
+      "revision": "r1",
+      "manifestHash": "fee274c19d4ee7f95bf20164ac368cbe6f347904cd8232775c2389d23f1edebc",
+      "lower": 1792049501,
+      "upper": 1792049502,
+      "coverageEndExclusive": 1792049501,
+      "validUntil": 1792049801
+    },
+    "final": {
+      "sourceRows": 5,
+      "sourcePages": 3,
+      "sourceRevision": "r92",
+      "sourceManifestHash": "90eb7f8de55e0169796d613265945fae2417352207d138de28005b0ab35d2ec2",
+      "observationLowerBound": 1792049594,
+      "observedAt": 1792049595,
+      "coverageEndExclusive": 1792049594,
+      "validUntil": 1792049894,
+      "normalizedMode": "LOCAL_LMS_RECORD",
+      "dailyMode": "LOCAL_LAB",
+      "dailyStatus": "IN_PROGRESS",
+      "creditedDates": [
+        "2026-10-15"
+      ],
+      "officialProgress": null,
+      "speedCompliance": "UNKNOWN"
+    },
+    "status": "PASS",
+    "finishedAt": "2026-10-15T07:33:16.052Z"
+  },
+  "successfulLifecycle": {
+    "kind": "ACTUAL_LOCAL_1502_RETEST_LIFECYCLE",
+    "startedAt": "2026-10-15T07:31:38.178Z",
+    "executionCommit": "3d73b45a3ef4c58ab51e42a3ebd74ed9f33f9516",
+    "status": "PASS",
+    "paymentAllowed": false,
+    "baseline": {
+      "status": "PASS",
+      "priorRows": 6,
+      "nextRun": "run4"
+    },
+    "upgradePreservedPriorRows": true,
+    "credentialPreflight": {
+      "newSyntheticPasswordVerifies": true,
+      "active": true,
+      "confirmed": true,
+      "manualAuth": true
+    },
+    "playbackCases": 21,
+    "sourceVersions": {
+      "moodle": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+      "videocheck": "67fb5233070f49653c0bd8209338c34b8fe61177",
+      "clearwatch": "2026101501",
+      "clearapi": "2026101502"
+    },
+    "cleanup": {
+      "status": "PASS",
+      "servicesRevoked": 1,
+      "syntheticUsersSuspended": 2,
+      "remainingTokens": 0,
+      "remainingSessions": 0,
+      "priorLearningRowsPreserved": 6,
+      "newLearningRowsPreserved": 3,
+      "priorAccountsAndServicesUnchanged": true,
+      "revokedTokenActuallyRejected": true,
+      "previousFixtureRestored": true
+    },
+    "previousRuntimeInputsRestored": true,
+    "ownContainersStopped": true,
+    "volumesPreserved": true,
+    "finishedAt": "2026-10-15T07:33:18.453Z"
+  },
+  "precedingFailedRun": {
+    "kind": "ACTUAL_LOCAL_MOODLE_API_SYNTHETIC_TEST_ACCOUNTS",
+    "mode": "LOCAL_LAB",
+    "startedAt": "2026-10-15T07:27:14.824Z",
+    "executionCommit": "6ff4ead186cb37a7ff2b47f13800ae7efbe12309",
+    "runRef": "run3",
+    "sourceVersions": {
+      "moodle": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+      "videocheck": "67fb5233070f49653c0bd8209338c34b8fe61177",
+      "clearwatch": "2026101501",
+      "clearapi": "2026101502"
+    },
+    "transport": "LOOPBACK_HTTP_NOT_PRODUCTION_HTTPS",
+    "videoMs": 30000,
+    "policy": "EXPLICIT_LOCAL_DEMO_ONE_DAY_9000BPS",
+    "actual90or100DayHistory": false,
+    "academyIntegration": false,
+    "humanAttentionProven": false,
+    "productEligible": false,
+    "paymentAllowed": false,
+    "cases": [
+      {
+        "name": "authenticated_three_page_explicit_absence",
+        "status": "PASS",
+        "sourceRows": 5,
+        "sourcePages": 3
+      },
+      {
+        "name": "actual_1502_observation_window_and_open_period",
+        "status": "PASS"
+      },
+      {
+        "name": "actual_cache_keeps_original_observation_bounds",
+        "status": "PASS"
+      },
+      {
+        "name": "other_account_is_not_applicant",
+        "status": "PASS"
+      },
+      {
+        "name": "invalid_token_rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "read_token_cannot_call_playback_write",
+        "status": "PASS"
+      }
+    ],
+    "initialObservation": {
+      "revision": "r1",
+      "manifestHash": "5546bdb99a5fa0855d57452bcc10450bd0e661eb4e2dda14511197560d0bd936",
+      "lower": 1792049234,
+      "upper": 1792049235,
+      "coverageEndExclusive": 1792049234,
+      "validUntil": 1792049534
+    },
+    "status": "FAIL",
+    "failedPhase": "initial",
+    "errorType": "TimeoutError",
+    "finishedAt": "2026-10-15T07:27:48.664Z"
+  },
+  "precedingFailedLifecycle": {
+    "kind": "ACTUAL_LOCAL_1502_RETEST_LIFECYCLE",
+    "startedAt": "2026-10-15T07:27:05.820Z",
+    "executionCommit": "6ff4ead186cb37a7ff2b47f13800ae7efbe12309",
+    "status": "FAIL",
+    "paymentAllowed": false,
+    "baseline": {
+      "status": "PASS",
+      "priorRows": 6,
+      "nextRun": "run3"
+    },
+    "upgradePreservedPriorRows": true,
+    "error": "LOCAL_RETEST_FAILED_SEE_PRIVATE_DIAGNOSTIC",
+    "cleanup": {
+      "status": "PASS",
+      "servicesRevoked": 1,
+      "syntheticUsersSuspended": 2,
+      "remainingTokens": 0,
+      "remainingSessions": 0,
+      "priorLearningRowsPreserved": 6,
+      "newLearningRowsPreserved": 0,
+      "priorAccountsAndServicesUnchanged": true,
+      "revokedTokenActuallyRejected": true,
+      "previousFixtureRestored": true
+    },
+    "previousRuntimeInputsRestored": true,
+    "ownContainersStopped": true,
+    "volumesPreserved": true,
+    "finishedAt": "2026-10-15T07:27:50.939Z"
+  },
+  "precedingFailureDiagnosis": {
+    "loginFailureEventCode": 3,
+    "classification": "AUTH_LOGIN_FAILED",
+    "exactCause": "UNCONFIRMED",
+    "actualPlaybackRows": 0
+  },
+  "offline": {
+    "node": "24.21.0",
+    "localAndDailyDriverM2": {
+      "passed": 99,
+      "failed": 0
+    },
+    "purePhpClockWindows": {
+      "passed": 9,
+      "failed": 0,
+      "network": "NONE",
+      "dbAccess": false
+    },
+    "workspace": "PASS"
+  },
+  "sourcePins": {
+    "videoSha256": "fce0617c5c8279f0483dff43006b465d8e277001a2115ac9b6bf854f28bacac6",
+    "videoCheckPatchSha256": "38b420b658547982ffe3a856310c07dcc5285b8325fa6267ec61439c3dc99291"
+  },
+  "preservation": {
+    "priorActual1501EvidenceUnchanged": true,
+    "priorLearningRowsUnchanged": 6,
+    "newLearningRowsRetained": 3,
+    "originalProjectVolumesRetained": true,
+    "unrelatedStreamDbStillRunning": true
+  },
+  "limits": {
+    "actualInstitutionHttps": false,
+    "officialAttendanceMeaning": false,
+    "realIdentity": false,
+    "actual90or100DayHistory": false,
+    "systemClockWasChanged": false,
+    "real300SecondTimeoutWaited": false,
+    "endBoundaryAndClockFaults": "OFFLINE_FIXTURES_ONLY",
+    "policy": "OPEN",
+    "grantOutbox": "HOLD",
+    "independentClaim": "NO_GO",
+    "automatic400PercentPayment": false,
+    "paymentAllowed": false
+  }
+}
