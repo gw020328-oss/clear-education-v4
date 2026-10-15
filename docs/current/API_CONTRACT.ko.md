@@ -1,5 +1,7 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
+2026-10-15 M3-0 진행: [제품 API·저장 계약](PRODUCT_WORKFLOW_CONTRACT.ko.md)은 clear-product-workflow.1의 **Draft 의존 계약**이다. 기존 v4 API/DB·프론트 view는 유지하며 새 /mvp 경로는 아직 HTTP에 등록하지 않았다. bytes manifest·원문 snapshot/bundle lookup과 별도 검토 run 영속 경계를 먼저 구현한다. 확정 정책/동의·운영 Evidence·판정/재원 표시의 전체 연결은 단계별 후속이다.
+
 2026-10-15 소비자 통합: [AI 계획·표시 결합](../ai-vision/POLICY_BINDING.ko.md)은 합성 순수 모듈이다. preview acknowledgment는 실제 지갑/학생 동의가 아니며 기존 HTTP/DB/schema·issuer·Evidence 수락 경로에 연결하지 않는다. 평가 전용 ACTUAL Gemini transport도 제품 MOCK observer와 분리한다.
 
 2026-10-15 M2: [경로·증거·금액 후보 평가](MVP_EVALUATOR.ko.md)의 `clear-mvp-evaluation.1`은 M1 계약을 소비하는 별도 순수 합성 모듈이다. 증거 상태·OR·명시 선택·최초 제출·정정/최종성과 금액 후보를 분리하며 실제 자격/지급은 false다. HTTP/DB/금고와 기존 차단 조건을 유지한다.
