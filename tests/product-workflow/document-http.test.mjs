@@ -189,3 +189,23 @@ test('deleting raw makes a stored receipt historical and a repeated deletion has
  const p=(await f.request(path(app)+'/document-preview')).body;assert.equal(p.expectedWorkflowRevision,4);
  const old=(await f.request(path(app)+'/review-runs/'+run.body.result.runId)).body;assert.equal(old.current,false);assert.equal(old.summary,null);
 });
+
+test('logout interrupts an incomplete upload immediately and leaves no partial submission',async t=>{
+ const f=await documentHttpFixture(t),app=await f.create();await f.acknowledge(app);
+ let req;const pending=new Promise((resolve,reject)=>{req=httpRequest({hostname:'127.0.0.1',port:f.port,path:path(app)+'/submissions',method:'POST',headers:{host:'clear.example.invalid',origin:f.service.origin,...headersFor(f.aliceContext),'content-type':'application/json','idempotency-key':'pending-logout'}},res=>{const chunks=[];res.on('data',b=>chunks.push(b));res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(Buffer.concat(chunks).toString())}));});req.on('error',reject);req.write('{');});
+ await new Promise(r=>setTimeout(r,15));assert.equal((await f.post('/auth/logout',{},'logout')).status,200);
+ const interrupted=await pending;assert.equal(interrupted.body.code,'DOC_CANCELLED');const fresh=await f.login(f.alice);
+ assert.equal((await f.request(path(app)+'/submissions',{headers:headersFor(fresh)})).body.length,0);
+});
+
+test('a C1 policy mutation clears pending raw immediately while replaying an unchanged C1 acknowledgment does not',async t=>{
+ const {createStudentWorkflowService}=await import('../../src/product-workflow/student-http-service.mjs');
+ const f=await documentHttpFixture(t),app=await f.create();await f.acknowledge(app);const sub=(await f.submit(app,'image')).body.result;
+ const old=(await f.request(path(app)+'/agreements')).body[0].payload.preview;
+ await f.post(path(app)+'/agreement',{expectedRevision:1,previewHash:old.previewHash,acknowledgement:'SYNTHETIC_ACK_ONLY'},'c1-ack');
+ assert.equal((await f.request(path(app)+'/submissions/'+sub.submissionId)).body.rawAvailable,true);
+ const next=structuredClone(f.configuration.studentPolicies);next[0].revision=3;next[0].draft.policyVersion='document-changed.3';
+ const changed=createStudentWorkflowService({directory:join(f.directory,'../student'),authentication:f.service,instanceId:'document-test',policies:next});changed.close();
+ const p=(await f.request('/mvp/policies')).body.policies[0];assert.equal((await f.post(path(app)+'/policy-selection',{expectedRevision:2,policyHash:p.policyHash},'change')).status,200);
+ assert.equal((await f.request(path(app)+'/submissions/'+sub.submissionId)).body.rawAvailable,false);
+});

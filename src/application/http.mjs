@@ -80,7 +80,7 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
         requireRule(documentWorkflow && loopback,'ROUTE');documentWorkflow.authorize(context,document[1],req.method!=='GET');
         if(documentUpload)releaseUpload=documentWorkflow.acquireUpload(context,document[1]);
       }
-      const body=req.method==='POST'?(documentUpload?await documentJsonBody(req):await jsonBody(req)):null;
+      const body=req.method==='POST'?(documentUpload?await documentJsonBody(req,releaseUpload.signal):await jsonBody(req)):null;
       if(document&&req.method==='DELETE')requireRule(!req.headers['transfer-encoding']&&(!req.headers['content-length']||req.headers['content-length']==='0'),'DOC_FILE_SET');
       if (/^\/mvp(?:\/|\?|$)/.test(path)) {
         requireRule((workflow || studentWorkflow || documentWorkflow) && loopback, 'FORBIDDEN');
@@ -133,6 +133,7 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
         } else if (req.method === 'POST' && match[2] === 'funding-confirmation') result = await service.confirmFunding(context, match[1], body);
         else throw new RuleError('ROUTE');
       }
+      if(documentWorkflow&&req.method==='POST'){const changed=/^\/mvp\/applications\/(0x[0-9a-f]{64})\/(agreement|policy-selection)$/.exec(path);if(changed)documentWorkflow.refresh(context,changed[1]);}
       res.end(JSON.stringify(result));
     } catch (error) {
       const code = error instanceof RuleError ? error.message : 'INTERNAL_ERROR';
@@ -195,18 +196,19 @@ function dispatchStudent(service, context, method, path, body, key) {
 
 
 // Bounded C2-only body reader. Existing routes retain their 64KiB limit.
-async function documentJsonBody(req){
+async function documentJsonBody(req,signal){
+ requireRule(!signal?.aborted,'DOC_CANCELLED');
  requireRule(req.headers['content-type']==='application/json','CONTENT_TYPE');
  requireRule(!req.headers['content-length']||(/^[0-9]+$/.test(req.headers['content-length'])&&Number(req.headers['content-length'])<=393216),'BODY_SIZE');
  return new Promise((resolve,reject)=>{
   let size=0;const chunks=[];
-  const cleanup=()=>{clearTimeout(timer);req.removeListener('data',data);req.removeListener('end',end);req.removeListener('error',fail);req.removeListener('aborted',abort);};
+  const cleanup=()=>{clearTimeout(timer);req.removeListener('data',data);req.removeListener('end',end);req.removeListener('error',fail);req.removeListener('aborted',abort);signal?.removeEventListener('abort',abort);};
   const fail=error=>{cleanup();for(const b of chunks)b.fill(0);req.pause();reject(error);};
   const abort=()=>fail(new RuleError('DOC_CANCELLED'));
   const data=chunk=>{size+=chunk.length;if(size>393216)return fail(new RuleError('BODY_SIZE'));chunks.push(Buffer.from(chunk));};
   const end=()=>{cleanup();try{const bytes=Buffer.concat(chunks);try{resolve(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));}finally{bytes.fill(0);}}catch{reject(new RuleError('JSON'));}finally{for(const b of chunks)b.fill(0);}};
   const timer=setTimeout(()=>fail(new RuleError('DOC_RECEIVE_TIMEOUT')),10000);timer.unref();
-  req.on('data',data);req.once('end',end);req.once('error',fail);req.once('aborted',abort);
+  req.on('data',data);req.once('end',end);req.once('error',fail);req.once('aborted',abort);signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();
  });
 }
 function dispatchDocument(service,context,method,path,body,key){
