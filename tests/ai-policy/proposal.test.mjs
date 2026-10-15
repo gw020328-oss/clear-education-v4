@@ -23,7 +23,9 @@ for (const name of ['ybm', 'siwon', 'third']) test(`${name} config uses the same
   assert.equal(result.status, 'NEEDS_OPERATOR_REVIEW');
   validateContract('PolicyDraft', result.draft);
   assert.equal(result.draft.mode, 'OFFICIAL_DRAFT');
-  assert.equal(result.draft.rules.find(rule => rule.ruleId === output.rules[0].rule.ruleId).threshold, output.rules[0].rule.threshold);
+  assert.equal(result.draft.rules.find(rule => rule.ruleId === output.rules[0].rule.ruleId).threshold, null);
+  assert.equal(result.heldRuleFields.find(item => item.ruleId === output.rules[0].rule.ruleId).observedValues.threshold, output.rules[0].rule.threshold);
+  assert.deepEqual(result.grounds, output);
   assert.equal(result.draft.questions[0].status, 'OPEN');
   assert.equal(result.publishable, false); assert.equal(result.paymentAllowed, false);
   assert.equal(result.run.actualModelCall, false);
@@ -34,7 +36,9 @@ test('unsupported rule is expressed as a grounded question without generating co
   const { input, output } = fixture(); output.rules = [];
   const result = await proposePolicy(input, mock(output));
   assert.equal(result.draft.questions[0].questionId, 'source-open');
-  assert.deepEqual(result.draft.rules, input.draft.rules);
+  const affected = output.questions[0].question.field;
+  assert.equal(result.draft.rules.find(rule => rule.requirementId === affected).threshold, null);
+  assert.deepEqual(result.draft.rules.filter(rule => rule.requirementId !== affected), input.draft.rules.filter(rule => rule.requirementId !== affected));
   assert.equal(result.publishable, false);
 });
 
@@ -107,4 +111,18 @@ test('cancellation after scheduling prevents a mock call and source text is pass
     return structuredClone(output);
   } });
   assert.equal(result.paymentAllowed, false);
+});
+
+test('normal candidate has no unresolved field signals and remains a draft only',async()=>{
+ const {input,output}=fixture();output.questions=[];output.rules[0].rule.questionIds=[];const result=await proposePolicy(input,mock(output));assert.equal(result.draft.rules.find(r=>r.ruleId===output.rules[0].rule.ruleId).threshold,output.rules[0].rule.threshold);assert.deepEqual(result.heldRuleFields,[]);assert.equal(result.publishable,false);
+});
+test('a question holds the matching rule even when model omits its questionIds association',async()=>{
+ const {input,output}=fixture();output.rules[0].rule.questionIds=[];const result=await proposePolicy(input,mock(output));const rule=result.draft.rules.find(r=>r.ruleId===output.rules[0].rule.ruleId);assert.equal(rule.threshold,null);assert.deepEqual(rule.questionIds,['source-open']);assert.equal(result.draft.questions[0].status,'OPEN');const reviewed=recordOperatorReview(result,{expectedRevision:1,reviewerRef:'operator',reviewId:'review-conflict',answers:[{questionId:'source-open',comment:'Still unresolved.'}]});assert.equal(reviewed.draft.rules.find(r=>r.ruleId===rule.ruleId).threshold,null);assert.equal(reviewed.draft.questions[0].status,'OPEN');
+});
+test('unknown question scope cannot leave executable candidate values in an unrelated rule',async()=>{
+ const {input,output}=fixture();output.questions[0].question.field='scope-unknown';const result=await proposePolicy(input,mock(output));assert.ok(result.draft.rules.every(r=>r.threshold===null&&r.days===null));assert.equal(result.publishable,false);
+});
+
+test('model failure cannot revive a template value with an already OPEN question',async()=>{
+ const {input,output}=fixture();input.draft.questions=structuredClone(output.questions.map(item=>item.question));const target=input.draft.rules.find(r=>r.ruleId===output.rules[0].rule.ruleId);target.questionIds=['source-open'];target.basis='OFFICIAL_OPEN';const result=await proposePolicy(input,{execution:'MOCK',observe(){throw new Error('SYNTHETIC_FAILURE');}});assert.equal(result.status,'MODEL_UNAVAILABLE');assert.equal(result.draft.rules.find(r=>r.ruleId===target.ruleId).threshold,null);assert.equal(result.draft.questions[0].status,'OPEN');assert.equal(result.publishable,false);
 });
