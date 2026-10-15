@@ -1,5 +1,9 @@
 # CLEAR 팀원·LLM 인계
 
+2026-10-15 M2: [경로·증거·금액 후보 평가](MVP_EVALUATOR.ko.md)의 `clear-mvp-evaluation.1`은 M1 계약을 소비하는 별도 순수 합성 모듈이다. 증거 상태·OR·명시 선택·최초 제출·정정/최종성과 금액 후보를 분리하며 실제 자격/지급은 false다. HTTP/DB/금고와 기존 차단 조건을 유지한다.
+
+2026-10-15 M1: [공통 정책·증거 계약](MVP_POLICY_CONTRACT.ko.md)의 `clear-mvp.1`은 별도 버전 합성 컴파일/소비자 준비 계약이다. YBM형·시원스쿨형·제3 합성 프로필을 같은 제한된 엔진에서 설정으로 실행한다. 기존 M0·HTTP/DB/금고를 보존한다. M1/M2 승인으로 이번 범위 구현을 진행하되 아래 과거 미착수 문구는 당시 기록이다. 공식 조건·예치 정책 OPEN, Moodle/원천 BLOCKED·grant/outbox HOLD·독립 청구 NO-GO·Mac 원인 미확정은 유지한다.
+
 2026-10-15 최신 후속 [TEST 재원 실험](TEST_FUNDING_LAB.ko.md): 기존 v4 경로를 보존하고 spikes/funding-lab의 새 인메모리 체인만 사용한다. 합성 fixture 자격과 실제 원천 검증을 분리한다. 테스트/시연 명령은 test:funding-lab / demo:funding-lab이며 사용자 DB·체인·키를 가져오지 않는다. 기존 grant/outbox 보류·독립 청구 NO-GO·Moodle/원천 차단·400% 금지·Mac 원인 미확정을 유지한다.
 
 2026-10-14 H2 후속: [격리 등록 접수](HISTORY_INTAKE.ko.md)는 H1의 두 목적을 별도 영속 ledger/독립 검증/관리형 수집기에 연결한다. 기존 H1 SYNTHETIC 및 HTTP/DB 계약은 보존한다. 로컬 모듈 연결과 실제 웹/기관 등록·자격 완료를 구분하며 미확인 전체성/신원/공식 기간은 UNKNOWN이다.
