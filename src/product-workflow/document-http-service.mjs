@@ -79,19 +79,19 @@ export function createDocumentWorkflowService({directory,authentication,student,
  function submissionView(row,v){const current=!!v&&v.h.submission===row.id&&v.h.fingerprint===row.fingerprint&&v.h.ack===row.ack&&!row.deleted;
   const bytes=raw.get(row.id);if(bytes&&clock()>=row.expires)wipe(row.id);
   return freeze({submissionId:row.id,submissionRevision:row.revision,workflowRevision:row.workflow_revision,manifest:JSON.parse(row.manifest),assetsHash:manifestHash(JSON.parse(row.manifest)),inputHash:row.input_hash,
-   current,state:row.deleted?'DELETED':!current?'SUPERSEDED':raw.has(row.id)?'RECEIVED':'RAW_UNAVAILABLE',rawAvailable:current&&raw.has(row.id),createdAt:row.created,expiresAt:row.expires,...gates});}
+   current,state:row.deleted?'DELETED':!current?'SUPERSEDED':raw.has(row.id)?'RECEIVED':'RAW_UNAVAILABLE',rawAvailable:current&&raw.has(row.id),createdAt:row.created,expiresAt:row.expires,...gates,syntheticDocumentSubmissionReady:!!v});}
  function runRow(app,run,s){identifier(run);const r=db.prepare('SELECT * FROM runs WHERE id=? AND app=? AND actor=?').get(run,app,s.wallet);check(r,'MVP_NOT_FOUND');check(clock()>=r.created,'MVP_CLOCK');return r;}
  function runView(r,v){let stored;try{stored=ledger.get(r.id);}catch(e){if(e.message!=='WORKFLOW_RUN_NOT_FOUND')throw e;}
   const current=!!v&&v.h.revision===r.workflow_revision&&v.h.submission===r.submission&&!!stored?.current;
   let state=r.state;if(stored?.state==='ACCEPTED'&&r.state!=='ACCEPTED'){db.prepare("UPDATE runs SET state='ACCEPTED' WHERE id=?").run(r.id);state='ACCEPTED';}
   else if(!['INTERRUPTED','ACCEPTED','RESERVED'].includes(state)&&stored)state=stored.state;
   return freeze({runId:r.id,submissionId:r.submission,workflowRevision:r.workflow_revision,method:r.method,state,current:current&&state!=='INTERRUPTED',
-   summary:current&&state==='ACCEPTED'?stored.summary:null,reason:state==='INTERRUPTED'?'INTERRUPTED':!current?'STALE_CONTEXT':stored?.reason??null,createdAt:r.created,...gates});}
+   summary:current&&state==='ACCEPTED'?stored.summary:null,reason:state==='INTERRUPTED'?'INTERRUPTED':!current?'STALE_CONTEXT':stored?.reason??null,createdAt:r.created,...gates,syntheticDocumentSubmissionReady:!!v});}
  function operationValue(row,context){check(clock()>=row.created,'MVP_CLOCK');const s=actor(context),v=currentOrInvalidate(context,row.app);check(row.actor===s.wallet,'MVP_NOT_FOUND');let result;
   if(row.kind==='submissions'||row.kind==='delete')result=submissionView(loadSubmission(row.app,row.target,s),v);
   else if(row.kind==='review-runs'||row.kind==='cancel')result=runView(runRow(row.app,row.target,s),v);
-  else result={...ackView(row.target),current:!!v&&v.h.ack===row.target};
-  return freeze({operationId:row.id,kind:row.kind,applicationId:row.app,state:'RECORDED',current:result.current,result,...gates});}
+  else result={...ackView(row.target),current:!!v&&v.h.ack===row.target,syntheticDocumentSubmissionReady:!!v};
+  return freeze({operationId:row.id,kind:row.kind,applicationId:row.app,state:'RECORDED',current:result.current,result,...gates,syntheticDocumentSubmissionReady:!!v});}
  function command(context,app,kind,key,body,fn){identifier(key);const s=actor(context,true),route=app+'/'+kind,requestHash=digest('CLEAR-DOC-COMMAND.1',body);
   const row=transaction(()=>{actor(context,true);student.get(context,app);const prior=db.prepare('SELECT * FROM commands WHERE actor=? AND route=? AND key=?').get(s.wallet,route,key);
    if(prior){check(prior.request_hash===requestHash,'IDEMPOTENCY_CONFLICT');return prior;}
