@@ -43,9 +43,11 @@
   },
   "frontend": {
     "owner": "서준형",
-    "observedRemoteHead": "9c03b7bbb612ebf1f18fb2181944382468d40ba7",
+    "observedRemoteHead": "4219a53bb5cb7efa2ca3e48939bd82de69e071d7",
     "webEdited": false,
-    "externalMessageSent": false
+    "externalMessageSent": false,
+    "initialC1ObservedRemoteHead": "9c03b7bbb612ebf1f18fb2181944382468d40ba7",
+    "observedPullRequest": 60
   },
   "existingUserDatabaseChainKeyAccess": false,
   "actualWebsiteFetches": 0,
@@ -60,5 +62,6 @@
     "grant": "HOLD",
     "outbox": "HOLD",
     "independentClaim": "NO_GO"
-  }
+  },
+  "pullRequest": 61
 }

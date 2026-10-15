@@ -1,7 +1,7 @@
 # MVP HTTP 연결·서준형 프론트 인계
 
 버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **develop 미병합 Draft 의존**.
-C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 정확한 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`를 정상 이력으로 포함한다. 후속 PR/최종 CI는 검토 PR과 이슈55를 확인한다.
+C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 정확한 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`를 정상 이력으로 포함한다. 후속 [Draft PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
 기준 develop `7f6096552f06492b4add8bd5653a2ff390cf7d3c`(#56/#58/#57 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 검토 [Draft PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
 
 ## 현재 구현과 다음 의존
@@ -15,7 +15,7 @@ C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c556
 | D: 새 원문 HTTP용 브라우저 adapter·예제·검사 | 이번 Draft 제공. 실제 `web/` 연결은 서준형 담당/미연결 |
 | 운영 원천 진위/적용성/동일인·정책 게시·실동의·Evidence/M2 영속 판정·재원 | **미완료**. mock/검토 기록은 운영 보장이 아님 |
 
-소유 확인: 공개 열린 PR0개를 조회했으며, 원격 `codex/frontend-shell`의 최신 `dc9bc62629daaf498e073a6aaab6527fed6d6fed`는 작성 계정 `puppy57201-stack`, 문서상 담당 서준형의 F0다. 이는 최초 원문 HTTP 단위의 관측이다. C1 시작 시 다시 조회한 원격 head는 `9c03b7bbb612ebf1f18fb2181944382468d40ba7`이며 서준형의 조건/정책/검증단계 화면과 develop 이력 merge가 추가됐다. `web/` 최신 기능 commit `c25ddd69657d5c27e568360ae149a36a187364b3` 및 새 policy-view/conditions/step-detail/timeline·시험 경로를 읽기 확인했다. 공개 후속 commit/PR 부재가 미공개 로컬 변경 부재를 뜻하지 않는다. 사용자 답변으로 **web/·지갑 UI·기존 F0 adapter는 서준형 소유**를 확정했다. 통합 세션은 `web/`를 편집하거나 팀원에게 직접 외부 메시지를 보내지 않는다.
+소유 확인: 공개 열린 PR0개를 조회했으며, 원격 `codex/frontend-shell`의 최신 `dc9bc62629daaf498e073a6aaab6527fed6d6fed`는 작성 계정 `puppy57201-stack`, 문서상 담당 서준형의 F0다. 이는 최초 원문 HTTP 단위의 관측이다. C1 시작 시 다시 조회한 원격 head는 `9c03b7bbb612ebf1f18fb2181944382468d40ba7`이며 서준형의 조건/정책/검증단계 화면과 develop 이력 merge가 추가됐다. 이후 공개된 [프론트 PR #60](https://github.com/gw020328-oss/clear-education-v4/pull/60)의 head `4219a53bb5cb7efa2ca3e48939bd82de69e071d7`와 web-only 수정 경로를 다시 확인했다. `web/`의 새 policy-view/conditions/step-detail/timeline·시험과 두 반 안내문 반영은 서준형 작업이며 이 백엔드 PR에서 수정하지 않는다. 공개 후속 commit/PR 부재가 미공개 로컬 변경 부재를 뜻하지 않는다. 사용자 답변으로 **web/·지갑 UI·기존 F0 adapter는 서준형 소유**를 확정했다. 통합 세션은 `web/`를 편집하거나 팀원에게 직접 외부 메시지를 보내지 않는다.
 
 백엔드 소유: `src/product-workflow/http-*`, `src/application`의 인증/라우팅 연결, 공개 자산 로더 재사용, 전용 `specs/m3`·tests·tools·현행 문서. F0의 엄격한 ApplicationView 및 `listApplications/getApplication/describe`는 그대로다. 새 원문용 client는 별도 namespace이며 기존 ApplicationView에 필드를 추가하지 않는다.
 
@@ -209,7 +209,7 @@ C2의 file 접수/bytes manifest·문서 검토run/취소/보완·재제출은 �
 ```text
 CLEAR 프론트 담당 서준형의 작업을 이어간다. 먼저 최신 origin/develop와 루트/제품 AGENTS.md, docs/current/MVP_SOURCE_HTTP_HANDOFF.ko.md, API_CONTRACT/PRODUCT_WORKFLOW_CONTRACT, 현재 열린 PR을 읽는다. 이 문서에 기록된 backend 코드 커밋/검토 PR의 최종 head·CI·병합 여부를 다시 확인한다. 미병합 API를 develop 구현으로 오해하지 않는다.
 
-자신의 frontend 작업본에서 branch/head와 git status를 먼저 확인하고 미커밋·미공개 변경을 보존한다. 원격 codex/frontend-shell의 C1 관측 head9c03b7bbb612ebf1f18fb2181944382468d40ba7(최초dc9bc62 이후 화면 변경 있음)은 공개 확인 기준일 뿐 최신 로컬 작업을 reset/덮어쓰라는 지시가 아니다. 필요한 최신 develop/승인된 backend 의존 이력은 정상 merge로 반영하며 강제push·브랜치삭제·개인 DB/체인 초기화는 하지 않는다.
+자신의 frontend 작업본에서 branch/head와 git status를 먼저 확인하고 미커밋·미공개 변경을 보존한다. 원격 codex/frontend-shell의 최신 관측 PR60/head4219a53bb5cb7efa2ca3e48939bd82de69e071d7(최초dc9bc62 및 중간9c03b7b 이후 화면 변경 있음)은 공개 확인 기준일 뿐 최신 로컬 작업을 reset/덮어쓰라는 지시가 아니다. 필요한 최신 develop/승인된 backend 의존 이력은 정상 merge로 반영하며 강제push·브랜치삭제·개인 DB/체인 초기화는 하지 않는다.
 
 소유 범위는 web/와 프론트 테스트/실행 안내다. 기존 F0 strict ApplicationView·list/get adapter·해시 라우팅·접근성을 유지한다. 새 clear-mvp-source-http.1 원문 namespace adapter를 별도로 연결한다. src/product-workflow/http-client.mjs는 브라우저용 한 파일이며 인증된 walletClient.request를 주입한다. backend/DB/collector/공통 정책을 프론트에서 복제하거나 핀/권한/verified 값을 만들어 보내지 않는다. API 의미나 endpoint 가용성이 애매하면 구체 요청/응답·경로와 질문을 오규원에게 전달하고 backend를 임의 수정하지 않는다.
 
