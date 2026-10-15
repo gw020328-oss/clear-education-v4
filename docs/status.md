@@ -1,7 +1,15 @@
+2026-10-15 PR61 실질 검토: 코드8c5411b에서 시계 역행 중 저장된 확인/신청 조회와 POST재생의 transaction 내부 session 재검사 누락을 보완. 관련285·학생HTTPS재시작·원본보존 PASS. 사용자 승인된 develop 정상병합은 정확 최종head CI 뒤 진행한다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 상태 기록이다.
+
+2026-10-15 최신 통합: PR59 최종head112e93a·CI6/6 성공 후 develop `2bb6d291b77ba397f8544995557db78b3ce54724` 정상 병합 완료. C1 기존2354b70을 보존하고 최신develop을 정상 merge(c19a10f), 선행 의존 해소. 관련283/기존dev33·source/student HTTPS재시작·보존/의존성 PASS. PR61은 Draft·미병합, 최종headCI 확인은 PR61/이슈55. C2·실동의 미완료, PR60/web은 별도 소유다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 시점 기록이다.
+
 <!-- PR59 review update: historical entries below retain their original dates. -->
 2026-10-15 PR59 최종 실질 검토: `7402f7f`에서 COMMITTING 첫 preview 혼합, 시계 역행 시 미만료 draft 조기 삭제, 생성/검토 시각 이전 결과 노출을 보완했다. 관련272·기존 개발환경33·합성 HTTPS 재시작·의존성/원본 보존 PASS. 최종 원격 CI 후 사용자 승인된 develop 정상 병합 예정이며, C1 PR61은 `2354b70`으로 보존해 그 뒤 기반 갱신한다. C2/실동의·PR60/web은 이 검토 범위 밖이다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md).
 
 # 개발 현황
+
+## 2026-10-15 C1 학생 신청·합성 확인 후속 Draft #61
+
+PR59정확head11e27ac 의존, 별도codex/mvp-student-application-http, 코드7c56442/680bce3. 학생본인신청·host합성조건/정확표시hash·SYNTHETIC_ACK_ONLY·단일DB원자멱등/GET복구·정책변경시명시선택/새확인·불변이력/restart를 연결했다. 신규학생HTTP/HTTPS11포함관련278개·기존dev33개·검증HTTPS서명로그인/재시작demo·보존/공개검사PASS. 파일접수/문서검토/보완C2·실동의/게시·운영Evidence/재원·실제화면은미구현이다. source/student버전과팀원복붙지침은[단일인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md)를따른다. 프론트PR60/head4219a53/서준형소유와web-only경로를읽기확인했고web편집0. PR59의조건부develop병합은추가승인됐으나아직리뷰대기이며학생후속PR은Draft·자동병합없음. 예치/보관/배정/충전OPEN·400%자동자격/지급금지·500%제외·grant/outboxHOLD·독립claimNO-GO유지.
 
 ## 2026-10-15 원문 HTTP 연결 Draft #59
 

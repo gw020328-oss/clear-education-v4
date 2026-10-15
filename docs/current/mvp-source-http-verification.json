@@ -4,7 +4,7 @@
   "baseDevelop": "7f6096552f06492b4add8bd5653a2ff390cf7d3c",
   "implementationCommit": "032215f2d50261808c62675d9880b45ef2e00cb0",
   "pullRequest": 59,
-  "status": "DRAFT_REVIEW",
+  "status": "MERGED_TO_DEVELOP",
   "stages": {
     "A": "IMPLEMENTED_SYNTHETIC_DEVELOPMENT",
     "B": "HTTP_MOCK_CONNECTED",
@@ -36,7 +36,7 @@
   "productionAuthIdentityVerified": false,
   "studentSubmissionOrUploadHttp": false,
   "frontendConnected": false,
-  "newPrMerged": false,
+  "newPrMerged": true,
   "remaining": [
     "student application/policy agreement/submission/review/retry HTTP and durable resolver",
     "teammate-owned web/wallet UI and same-origin build",
@@ -68,8 +68,12 @@
     "httpsDemo": "PASS",
     "workspace": "PASS",
     "dependencies": "PASS",
-    "finalRemoteCi": "PENDING",
-    "merge": "PENDING",
-    "c1PreservedHead": "2354b70bd1f5cb6f4402c73ce0c40efeb3ca08d9"
+    "finalRemoteCi": "6_OF_6_SUCCESS",
+    "merge": "2bb6d291b77ba397f8544995557db78b3ce54724",
+    "c1PreservedHead": "2354b70bd1f5cb6f4402c73ce0c40efeb3ca08d9",
+    "finalHead": "112e93a36c2b19cdddef15cd44f7c106eb6030be",
+    "pushRun": 38715507758,
+    "pullRequestRun": 38715523867,
+    "mergedCommitCiClaimed": false
   }
 }

@@ -36,19 +36,20 @@ const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].inclu
 
 // The factory does not listen or deploy. HTTPS termination must preserve Host
 // and use an encrypted connection to this handler; proxy headers are not trusted.
-export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow } = {}) {
+export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow, studentWorkflow } = {}) {
   const makeServer = tls ? createHttpsServer : createServer;
   const server = makeServer({ ...tls, requestTimeout: 10000, headersTimeout: 10000, maxHeaderSize: 8192 },
-    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow }));
+    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow, studentWorkflow }));
   server.maxConnections = 32;
   return server;
 }
 
 // Composable handler; the same transport/origin/session checks apply when a
 // local development listener also serves a frontend build and synthetic RPC.
-export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow } = {}) {
+export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow, studentWorkflow } = {}) {
   const expected = new URL(service.origin);
   requireRule(!workflow || workflow.origin === service.origin, 'ORIGIN_CONFIG');
+  requireRule(!studentWorkflow || studentWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -72,8 +73,10 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
         csrf: req.headers['x-csrf-token'] ?? null };
       const path = req.url, key = req.headers['idempotency-key']; let result;
       if (/^\/mvp(?:\/|\?|$)/.test(path)) {
-        requireRule(workflow && loopback, 'FORBIDDEN');
-        result = await dispatchWorkflow(workflow, context, req.method, path, body, key, cancelled.signal);
+        requireRule((workflow || studentWorkflow) && loopback, 'FORBIDDEN');
+        result = /^\/mvp\/(policies|applications|student-operations)(?:\/|$)/.test(path)
+          ? dispatchStudent(studentWorkflow, context, req.method, path, body, key)
+          : await dispatchWorkflow(workflow, context, req.method, path, body, key, cancelled.signal);
       } else if (req.method === 'POST' && path === '/auth/nonce') {
         const challenge = service.challenge(body);
         res.setHeader('Set-Cookie', cookie(PREAUTH, challenge.browserToken, 300));
@@ -123,7 +126,7 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
     } catch (error) {
       const code = error instanceof RuleError ? error.message : 'INTERNAL_ERROR';
       res.statusCode = code === 'INTERNAL_ERROR' ? 500 : code === 'MVP_NOT_FOUND' ? 404
-        : ['MVP_STALE','MVP_TEMPLATE_REQUIRED','MVP_BUSY','MVP_CLOSED'].includes(code) ? 409
+        : ['MVP_STALE','MVP_TEMPLATE_REQUIRED','MVP_BUSY','MVP_CLOSED','MVP_POLICY_UNAVAILABLE','MVP_APPLICATION_EXISTS'].includes(code) ? 409
         : code === 'SOURCE_EXPIRED' ? 410 : statusFor(code);
       res.end(JSON.stringify({ code, message: '요청을 완료하지 못했습니다.', retryable: false,
         nextAction: res.statusCode === 401 ? 'SIGN_IN_AGAIN' : 'CHECK_REQUEST', requestId }));
@@ -133,6 +136,7 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
 
 // Separate namespace: F0 ApplicationView and existing v4 endpoints stay intact.
 async function dispatchWorkflow(service, context, method, path, body, key, signal) {
+  requireRule(service, 'ROUTE');
   if (method === 'GET' && path === '/mvp/source-bundles') return service.catalogue(context);
   const recovery = /^\/mvp\/source-bundles\/([a-z][a-z0-9.-]{0,63})\/operations\/(snapshots|drafts)\/([a-z][a-z0-9.-]{0,63})$/.exec(path);
   if (recovery && method === 'GET') return service.recoverOperation(context,recovery[1],recovery[2],recovery[3]);
@@ -147,5 +151,32 @@ async function dispatchWorkflow(service, context, method, path, body, key, signa
   const operation = /^\/mvp\/operations\/([a-z][a-z0-9.-]{0,63})(?:\/(cancel))?$/.exec(path);
   if (operation && method === 'GET' && !operation[2]) return service.operation(context, operation[1]);
   if (operation && method === 'POST' && operation[2]) return service.cancel(context, operation[1], body);
+  throw new RuleError('ROUTE');
+}
+
+function dispatchStudent(service, context, method, path, body, key) {
+  requireRule(service, 'ROUTE');
+  if(method==='GET'&&path==='/mvp/policies')return service.policies(context);
+  const policy=/^\/mvp\/policies\/(0x[0-9a-f]{64})$/.exec(path);
+  if(method==='GET'&&policy)return service.policy(context,policy[1]);
+  if(path==='/mvp/applications'){
+    if(method==='GET')return service.list(context);
+    if(method==='POST')return service.create(context,body,key);
+  }
+  const createRecovery=/^\/mvp\/applications\/operations\/([a-z][a-z0-9.-]{0,63})$/.exec(path);
+  if(method==='GET'&&createRecovery)return service.recover(context,'applications',createRecovery[1]);
+  const operation=/^\/mvp\/student-operations\/([a-z][a-z0-9.-]{0,63})$/.exec(path);
+  if(method==='GET'&&operation)return service.operation(context,operation[1]);
+  const recovery=/^\/mvp\/applications\/(0x[0-9a-f]{64})\/operations\/(agreement|policy-selection)\/([a-z][a-z0-9.-]{0,63})$/.exec(path);
+  if(method==='GET'&&recovery)return service.recover(context,recovery[2],recovery[3],recovery[1]);
+  const application=/^\/mvp\/applications\/(0x[0-9a-f]{64})(?:\/(agreement-preview|agreement|agreements|policy-selection))?$/.exec(path);
+  if(application){
+    const [,id,action]=application;
+    if(method==='GET'&&!action)return service.get(context,id);
+    if(method==='GET'&&action==='agreement-preview')return service.preview(context,id);
+    if(method==='GET'&&action==='agreements')return service.acknowledgments(context,id);
+    if(method==='POST'&&action==='agreement')return service.acknowledge(context,id,body,key);
+    if(method==='POST'&&action==='policy-selection')return service.selectPolicy(context,id,body,key);
+  }
   throw new RuleError('ROUTE');
 }
