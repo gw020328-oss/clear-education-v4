@@ -1,0 +1,39 @@
+name: Independent claim boundary spike
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'spikes/independent-claim-boundaries/**'
+      - 'spikes/direct-proof-feasibility/**'
+      - 'spikes/funding-lab/**'
+      - 'src/policy/mvp/**'
+      - 'src/eligibility/mvp/**'
+      - 'specs/m1/**'
+      - 'specs/m2/**'
+      - 'src/ybm-collector/package*.json'
+      - 'package*.json'
+      - '.github/workflows/independent-claim-spike.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  boundaries:
+    name: Offline independent claim boundaries
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Install locked public dependencies without lifecycle scripts
+        run: |
+          ./tools/npm ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/ybm-collector ci --ignore-scripts --no-audit --no-fund
+      - name: Offline policy projection, EVM wire contracts and prior source boundaries
+        run: |
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test spikes/independent-claim-boundaries/*.test.mjs spikes/direct-proof-feasibility/record-policy.test.mjs spikes/direct-proof-feasibility/attestor-extension.test.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs spikes/independent-claim-boundaries/report.mjs > "$RUNNER_TEMP/claim-inventory.json"
+          cmp spikes/independent-claim-boundaries/inventory.json "$RUNNER_TEMP/claim-inventory.json"
