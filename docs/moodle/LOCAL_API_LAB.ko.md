@@ -1,5 +1,7 @@
 # 격리 Moodle: 실제 짧은 재생과 인증 API 연결
 
+2026-10-15 최신: `clearapi=2026101502` 새 합성 계정·강좌의 실제 로컬 재시험 **21/21 PASS**, 기존 6학습 행 보존과 이번 자격증명 정리까지 확인했다. [1502 재시험 보고서](RETEST_1502.ko.md)와 [실측 JSON](local-api-1502-retest-report.json)을 우선한다. 아래 15+6은 `1501` 당시 기록이며, 마지막 관측 경계 절의 1502 실제 미검증 문구도 이번 재시험 전 상태다.
+
 2026-10-15, [#40](https://github.com/gw020328-oss/clear-education-v4/issues/40)의 로컬 실제 원천 연결 단계다. 공통 M1/M2가 합쳐진 develop `1f98d5f`를 이력 병합했고, 아직 Draft인 L1 [#45](https://github.com/gw020328-oss/clear-education-v4/pull/45)와 합성 export [#48](https://github.com/gw020328-oss/clear-education-v4/pull/48)의 코드를 이력으로 재사용한다. 제품 HTTP/DB, 공통 schema/evaluator, root dependencies/CI 및 다른 담당 작업본은 수정하지 않았다.
 
 실제 새 Moodle에서 테스트 계정으로 브라우저 영상을 재생하고, 저장된 DB 기록을 인증 REST로 읽어 `LOCAL_LMS_RECORD` facts와 `LOCAL_LAB` 일일 평가로 연결했다. 정책은 **별도 명시한 1일·9000BPS 데모**다. 실제 학원 정책·기관 연동·90/100일 이력·사람의 집중·전체 환급 자격·지급 검증이 아니다. 400% 자동 판정/지급은 금지, 500% 제외, 정책 OPEN·grant/outbox HOLD·독립 claim NO_GO·실원천/제품 gate를 유지한다. 기존 vault/TEST 실험실도 변경하지 않았다.

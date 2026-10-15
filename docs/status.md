@@ -1,5 +1,13 @@
 # 개발 현황
 
+## 2026-10-15 M3-0 연결 준비 (Draft)
+
+PR #54가 develop `4ae548b`에 병합됐다. 새 v4의 정상 T01 개선과 충돌 T04/누락 V02 유지, 합성3사례·5생성+5count/HTTP오류0은 [새 평가 기록](ai-vision/GEMINI_RECOVERY_EVALUATION.ko.md)을 따른다. 프로젝트/기존 환경 키/Tier1 복구는 조정 세션이 사용자와 확인했으며 식별자는 공개하지 않는다. 실제 청구액은 미확인이다. 아래 v3 과잉 보류 기록은 당시 상태다.
+
+[제품 연결 계약](current/PRODUCT_WORKFLOW_CONTRACT.ko.md)·공통 Draft PR #58은 API/저장 단계, bytes manifest, 새 합성 검토 ledger와 제한 URL 원문 archive를 준비한다. HTTP 등록/학생 동의/실제 업로드/운영 Evidence·판정 저장·재원 표시 전체 연결은 후속이다. AI #57은 미병합 계약을 소비하는 별도 Draft다. [1502 실제 재시험 PR #56](https://github.com/gw020328-oss/clear-education-v4/pull/56)의 새 실측21/21을 이슈40에 반영했고, 과거1501의15+6과 구분한다. run3 로그인 실패의 정확 원인은 미확정이다. Draft PR은 아직 develop 완료 사실이 아니다.
+
+추가 유료 호출·실제YBM 수집·실자금/체인·배포는 없고, 예치정책OPEN·400%사전검토만/500%제외·원천/동일인미확인 차단·grant/outbox HOLD·독립claim NO-GO와 기존자산 보존을 유지한다.
+
 ## 2026-10-15 소비자 최종 통합
 
 이 절은 아래 11:22 KST 조회보다 최신인 통합 기록이다. main 통합·배포·실제 지급 완료가 아니다. 최종 head별 원격 검사와 병합 시각은 각 PR의 기록을 따른다.

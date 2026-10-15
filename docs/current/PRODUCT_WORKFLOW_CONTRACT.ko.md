@@ -1,6 +1,6 @@
 # 제품 연결 API·저장 계약 — M3-0
 
-상태: **DRAFT / 의존 구현용 계약 / develop 미병합**. 버전 `clear-product-workflow.1`, 선행 develop `4ae548b`(PR #54), 추적 #55·#39·#40. 이 문서는 새 연결의 정본 제안이며 기존 실행 API·application DB schema4·V4 동의/금고와 별도다. 병합 전 소비자는 정확한 계약 커밋을 이력 병합하고 Draft 의존임을 표시한다.
+상태: **DRAFT / 의존 구현용 계약 / develop 미병합**. 버전 `clear-product-workflow.1`, 선행 develop `4ae548b`(PR #54), 검토 PR [#58](https://github.com/gw020328-oss/clear-education-v4/pull/58), 추적 #55·#39·#40. 이 문서는 새 연결의 정본 제안이며 기존 실행 API·application DB schema4·V4 동의/금고와 별도다. 병합 전 소비자는 정확한 계약 커밋을 이력 병합하고 Draft 의존임을 표시한다.
 
 ## 단계와 구현 경계
 
@@ -88,3 +88,9 @@ lookup은 snapshot을 await 직후 고정 복사하고 각 artifact bytes를 복
 공통 모듈 구현은 private-db/review-ledger/source-store/public-fetch/source-collector와 contract/source-contract다. collectSourceSnapshot은 exact 허용 URL의 원본 bytes와 명시 이미지 요청 결과를 resourceRequests로 남긴다. 실패 요청도 URL/HTTP 상태가 snapshotHash에 포함된다. 자동 JS 실행/이미지 발견은 없고 HTML 결과는 PARTIAL이다. UTF-8 정규화가 불가능하면 raw는 보존하고 텍스트는 미확보로 남긴다. 원문 실제 사이트 수집은 이번 시험에서 실행하지 않았으며 합성 transport·고정 TLS/lookup 옵션 검증만 했다.
 
 `./tools/npm run test:product-workflow`와 `./tools/npm run demo:product-workflow`가 새 합성 DB에서 동작한다. CI는 네트워크 tripwire를 추가한다. 데모는 원문 보완/필수 가이드 누락→run의 보류 요약 수락→DB 재개봉/동일 receipt 복구까지이며, 정책 승인/실제 학생 동의/HTTP 업로드/조건 판정 저장/재원 read 연결은 아직 아니다. 데모의 ACCEPTED는 보류 요약을 단회 저장했다는 뜻이다. 기존 application·금고 모듈과 root 의존성/lockfile을 변경하지 않았다.
+
+SourceSnapshot.resourceRequests는 `{resourceId,role:PAGE|IMAGE,requestedUrl,finalUrl,httpStatus,status:COLLECTED|FAILED}`의 최대8개 배열이다. PUBLIC_URL은 page와 명시 이미지의 모든 시도를 포함하고 PASTE/FILE은 빈 배열이다. 실제 보관 artifact가 없는 COLLECTED 표시는 거부하며, FAILED 리소스가 있으면 전체 COLLECTED를 거부한다. exact source version에 실패 URL도 결합되므로 다음 수집/보완에서 누락 여부를 비교할 수 있다. archive는 시연용120 snapshot 상한을 두며, 버전 tombstone은 purge로 초기화하지 않는다.
+
+통합 검토 보정: 기본 HTTPS transport는 page·image의 응답 스트림 전체에 하나의 16MiB 수신 예산을 공유한다. 실패한 응답에서 읽은 bytes도 차감하며 초과 chunk는 보관하지 않고 스트림을 닫는다. 예산 소진 뒤 후속 리소스는 요청하지 않고 FAILED/RESOURCE_FAILED로 남긴다. 전송 계층에서 이미 전달된 마지막 chunk의 초과분까지 네트워크 수신을 되돌릴 수 있다는 보장은 아니다. raw+추출 text+image의 보관 합계16MiB 검사는 이 수신 예산과 별도로 유지한다. 실제 URL 호출 없이 합성 스트림과 collector 회귀로 검사한다.
+
+계약 초기 커밋4018e32, 기관/저장 후속91430c6, resourceRequests 및 최종 consumer 계약48d2117을 AI에 전달했다. AI #57은 별도 Draft 의존 PR이며 이 PR에 자동 포함하지 않는다. 해당 모듈 소비자의 실제 최종 시험/CI는 자신의 PR에서 확인한다. Moodle 새1502 실측21/21은 Draft #56의 근거이고 그 PR 역시 자동 병합하지 않는다.
