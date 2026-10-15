@@ -153,12 +153,12 @@ function assessDaily(compiled, ruleId, trusted, input, now, profile) {
     let openDay = false;
     for (let i = 0; i < l.days; i++) {
       const label = date.toISOString().slice(0, 10), end = Date.parse(label + 'T00:00:00+09:00') / 1000 + 86400;
-      if (!daily.has(label)) { if (now < end) openDay = true; else missing.push(label); }
+      if (!daily.has(label)) { if (observed < end) openDay = true; else missing.push(label); }
       date.setUTCDate(date.getUTCDate() + 1);
     }
     const min = daily.size ? Math.min(...daily.values()) : 0;
     if (missing.length) return result('NOT_MET', 'LEARNING_CONFIRMED_MISSING_DATES', credited, missing, min);
-    if (openDay || now < period.until) return result('IN_PROGRESS', 'LEARNING_PERIOD_OPEN', credited);
+    if (openDay || observed < period.until) return result('IN_PROGRESS', 'LEARNING_PERIOD_OPEN', credited);
     return result(credited.length === l.days ? 'PASS' : 'NOT_MET', 'LEARNING_DAILY_SUMMARY', credited, missing, min);
   } catch (error) {
     if (!(error instanceof RuleError)) throw error;

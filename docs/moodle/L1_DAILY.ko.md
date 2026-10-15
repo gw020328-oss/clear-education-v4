@@ -52,3 +52,7 @@ M2가 ruleHash·unit·days/threshold와 evidence 신뢰/범위를 확인한다. 
 원본/legacy191파일·reference4개 보존 및 의존성 검사 통과. 새 시험은 전용 경로에서 로컬 실행하며 root CI에 무단 추가하지 않았다. 원격 head/CI·공개 이력 확인은 PR에 기록한다.
 
 L2/L3는 새 synthetic export lab/current revision·감사 이력·페이지/실패 검사와 read-only driver를 작은 후속 단위로 준비한다. 기존 Moodle/Docker 환경·토큰·개인계정·새 실제 재생·학원 접속은 사용하지 않는다. 실제 Moodle/원천 BLOCKED, 400% 자동 자격/지급 금지, 500% 시연 제외, grant/outbox HOLD, 독립청구 NO-GO, 예치 정책 OPEN, Mac 원인 미확정을 유지한다. L4 HTTP/DB 연결은 공통 소유자와 별도 합의하며 Draft PR 자동 병합 없음.
+
+최종 리뷰 보정: 날짜 종료/전체 기간 판정은 평가 시각 now가 아니라 snapshot.observedAt을 따른다. 아직 유효한 snapshot도 자정/기간 종료를 지난 시간만으로 PASS 또는 결석으로 승격하지 않으며 새 관측 전에는 IN_PROGRESS를 유지한다. 종료 직전/직후 성공·미응시 회귀를 추가했다.
+
+전용 tests/moodle-mvp/*.test.mjs를 Public synthetic tests CI에 편입하고 외부 통신 tripwire를 적용했다. 현재 L1 36개이며 이후 export/bridge 시험도 같은 glob으로 포함된다. 실제 로컬 Moodle 재생/기관 시험은 이 CI의 범위가 아니다.
