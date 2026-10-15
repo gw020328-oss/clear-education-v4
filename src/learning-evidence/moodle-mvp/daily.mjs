@@ -99,6 +99,7 @@ export function assessMvpDailyLearning(compiled, ruleId, trusted, input, now) {
       records.set(row.sourceRecordRef, row);
       check(!['UNKNOWN', 'UNAVAILABLE'].includes(row.sourceRecordStatus), 'LEARNING_RECORD_UNAVAILABLE');
       if (row.sourceRecordStatus === 'NO_RECORD') continue;
+      check(['VIDEO', 'OT'].includes(row.activityType) && row.activityType === mapping.activityType, 'LEARNING_ACTIVITY_MEANING');
       check(row.sourcePolicyHash === mapping.sourcePolicyHash && row.durationMs === mapping.durationMs, 'LEARNING_MEDIA_RULE_PIN');
       check(row.deliveryMode !== 'UNKNOWN', 'LEARNING_DELIVERY_UNKNOWN');
       if (row.deliveryMode !== 'STREAMING') continue;
