@@ -96,3 +96,19 @@ PR60 리뷰에 따라 정책 오류부터 수정하고 진행 현황·서류 보
 - 다섯 fixture, 파일 bytes 거부/제한, 이미지 판독 보류, 보완 후 옛 결과 stale, 중복 클릭·응답 유실 GET 복구, 명시 cancel/delete, raw TTL·재시작을 실제 합성 HTTPS에서 확인한다. mock 단위 시험과 서버 연결 시험 결과를 구분한다.
 - server-only service/example/pins/DB/collector/Node 모듈·개인키·CA private key·원본을 번들에 포함하지 않는다. 파일/텍스트/base64·서명/token/CSRF/키·모델 원출력을 localStorage/sessionStorage/IndexedDB/service-worker cache/로그·오류수집에 저장하지 않는다. 허용한 공개 fixture 입력 외 민감 내용을 스냅샷에 넣지 않는다.
 - 실제 Reclaim/YBM/Moodle/학교·유료 모델·실학생 자료·새 금고/issuer·main 배포는 켜지 않는다. 미구현 항목은 준비/보류로 남긴다. 완료 보고에는 정확 backend SHA, 자기 frontend SHA, 연결한 DTO/경로, 실행한 시험, 남은 미연결·제약을 기록한다.
+
+## C3 후속 연결 추가 — 별도 Draft의 제공 범위 확인 후 적용
+
+C2 PR63은 develop890ad93cfb3677c5b4107428095c6f0b15efa9a4에 병합됐다. 새 C3는 이슈65의 Draft 단위이므로 develop 가용성을 따로 확인한다. 위 C1/C2 범위·PR60 정책/UX 지침은 그대로 유지하며 C3 명령을 기존 F0/C2 DTO로 치환하지 않는다.
+
+읽는 순서에 `docs/current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md`→`src/product-workflow/evaluation-http-client.mjs`→`specs/m3/evaluation-http-responses.json`을 추가한다. YBM/시원스쿨 host fixture는 서버 전용이므로 example/pins 모듈을 번들에 넣지 않는다. `evaluation-preview.requirements[].fixtures`의 ID와 의미만 화면에 표시한다.
+
+1. 별도 새 evaluation 개발 host의 version/합성 capability·profile·PUBLIC_SYNTHETIC_SCENARIO를 확인하고 C1 신청/정확 ACK를 연결한다. 이 환경은 C2 third-policy 문서 host와 다르며 임의 개인자료/검증 receipt 입력을 지원하지 않는다.
+2. preview의 workflowRevision과 requirement.expectedEvidenceRevision을 사용해 `{expectedWorkflowRevision,expectedEvidenceRevision,fixtureId}`만 수락 요청한다. fixture-ready는 명시 공개 합성 assertion이며 실제 원천 인증이 아니다. review-unverified는 UNKNOWN을 유지하고 C2 CHECKED를 대체 입력으로 보내지 않는다.
+3. 최신 preview의 tier별 계산·공식 선택 OPEN·합성 EXPLICIT_SINGLE_TIER_NO_TOPUP와 제한을 보여준 뒤 사용자의 명시 선택으로 `{expectedWorkflowRevision,selectionPreviewHash,tier,acknowledgement:'SYNTHETIC_SELECTION_ONLY'}`를 전송한다. C1/C2 표시 hash를 쓰지 않는다.
+4. `{expectedWorkflowRevision}`로 평가하고 operation.result의 decisionId/current/result를 읽는다. M2 rules/tiers/quote/settlement/entitlement와 outer fundingStatus/gates를 구분한다. FINAL_SYNTHETIC도 실제 자격·배정·청구가 아니다. UNKNOWN/MISSING/보완 이유를 유지하고 임의 점수·확인 상태를 채우지 않는다.
+5. 보완은 최신 preview와 새 key로 fixture 재수락→재평가한다. 같은 시험 정정과 다른 시험 교체 거부를 구분한다. 과거 result=null/historicalResult는 이력 영역에만 표시하고 늦은 응답이 현재 화면을 덮지 않게 한다. 정책/ACK 변경은 준비 불가이며 기존 증거 재수락을 자동 시도하지 않는다.
+6. 합성 최종화는 보완 기한 뒤에만 현재 workflow/facts/selection revision을 확인하고 `SYNTHETIC_FINALIZATION_ONLY`로 명시 실행한다. 기한/시각은 브라우저가 바꾸지 않는다. 일반 CLI는 evidenceUntil 1시간 전부터 경과 시간을 재생하고 학습 종료/보완 종료까지 기다려야 한다. 빠른 합성 완주는 서버 시험 demo의 역할이며 UI 가짜 성공으로 대신하지 않는다.
+7. 유실 응답은 evaluation-operations의 명령명/동일 key GET으로 복구한다. 목록 최근100 receipts/50 decisions는 전체 이력이 아니다. 새로고침/재시작은 저장 결과를 읽으며 POST/모델/평가를 자동 재실행하지 않는다. C3 cancel API는 없다.
+
+수용 검사에 YBM 합성 보류→보완→후보/명시 최종화→재시작 동일 저장결과, 시원스쿨 OR·이력UNKNOWN·200/300 계산 후보·400 PRECHECK_ONLY·500 거부, 최초 시험 교체 거부/같은 시험 정정, 중복/응답유실·새 선택/정책 변경에 따른stale를 추가한다. 실제 Reclaim/Moodle/Vision 연결·프론트 사용성 완료로 표현하지 않는다. C3 파일/프론트 구현은 백엔드 담당이 대신 수정하지 않는다.

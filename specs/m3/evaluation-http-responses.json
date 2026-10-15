@@ -1,0 +1,2847 @@
+{
+  "kind": "SYNTHETIC_EVIDENCE_EVALUATION_HTTP_DEMO",
+  "version": "clear-mvp-evidence-http.1",
+  "profile": "ybm",
+  "verifiedHttps": true,
+  "signedInvitedWalletLogin": true,
+  "timeMode": "TRUSTED_HOST_SYNTHETIC_PHASES",
+  "restartSameDecision": true,
+  "atomicEvidenceAndDecision": true,
+  "sourceVerified": false,
+  "userConsentVerified": false,
+  "productEligible": false,
+  "paymentAllowed": false,
+  "fundingStatus": "UNKNOWN",
+  "grant": "HOLD",
+  "outbox": "HOLD",
+  "independentClaim": "NO_GO",
+  "actualWebsiteFetches": 0,
+  "paidModelCalls": 0,
+  "responses": {
+    "preview": {
+      "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+      "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+      "policyRevision": 1,
+      "binding": {
+        "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+        "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376",
+        "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+        "bindingRevision": 1,
+        "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+        "instanceId": "mvp-1d4aabf3cda8a390",
+        "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+        "policyVersion": "m1-ybm-demo.1",
+        "productId": "ybm-750-demo",
+        "cohortId": "demo-2030"
+      },
+      "c1AcknowledgmentHash": "0x8f001d9bb17fab3aad8a2bf9f491b0108772492c3c19025f0ed338268ba796b3",
+      "c1PreviewHash": "0xcda44d911bb14a6b1e19913110e6f5ee5e89b2e7042748ff9756d06f2b5451b5",
+      "c1DisplayHash": "0x9ad718dc764646fbf99459ed95e792299916b65c3e150482743a853ae2bedcd7",
+      "workflowRevision": 1,
+      "factsRevision": 1,
+      "selectionRevision": 1,
+      "selection": {
+        "tier": null,
+        "revision": 1,
+        "acknowledged": false,
+        "rule": "OFFICIAL_OPEN"
+      },
+      "finalized": false,
+      "firstScoreRef": null,
+      "initialSubmissionAt": null,
+      "tiers": [
+        {
+          "tier": 100,
+          "support": "CONDITION_AMOUNT",
+          "quote": {
+            "state": "CALCULATED_SYNTHETIC",
+            "amountAtoms": "100000000"
+          }
+        }
+      ],
+      "amount": {
+        "kind": "FIXED_SYNTHETIC_NET",
+        "basis": "SYNTHETIC_ASSUMPTION",
+        "token": "TEST",
+        "decimals": 6,
+        "netAtoms": "100000000"
+      },
+      "selectionRule": {
+        "officialRule": "OPEN",
+        "syntheticRule": "EXPLICIT_SINGLE_TIER_NO_TOPUP"
+      },
+      "deadlines": {
+        "evidenceFrom": 1898521200,
+        "evidenceUntil": 1906297200,
+        "supplementUntil": 1906383600,
+        "finalizeUntil": 1906470000,
+        "allocationUntil": 1906556400,
+        "claimUntil": 1907161200,
+        "minClaimWindowSeconds": 604800
+      },
+      "requirements": [
+        {
+          "requirementId": "score",
+          "kind": "EXAM",
+          "expectedEvidenceRevision": 0,
+          "fixtures": [
+            {
+              "fixtureId": "score-ready",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            },
+            {
+              "fixtureId": "score-unverified",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "UNKNOWN",
+              "semantics": "UNKNOWN"
+            },
+            {
+              "fixtureId": "score-missing",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            },
+            {
+              "fixtureId": "score-corrected",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            },
+            {
+              "fixtureId": "score-other-exam",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            }
+          ]
+        },
+        {
+          "requirementId": "learning",
+          "kind": "LEARNING",
+          "expectedEvidenceRevision": 0,
+          "fixtures": [
+            {
+              "fixtureId": "learning-ready",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            },
+            {
+              "fixtureId": "learning-unverified",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "UNKNOWN",
+              "semantics": "UNKNOWN"
+            },
+            {
+              "fixtureId": "learning-missing",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            }
+          ]
+        },
+        {
+          "requirementId": "review",
+          "kind": "REVIEW",
+          "expectedEvidenceRevision": 0,
+          "fixtures": [
+            {
+              "fixtureId": "review-ready",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            },
+            {
+              "fixtureId": "review-unverified",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "UNKNOWN",
+              "semantics": "UNKNOWN"
+            },
+            {
+              "fixtureId": "review-missing",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            }
+          ]
+        },
+        {
+          "requirementId": "mock",
+          "kind": "MOCK_TEST",
+          "expectedEvidenceRevision": 0,
+          "fixtures": [
+            {
+              "fixtureId": "mock-ready",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            },
+            {
+              "fixtureId": "mock-unverified",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "UNKNOWN",
+              "semantics": "UNKNOWN"
+            },
+            {
+              "fixtureId": "mock-missing",
+              "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+              "sourceStatus": "PRESENT",
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "semantics": "VERIFIED_SYNTHETIC"
+            }
+          ]
+        }
+      ],
+      "userConsentVerified": false,
+      "sourceVerified": false,
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "version": "clear-mvp-evidence-http.1",
+      "dataMode": "SYNTHETIC",
+      "identityVerified": false,
+      "policyPublished": false,
+      "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+      "realDataAllowed": false,
+      "evidenceAcceptanceReady": false,
+      "syntheticEvidenceAcceptanceReady": true,
+      "fundingStatus": "UNKNOWN",
+      "claimAuthority": false,
+      "scenarioTime": 1906293600,
+      "selectionPreviewHash": "0x1464fb406886b8eac013bcac3db28cd8f8ba4a56101103312c1e7ff31c2f2884"
+    },
+    "receipt": {
+      "operationId": "evaluation-op-a5a69c86-3e44-4827-969a-ba39391460dd",
+      "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+      "kind": "evidence-receipts",
+      "state": "RECORDED",
+      "current": true,
+      "result": {
+        "recordId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014",
+        "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+        "workflowRevision": 2,
+        "current": true,
+        "reason": null,
+        "createdAt": 1906293600,
+        "c1AcknowledgmentHash": "0x8f001d9bb17fab3aad8a2bf9f491b0108772492c3c19025f0ed338268ba796b3",
+        "evidence": {
+          "acceptedAt": 1906293600,
+          "authenticity": "VERIFIED_SYNTHETIC",
+          "binding": {
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "cohortId": "demo-2030",
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "collectedAt": 1906293590,
+          "completeness": "NOT_REQUIRED",
+          "contractVersion": "clear-mvp.1",
+          "correction": "CURRENT",
+          "coveredPeriod": {
+            "boundaries": "[from,until)",
+            "from": 1898521200,
+            "timeZone": "Asia/Seoul",
+            "until": 1906297200
+          },
+          "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+          "mode": "SYNTHETIC",
+          "observations": [
+            {
+              "days": null,
+              "ruleHash": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e",
+              "ruleId": "score-target",
+              "status": "OBSERVED",
+              "unit": "SCORE",
+              "value": 750
+            }
+          ],
+          "payloadHash": "0xf9b1dc18758ae4cc0fb26ff0dde2af83313ca56c2bd9bb190fac2fcadedeb464",
+          "requirementId": "score",
+          "revision": 1,
+          "semantics": "VERIFIED_SYNTHETIC",
+          "sourceBinding": {
+            "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+            "accountBindingVersion": "synthetic-binding.1",
+            "courseId": "ybm-750-demo",
+            "institutionId": "synthetic-ybm",
+            "providerInstanceId": "synthetic-ybm",
+            "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+          },
+          "sourceRevision": "source-revision.1",
+          "sourceStatus": "PRESENT",
+          "subject": "VERIFIED_SYNTHETIC",
+          "trustProfile": "synthetic-fixture-verifier.1"
+        },
+        "evidenceHash": "0xeb77384b2c30541712f425aa776d83d6b5109debd330d25f57fde2b22c9e1573",
+        "exam": {
+          "eventAt": 1898607600,
+          "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+          "revision": 1,
+          "submissionRef": {
+            "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+            "revision": 1,
+            "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+          }
+        },
+        "fixtureId": "score-ready",
+        "provenance": "PUBLIC_SYNTHETIC_ASSERTION",
+        "receiptId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014",
+        "userConsentVerified": false,
+        "sourceVerified": false,
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "version": "clear-mvp-evidence-http.1",
+        "dataMode": "SYNTHETIC",
+        "identityVerified": false,
+        "policyPublished": false,
+        "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+        "realDataAllowed": false,
+        "evidenceAcceptanceReady": false,
+        "syntheticEvidenceAcceptanceReady": true,
+        "fundingStatus": "UNKNOWN",
+        "claimAuthority": false
+      },
+      "userConsentVerified": false,
+      "sourceVerified": false,
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "version": "clear-mvp-evidence-http.1",
+      "dataMode": "SYNTHETIC",
+      "identityVerified": false,
+      "policyPublished": false,
+      "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+      "realDataAllowed": false,
+      "evidenceAcceptanceReady": false,
+      "syntheticEvidenceAcceptanceReady": true,
+      "fundingStatus": "UNKNOWN",
+      "claimAuthority": false
+    },
+    "held": {
+      "operationId": "evaluation-op-11f467e3-8e3b-464c-8ce5-f32df77031f2",
+      "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+      "kind": "evaluations",
+      "state": "RECORDED",
+      "current": true,
+      "result": {
+        "recordId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+        "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+        "workflowRevision": 6,
+        "current": true,
+        "reason": null,
+        "createdAt": 1906297201,
+        "decisionId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+        "result": {
+          "binding": {
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "cohortId": "demo-2030",
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "decisionId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+          "entitlement": null,
+          "evaluatedAt": 1906297201,
+          "evaluatorVersion": "clear-mvp-evaluation.1",
+          "factsRevision": 5,
+          "grant": "HOLD",
+          "independentClaim": "NO_GO",
+          "outbox": "HOLD",
+          "paymentAllowed": false,
+          "productEligible": false,
+          "proofVerified": false,
+          "reason": "EVIDENCE_UNKNOWN",
+          "rules": [
+            {
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "SOURCE_UNVERIFIED",
+              "requirementId": "review",
+              "ruleId": "review-accepted",
+              "state": "UNKNOWN"
+            },
+            {
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "learning",
+              "ruleId": "daily-learning",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "mock",
+              "ruleId": "mock-completed",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "score",
+              "ruleId": "score-target",
+              "state": "MET"
+            }
+          ],
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "settlement": "ON_HOLD",
+          "tiers": [
+            {
+              "quote": {
+                "amountAtoms": "100000000",
+                "state": "CALCULATED_SYNTHETIC"
+              },
+              "routes": [
+                {
+                  "routeId": "single-route",
+                  "ruleIds": [
+                    "review-accepted",
+                    "mock-completed",
+                    "daily-learning",
+                    "score-target"
+                  ],
+                  "state": "UNKNOWN"
+                }
+              ],
+              "state": "UNKNOWN",
+              "support": "CONDITION_AMOUNT",
+              "tier": 100
+            }
+          ]
+        },
+        "historicalResult": null,
+        "snapshot": {
+          "amount": {
+            "basis": "SYNTHETIC_ASSUMPTION",
+            "decimals": 6,
+            "kind": "FIXED_SYNTHETIC_NET",
+            "netAtoms": "100000000",
+            "token": "TEST"
+          },
+          "c1AcknowledgmentHash": "0x8f001d9bb17fab3aad8a2bf9f491b0108772492c3c19025f0ed338268ba796b3",
+          "context": {
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "decisionId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+            "evaluatedAt": 1906297201,
+            "evaluatorVersion": "clear-mvp-evaluation.1",
+            "evidencePins": [
+              {
+                "digest": "0xf8341c8f4dd1177d3a39a847a5283c2aa55eb9ebefb9328fd62a2afac58333fd",
+                "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+                "revision": 1
+              },
+              {
+                "digest": "0x5129bceca74640dd808d97cee51bf345a0b62891b23f0f8beb72c1741536cfa9",
+                "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+                "revision": 1
+              },
+              {
+                "digest": "0x649805352ae0b7fef64f9736b0fecb7deee0a95926d8a86386aecabd5bdd771d",
+                "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+                "revision": 1
+              },
+              {
+                "digest": "0xeb77384b2c30541712f425aa776d83d6b5109debd330d25f57fde2b22c9e1573",
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1
+              }
+            ],
+            "examPins": [
+              {
+                "eventAt": 1898607600,
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1,
+                "submissionRef": {
+                  "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+                  "revision": 1,
+                  "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+                }
+              }
+            ],
+            "factsRevision": 5,
+            "finalization": {
+              "factsRevision": 5,
+              "finalizedAt": null,
+              "selectionRevision": 2,
+              "state": "OPEN"
+            },
+            "firstScoreRef": {
+              "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+              "revision": 1,
+              "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+            },
+            "initialSubmissionAt": 1906293600,
+            "mode": "SYNTHETIC",
+            "sourceBindings": [
+              {
+                "requirementId": "learning",
+                "sourceBinding": {
+                  "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+                }
+              },
+              {
+                "requirementId": "mock",
+                "sourceBinding": {
+                  "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+                }
+              },
+              {
+                "requirementId": "review",
+                "sourceBinding": {
+                  "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+                }
+              },
+              {
+                "requirementId": "score",
+                "sourceBinding": {
+                  "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+                }
+              }
+            ]
+          },
+          "evidence": [
+            {
+              "acceptedAt": 1906297201,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906297200,
+              "completeness": "COMPLETE_SYNTHETIC",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": 90,
+                  "ruleHash": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+                  "ruleId": "daily-learning",
+                  "status": "OBSERVED",
+                  "unit": "BPS",
+                  "value": 9000
+                }
+              ],
+              "payloadHash": "0x4ae7af20c7a52dd75853efbb6f3ba9b0db8b89664825973e6c5007b8167448bd",
+              "requirementId": "learning",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+                  "ruleId": "mock-completed",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x29830ac9bcff6da01274cc677cefc1c85a172d264768f802de4a8a19b07df6af",
+              "requirementId": "mock",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "UNKNOWN",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+                  "ruleId": "review-accepted",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x6eefdd18af01fd15aa6b0d4d7fe85209cfde86f5261420e9fbfa8ad333650d08",
+              "requirementId": "review",
+              "revision": 1,
+              "semantics": "UNKNOWN",
+              "sourceBinding": {
+                "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e",
+                  "ruleId": "score-target",
+                  "status": "OBSERVED",
+                  "unit": "SCORE",
+                  "value": 750
+                }
+              ],
+              "payloadHash": "0xf9b1dc18758ae4cc0fb26ff0dde2af83313ca56c2bd9bb190fac2fcadedeb464",
+              "requirementId": "score",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            }
+          ],
+          "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+          "ruleHashes": {
+            "daily-learning": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+            "mock-completed": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+            "review-accepted": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+            "score-target": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e"
+          },
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "sourceSetHash": "0x5e5cd72d82edc11051da66a7cf3c0b598a8419fbe43b31583157b67df7ce24e5"
+        },
+        "snapshotHash": "0xb3ba50df866707d2f6ee7c92bd1082586543ea0559165de0650b637255b0efe4",
+        "resultHash": "0xe294c2176d1c04a92b2d73dd2e1febc0352e7f99b640d41162c7217f87f727de",
+        "userConsentVerified": false,
+        "sourceVerified": false,
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "version": "clear-mvp-evidence-http.1",
+        "dataMode": "SYNTHETIC",
+        "identityVerified": false,
+        "policyPublished": false,
+        "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+        "realDataAllowed": false,
+        "evidenceAcceptanceReady": false,
+        "syntheticEvidenceAcceptanceReady": true,
+        "fundingStatus": "UNKNOWN",
+        "claimAuthority": false
+      },
+      "userConsentVerified": false,
+      "sourceVerified": false,
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "version": "clear-mvp-evidence-http.1",
+      "dataMode": "SYNTHETIC",
+      "identityVerified": false,
+      "policyPublished": false,
+      "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+      "realDataAllowed": false,
+      "evidenceAcceptanceReady": false,
+      "syntheticEvidenceAcceptanceReady": true,
+      "fundingStatus": "UNKNOWN",
+      "claimAuthority": false
+    },
+    "candidate": {
+      "operationId": "evaluation-op-c0d23724-c06b-456c-8899-bcd0042e532c",
+      "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+      "kind": "evaluations",
+      "state": "RECORDED",
+      "current": true,
+      "result": {
+        "recordId": "decision-e68ca00d-9d7d-421f-8262-5a1ddc61d64c",
+        "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+        "workflowRevision": 7,
+        "current": true,
+        "reason": null,
+        "createdAt": 1906297201,
+        "decisionId": "decision-e68ca00d-9d7d-421f-8262-5a1ddc61d64c",
+        "result": {
+          "binding": {
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "cohortId": "demo-2030",
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "decisionId": "decision-e68ca00d-9d7d-421f-8262-5a1ddc61d64c",
+          "entitlement": null,
+          "evaluatedAt": 1906297201,
+          "evaluatorVersion": "clear-mvp-evaluation.1",
+          "factsRevision": 6,
+          "grant": "HOLD",
+          "independentClaim": "NO_GO",
+          "outbox": "HOLD",
+          "paymentAllowed": false,
+          "productEligible": false,
+          "proofVerified": false,
+          "reason": "CORRECTION_OPEN",
+          "rules": [
+            {
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "evidenceRevision": 2,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "review",
+              "ruleId": "review-accepted",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "learning",
+              "ruleId": "daily-learning",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "mock",
+              "ruleId": "mock-completed",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "score",
+              "ruleId": "score-target",
+              "state": "MET"
+            }
+          ],
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "settlement": "CANDIDATE_SYNTHETIC",
+          "tiers": [
+            {
+              "quote": {
+                "amountAtoms": "100000000",
+                "state": "CALCULATED_SYNTHETIC"
+              },
+              "routes": [
+                {
+                  "routeId": "single-route",
+                  "ruleIds": [
+                    "review-accepted",
+                    "mock-completed",
+                    "daily-learning",
+                    "score-target"
+                  ],
+                  "state": "MET"
+                }
+              ],
+              "state": "MET",
+              "support": "CONDITION_AMOUNT",
+              "tier": 100
+            }
+          ]
+        },
+        "historicalResult": null,
+        "snapshot": {
+          "amount": {
+            "basis": "SYNTHETIC_ASSUMPTION",
+            "decimals": 6,
+            "kind": "FIXED_SYNTHETIC_NET",
+            "netAtoms": "100000000",
+            "token": "TEST"
+          },
+          "c1AcknowledgmentHash": "0x8f001d9bb17fab3aad8a2bf9f491b0108772492c3c19025f0ed338268ba796b3",
+          "context": {
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "decisionId": "decision-e68ca00d-9d7d-421f-8262-5a1ddc61d64c",
+            "evaluatedAt": 1906297201,
+            "evaluatorVersion": "clear-mvp-evaluation.1",
+            "evidencePins": [
+              {
+                "digest": "0xf8341c8f4dd1177d3a39a847a5283c2aa55eb9ebefb9328fd62a2afac58333fd",
+                "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+                "revision": 1
+              },
+              {
+                "digest": "0x5129bceca74640dd808d97cee51bf345a0b62891b23f0f8beb72c1741536cfa9",
+                "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+                "revision": 1
+              },
+              {
+                "digest": "0xeb77384b2c30541712f425aa776d83d6b5109debd330d25f57fde2b22c9e1573",
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1
+              },
+              {
+                "digest": "0x7e76e79dd58279b35cc52a639949e7fbf8ac182712718b382852896e3c360e2b",
+                "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+                "revision": 2
+              }
+            ],
+            "examPins": [
+              {
+                "eventAt": 1898607600,
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1,
+                "submissionRef": {
+                  "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+                  "revision": 1,
+                  "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+                }
+              }
+            ],
+            "factsRevision": 6,
+            "finalization": {
+              "factsRevision": 6,
+              "finalizedAt": null,
+              "selectionRevision": 2,
+              "state": "OPEN"
+            },
+            "firstScoreRef": {
+              "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+              "revision": 1,
+              "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+            },
+            "initialSubmissionAt": 1906293600,
+            "mode": "SYNTHETIC",
+            "sourceBindings": [
+              {
+                "requirementId": "learning",
+                "sourceBinding": {
+                  "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+                }
+              },
+              {
+                "requirementId": "mock",
+                "sourceBinding": {
+                  "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+                }
+              },
+              {
+                "requirementId": "score",
+                "sourceBinding": {
+                  "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+                }
+              },
+              {
+                "requirementId": "review",
+                "sourceBinding": {
+                  "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+                }
+              }
+            ]
+          },
+          "evidence": [
+            {
+              "acceptedAt": 1906297201,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906297200,
+              "completeness": "COMPLETE_SYNTHETIC",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": 90,
+                  "ruleHash": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+                  "ruleId": "daily-learning",
+                  "status": "OBSERVED",
+                  "unit": "BPS",
+                  "value": 9000
+                }
+              ],
+              "payloadHash": "0x4ae7af20c7a52dd75853efbb6f3ba9b0db8b89664825973e6c5007b8167448bd",
+              "requirementId": "learning",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+                  "ruleId": "mock-completed",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x29830ac9bcff6da01274cc677cefc1c85a172d264768f802de4a8a19b07df6af",
+              "requirementId": "mock",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e",
+                  "ruleId": "score-target",
+                  "status": "OBSERVED",
+                  "unit": "SCORE",
+                  "value": 750
+                }
+              ],
+              "payloadHash": "0xf9b1dc18758ae4cc0fb26ff0dde2af83313ca56c2bd9bb190fac2fcadedeb464",
+              "requirementId": "score",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906297201,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+                  "ruleId": "review-accepted",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x6eefdd18af01fd15aa6b0d4d7fe85209cfde86f5261420e9fbfa8ad333650d08",
+              "requirementId": "review",
+              "revision": 2,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            }
+          ],
+          "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+          "ruleHashes": {
+            "daily-learning": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+            "mock-completed": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+            "review-accepted": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+            "score-target": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e"
+          },
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "sourceSetHash": "0x5e5cd72d82edc11051da66a7cf3c0b598a8419fbe43b31583157b67df7ce24e5"
+        },
+        "snapshotHash": "0x565c56bc312194088fdd48a1d39d1fc58f27d481e18690d3831d1071c5b3d9f0",
+        "resultHash": "0x85b20eefd96f048982450768f510bf8206ef65d52bee90f0da727a758a269cdd",
+        "userConsentVerified": false,
+        "sourceVerified": false,
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "version": "clear-mvp-evidence-http.1",
+        "dataMode": "SYNTHETIC",
+        "identityVerified": false,
+        "policyPublished": false,
+        "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+        "realDataAllowed": false,
+        "evidenceAcceptanceReady": false,
+        "syntheticEvidenceAcceptanceReady": true,
+        "fundingStatus": "UNKNOWN",
+        "claimAuthority": false
+      },
+      "userConsentVerified": false,
+      "sourceVerified": false,
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "version": "clear-mvp-evidence-http.1",
+      "dataMode": "SYNTHETIC",
+      "identityVerified": false,
+      "policyPublished": false,
+      "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+      "realDataAllowed": false,
+      "evidenceAcceptanceReady": false,
+      "syntheticEvidenceAcceptanceReady": true,
+      "fundingStatus": "UNKNOWN",
+      "claimAuthority": false
+    },
+    "final": {
+      "operationId": "evaluation-op-fc6e2079-eae6-4946-bd92-557d6ba08ff7",
+      "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+      "kind": "evaluations",
+      "state": "RECORDED",
+      "current": true,
+      "result": {
+        "recordId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+        "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+        "workflowRevision": 8,
+        "current": true,
+        "reason": null,
+        "createdAt": 1906383600,
+        "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+        "result": {
+          "binding": {
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "cohortId": "demo-2030",
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+          "entitlement": {
+            "allocationImplemented": false,
+            "amountAtoms": "100000000",
+            "amountRuleHash": "0xb86f45f5e710d8844a489771a8cd895453effc203bc69a6a55c559f40658abb0",
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "claimAuthority": false,
+            "cohortId": "demo-2030",
+            "contextHash": "0xc432ff195e1b49a65d2f70ee711540446d206467bef40642debe2e9d80b6984f",
+            "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+            "digest": "0x6ce69f98c902dfe7050311423207b4dfee5fac33d9187a3f682fc7e9496a58a2",
+            "evaluatedAt": 1906383600,
+            "evaluatorVersion": "clear-mvp-evaluation.1",
+            "evidenceSetHash": "0x3d752cbd2976031ea615f1219980d143583d9422179946607712d5ec267f523f",
+            "factsRevision": 6,
+            "finalization": {
+              "factsRevision": 6,
+              "finalizedAt": 1906383600,
+              "selectionRevision": 2,
+              "state": "FINALIZED_SYNTHETIC"
+            },
+            "firstScoreRef": {
+              "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+              "revision": 1,
+              "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+            },
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "paymentAllowed": false,
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "selectedTier": 100,
+            "selectionRevision": 2,
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "evaluatedAt": 1906383600,
+          "evaluatorVersion": "clear-mvp-evaluation.1",
+          "factsRevision": 6,
+          "grant": "HOLD",
+          "independentClaim": "NO_GO",
+          "outbox": "HOLD",
+          "paymentAllowed": false,
+          "productEligible": false,
+          "proofVerified": false,
+          "reason": "NONE",
+          "rules": [
+            {
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "evidenceRevision": 2,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "review",
+              "ruleId": "review-accepted",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "learning",
+              "ruleId": "daily-learning",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "mock",
+              "ruleId": "mock-completed",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "score",
+              "ruleId": "score-target",
+              "state": "MET"
+            }
+          ],
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "settlement": "FINAL_SYNTHETIC",
+          "tiers": [
+            {
+              "quote": {
+                "amountAtoms": "100000000",
+                "state": "CALCULATED_SYNTHETIC"
+              },
+              "routes": [
+                {
+                  "routeId": "single-route",
+                  "ruleIds": [
+                    "review-accepted",
+                    "mock-completed",
+                    "daily-learning",
+                    "score-target"
+                  ],
+                  "state": "MET"
+                }
+              ],
+              "state": "MET",
+              "support": "CONDITION_AMOUNT",
+              "tier": 100
+            }
+          ]
+        },
+        "historicalResult": null,
+        "snapshot": {
+          "amount": {
+            "basis": "SYNTHETIC_ASSUMPTION",
+            "decimals": 6,
+            "kind": "FIXED_SYNTHETIC_NET",
+            "netAtoms": "100000000",
+            "token": "TEST"
+          },
+          "c1AcknowledgmentHash": "0x8f001d9bb17fab3aad8a2bf9f491b0108772492c3c19025f0ed338268ba796b3",
+          "context": {
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+            "evaluatedAt": 1906383600,
+            "evaluatorVersion": "clear-mvp-evaluation.1",
+            "evidencePins": [
+              {
+                "digest": "0xf8341c8f4dd1177d3a39a847a5283c2aa55eb9ebefb9328fd62a2afac58333fd",
+                "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+                "revision": 1
+              },
+              {
+                "digest": "0x5129bceca74640dd808d97cee51bf345a0b62891b23f0f8beb72c1741536cfa9",
+                "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+                "revision": 1
+              },
+              {
+                "digest": "0xeb77384b2c30541712f425aa776d83d6b5109debd330d25f57fde2b22c9e1573",
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1
+              },
+              {
+                "digest": "0x7e76e79dd58279b35cc52a639949e7fbf8ac182712718b382852896e3c360e2b",
+                "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+                "revision": 2
+              }
+            ],
+            "examPins": [
+              {
+                "eventAt": 1898607600,
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1,
+                "submissionRef": {
+                  "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+                  "revision": 1,
+                  "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+                }
+              }
+            ],
+            "factsRevision": 6,
+            "finalization": {
+              "factsRevision": 6,
+              "finalizedAt": 1906383600,
+              "selectionRevision": 2,
+              "state": "FINALIZED_SYNTHETIC"
+            },
+            "firstScoreRef": {
+              "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+              "revision": 1,
+              "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+            },
+            "initialSubmissionAt": 1906293600,
+            "mode": "SYNTHETIC",
+            "sourceBindings": [
+              {
+                "requirementId": "learning",
+                "sourceBinding": {
+                  "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+                }
+              },
+              {
+                "requirementId": "mock",
+                "sourceBinding": {
+                  "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+                }
+              },
+              {
+                "requirementId": "score",
+                "sourceBinding": {
+                  "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+                }
+              },
+              {
+                "requirementId": "review",
+                "sourceBinding": {
+                  "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+                }
+              }
+            ]
+          },
+          "evidence": [
+            {
+              "acceptedAt": 1906297201,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906297200,
+              "completeness": "COMPLETE_SYNTHETIC",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": 90,
+                  "ruleHash": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+                  "ruleId": "daily-learning",
+                  "status": "OBSERVED",
+                  "unit": "BPS",
+                  "value": 9000
+                }
+              ],
+              "payloadHash": "0x4ae7af20c7a52dd75853efbb6f3ba9b0db8b89664825973e6c5007b8167448bd",
+              "requirementId": "learning",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+                  "ruleId": "mock-completed",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x29830ac9bcff6da01274cc677cefc1c85a172d264768f802de4a8a19b07df6af",
+              "requirementId": "mock",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e",
+                  "ruleId": "score-target",
+                  "status": "OBSERVED",
+                  "unit": "SCORE",
+                  "value": 750
+                }
+              ],
+              "payloadHash": "0xf9b1dc18758ae4cc0fb26ff0dde2af83313ca56c2bd9bb190fac2fcadedeb464",
+              "requirementId": "score",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906297201,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+                  "ruleId": "review-accepted",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x6eefdd18af01fd15aa6b0d4d7fe85209cfde86f5261420e9fbfa8ad333650d08",
+              "requirementId": "review",
+              "revision": 2,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            }
+          ],
+          "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+          "ruleHashes": {
+            "daily-learning": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+            "mock-completed": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+            "review-accepted": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+            "score-target": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e"
+          },
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "sourceSetHash": "0x5e5cd72d82edc11051da66a7cf3c0b598a8419fbe43b31583157b67df7ce24e5"
+        },
+        "snapshotHash": "0xad65383725b3f772ca4135b2e5e138be688e4c4abc6d3b018d0a60f856a71f52",
+        "resultHash": "0xf339fa9dce91b4af03f6cfede7f0afb712331ed4058ea1906b2af8230f43fbde",
+        "userConsentVerified": false,
+        "sourceVerified": false,
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "version": "clear-mvp-evidence-http.1",
+        "dataMode": "SYNTHETIC",
+        "identityVerified": false,
+        "policyPublished": false,
+        "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+        "realDataAllowed": false,
+        "evidenceAcceptanceReady": false,
+        "syntheticEvidenceAcceptanceReady": true,
+        "fundingStatus": "UNKNOWN",
+        "claimAuthority": false
+      },
+      "userConsentVerified": false,
+      "sourceVerified": false,
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "version": "clear-mvp-evidence-http.1",
+      "dataMode": "SYNTHETIC",
+      "identityVerified": false,
+      "policyPublished": false,
+      "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+      "realDataAllowed": false,
+      "evidenceAcceptanceReady": false,
+      "syntheticEvidenceAcceptanceReady": true,
+      "fundingStatus": "UNKNOWN",
+      "claimAuthority": false
+    },
+    "recovered": {
+      "operationId": "evaluation-op-fc6e2079-eae6-4946-bd92-557d6ba08ff7",
+      "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+      "kind": "evaluations",
+      "state": "RECORDED",
+      "current": true,
+      "result": {
+        "recordId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+        "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+        "workflowRevision": 8,
+        "current": true,
+        "reason": null,
+        "createdAt": 1906383600,
+        "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+        "result": {
+          "binding": {
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "cohortId": "demo-2030",
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+          "entitlement": {
+            "allocationImplemented": false,
+            "amountAtoms": "100000000",
+            "amountRuleHash": "0xb86f45f5e710d8844a489771a8cd895453effc203bc69a6a55c559f40658abb0",
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "claimAuthority": false,
+            "cohortId": "demo-2030",
+            "contextHash": "0xc432ff195e1b49a65d2f70ee711540446d206467bef40642debe2e9d80b6984f",
+            "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+            "digest": "0x6ce69f98c902dfe7050311423207b4dfee5fac33d9187a3f682fc7e9496a58a2",
+            "evaluatedAt": 1906383600,
+            "evaluatorVersion": "clear-mvp-evaluation.1",
+            "evidenceSetHash": "0x3d752cbd2976031ea615f1219980d143583d9422179946607712d5ec267f523f",
+            "factsRevision": 6,
+            "finalization": {
+              "factsRevision": 6,
+              "finalizedAt": 1906383600,
+              "selectionRevision": 2,
+              "state": "FINALIZED_SYNTHETIC"
+            },
+            "firstScoreRef": {
+              "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+              "revision": 1,
+              "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+            },
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "paymentAllowed": false,
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "selectedTier": 100,
+            "selectionRevision": 2,
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "evaluatedAt": 1906383600,
+          "evaluatorVersion": "clear-mvp-evaluation.1",
+          "factsRevision": 6,
+          "grant": "HOLD",
+          "independentClaim": "NO_GO",
+          "outbox": "HOLD",
+          "paymentAllowed": false,
+          "productEligible": false,
+          "proofVerified": false,
+          "reason": "NONE",
+          "rules": [
+            {
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "evidenceRevision": 2,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "review",
+              "ruleId": "review-accepted",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "learning",
+              "ruleId": "daily-learning",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "mock",
+              "ruleId": "mock-completed",
+              "state": "MET"
+            },
+            {
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "evidenceRevision": 1,
+              "observationStatus": "OBSERVED",
+              "reason": "NONE",
+              "requirementId": "score",
+              "ruleId": "score-target",
+              "state": "MET"
+            }
+          ],
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "settlement": "FINAL_SYNTHETIC",
+          "tiers": [
+            {
+              "quote": {
+                "amountAtoms": "100000000",
+                "state": "CALCULATED_SYNTHETIC"
+              },
+              "routes": [
+                {
+                  "routeId": "single-route",
+                  "ruleIds": [
+                    "review-accepted",
+                    "mock-completed",
+                    "daily-learning",
+                    "score-target"
+                  ],
+                  "state": "MET"
+                }
+              ],
+              "state": "MET",
+              "support": "CONDITION_AMOUNT",
+              "tier": 100
+            }
+          ]
+        },
+        "historicalResult": null,
+        "snapshot": {
+          "amount": {
+            "basis": "SYNTHETIC_ASSUMPTION",
+            "decimals": 6,
+            "kind": "FIXED_SYNTHETIC_NET",
+            "netAtoms": "100000000",
+            "token": "TEST"
+          },
+          "c1AcknowledgmentHash": "0x8f001d9bb17fab3aad8a2bf9f491b0108772492c3c19025f0ed338268ba796b3",
+          "context": {
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "decisionId": "decision-25dfa852-3516-46a5-80a0-ebe444fe9634",
+            "evaluatedAt": 1906383600,
+            "evaluatorVersion": "clear-mvp-evaluation.1",
+            "evidencePins": [
+              {
+                "digest": "0xf8341c8f4dd1177d3a39a847a5283c2aa55eb9ebefb9328fd62a2afac58333fd",
+                "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+                "revision": 1
+              },
+              {
+                "digest": "0x5129bceca74640dd808d97cee51bf345a0b62891b23f0f8beb72c1741536cfa9",
+                "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+                "revision": 1
+              },
+              {
+                "digest": "0xeb77384b2c30541712f425aa776d83d6b5109debd330d25f57fde2b22c9e1573",
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1
+              },
+              {
+                "digest": "0x7e76e79dd58279b35cc52a639949e7fbf8ac182712718b382852896e3c360e2b",
+                "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+                "revision": 2
+              }
+            ],
+            "examPins": [
+              {
+                "eventAt": 1898607600,
+                "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+                "revision": 1,
+                "submissionRef": {
+                  "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+                  "revision": 1,
+                  "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+                }
+              }
+            ],
+            "factsRevision": 6,
+            "finalization": {
+              "factsRevision": 6,
+              "finalizedAt": 1906383600,
+              "selectionRevision": 2,
+              "state": "FINALIZED_SYNTHETIC"
+            },
+            "firstScoreRef": {
+              "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+              "revision": 1,
+              "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+            },
+            "initialSubmissionAt": 1906293600,
+            "mode": "SYNTHETIC",
+            "sourceBindings": [
+              {
+                "requirementId": "learning",
+                "sourceBinding": {
+                  "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+                }
+              },
+              {
+                "requirementId": "mock",
+                "sourceBinding": {
+                  "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+                }
+              },
+              {
+                "requirementId": "score",
+                "sourceBinding": {
+                  "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+                }
+              },
+              {
+                "requirementId": "review",
+                "sourceBinding": {
+                  "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                  "accountBindingVersion": "synthetic-binding.1",
+                  "courseId": "ybm-750-demo",
+                  "institutionId": "synthetic-ybm",
+                  "providerInstanceId": "synthetic-ybm",
+                  "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+                }
+              }
+            ]
+          },
+          "evidence": [
+            {
+              "acceptedAt": 1906297201,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906297200,
+              "completeness": "COMPLETE_SYNTHETIC",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": 90,
+                  "ruleHash": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+                  "ruleId": "daily-learning",
+                  "status": "OBSERVED",
+                  "unit": "BPS",
+                  "value": 9000
+                }
+              ],
+              "payloadHash": "0x4ae7af20c7a52dd75853efbb6f3ba9b0db8b89664825973e6c5007b8167448bd",
+              "requirementId": "learning",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+                  "ruleId": "mock-completed",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x29830ac9bcff6da01274cc677cefc1c85a172d264768f802de4a8a19b07df6af",
+              "requirementId": "mock",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906293600,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": {
+                "boundaries": "[from,until)",
+                "from": 1898521200,
+                "timeZone": "Asia/Seoul",
+                "until": 1906297200
+              },
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e",
+                  "ruleId": "score-target",
+                  "status": "OBSERVED",
+                  "unit": "SCORE",
+                  "value": 750
+                }
+              ],
+              "payloadHash": "0xf9b1dc18758ae4cc0fb26ff0dde2af83313ca56c2bd9bb190fac2fcadedeb464",
+              "requirementId": "score",
+              "revision": 1,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            },
+            {
+              "acceptedAt": 1906297201,
+              "authenticity": "VERIFIED_SYNTHETIC",
+              "binding": {
+                "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+                "bindingRevision": 1,
+                "cohortId": "demo-2030",
+                "instanceId": "mvp-1d4aabf3cda8a390",
+                "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+                "policyVersion": "m1-ybm-demo.1",
+                "productId": "ybm-750-demo",
+                "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+                "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+              },
+              "collectedAt": 1906293590,
+              "completeness": "NOT_REQUIRED",
+              "contractVersion": "clear-mvp.1",
+              "correction": "CURRENT",
+              "coveredPeriod": null,
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "mode": "SYNTHETIC",
+              "observations": [
+                {
+                  "days": null,
+                  "ruleHash": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+                  "ruleId": "review-accepted",
+                  "status": "OBSERVED",
+                  "unit": "BOOLEAN",
+                  "value": true
+                }
+              ],
+              "payloadHash": "0x6eefdd18af01fd15aa6b0d4d7fe85209cfde86f5261420e9fbfa8ad333650d08",
+              "requirementId": "review",
+              "revision": 2,
+              "semantics": "VERIFIED_SYNTHETIC",
+              "sourceBinding": {
+                "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+              },
+              "sourceRevision": "source-revision.1",
+              "sourceStatus": "PRESENT",
+              "subject": "VERIFIED_SYNTHETIC",
+              "trustProfile": "synthetic-fixture-verifier.1"
+            }
+          ],
+          "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+          "ruleHashes": {
+            "daily-learning": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+            "mock-completed": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+            "review-accepted": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+            "score-target": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e"
+          },
+          "selection": {
+            "acknowledged": true,
+            "revision": 2,
+            "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+            "tier": 100
+          },
+          "sourceSetHash": "0x5e5cd72d82edc11051da66a7cf3c0b598a8419fbe43b31583157b67df7ce24e5"
+        },
+        "snapshotHash": "0xad65383725b3f772ca4135b2e5e138be688e4c4abc6d3b018d0a60f856a71f52",
+        "resultHash": "0xf339fa9dce91b4af03f6cfede7f0afb712331ed4058ea1906b2af8230f43fbde",
+        "userConsentVerified": false,
+        "sourceVerified": false,
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "version": "clear-mvp-evidence-http.1",
+        "dataMode": "SYNTHETIC",
+        "identityVerified": false,
+        "policyPublished": false,
+        "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+        "realDataAllowed": false,
+        "evidenceAcceptanceReady": false,
+        "syntheticEvidenceAcceptanceReady": true,
+        "fundingStatus": "UNKNOWN",
+        "claimAuthority": false
+      },
+      "userConsentVerified": false,
+      "sourceVerified": false,
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "version": "clear-mvp-evidence-http.1",
+      "dataMode": "SYNTHETIC",
+      "identityVerified": false,
+      "policyPublished": false,
+      "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+      "realDataAllowed": false,
+      "evidenceAcceptanceReady": false,
+      "syntheticEvidenceAcceptanceReady": true,
+      "fundingStatus": "UNKNOWN",
+      "claimAuthority": false
+    },
+    "stale": {
+      "recordId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+      "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+      "workflowRevision": 6,
+      "current": false,
+      "reason": "STALE_CONTEXT",
+      "createdAt": 1906297201,
+      "decisionId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+      "result": null,
+      "historicalResult": {
+        "binding": {
+          "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+          "bindingRevision": 1,
+          "cohortId": "demo-2030",
+          "instanceId": "mvp-1d4aabf3cda8a390",
+          "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+          "policyVersion": "m1-ybm-demo.1",
+          "productId": "ybm-750-demo",
+          "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+          "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+          "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+        },
+        "decisionId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+        "entitlement": null,
+        "evaluatedAt": 1906297201,
+        "evaluatorVersion": "clear-mvp-evaluation.1",
+        "factsRevision": 5,
+        "grant": "HOLD",
+        "independentClaim": "NO_GO",
+        "outbox": "HOLD",
+        "paymentAllowed": false,
+        "productEligible": false,
+        "proofVerified": false,
+        "reason": "EVIDENCE_UNKNOWN",
+        "rules": [
+          {
+            "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+            "evidenceRevision": 1,
+            "observationStatus": "OBSERVED",
+            "reason": "SOURCE_UNVERIFIED",
+            "requirementId": "review",
+            "ruleId": "review-accepted",
+            "state": "UNKNOWN"
+          },
+          {
+            "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+            "evidenceRevision": 1,
+            "observationStatus": "OBSERVED",
+            "reason": "NONE",
+            "requirementId": "learning",
+            "ruleId": "daily-learning",
+            "state": "MET"
+          },
+          {
+            "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+            "evidenceRevision": 1,
+            "observationStatus": "OBSERVED",
+            "reason": "NONE",
+            "requirementId": "mock",
+            "ruleId": "mock-completed",
+            "state": "MET"
+          },
+          {
+            "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+            "evidenceRevision": 1,
+            "observationStatus": "OBSERVED",
+            "reason": "NONE",
+            "requirementId": "score",
+            "ruleId": "score-target",
+            "state": "MET"
+          }
+        ],
+        "selection": {
+          "acknowledged": true,
+          "revision": 2,
+          "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+          "tier": 100
+        },
+        "settlement": "ON_HOLD",
+        "tiers": [
+          {
+            "quote": {
+              "amountAtoms": "100000000",
+              "state": "CALCULATED_SYNTHETIC"
+            },
+            "routes": [
+              {
+                "routeId": "single-route",
+                "ruleIds": [
+                  "review-accepted",
+                  "mock-completed",
+                  "daily-learning",
+                  "score-target"
+                ],
+                "state": "UNKNOWN"
+              }
+            ],
+            "state": "UNKNOWN",
+            "support": "CONDITION_AMOUNT",
+            "tier": 100
+          }
+        ]
+      },
+      "snapshot": {
+        "amount": {
+          "basis": "SYNTHETIC_ASSUMPTION",
+          "decimals": 6,
+          "kind": "FIXED_SYNTHETIC_NET",
+          "netAtoms": "100000000",
+          "token": "TEST"
+        },
+        "c1AcknowledgmentHash": "0x8f001d9bb17fab3aad8a2bf9f491b0108772492c3c19025f0ed338268ba796b3",
+        "context": {
+          "binding": {
+            "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+            "bindingRevision": 1,
+            "cohortId": "demo-2030",
+            "instanceId": "mvp-1d4aabf3cda8a390",
+            "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+            "policyVersion": "m1-ybm-demo.1",
+            "productId": "ybm-750-demo",
+            "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+            "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+          },
+          "decisionId": "decision-db35abe6-1802-4b4b-8d01-58f65e3ecaab",
+          "evaluatedAt": 1906297201,
+          "evaluatorVersion": "clear-mvp-evaluation.1",
+          "evidencePins": [
+            {
+              "digest": "0xf8341c8f4dd1177d3a39a847a5283c2aa55eb9ebefb9328fd62a2afac58333fd",
+              "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+              "revision": 1
+            },
+            {
+              "digest": "0x5129bceca74640dd808d97cee51bf345a0b62891b23f0f8beb72c1741536cfa9",
+              "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+              "revision": 1
+            },
+            {
+              "digest": "0x649805352ae0b7fef64f9736b0fecb7deee0a95926d8a86386aecabd5bdd771d",
+              "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+              "revision": 1
+            },
+            {
+              "digest": "0xeb77384b2c30541712f425aa776d83d6b5109debd330d25f57fde2b22c9e1573",
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "revision": 1
+            }
+          ],
+          "examPins": [
+            {
+              "eventAt": 1898607600,
+              "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+              "revision": 1,
+              "submissionRef": {
+                "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+                "revision": 1,
+                "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+              }
+            }
+          ],
+          "factsRevision": 5,
+          "finalization": {
+            "factsRevision": 5,
+            "finalizedAt": null,
+            "selectionRevision": 2,
+            "state": "OPEN"
+          },
+          "firstScoreRef": {
+            "examCommitment": "0x444d873e9af0be329259fdc71398fc0d49aa58d966a71fbe8e825b5864e4cce3",
+            "revision": 1,
+            "submissionId": "evidence-receipt-17aeed5e-7546-479a-8dcd-f0db8a388014"
+          },
+          "initialSubmissionAt": 1906293600,
+          "mode": "SYNTHETIC",
+          "sourceBindings": [
+            {
+              "requirementId": "learning",
+              "sourceBinding": {
+                "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+              }
+            },
+            {
+              "requirementId": "mock",
+              "sourceBinding": {
+                "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+              }
+            },
+            {
+              "requirementId": "review",
+              "sourceBinding": {
+                "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+              }
+            },
+            {
+              "requirementId": "score",
+              "sourceBinding": {
+                "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+                "accountBindingVersion": "synthetic-binding.1",
+                "courseId": "ybm-750-demo",
+                "institutionId": "synthetic-ybm",
+                "providerInstanceId": "synthetic-ybm",
+                "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+              }
+            }
+          ]
+        },
+        "evidence": [
+          {
+            "acceptedAt": 1906297201,
+            "authenticity": "VERIFIED_SYNTHETIC",
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "collectedAt": 1906297200,
+            "completeness": "COMPLETE_SYNTHETIC",
+            "contractVersion": "clear-mvp.1",
+            "correction": "CURRENT",
+            "coveredPeriod": {
+              "boundaries": "[from,until)",
+              "from": 1898521200,
+              "timeZone": "Asia/Seoul",
+              "until": 1906297200
+            },
+            "evidenceId": "evidence-440f8695ccb44f0ad0585c3bbb82e9f192694f32858b13c1",
+            "mode": "SYNTHETIC",
+            "observations": [
+              {
+                "days": 90,
+                "ruleHash": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+                "ruleId": "daily-learning",
+                "status": "OBSERVED",
+                "unit": "BPS",
+                "value": 9000
+              }
+            ],
+            "payloadHash": "0x4ae7af20c7a52dd75853efbb6f3ba9b0db8b89664825973e6c5007b8167448bd",
+            "requirementId": "learning",
+            "revision": 1,
+            "semantics": "VERIFIED_SYNTHETIC",
+            "sourceBinding": {
+              "accountBindingId": "binding-eb042001f664512f326c7235f1b67e03",
+              "accountBindingVersion": "synthetic-binding.1",
+              "courseId": "ybm-750-demo",
+              "institutionId": "synthetic-ybm",
+              "providerInstanceId": "synthetic-ybm",
+              "sourceAccountRef": "account-eb042001f664512f326c7235f1b67e03"
+            },
+            "sourceRevision": "source-revision.1",
+            "sourceStatus": "PRESENT",
+            "subject": "VERIFIED_SYNTHETIC",
+            "trustProfile": "synthetic-fixture-verifier.1"
+          },
+          {
+            "acceptedAt": 1906293600,
+            "authenticity": "VERIFIED_SYNTHETIC",
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "collectedAt": 1906293590,
+            "completeness": "NOT_REQUIRED",
+            "contractVersion": "clear-mvp.1",
+            "correction": "CURRENT",
+            "coveredPeriod": null,
+            "evidenceId": "evidence-a717bd16be33e2fac8323242da95a1142850332df817c99e",
+            "mode": "SYNTHETIC",
+            "observations": [
+              {
+                "days": null,
+                "ruleHash": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+                "ruleId": "mock-completed",
+                "status": "OBSERVED",
+                "unit": "BOOLEAN",
+                "value": true
+              }
+            ],
+            "payloadHash": "0x29830ac9bcff6da01274cc677cefc1c85a172d264768f802de4a8a19b07df6af",
+            "requirementId": "mock",
+            "revision": 1,
+            "semantics": "VERIFIED_SYNTHETIC",
+            "sourceBinding": {
+              "accountBindingId": "binding-d18771d06f835f752f45a6f6a1646e6a",
+              "accountBindingVersion": "synthetic-binding.1",
+              "courseId": "ybm-750-demo",
+              "institutionId": "synthetic-ybm",
+              "providerInstanceId": "synthetic-ybm",
+              "sourceAccountRef": "account-d18771d06f835f752f45a6f6a1646e6a"
+            },
+            "sourceRevision": "source-revision.1",
+            "sourceStatus": "PRESENT",
+            "subject": "VERIFIED_SYNTHETIC",
+            "trustProfile": "synthetic-fixture-verifier.1"
+          },
+          {
+            "acceptedAt": 1906293600,
+            "authenticity": "UNKNOWN",
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "collectedAt": 1906293590,
+            "completeness": "NOT_REQUIRED",
+            "contractVersion": "clear-mvp.1",
+            "correction": "CURRENT",
+            "coveredPeriod": null,
+            "evidenceId": "evidence-7441da10b45215c298003c2267180a070d1b6c8d630a4dcc",
+            "mode": "SYNTHETIC",
+            "observations": [
+              {
+                "days": null,
+                "ruleHash": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+                "ruleId": "review-accepted",
+                "status": "OBSERVED",
+                "unit": "BOOLEAN",
+                "value": true
+              }
+            ],
+            "payloadHash": "0x6eefdd18af01fd15aa6b0d4d7fe85209cfde86f5261420e9fbfa8ad333650d08",
+            "requirementId": "review",
+            "revision": 1,
+            "semantics": "UNKNOWN",
+            "sourceBinding": {
+              "accountBindingId": "binding-38ad48eafdb1aa467645e847feced211",
+              "accountBindingVersion": "synthetic-binding.1",
+              "courseId": "ybm-750-demo",
+              "institutionId": "synthetic-ybm",
+              "providerInstanceId": "synthetic-ybm",
+              "sourceAccountRef": "account-38ad48eafdb1aa467645e847feced211"
+            },
+            "sourceRevision": "source-revision.1",
+            "sourceStatus": "PRESENT",
+            "subject": "VERIFIED_SYNTHETIC",
+            "trustProfile": "synthetic-fixture-verifier.1"
+          },
+          {
+            "acceptedAt": 1906293600,
+            "authenticity": "VERIFIED_SYNTHETIC",
+            "binding": {
+              "applicationId": "0xc34744f24a84069c492c6e8d10dbd4a1c7611830f1b4d0e93b33845ea448ef7a",
+              "bindingRevision": 1,
+              "cohortId": "demo-2030",
+              "instanceId": "mvp-1d4aabf3cda8a390",
+              "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+              "policyVersion": "m1-ybm-demo.1",
+              "productId": "ybm-750-demo",
+              "recipientRef": "recipient-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectBindingId": "wallet-1f2a15ffd63641c11a8da2fcd7e2523c",
+              "subjectRef": "0x1f2a15ffd63641c11a8da2fcd7e2523ca850a55fbc8b8b901f23b67c4c584376"
+            },
+            "collectedAt": 1906293590,
+            "completeness": "NOT_REQUIRED",
+            "contractVersion": "clear-mvp.1",
+            "correction": "CURRENT",
+            "coveredPeriod": {
+              "boundaries": "[from,until)",
+              "from": 1898521200,
+              "timeZone": "Asia/Seoul",
+              "until": 1906297200
+            },
+            "evidenceId": "evidence-025112ff8e7c9de9d747441895d79b56b8c037cda99ada2e",
+            "mode": "SYNTHETIC",
+            "observations": [
+              {
+                "days": null,
+                "ruleHash": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e",
+                "ruleId": "score-target",
+                "status": "OBSERVED",
+                "unit": "SCORE",
+                "value": 750
+              }
+            ],
+            "payloadHash": "0xf9b1dc18758ae4cc0fb26ff0dde2af83313ca56c2bd9bb190fac2fcadedeb464",
+            "requirementId": "score",
+            "revision": 1,
+            "semantics": "VERIFIED_SYNTHETIC",
+            "sourceBinding": {
+              "accountBindingId": "binding-b3ad430bd5c67616e03df3ce8f908478",
+              "accountBindingVersion": "synthetic-binding.1",
+              "courseId": "ybm-750-demo",
+              "institutionId": "synthetic-ybm",
+              "providerInstanceId": "synthetic-ybm",
+              "sourceAccountRef": "account-b3ad430bd5c67616e03df3ce8f908478"
+            },
+            "sourceRevision": "source-revision.1",
+            "sourceStatus": "PRESENT",
+            "subject": "VERIFIED_SYNTHETIC",
+            "trustProfile": "synthetic-fixture-verifier.1"
+          }
+        ],
+        "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+        "ruleHashes": {
+          "daily-learning": "0x72b8b8234dfa30d6cf6f37f9e6cb09e5b5a64c5461c7c86760d9c4c2fc006217",
+          "mock-completed": "0xa92693a844f49312f79323035e4e567b3c47fe1559b816d7d8a18fc9feb19f9b",
+          "review-accepted": "0xcc5466ffebb40a5c863a4177fb4e2a0bf31c8cc17f63c791fe1df99ec65cfb14",
+          "score-target": "0x9bb95b39079d91d39ec39055285563860f6ba72441c4636c608928fae8367f6e"
+        },
+        "selection": {
+          "acknowledged": true,
+          "revision": 2,
+          "rule": "EXPLICIT_SINGLE_TIER_NO_TOPUP",
+          "tier": 100
+        },
+        "sourceSetHash": "0x5e5cd72d82edc11051da66a7cf3c0b598a8419fbe43b31583157b67df7ce24e5"
+      },
+      "snapshotHash": "0xb3ba50df866707d2f6ee7c92bd1082586543ea0559165de0650b637255b0efe4",
+      "resultHash": "0xe294c2176d1c04a92b2d73dd2e1febc0352e7f99b640d41162c7217f87f727de",
+      "userConsentVerified": false,
+      "sourceVerified": false,
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "version": "clear-mvp-evidence-http.1",
+      "dataMode": "SYNTHETIC",
+      "identityVerified": false,
+      "policyPublished": false,
+      "timeMode": "PUBLIC_SYNTHETIC_SCENARIO",
+      "realDataAllowed": false,
+      "evidenceAcceptanceReady": false,
+      "syntheticEvidenceAcceptanceReady": true,
+      "fundingStatus": "UNKNOWN",
+      "claimAuthority": false
+    }
+  }
+}

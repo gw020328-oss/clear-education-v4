@@ -196,3 +196,9 @@ PR #4의 초기 400개·후속 407개, PR #6의 519개, PR #7의 577개, PR #8�
 5. 타 사용자 자기 PC/계정 실제 수집 최소 1건과 비개발자 2명 합성 과업 시험을 별도 결과로 보고한다.
 
 이 항목들은 후속이며 이번 문서 갱신에서 실제 로그인·새 증명·자금 이동·배포를 실행하지 않았다. main 통합은 전체 통합 검증 뒤 별도 develop→main PR로 진행한다. 실명 확인·실제 학원 API·원화 지급·공개 Amoy 지급·여러 교육기관 지원은 후속이다. [원래 PRD](reference/PRD.ko.md)와 [최신 Mac MVP](current/MAC_MVP.ko.md)를 함께 읽고 날짜별 계획을 완료 사실로 해석하지 않는다.
+
+## 2026-10-15 C2 병합·C3 합성 증거/평가 저장 Draft
+
+PR63 최종head230a951의 raw TTL observer 정리 보완·관련312/312·CI6/6 이후 develop890ad93cfb3677c5b4107428095c6f0b15efa9a4로 정상 병합했다. [프론트 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md)·[복붙 지침](current/MVP_FRONTEND_CONNECTION_PROMPT.ko.md)에 실제 병합 근거를 반영했다.
+
+후속 이슈65/C3는 최신 develop에서 새 evidence/evaluation 단일 DB·본인 세션/서버 binding·최초 시험/명시 선택/합성 최종성·보완/stale·원자 명령/결과 저장·GET/재시작을 연결하는 Draft다. YBM과 시원스쿨은 같은 인터페이스의 host 합성 profile이며 실제 원천/동일인·실동의·개인자료/금고·재원/지급을 연결하지 않는다. [상세 계약](current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md)·최종 검증 JSON/PR의 exact head를 따른다. 새 PR 자동 병합 미승인.

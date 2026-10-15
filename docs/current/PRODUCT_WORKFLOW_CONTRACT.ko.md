@@ -1,5 +1,7 @@
 # 제품 연결 API·저장 계약 — M3-0
 
+2026-10-15 최신 C3 Draft: 선행 PR63은 develop890ad93에 병합됐고, 이슈65의 별도 합성 증거 수락→M2 평가→불변 결과/보완·재시작 조회를 구현했다. [단일 HTTP 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)와 [C3 계약](MVP_EVIDENCE_HTTP_CONTRACT.ko.md)을 따른다. 기존 F0/운영 API와 다른 namespace이며 실제 자격·지급/원천·개인자료는 미완료다. web/PR60·독립 청구 파일은 각 담당 소유다.
+
 2026-10-15 C2 최신: Draft PR63/코드0a9945b에서 합성 fixture 실bytes 접수·별도 문서 확인·검토run/보완·멱등/restart를 구현했다. [단일 인계 최신 C2절](MVP_SOURCE_HTTP_HANDOFF.ko.md)과 [상세 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)을 따른다. 운영 documentSubmissionReady=false·full decode/실동의/개인자료/재원 미완료, web/는 서준형 소유다. 아래 계약 단계/미구현 문구는 이전 기록이다.
 
 2026-10-15 최신: PR61은 최종head95b397c의 필수CI 통과 후 develop0590fd0에 정상 병합했다. 추가 push Mac 검사는 종료 미확정으로6/6 성공을 주장하지 않는다. C2는 하위#62·[구현 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)을 정리한 단계이며 endpoint/파일접수는 미구현이다. [단일 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)를 시작점으로 삼는다. 아래 Draft 표기는 이전 기록이다.
