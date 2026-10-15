@@ -29,3 +29,16 @@ test('model cannot invent the field allowlist or redirect a question to an undec
  const transport=fake(r=>{const value=JSON.parse(r.candidates[0].content.parts[0].text);value.fields.push({fieldId:'invented',value:'1',location:'L1'});value.questions=[{questionId:'redirect',fieldIds:['invented'],text:'Is this certain?'}];r.candidates[0].content.parts[0].text=JSON.stringify(value);return r;});
  await assert.rejects(createGeminiEvaluation({fixtures,approval:approved,transport}).evaluate(fixtures[0]),/GEMINI_OUTPUT_REVIEW/);
 });
+
+test('HTTP diagnostics expose only status and fixed schema words, never provider text',async()=>{
+ const transport=developerTransport({keyReader:()=>'dummy',fetchImpl:async()=>new Response(JSON.stringify({error:{status:'INVALID_ARGUMENT',message:'PRIVATE_ACCOUNT_123 unsupported enum BOOLEAN response_json_schema'}}),{status:400})});
+ await assert.rejects(transport.request(model,'generateContent',{}),error=>{assert.equal(error.httpStatus,400);assert.equal(error.providerStatus,'INVALID_ARGUMENT');assert.deepEqual(error.schemaKeywords,['response_json_schema','enum','BOOLEAN']);assert.ok(!JSON.stringify(error).includes('PRIVATE_ACCOUNT'));return true;});
+});
+test('smaller output caps reserve the tighter maximum and remain approval bounded',async()=>{
+ const result=await createGeminiEvaluation({fixtures,approval:{...approved,maxOutputTokens:1024},transport:fake()}).evaluate(fixtures[0]);assert.equal(result.reservedNanoUsd,'4960000');
+});
+test('provider OpenAPI encoding preserves nullable scopes while local authority constraints remain strict',async()=>{
+ let body;const transport=fake(),request=transport.request.bind(transport);transport.request=async(model,method,input,...rest)=>{if(method==='generateContent')body=input;return request(model,method,input,...rest);};
+ const result=await createGeminiEvaluation({fixtures,approval:approved,transport}).evaluate(fixtures[0]);
+ const schema=body.generationConfig.responseSchema;assert.equal(schema.type,'OBJECT');assert.equal(schema.properties.questions.items.properties.fieldIds.type,'ARRAY');assert.equal(schema.properties.questions.items.properties.fieldIds.nullable,true);assert.equal(schema.properties.paymentAllowed.type,'BOOLEAN');assert.equal(schema.properties.paymentAllowed.enum,undefined);assert.deepEqual(EVALUATION_SCHEMA.properties.paymentAllowed.enum,[false]);assert.equal(result.wireSchemaVersion,'clear-gemini-oas.1');
+});

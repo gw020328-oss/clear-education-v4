@@ -37,3 +37,9 @@ test('same-revision retry supersedes an in-flight result and caller mutation can
 test('stored ACTUAL T04 responses replay offline with held values and preserved evidence',async()=>{
  for(const filename of ['gemini-pilot-result.json','gemini-comparison-result.json']){const report=JSON.parse(await readFile(new URL('../../docs/ai-vision/'+filename,import.meta.url),'utf8'));const actual=report.attempts.find(a=>a.caseId==='T04'&&a.result);assert.equal(actual.result.fields.find(f=>f.fieldId==='score').value,'700');const result=reviewFields({fields:actual.result.fields,questions:actual.result.questions,flags:actual.result.flags},actual.result.fields.map(f=>f.fieldId));assert.equal(result.fields.find(f=>f.fieldId==='score').value,null);assert.ok(result.questions.length);assert.equal(result.provenance.find(f=>f.fieldId==='score').observedValue,'700');}
 });
+test('v3 live responses replay offline without hiding the normal-control false hold',async()=>{
+ const report=JSON.parse(await readFile(new URL('../../docs/ai-vision/gemini-v3-reevaluation.json',import.meta.url),'utf8'));
+ const responses=report.attempts.filter(item=>item.rawObservation);assert.equal(responses.length,2);
+ for(const item of responses){const raw=item.rawObservation,replay=reviewFields({fields:raw.fields,questions:raw.questions,flags:raw.flags},raw.fields.map(field=>field.fieldId));assert.deepEqual(replay.fields.map(({fieldId,value,location})=>({fieldId,value,location})),item.result.fields);assert.equal(replay.paymentAllowed,false);}
+ const normal=responses.find(item=>item.caseId==='T01'),conflict=responses.find(item=>item.caseId==='T04');assert.equal(normal.reviewedAssessment.status,'SEMANTIC_ERROR');assert.equal(normal.rawObservation.fields[0].value,'700');assert.ok(normal.result.fields.every(field=>field.value===null));assert.equal(conflict.result.fields.find(field=>field.fieldId==='score').value,null);
+});

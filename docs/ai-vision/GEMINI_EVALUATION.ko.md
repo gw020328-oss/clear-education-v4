@@ -1,5 +1,7 @@
 # Gemini 합성 파일럿 — 2026-10-15
 
+후속 v3 실제 재평가와 실행 원장 보완은 [별도 기록](GEMINI_V3_REEVALUATION.ko.md)을 우선한다. 아래 12건 파일럿/3.8 비교는 당시 결과로 보존한다. v3의 정상 대조군 과잉 보류와 HTTP 오류는 해결됐다고 표시하지 않는다.
+
 기존 M1 소비자 구현은 Draft PR #47이며 CI 6개가 통과했다. 이번 변경은 별도의 평가 전용 REST 연결이다. 기존 `proposePolicy` / `precheckObservation`의 MOCK 제한과 DocumentPrecheck 계약은 유지한다. 실제 모델 출력을 Evidence·지급 결정으로 변환하지 않는다. 일반 구현의 선택 기준은 Sol / Medium이며 설정 안내만으로 모델을 변경한 것으로 간주하지 않는다.
 
 ## 공급자와 모델

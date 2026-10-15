@@ -1,3 +1,4 @@
+import { withEvaluationLease, atomicEvaluationCheckpoint } from '../../src/ai-policy/evaluation-ledger.mjs';
 import { readFile, writeFile, open } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { createGeminiEvaluation, GEMINI_EVALUATION_MODEL as model } from '../../src/ai-policy/gemini-evaluation.mjs';
@@ -8,7 +9,7 @@ if(createHash('sha256').update(bytes).digest('hex')!==renderer.fixtureSha256)thr
 const fixtures=JSON.parse(bytes),gold=JSON.parse(await readFile(new URL('gold.json',dir),'utf8'));
 if(process.argv.length!==3 || !['--execute-approved','--resume-approved'].includes(process.argv[2])){
   console.log(JSON.stringify({execution:'DRY_RUN',model,text:4,images:8,maxGenerationCalls:14,maxCountCalls:14,budgetUsd:'0.25',keyRead:false}));
-}else{
+}else await withEvaluationLease(dir,async()=>{
   // Exclusive persistent lock: rerunning never resets this approved run's budget.
   const prior = process.argv[2]==='--resume-approved' ? JSON.parse(await readFile(new URL('actual-results.json',dir),'utf8')) : null;
   if (!prior) { const lock=await open(new URL('approved-run.lock',dir),'wx',0o600);await lock.close(); }
@@ -17,7 +18,7 @@ if(process.argv.length!==3 || !['--execute-approved','--resume-approved'].includ
   const approval={approved:true,service:'GEMINI_DEVELOPER_API_PAID_STANDARD',model,syntheticOnly:true,maxGenerationCalls:14-previous.generationCalls,maxCountCalls:14-previous.countCalls,budgetNanoUsd:String(250000000n-BigInt(previous.reservedNanoUsd))};
   const evaluator=createGeminiEvaluation({fixtures,approval,onCheckpoint:async()=>save()});
   const report=prior??{execution:'ACTUAL',model,startedAt:new Date().toISOString(),corpusHash:renderer.fixtureSha256,attempts:[],paymentAllowed:false};
-  const save=async()=>{const current=evaluator.usage();report.usage={...current,countCalls:previous.countCalls+current.countCalls,generationCalls:previous.generationCalls+current.generationCalls,actualModelCalls:previous.actualModelCalls+current.actualModelCalls,reservedNanoUsd:String(BigInt(previous.reservedNanoUsd)+BigInt(current.reservedNanoUsd))};await writeFile(new URL('actual-results.json',dir),JSON.stringify(report,null,2),{mode:0o600});};
+  const save=async()=>{const current=evaluator.usage();report.usage={...current,countCalls:previous.countCalls+current.countCalls,generationCalls:previous.generationCalls+current.generationCalls,actualModelCalls:previous.actualModelCalls+current.actualModelCalls,reservedNanoUsd:String(BigInt(previous.reservedNanoUsd)+BigInt(current.reservedNanoUsd))};await atomicEvaluationCheckpoint(new URL('actual-results.json',dir),report);};
   await save();
   for(const fixture of fixtures){
     if(report.attempts.some(a=>a.caseId===fixture.caseId && a.status!=='ERROR'))continue;
@@ -45,4 +46,4 @@ if(process.argv.length!==3 || !['--execute-approved','--resume-approved'].includ
   report.costComplete=report.attempts.every(a=>a.tokens && a.tokens.promptTokenCount!==null && a.tokens.candidatesTokenCount!==null);
   report.estimatedGenerationNanoUsd=String(report.attempts.reduce((sum,a)=>a.tokens&&a.tokens.promptTokenCount!==null&&a.tokens.candidatesTokenCount!==null?sum+BigInt(a.tokens.promptTokenCount)*300n+BigInt(a.tokens.candidatesTokenCount+(a.tokens.thoughtsTokenCount??0))*2500n:sum,0n));
   await save();console.log(JSON.stringify({execution:'ACTUAL',completed:report.attempts.length,usage:report.usage,estimatedGenerationNanoUsd:report.estimatedGenerationNanoUsd}));
-}
+});
