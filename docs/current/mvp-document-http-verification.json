@@ -49,7 +49,8 @@
     "diff": "PASS",
     "publicHistory": "PENDING_FINAL_HEAD",
     "remoteCi": "SEE_PR63_FINAL_HEAD_CHECKS",
-    "startupCleanupIncluded": true
+    "startupCleanupIncluded": true,
+    "expiryAndHttpsFocusedAfterSourceFix": 3
   },
   "requestedImplementationSetting": "GPT-6.1 Sol / Medium",
   "priorPr61AdditionalMac": {
@@ -66,5 +67,6 @@
     "authenticated Evidence/M2/funding",
     "teammate-owned frontend connection"
   ],
-  "lifetimeFixCommit": "24e75f2f467805162aac814c921f1c1c50bfd802"
+  "lifetimeFixCommit": "24e75f2f467805162aac814c921f1c1c50bfd802",
+  "publicSourceExpiryFixCommit": "43ffe3243e70d6db10213cc5fe82fab1d0e897a9"
 }
