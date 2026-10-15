@@ -15,7 +15,7 @@ function summarize(context,result,extra=[]){
   for(const f of result.fieldReview?.fields??[]){
     if(f.state==='OBSERVED')continue;
     const conflict=(result.fieldReview.flags??[]).some(flag=>typeof flag==='object'&&flag.code==='CONFLICT'&&(flag.fieldIds===null||flag.fieldIds.includes(f.fieldId)));
-    reasons.push({fieldId:f.fieldId,code:conflict?'CONFLICT':f.state==='UNOBSERVED'?'MISSING_INPUT':'NEEDS_SUPPLEMENT'});
+    reasons.push({fieldId:f.fieldId,code:conflict?'CONFLICT':status==='UNREADABLE'?'UNREADABLE':f.state==='UNOBSERVED'?'MISSING_INPUT':'NEEDS_SUPPLEMENT'});
   }
   if(result.reason==='MODEL_OUTPUT_REJECTED')reasons.push({fieldId:null,code:'MODEL_FAILED'});
   if(extra.length&&status==='CHECKED')status='NEEDS_REVIEW';

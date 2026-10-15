@@ -67,3 +67,18 @@ test('wall-clock expiry cannot return checked and cleanup still executes',async(
  const r=await reviewWorkflowDocument(f,observer(request=>{assets=request.assets;time=1800000;return readable;}),{nowMs:()=>time});
  assert.ok(r.reasons.some(r=>r.code==='TIMED_OUT'));assert.ok(assets[0].bytes.every(b=>b===0));
 });
+test('unreadable is distinct from missing and remains an actionable hold',async()=>{
+ const f=workflowFixture('VISION'),r=await reviewWorkflowDocument(f,observer(()=>({reviewStatus:'UNREADABLE',observations:[{fieldId:'image-type',value:null,locator:null,quote:null}]})));
+ assert.equal(r.reviewStatus,'UNREADABLE');assert.ok(r.reasons.some(r=>r.code==='UNREADABLE'));assert.ok(!r.reasons.some(r=>r.code==='MISSING_INPUT'));
+});
+test('provider failure exposes no raw message and still clears observer bytes',async()=>{
+ const f=workflowFixture('VISION');let bytes;
+ const r=await reviewWorkflowDocument(f,observer(request=>{bytes=request.assets[0].bytes;throw new Error('SYNTHETIC_RAW_PROVIDER_SECRET');}));
+ assert.equal(r.reviewStatus,'NEEDS_REVIEW');assert.ok(r.reasons.some(r=>r.code==='MODEL_FAILED'));assert.ok(!JSON.stringify(r).includes('SYNTHETIC_RAW_PROVIDER_SECRET'));assert.ok(bytes.every(b=>b===0));
+});
+test('TEXT_AI keeps exact span validation without adding an image decode hold',async()=>{
+ for(const correct of [true,false]){
+  const f=workflowFixture('TEXT_AI'),r=await reviewWorkflowDocument(f,observer(()=>({reviewStatus:'CHECKED',observations:[{fieldId:'image-type',value:'RELATED',locator:'post/post-a/text/0/3',quote:correct?'가나다':'invented'}]})));
+  assert.equal(r.reviewStatus,correct?'CHECKED':'NEEDS_REVIEW');assert.ok(!r.reasons.some(r=>r.code==='IMAGE_NOT_DECODED'));if(!correct)assert.ok(r.reasons.some(r=>r.code==='MODEL_FAILED'));
+ }
+});
