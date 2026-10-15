@@ -36,8 +36,10 @@ FINAL_SYNTHETIC의 고정 후보 entitlement는 binding·policy·선택 tier/rev
 
 ## 검증과 소비자 후속
 
-`./tools/npm run test:mvp-policy`: M1 10개+M2 14개, 총 24개 통과. M0의 19개 조건/금액 벡터를 실행 평가와 대조하며 불가능한 음수/상한 산술은 컴파일에서 먼저 거부한다. 새 평가는 출석 OR 성적/이력, 경계 점수, 여러 미확인 조합, 400/500, 바꿔치기·최초 시험·기간 끝·금액/정정 상태·입력 불변·context hash를 검사한다. `./tools/node specs/m2/demo.mjs`는 두 프로필 정상/이력 UNKNOWN/400 사전검토와 제3 프로필을 합성으로 출력한다. 기존 정책 112개, 학습 131개 및 M0/workspace 보존 검사를 통과했다. 원격 CI는 PR의 최종 head 결과를 따른다.
+`./tools/npm run test:mvp-policy`: M1 10개+M2 15개, 총 25개 통과. M0의 19개 조건/금액 벡터를 실행 평가와 대조하며 불가능한 음수/상한 산술은 컴파일에서 먼저 거부한다. 새 평가는 출석 OR 성적/이력, 경계 점수, 여러 미확인 조합, 400/500, 바꿔치기·최초 시험·기간 끝·금액/정정 상태·입력 불변·context hash를 검사한다. `./tools/node specs/m2/demo.mjs`는 두 프로필 정상/이력 UNKNOWN/400 사전검토와 제3 프로필을 합성으로 출력한다. 기존 정책 112개, 학습 131개 및 M0/workspace 보존 검사를 통과했다. 원격 CI는 PR의 최종 head 결과를 따른다.
 
 AI/Vision·Moodle에는 M1 최소 feature commit과 소유 경계·예제·착수 신호를 전달했다. AI의 세부 review plan/planDigest는 아직 policyHash에 포함된 실행 규칙이 아니며 별도 합성 사전검토 wrapper로만 소비한다. 세부 문서 필수항목의 정본 hash 결합은 소비자 적합성 OPEN이다. Moodle L1의 OBSERVED BPS/days 및 UNKNOWN/IN_PROGRESS의 null 조합은 schema 의미와 맞지만 실제 소비 bridge/원천 검증 완료를 뜻하지 않는다. 두 소비자의 후속 PR과 공통 통합 검증을 별도로 확인한다. 준비/소비자 PR의 자동 병합은 하지 않는다.
 
 예치 비율·공용 풀·배정 순서·충전/회수/추가 보장은 멘토 미결로 남긴다. 기존 금고·DB·체인·키, 실제 Moodle/원천 차단, 400% 자동 자격·지급 금지, 500% 제외, grant/outbox 보류, 독립 청구 NO-GO와 Mac 실패 원인 미확정을 유지한다.
+
+소비자 bridge 피드백으로 현재 기간의 FUTURE_DAYS가 관찰 UNKNOWN/MISSING/NEEDS_SUPPLEMENT를 가리는 우선순위를 보정했다. 원천/진위·전체성 차단을 먼저 확인하고, 누락·미확인 관찰을 보존한 뒤 OBSERVED 자료에만 현재 기간 IN_PROGRESS를 적용한다. 신규 회귀는 제3 프로필의 다섯 상태를 재현한다. 지급 gate는 보정 전후 모두 false다.
