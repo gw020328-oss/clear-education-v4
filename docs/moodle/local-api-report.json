@@ -1,0 +1,118 @@
+{
+  "kind": "ACTUAL_LOCAL_MOODLE_API_SYNTHETIC_TEST_ACCOUNTS",
+  "mode": "LOCAL_LAB",
+  "startedAt": "2026-10-15T03:29:48.544Z",
+  "sourceVersions": {
+    "moodle": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+    "videocheck": "67fb5233070f49653c0bd8209338c34b8fe61177"
+  },
+  "transport": "LOOPBACK_HTTP_NOT_PRODUCTION_HTTPS",
+  "videoMs": 30000,
+  "policy": "EXPLICIT_LOCAL_DEMO_ONE_DAY_9000BPS",
+  "actual90or100DayHistory": false,
+  "academyIntegration": false,
+  "humanAttentionProven": false,
+  "productEligible": false,
+  "paymentAllowed": false,
+  "cases": [
+    {
+      "name": "authenticated_three_page_explicit_absence",
+      "status": "PASS",
+      "sourceRows": 5,
+      "sourcePages": 3
+    },
+    {
+      "name": "other_account_is_not_applicant",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid_token_rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "read_token_cannot_call_playback_write",
+      "status": "PASS"
+    },
+    {
+      "name": "real_double_browser_db_api_facts_daily",
+      "status": "PASS",
+      "wallMs": 16557,
+      "effectiveMs": "14992",
+      "mediaCoveredMs": "30000",
+      "normalClose": true,
+      "creditDay": null,
+      "dailyStatus": "IN_PROGRESS",
+      "creditedDays": 0
+    },
+    {
+      "name": "real_normal_browser_db_api_facts_daily",
+      "status": "PASS",
+      "wallMs": 31837,
+      "effectiveMs": "29987",
+      "mediaCoveredMs": "30000",
+      "normalClose": true,
+      "creditDay": "2026-10-15",
+      "dailyStatus": "IN_PROGRESS",
+      "creditedDays": 1
+    },
+    {
+      "name": "pause_no_effective_time_added",
+      "status": "PASS",
+      "pausedDeltaMs": 0
+    },
+    {
+      "name": "real_pause_browser_db_api_facts_daily",
+      "status": "PASS",
+      "wallMs": 36876,
+      "effectiveMs": "29985",
+      "mediaCoveredMs": "30000",
+      "normalClose": true,
+      "creditDay": "2026-10-15",
+      "dailyStatus": "IN_PROGRESS",
+      "creditedDays": 1
+    },
+    {
+      "name": "reopen_does_not_create_new_day",
+      "status": "PASS"
+    },
+    {
+      "name": "lost_response_requery_no_credit_change",
+      "status": "PASS"
+    },
+    {
+      "name": "concurrent_correction_discards_partial_export",
+      "status": "PASS"
+    },
+    {
+      "name": "unavailable_not_no_record",
+      "status": "PASS"
+    },
+    {
+      "name": "approved_correction_new_revision_no_duplicate_day",
+      "status": "PASS"
+    },
+    {
+      "name": "actual_snapshot_synthetic_clock_expiry",
+      "status": "PASS"
+    },
+    {
+      "name": "expired_moodle_read_token_rejected",
+      "status": "PASS"
+    }
+  ],
+  "final": {
+    "sourceRows": 5,
+    "sourcePages": 3,
+    "sourceRevision": "r90",
+    "normalizedMode": "LOCAL_LMS_RECORD",
+    "dailyMode": "LOCAL_LAB",
+    "dailyStatus": "IN_PROGRESS",
+    "creditedDates": [
+      "2026-10-15"
+    ],
+    "officialProgress": null,
+    "speedCompliance": "UNKNOWN"
+  },
+  "status": "PASS",
+  "finishedAt": "2026-10-15T03:31:19.393Z"
+}
