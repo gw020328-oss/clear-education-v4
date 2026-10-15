@@ -50,7 +50,8 @@
     "publicHistory": "PENDING_FINAL_HEAD",
     "remoteCi": "SEE_PR63_FINAL_HEAD_CHECKS",
     "startupCleanupIncluded": true,
-    "expiryAndHttpsFocusedAfterSourceFix": 3
+    "expiryAndHttpsFocusedAfterSourceFix": 3,
+    "latestCodeRelated": "309_OF_309_PASS"
   },
   "requestedImplementationSetting": "GPT-6.1 Sol / Medium",
   "priorPr61AdditionalMac": {
@@ -68,5 +69,6 @@
     "teammate-owned frontend connection"
   ],
   "lifetimeFixCommit": "24e75f2f467805162aac814c921f1c1c50bfd802",
-  "publicSourceExpiryFixCommit": "43ffe3243e70d6db10213cc5fe82fab1d0e897a9"
+  "publicSourceExpiryFixCommit": "43ffe3243e70d6db10213cc5fe82fab1d0e897a9",
+  "readinessFixCommit": "f5873062293fef4a4c3a1decb9fd6ada3701a71d"
 }

@@ -83,3 +83,5 @@ C2 실행은 새 합성 환경을 명시 생성하는 별도 개발 진입점을
 수명 보완 코드 `24e75f2f467805162aac814c921f1c1c50bfd802`는 pending upload 슬롯에도 abort signal을 결합해 logout/종료·C1 기준 변경 시 수신을 중단한다. C1 idempotent ACK 재생으로 기준이 그대로면 raw를 폐기하지 않는다. 관련 회귀2개를 포함한 최종 로컬 합계는309/309다.
 
 공개 원문 만료 보완 `43ffe3243e70d6db10213cc5fe82fab1d0e897a9`: C2 archive 시작/인증된 source 조회에서 기존 purge를 호출해 만료 artifact bytes를 논리 정리한다. 원문 만료 시 요약은 현재로 노출하지 않고 metadata/버전 이력은 보존한다. 이 보완은 학생 raw의 디스크 저장을 추가하지 않으며 SQLite/디스크 잔재 완전 삭제를 보장하지 않는다. 만료/이력 회귀와 HTTPS·시작 정리3개를 재검사했다.
+
+준비 표시 보완 `f5873062293fef4a4c3a1decb9fd6ada3701a71d`: 정책/원문이 준비되지 않은 이력 응답은 syntheticDocumentSubmissionReady=false이며 summary/current 차단과 일치한다. 최신 코드의 관련309/309를 다시 확인했다. 최종 원격 CI는 정확한 PR63 head의 Checks/본문·이슈55/62를 정본으로 한다.
