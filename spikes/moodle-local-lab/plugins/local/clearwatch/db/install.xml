@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLDB PATH="local/clearwatch/db" VERSION="20261014" COMMENT="Isolated CLEAR attendance diagnostic"><TABLES>
+<TABLE NAME="local_clearwatch_policy" COMMENT="CLEAR diagnostic state"><FIELDS><FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+<FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="durationms" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="thresholdbps" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="contenthash" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="policyhash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+</FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS><INDEXES>
+<INDEX NAME="uniqueentry" UNIQUE="true" FIELDS="cmid"/>
+</INDEXES></TABLE>
+<TABLE NAME="local_clearwatch_state" COMMENT="CLEAR diagnostic state"><FIELDS><FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+<FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="policyhash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="elapsedms" TYPE="int" LENGTH="19" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="positionms" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="coverage" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="closedms" TYPE="int" LENGTH="19" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="creditday" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+</FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS><INDEXES>
+<INDEX NAME="uniqueentry" UNIQUE="true" FIELDS="userid,cmid"/>
+</INDEXES></TABLE>
+<TABLE NAME="local_clearwatch_session" COMMENT="CLEAR diagnostic state"><FIELDS><FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+<FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="tokenhash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="policyhash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="startedms" TYPE="int" LENGTH="19" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="lastms" TYPE="int" LENGTH="19" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="lastseq" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="creditedms" TYPE="int" LENGTH="19" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="positionms" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="playing" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+</FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS><INDEXES>
+<INDEX NAME="useractive" UNIQUE="false" FIELDS="userid,active"/>
+</INDEXES></TABLE>
+<TABLE NAME="local_clearwatch_event" COMMENT="CLEAR diagnostic state"><FIELDS><FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+<FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="seq" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="fingerprint" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="response" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+</FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS><INDEXES>
+<INDEX NAME="uniqueentry" UNIQUE="true" FIELDS="sessionid,seq"/>
+</INDEXES></TABLE>
+<TABLE NAME="local_clearwatch_credit" COMMENT="CLEAR diagnostic state"><FIELDS><FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+<FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="policyhash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="creditday" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="closedms" TYPE="int" LENGTH="19" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="elapsedms" TYPE="int" LENGTH="19" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+</FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS><INDEXES>
+<INDEX NAME="uniqueentry" UNIQUE="true" FIELDS="userid,cmid"/>
+</INDEXES></TABLE>
+</TABLES></XMLDB>

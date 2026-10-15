@@ -80,6 +80,10 @@ jobs:
         run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/moodle-mvp/*.test.mjs
       - name: Offline AI evaluation preparation
         run: ./tools/node --test spikes/ai-vision-preparation/*.test.mjs
+      - name: Offline local Moodle transport and normalization boundaries
+        run: |
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/moodle-local/*.test.mjs
+          php tests/moodle-local/observation-window.php
       - name: M0 contracts and two-stage exam lifecycle examples
         run: ./tools/node specs/m0/check.mjs
       - name: Isolated TEST partial funding, allocation and recovery
