@@ -72,6 +72,8 @@ Operation.state는 RUNNING/COMMITTING/SUCCEEDED/FAILED/CANCELLED/TIMED_OUT/SUPER
 
 공통 응답 제한은 `dataMode:SYNTHETIC`, `captureMode:MOCK|PUBLIC_URL`, `authenticationScope:INVITED_WALLET_SESSION`, identityVerified/sourceVerified/userConsentVerified/policyPublished/productEligible/paymentAllowed=false, fundingStatus=UNKNOWN, grant/outbox=HOLD, independentClaim=NO_GO다. source image가 읽혔어도 signature-only는 IMAGE_NOT_DECODED이며 완전 decode/PASS로 승격하지 않는다.
 
+실제 합성 loopback HTTP 응답으로 만든 [요청/응답·409 stale·403 권한 예제](../../specs/m3/source-http-responses.json)를 함께 제공한다. token·서명·키는 포함하지 않는다. 예제의 ID/hash/fixture 시각은 실행 권한으로 재사용하지 않으며 CLI의 synthetic-demo와 테스트 fixture의 bundle-a 이름은 구분한다. 기존 C1 `tools/dev.mjs`/8443에는 이번 MVP service가 자동 연결되지 않으므로 위 전용 CLI/9443을 사용한다.
+
 예제 흐름(실제 값은 응답에서 가져온다):
 
 ```js
