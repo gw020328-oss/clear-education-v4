@@ -78,3 +78,5 @@ preview는 workflowRevision/factsRevision/selectionRevision, C1 ACK/Binding/표�
 C3 최종 리뷰 보완: 인증된 요청에서 정책/ACK 문맥 불가 또는 변경을 관측하면 invalidated를 영속 기록하고 head/facts/selection revision을 증가시킨다. 이후 같은 정책을 다시 켜더라도 과거 decision을 current로 자동 복원하지 않는다. 기존 snapshot/최초 시험은 보존하며 이번 고정 합성 host는 새 검토 환경을 요구한다. 외부 정책 시스템의 모든 비활성/재활성 이벤트를 감시하는 기능은 아니다. 이 경계는 새 합성 DB 회귀에서 실패를 재현한 뒤 보완했다.
 
 검증: 최종 관련361/361(M1/M2 27·C3 HTTP19/TLS3 포함), 기존 개발환경33/33, 원본legacy191개 지문/의존성 graph 보존·diff PASS. C3의 HTTPS 두 profile은 새 TEST 지갑 서명과 CA 검증을 사용한다. 원자 rollback은 새 합성 DB의 중간 INSERT 실패 주입이며 실제 사용자 DB 강제종료 실측이 아니다. 최종 원격 CI는 연결 Draft PR의 exact head를 따른다.
+
+C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https://github.com/gw020328-oss/clear-education-v4/pull/67), 상위55/하위65. 최종 문서 head의 원격 CI/검토 근거는 PR67을 따른다. 이 PR은 develop 미병합이며 자동 병합하지 않는다.

@@ -366,3 +366,5 @@ C3 host는 새 `tools/mvp-evaluation-dev.mjs`/`var/mvp-evaluations/<new-name>` �
 C3 최종 리뷰 보완: 인증된 요청에서 정책/ACK 문맥 불가 또는 변경을 관측하면 invalidated를 영속 기록하고 head/facts/selection revision을 증가시킨다. 이후 같은 정책을 다시 켜더라도 과거 decision을 current로 자동 복원하지 않는다. 기존 snapshot/최초 시험은 보존하며 이번 고정 합성 host는 새 검토 환경을 요구한다. 외부 정책 시스템의 모든 비활성/재활성 이벤트를 감시하는 기능은 아니다. 이 경계는 새 합성 DB 회귀에서 실패를 재현한 뒤 보완했다.
 
 C3 최종 로컬 검증은 관련361/361(C3 HTTP19+HTTPS3 포함), 기존 개발환경33/33·원본legacy191개/의존성graph보존·diff PASS다. 검토 기록과 정확 head CI는 이슈65의 연결 Draft PR에서 확인한다. 현재는 화면 연결/사용성 시험 완료를 주장하지 않는다.
+
+C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https://github.com/gw020328-oss/clear-education-v4/pull/67), 상위55/하위65. 최종 문서 head의 원격 CI/검토 근거는 PR67을 따른다. 이 PR은 develop 미병합이며 자동 병합하지 않는다.

@@ -1,7 +1,7 @@
 {
   "version": "clear-mvp-evidence-http-verification.1",
   "date": "2026-10-15",
-  "status": "IMPLEMENTED_SYNTHETIC_DRAFT_PENDING_FINAL_CI",
+  "status": "IMPLEMENTED_SYNTHETIC_DRAFT",
   "issue": 65,
   "parentIssue": 55,
   "baseDevelop": "890ad93cfb3677c5b4107428095c6f0b15efa9a4",
@@ -31,10 +31,11 @@
       "ybm",
       "siwon"
     ],
-    "remoteCi": "PENDING_FINAL_HEAD",
+    "remoteCi": "SEE_PR67_EXACT_FINAL_HEAD_CHECKS",
     "workspaceOriginalLegacy": "191_FILES_PRESERVED",
     "dependencyGraph": "PRESERVED_NO_DEPENDENCY_CHANGE",
-    "diff": "PASS"
+    "diff": "PASS",
+    "publicHistory": "PASS_AT_IMPLEMENTATION_260_COMMITS_1453_BLOBS_ZERO_FINDINGS"
   },
   "gates": {
     "depositStorageAllocationTopupReclaim": "OPEN",
@@ -70,5 +71,7 @@
     "single transaction stores evidence/result and command; GET never reexecutes",
     "configuration changes require new reviewed environment; no automatic repin",
     "observed policy/ACK invalidation is durably latched; re-enabling cannot revive old decisions"
-  ]
+  ],
+  "pullRequest": 67,
+  "implementationCommit": "6d4cd6baed0be7d64afdd5567af14eadba4849fd"
 }
