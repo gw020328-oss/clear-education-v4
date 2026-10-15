@@ -4,6 +4,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { httpFixture,contextHeaders } from './http-fixture.mjs';
+import { id } from 'ethers';
+import { createApplicationService } from '../../src/application/service.mjs';
+import { createWorkflowHttpService } from '../../src/product-workflow/http-service.mjs';
 import { createWorkflowSourceClient } from '../../src/product-workflow/http-client.mjs';
 const path='/mvp/source-bundles/bundle-a';
 
@@ -157,4 +160,58 @@ test('expired source artifacts and persisted public draft quotes are logically p
  const db=new DatabaseSync(join(f.config.directory,'mvp-http.sqlite'));
  const row=db.prepare('SELECT result,request_hash FROM operations WHERE id=?').get(draft.body.operationId);db.close();assert.equal(row.result,null);assert.ok(row.request_hash);
  const sourceDb=new DatabaseSync(join(f.config.directory,'sources.sqlite'));assert.equal(sourceDb.prepare('SELECT COUNT(*) AS n FROM artifacts').get().n,0);sourceDb.close();
+});
+
+test('first preview after COMMITTING recovery uses the newly archived source, never old bytes with a new operation',async t=>{
+ const f=await httpFixture(t),first=await f.capture(),second=await f.capture('capture-b',1);
+ const db=new DatabaseSync(join(f.config.directory,'mvp-http.sqlite'));
+ db.prepare("UPDATE operations SET state='COMMITTING' WHERE id=?").run(second.body.operationId);
+ db.prepare('UPDATE heads SET bundle_hash=? WHERE id=?').run(first.body.result.bundleHash,'bundle-a');db.close();
+ await f.restart();const p=await f.request(path);
+ assert.equal(p.status,200);assert.equal(p.body.bundleHash,second.body.result.bundleHash);assert.equal(p.body.bundleRevision,2);
+ assert.equal(p.body.sources[0].revision,2);assert.equal(p.body.sourceCurrent,true);assert.equal(f.captureCalls,2);
+});
+
+test('clock reversal does not purge an unexpired stored draft or expose a pre-issuance operation',async t=>{
+ const f=await httpFixture(t);await f.capture();const p=(await f.request(path)).body;
+ const draft=await f.request(path+'/drafts',{method:'POST',body:{expectedRevision:1,bundleHash:p.bundleHash},headers:{...contextHeaders(f.operatorContext),'idempotency-key':'clock-draft'}});
+ assert.equal(draft.body.state,'SUCCEEDED');f.setTime(99);f.workflow.purgeExpired();
+ const db=new DatabaseSync(join(f.config.directory,'mvp-http.sqlite'));const stored=db.prepare('SELECT result FROM operations WHERE id=?').get(draft.body.operationId);db.close();
+ assert.notEqual(stored.result,null,'temporary clock/source unavailability must not delete unexpired quotes');
+ const denied=await f.request('/mvp/operations/'+draft.body.operationId);assert.equal(denied.status,422);assert.equal(denied.body.code,'MVP_CLOCK');
+ f.setTime(101);assert.deepEqual((await f.request('/mvp/operations/'+draft.body.operationId)).body.result,draft.body.result);
+});
+
+test('an operation cannot be current before its stored creation time even when its source is still readable',async t=>{
+ const f=await httpFixture(t);f.setTime(200);const captured=await f.capture();assert.equal(captured.body.state,'SUCCEEDED');
+ f.setTime(150);const denied=await f.request('/mvp/operations/'+captured.body.operationId);assert.equal(denied.status,422);assert.equal(denied.body.code,'MVP_CLOCK');
+});
+
+
+test('another signed operator cannot recover or cancel an actor-owned operation',async t=>{
+ const f=await httpFixture(t);
+ const authentication=createApplicationService({directory:join(f.directory,'two-operators-auth'),origin:f.service.origin,
+  chainId:f.operatorContext.chainId,instanceId:id('SYNTHETIC_TWO_OPERATORS'),participants:[f.alice.address],operators:[f.operator.address,f.bob.address],now:()=>f.time});
+ const workflow=createWorkflowHttpService({...f.config,directory:join(f.directory,'two-operators-source'),authentication});
+ try{
+  const a=await f.login(f.operator,authentication),b=await f.login(f.bob,authentication);
+  const captured=await workflow.capture(a,'bundle-a',{urlId:0,expectedRevision:0},'owned');
+  assert.equal(workflow.catalogue(b).bundles.length,1);
+  assert.throws(()=>workflow.operation(b,captured.operationId),/MVP_NOT_FOUND/);
+  assert.throws(()=>workflow.recoverOperation(b,'bundle-a','snapshots','owned'),/MVP_NOT_FOUND/);
+  assert.throws(()=>workflow.cancel(b,captured.operationId,{}),/MVP_NOT_FOUND/);
+  assert.throws(()=>workflow.recoverOperation(a,'bundle-a','drafts','owned'),/MVP_NOT_FOUND/);
+  assert.deepEqual(workflow.recoverOperation(a,'bundle-a','snapshots','owned'),captured);
+ }finally{workflow.close();authentication.close();}
+});
+
+
+test('a stored review cannot become current before its recorded review time',async t=>{
+ const f=await httpFixture(t);await f.capture();const p=(await f.request(path)).body;f.setTime(200);
+ const body={expectedRevision:1,previewHash:p.previewHash,acknowledgement:'SYNTHETIC_REVIEW_ONLY'};
+ const headers={...contextHeaders(f.operatorContext),'idempotency-key':'clock-review'};
+ assert.equal((await f.request(path+'/reviews',{method:'POST',body,headers})).body.current,true);
+ f.setTime(150);const history=await f.request(path+'/reviews');assert.equal(history.status,422);assert.equal(history.body.code,'MVP_CLOCK');
+ const replay=await f.request(path+'/reviews',{method:'POST',body,headers});assert.equal(replay.status,422);assert.equal(replay.body.code,'MVP_CLOCK');
+ f.setTime(201);assert.equal((await f.request(path+'/reviews')).body[0].current,true);
 });

@@ -68,7 +68,7 @@ test('source archives are immutable, private, recoverable and expired bytes cann
  const resolved=await resolveSourceBundle(store.getBundle(bHash),{getSnapshot:async h=>store.getSnapshot(h),getArtifact:async(h,id)=>store.getArtifact(h,id),now:()=>time});assert.equal(resolved.status,'NEEDS_SUPPLEMENT');
  const next=structuredClone(bundle);next.revision++;next.requiredSourceIds=[input.sourceId];store.putBundle(next);assert.equal(store.getCurrentBundleHash(bundle.bundleId),sourceBundleHash(next));assert.deepEqual(store.getBundle(bHash),bundle);
  const different=createSourceSupplement({...input,sourceType:'PASTE',bytes:Buffer.from('SYNTHETIC changed'),collectedAt:100});assert.throws(()=>store.putSnapshot(different.snapshot,different.blobs),/VERSION_CONFLICT/);
- time=collected.snapshot.expiresAt;assert.equal(store.purgeExpired().deletedArtifacts,2);assert.throws(()=>store.getArtifact(hash,'body'),/EXPIRED/);assert.throws(()=>store.putSnapshot(collected.snapshot,collected.blobs),/EXPIRED/);
+ time=collected.snapshot.expiresAt;assert.equal(store.purgeExpired().deletedArtifacts,2);assert.deepEqual(store.getSnapshotRetention(hash),{collectedAt:100,expiresAt:collected.snapshot.expiresAt});assert.throws(()=>store.getSnapshot(hash),/EXPIRED/);assert.throws(()=>store.getArtifact(hash,'body'),/EXPIRED/);assert.throws(()=>store.putSnapshot(collected.snapshot,collected.blobs),/EXPIRED/);
 });
 test('cancellation during DNS does not dispatch a late resolved request',async()=>{
  const c=new AbortController();let finish,calls=0;
