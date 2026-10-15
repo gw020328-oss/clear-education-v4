@@ -1,5 +1,7 @@
 # MVP 공통 인터페이스 초안
 
+2026-10-15 [TEST 재원 실험 계약](TEST_FUNDING_LAB.ko.md)에서 PER_APPLICATION_TEST_ADAPTER의 고정 fixture/직접 거래 동의·충전 operation·전액 배정·단회 지급·확인 블록 조회를 구현한다. 별도 실험 ABI이며 제품 wire/DB/ABI나 PG 보관 어댑터로 채택한 것이 아니다. 기존 v4 API는 보존한다. 공통 금액은 약정/누적 충전/현재 확보/배정/현재 예약/부족/지급/회수를 구분한다.
+
 H2 실행 결과: [검증 기록](history-intake-verification.json)에 새 실제 등록 문맥 증명·독립 검증·영속 접수/재개봉 성공과 빈 계정 응답 미지원/UNKNOWN을 분리했다. 로컬 모듈 연결은 완료했고 웹/기관 동의·원천 완전성/동일인·자격/지급은 미완료다. 검토 PR: [#33](https://github.com/gw020328-oss/clear-education-v4/pull/33), [#34](https://github.com/gw020328-oss/clear-education-v4/pull/34), [#35](https://github.com/gw020328-oss/clear-education-v4/pull/35).
 
 2026-10-14 H2 승인 후속: [등록 접수·원천 경계](HISTORY_INTAKE.ko.md)에 변경점과 단위별 완료 기준을 정의한다. H2a 원천 범위 검토 → H2b 영속 단회 접수 → H2c 수집기 연결 순서다. 실제 미확인 전체성/실명/공식 기간은 UNKNOWN이고 기존 지급·Moodle·400%·NO-GO 차단을 유지한다. H1 합성과 기존 HTTP/DB를 바꾸지 않는 별도 로컬 접수 경계다.
@@ -87,7 +89,7 @@ LearningRecord에는 providerInstanceId, allowed/excluded/required activity inve
 
 ## 재원과 청구의 상태 및 불변식
 
-**신규 계약 설계 후보**다. 현 `CourseRefundVaultV4` 변경 또는 실자금 권리 변경이 아니다. 최소 구조는 신청별 전용 재원으로 공용 풀 경쟁을 제외한다. fundingReference는 등록 시 고정한 chain/instance/token/contract와 신청을 가리킨다.
+**신규 계약 설계 후보**다. 현 `CourseRefundVaultV4` 변경 또는 실자금 권리 변경이 아니다. 이번 TEST 어댑터는 신청별 전용 재원으로 공용 풀 경쟁을 제외한다. 상용 구조·PG 보관·배정 순서·전용 허용은 미정이다. fundingReference는 등록 시 고정한 chain/instance/token/contract와 신청을 가리킨다.
 
 | funding 상태 / 명령 | 전제·전이 | 취소/재시도·불변식 |
 | --- | --- | --- |

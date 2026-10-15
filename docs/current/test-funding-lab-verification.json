@@ -1,0 +1,205 @@
+{
+  "date": "2026-10-15",
+  "executionCommit": "390eccd8420fb28dd77694eebc77d5632e4af076",
+  "baseDevelop": "ef138da14b9b3493554fbc357550b03e6c2d5d01",
+  "scope": "EPHEMERAL_SYNTHETIC_TEST_ONLY",
+  "eligibilitySource": "TRUSTED_CONSTRUCTOR_FIXTURES_NOT_REAL_EVIDENCE",
+  "chainId": 31338,
+  "token": "TEST",
+  "decimals": 6,
+  "tests": {
+    "fundingLab": 28,
+    "existingV4VaultRegression": 78,
+    "m0Examples": "PASS",
+    "workspaceOriginalFiles": 191
+  },
+  "steps": [
+    {
+      "label": "합성 조건 충족·재원 부족",
+      "registration": "REGISTERED",
+      "eligibility": "FINAL_SYNTHETIC",
+      "funding": "UNFUNDED",
+      "claimState": "NOT_READY",
+      "entitlementAtoms": "100000000",
+      "fundedTotalAtoms": "0",
+      "securedAtoms": "0",
+      "allocatedAtoms": "0",
+      "reservedAtoms": "0",
+      "shortfallAtoms": "100000000",
+      "paidAtoms": "0",
+      "paymentAllowed": false
+    },
+    {
+      "label": "40 TEST 부분 충전",
+      "registration": "REGISTERED",
+      "eligibility": "FINAL_SYNTHETIC",
+      "funding": "PARTIAL",
+      "claimState": "NOT_READY",
+      "entitlementAtoms": "100000000",
+      "fundedTotalAtoms": "40000000",
+      "securedAtoms": "40000000",
+      "allocatedAtoms": "0",
+      "reservedAtoms": "0",
+      "shortfallAtoms": "60000000",
+      "paidAtoms": "0",
+      "paymentAllowed": false
+    },
+    {
+      "label": "60 TEST 추가 충전·응답 유실 재조회·중복 재시도",
+      "registration": "REGISTERED",
+      "eligibility": "FINAL_SYNTHETIC",
+      "funding": "FUNDED",
+      "claimState": "NOT_READY",
+      "entitlementAtoms": "100000000",
+      "fundedTotalAtoms": "100000000",
+      "securedAtoms": "100000000",
+      "allocatedAtoms": "0",
+      "reservedAtoms": "0",
+      "shortfallAtoms": "0",
+      "paidAtoms": "0",
+      "paymentAllowed": false
+    },
+    {
+      "label": "신청별 전액 배정",
+      "registration": "REGISTERED",
+      "eligibility": "FINAL_SYNTHETIC",
+      "funding": "ALLOCATED",
+      "claimState": "CLAIMABLE_TEST",
+      "entitlementAtoms": "100000000",
+      "fundedTotalAtoms": "100000000",
+      "securedAtoms": "100000000",
+      "allocatedAtoms": "100000000",
+      "reservedAtoms": "100000000",
+      "shortfallAtoms": "0",
+      "paidAtoms": "0",
+      "paymentAllowed": false
+    },
+    {
+      "label": "단회 전액 지급·중복 재시도",
+      "registration": "REGISTERED",
+      "eligibility": "FINAL_SYNTHETIC",
+      "funding": "PAID",
+      "claimState": "PAID",
+      "entitlementAtoms": "100000000",
+      "fundedTotalAtoms": "100000000",
+      "securedAtoms": "0",
+      "allocatedAtoms": "100000000",
+      "reservedAtoms": "0",
+      "shortfallAtoms": "0",
+      "paidAtoms": "100000000",
+      "paymentAllowed": false
+    }
+  ],
+  "unfundedPaymentBlocked": true,
+  "partialAllocationBlocked": true,
+  "recoveredOperationWithoutDuplicateCredit": true,
+  "otherApplicationReservedAtoms": "100000000",
+  "successfulPaymentsForFirstApplication": 1,
+  "simulationNotice": "60/55/5/15 percent are mentor-question assumptions, not defaults or recommendations; no PG or asset connection",
+  "comparisons": [
+    {
+      "mode": "CALCULATION_ONLY",
+      "assumptions": {
+        "students": 100,
+        "tuitionAtoms": "100000000",
+        "refunds": [
+          {
+            "tier": 100,
+            "count": 50,
+            "amountAtoms": "100000000"
+          },
+          {
+            "tier": 300,
+            "count": 10,
+            "amountAtoms": "300000000"
+          }
+        ],
+        "ancillaryAtoms": "100000000",
+        "bufferBps": 500,
+        "bufferBasis": "REVENUE",
+        "topUpBps": 1500,
+        "topUpBasis": "REVENUE",
+        "additionalTopUpAtoms": "0",
+        "holdBps": 6000
+      },
+      "refundPeople": 60,
+      "revenueAtoms": "10000000000",
+      "refundAtoms": "8000000000",
+      "ancillaryAtoms": "100000000",
+      "liabilityAtoms": "8100000000",
+      "retainedAtoms": "6000000000",
+      "bufferAtoms": "500000000",
+      "hypotheticalTopUpAtoms": "1500000000",
+      "ratioTopUpAtoms": "1500000000",
+      "explicitTopUpAtoms": "0",
+      "simulatedAvailableAtoms": "7500000000",
+      "requiredAtoms": "8600000000",
+      "additionalRequiredAtoms": "1100000000",
+      "surplusAtoms": "0",
+      "onchainSpendableAtoms": "0",
+      "paymentAllowed": false,
+      "productDefault": false
+    },
+    {
+      "mode": "CALCULATION_ONLY",
+      "assumptions": {
+        "students": 100,
+        "tuitionAtoms": "100000000",
+        "refunds": [
+          {
+            "tier": 100,
+            "count": 50,
+            "amountAtoms": "100000000"
+          },
+          {
+            "tier": 300,
+            "count": 10,
+            "amountAtoms": "300000000"
+          }
+        ],
+        "ancillaryAtoms": "100000000",
+        "bufferBps": 500,
+        "bufferBasis": "REVENUE",
+        "topUpBps": 1500,
+        "topUpBasis": "REVENUE",
+        "additionalTopUpAtoms": "0",
+        "holdBps": 5500
+      },
+      "refundPeople": 60,
+      "revenueAtoms": "10000000000",
+      "refundAtoms": "8000000000",
+      "ancillaryAtoms": "100000000",
+      "liabilityAtoms": "8100000000",
+      "retainedAtoms": "5500000000",
+      "bufferAtoms": "500000000",
+      "hypotheticalTopUpAtoms": "1500000000",
+      "ratioTopUpAtoms": "1500000000",
+      "explicitTopUpAtoms": "0",
+      "simulatedAvailableAtoms": "7000000000",
+      "requiredAtoms": "8600000000",
+      "additionalRequiredAtoms": "1600000000",
+      "surplusAtoms": "0",
+      "onchainSpendableAtoms": "0",
+      "paymentAllowed": false,
+      "productDefault": false
+    }
+  ],
+  "blockers": {
+    "automatic400PercentPayment": false,
+    "moodle": "BLOCKED",
+    "sourceEligibility": "BLOCKED",
+    "grantOutbox": "HOLD",
+    "independentProductClaim": "NO_GO",
+    "macFailureRootCause": "UNCONFIRMED"
+  },
+  "notImplemented": [
+    "production registration/consent migration",
+    "official eligibility verifier",
+    "global same-exam nullifier",
+    "real PG custody/settlement and KRW bridge",
+    "public chain deployment",
+    "persistent chain disaster recovery",
+    "business allocation priority and top-up obligations"
+  ],
+  "userDatabaseChainKeysModified": false
+}
