@@ -1,5 +1,7 @@
 # 제품 연결 API·저장 계약 — M3-0
 
+2026-10-15 신규 Draft: [원문 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-source-http.1`은 별도 loopback HTTPS에서 operator 원문 등록/조회·mock 초안·개발용 검토 기록을 연결한다. 기존 F0/web은 서준형 소유로 보존한다. 수강생 신청·동의·업로드/문서 검토 HTTP와 실제 화면 연결은 이 단위에 아직 없다. 아래 이전 미연결/예약 문구는 해당 경로 또는 이전 시점의 기록이며 새 구현 subset과 구분한다.
+
 상태: **M3-0 합성 모듈 계약 / PR #58 develop 병합 `5f902dc`**. 버전 `clear-product-workflow.1`, 최초 기준 develop `4ae548b`(PR #54), 추적 #55·#39·#40. 기존 실행 API·application DB schema4·V4 동의/금고와 별도다. 아래 M3-1 이후의 HTTP·정책/동의·Evidence·재원 API는 여전히 제안이며 운영 구현 완료가 아니다. 소비자는 정확한 계약 이력을 반영한다.
 
 ## 단계와 구현 경계

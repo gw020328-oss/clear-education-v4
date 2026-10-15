@@ -36,18 +36,19 @@ const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].inclu
 
 // The factory does not listen or deploy. HTTPS termination must preserve Host
 // and use an encrypted connection to this handler; proxy headers are not trusted.
-export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls } = {}) {
+export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow } = {}) {
   const makeServer = tls ? createHttpsServer : createServer;
   const server = makeServer({ ...tls, requestTimeout: 10000, headersTimeout: 10000, maxHeaderSize: 8192 },
-    createApplicationHandler(service, { allowLoopbackHttpForTests }));
+    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow }));
   server.maxConnections = 32;
   return server;
 }
 
 // Composable handler; the same transport/origin/session checks apply when a
 // local development listener also serves a frontend build and synthetic RPC.
-export function createApplicationHandler(service, { allowLoopbackHttpForTests = false } = {}) {
+export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow } = {}) {
   const expected = new URL(service.origin);
+  requireRule(!workflow || workflow.origin === service.origin, 'ORIGIN_CONFIG');
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -70,7 +71,10 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
         chainId: typeof chain === 'string' && /^[1-9][0-9]{0,15}$/.test(chain) ? Number(chain) : null,
         csrf: req.headers['x-csrf-token'] ?? null };
       const path = req.url, key = req.headers['idempotency-key']; let result;
-      if (req.method === 'POST' && path === '/auth/nonce') {
+      if (/^\/mvp(?:\/|\?|$)/.test(path)) {
+        requireRule(workflow && loopback, 'FORBIDDEN');
+        result = await dispatchWorkflow(workflow, context, req.method, path, body, key, cancelled.signal);
+      } else if (req.method === 'POST' && path === '/auth/nonce') {
         const challenge = service.challenge(body);
         res.setHeader('Set-Cookie', cookie(PREAUTH, challenge.browserToken, 300));
         result = { nonce: challenge.nonce, message: challenge.message, expiresAt: challenge.expiresAt };
@@ -118,9 +122,30 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       res.end(JSON.stringify(result));
     } catch (error) {
       const code = error instanceof RuleError ? error.message : 'INTERNAL_ERROR';
-      res.statusCode = code === 'INTERNAL_ERROR' ? 500 : statusFor(code);
+      res.statusCode = code === 'INTERNAL_ERROR' ? 500 : code === 'MVP_NOT_FOUND' ? 404
+        : ['MVP_STALE','MVP_TEMPLATE_REQUIRED','MVP_BUSY','MVP_CLOSED'].includes(code) ? 409
+        : code === 'SOURCE_EXPIRED' ? 410 : statusFor(code);
       res.end(JSON.stringify({ code, message: '요청을 완료하지 못했습니다.', retryable: false,
         nextAction: res.statusCode === 401 ? 'SIGN_IN_AGAIN' : 'CHECK_REQUEST', requestId }));
     } finally { req.removeListener('aborted', abort); res.removeListener('close', closed); }
   };
+}
+
+// Separate namespace: F0 ApplicationView and existing v4 endpoints stay intact.
+async function dispatchWorkflow(service, context, method, path, body, key, signal) {
+  if (method === 'GET' && path === '/mvp/source-bundles') return service.catalogue(context);
+  const recovery = /^\/mvp\/source-bundles\/([a-z][a-z0-9.-]{0,63})\/operations\/(snapshots|drafts)\/([a-z][a-z0-9.-]{0,63})$/.exec(path);
+  if (recovery && method === 'GET') return service.recoverOperation(context,recovery[1],recovery[2],recovery[3]);
+  const bundle = /^\/mvp\/source-bundles\/([a-z][a-z0-9.-]{0,63})(?:\/(snapshots|drafts|reviews))?$/.exec(path);
+  if (bundle) {
+    if (method === 'GET' && !bundle[2]) return service.preview(context, bundle[1]);
+    if (method === 'GET' && bundle[2] === 'reviews') return service.reviews(context, bundle[1]);
+    if (method === 'POST' && bundle[2] === 'snapshots') return service.capture(context, bundle[1], body, key, { signal });
+    if (method === 'POST' && bundle[2] === 'drafts') return service.propose(context, bundle[1], body, key, { signal });
+    if (method === 'POST' && bundle[2] === 'reviews') return service.review(context, bundle[1], body, key);
+  }
+  const operation = /^\/mvp\/operations\/([a-z][a-z0-9.-]{0,63})(?:\/(cancel))?$/.exec(path);
+  if (operation && method === 'GET' && !operation[2]) return service.operation(context, operation[1]);
+  if (operation && method === 'POST' && operation[2]) return service.cancel(context, operation[1], body);
+  throw new RuleError('ROUTE');
 }
