@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLDB PATH="local/clearapi/db" VERSION="20261015" COMMENT="Isolated local export lab"><TABLES>
+<TABLE NAME="local_clearapi_head" COMMENT="Local laboratory export head"><FIELDS><FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+<FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="generation" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="fingerprint" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+<FIELD NAME="artifact" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+</FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
+<INDEXES><INDEX NAME="scopeunique" UNIQUE="true" FIELDS="userid,courseid"/></INDEXES>
+</TABLE>
+<TABLE NAME="local_clearapi_audit" COMMENT="Local laboratory export audit"><FIELDS><FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+<FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="generation" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" DEFAULT="0"/>
+<FIELD NAME="causekey" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false"/>
+</FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
+</TABLE>
+</TABLES></XMLDB>
