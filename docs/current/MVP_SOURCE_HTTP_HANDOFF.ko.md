@@ -1,7 +1,7 @@
 # 원문 HTTP 연결·서준형 프론트 인계
 
 버전 `clear-mvp-source-http.1` / 2026-10-15 / **develop 미병합 Draft**.
-기준 develop `7f6096552f06492b4add8bd5653a2ff390cf7d3c`(#56/#58/#57 통합), 구현 브랜치 `codex/mvp-http-integration`. 정확한 코드 커밋과 검토 PR은 아래 검증·인계 절에 기록한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
+기준 develop `7f6096552f06492b4add8bd5653a2ff390cf7d3c`(#56/#58/#57 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 검토 [Draft PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
 
 ## 현재 구현과 다음 의존
 
@@ -161,4 +161,4 @@ CLEAR 프론트 담당 서준형의 작업을 이어간다. 먼저 최신 origin
 
 ## 검증·인계 기준
 
-코드 커밋/검토 PR·최종 CI는 확정 후 이 절과 이슈55에 기록한다. 코드 검증은 operator 권한·TLS/Host/Origin/CSRF, raw JSON 권한 주입 거부, 새 합성 DB의 멱등·CAS/취소·로그아웃 후 거부·시간/원문 만료·COMMITTING 화해/미커밋 보류·재시작·기존 F0/v4 보존을 포함한다. 재시작 marker 시험은 새 합성 DB에 crash 상태를 구성한 시험이며 실제 사용자 DB나 실제 강제종료 원인 실측으로 기록하지 않는다.
+구현 `032215f`에서 관련267/267(신규HTTP·HTTPS15 포함), 기존 개발환경33/33·새 합성 HTTPS 데모·원본/legacy191개·의존성·공개이력·diff-check가 통과했다. 코드 변경 뒤의 정확한 최종 head/원격 CI는 PR59 Checks와 최종 보고를 정본으로 삼는다. 이 문서 기록만으로 원격 CI 성공을 가정하지 않는다. 코드 검증은 operator 권한·TLS/Host/Origin/CSRF, raw JSON 권한 주입 거부, 새 합성 DB의 멱등·CAS/취소·로그아웃 후 거부·시간/원문 만료·COMMITTING 화해/미커밋 보류·재시작·기존 F0/v4 보존을 포함한다. 재시작 marker 시험은 새 합성 DB에 crash 상태를 구성한 시험이며 실제 사용자 DB나 실제 강제종료 원인 실측으로 기록하지 않는다.

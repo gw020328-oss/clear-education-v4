@@ -1,5 +1,9 @@
 # 개발 현황
 
+## 2026-10-15 원문 HTTP 연결 Draft #59
+
+[프론트 인계·API 정본](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), 코드032215f, 기준develop7f60965. A/B의초대지갑세션·operator/CSRF/loopbackHTTPS·새DB 원문등록/조회→mock초안→정확표시검토·취소/멱등/CAS·GET복구/재시작을 연결했다. 관련267개(신규HTTP/HTTPS15포함)·기존dev33개·새합성HTTPS데모·보존/공개검사PASS. 실제사이트/유료모델0, 기존사용자DB/키/체인접근0. 서준형이web/소유자이며 통합세션은web/를편집하지않았다. 학생신청/실동의/업로드·문서검토/보완HTTP(C)와실제화면·운영Evidence/재원은미구현이다. Draft59는미병합이며최종head원격CI는PR을따른다. 예치/배정/충전OPEN·400%자동자격/지급금지·500%제외·grant/outboxHOLD·독립claimNO-GO를유지한다.
+
 ## 2026-10-15 PR56 → PR58 → PR57 통합 검토
 
 - Moodle #56은 develop `edb3efcdc2af0ff045a24dc95b6957f54818e3de`에 병합됐다. 정확 head202ce35의 PR Mac 취소 job을1회 재실행해62/62·실패/취소/skip0, PR/push6checks SUCCESS를 확인했다. 최초 실행은 Chrome lifecycle/hard-kill 단계 후15분상한 CANCELLED이며 구체 정체 원인은 미확정이다. capacity notice로 원인을 단정하지 않는다. 실제1502 재시험은 반복하지 않았고 기존6+새3행/토큰·세션 정리/중지 컨테이너·볼륨 보존 기록을 유지했다. 새 오프라인99개와 workspace/공개검사가 통과했다.
