@@ -17,7 +17,7 @@ export function validatePublicUrl(value,allowlist=OFFICIAL_URLS){
 export function isPublicAddress(address){
   const family=isIP(address);if(family===4){const n=address.split('.').reduce((v,x)=>(v*256+Number(x))>>>0,0);
     const ranges=[['0.0.0.0',8],['10.0.0.0',8],['100.64.0.0',10],['127.0.0.0',8],['169.254.0.0',16],['172.16.0.0',12],['192.0.0.0',24],
-      ['192.0.2.0',24],['192.168.0.0',16],['198.18.0.0',15],['198.51.100.0',24],['203.0.113.0',24],['224.0.0.0',3]];
+      ['192.0.2.0',24],['192.88.99.0',24],['192.168.0.0',16],['198.18.0.0',15],['198.51.100.0',24],['203.0.113.0',24],['224.0.0.0',3]];
     return !ranges.some(([ip,bits])=>{const base=ip.split('.').reduce((v,x)=>(v*256+Number(x))>>>0,0),mask=(0xffffffff<<(32-bits))>>>0;return (n&mask)===(base&mask);});
   }
   if(family===6){const parts=address.toLowerCase().split(':'),first=parseInt(parts[0],16),second=parseInt(parts[1]||'0',16);
@@ -50,8 +50,8 @@ export async function fetchPublicResource(value,{kind='PAGE',allowlist=OFFICIAL_
     check(Array.isArray(addresses)&&addresses.length>0&&addresses.length<=64&&addresses.every(a=>isPublicAddress(a.address)&&isIP(a.address)===a.family),'SOURCE_DESTINATION_BLOCKED');
     const response=await bounded(request(u,addresses[0],limit,active),active);check(!active.aborted,'SOURCE_FETCH_CANCELLED');
     if([301,302,303,307,308].includes(response.status)){check(redirects<SOURCE_LIMITS.maxRedirects&&typeof response.location==='string','SOURCE_REDIRECT');
-      next=validatePublicUrl(new URL(response.location,u).href,permitted).href;continue;}
-    check(response.status===200,'SOURCE_HTTP_STATUS');check(kind==='PAGE'?['text/html','text/plain'].includes(response.mediaType):['image/png','image/jpeg'].includes(response.mediaType),'SOURCE_MEDIA');
+      next=validatePublicUrl(new URL(response.location,u).href,permitted).href;check(new URL(next).origin===new URL(start).origin,'SOURCE_REDIRECT_ORIGIN');continue;}
+    if(response.status!==200){const error=Error('SOURCE_HTTP_STATUS');if(Number.isInteger(response.status)&&response.status>=100&&response.status<=599)error.httpStatus=response.status;throw error;}check(kind==='PAGE'?['text/html','text/plain'].includes(response.mediaType):['image/png','image/jpeg'].includes(response.mediaType),'SOURCE_MEDIA');
     check(response.bytes instanceof Uint8Array&&response.bytes.byteLength>0&&response.bytes.byteLength<=limit,'SOURCE_SIZE');
     if(kind==='IMAGE'){const b=response.bytes;check(response.mediaType==='image/png'?b.length>=8&&Buffer.from(b.subarray(0,8)).equals(Buffer.from([137,80,78,71,13,10,26,10])):b.length>=3&&b[0]===255&&b[1]===216&&b[2]===255,'SOURCE_MEDIA');}
     return {requestedUrl:start,finalUrl:u.href,status:200,mediaType:response.mediaType,bytes:Buffer.from(response.bytes)};

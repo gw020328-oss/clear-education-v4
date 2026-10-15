@@ -21,6 +21,8 @@ export function openReviewLedger({directory,environment,now=()=>Math.floor(Date.
   const clock=()=>{const t=now();check(Number.isSafeInteger(t)&&t>=0&&t<=4102444800,'WORKFLOW_CLOCK');return t;};
   function load(id){identifier(id);const r=db.prepare('SELECT * FROM runs WHERE id=?').get(id);check(r,'WORKFLOW_RUN_NOT_FOUND');return r;}
   function inspect(row){const t=clock(),head=db.prepare('SELECT * FROM heads WHERE scope=?').get(row.scope),context=JSON.parse(row.context);
+    check(runContextHash(context)===row.context_hash&&context.runId===row.id&&context.attempt===row.attempt&&scope(context.snapshot)===row.scope,'WORKFLOW_DB_INTEGRITY');
+    if(row.state==='ACCEPTED'){const summary=JSON.parse(row.summary);validateReviewSummary(summary);check(summary.runContextHash===row.context_hash&&digest('CLEAR-WORKFLOW-RECEIPT.1',summary)===row.summary_hash,'WORKFLOW_DB_INTEGRITY');}
     const latest=db.prepare('SELECT MAX(attempt) AS n FROM runs WHERE scope=?').get(row.scope).n;
     check(t>=row.created_at,'WORKFLOW_CLOCK');
     const app=db.prepare('SELECT * FROM app_heads WHERE id=?').get(context.snapshot.binding.applicationId);

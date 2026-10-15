@@ -6,9 +6,9 @@
 
 | 단계 | 이번 산출물 / 다음 선행 |
 | --- | --- |
-| M3-0 | 실행 가능한 계약 validator·문서 bytes 지문·공개 원문 snapshot lookup, 별도 합성 SQLite 검토 run ledger와 실패/재시작 회귀. 실제 HTTP/화면·학생 동의는 아직 없음 |
+| M3-0 | 실행 가능한 계약 validator·문서 bytes 지문·공개 원문 snapshot lookup, 별도 합성 SQLite 검토 run ledger, 제한 공개URL 수집기·비공개 원문 archive와 실패/재시작 회귀. 실제 HTTP/화면·학생 동의는 아직 없음 |
 | M3-1 | 기존 지갑 세션/CSRF로 보호한 `/mvp` HTTP·정책/신청/동의 저장. 합성 동의와 실제 지갑/계약 동의 구분. source/plan·표시 DTO 승인과 변경 불변성 검토 필요 |
-| M3-2 | 아래 제한의 원문 collector/보관 및 AI 소비, 학생 업로드 decode·byte 수명·검토/보완 연결. 개인 자료·유료 호출은 별도 승인/보관 관문 전 차단 |
+| M3-2 | M3-0 모듈의 HTTP·운영자 등록 UI와 AI 소비 연결, 학생 업로드 decode·byte 수명·검토/보완 연결. 개인 자료·유료 호출은 별도 승인/보관 관문 전 차단 |
 | M3-3 | 성적·학습의 인증된 source adapter→영속 수락 pin→M2 입력/판정 저장. 기존 M2를 호출하기 전 신뢰·최초 성적·정정/기한을 독립 생성. LOCAL_LAB/AI 관찰을 VERIFIED Evidence로 바꾸지 않음 |
 | M3-4 | F0 이후 별도 화면 adapter, 자격/재원 상태 병기. read-only 재원 어댑터 확정 전 UNKNOWN. 배정·충전 의무·지급 기능은 미구현/보류 |
 
@@ -41,7 +41,9 @@
 | evidence / decision | 검증자 identity/version·원천/주체/의미/전체성·정정·기간 pin, 첫 성적 참조·최초 제출/보완 시각·facts revision. M2 입력·출력 지문과 이유를 append-only 저장. 오래된 결과는 이력으로만 보존, 현재 표시에서 제외 |
 | operation | actor+route+Idempotency-Key·canonical requestHash, target ID. 동일 키/다른 요청 CONFLICT. 원자 성공 뒤 유실된 응답은 조회로 복구. tombstone 삭제로 중복 방지 이력 초기화 금지 |
 
-이번 SQLite 파일명은 `workflow.sqlite`, schema1·환경 지문을 가진 **새 전용 합성 저장소**다. 기존 applications.sqlite를 열거나 migration하지 않는다. 구현은 workflow_head/review_run/receipt+operation subset만 포함한다. 정책/신청/동의/증거/판정의 전체 테이블과 기존 사용자 DB 이관은 후속이다. 저장소 연결 자체는 인증이 아니다. pinLatest/complete는 신뢰한 내부 resolver/worker API이며 공개 요청을 직접 넘기지 않는다. runtime context를 복사하거나 해시를 아는 것이 권한 증명이 아니다.
+앱 전체 revision watermark도 저장하여 다른 method/rule scope의 pending run이 이전 신청 revision으로 완료되지 못하게 한다.
+
+이번 SQLite 파일명은 `workflow.sqlite`, schema1·환경 지문을 가진 **새 전용 합성 저장소**다. 기존 applications.sqlite를 열거나 migration하지 않는다. 구현은 app_heads/heads/runs 및 source snapshots/artifacts/bundles/bundle_heads subset만 포함한다. 정책/신청/동의/증거/판정의 전체 테이블과 기존 사용자 DB 이관은 후속이다. 저장소 연결 자체는 인증이 아니다. pinLatest/complete는 신뢰한 내부 resolver/worker API이며 공개 요청을 직접 넘기지 않는다. runtime context를 복사하거나 해시를 아는 것이 권한 증명이 아니다.
 
 ## 공통 ledger 호출 계약
 
@@ -63,7 +65,7 @@ AI는 이 context와 현재 bytes를 확인하고 기존 엄격 locator(`post/..
 
 `source-contract.mjs`의 SourceSnapshot/SourceBundle/resolveSourceBundle을 따른다. sourceType은 PUBLIC_URL/PASTE/FILE이고 institutionId/productId/cohortId를 고정한다. collectedAt·expiresAt(시연30일), 요청/최종URL·HTTP 상태·COLLECTED/PARTIAL/FAILED·추출버전·한계와 artifact별 raw/text/image 지문을 결합한다. HTML raw와 추출 텍스트 hash를 혼용하지 않는다. 원본 보관이 없거나 hash가 다르면 lookup 실패로 보류한다. 원문 만료/삭제 시 초안은 SOURCE_UNAVAILABLE로 보완하며, 확정·동의 자료의 운영 보관/아카이브 정책은 OPEN이라 실제 정책 공개를 차단한다. 운영자 등록/확정이 공식 발행자 진위·기수 적용성·계약/기관 승인 증명은 아니다.
 
-처음 allowlist는 기존 근거의 YBM 상품 페이지, 시원스쿨 상품 페이지·공지901, 명시 Naver 가이드다. exact HTTPS URL만 허용하고 이미지·redirect도 별도 등록 URL만 같은 검사로 요청한다. URL 사용자가 임의 hostname/path/port를 추가하는 기능은 없다. 계정/암호·임의 포트·file·loopback/private/link-local/metadata 주소 거부, DNS public address 확인 후 해당 주소에 연결을 고정하고 TLS hostname을 검증한다. redirect 각 단계 재검사, 최대2회/8리소스·HTML2MiB/이미지8MiB·총16MiB, 요청10초/전체30초. 쿠키/사용자 header·script·form·자동 링크 추적 없음. 자동 텍스트 추출은 휴리스틱임을 남기고 JS/필요이미지 누락을 완전 확보로 표시하지 않는다. 보완 paste/file은 별도 새 source revision이다.
+처음 allowlist는 기존 근거의 YBM 상품 페이지, 시원스쿨 상품 페이지·공지901, 명시 Naver 가이드다. exact HTTPS URL만 허용하고 이미지·redirect도 별도 등록 URL만 같은 검사로 요청한다. URL 사용자가 임의 hostname/path/port를 추가하는 기능은 없다. 계정/암호·임의 포트·file·loopback/private/link-local/metadata 주소 거부, DNS public address 확인 후 해당 주소에 연결을 고정하고 TLS hostname을 검증한다. redirect 각 단계 재검사·동일 origin으로 제한, 최대2회/8리소스·HTML2MiB/이미지8MiB·총16MiB, 요청10초/전체30초. 쿠키/사용자 header·script·form·자동 링크 추적 없음. 자동 텍스트 추출은 휴리스틱임을 남기고 JS/필요이미지 누락을 완전 확보로 표시하지 않는다. 보완 paste/file은 별도 새 source revision이다.
 
 AI는 common getSnapshot/getArtifact lookup으로 텍스트 blocks와 이미지 bytes를 받는다. 각 artifact hash/length, snapshotHash·bundle revision·product/cohort를 재검사한다. source의 텍스트/이미지 지시문은 모두 비신뢰 데이터다. 필요한 source ID가 없거나 부분수집이면 NEEDS_SUPPLEMENT, 모두 읽혀도 READABLE_UNVERIFIED이며 자동 정책 게시/동의는 없다.
 
@@ -80,3 +82,9 @@ AI는 common getSnapshot/getArtifact lookup으로 텍스트 blocks와 이미지 
 호스트의 독립 M1 Source pin은 sourceId/institutionId/productId/cohortId와 capturedAt=collectedAt을 대조한다. rawHash는 유일한 RESPONSE_BODY artifact.sha256, normalizedHash는 textArtifactId의 EXTRACTED_TEXT.sha256, normalizerVersion은 extractionVersion이다. 텍스트가 없으면 normalizedHash/normalizerVersion 둘 다 null이다. locators는 resolve가 반환한 정확한 text block locator다. snapshotHash/bundleHash는 이 M1 지문과 별도로 보존한다. 기관 범위/원문 bytes의 일치가 발행자 진위·적용성·기관 승인은 아니다. PUBLIC_URL/PASTE/FILE provenance를 지우거나 SYNTHETIC으로 재표시하지 않는다. M1 origin/applicability는 신뢰 호스트가 별도로 제공하는 미확인 주장이고, 소비자가 응답으로부터 자동 repin/승격하지 않는다. 이미지-only·미수집 자료는 텍스트 quote를 만들어 채우지 않고 보완 질문으로 남긴다.
 
 lookup은 snapshot을 await 직후 고정 복사하고 각 artifact bytes를 복사·대조한다. 전체 lookup 종료 시 만료도 다시 검사한다. 외부 callback이 같은 mutable 객체를 재사용해도 이미 확인한 scope/지문을 바꿀 수 없다. 실제 archive는 별도 sources.sqlite를 사용하며 30일 만료 뒤 조회 차단과 명시적 purge를 제공한다. purge는 논리적 삭제이며 SQLite/디스크 잔재 완전 삭제 보장은 아니다. 확정 정책의 장기 보관/아카이브·운영 개인자료 수명은 후속 관문이다.
+
+## 현재 실행·검증 범위
+
+공통 모듈 구현은 private-db/review-ledger/source-store/public-fetch/source-collector와 contract/source-contract다. collectSourceSnapshot은 exact 허용 URL의 원본 bytes와 명시 이미지 요청 결과를 resourceRequests로 남긴다. 실패 요청도 URL/HTTP 상태가 snapshotHash에 포함된다. 자동 JS 실행/이미지 발견은 없고 HTML 결과는 PARTIAL이다. UTF-8 정규화가 불가능하면 raw는 보존하고 텍스트는 미확보로 남긴다. 원문 실제 사이트 수집은 이번 시험에서 실행하지 않았으며 합성 transport·고정 TLS/lookup 옵션 검증만 했다.
+
+`./tools/npm run test:product-workflow`와 `./tools/npm run demo:product-workflow`가 새 합성 DB에서 동작한다. CI는 네트워크 tripwire를 추가한다. 데모는 원문 보완/필수 가이드 누락→run의 보류 요약 수락→DB 재개봉/동일 receipt 복구까지이며, 정책 승인/실제 학생 동의/HTTP 업로드/조건 판정 저장/재원 read 연결은 아직 아니다. 데모의 ACCEPTED는 보류 요약을 단회 저장했다는 뜻이다. 기존 application·금고 모듈과 root 의존성/lockfile을 변경하지 않았다.
