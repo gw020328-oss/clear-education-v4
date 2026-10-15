@@ -75,3 +75,5 @@ Video Checkpoints upstream URL은 제공 패키지의 provenance를 사용한다
 선행 #45 최신 `227d37f`는 새head CI6개 PASS다. 과거 `b731096` push Mac job은 CANCELLED·log not found로 원인 미해결이다. #48 최신 `49f453e`는 PR run38675877446의 3job PASS, push run38675871275의 Mac 1job FAIL(`SYNTHETIC_COOKIE_CHECK_FAILED`, SIGKILL 복구2/5, 50/51)이므로 총5PASS/1FAIL이다. 이 실패 로그를 공통 담당에게 전달했고 수정·무근거재실행은 하지 않았다. 통과한 다른 run으로 실패 원인을 해결했다고 표시하지 않는다. 모든 PR은 Draft, 자동 병합 없음이다.
 
 최종 리뷰 보정: registry/sourcePin을 요청 시작 때 고정 복사해 비동기 caller 변경을 차단하며, 정리 중 취소도 최종 facts를 반환하지 않는다. 합성 transport 회귀2개를 추가했다. 기존 실제 로컬15/15·사후6/6 결과는 보정 전 source 기록이며 새 실제 재생을 실행한 것으로 표시하지 않는다.
+
+공통 최종 통합: LOCAL 합성 transport/정규화 회귀30개를 네트워크 차단과 함께 필수 Public synthetic tests에 편입했다. 실제 Docker 재생은 CI 대상이 아니다. #45의 관측 시각 기준 기간 종료 보정과 #53의 전용 Chrome target 검사를 포함하며, 위 선행 실패 기록은 당시 이력이다. 과거 실패 원인의 미확정은 유지한다.
