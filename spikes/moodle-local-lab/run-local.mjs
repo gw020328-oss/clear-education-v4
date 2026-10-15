@@ -11,6 +11,8 @@ import { collectLocalMoodleFacts } from '../../src/learning-evidence/moodle-mvp/
 import { assessLocalLabDailyLearning } from '../../src/learning-evidence/moodle-mvp/daily.mjs';
 
 const root=fileURLToPath(new URL('../../',import.meta.url)), runtime=resolve(root,'var/moodle-local-api');
+const reportName=process.env.CLEAR_LOCAL_REPORT_NAME??'local-api-report.json';
+if(!/^[a-z0-9-]+\.json$/.test(reportName))throw Error('LOCAL_REPORT_NAME');
 const compose=['compose','-f',resolve(root,'spikes/moodle-local-lab/compose.yml')];
 const cli=(script,...args)=>execFileSync('docker',[...compose,'exec','-T','web','php','/lab-scripts/'+script,...args],{encoding:'utf8',maxBuffer:4*1024*1024});
 const privateFixture=JSON.parse(execFileSync('docker',[...compose,'exec','-T','web','cat','/var/moodledata/local-api-fixture.json'],{encoding:'utf8'}));
@@ -31,6 +33,7 @@ function assess(out,p,approved=false){
 }
 async function take(approved=false){const p=pin();await waitClock(p);const out=await collectLocalMoodleFacts(registry,p,client(),{now});return {p,out,daily:assess(out,p,approved)};}
 const report={kind:'ACTUAL_LOCAL_MOODLE_API_SYNTHETIC_TEST_ACCOUNTS',mode:'LOCAL_LAB',startedAt:new Date().toISOString(),
+  executionCommit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),runRef:definition.runRef,
   sourceVersions:{moodle:'215f44380bdc3ccf852a3a22e34f8423ff64033a',videocheck:'67fb5233070f49653c0bd8209338c34b8fe61177'},
   transport:'LOOPBACK_HTTP_NOT_PRODUCTION_HTTPS',videoMs:30000,policy:'EXPLICIT_LOCAL_DEMO_ONE_DAY_9000BPS',
   actual90or100DayHistory:false,academyIntegration:false,humanAttentionProven:false,productEligible:false,paymentAllowed:false,cases:[]};
@@ -40,6 +43,15 @@ try{
   const initial=await take();assert.equal(initial.out.facts.dataMode,'LOCAL_LMS_RECORD');assert.equal(initial.p.pages.length,3);
   assert.ok(initial.out.facts.records.every(r=>r.sourceRecordStatus==='NO_RECORD'));
   assert.equal(initial.daily.learningStatus,'IN_PROGRESS');add('authenticated_three_page_explicit_absence',{sourceRows:5,sourcePages:3});
+  report.sourceVersions={...report.sourceVersions,...initial.p.sourceVersions};
+  report.initialObservation={revision:initial.p.revision,manifestHash:initial.p.manifestHash,
+    lower:initial.p.observationLowerBound,upper:initial.p.observedAt,coverageEndExclusive:initial.p.coverageEndExclusive,validUntil:initial.p.validUntil};
+  assert.equal(initial.p.sourceVersions.clearapi,'2026101502');
+  assert.ok(initial.p.observationLowerBound<=initial.p.observedAt);
+  assert.equal(initial.p.validUntil,initial.p.observationLowerBound+300);
+  assert.equal(initial.p.coverageEndExclusive,Math.min(initial.p.observationLowerBound,initial.p.periodEndExclusive));
+  assert.ok(initial.p.observationLowerBound<initial.p.periodEndExclusive);add('actual_1502_observation_window_and_open_period');
+  await sleep(1100);const cached=pin();assert.deepEqual(cached,initial.p);add('actual_cache_keeps_original_observation_bounds');
   const wrong=await collectLocalMoodleFacts(registry,initial.p,client('two'),{now});assert.equal(wrong.reason,'LOCAL_ACCOUNT_BINDING');add('other_account_is_not_applicant');
   const bad=await collectLocalMoodleFacts(registry,initial.p,client('one',{tokenProvider:()=> '0'.repeat(32)}),{now});assert.equal(bad.reason,'LOCAL_AUTH_REJECTED');add('invalid_token_rejected');
   const denied=await fetch('http://127.0.0.1:18765/webservice/rest/server.php',{method:'POST',body:new URLSearchParams({wstoken:privateFixture.tokens.one,
@@ -51,7 +63,11 @@ try{
   browser=await chromium.launch({headless:true});const context=await browser.newContext(),page=await context.newPage();
   await page.goto('http://127.0.0.1:18765/login/index.php');await page.locator('#username').fill(privateFixture.usernames?.one??'lab-one');
   await page.locator('#password').fill(secrets.learnerPassword);await page.locator('#loginbtn').click();
-  await page.waitForURL(url=>!url.pathname.includes('/login/'));
+  try{await page.waitForURL(url=>!url.pathname.includes('/login/'));}
+  catch{
+    report.loginFailure={path:new URL(page.url()).pathname,loginErrorPresent:await page.locator('#loginerrormessage').count()>0};
+    throw Error('LOCAL_BROWSER_LOGIN_FAILED');
+  }
   async function open(label){await page.goto('http://127.0.0.1:18765/mod/videocheck/view.php?id='+privateFixture.modules[label]);
     await page.waitForFunction(()=>document.querySelector('[data-clear-ready="true"]')||document.querySelector('[data-clear-error="true"]'),null,{timeout:30000});await check();}
   async function check(){if(await page.locator('[data-clear-error="true"]').count())throw Error('LOCAL_TRACKER_ERROR');}
@@ -99,16 +115,34 @@ try{
   // This Moodle version reports expired tokens as a generic access exception;
   // do not invent a more precise cause from an uninformative API error body.
   await assert.rejects(expiredToken.identity(),/LOCAL_(AUTH|ACCESS)_REJECTED/);await expiredToken.close();add('expired_moodle_read_token_rejected');
+  phase='current-boundaries';
+  const otherCourse=createLocalMoodleClient({baseUrl:'http://127.0.0.1:18765',courseId:1,tokenProvider:()=>privateFixture.tokens.one});
+  try{await assert.rejects(otherCourse.identity(),/LOCAL_ACCESS_REJECTED/);}finally{await otherCourse.close();}add('actual_other_course_rejected');
+  const mutationRegistry=structuredClone(registry),mutationPin=structuredClone(restored.p),mutationClient=client(),identity=mutationClient.identity;
+  mutationClient.identity=async(...args)=>{const result=await identity(...args);mutationRegistry.rawBinding.applicationId='0x'+'00'.repeat(32);
+    mutationPin.revision='r999999';mutationPin.manifestHash='00'.repeat(32);return result;};
+  const detached=await collectLocalMoodleFacts(mutationRegistry,mutationPin,mutationClient,{now});
+  assert.equal(detached.status,'COLLECTED_LOCAL_LAB');assert.equal(detached.sourceRevision,restored.p.revision);
+  assert.equal(detached.facts.binding.applicationId,registry.rawBinding.applicationId);add('actual_api_async_registry_and_pin_detached');
+  const cancelClient=client(),controller=new AbortController(),close=cancelClient.close;
+  cancelClient.close=async()=>{await close();controller.abort();};
+  const cancelled=await collectLocalMoodleFacts(registry,restored.p,cancelClient,{now,signal:controller.signal});
+  assert.equal(cancelled.reason,'LOCAL_CANCELLED');assert.equal(cancelled.facts,null);add('actual_api_cleanup_cancellation_discards_facts');
+  cli('mutate.php','access-expire');
+  try{const deadlineClient=client();try{await assert.rejects(deadlineClient.identity(),/LOCAL_ACCESS_REJECTED/);}finally{await deadlineClient.close();}}
+  finally{cli('mutate.php','access-restore');}add('actual_plugin_read_deadline_rejected_without_extension');
   report.final={sourceRows:restored.p.totalRows,sourcePages:restored.p.pages.length,sourceRevision:restored.p.revision,
+    sourceManifestHash:restored.p.manifestHash,observationLowerBound:restored.p.observationLowerBound,observedAt:restored.p.observedAt,
+    coverageEndExclusive:restored.p.coverageEndExclusive,validUntil:restored.p.validUntil,
     normalizedMode:restored.out.facts.dataMode,dailyMode:restored.daily.mode,dailyStatus:restored.daily.learningStatus,
     creditedDates:restored.daily.creditedDates,officialProgress:null,speedCompliance:'UNKNOWN'};
   report.status='PASS';
 }catch(e){
   report.status='FAIL';report.failedPhase=phase;report.errorType=e?.name??'Error';
   let diagnostic=String(e?.stack??e);for(const value of [...Object.values(secrets),...Object.values(privateFixture.tokens)])diagnostic=diagnostic.replaceAll(value,'[REDACTED]');
-  await writeFile(resolve(runtime,'run-diagnostic.txt'),diagnostic,{mode:0o600});process.exitCode=1;
+  await writeFile(resolve(runtime,reportName.replace(/\.json$/,'-diagnostic.txt')),diagnostic,{mode:0o600});process.exitCode=1;
 }finally{
   await browser?.close();report.finishedAt=new Date().toISOString();
-  await writeFile(resolve(runtime,'local-api-report.json'),JSON.stringify(report,null,2)+'\n',{mode:0o600});
+  await writeFile(resolve(runtime,reportName),JSON.stringify(report,null,2)+'\n',{mode:0o600});
   console.log(JSON.stringify({status:report.status,passed:report.cases.length,failedPhase:report.failedPhase??null}));
 }
