@@ -67,6 +67,8 @@ jobs:
         run: ./tools/npm run test:proof-sessions
       - name: M0 contracts and two-stage exam lifecycle examples
         run: ./tools/node specs/m0/check.mjs
+      - name: Isolated TEST partial funding, allocation and recovery
+        run: ./tools/npm run test:funding-lab
       - name: Synthetic complete exam inventories and highest-score evidence
         run: ./tools/npm run test:exam-evidence
       - name: Product collector, independent verification and atomic result acceptance

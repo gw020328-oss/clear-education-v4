@@ -18,7 +18,9 @@
     "test:proof-sessions": "node --test tests/proof-sessions/*.test.mjs",
     "test:exam-evidence": "node --test tests/exam-evidence/*.test.mjs",
     "test:product-proof": "node --test tests/product-proof/*.test.mjs",
-    "test:learning-evidence": "node --test tests/learning-evidence/*.test.mjs"
+    "test:learning-evidence": "node --test tests/learning-evidence/*.test.mjs",
+    "test:funding-lab": "node --test tests/funding-lab/*.test.mjs",
+    "demo:funding-lab": "node spikes/funding-lab/run-demo.mjs"
   },
   "dependencies": {
     "ethers": "6.17.0",

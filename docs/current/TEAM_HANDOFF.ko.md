@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+2026-10-15 최신 후속 [TEST 재원 실험](TEST_FUNDING_LAB.ko.md): 기존 v4 경로를 보존하고 spikes/funding-lab의 새 인메모리 체인만 사용한다. 합성 fixture 자격과 실제 원천 검증을 분리한다. 테스트/시연 명령은 test:funding-lab / demo:funding-lab이며 사용자 DB·체인·키를 가져오지 않는다. 기존 grant/outbox 보류·독립 청구 NO-GO·Moodle/원천 차단·400% 금지·Mac 원인 미확정을 유지한다.
+
 2026-10-14 H2 후속: [격리 등록 접수](HISTORY_INTAKE.ko.md)는 H1의 두 목적을 별도 영속 ledger/독립 검증/관리형 수집기에 연결한다. 기존 H1 SYNTHETIC 및 HTTP/DB 계약은 보존한다. 로컬 모듈 연결과 실제 웹/기관 등록·자격 완료를 구분하며 미확인 전체성/신원/공식 기간은 UNKNOWN이다.
 
 2026-10-14 후기/블로그 문서 후속: [사전검토 명세](REVIEW_PRECHECK.ko.md)에 확인된 공식 조건, 미결 해석, 코드/텍스트/Vision/원천 역할, 후속 DTO와 수용 기준을 모았다. 가이드 본문은 확보했지만 정책 적용/게시 검증은 미확인이다. AI/Vision 주 시연은 합성 블로그 자료, 400%는 구조화/사전검토만이다. 이번 후속은 코드/schema 변경 없이 PRD·계획·인계만 갱신하며 기존 H1·Moodle·지급 차단을 보존한다.

@@ -1,5 +1,7 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
+2026-10-15 [TEST 재원 실험](TEST_FUNDING_LAB.ko.md)은 별도 spikes/funding-lab ABI/읽기 어댑터다. 아래 제품 HTTP·application DB schema 4·v4 동의/예치 계약은 변경하지 않는다. 공개 endpoint/신규 issuer·grant/outbox는 추가하지 않는다. 확인된 과거 블록의 TEST 상태와 제품 청구 가능 표시를 혼용하지 않는다.
+
 2026-10-14 H2 후속: [격리 등록 접수](HISTORY_INTAKE.ko.md)는 H1의 두 목적을 별도 영속 ledger/독립 검증/관리형 수집기에 연결한다. 기존 H1 SYNTHETIC 및 HTTP/DB 계약은 보존한다. 로컬 모듈 연결과 실제 웹/기관 등록·자격 완료를 구분하며 미확인 전체성/신원/공식 기간은 UNKNOWN이다.
 
 2026-10-14 후기 사전검토 후속은 [규칙·상태/필드 제안](REVIEW_PRECHECK.ko.md)을 따른다. rule별 자료 검토와 게시 원천 상태를 분리하며 400% 자동 자격/지급을 허용하지 않는다. 이번 변경은 문서뿐이고 기존 HTTP/Reason enum·M0 schema/version을 변경하지 않는다. 제안 필드를 기존 endpoint로 보내지 않는다.
