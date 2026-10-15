@@ -1,6 +1,6 @@
 # 원문 HTTP 연결·서준형 프론트 인계
 
-버전 `clear-mvp-source-http.1` / 2026-10-15 / **develop 미병합 Draft**.
+버전 `clear-mvp-source-http.1` / 2026-10-15 / **PR59 최종 검토·CI 확인 중, develop 미병합**.
 기준 develop `7f6096552f06492b4add8bd5653a2ff390cf7d3c`(#56/#58/#57 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 검토 [Draft PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
 
 ## 현재 구현과 다음 의존
@@ -141,7 +141,7 @@ const sourceClient = createWorkflowSourceClient({ request: walletClient.request.
 
 두 DB 사이에는 COMMITTING 복구 marker를 먼저 쓰고 immutable archive를 기록한 뒤 결과를 확정한다. 중간 종료 후 GET은 **이미 보관된** 정확 snapshot/bundle만 화해해 복구한다. bytes가 저장되지 않았다면 작업은 기한까지 RUNNING/COMMITTING으로 남고 TIMED_OUT으로 보류한다. 재시작이 URL/모델을 자동 재호출하지 않는다. 새 revision/명시 취소는 늦은 결과를 현재로 수락하지 않는다. 실제 다중 서버 운영/분산 worker는 이 개발용 단위 범위가 아니다.
 
-예치율/보관율/배정 우선/충전·회수 정책OPEN,자격과 재원분리,400%사전검토만·자동자격/지급금지,500%제외,원천/동일인미확인보류,grant/outboxHOLD·독립claimNO-GO를 유지한다. 새 PR은 Draft이며 이번 PR의 병합·main 병합·배포·유료 호출은 승인되지 않았다.
+예치율/보관율/배정 우선/충전·회수 정책OPEN,자격과 재원분리,400%사전검토만·자동자격/지급금지,500%제외,원천/동일인미확인보류,grant/outboxHOLD·독립claimNO-GO를 유지한다. PR59는 사용자 승인에 따라 최종 검토·필수 CI 통과 후 정상 merge로 develop에 병합한다. main 병합·배포·유료 호출은 범위 밖이다.
 
 ## Claude Code 복붙용 작업 지침
 
@@ -164,3 +164,16 @@ CLEAR 프론트 담당 서준형의 작업을 이어간다. 먼저 최신 origin
 ## 검증·인계 기준
 
 구현 `032215f`에서 관련267/267(신규HTTP·HTTPS15 포함), 기존 개발환경33/33·새 합성 HTTPS 데모·원본/legacy191개·의존성·공개이력·diff-check가 통과했다. 코드 변경 뒤의 정확한 최종 head/원격 CI는 PR59 Checks와 최종 보고를 정본으로 삼는다. 이 문서 기록만으로 원격 CI 성공을 가정하지 않는다. 코드 검증은 operator 권한·TLS/Host/Origin/CSRF, raw JSON 권한 주입 거부, 새 합성 DB의 멱등·CAS/취소·로그아웃 후 거부·시간/원문 만료·COMMITTING 화해/미커밋 보류·재시작·기존 F0/v4 보존을 포함한다. 재시작 marker 시험은 새 합성 DB에 crash 상태를 구성한 시험이며 실제 사용자 DB나 실제 강제종료 원인 실측으로 기록하지 않는다.
+
+
+## PR59 실질 검토 보완 (2026-10-15)
+
+요청 설정 GPT-6.1 Sol / High의 검토 단위다. 보완 코드 `7402f7f97158b3dbf42247203dcf9e587aeb1178`에서 다음 재현 실패를 수정했다.
+
+- COMMITTING 복구가 첫 preview의 원문을 읽은 뒤 head를 갱신해 과거 bundle/bytes와 새 operation을 함께 반환했다. 이제 읽기 전에 복구하고 비동기 해석 뒤 head를 다시 검사한다.
+- 원문을 일시적으로 읽을 수 없는 상태를 만료로 취급해 시계 역행 시 아직 유효한 draft result를 삭제했다. 이제 내부의 무결성 검증된 보관 기한만으로 만료를 판정한다. 이 메타데이터 helper는 HTTP에 노출되지 않으며 만료 원문·bytes의 조회 차단을 유지한다.
+- 작업 생성·검토 기록 시각 이전의 clock에서는 현재 작업/검토 이력·멱등 재생을 `422 MVP_CLOCK`으로 차단한다. 시계가 정상으로 돌아오면 보관된 결과를 재수집 없이 읽는다.
+
+관련272/272(신규 회귀5개 포함), 기존 개발환경33/33, 합성 HTTPS 서명 지갑·재시작 데모, 의존성·원본/legacy191개·diff 검사가 통과했다. 같은 operator 역할의 별도 지갑도 다른 actor의 operation ID·route/key GET 복구·취소에 접근할 수 없음을 확인했다. 재현은 새 합성 DB만 사용했다. 실제 사이트/유료 호출0, 기존 사용자 DB/키/체인 접근0, web/편집0. 원격 최종 head CI와 병합 결과는 PR59 및 후속 통합 기록에서 확인한다.
+
+C1은 별도 Draft [PR61](https://github.com/gw020328-oss/clear-education-v4/pull/61)의 `2354b70bd1f5cb6f4402c73ce0c40efeb3ca08d9`에 보존했다. PR59 병합 후 최신 develop을 정상 merge해 별도로 검사하며, 이 PR59에 C1을 포함하지 않는다. C2 문서 제출/보완 HTTP·실동의는 미완료다. 관찰한 서준형 소유 PR60 head는 `4219a53bb5cb7efa2ca3e48939bd82de69e071d7`이며 검토/수정/병합 대상이 아니다.

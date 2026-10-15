@@ -52,5 +52,24 @@
     "grant": "HOLD",
     "outbox": "HOLD",
     "independentClaim": "NO_GO"
+  },
+  "integrationReview": {
+    "date": "2026-10-15",
+    "requestedSetting": "GPT-6.1 Sol / High",
+    "fixCommit": "7402f7f97158b3dbf42247203dcf9e587aeb1178",
+    "relatedTests": 272,
+    "existingDevelopmentTests": 33,
+    "regressionsAdded": 5,
+    "fixes": [
+      "reconcile COMMITTING before source preview read and recheck head",
+      "purge draft result only on verified expiry rather than temporary unavailability",
+      "reject operations and review replay before recorded creation time"
+    ],
+    "httpsDemo": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "finalRemoteCi": "PENDING",
+    "merge": "PENDING",
+    "c1PreservedHead": "2354b70bd1f5cb6f4402c73ce0c40efeb3ca08d9"
   }
 }
