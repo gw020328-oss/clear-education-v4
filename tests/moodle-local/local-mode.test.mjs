@@ -40,8 +40,9 @@ test('local progress/speed remain unknown, and missing time cannot be filled fro
 });
 
 for(const missing of [false,true])test('local SQL snapshot before midnight cannot finalize from rounded upper bound: '+missing,()=>{
+  for(const processingDelay of [0,30]) {
   const f=fixture(),end=Number(f.facts.snapshot.periodEndExclusive),last=f.facts.records.at(-1);
-  Object.assign(f.facts.snapshot,{observedAt:String(end),coverageEndExclusive:String(end-1),validUntil:String(end+300)});
+  Object.assign(f.facts.snapshot,{observedAt:String(end+processingDelay),coverageEndExclusive:String(end-1),validUntil:String(end+299)});
   // A valid close inside the final fractional second must not be called future.
   last.closedAtMs=String(end*1000-300);
   if(missing)last.sourceRecordStatus='NO_RECORD';
@@ -51,6 +52,7 @@ for(const missing of [false,true])test('local SQL snapshot before midnight canno
   // Only a new source observation covering the boundary can finalize.
   f.trusted.observationLowerBound=end;f.facts.snapshot.coverageEndExclusive=String(end);repin(f);
   assert.equal(f.local().learningStatus,missing?'NOT_MET':'PASS');
+  }
 });
 test('local coverage cannot extend beyond its observation upper bound',()=>{
   const f=fixture(),end=Number(f.facts.snapshot.periodEndExclusive);
