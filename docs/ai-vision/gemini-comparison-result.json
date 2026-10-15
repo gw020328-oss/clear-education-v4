@@ -1,0 +1,86 @@
+{
+  "execution": "ACTUAL",
+  "model": "gemini-3.8-flash",
+  "corpusHash": "c1c5f21324067b27ab88bceaf8b244dc6d89c7ac7b37a4158c005610a58e7c6b",
+  "startedAt": "2026-10-15T02:52:23.711Z",
+  "preflightFailures": [
+    {
+      "caseId": "T01",
+      "execution": "ACTUAL",
+      "status": "ERROR",
+      "code": "GEMINI_EVALUATION_FAILED"
+    }
+  ],
+  "attempts": [
+    {
+      "caseId": "T01",
+      "execution": "ACTUAL",
+      "status": "ERROR",
+      "code": "GEMINI_REQUEST_ABORTED"
+    },
+    {
+      "caseId": "T04",
+      "fixtureHash": "f1964d9c0b1c52dfff33fa9b833cb4d4f1a67051090666dfd78fc4d48bd7d2f2",
+      "execution": "ACTUAL",
+      "model": "gemini-3.8-flash",
+      "resolvedModel": "gemini-3.8-flash",
+      "tokens": {
+        "promptTokenCount": 180,
+        "candidatesTokenCount": 108,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 288
+      },
+      "reservedNanoUsd": "13680000",
+      "result": {
+        "caseId": "T04",
+        "fields": [
+          {
+            "fieldId": "score",
+            "value": "700",
+            "location": "L1"
+          },
+          {
+            "fieldId": "depositMultiplier",
+            "value": null,
+            "location": "L3"
+          }
+        ],
+        "questions": [
+          "Which target score should be used: 700 from L1 or 800 from L2?"
+        ],
+        "flags": [
+          "CONFLICT_IN_DATA",
+          "INJECTED_INSTRUCTION"
+        ],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "status": "SEMANTIC_ERROR",
+      "errors": [
+        "VALUE:score"
+      ]
+    }
+  ],
+  "paymentAllowed": false,
+  "usage": {
+    "execution": "ACTUAL",
+    "countCalls": 2,
+    "generationCalls": 2,
+    "reservedNanoUsd": "27360000",
+    "actualModelCalls": 2
+  },
+  "finishedAt": "2026-10-15T02:54:48.886Z",
+  "estimatedGenerationNanoUsd": "540000",
+  "costComplete": false,
+  "promptVersion": "clear-gemini-eval.1",
+  "notes": [
+    "Separate user approval: maximum 2 generation / 2 count requests, USD 0.05.",
+    "T01 aborted at original 45-second deadline; T04 used extended 120-second deadline.",
+    "One local preflight failure sent zero requests and did not consume approval.",
+    "Timeout usage unavailable; estimatedGenerationNanoUsd is a known-response subtotal, not total charge.",
+    "No live evaluation of revised prompt version 2."
+  ]
+}

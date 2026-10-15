@@ -1,0 +1,68 @@
+{
+  "version": "clear-product-workflow-verification.1",
+  "date": "2026-10-15",
+  "baseDevelop": "4ae548b8c844f482418f3abfb20a2f1886cac398",
+  "implementationCommit": "48d211774d6c78bd2332738c500cc590264c1a48",
+  "contractCommits": [
+    "4018e32693efe990d70cef5f2524984efab5f977",
+    "91430c6feec97fec5de62fdd2a889146005351dc",
+    "48d211774d6c78bd2332738c500cc590264c1a48"
+  ],
+  "status": "DRAFT_REVIEW",
+  "offlineTests": {
+    "productWorkflow": 36,
+    "networkTripwire": true,
+    "twoProcessAcceptance": true,
+    "newSyntheticDatabasesOnly": true,
+    "rawStudentBytesPersisted": false
+  },
+  "demo": {
+    "sourceStatus": "NEEDS_SUPPLEMENT",
+    "missingGuide": true,
+    "summaryState": "ACCEPTED",
+    "restartSameReceipt": true,
+    "httpConnected": false,
+    "actualModelCalls": 0,
+    "eligibilityDecisionStored": false,
+    "fundingStatus": "UNKNOWN"
+  },
+  "preservation": {
+    "originalAndLegacyFiles": 191,
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "applicationSchemaMigration": false,
+    "existingDatabaseChainKeyAccess": false
+  },
+  "actualSourceWebsiteFetchPerformed": false,
+  "ci": "Check PR58 latest exact head; no claim of completion from local tests alone",
+  "remaining": [
+    "HTTP/authenticated runtime wiring",
+    "production policy publication/agreement",
+    "full image decode/upload",
+    "authenticated Evidence and durable M2 evaluation",
+    "funding read projection/UI",
+    "live privacy/retention approvals"
+  ],
+  "gates": {
+    "depositPolicy": "OPEN",
+    "tier400": "PRECHECK_ONLY",
+    "tier500": "EXCLUDED",
+    "sourceAndIdentity": "BLOCKED",
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO"
+  },
+  "integrationReview": {
+    "date": "2026-10-15",
+    "baseDevelop": "edb3efcdc2af0ff045a24dc95b6957f54818e3de",
+    "productWorkflowTests": 38,
+    "sharedResponseByteBudgetRegression": true,
+    "failedReadBytesCharged": true,
+    "dispatchAfterBudgetExhaustion": false,
+    "actualWebsiteFetches": 0,
+    "demo": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "change": "Share 16MiB response-stream budget across page/images; retain independent archive-size limit. Final CI must be checked on the new exact head."
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "contractStatus": "SYNTHETIC_CONSUMER_CONTRACT",
+  "profile": "clear-learning-facts.1",
+  "dataMode": "SYNTHETIC",
+  "scenario": "UNIT_EXAMPLE",
+  "binding": {
+    "institutionId": "synthetic-lab",
+    "providerInstanceId": "synthetic-moodle-instance",
+    "courseId": "synthetic-course-750",
+    "cohortId": "synthetic-cohort",
+    "applicationId": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "learnerRef": "synthetic-learner",
+    "subjectRef": "0x2222222222222222222222222222222222222222222222222222222222222222",
+    "accountBindingId": "synthetic-binding",
+    "accountBindingVersion": "synthetic-binding.1",
+    "policyHash": "0x3333333333333333333333333333333333333333333333333333333333333333",
+    "policyVersion": "synthetic-demo.1",
+    "timeZone": "Asia/Seoul",
+    "bindingAssurance": "SYNTHETIC_TEST_PIN"
+  },
+  "inventory": {
+    "activitySetVersion": "synthetic-activities.1",
+    "activitySetHash": "0x4444444444444444444444444444444444444444444444444444444444444444",
+    "mappingVersion": "synthetic-clearwatch-projection.1",
+    "providerRuleVersion": null,
+    "capabilities": {
+      "effectiveTime": true,
+      "mediaCoverage": true,
+      "normalClose": true,
+      "creditDay": true,
+      "officialProgress": false,
+      "speedCompliance": false,
+      "currentRevision": false,
+      "atomicExport": false,
+      "correctionHistory": false
+    }
+  },
+  "snapshot": {
+    "collectionId": "synthetic-example-collection",
+    "observedAt": "1791944100",
+    "validUntil": null,
+    "periodStart": "1791903600",
+    "periodEndExclusive": "1799679600",
+    "coverageStart": null,
+    "coverageEndExclusive": null,
+    "sourceRevision": null,
+    "sourceCompleteness": "UNKNOWN",
+    "correctionState": "UNKNOWN",
+    "totalRows": null,
+    "pageManifest": null,
+    "normalizedDigest": null
+  },
+  "trust": {
+    "assurance": "SYNTHETIC_TEST_PIN",
+    "sourceSignatureVerified": false,
+    "signerRef": null,
+    "humanAttentionProven": false,
+    "paymentAuthorized": false,
+    "limitations": [
+      "ILLUSTRATIVE_VALUES_NOT_EXECUTED",
+      "SOURCE_REVISION_UNAVAILABLE",
+      "HISTORY_COMPLETENESS_UNCONFIRMED",
+      "OFFICIAL_PROGRESS_UNAVAILABLE",
+      "SPEED_COMPLIANCE_UNAVAILABLE",
+      "SHORT_RECORD_CANNOT_PROVE_90_DAYS"
+    ]
+  },
+  "records": [
+    {
+      "activityId": "synthetic-cmid-1",
+      "lectureId": "synthetic-lecture-1",
+      "activityType": "VIDEO",
+      "sourceRecordRef": null,
+      "recordRevision": null,
+      "supersedesRecordRef": null,
+      "sourcePolicyHash": "5555555555555555555555555555555555555555555555555555555555555555",
+      "sourceRecordStatus": "PRESENT",
+      "effectiveMs": "29973",
+      "durationMs": "30000",
+      "mediaCoveredMs": "30000",
+      "lastPositionMs": "30000",
+      "effectiveTimeMeaning": "SERVER_BOUNDED_CLIENT_TELEMETRY",
+      "providerProgressBps": null,
+      "progressRuleVersion": null,
+      "speedCompliance": "UNKNOWN",
+      "normalCloseAcknowledged": true,
+      "closedAtMs": "1791944000000",
+      "sourceCreditDay": "2026-10-14",
+      "sourceReportedCredit": true,
+      "dateAttributionRuleVersion": "synthetic-finish-kst.1",
+      "completionState": "NOT_APPLICABLE",
+      "completedAt": null,
+      "stateChangedAt": null,
+      "deliveryMode": "UNKNOWN",
+      "fieldProvenance": {
+        "measurements": "SYNTHETIC_LOCAL_CLEARWATCH_SHAPED_VALUES",
+        "activityMapping": "SYNTHETIC_TEST_INVENTORY",
+        "identityBinding": "SYNTHETIC_TEST_BINDING",
+        "progress": "NOT_RETURNED_BY_CURRENT_READ_API",
+        "speed": "NOT_RETURNED_BY_CURRENT_READ_API",
+        "date": "SYNTHETIC_SERVER_FINISH_DAY"
+      }
+    }
+  ]
+}

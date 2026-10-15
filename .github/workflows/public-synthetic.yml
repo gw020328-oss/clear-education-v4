@@ -65,6 +65,33 @@ jobs:
         run: ./tools/npm run test:vault
       - name: Product proof sessions, durable nonce and current enrollment
         run: ./tools/npm run test:proof-sessions
+      - name: Versioned MVP policy contracts and generic synthetic profiles
+        run: ./tools/npm run test:mvp-policy
+      - name: Product workflow ledger and restricted public source boundaries
+        run: |
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/product-workflow/*.test.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs specs/m3/demo.mjs
+      - name: Offline Moodle preparation vectors and package checks
+        run: ./tools/node --test tests/moodle-preparation/*.test.mjs
+      - name: Offline AI policy and document prechecks
+        run: |
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/ai-policy/*.test.mjs tests/document-precheck/*.test.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs tests/ai-policy/evaluate-mock.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs tests/ai-policy/replay-field-review.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs tests/document-precheck/bound-policy-example.mjs > "$RUNNER_TEMP/review-policy-example.json"
+          cmp docs/ai-vision/policy-binding-example.json "$RUNNER_TEMP/review-policy-example.json"
+      - name: Synthetic Moodle daily evaluation and export boundaries
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/moodle-mvp/*.test.mjs
+      - name: Offline AI evaluation preparation
+        run: ./tools/node --test spikes/ai-vision-preparation/*.test.mjs
+      - name: Offline local Moodle transport and normalization boundaries
+        run: |
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/moodle-local/*.test.mjs
+          php tests/moodle-local/observation-window.php
+      - name: M0 contracts and two-stage exam lifecycle examples
+        run: ./tools/node specs/m0/check.mjs
+      - name: Isolated TEST partial funding, allocation and recovery
+        run: ./tools/npm run test:funding-lab
       - name: Synthetic complete exam inventories and highest-score evidence
         run: ./tools/npm run test:exam-evidence
       - name: Product collector, independent verification and atomic result acceptance
@@ -89,7 +116,7 @@ jobs:
       - name: Fresh checkout integrity regression
         run: ./tools/node --test tests/workspace-integrity.test.mjs
       - name: Managed storage and initialization regression (synthetic only)
-        run: ./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs tests/mac-collector/recovery.test.mjs
+        run: ./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs tests/mac-collector/recovery.test.mjs tests/mac-collector/synthetic.test.mjs
 
   mac-recovery:
     name: Mac synthetic recovery

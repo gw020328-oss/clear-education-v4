@@ -8,6 +8,18 @@ import { fileURLToPath } from 'node:url';
 import { prepareRoot } from '../../src/mac-collector/storage.mjs';
 const worker=fileURLToPath(new URL('../../src/mac-collector/worker.mjs',import.meta.url));
 const fixture=fileURLToPath(new URL('./fixtures/startup-fault.mjs',import.meta.url));
+for(const code of ['ENOTEMPTY','EACCES','SYNTHETIC_PRIVATE_CODE'])test(`recovery diagnostic ${code}: fixed stage/code only, no exception detail`,async t=>{
+  const root=await fs.mkdtemp(join(await fs.realpath(tmpdir()),'clear-diagnostic-'));
+  t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  await fs.chmod(root,0o700);await prepareRoot(root,{synthetic:true});
+  const child=spawn(process.execPath,['--import',fixture,worker],{env:{...process.env,CLEAR_TEST_ROOT:root,CLEAR_LOCKED:'1',CLEAR_FAULT:'recovery-'+code},stdio:['ignore','pipe','pipe']});
+  let output='';for(const pipe of [child.stdout,child.stderr])pipe.on('data',b=>output+=b);
+  const exit=await new Promise((resolve,reject)=>{child.once('close',resolve);child.once('error',reject);});
+  assert.equal(exit,1);
+  assert.ok(output.includes('STALE_RECOVERY:'+(code==='SYNTHETIC_PRIVATE_CODE'?'UNEXPECTED_ERROR':code)),output);
+  assert.doesNotMatch(output,/SYNTHETIC_PRIVATE|Error:|at file:/);
+  assert.ok(!output.includes(root));
+});
 for(const mode of ['init-signal','init-error','browser-signal','browser-error'])test(`${mode}: cleanup waits for startup; no recreated profile or live browser group`,{skip:mode.startsWith('browser')&&process.platform!=='darwin',timeout:30000},async t=>{
   const root=await fs.mkdtemp(join(await fs.realpath(tmpdir()),'clear-startup-'));await fs.chmod(root,0o700);await prepareRoot(root,{synthetic:true});
   const child=spawn(process.execPath,['--import',fixture,worker,'--test-browser-hold'],{env:{...process.env,CLEAR_TEST_ROOT:root,CLEAR_LOCKED:'1',CLEAR_FAULT:mode},stdio:['ignore','pipe','pipe']});

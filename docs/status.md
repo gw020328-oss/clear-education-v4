@@ -1,5 +1,98 @@
 # 개발 현황
 
+## 2026-10-15 PR56 → PR58 → PR57 통합 검토
+
+- Moodle #56은 develop `edb3efcdc2af0ff045a24dc95b6957f54818e3de`에 병합됐다. 정확 head202ce35의 PR Mac 취소 job을1회 재실행해62/62·실패/취소/skip0, PR/push6checks SUCCESS를 확인했다. 최초 실행은 Chrome lifecycle/hard-kill 단계 후15분상한 CANCELLED이며 구체 정체 원인은 미확정이다. capacity notice로 원인을 단정하지 않는다. 실제1502 재시험은 반복하지 않았고 기존6+새3행/토큰·세션 정리/중지 컨테이너·볼륨 보존 기록을 유지했다. 새 오프라인99개와 workspace/공개검사가 통과했다.
+- 공통 #58은 develop `5f902dc38f5f050e7907f815d7e98b0d8d028aaf`에 병합됐다. 실질 리뷰에서 보관합계와 별개인 누적 수신량 제한을 보완했다(`39379ec`). HTTPS stream이16MiB를 공유하고 실패읽기도 차감·소진후 후속dispatch를 차단한다. 최종head39379ec의 PR/push6checks SUCCESS, 공통38개·새합성DB데모·원본/legacy191개·의존성·공개검사 PASS다.
+- AI #57은 공통 병합 이력을 반영했고, 차분은 두 consumer adapter·전용tests/docs와 이번 통합 현행 문서 정리다. 결합 상태에서 관련308개 PASS(공통38개/호스트3개 포함, 중복합산 금지), 데모·mock7/7·binding 예제 byte 대조·workspace PASS를 확인했다. 최종 head의 원격CI와 병합 여부는 [PR57](https://github.com/gw020328-oss/clear-education-v4/pull/57)의 최종 리뷰를 정본으로 삼는다. 기존306개 기록은 수정 전 검사 범위다.
+
+실제 유료 AI/URL 수집/개인자료·기존 DB/키·체인 접근0. HTTP·실제 동의·업로드/완전decode·운영 Evidence·영속 M2 판정·재원/화면은 미구현이다. 예치·배정·충전정책OPEN,자격/재원분리,400%사전검토만/자동자격·지급금지,500%제외,원천/동일인미확인보류,grant/outbox HOLD·독립claim NO-GO를 유지한다. 세 담당 채팅은 completed/idle을 확인했고 추가 구현·아카이브/삭제를 요청하지 않았다. 아래 Draft/실패/검사 기록은 이전 시점의 이력이다.
+
+## 2026-10-15 M3-0 연결 준비 (Draft)
+
+PR #54가 develop `4ae548b`에 병합됐다. 새 v4의 정상 T01 개선과 충돌 T04/누락 V02 유지, 합성3사례·5생성+5count/HTTP오류0은 [새 평가 기록](ai-vision/GEMINI_RECOVERY_EVALUATION.ko.md)을 따른다. 프로젝트/기존 환경 키/Tier1 복구는 조정 세션이 사용자와 확인했으며 식별자는 공개하지 않는다. 실제 청구액은 미확인이다. 아래 v3 과잉 보류 기록은 당시 상태다.
+
+[제품 연결 계약](current/PRODUCT_WORKFLOW_CONTRACT.ko.md)·공통 Draft PR #58은 API/저장 단계, bytes manifest, 새 합성 검토 ledger와 제한 URL 원문 archive를 준비한다. HTTP 등록/학생 동의/실제 업로드/운영 Evidence·판정 저장·재원 표시 전체 연결은 후속이다. AI #57은 미병합 계약을 소비하는 별도 Draft다. [1502 실제 재시험 PR #56](https://github.com/gw020328-oss/clear-education-v4/pull/56)의 새 실측21/21을 이슈40에 반영했고, 과거1501의15+6과 구분한다. run3 로그인 실패의 정확 원인은 미확정이다. Draft PR은 아직 develop 완료 사실이 아니다.
+
+추가 유료 호출·실제YBM 수집·실자금/체인·배포는 없고, 예치정책OPEN·400%사전검토만/500%제외·원천/동일인미확인 차단·grant/outbox HOLD·독립claim NO-GO와 기존자산 보존을 유지한다.
+
+## 2026-10-15 소비자 최종 통합
+
+이 절은 아래 11:22 KST 조회보다 최신인 통합 기록이다. main 통합·배포·실제 지급 완료가 아니다. 최종 head별 원격 검사와 병합 시각은 각 PR의 기록을 따른다.
+
+| 범위 | develop 통합 및 한계 |
+| --- | --- |
+| M1/M2 #43/#46 | `3781f58` / `1f98d5f`. 공통 합성 정책·증거·금액 후보 평가. HTTP/DB·실제 자격 수락은 미구현 |
+| Moodle 준비·L1 #41/#45 | `6b311de` / `6bb476f`. 일별 평가의 기간 완료는 조회 시각이 아닌 원천 관측 시각 기준 |
+| AI 준비·소비자 #42/#47 | `f5f386e` / `b2a1933`. 근거 있는 초안과 순수 사전검토, 자동 게시/자격 없음 |
+| Mac 보정 #53 | `8785ef3`. 통제된 초기 탭 navigation 경합을 전용 target으로 수정. 과거 실패의 실제 원인 확정은 아님 |
+| 합성 Moodle export/driver #48 | `3f6985e`. 원자 revision/manifest·페이지 전체성, M2 합성 bridge. 실제 기관/제품 수락 아님 |
+| 격리 로컬 Moodle #52 | `b0c6ea4`. 인증된 로컬 읽기·정규화·일별 평가, 비동기 문맥/취소·관측 하한 보강. 제품 Evidence 연결 없음 |
+| AI 후속 #51 (이 변경) | 충돌 필드 보류, 실제 policy/rule hash·정확 표시 기준 결합, 배타 평가 원장과 실제 소규모 결과. 실제 학생 동의·서명·DB·Evidence 수락 없음 |
+
+검증 범위는 서로 구분한다. AI 전용77개·mock7/7·저장된 응답 재처리·binding 예제 대조, Moodle LOCAL39개+일별/driver/M2 60개 및 별도 PHP clock9개를 오프라인 CI에 편입했다. #52의 실제 짧은 재생15+사후6건은 clearapi2026101501 기록이다. 보정된1502의 실제 DB/재생은 재시험하지 않았다. 원래 DB/키/체인/금고를 보존했다.
+
+Gemini v3는 승인된 생성/사전계수 각각5회 중 HTTP오류3건·응답2건이다. T04 충돌값은 null 유지, 정상 T01은 불필요한 질문/flag 때문에 과잉 보류가 남았다. 추가 유료 호출 없음. 예약 US$0.02452와 성공응답 부분 추정 US$0.0011717은 실제 전체 청구 확인값이 아니며, 충전 프로젝트 연결도 미확인이다. [상세 평가](ai-vision/GEMINI_V3_REEVALUATION.ko.md).
+
+멘토 예치 비율/풀/배정/충전/회수 정책 OPEN,400%자동자격·지급금지,500%제외,실제기관 Moodle·원천/동일인 미확인 BLOCKED,grant/outbox HOLD,독립청구 제품 NO-GO를 유지한다. 운영 원천·동의·단회 수락/복구와 실제 서류/장기 학습 검증, AI 과잉 보류는 #39/#40 후속으로 남는다. Mac 과거 timeout/cookie실패/CANCELLED 원인도 일괄 해소로 기록하지 않는다.
+
+
+## 2026-10-15 원격 확인
+
+공개 근거 확인: **2026-10-15 11:22 KST**. 원격 브랜치·병합/열린 PR·정확한 head의 CI와 공개 비식별 보고서를 대조했다. 아래 실제 실행과 시험 수는 저장된 기록이며 이번 문서 작업에서 재실행하지 않았다.
+
+| 원격 대상 | 확인 상태 |
+| --- | --- |
+| main | [`375051e00f8f45a8266a6158024c84d3898b11c9`](https://github.com/gw020328-oss/clear-education-v4/commit/375051e00f8f45a8266a6158024c84d3898b11c9). 아래 develop 결과 미반영 |
+| develop | [`21776f53d7660597b94a37c89139316e43eeb673`](https://github.com/gw020328-oss/clear-education-v4/commit/21776f53d7660597b94a37c89139316e43eeb673), PR #36 병합. main보다 107커밋 앞서며 서비스 배포 완료를 뜻하지 않음 |
+| 열린 기능 PR | [#41 Moodle 준비](https://github.com/gw020328-oss/clear-education-v4/pull/41), [#42 AI/Vision 합성 준비](https://github.com/gw020328-oss/clear-education-v4/pull/42), [#43 공통 정책 계약](https://github.com/gw020328-oss/clear-education-v4/pull/43). 모두 develop 미병합. 이 문서 갱신 PR은 확인 이후 별도 생성 |
+
+### develop에 추가로 병합된 범위
+
+기존 PR #1~#8 이후 아래 PR은 모두 develop 대상 병합으로 확인했다. main 통합·운영 배포·전체 제품 완료와 구분한다.
+
+| 병합 PR | 확인한 범위와 공개 근거 |
+| --- | --- |
+| [#9](https://github.com/gw020328-oss/clear-education-v4/pull/9), [#14](https://github.com/gw020328-oss/clear-education-v4/pull/14) | 팀 인계와 [독립 로컬 합성 HTTPS 개발 환경](current/LOCAL_SYNTHETIC.ko.md) |
+| [#16](https://github.com/gw020328-oss/clear-education-v4/pull/16), [#17](https://github.com/gw020328-oss/clear-education-v4/pull/17), [#19](https://github.com/gw020328-oss/clear-education-v4/pull/19) | [제품 증명 세션·영속 nonce](current/PROOF_SESSIONS.ko.md), [전체 시험 증거의 합성 계약](current/EXAM_EVIDENCE.ko.md), [독립 검증·세션별 결과 단회 수락](current/PRODUCT_PROOF.ko.md). 실제 원천 전체성·제품 자격/지급은 차단 유지 |
+| [#20](https://github.com/gw020328-oss/clear-education-v4/pull/20), [#25](https://github.com/gw020328-oss/clear-education-v4/pull/25) | [학습 증거 계약](current/LEARNING_EVIDENCE.ko.md)·[합성 provider 및 Moodle 명세](current/LEARNING_PROVIDER.ko.md). 실제 Moodle 취득·기관/계정 연결 완료가 아님 |
+| [#23](https://github.com/gw020328-oss/clear-education-v4/pull/23), [#27](https://github.com/gw020328-oss/clear-education-v4/pull/27), [#29](https://github.com/gw020328-oss/clear-education-v4/pull/29) | [안전한 오류·응답 유실 복구](current/API_RECOVERY.ko.md), [증명 세션 지갑 승인](current/PROOF_WALLET.ko.md), [구독 가능한 클라이언트 흐름](current/PROOF_FLOW.ko.md). 완성된 참가자 화면·실수집/지급 통합을 뜻하지 않음 |
+| [#21](https://github.com/gw020328-oss/clear-education-v4/pull/21) | 직접 증거 청구·Windows 호환성의 격리 spike. [Windows 11 공개 합성 기록](../spikes/windows-compatibility/windows11-teammate-report.json)은 realYbm=false·productionReady=false이며 암호화/강제 종료/24시간 정리 등 미검증 관문 유지 |
+| [#30](https://github.com/gw020328-oss/clear-education-v4/pull/30), [#31](https://github.com/gw020328-oss/clear-education-v4/pull/31) | [새 MVP 계획](current/MVP_PLAN_20261014.ko.md), [M0 합성 계약](current/M0_CONTRACT.ko.md), [등록 이력→목표 성적의 H1 합성 검증](current/EXAM_LIFECYCLE.ko.md), [후기 사전검토 명세](current/REVIEW_PRECHECK.ko.md). M0 소비자 합의 PENDING, 실제 사업 정책·제품 인터페이스 미동결 |
+| [#32](https://github.com/gw020328-oss/clear-education-v4/pull/32), [#33](https://github.com/gw020328-oss/clear-education-v4/pull/33), [#34](https://github.com/gw020328-oss/clear-education-v4/pull/34), [#35](https://github.com/gw020328-oss/clear-education-v4/pull/35) | 표 공증 spike와 [별도 로컬 등록 접수·원천 경계·관리형 실제 수집기 연결](current/HISTORY_INTAKE.ko.md). 최종 병합 `ef138da14b9b3493554fbc357550b03e6c2d5d01`. 아래 실제/미검증 범위 참조 |
+| [#36](https://github.com/gw020328-oss/clear-education-v4/pull/36) | [부분 충전·전액 배정 TEST 실험](current/TEST_FUNDING_LAB.ko.md), 병합 `21776f5`. 기존 v4 금고·제품 DB·동의 경로를 바꾸지 않은 격리 실험 |
+
+### 완료·진행·미검증의 구분
+
+- **저장된 실제 등록 접수 성공:** [비식별 기록](current/history-intake-verification.json), 실행 코드 `bca6568`. 성적이 있는 계정에서 새 로컬 등록 문맥의 표 증명·공식 서명·독립 오프라인 검증·영속 receipt 수락·DB 재개봉 복구·프로필 삭제가 성공했다. 상태는 RECEIVED_UNVERIFIED_COVERAGE/UNKNOWN이다. 전체 이력·원천 범위·실명/신청자 결합·제품 자격·지급은 false/미확인이다.
+- **빈 응답 관찰은 미응시 증명이 아님:** 사용자가 지정한 이력 없는 계정의 응답은 SOURCE_LAYOUT_UNSUPPORTED/UNKNOWN으로 종료했다. 새 서명 생성·receipt 수락·미응시 승인은 하지 않았다. 이를 타 사용자의 성공한 실제 수집이나 인증된 빈 이력으로 세지 않는다. 실제 다건 계정·숨은 페이지/필터·공식 등록 기간·수강 후 ACHIEVEMENT는 미검증이다.
+- **합성 TEST 지급:** [저장된 검증](current/test-funding-lab-verification.json), 실행 코드 `390eccd8420fb28dd77694eebc77d5632e4af076`. 새 인메모리 TEST 체인에서 40+60 TEST 충전→100 TEST 전액 배정→고정 수령인 1회 지급·재조회/중복 재시도를 검증했다. 자격은 생성자가 신뢰한 인공 fixture이며 실제 원천 자격·PG·원화·실자금·제품 지급 성공이 아니다. 새 시험 28개와 기존 금고 회귀 78개는 별개 범위이며 다른 단계 총계와 합산하지 않는다.
+- **보류와 후속:** 실제 Moodle·원천 자격 검증 BLOCKED, grant/outbox HOLD, 독립 청구 제품 전환 NO-GO, 400% 자동 자격·지급 금지를 유지한다. 사업 단위 동일 시험 nullifier, 실제 웹 등록/동의·정책·금액 확정, PG/재원 책임, 운영 배포, 타 사용자 실제 수집과 비개발자 합성 사용성 시험은 후속이다. Mac CI timeout의 최초 원인은 미확정이다.
+
+### 정확한 head의 CI
+
+아래 병합 PR의 최종 head에서 Public content history, Public synthetic tests, Mac synthetic recovery가 PR/push 각각 성공했다. 재실행 통과를 과거 실패 원인의 해결로 표현하지 않는다.
+
+| PR / 정확한 head | PR CI / push CI | 확인 결과 |
+| --- | --- | --- |
+| #32 `0be735d61ed47e2d5dbb5b288dd26eed104a6ad3` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38542470643) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38542462827) | 최종 성공. 최초 Mac 실패 원인 미확정 |
+| #33 `04e71df5e381f61e7f49dd4ff2a4b7f22e1d58a1` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38536961078) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38536955128) | 성공 |
+| #34 `4da7a65cf350576e3da41900b75287a08210dffd` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38541499690) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38541492772) | 최종 성공. 과거 Mac timeout 원인 미확정 |
+| #35 `b02a51ad6223fcd64871b8891f7ced2879ac46e6` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38543004399) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38542998121) | 성공 |
+| #36 `9cf82914425da3b886b406f4d26a26fb3d42d70a` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38668219870) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38668162252) | 성공 |
+
+확인 시점 main `375051e`와 develop `21776f5` 자체의 check-runs와 Actions 실행은 각각 0건이다. [workflow](../.github/workflows/public-synthetic.yml)는 develop/main 대상 PR과 codex/** push를 검사한다. head CI 성공을 병합 커밋 검증이나 실제 계정·지급·배포 검증으로 옮겨 적지 않는다.
+
+열린 #41 `7ac1f2ca8777115104987926af7e7f588956219e`, #42 `0afe4cc19882e21566b4260b7278ee7e11262bc5`, #43 `3b540193e12085c0da38157364e3c59212493c9b`의 Public synthetic tests는 확인 시점 진행 중이었다. Public content history/Mac synthetic recovery의 일부 완료만으로 전체 CI 통과나 develop 반영을 주장하지 않는다. 이후 상태는 각 PR의 Checks를 확인한다.
+
+## 이전 날짜의 현황 기록
+
+아래 2026-10-12~14의 기준 커밋·열린 PR·완료/후속 표는 당시 스냅샷이다. 최신 원격 상태는 위 절을 우선하고, 다음 구현 범위는 최신 승인과 해당 계획을 확인한다.
+
+2026-10-14 M0 추가: [합성 계약](current/M0_CONTRACT.ko.md)·[결정/미결 질문](current/M0_DECISIONS.ko.md)·[프런트 시작 문서](current/FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
+2026-10-14 최신 확인: develop `6d941a1fe0669b89730da1472d23ecd7caab22f4`, PR #29와 #21 병합 완료. [구현 차이·근거](current/MVP_GAP_20261014.ko.md)가 현재 구현/실험/미검증을 구분한다. [새 정본 PRD](current/MVP_PRD_20261014.ko.md)와 [단계별 계획](current/MVP_PLAN_20261014.ko.md)은 문서 설계이며 기능 완료가 아니다. 실제 Moodle 제품 연동·원천 검증 차단, grant/outbox 보류, 독립 청구 제품 전환 NO-GO는 유지한다. 아래 2026-10-12~13의 상태·다음 단계·PR 표는 당시 이력이며 새 작업 순서는 최신 계획을 따른다.
+
 공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](current/PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
 
 공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](current/PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.

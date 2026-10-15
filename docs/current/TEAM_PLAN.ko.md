@@ -1,5 +1,17 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-15 통합 검토: [제품 API·저장 계약](PRODUCT_WORKFLOW_CONTRACT.ko.md)의 M3-0 합성 모듈은 PR #58로 develop `5f902dc`에 병합됐다. Moodle1502 실측 인계 PR #56은 `edb3efc`로 병합됐다. AI 소비자 PR #57은 이 기준을 이력 반영했으며 최신 병합 여부·CI는 해당 PR을 따른다. 기존 v4 API/DB·프론트 view는 유지하고 새 /mvp HTTP·실제 정책/동의·업로드/decode·운영 Evidence·M2 판정 저장·재원/화면 연결은 후속이다. 통합 검증 근거는 [현황](../status.md)의 최신 절을 우선한다.
+
+2026-10-15 최종 소비자 통합: M1/M2 #43/#46, AI 준비/소비자 #42/#47, Moodle 준비/일별/export/로컬 #41/#45/#48/#52, Mac 보정 #53은 develop에 병합됐다. 이 변경 #51은 충돌 필드 보류·정확한 계획/표시 기준의 정책 해시 결합·평가 원장과 실제 소규모 재평가를 추가한다. [최신 통합 현황](../status.md)과 [결합 경계](../ai-vision/POLICY_BINDING.ko.md)를 따른다. 합성 소비자 적합성은 확인했으나 운영 동의·Evidence 수락/DB·실제 기관 연결은 완료되지 않았다. clearapi1502 실제 재검증·AI 정상 자료 과잉 보류와 기존 정책/자격/지급 차단을 유지한다. 아래 날짜별 계획은 당시 범위다.
+
+2026-10-15 M2: [경로·증거·금액 후보 평가](MVP_EVALUATOR.ko.md)의 `clear-mvp-evaluation.1`은 M1 계약을 소비하는 별도 순수 합성 모듈이다. 증거 상태·OR·명시 선택·최초 제출·정정/최종성과 금액 후보를 분리하며 실제 자격/지급은 false다. HTTP/DB/금고와 기존 차단 조건을 유지한다.
+
+2026-10-15 M1: [공통 정책·증거 계약](MVP_POLICY_CONTRACT.ko.md)의 `clear-mvp.1`은 별도 버전 합성 컴파일/소비자 준비 계약이다. YBM형·시원스쿨형·제3 합성 프로필을 같은 제한된 엔진에서 설정으로 실행한다. 기존 M0·HTTP/DB/금고를 보존한다. M1/M2 승인으로 이번 범위 구현을 진행하되 아래 과거 미착수 문구는 당시 기록이다. 공식 조건·예치 정책 OPEN, Moodle/원천 BLOCKED·grant/outbox HOLD·독립 청구 NO-GO·Mac 원인 미확정은 유지한다.
+
+2026-10-14 M0 추가: [합성 계약](M0_CONTRACT.ko.md)·[결정/미결 질문](M0_DECISIONS.ko.md)·[프런트 시작 문서](FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
+2026-10-14 최신 제안은 [MVP 단계별 계획](MVP_PLAN_20261014.ko.md)이다. YBM 한 경로 합성 E2E를 우선하고 AI/Vision·Moodle을 공통 interface freeze 후 병렬 연결한다. 기준 develop `6d941a1`. 아래 C/F/B 계획은 이전 구현 이력/의존성 참고이며 자동 착수 대상이 아니다. 800점 AND 80%·최고점·선예치는 보존할 기존 코드이며 [새 PRD](MVP_PRD_20261014.ko.md)의 정책/재원 설계로 대체할 대상이다. 기능 구현·차단 해제·자동 병합은 이번 문서 범위 밖이다.
+
 공통 세션 흐름(2026-10-13): [이슈 #28](https://github.com/gw020328-oss/clear-education-v4/issues/28), [클라이언트 흐름 계약](PROOF_FLOW.ko.md). PR #27 병합 `77d1c4b` 위에서 생성·검토·지갑 승인·세션/결과 조회·취소와 응답 유실 복구를 구독 가능한 상태로 연결했다. F0 화면은 별도이며 HTTP/DB/정책/금고/Moodle 계약을 변경하지 않는다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류·독립 청구 제품 전환 NO-GO를 유지한다.
 
 공통 증명 세션 승인(2026-10-13): [이슈 #26](https://github.com/gw020328-oss/clear-education-v4/issues/26), [지갑 승인 도구](PROOF_WALLET.ko.md). PR #25 병합 `51ee66b` 위에서 기존 B1 서명/HTTP 계약을 재사용하는 `authorizeProofSession`을 추가했다. 검토한 문맥·독립 owner 공개키·중단/만료·응답 유실을 검사한다. 실제 Moodle 연동·원천 검증 차단과 grant/outbox 보류는 유지하며 HTTP/DB/정책/금고/화면은 변경하지 않는다.

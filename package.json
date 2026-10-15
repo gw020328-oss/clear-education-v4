@@ -18,7 +18,12 @@
     "test:proof-sessions": "node --test tests/proof-sessions/*.test.mjs",
     "test:exam-evidence": "node --test tests/exam-evidence/*.test.mjs",
     "test:product-proof": "node --test tests/product-proof/*.test.mjs",
-    "test:learning-evidence": "node --test tests/learning-evidence/*.test.mjs"
+    "test:learning-evidence": "node --test tests/learning-evidence/*.test.mjs",
+    "test:funding-lab": "node --test tests/funding-lab/*.test.mjs",
+    "demo:funding-lab": "node spikes/funding-lab/run-demo.mjs",
+    "test:mvp-policy": "node --test tests/mvp-policy/*.test.mjs",
+    "test:product-workflow": "node --test tests/product-workflow/*.test.mjs",
+    "demo:product-workflow": "node specs/m3/demo.mjs"
   },
   "dependencies": {
     "ethers": "6.17.0",
@@ -26,7 +31,7 @@
     "solc": "0.8.30"
   },
   "version": "0.0.0",
-  "description": "CLEAR v4 isolated development workspace — W01 setup only",
+  "description": "CLEAR v4 isolated development workspace \u2014 W01 setup only",
   "engines": {
     "node": "24.21.0",
     "npm": "11.19.0"

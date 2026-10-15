@@ -1,5 +1,15 @@
 # CLEAR 문서
 
+2026-10-15 11:22 KST 최신 원격 상태: `develop` [21776f5](https://github.com/gw020328-oss/clear-education-v4/commit/21776f53d7660597b94a37c89139316e43eeb673)(PR #36 병합), `main` `375051e` 미통합. [최신 현황·PR·CI](status.md#2026-10-15-원격-확인)를 먼저 읽습니다. 아래 날짜별 기준과 시험 수는 당시 기록입니다.
+
+- [등록 이력 → 목표 성적의 합성 계약](current/EXAM_LIFECYCLE.ko.md), [별도 영속 접수·수집기 연결](current/HISTORY_INTAKE.ko.md), [비식별 실제 실행 기록](current/history-intake-verification.json): PR #31~#35가 develop에 병합됐습니다. 표 증명·접수 성공과 전체 이력·신원·제품 자격·지급을 구분합니다.
+- [부분 충전·전액 배정 TEST 실험](current/TEST_FUNDING_LAB.ko.md), [저장된 합성 검증](current/test-funding-lab-verification.json): PR #36 병합. 실제 원천·PG·원화·제품 지급 통합은 포함하지 않습니다.
+- Moodle·AI/Vision·공통 정책 계약의 진행 PR은 최신 현황에서 확인합니다. 실제 Moodle/원천 자격 검증 BLOCKED, grant/outbox HOLD, 독립 청구 제품 NO-GO를 유지합니다.
+
+2026-10-14 M0 추가: [합성 계약](current/M0_CONTRACT.ko.md)·[결정/미결 질문](current/M0_DECISIONS.ko.md)·[프런트 시작 문서](current/FRONTEND_M0_HANDOFF.ko.md)를 우선한다. 첫 mock의 필드·예제는 FIXED_FOR_M0_FIXTURES이며 소비자 합의는 PENDING이다. 아래 넓은 설계의 wire/ABI·실제 조건은 여전히 미동결이다. 제품 기능과 M1 이후 구현은 포함하지 않으며 실제 Moodle·원천 검증 차단, grant/outbox 보류, 독립 청구 NO-GO를 유지한다.
+
+2026-10-14 목표 설계의 시작점: [정본 PRD](current/MVP_PRD_20261014.ko.md) → [현재 구현 차이·근거](current/MVP_GAP_20261014.ko.md) → [DRAFT_INTERFACE](current/MVP_INTERFACES_20261014.ko.md) → [단계별 개발 계획](current/MVP_PLAN_20261014.ko.md). 기준 develop `6d941a1`. 새 요구는 설계이며 현재 코드·실제 수집/지급 차단을 변경하지 않습니다. 과거 reference와 아래 날짜별 기록을 최신 목표/완료 사실로 혼동하지 않습니다.
+
 새 팀원과 LLM은 [팀 인계](current/TEAM_HANDOFF.ko.md) → [역할·PR 계획](current/TEAM_PLAN.ko.md) → [현재 API 계약](current/API_CONTRACT.ko.md) 순서로 시작합니다. [첫 작업 프롬프트](current/TEAM_START_PROMPT.ko.md)는 F0 합성 화면 PR을 위한 복사용 메시지입니다. 인계 기준은 PR #8 제품 코드와 PR #5 문서가 병합된 `9397e62`이며, 아래 날짜가 있는 현황은 당시 스냅샷입니다.
 
 2026-10-12 14:11 KST 확인: PR #1~#4·#6~#8은 develop (`841052a`)에 병합됐고 main (`375051e`)에는 아직 반영되지 않았습니다. 최신 상태·정확한 근거 커밋·CI는 [개발 현황](status.md)을 먼저 확인하세요. 실제 YBM 증명 1쌍의 생성·독립 검증 기록과 제품 자격·지급 완료를 구분합니다.
@@ -29,7 +39,7 @@
 - [합성 정책과 결정적 자격 평가](current/POLICY_EVALUATOR.ko.md): PR #6, 기간 내 최고점·800점 AND 시드 80%·결측/충돌 보류. SYNTHETIC 전용.
 - [지갑 인증·신청 동의·SQLite 영속 상태](current/WALLET_APPLICATIONS.ko.md): PR #7, 로그인/신청 동의 nonce 원자 소비·재시작 복원.
 - [금고 설정·최종 동의·예치 확인](current/VAULT_ENROLLMENT.ko.md): PR #8, CONSENTED→FUNDING_PENDING→ENROLLED와 복구. 메모리 EVM/무가치 TEST 검증.
-- 제품 proof·시험 nullifier·발급 outbox·독립 청구·실제 자격/지급·타 사용자·운영 배포는 후속입니다. 과거 보고서의 당시 후속 항목은 최신 현황과 함께 읽습니다.
+- [제품 proof 세션·영속 nonce](current/PROOF_SESSIONS.ko.md)와 [합성 결과 단회 수락](current/PRODUCT_PROOF.ko.md)은 develop에 병합됐습니다. 사업 단위 시험 nullifier·제품 자격/지급·타 사용자·운영 배포는 후속이며, grant/outbox와 독립 청구 제품 전환은 보류합니다. 과거 보고서의 당시 후속 항목은 최신 현황과 함께 읽습니다.
 
 ## 실험 기록
 

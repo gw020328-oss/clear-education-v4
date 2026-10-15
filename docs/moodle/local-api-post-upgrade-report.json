@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "kind": "ACTUAL_POST_UPGRADE_LOCAL_API_VERIFICATION",
+  "mode": "LOCAL_LAB",
+  "sourceVersions": {
+    "clearwatch": "2026101501",
+    "clearapi": "2026101501"
+  },
+  "rows": 5,
+  "pages": 3,
+  "factsMode": "LOCAL_LMS_RECORD",
+  "dailyStatus": "IN_PROGRESS",
+  "creditedDates": [
+    "2026-10-15"
+  ],
+  "tests": [
+    "post-upgrade-records-preserved",
+    "actual-api-normalize-daily-current-code",
+    "wrong-course-scope-rejected",
+    "plugin-access-deadline-enforced",
+    "original-deadline-restored-without-extension",
+    "test-credentials-absent-from-new-container-logs"
+  ],
+  "metrics": [
+    {
+      "activity": "normal",
+      "effectiveMs": "29987",
+      "mediaCoveredMs": "30000",
+      "normalClose": true,
+      "creditDay": "2026-10-15",
+      "providerProgressBps": null,
+      "speedCompliance": "UNKNOWN"
+    },
+    {
+      "activity": "double",
+      "effectiveMs": "14992",
+      "mediaCoveredMs": "30000",
+      "normalClose": true,
+      "creditDay": null,
+      "providerProgressBps": null,
+      "speedCompliance": "UNKNOWN"
+    },
+    {
+      "activity": "pause",
+      "effectiveMs": "29985",
+      "mediaCoveredMs": "30000",
+      "normalClose": true,
+      "creditDay": "2026-10-15",
+      "providerProgressBps": null,
+      "speedCompliance": "UNKNOWN"
+    }
+  ],
+  "transport": "LOOPBACK_HTTP_NOT_PRODUCTION_HTTPS",
+  "productEligible": false,
+  "paymentAllowed": false,
+  "humanAttentionProven": false
+}

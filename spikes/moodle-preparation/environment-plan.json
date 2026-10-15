@@ -1,0 +1,32 @@
+{
+  "status": "PLAN_ONLY",
+  "runtimeEnabled": false,
+  "purpose": "New isolated L2 environment after common contract readiness",
+  "projectName": "clear-moodle-issue40-lab",
+  "proposedLoopbackPort": 18765,
+  "sourceMounts": "NEW_COPIES_ONLY",
+  "readExistingExperimentRuntime": false,
+  "reuseExistingVolumesOrDatabase": false,
+  "newVolumeNames": ["clear-moodle-issue40-lab-db", "clear-moodle-issue40-lab-content"],
+  "credentials": "NOT_PROVISIONED",
+  "sources": {
+    "moodleCommit": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+    "videoCheckCommit": "67fb5233070f49653c0bd8209338c34b8fe61177",
+    "clearwatchVersion": "2026101401",
+    "phpImageDigestFromPriorExperiment": "sha256:501f19fa75ad3cdc8962f2a742f39d179b8aa8ffdc2ff233d8d27a32f14e0e05",
+    "postgresImageDigest": null
+  },
+  "gates": [
+    "COMMON_M1_M2_VERSION_AND_START_SIGNAL",
+    "APPROVED_MOODLE_PATH_OWNERSHIP",
+    "PIN_NEW_DATABASE_IMAGE_AND_VERIFY_IMAGE_COMPATIBILITY",
+    "CONFIRM_PORT_AND_NEW_VOLUME_NAMES_BEFORE_START",
+    "GPL_PATCH_AND_UPGRADE_ROLLBACK_REVIEW",
+    "NEW_SYNTHETIC_ACCOUNT_ONLY",
+    "NO_OFFICIAL_PROGRESS_OR_SPEED_INFERENCE",
+    "SOURCE_REVISION_AND_ATOMIC_EXPORT_DESIGN"
+  ],
+  "collectionEnabled": false,
+  "paymentAuthorized": false,
+  "humanAttentionProven": false
+}
