@@ -41,8 +41,10 @@ Gemini 평가 연결은 prompt `clear-gemini-eval.3`와 필드 범위가 있는 
 
 기존 생성/사전계수 3.5 각각14회 + 3.8 각각2회의 승인은 모두 소진됐다. 제안한 후속 최소 재평가는 3.5 정상/충돌 각1건, 생성·사전계수 최대2회·US$0.03이다. 사용자 답변은 사용한 결제 API에 대한 확인 질문이므로 이를 추가 예산 승인으로 해석하지 않는다. 새 유료 호출은 실행하지 않았다. 실제 실행에 사용한 환경변수 키의 소유 프로젝트와 사용자가 충전한 Billing 프로젝트의 일치는 독립 확인하지 못했다. 키 값·결제 식별자를 요구하거나 출력하지 않는다.
 
-공통 #43은 `3781f5831f4482b62a928407ce432a2eaebb7ad8`로 develop에 병합되어 작업본에 이력 반영했다(schema/API 필드 변경 없음). #46은 아직 미병합이다. 최종 병합 commit 수신 후 소비 검증을 이어가며, 이번 변경으로 M2 또는 정본 결합이 완료됐다고 기록하지 않는다. reviewPlan→policyHash OPEN, 운영 Evidence 연결 차단을 유지한다. 예치 정책 미확정,400% 사전검토만,500% 제외, grant/outbox HOLD·독립청구 NO-GO·원천/동일인 미확인 보류도 유지한다. 브랜드별 특례가 없다.
+공통 #43은 `3781f5831f4482b62a928407ce432a2eaebb7ad8`로 develop에 병합되어 작업본에 이력 반영했다(schema/API 필드 변경 없음). #46도 최종 merge `1f98d5f26dfcea34af769e5b74528241224702fc`를 이력 반영했다. schema/API 필드·버전은 변경되지 않았다. 이번 변경을 운영 Evidence 연결이나 정본 결합 완료로 기록하지 않는다. reviewPlan→policyHash OPEN, 운영 Evidence 연결 차단을 유지한다. 예치 정책 미확정,400% 사전검토만,500% 제외, grant/outbox HOLD·독립청구 NO-GO·원천/동일인 미확인 보류도 유지한다. 브랜드별 특례가 없다.
 
 이번 로컬 검증은 192 tests PASS(공통 M1 10 포함), 소비자 mock 7/7, 저장 ACTUAL T04 오프라인 재생2/2, M0 3종·workspace local PASS다. 새 구조화 Gemini 응답은 fake transport로 검증했다. 기존 #51 d3c1736 원격 CI 6개 PASS를 확인했으며, 후속 head의 CI는 별도 결과로 기록한다.
 
 추가 검증으로 Gemini 입력 fixture에 `requestedFieldIds`를 독립 pin했다. 모델이 반환한 필드로 허용 목록을 만들지 않고, 잘못된 필드/질문 대상은 거부한다. renderer는 이 ID 목록만 prompt에 전달하며 gold 값은 보내지 않는다. 과거 v1 corpus/ledger를 덮거나 초기화해 승인 한도를 재사용하지 않는다. 새 corpus 준비는 별도 ignored 디렉터리에서 진행해야 한다. 최종 전용·기존 회귀는 193 PASS다.
+
+최종 공통 M1/M2 병합 후 전용·기존 합산 211 tests PASS(공통 M1+M2 27 포함)를 확인했다. 세 프로필의 CHECKED DocumentPrecheck를 M2 Evidence로 직접 넣으면 거부되는 소비 경계 회귀도 포함한다. 이는 Evidence adapter 구현 완료가 아니다. 기존 193 결과와 구분하며 M2의 snapshot/점수 충돌 보정도 같은 실행에서 통과했다.
