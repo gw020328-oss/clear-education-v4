@@ -1,3 +1,4 @@
+import { quoteBenefitAmount } from '../../src/policy/benefit-amount.mjs';
 // Offline conformance arithmetic for fixed examples, not a production rule/settlement engine.
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -29,19 +30,7 @@ export function checkBenefits({ schema, shape, canonical, ensure, source }) {
       return all(checks);
     }))]) ]));
   }
-  function quote(c) {
-    const tier = c.selection.tier, a = c.amountInputs;
-    if (tier === null) return ['NO_SELECTION', null];
-    if (tier === 400) return ['PRECHECK_ONLY', null];
-    if (a.basis === 'OFFICIAL_OPEN' || Object.values(a).includes(null)) return ['AMOUNT_OPEN', null];
-    const [paid, book, device, fee, exam, cap] = ['paidAtoms', 'bookAtoms', 'deviceAtoms', 'fixedFeeAtoms', 'examCreditAtoms', 'capAtoms'].map(k => BigInt(a[k]));
-    const base = paid - book - device;
-    const beforeTax100 = base * BigInt(tier) - fee * 100n + exam * 100n;
-    if (base < 0n || beforeTax100 <= 0n) return ['INVALID_AMOUNT', null];
-    // One final integer division; no interim rounding, float or guessed percentage fee.
-    const net = beforeTax100 * BigInt(10000 - a.taxBps) / 1000000n;
-    return net <= 0n || net > cap ? ['INVALID_AMOUNT', null] : ['CALCULATED_SYNTHETIC', net.toString()];
-  }
+  const quote = c => quoteBenefitAmount(c.selection.tier, c.amountInputs);
   function settlement(c, states, qs) {
     const selected = c.selection.tier;
     if (!sameScore(c)) return ['ON_HOLD', 'FIRST_SCORE_MISMATCH'];
