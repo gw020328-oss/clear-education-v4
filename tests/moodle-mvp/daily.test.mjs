@@ -144,3 +144,21 @@ for (const [label, mutate] of [
     assert.equal(r.observation.status, 'UNKNOWN'); assert.equal(r.observation.days, null);
   });
 }
+
+// A still-fresh snapshot cannot learn what happened after it was observed.
+test('crossing midnight without a new snapshot cannot finalize success or absence', () => {
+  for (const missing of [false, true]) {
+    const f = dailyFixture(), end = f.compiled.policy.requirements.find(r => r.kind === 'LEARNING').period.until;
+    f.facts.snapshot.observedAt = String(end - 1);
+    f.facts.snapshot.validUntil = String(end + 300);
+    f.facts.snapshot.coverageEndExclusive = String(end - 1);
+    if (missing) f.facts.records.at(-1).sourceRecordStatus = 'NO_RECORD';
+    repin(f);
+    assert.equal(f.run().learningStatus, 'IN_PROGRESS');
+    assert.equal(f.run().observation.value, null);
+    f.facts.snapshot.observedAt = String(end);
+    f.facts.snapshot.coverageEndExclusive = String(end);
+    repin(f);
+    assert.equal(f.run().learningStatus, missing ? 'NOT_MET' : 'PASS');
+  }
+});
