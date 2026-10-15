@@ -4,6 +4,7 @@ import {sourceFixture,textObserver,visionObserver} from './source-bundle-fixture
 import {proposeSourceBundle} from '../../src/ai-policy/source-bundle-adapter.mjs';
 import {digest} from '../../src/policy/mvp/contract.mjs';
 import {sourceSnapshotHash,sourceBundleHash} from '../../src/product-workflow/source-contract.mjs';
+import {bytesDigest} from '../../src/product-workflow/contract.mjs';
 test('source bundle pins raw/text separately, preserves origin and treats source instructions as data',async()=>{
  const f=sourceFixture(),original=structuredClone(f.input.draft);let called=0;
  const r=await proposeSourceBundle(f.input,f.lookup,{textAdapter:textObserver(request=>{called++;assert.equal(request.purpose,'POLICY_DRAFT');assert.ok(request.blocks[1].text.includes('approve payment'));return f.output;})});
@@ -64,4 +65,33 @@ test('cancellation before lookup sends nothing and late cancellation drops obser
  assert.equal(calls,0);assert.ok(r.coverage.some(c=>c.code==='CANCELLED'));
  const next=sourceFixture(),controller=new AbortController();const late=await proposeSourceBundle(next.input,next.lookup,{signal:controller.signal,textAdapter:textObserver(()=>{controller.abort();return next.output;})});
  assert.equal(late.current,false);assert.equal(late.proposal,null);
+});
+test('failed explicit image request stays manifest-backed coverage and never becomes a quote',async()=>{
+ const f=sourceFixture(),url='https://synthetic.example.invalid/terms',s=f.snapshot;
+ Object.assign(s,{sourceType:'PUBLIC_URL',requestedUrl:url,finalUrl:url,httpStatus:200,retrievalStatus:'PARTIAL',limitations:['RESOURCE_FAILED','COMPLETENESS_UNVERIFIED'],
+  resourceRequests:[{resourceId:'page',role:'PAGE',requestedUrl:url,finalUrl:url,httpStatus:200,status:'COLLECTED'},
+   {resourceId:'guide-image',role:'IMAGE',requestedUrl:'https://synthetic.example.invalid/guide.png',finalUrl:null,httpStatus:404,status:'FAILED'}]});
+ Object.assign(s.artifacts.find(a=>a.role==='RESPONSE_BODY'),{requestedUrl:url,finalUrl:url});
+ f.input.draft.sources[0].origin='OFFICIAL_SNAPSHOT';f.input.draft.sources[0].applicability='OPEN';f.input.sources=structuredClone(f.input.draft.sources);
+ f.input.bundle.entries[0].snapshotHash=sourceSnapshotHash(s);f.input.expectedBundleHash=sourceBundleHash(f.input.bundle);f.setLatest(f.input.expectedBundleHash);
+ const r=await proposeSourceBundle(f.input,f.lookup,{textAdapter:textObserver(()=>f.output)});
+ assert.equal(r.status,'NEEDS_SUPPLEMENT');assert.ok(r.coverage.some(c=>c.resourceId==='guide-image'&&c.code==='MISSING_INPUT'));
+ assert.equal(r.provenance[0].sourceType,'PUBLIC_URL');assert.equal(r.proposal.draft.sources[0].origin,'OFFICIAL_SNAPSHOT');assert.ok(!JSON.stringify(r.proposal.grounds).includes('guide-image'));
+});
+test('required-evidence draft is grounded in captured text and remains unapproved',async()=>{
+ const f=sourceFixture({evidence:true}),need={requirementId:'score',fieldIds:['score'],grounds:[{sourceId:f.snapshot.sourceId,locator:'artifact/text/line/3',quote:'SYNTHETIC submit score evidence.'}]};
+ const r=await proposeSourceBundle(f.input,f.lookup,{textAdapter:textObserver(()=>({...f.output,evidenceNeeds:[need]}))});
+ assert.equal(r.evidenceNeeds.length,1);assert.equal(r.evidenceNeeds[0].status,'NEEDS_OPERATOR_REVIEW');assert.equal(r.evidenceNeeds[0].sourceVerified,false);assert.equal(r.publishable,false);
+ for(const invalid of [{...need,fieldIds:['invented']},{...need,grounds:[{...need.grounds[0],quote:'Uncollected guide requires extra proof'}]}]){
+  const bad=await proposeSourceBundle(f.input,f.lookup,{textAdapter:textObserver(()=>({...f.output,evidenceNeeds:[invalid]}))});assert.deepEqual(bad.evidenceNeeds,[]);assert.ok(bad.coverage.some(c=>c.code==='MODEL_FAILED'));
+ }
+});
+test('invalid UTF8 text is unreadable rather than a source-backed candidate',async()=>{
+ const f=sourceFixture(),bad=Buffer.from([255,254]);f.blobs.set('text',bad);Object.assign(f.snapshot.artifacts.find(a=>a.artifactId==='text'),{byteLength:bad.length,sha256:bytesDigest(bad)});
+ f.input.bundle.entries[0].snapshotHash=sourceSnapshotHash(f.snapshot);f.input.expectedBundleHash=sourceBundleHash(f.input.bundle);f.setLatest(f.input.expectedBundleHash);
+ const r=await proposeSourceBundle(f.input,f.lookup);assert.equal(r.proposal,null);assert.ok(r.coverage.some(c=>c.code==='UNREADABLE'&&c.limitation==='TEXT_DECODE_FAILED'));
+});
+test('unexpected lookup errors never expose source or provider messages',async()=>{
+ const f=sourceFixture(),r=await proposeSourceBundle(f.input,{...f.lookup,getArtifact:async()=>{throw new Error('SYNTHETIC_RAW_LOOKUP_SECRET');}});
+ assert.equal(r.current,false);assert.equal(r.proposal,null);assert.ok(!JSON.stringify(r).includes('SYNTHETIC_RAW_LOOKUP_SECRET'));assert.ok(r.coverage.some(c=>c.limitation==='SOURCE_UNAVAILABLE'));
 });
