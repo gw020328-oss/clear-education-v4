@@ -42,6 +42,9 @@ export function evaluateMvpEligibility(compiled, { context, evidence, selection 
             : o.days !== null && o.days <= r.days), 'MVP_OBSERVATION_VALUE');
       } else check(o.value === null && o.days === null, 'MVP_OBSERVATION_VALUE');
     }
+    // Threshold rules for one exam/history snapshot must use the same score.
+    if (['EXAM', 'BASELINE'].includes(req.kind)) check(new Set(e.observations
+      .filter(o => o.status === 'OBSERVED').map(o => o.value)).size <= 1, 'MVP_SCORE_CONFLICT');
   }
   let firstScoreMismatch = false;
   const rules = p.rules.map(r => {
@@ -59,6 +62,9 @@ export function evaluateMvpEligibility(compiled, { context, evidence, selection 
       evaluated = state('UNKNOWN', 'SUBMISSION_PERIOD');
     else if (req.coverage === 'COMPLETE_PERIOD' && (e.completeness !== 'COMPLETE_SYNTHETIC' || !same(e.coveredPeriod, req.period)))
       evaluated = state('UNKNOWN', 'COVERAGE_UNKNOWN');
+    else if (req.coverage === 'COMPLETE_PERIOD' && e.collectedAt < req.period.until
+      && (req.kind !== 'LEARNING' || context.evaluatedAt >= req.period.until))
+      evaluated = state('UNKNOWN', 'COVERAGE_UNKNOWN'); // elapsed time cannot complete an older snapshot
     else {
       const o = e.observations.find(o => o.ruleId === r.ruleId);
       const exam = req.kind === 'EXAM' ? context.examPins.find(v => v.evidenceId === e.evidenceId && v.revision === e.revision) : null;

@@ -43,3 +43,5 @@ AI/Vision·Moodle에는 M1 최소 feature commit과 소유 경계·예제·착�
 예치 비율·공용 풀·배정 순서·충전/회수/추가 보장은 멘토 미결로 남긴다. 기존 금고·DB·체인·키, 실제 Moodle/원천 차단, 400% 자동 자격·지급 금지, 500% 제외, grant/outbox 보류, 독립 청구 NO-GO와 Mac 실패 원인 미확정을 유지한다.
 
 소비자 bridge 피드백으로 현재 기간의 FUTURE_DAYS가 관찰 UNKNOWN/MISSING/NEEDS_SUPPLEMENT를 가리는 우선순위를 보정했다. 원천/진위·전체성 차단을 먼저 확인하고, 누락·미확인 관찰을 보존한 뒤 OBSERVED 자료에만 현재 기간 IN_PROGRESS를 적용한다. 신규 회귀는 제3 프로필의 다섯 상태를 재현한다. 지급 gate는 보정 전후 모두 false다.
+
+최종 리뷰 보정: 전체 기간 증거는 기간 종료 시점 이후에 수집해야 한다. 진행 중 학습 관찰은 IN_PROGRESS일 수 있지만, 종료 전 snapshot을 그대로 둔 채 평가 시각만 뒤로 옮기면 COVERAGE_UNKNOWN으로 보류한다. 과거 이력의 NO_RECORD도 기간 끝 이전 수집으로는 확정하지 않는다. 같은 시험/이력 Evidence의 여러 OBSERVED 점수 규칙이 서로 다른 값을 가지면 MVP_SCORE_CONFLICT로 거부한다. 두 회귀를 추가해 M1 10개+M2 17개, 총 27개가 통과했다. 예제의 완료 학습 snapshot도 기간 종료 후 취득·수락으로 보정했다.
