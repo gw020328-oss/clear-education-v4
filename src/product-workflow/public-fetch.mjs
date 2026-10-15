@@ -26,29 +26,30 @@ export function isPublicAddress(address){
 }
 function bounded(promise,signal){return new Promise((resolve,reject)=>{const abort=()=>{signal.removeEventListener('abort',abort);reject(Error('SOURCE_FETCH_CANCELLED'));};signal.addEventListener('abort',abort,{once:true});
   Promise.resolve(promise).then(v=>{signal.removeEventListener('abort',abort);resolve(v);},()=>{signal.removeEventListener('abort',abort);reject(Error('SOURCE_FETCH_FAILED'));});if(signal.aborted)abort();});}
-export function requestPinned(u,address,limit,signal){return new Promise((resolve,reject)=>{
+export function requestPinned(u,address,limit,signal,budget={remaining:SOURCE_LIMITS.maxTotalBytes}){return new Promise((resolve,reject)=>{
+  if(!Number.isSafeInteger(budget.remaining)||budget.remaining<=0||budget.remaining>SOURCE_LIMITS.maxTotalBytes){reject(Error('SOURCE_SIZE'));return;}
   const req=httpsRequest({hostname:u.hostname,servername:u.hostname,port:443,path:u.pathname+u.search,method:'GET',agent:false,family:address.family,
     lookup:(_host,_options,callback)=>callback(null,address.address,address.family),signal,
     headers:{accept:'text/html,text/plain,image/png,image/jpeg','accept-encoding':'identity','user-agent':'CLEAR-Public-Source/1'}},res=>{
       const status=res.statusCode,location=res.headers.location;
       if([301,302,303,307,308].includes(status)){res.destroy();resolve({status,location,mediaType:null,bytes:Buffer.alloc(0)});return;}
       const encoding=res.headers['content-encoding'];if(encoding&&encoding!=='identity'){res.destroy();reject(Error('SOURCE_ENCODING'));return;}
-      let length=0;const chunks=[];res.on('data',chunk=>{length+=chunk.length;if(length>limit){res.destroy();reject(Error('SOURCE_SIZE'));}else chunks.push(chunk);});
+      let length=0;const chunks=[];res.on('data',chunk=>{length+=chunk.length;const available=budget.remaining;budget.remaining=Math.max(0,available-chunk.length);if(length>limit||chunk.length>available){res.destroy();reject(Error('SOURCE_SIZE'));}else chunks.push(chunk);});
       res.on('end',()=>resolve({status,location:null,mediaType:String(res.headers['content-type']??'').split(';')[0].trim().toLowerCase(),bytes:Buffer.concat(chunks)}));
       res.on('error',()=>reject(Error('SOURCE_FETCH_FAILED')));
     });req.on('error',()=>reject(Error('SOURCE_FETCH_FAILED')));req.end();
 });}
 // Trusted server configuration only. No user-supplied transport, headers,
 // cookies, proxy, port, allowlist edits, scripts or automatic link discovery.
-export async function fetchPublicResource(value,{kind='PAGE',allowlist=OFFICIAL_URLS,lookup=dnsLookup,request=requestPinned,signal}={}){
+export async function fetchPublicResource(value,{kind='PAGE',allowlist=OFFICIAL_URLS,lookup=dnsLookup,request=requestPinned,signal,budget={remaining:SOURCE_LIMITS.maxTotalBytes}}={}){
   check(['PAGE','IMAGE'].includes(kind),'SOURCE_MEDIA');const permitted=[...allowlist],start=validatePublicUrl(value,permitted).href;
   const active=AbortSignal.any([AbortSignal.timeout(SOURCE_LIMITS.requestTimeoutMs),...(signal?[signal]:[])]);
   const limit=kind==='PAGE'?SOURCE_LIMITS.maxBodyBytes:SOURCE_LIMITS.maxImageBytes;let next=start;
   for(let redirects=0;redirects<=SOURCE_LIMITS.maxRedirects;redirects++){
-    check(!active.aborted,'SOURCE_FETCH_CANCELLED');const u=validatePublicUrl(next,permitted);
+    check(!active.aborted,'SOURCE_FETCH_CANCELLED');check(Number.isSafeInteger(budget.remaining)&&budget.remaining>0&&budget.remaining<=SOURCE_LIMITS.maxTotalBytes,'SOURCE_SIZE');const u=validatePublicUrl(next,permitted);
     const addresses=await bounded(lookup(u.hostname,{all:true,verbatim:true}),active);
     check(Array.isArray(addresses)&&addresses.length>0&&addresses.length<=64&&addresses.every(a=>isPublicAddress(a.address)&&isIP(a.address)===a.family),'SOURCE_DESTINATION_BLOCKED');
-    const response=await bounded(request(u,addresses[0],limit,active),active);check(!active.aborted,'SOURCE_FETCH_CANCELLED');
+    const response=await bounded(request(u,addresses[0],limit,active,budget),active);check(!active.aborted,'SOURCE_FETCH_CANCELLED');
     if([301,302,303,307,308].includes(response.status)){check(redirects<SOURCE_LIMITS.maxRedirects&&typeof response.location==='string','SOURCE_REDIRECT');
       next=validatePublicUrl(new URL(response.location,u).href,permitted).href;check(new URL(next).origin===new URL(start).origin,'SOURCE_REDIRECT_ORIGIN');continue;}
     if(response.status!==200){const error=Error('SOURCE_HTTP_STATUS');if(Number.isInteger(response.status)&&response.status>=100&&response.status<=599)error.httpStatus=response.status;throw error;}check(kind==='PAGE'?['text/html','text/plain'].includes(response.mediaType):['image/png','image/jpeg'].includes(response.mediaType),'SOURCE_MEDIA');

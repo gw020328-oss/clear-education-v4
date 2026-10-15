@@ -91,4 +91,6 @@ lookup은 snapshot을 await 직후 고정 복사하고 각 artifact bytes를 복
 
 SourceSnapshot.resourceRequests는 `{resourceId,role:PAGE|IMAGE,requestedUrl,finalUrl,httpStatus,status:COLLECTED|FAILED}`의 최대8개 배열이다. PUBLIC_URL은 page와 명시 이미지의 모든 시도를 포함하고 PASTE/FILE은 빈 배열이다. 실제 보관 artifact가 없는 COLLECTED 표시는 거부하며, FAILED 리소스가 있으면 전체 COLLECTED를 거부한다. exact source version에 실패 URL도 결합되므로 다음 수집/보완에서 누락 여부를 비교할 수 있다. archive는 시연용120 snapshot 상한을 두며, 버전 tombstone은 purge로 초기화하지 않는다.
 
+통합 검토 보정: 기본 HTTPS transport는 page·image의 응답 스트림 전체에 하나의 16MiB 수신 예산을 공유한다. 실패한 응답에서 읽은 bytes도 차감하며 초과 chunk는 보관하지 않고 스트림을 닫는다. 예산 소진 뒤 후속 리소스는 요청하지 않고 FAILED/RESOURCE_FAILED로 남긴다. 전송 계층에서 이미 전달된 마지막 chunk의 초과분까지 네트워크 수신을 되돌릴 수 있다는 보장은 아니다. raw+추출 text+image의 보관 합계16MiB 검사는 이 수신 예산과 별도로 유지한다. 실제 URL 호출 없이 합성 스트림과 collector 회귀로 검사한다.
+
 계약 초기 커밋4018e32, 기관/저장 후속91430c6, resourceRequests 및 최종 consumer 계약48d2117을 AI에 전달했다. AI #57은 별도 Draft 의존 PR이며 이 PR에 자동 포함하지 않는다. 해당 모듈 소비자의 실제 최종 시험/CI는 자신의 PR에서 확인한다. Moodle 새1502 실측21/21은 Draft #56의 근거이고 그 PR 역시 자동 병합하지 않는다.

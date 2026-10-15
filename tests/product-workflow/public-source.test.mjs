@@ -47,6 +47,18 @@ test('image fetch failure and invalid text decoding preserve raw body and partia
  const f=await collectSourceSnapshot({...input,imageUrls:[OFFICIAL_URLS[1]]},{now:()=>100,fetchResource:async(value,{kind})=>{if(kind==='IMAGE')throw Error('SYNTHETIC_PROVIDER_PRIVATE');return {requestedUrl:value,finalUrl:value,status:200,mediaType:'text/html',bytes:Buffer.from([255,254])};}});
  assert.equal(f.snapshot.retrievalStatus,'PARTIAL');assert.equal(f.snapshot.textArtifactId,null);assert.deepEqual(f.snapshot.artifacts.map(a=>a.role),['RESPONSE_BODY']);assert.ok(f.snapshot.limitations.includes('RESOURCE_FAILED'));assert.equal(f.snapshot.resourceRequests[1].status,'FAILED');assert.equal(f.snapshot.resourceRequests[1].requestedUrl,OFFICIAL_URLS[1]);
 });
+test('collector shares the transport budget and leaves later resources failed after exhaustion',async()=>{
+ let calls=0,shared;
+ const result=await collectSourceSnapshot({...input,imageUrls:OFFICIAL_URLS.slice(1)},{now:()=>100,fetchResource:async(value,{kind,budget})=>{
+  calls++;if(!shared)shared=budget;assert.equal(budget,shared);
+  if(kind==='IMAGE'){budget.remaining=0;throw Error('SOURCE_SIZE');}
+  return {requestedUrl:value,finalUrl:value,...page()};
+ }});
+ assert.equal(calls,2);assert.equal(result.snapshot.retrievalStatus,'PARTIAL');
+ assert.ok(result.snapshot.limitations.includes('RESOURCE_FAILED'));
+ assert.deepEqual(result.snapshot.resourceRequests.map(r=>r.status),['COLLECTED','FAILED','FAILED','FAILED']);
+ assert.deepEqual(result.snapshot.artifacts.map(a=>a.role),['RESPONSE_BODY','EXTRACTED_TEXT']);
+});
 test('source archives are immutable, private, recoverable and expired bytes cannot be resurrected',async t=>{
  const directory=realpathSync(mkdtempSync(join(tmpdir(),'clear-source-')));let time=101,store=openSourceStore({directory,environment:env,now:()=>time});t.after(()=>{store.close();rmSync(directory,{recursive:true,force:true});});
  const collected=createSourceSupplement({...input,sourceType:'PASTE',bytes:Buffer.from('SYNTHETIC quote'),collectedAt:100});

@@ -51,5 +51,18 @@
     "grant": "HOLD",
     "outbox": "HOLD",
     "independentClaim": "NO_GO"
+  },
+  "integrationReview": {
+    "date": "2026-10-15",
+    "baseDevelop": "edb3efcdc2af0ff045a24dc95b6957f54818e3de",
+    "productWorkflowTests": 38,
+    "sharedResponseByteBudgetRegression": true,
+    "failedReadBytesCharged": true,
+    "dispatchAfterBudgetExhaustion": false,
+    "actualWebsiteFetches": 0,
+    "demo": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "change": "Share 16MiB response-stream budget across page/images; retain independent archive-size limit. Final CI must be checked on the new exact head."
   }
 }
