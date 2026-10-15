@@ -1,5 +1,7 @@
 # CLEAR 문서
 
+공개 현황(2026-10-15)은 [main 제공 범위와 develop 진행의 구분](status.md#2026-10-15-공개-현황)을 먼저 확인하세요. main의 기존 코드·설치/실행 방법은 유지했습니다. 최신 개발의 자세한 기록은 [확인한 develop 커밋의 현황](https://github.com/gw020328-oss/clear-education-v4/blob/5eb651a8664ea81a203431d7a8f9a24ab3972f55/docs/status.md)에 있으며 main에 없는 기능의 사용 안내가 아닙니다.
+
 ## 처음 보는 분
 
 | 문서 | 내용 |
