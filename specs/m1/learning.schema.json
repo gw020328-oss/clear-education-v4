@@ -1,0 +1,594 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:clear:learning-facts:1",
+  "title": "Learning facts consumer contract; shape only",
+  "description": "Proposed new DTO, not an existing Moodle or product response. Shape validation does not authenticate the source, prove completeness, certify attention, or authorize payment. See REVIEW.txt for semantic checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractStatus",
+    "profile",
+    "dataMode",
+    "scenario",
+    "binding",
+    "inventory",
+    "snapshot",
+    "trust",
+    "records"
+  ],
+  "properties": {
+    "contractStatus": {
+      "const": "SYNTHETIC_CONSUMER_CONTRACT"
+    },
+    "profile": {
+      "const": "clear-learning-facts.1"
+    },
+    "dataMode": {
+      "enum": [
+        "SYNTHETIC",
+        "LOCAL_LMS_RECORD",
+        "INSTITUTION_LMS_RECORD"
+      ]
+    },
+    "scenario": {
+      "enum": [
+        "UNIT_EXAMPLE",
+        "SHORT_REAL_PLAYBACK",
+        "SYNTHETIC_90_DAY",
+        "SYNTHETIC_100_DAY",
+        "INSTITUTION_HISTORY"
+      ]
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "institutionId",
+        "providerInstanceId",
+        "courseId",
+        "cohortId",
+        "applicationId",
+        "learnerRef",
+        "subjectRef",
+        "accountBindingId",
+        "accountBindingVersion",
+        "policyHash",
+        "policyVersion",
+        "timeZone",
+        "bindingAssurance"
+      ],
+      "properties": {
+        "institutionId": {
+          "$ref": "#/$defs/id"
+        },
+        "providerInstanceId": {
+          "$ref": "#/$defs/id"
+        },
+        "courseId": {
+          "$ref": "#/$defs/id"
+        },
+        "cohortId": {
+          "$ref": "#/$defs/id"
+        },
+        "applicationId": {
+          "$ref": "#/$defs/hash32"
+        },
+        "learnerRef": {
+          "$ref": "#/$defs/id"
+        },
+        "subjectRef": {
+          "$ref": "#/$defs/hash32"
+        },
+        "accountBindingId": {
+          "$ref": "#/$defs/id"
+        },
+        "accountBindingVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "policyHash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "policyVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "timeZone": {
+          "$ref": "#/$defs/id"
+        },
+        "bindingAssurance": {
+          "enum": [
+            "SYNTHETIC_TEST_PIN",
+            "SOURCE_ACCOUNT_CONTROL_VERIFIED",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activitySetVersion",
+        "activitySetHash",
+        "mappingVersion",
+        "providerRuleVersion",
+        "capabilities"
+      ],
+      "properties": {
+        "activitySetVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "activitySetHash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "mappingVersion": {
+          "$ref": "#/$defs/id"
+        },
+        "providerRuleVersion": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "effectiveTime",
+            "mediaCoverage",
+            "normalClose",
+            "creditDay",
+            "officialProgress",
+            "speedCompliance",
+            "currentRevision",
+            "atomicExport",
+            "correctionHistory"
+          ],
+          "properties": {
+            "effectiveTime": {
+              "type": "boolean"
+            },
+            "mediaCoverage": {
+              "type": "boolean"
+            },
+            "normalClose": {
+              "type": "boolean"
+            },
+            "creditDay": {
+              "type": "boolean"
+            },
+            "officialProgress": {
+              "type": "boolean"
+            },
+            "speedCompliance": {
+              "type": "boolean"
+            },
+            "currentRevision": {
+              "type": "boolean"
+            },
+            "atomicExport": {
+              "type": "boolean"
+            },
+            "correctionHistory": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collectionId",
+        "observedAt",
+        "validUntil",
+        "periodStart",
+        "periodEndExclusive",
+        "coverageStart",
+        "coverageEndExclusive",
+        "sourceRevision",
+        "sourceCompleteness",
+        "correctionState",
+        "totalRows",
+        "pageManifest",
+        "normalizedDigest"
+      ],
+      "properties": {
+        "collectionId": {
+          "$ref": "#/$defs/id"
+        },
+        "observedAt": {
+          "$ref": "#/$defs/epochSeconds"
+        },
+        "validUntil": {
+          "$ref": "#/$defs/nullableEpochSeconds"
+        },
+        "periodStart": {
+          "$ref": "#/$defs/epochSeconds"
+        },
+        "periodEndExclusive": {
+          "$ref": "#/$defs/epochSeconds"
+        },
+        "coverageStart": {
+          "$ref": "#/$defs/nullableEpochSeconds"
+        },
+        "coverageEndExclusive": {
+          "$ref": "#/$defs/nullableEpochSeconds"
+        },
+        "sourceRevision": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "sourceCompleteness": {
+          "enum": [
+            "COMPLETE",
+            "PARTIAL",
+            "UNKNOWN"
+          ]
+        },
+        "correctionState": {
+          "enum": [
+            "UNCHANGED",
+            "CORRECTED",
+            "UNKNOWN"
+          ]
+        },
+        "totalRows": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "pageManifest": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "manifestDigest",
+                "terminalPageId",
+                "pages"
+              ],
+              "properties": {
+                "manifestDigest": {
+                  "$ref": "#/$defs/hash32"
+                },
+                "terminalPageId": {
+                  "$ref": "#/$defs/id"
+                },
+                "pages": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "pageId",
+                      "offset",
+                      "rowCount",
+                      "pageDigest"
+                    ],
+                    "properties": {
+                      "pageId": {
+                        "$ref": "#/$defs/id"
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "rowCount": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "pageDigest": {
+                        "$ref": "#/$defs/hash32"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "normalizedDigest": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/hash32"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assurance",
+        "sourceSignatureVerified",
+        "signerRef",
+        "humanAttentionProven",
+        "paymentAuthorized",
+        "limitations"
+      ],
+      "properties": {
+        "assurance": {
+          "enum": [
+            "SYNTHETIC_TEST_PIN",
+            "SERVER_BOUNDED_CLIENT_TELEMETRY",
+            "INSTITUTION_RECORDED_FACTS",
+            "UNKNOWN"
+          ]
+        },
+        "sourceSignatureVerified": {
+          "type": "boolean"
+        },
+        "signerRef": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "humanAttentionProven": {
+          "const": false
+        },
+        "paymentAuthorized": {
+          "const": false
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "records": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "$ref": "#/$defs/activity"
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "nullableId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "hash32": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$"
+    },
+    "epochSeconds": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "maxLength": 20
+    },
+    "nullableEpochSeconds": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "maxLength": 20
+    },
+    "nullableMs": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "maxLength": 20
+    },
+    "nullableDate": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activityId",
+        "lectureId",
+        "activityType",
+        "sourceRecordRef",
+        "recordRevision",
+        "supersedesRecordRef",
+        "sourcePolicyHash",
+        "sourceRecordStatus",
+        "effectiveMs",
+        "durationMs",
+        "mediaCoveredMs",
+        "lastPositionMs",
+        "effectiveTimeMeaning",
+        "providerProgressBps",
+        "progressRuleVersion",
+        "speedCompliance",
+        "normalCloseAcknowledged",
+        "closedAtMs",
+        "sourceCreditDay",
+        "sourceReportedCredit",
+        "dateAttributionRuleVersion",
+        "completionState",
+        "completedAt",
+        "stateChangedAt",
+        "deliveryMode",
+        "fieldProvenance"
+      ],
+      "properties": {
+        "activityId": {
+          "$ref": "#/$defs/id"
+        },
+        "lectureId": {
+          "$ref": "#/$defs/id"
+        },
+        "activityType": {
+          "enum": [
+            "VIDEO",
+            "OT",
+            "MOCK_TEST",
+            "OTHER",
+            "UNKNOWN"
+          ]
+        },
+        "sourceRecordRef": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "recordRevision": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "supersedesRecordRef": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "sourcePolicyHash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(0x)?[0-9a-f]{64}$"
+        },
+        "sourceRecordStatus": {
+          "enum": [
+            "PRESENT",
+            "NO_RECORD",
+            "UNAVAILABLE",
+            "UNKNOWN"
+          ]
+        },
+        "effectiveMs": {
+          "$ref": "#/$defs/nullableMs"
+        },
+        "durationMs": {
+          "$ref": "#/$defs/nullableMs"
+        },
+        "mediaCoveredMs": {
+          "$ref": "#/$defs/nullableMs"
+        },
+        "lastPositionMs": {
+          "$ref": "#/$defs/nullableMs"
+        },
+        "effectiveTimeMeaning": {
+          "enum": [
+            "SERVER_BOUNDED_CLIENT_TELEMETRY",
+            "PROVIDER_APPROVED_EFFECTIVE_TIME",
+            "NOT_APPLICABLE",
+            "UNKNOWN"
+          ]
+        },
+        "providerProgressBps": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "progressRuleVersion": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "speedCompliance": {
+          "enum": [
+            "COMPLIANT",
+            "NON_COMPLIANT",
+            "NOT_APPLICABLE",
+            "UNKNOWN"
+          ]
+        },
+        "normalCloseAcknowledged": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "closedAtMs": {
+          "$ref": "#/$defs/nullableMs"
+        },
+        "sourceCreditDay": {
+          "$ref": "#/$defs/nullableDate"
+        },
+        "sourceReportedCredit": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dateAttributionRuleVersion": {
+          "$ref": "#/$defs/nullableId"
+        },
+        "completionState": {
+          "enum": [
+            "COMPLETE",
+            "INCOMPLETE",
+            "PASS",
+            "FAIL",
+            "UNKNOWN",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "completedAt": {
+          "$ref": "#/$defs/nullableEpochSeconds"
+        },
+        "stateChangedAt": {
+          "$ref": "#/$defs/nullableEpochSeconds"
+        },
+        "deliveryMode": {
+          "enum": [
+            "STREAMING",
+            "DOWNLOAD",
+            "NOT_APPLICABLE",
+            "UNKNOWN"
+          ]
+        },
+        "fieldProvenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "measurements",
+            "activityMapping",
+            "identityBinding",
+            "progress",
+            "speed",
+            "date"
+          ],
+          "properties": {
+            "measurements": {
+              "$ref": "#/$defs/id"
+            },
+            "activityMapping": {
+              "$ref": "#/$defs/id"
+            },
+            "identityBinding": {
+              "$ref": "#/$defs/id"
+            },
+            "progress": {
+              "$ref": "#/$defs/id"
+            },
+            "speed": {
+              "$ref": "#/$defs/id"
+            },
+            "date": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        }
+      }
+    }
+  }
+}
