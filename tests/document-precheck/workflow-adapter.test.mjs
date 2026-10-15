@@ -12,7 +12,7 @@ test('CODE binds the issued context and returns only a minimal persisted summary
 });
 test('VISION receives exact owned bytes and wipes copies while keeping decode/authority limits',async()=>{
  const f=workflowFixture('VISION'),original=Buffer.from(f.files[0].bytes);let assets;
- const result=await reviewWorkflowDocument(f,observer(request=>{assets=request.assets;assert.deepEqual(request.assets[0].bytes,original);assert.equal(request.assetsHash,f.context.assetsHash);return readable;}));
+ const result=await reviewWorkflowDocument(f,observer(request=>{assets=request.assets;assert.equal(request.purpose,'DOCUMENT_PRECHECK');assert.deepEqual(request.assets[0].bytes,original);assert.equal(request.assetsHash,f.context.assetsHash);return readable;}));
  assert.equal(result.reviewStatus,'NEEDS_REVIEW');assert.ok(result.reasons.some(r=>r.code==='IMAGE_NOT_DECODED'));
  assert.ok(assets[0].bytes.every(b=>b===0));assert.deepEqual(f.files[0].bytes,original);
  assert.ok(!JSON.stringify(result).includes('SYNTHETIC_PERSON_NAME'));assert.ok(!JSON.stringify(result).includes('post/post-a'));

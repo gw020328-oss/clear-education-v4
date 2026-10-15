@@ -58,7 +58,7 @@ export async function reviewWorkflowDocument({context,policy,submission,files},a
       result=await precheckObservation(policy.compiled,oldContext,input,{method:s.method,fieldIds:s.fieldIds,signal,timeoutMs,
         adapter:{execution:'MOCK',observe(request,options){
           const assets=[];for(const file of owned){const copy={...file,bytes:Buffer.from(file.bytes)};observerCopies.push(copy);assets.push(copy);}
-          return adapter.observe({...request,assets,assetsHash:captured.assetsHash,runContextHash:runContextHash(captured)},options);
+          return adapter.observe({...request,purpose:captured.purpose,assets,assetsHash:captured.assetsHash,runContextHash:runContextHash(captured)},options);
         }}});
     }
     verifyDocumentManifest(s.manifest,input,owned);
