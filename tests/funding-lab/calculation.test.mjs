@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { quoteBenefitAmount } from '../../src/policy/benefit-amount.mjs';
 import { simulateReserve } from '../../spikes/funding-lab/simulation.mjs';
 const amount={basis:'SYNTHETIC_ASSUMPTION',token:'TEST',decimals:6,paidAtoms:'100000000',bookAtoms:'10000000',deviceAtoms:'5000000',fixedFeeAtoms:'1000000',examCreditAtoms:'2000000',taxBps:300,capAtoms:'999000000',rounding:'FLOOR_ONCE_DEMO',formulaVersion:'siwon-demo-amount.1'};
-const scenario={students:100,tuitionAtoms:'100000000',refunds:[{tier:100,count:50,amountAtoms:'100000000'},{tier:300,count:10,amountAtoms:'300000000'}],ancillaryAtoms:'100000000',holdBps:6000,bufferBps:500,bufferBasis:'REVENUE',topUpBps:1500,topUpBasis:'REVENUE'};
+const scenario={students:100,tuitionAtoms:'100000000',refunds:[{tier:100,count:50,amountAtoms:'100000000'},{tier:300,count:10,amountAtoms:'300000000'}],ancillaryAtoms:'100000000',holdBps:6000,bufferBps:500,bufferBasis:'REVENUE',topUpBps:1500,topUpBasis:'REVENUE',additionalTopUpAtoms:'0'};
 test('shared M0 amount arithmetic uses one final floor with fixed units and no silent official defaults',()=>{
   assert.deepEqual(quoteBenefitAmount(200,amount),['CALCULATED_SYNTHETIC','165870000']);
   for(const field of ['paidAtoms','bookAtoms','deviceAtoms','fixedFeeAtoms','examCreditAtoms','taxBps','capAtoms'])assert.deepEqual(quoteBenefitAmount(200,{...amount,[field]:null}),['AMOUNT_OPEN',null]);
@@ -21,6 +21,7 @@ test('mentor what-if ratios remain explicit aggregate assumptions, never onchain
   assert.equal(b.additionalRequiredAtoms,'1600000000');assert.equal(a.onchainSpendableAtoms,'0');assert.equal(a.paymentAllowed,false);assert.equal(a.productDefault,false);
   const c=simulateReserve({...scenario,bufferBasis:'LIABILITY',topUpBasis:'LIABILITY',ancillaryAtoms:'0',refunds:[{tier:100,count:20,amountAtoms:'100000000'}]});
   assert.equal(c.refundPeople,20);assert.equal(c.bufferAtoms,'100000000');assert.equal(c.hypotheticalTopUpAtoms,'300000000');assert.equal(c.additionalRequiredAtoms,'0');
+  assert.equal(simulateReserve({...scenario,additionalTopUpAtoms:'1100000000'}).additionalRequiredAtoms,'0');
   const d=simulateReserve({...scenario,students:0,refunds:[],ancillaryAtoms:'0'});assert.equal(d.requiredAtoms,'0');
 });
 test('simulation rejects missing inputs, overcounting, ambiguous basis, floats and 400/500 payout bins',()=>{

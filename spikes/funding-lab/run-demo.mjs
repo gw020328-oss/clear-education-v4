@@ -23,7 +23,7 @@ try {
   await(await f.vault.connect(f.signers[3]).claim(app)).wait();await(await f.vault.claim(app)).wait();await f.mine();await record('단회 전액 지급·중복 재시도');
   assert.equal(await f.token.balanceOf(f.fixtures[0].recipient),100000000n);assert.equal(await f.vault.totalReserved(),100000000n);
   const base={students:100,tuitionAtoms:'100000000',refunds:[{tier:100,count:50,amountAtoms:'100000000'},{tier:300,count:10,amountAtoms:'300000000'}],
-    ancillaryAtoms:'100000000',bufferBps:500,bufferBasis:'REVENUE',topUpBps:1500,topUpBasis:'REVENUE'};
+    ancillaryAtoms:'100000000',bufferBps:500,bufferBasis:'REVENUE',topUpBps:1500,topUpBasis:'REVENUE',additionalTopUpAtoms:'0'};
   console.log(JSON.stringify({scope:'EPHEMERAL_SYNTHETIC_TEST_ONLY',chainId:31338,token:'TEST',decimals:6,
     eligibilitySource:'TRUSTED_CONSTRUCTOR_FIXTURES_NOT_REAL_EVIDENCE',steps,
     recoveredOperationWithoutDuplicateCredit:true,unfundedPaymentBlocked:true,partialAllocationBlocked:true,
