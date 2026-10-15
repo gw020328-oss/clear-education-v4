@@ -8,6 +8,8 @@ export const localSourceHash = (domain, value) => digest(domain, value).slice(2)
 export async function collectLocalMoodleFacts(registry, sourcePin, client, { now, signal } = {}) {
   let output;
   try {
+    registry = structuredClone(registry); sourcePin = structuredClone(sourcePin);
+    check(!signal?.aborted, 'LOCAL_CANCELLED');
     check(client.profile === 'clear-local-moodle.1' && client.transport === 'LOOPBACK_HTTP_ONLY', 'LOCAL_TRANSPORT');
     const identity = await client.identity(signal);
     check(identity.labOnly === true && same(identity.sourceBinding, registry.sourceBinding), 'LOCAL_ACCOUNT_BINDING');
@@ -65,7 +67,8 @@ export async function collectLocalMoodleFacts(registry, sourcePin, client, { now
       pageManifest:{pages,terminalPageId:pages.at(-1).pageId,manifestDigest:digest('CLEAR-MOODLE-MANIFEST',{
         sourceRevision:m.revision,totalRows:f.records.length,terminalPageId:pages.at(-1).pageId,pages})},normalizedDigest:null };
     f.snapshot.normalizedDigest = factsDigest(f); validateLearningFactsShape(f);
-    check(Number.isSafeInteger(now()) && now() >= m.observedAt && now() <= m.validUntil, 'LOCAL_STALE');
+    const clock = now();
+    check(Number.isSafeInteger(clock) && clock >= m.observedAt && clock <= m.validUntil, 'LOCAL_STALE');
     output = { status:'COLLECTED_LOCAL_LAB',mode:'LOCAL_LAB',facts:f,sourceRevision:m.revision,sourceManifestHash:m.manifestHash,
       productConnected:false,sourceSignatureVerified:false,humanAttentionProven:false,paymentAllowed:false };
   } catch(e) {
@@ -73,5 +76,6 @@ export async function collectLocalMoodleFacts(registry, sourcePin, client, { now
       'LOCAL_ACTIVITY_MISSING','LOCAL_STALE','LOCAL_REVISION_CHANGED','LOCAL_AUTH_REJECTED','LOCAL_ACCESS_REJECTED','LOCAL_CANCELLED','LOCAL_TIMEOUT','LOCAL_AUTH_UNAVAILABLE','LOCAL_RESPONSE_LIMIT','LOCAL_SOURCE_UNAVAILABLE']);
     output = {status:'ON_HOLD',mode:'LOCAL_LAB',reason:codes.has(e?.message)?e.message:'LOCAL_SOURCE_UNAVAILABLE',facts:null,productConnected:false,paymentAllowed:false};
   } finally { try { await client.close(); } catch { output={status:'ON_HOLD',mode:'LOCAL_LAB',reason:'LOCAL_CLEANUP_FAILED',facts:null,productConnected:false,paymentAllowed:false}; } }
+  if (signal?.aborted) output = {status:'ON_HOLD',mode:'LOCAL_LAB',reason:'LOCAL_CANCELLED',facts:null,productConnected:false,paymentAllowed:false};
   return freeze(output);
 }

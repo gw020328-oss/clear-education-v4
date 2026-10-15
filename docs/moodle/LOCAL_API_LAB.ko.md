@@ -73,3 +73,5 @@ Video Checkpoints upstream URL은 제공 패키지의 provenance를 사용한다
 최종 로컬 회귀 362개(새 LOCAL 28개 포함)가 모두 통과했다. PHP 18파일 syntax 검사도 통과했다. 이것은 기존 Mac/제품/계약 전체 CI의 대체가 아니다. 기존 root CI를 소유 경계에 따라 수정하지 않았으므로 새 LOCAL 28개와 실제 Docker 15개/사후6개는 원격 CI 자동 수행 대상이 아니다.
 
 선행 #45 최신 `227d37f`는 새head CI6개 PASS다. 과거 `b731096` push Mac job은 CANCELLED·log not found로 원인 미해결이다. #48 최신 `49f453e`는 PR run38675877446의 3job PASS, push run38675871275의 Mac 1job FAIL(`SYNTHETIC_COOKIE_CHECK_FAILED`, SIGKILL 복구2/5, 50/51)이므로 총5PASS/1FAIL이다. 이 실패 로그를 공통 담당에게 전달했고 수정·무근거재실행은 하지 않았다. 통과한 다른 run으로 실패 원인을 해결했다고 표시하지 않는다. 모든 PR은 Draft, 자동 병합 없음이다.
+
+최종 리뷰 보정: registry/sourcePin을 요청 시작 때 고정 복사해 비동기 caller 변경을 차단하며, 정리 중 취소도 최종 facts를 반환하지 않는다. 합성 transport 회귀2개를 추가했다. 기존 실제 로컬15/15·사후6/6 결과는 보정 전 source 기록이며 새 실제 재생을 실행한 것으로 표시하지 않는다.

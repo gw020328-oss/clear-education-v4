@@ -50,3 +50,26 @@ test('unavailable is preserved separately from no record; no time is manufacture
 test('cleanup failure holds a collected result without exposing provider text',async()=>{
   const f=fixture();f.client.close=async()=>{throw Error('SYNTHETIC_SECRET');};const r=await f.run();assert.equal(r.reason,'LOCAL_CLEANUP_FAILED');assert.equal(r.facts,null);
 });
+
+test('caller mutation during acquisition cannot replace pinned account or application context',async()=>{
+  const f=fixture(), original=structuredClone(f.registry), pin=f.pin();
+  const identity=f.client.identity;
+  f.client.identity=async()=>{
+    f.registry.rawBinding.applicationId='0x'+'00'.repeat(32);
+    pin.revision='r2'; pin.manifestHash='00'.repeat(32);
+    return identity();
+  };
+  const result=await collectLocalMoodleFacts(f.registry,pin,f.client,{now:()=>f.m.observedAt});
+  assert.equal(result.status,'COLLECTED_LOCAL_LAB');
+  assert.equal(result.facts.binding.applicationId,original.rawBinding.applicationId);
+  assert.equal(result.sourceRevision,'r1');
+});
+test('pre-cancel and cancellation during cleanup never return collected facts',async()=>{
+  const pre=fixture(), c=new AbortController();c.abort();
+  pre.client.identity=()=>assert.fail('cancelled acquisition must not start');
+  const early=await collectLocalMoodleFacts(pre.registry,pre.pin(),pre.client,{now:()=>pre.m.observedAt,signal:c.signal});
+  assert.equal(early.reason,'LOCAL_CANCELLED');assert.equal(pre.closed(),1);
+  const f=fixture(), active=new AbortController();f.client.close=async()=>active.abort();
+  const late=await collectLocalMoodleFacts(f.registry,f.pin(),f.client,{now:()=>f.m.observedAt,signal:active.signal});
+  assert.equal(late.reason,'LOCAL_CANCELLED');assert.equal(late.facts,null);
+});
