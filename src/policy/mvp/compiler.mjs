@@ -44,6 +44,7 @@ export function compileMvpPolicy(input, { sources, capabilities }) {
     unique(r.requiredFields); validPeriod(r.period);
     check(r.coverage !== 'COMPLETE_PERIOD' || r.period !== null, 'MVP_COVERAGE');
     if (['BASELINE', 'LEARNING'].includes(r.kind)) check(r.coverage === 'COMPLETE_PERIOD', 'MVP_COVERAGE');
+    if (r.kind === 'EXAM') check(r.coverage === 'EXISTENTIAL' && r.period !== null, 'MVP_COVERAGE');
   }
   unique(p.rules.map(r => r.ruleId));
   for (const r of p.rules) {
