@@ -61,16 +61,19 @@ export function createWorkflowHttpService({ directory, authentication, instanceI
   const head=id=>db.prepare('SELECT * FROM heads WHERE id=?').get(id)??{id,revision:0,operation_id:null,bundle_hash:null};
   const load=id=>{identifier(id);const row=db.prepare('SELECT * FROM operations WHERE id=?').get(id);check(row,'MVP_NOT_FOUND');return row;};
   function expire(row){
-    if(['RUNNING','COMMITTING'].includes(row.state)&&clock()>=row.expires_at){
+    const t=clock();check(t>=row.created_at,'MVP_CLOCK');
+    if(['RUNNING','COMMITTING'].includes(row.state)&&t>=row.expires_at){
       db.prepare("UPDATE operations SET state='TIMED_OUT',result=NULL,error='TIMED_OUT' WHERE id=? AND state IN ('RUNNING','COMMITTING')").run(row.id);
       active.get(row.id)?.abort();return load(row.id);
     }return row;
   }
   function available(hash){try{const b=archive.getBundle(hash);for(const e of b.entries)archive.getSnapshot(e.snapshotHash);return true;}catch{return false;}}
   function purgeExpired(){
-    const removed=archive.purgeExpired();
+    const removed=archive.purgeExpired(),t=clock();
     transaction(()=>{for(const row of db.prepare("SELECT id,result FROM operations WHERE kind='drafts' AND result IS NOT NULL").all()){
-      const result=JSON.parse(row.result);if(result.bundleHash&&!available(result.bundleHash))db.prepare("UPDATE operations SET result=NULL,error='SOURCE_UNAVAILABLE' WHERE id=?").run(row.id);
+      const result=JSON.parse(row.result);
+      if(result.bundleHash&&archive.getBundle(result.bundleHash).entries.some(e=>archive.getSnapshotRetention(e.snapshotHash).expiresAt<=t))
+        db.prepare("UPDATE operations SET result=NULL,error='SOURCE_UNAVAILABLE' WHERE id=?").run(row.id);
     }});return removed;
   }
   function view(row){row=expire(row);const h=head(row.bundle_id),result=row.result?JSON.parse(row.result):null;
@@ -87,6 +90,7 @@ export function createWorkflowHttpService({ directory, authentication, instanceI
       const h=head(id);check(body.expectedRevision===h.revision,'MVP_STALE');
       check(db.prepare('SELECT COUNT(*) AS n FROM operations').get().n<1000,'MVP_BUSY');
       const revision=h.revision+1,idValue=opId(),t=clock();
+      if(h.operation_id)check(t>=load(h.operation_id).created_at,'MVP_CLOCK');
       if(h.operation_id){db.prepare("UPDATE operations SET state='SUPERSEDED',result=NULL,error='STALE_CONTEXT' WHERE id=? AND state IN ('RUNNING','COMMITTING')").run(h.operation_id);active.get(h.operation_id)?.abort();}
       db.prepare('INSERT INTO operations VALUES(?,?,?,?,?,?,?,?,?,?,?,NULL,NULL)').run(idValue,s.wallet,route,key,requestHash,id,revision,kind,'RUNNING',t,t+30);
       db.prepare('INSERT INTO heads VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,operation_id=excluded.operation_id').run(id,revision,idValue,h.bundle_hash);
@@ -134,10 +138,13 @@ export function createWorkflowHttpService({ directory, authentication, instanceI
     return view(load(row.id));
   }
   async function preview(context,id){
-    actor(context);definition(id);purgeExpired();const h=head(id);check(h.bundle_hash,'MVP_NOT_FOUND');
+    actor(context);definition(id);purgeExpired();let h=head(id);
+    if(h.operation_id){recover(expire(load(h.operation_id)));h=head(id);}
+    check(h.bundle_hash,'MVP_NOT_FOUND');
     const b=archive.getBundle(h.bundle_hash),resolved=await resolveSourceBundle(b,{getSnapshot:archive.getSnapshot,getArtifact:archive.getArtifact,now});
     actor(context);const latest=head(id);check(latest.revision===h.revision&&latest.bundle_hash===h.bundle_hash,'MVP_STALE');
     const operation=h.operation_id?view(recover(load(h.operation_id))):null;
+    const afterRecovery=head(id);check(afterRecovery.revision===h.revision&&afterRecovery.bundle_hash===h.bundle_hash,'MVP_STALE');
     const sourceCurrent=!!operation?.current&&operation.state==='SUCCEEDED';
     // Source blocks are JSON text only, never an HTML/asset response. A separate
     // transient proposal may include bounded quotes; it is not a document receipt.
@@ -193,7 +200,7 @@ export function createWorkflowHttpService({ directory, authentication, instanceI
       db.prepare('INSERT INTO reviews VALUES(?,?,?,?,?)').run(idValue,s.wallet,p.bundleHash,p.previewHash,canonical(r));return reviewView(r);
     });
   }
-  function reviewView(r){const h=head(r.request.bundleId);return freeze({...r,current:h.revision===r.request.revision&&h.bundle_hash===r.request.bundleHash&&available(r.request.bundleHash)});}
+  function reviewView(r){check(clock()>=r.reviewedAt,'MVP_CLOCK');const h=head(r.request.bundleId);return freeze({...r,current:h.revision===r.request.revision&&h.bundle_hash===r.request.bundleHash&&available(r.request.bundleHash)});}
   purgeExpired();
   return {origin:authentication.origin,capture,preview,propose,review,purgeExpired,
     reviews(context,id){actor(context);definition(id);purgeExpired();return db.prepare("SELECT record FROM reviews WHERE json_extract(record,'$.request.bundleId')=? ORDER BY rowid DESC LIMIT 20").all(id).map(r=>reviewView(JSON.parse(r.record)));},
