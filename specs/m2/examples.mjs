@@ -16,7 +16,7 @@ export function evaluationExample(name = 'ybm', options = {}) {
     initialSubmissionAt: p.deadlines.evidenceUntil - 1,
     finalization: { state: 'FINALIZED_SYNTHETIC', factsRevision: 1, selectionRevision: 1, finalizedAt: p.deadlines.supplementUntil } };
   const evidence = p.requirements.map(req => {
-    const collectedAt = req.kind === 'BASELINE' ? T + 60 : p.deadlines.evidenceUntil - 10;
+    const collectedAt = req.kind === 'BASELINE' ? T + 60 : req.kind === 'LEARNING' ? req.period.until : p.deadlines.evidenceUntil - 10;
     const e = { contractVersion: p.contractVersion, mode: 'SYNTHETIC', binding: structuredClone(binding), evidenceId: 'evidence-' + req.requirementId,
       revision: 1, requirementId: req.requirementId, sourceBinding: exampleSourceBinding(), sourceRevision: 'source-revision.1',
       payloadHash: digest('SYNTHETIC-PAYLOAD', req.requirementId), trustProfile: req.trustProfile, collectedAt, acceptedAt: collectedAt + 1,

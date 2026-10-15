@@ -81,6 +81,8 @@ test('missing, unavailable, supplement, unknown and future days remain distinct'
   const missing = evaluationExample(); missing.input.evidence = missing.input.evidence.filter(e => e.requirementId !== 'learning');
   assert.equal(rule(run(missing), 'daily-learning').reason, 'EVIDENCE_MISSING');
   const future = evaluationExample(); future.input.context.evaluatedAt = future.compiled.policy.requirements[1].period.until - 1;
+  record(future.input, 'learning').acceptedAt = future.input.context.evaluatedAt;
+  record(future.input, 'learning').collectedAt = future.input.context.evaluatedAt - 1;
   assert.equal(rule(run(future), 'daily-learning').state, 'IN_PROGRESS');
   const noSource = evaluationExample(); record(noSource.input, 'learning').sourceStatus = 'UNAVAILABLE';
   assert.equal(rule(run(noSource), 'daily-learning').state, 'UNKNOWN');
@@ -182,4 +184,27 @@ test('entitlement commits to full context and evidence revisions without mutatin
   assert.notEqual(run(v).entitlement.digest, a.entitlement.digest);
   const b = run(v); record(v.input, 'review').revision++;
   assert.notEqual(run(v).entitlement.digest, b.entitlement.digest);
+});
+test('a snapshot collected before period end cannot become complete just by waiting', () => {
+  const v = evaluationExample(), e = record(v.input, 'learning');
+  const end = v.compiled.policy.requirements.find(r => r.kind === 'LEARNING').period.until;
+  e.collectedAt = end - 2; e.acceptedAt = end - 1;
+  v.input.context.evaluatedAt = end - 1;
+  assert.equal(rule(run(v), 'daily-learning').state, 'IN_PROGRESS');
+  v.input.context.evaluatedAt = v.compiled.policy.deadlines.supplementUntil;
+  let out = run(v);
+  assert.equal(rule(out, 'daily-learning').reason, 'COVERAGE_UNKNOWN'); assert.equal(out.entitlement, null);
+  e.collectedAt = end; e.acceptedAt = end + 1;
+  out = run(v); assert.equal(out.settlement, 'FINAL_SYNTHETIC');
+  const history = evaluationExample('siwon', { score: 850, tier: 300 }), h = record(history.input, 'history');
+  h.sourceStatus = 'NO_RECORD'; h.observations = []; h.collectedAt = T - 1; h.acceptedAt = T;
+  out = run(history);
+  assert.equal(rule(out, 'baseline-below-750').reason, 'COVERAGE_UNKNOWN'); assert.equal(out.entitlement, null);
+});
+test('different thresholds cannot read conflicting scores from the same pinned exam', () => {
+  const v = evaluationExample('siwon', { score: 745, tier: 50 }), e = record(v.input, 'score');
+  e.observations.find(o => o.ruleId === 'score-750').value = 850;
+  assert.throws(() => run(v), { message: 'MVP_SCORE_CONFLICT' });
+  e.observations.find(o => o.ruleId === 'score-750').value = 745;
+  assert.equal(tier(run(v), 50).state, 'MET');
 });
