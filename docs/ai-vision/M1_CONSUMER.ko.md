@@ -4,6 +4,8 @@
 
 의존 계약은 `clear-mvp.1` / `clear-mvp-compiler.1`, 공통 feature commit `3b540193e12085c0da38157364e3c59212493c9b`, [Draft PR #43](https://github.com/gw020328-oss/clear-education-v4/pull/43)이다. [정본 계약](../current/MVP_POLICY_CONTRACT.ko.md)을 소비하며 이번 작업의 기준 develop은 `21776f5`다. [준비 PR #42](https://github.com/gw020328-oss/clear-education-v4/pull/42)의 이력도 병합해 기존 31개·후기/블로그 11개·별도 일반화 3개 명세를 보존했다. 선행 PR이 미병합이면 이 PR도 의존 브랜치의 Draft다. 자동 병합하지 않는다.
 
+후속 인수: 공통 #43의 EXAM 기간/coverage·schema 불변 보정 `3961b09cbcb71c028d2dae6be2889a39849ee7c7`도 이력 병합해 소비 시험을 다시 확인했다. 공통 담당은 별도 review plan/hash 경계를 승인하고 정본 결합 미결을 OPEN으로 유지했다. [M2 Draft #46](https://github.com/gw020328-oss/clear-education-v4/pull/46)이 별도로 제공됐지만 이 소비자는 DocumentPrecheck→Evidence 변환을 추가하지 않는다. M2 자격/선택/금액 연결은 이 PR의 완료 사실이 아니다.
+
 선정 설정과 전달된 실제 실행 설정은 GPT-6.1 Sol / Medium이다. 새 권한·자금·민감 저장 설계를 추가하지 않고 계약 기반 순수 소비자로 한정했다. 루트 schema/HTTP/DB/package/CI 및 web는 이 작업에서 수정하지 않는다.
 
 ## 정책 초안
