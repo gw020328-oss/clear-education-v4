@@ -1,5 +1,7 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
+2026-10-15 C1 학생 후속 Draft: [단일 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-student-http.1`은 PR59 head11e27ac에 의존해 학생 본인 신청·서버 합성 조건/정확 표시 확인·정책 변경 재확인·원자 멱등/GET복구를 추가한다. 실제 동의/게시·C2 파일/문서 검토·운영 Evidence/재원·화면은 미구현이다. F0/web은 서준형 소유로 유지한다. 아래 이전 C 전체 미구현 표기는 이전 단위의 기록이다.
+
 2026-10-15 신규 Draft: [원문 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-source-http.1`은 별도 loopback HTTPS에서 operator 원문 등록/조회·mock 초안·개발용 검토 기록을 연결한다. 기존 F0/web은 서준형 소유로 보존한다. 수강생 신청·동의·업로드/문서 검토 HTTP와 실제 화면 연결은 이 단위에 아직 없다. 아래 이전 미연결/예약 문구는 해당 경로 또는 이전 시점의 기록이며 새 구현 subset과 구분한다.
 
 2026-10-15 통합 검토: [제품 API·저장 계약](PRODUCT_WORKFLOW_CONTRACT.ko.md)의 M3-0 합성 모듈은 PR #58로 develop `5f902dc`에 병합됐다. Moodle1502 실측 인계 PR #56은 `edb3efc`로 병합됐다. AI 소비자 PR #57은 이 기준을 이력 반영했으며 최신 병합 여부·CI는 해당 PR을 따른다. 기존 v4 API/DB·프론트 view는 유지하고 새 /mvp HTTP·실제 정책/동의·업로드/decode·운영 Evidence·M2 판정 저장·재원/화면 연결은 후속이다. 통합 검증 근거는 [현황](../status.md)의 최신 절을 우선한다.

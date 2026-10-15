@@ -1,0 +1,425 @@
+{
+  "version": "clear-mvp-student-http.1",
+  "provenance": "GENERATED_FROM_SYNTHETIC_C1_HTTP_FIXTURE",
+  "notReusableAuthority": true,
+  "actualWebsiteFetches": 0,
+  "paidModelCalls": 0,
+  "examples": [
+    {
+      "method": "POST",
+      "path": "/mvp/applications",
+      "request": {
+        "policyHash": "0x0555d0f7b215c7957412f1684417a87f5c4871a7fe5d7cbf2fdf7b347ea01f77"
+      },
+      "idempotencyKey": "create-a",
+      "httpStatus": 200,
+      "response": {
+        "operationId": "student-op-acfe5baf-5de6-45d8-991d-c6a716947894",
+        "applicationId": "0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428",
+        "applicationRevision": 1,
+        "state": "RECORDED",
+        "current": true,
+        "reason": null,
+        "result": {
+          "acknowledgment": null,
+          "agreementScope": "NONE",
+          "applicationId": "0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428",
+          "authenticationScope": "INVITED_WALLET_SESSION",
+          "createdAt": 100,
+          "dataMode": "SYNTHETIC",
+          "documentSubmissionReady": false,
+          "eligibilityStatus": "NOT_EVALUATED",
+          "fundingStatus": "UNKNOWN",
+          "grant": "HOLD",
+          "identityVerified": false,
+          "independentClaim": "NO_GO",
+          "learner": "0x387bcD125dCD6349d68f826Ad3d1e7cc05362B2f",
+          "outbox": "HOLD",
+          "paymentAllowed": false,
+          "policyCurrent": true,
+          "policyHash": "0x0555d0f7b215c7957412f1684417a87f5c4871a7fe5d7cbf2fdf7b347ea01f77",
+          "policyId": "student-third-demo",
+          "policyPublished": false,
+          "policyRevision": 1,
+          "productEligible": false,
+          "sourceStatus": "UNVERIFIED",
+          "sourceVerified": false,
+          "state": "DRAFT",
+          "updatedAt": 100,
+          "userConsentVerified": false,
+          "version": "clear-mvp-student-http.1",
+          "workflowRevision": 1
+        },
+        "userConsentVerified": false,
+        "sourceVerified": false,
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "version": "clear-mvp-student-http.1",
+        "dataMode": "SYNTHETIC",
+        "authenticationScope": "INVITED_WALLET_SESSION",
+        "identityVerified": false,
+        "policyPublished": false,
+        "fundingStatus": "UNKNOWN",
+        "eligibilityStatus": "NOT_EVALUATED",
+        "sourceStatus": "UNVERIFIED",
+        "documentSubmissionReady": false
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/mvp/applications/0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428/agreement-preview",
+      "httpStatus": 200,
+      "response": {
+        "previewVersion": "clear-mvp-student-preview.1",
+        "applicationId": "0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428",
+        "expectedRevision": 1,
+        "binding": {
+          "applicationId": "0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428",
+          "subjectRef": "0xd796fbeef87288a3455b3f606a7ddacb2486389c4f8a863e333283fb48bd0f7b",
+          "subjectBindingId": "wallet-d796fbeef87288a3455b3f606a7ddacb",
+          "bindingRevision": 1,
+          "recipientRef": "recipient-d796fbeef87288a3455b3f606a7ddacb",
+          "instanceId": "student-test",
+          "policyHash": "0x0555d0f7b215c7957412f1684417a87f5c4871a7fe5d7cbf2fdf7b347ea01f77",
+          "policyVersion": "student-third-demo.1",
+          "productId": "third-synthetic-700",
+          "cohortId": "demo-2030"
+        },
+        "policyId": "student-third-demo",
+        "policyRevision": 1,
+        "policyHash": "0x0555d0f7b215c7957412f1684417a87f5c4871a7fe5d7cbf2fdf7b347ea01f77",
+        "display": {
+          "displayVersion": "clear-mvp-student-display.1",
+          "policyId": "student-third-demo",
+          "policyRevision": 1,
+          "policyHash": "0x0555d0f7b215c7957412f1684417a87f5c4871a7fe5d7cbf2fdf7b347ea01f77",
+          "policyVersion": "student-third-demo.1",
+          "scope": {
+            "institutionId": "synthetic-third",
+            "productId": "third-synthetic-700",
+            "cohortId": "demo-2030"
+          },
+          "sourceSetHash": "0xe5161fb83ae5a5e1a4e49f709dff756de6c80b0ae9324dfae5b32f9cd6db4c3f",
+          "ruleHashes": {
+            "review-accepted": "0x89baa36753bec18b7c4e46dcac40481eb21d5de06918d47081f42e842b213d1e",
+            "daily-learning": "0x986223717fd609c77f8907bffb8bc09339c907e0734e713de66cd2481ac62a46",
+            "mock-completed": "0x09a3763b3c76e85fe55af47c61e6aac4e33923b05a0252f875ee0c3c9078ec4d",
+            "score-target": "0x27031a1c7b8b20310f43a40a6858bf812689b4e1f78fe6d7cf8db06b87c41aae"
+          },
+          "conditions": {
+            "ruleVersion": "clear-mvp-rules.1",
+            "requirements": [
+              {
+                "coverage": "EXISTENTIAL",
+                "kind": "EXAM",
+                "maxAgeSeconds": 86400,
+                "period": {
+                  "boundaries": "[from,until)",
+                  "from": 1898521200,
+                  "timeZone": "Asia/Seoul",
+                  "until": 1899730800
+                },
+                "requiredFields": [
+                  "score"
+                ],
+                "requirementId": "score",
+                "trustProfile": "synthetic-fixture-verifier.1"
+              },
+              {
+                "coverage": "COMPLETE_PERIOD",
+                "kind": "LEARNING",
+                "maxAgeSeconds": 86400,
+                "period": {
+                  "boundaries": "[from,until)",
+                  "from": 1898521200,
+                  "timeZone": "Asia/Seoul",
+                  "until": 1899730800
+                },
+                "requiredFields": [
+                  "daily-summary"
+                ],
+                "requirementId": "learning",
+                "trustProfile": "synthetic-fixture-verifier.1"
+              },
+              {
+                "coverage": "NOT_REQUIRED",
+                "kind": "REVIEW",
+                "maxAgeSeconds": 86400,
+                "period": null,
+                "requiredFields": [
+                  "accepted-review"
+                ],
+                "requirementId": "review",
+                "trustProfile": "synthetic-fixture-verifier.1"
+              },
+              {
+                "coverage": "NOT_REQUIRED",
+                "kind": "MOCK_TEST",
+                "maxAgeSeconds": 86400,
+                "period": null,
+                "requiredFields": [
+                  "completed"
+                ],
+                "requirementId": "mock",
+                "trustProfile": "synthetic-fixture-verifier.1"
+              }
+            ],
+            "rules": [
+              {
+                "basis": "SYNTHETIC_ASSUMPTION",
+                "days": null,
+                "predicate": "BOOLEAN",
+                "questionIds": [],
+                "requirementId": "review",
+                "ruleId": "review-accepted",
+                "sourceRefs": [
+                  {
+                    "locator": "S-1/S-2/S-3 synthetic agreement",
+                    "sourceId": "third-synthetic-terms"
+                  }
+                ],
+                "threshold": null,
+                "unit": "BOOLEAN"
+              },
+              {
+                "basis": "SYNTHETIC_ASSUMPTION",
+                "days": 14,
+                "predicate": "DAILY_TIME",
+                "questionIds": [],
+                "requirementId": "learning",
+                "ruleId": "daily-learning",
+                "sourceRefs": [
+                  {
+                    "locator": "S-1/S-2/S-3 synthetic agreement",
+                    "sourceId": "third-synthetic-terms"
+                  }
+                ],
+                "threshold": 8000,
+                "unit": "BPS"
+              },
+              {
+                "basis": "SYNTHETIC_ASSUMPTION",
+                "days": null,
+                "predicate": "BOOLEAN",
+                "questionIds": [],
+                "requirementId": "mock",
+                "ruleId": "mock-completed",
+                "sourceRefs": [
+                  {
+                    "locator": "S-1/S-2/S-3 synthetic agreement",
+                    "sourceId": "third-synthetic-terms"
+                  }
+                ],
+                "threshold": null,
+                "unit": "BOOLEAN"
+              },
+              {
+                "basis": "SYNTHETIC_ASSUMPTION",
+                "days": null,
+                "predicate": "SCORE_GTE",
+                "questionIds": [],
+                "requirementId": "score",
+                "ruleId": "score-target",
+                "sourceRefs": [
+                  {
+                    "locator": "S-1/S-2/S-3 synthetic agreement",
+                    "sourceId": "third-synthetic-terms"
+                  }
+                ],
+                "threshold": 700,
+                "unit": "SCORE"
+              }
+            ],
+            "commonRuleIds": [
+              "review-accepted",
+              "mock-completed"
+            ],
+            "tiers": [
+              {
+                "alternatives": [
+                  {
+                    "allRuleIds": [
+                      "daily-learning",
+                      "score-target"
+                    ],
+                    "routeId": "single-route"
+                  }
+                ],
+                "support": "CONDITION_AMOUNT",
+                "tier": 75
+              }
+            ],
+            "learningRules": [
+              {
+                "activitySetHash": "0xc893f9dade480f665c83f411a0210dd8f9965160936aa4db2e044ebf5db249e6",
+                "allowedActivityIds": [
+                  "lesson-1",
+                  "lesson-2",
+                  "lesson-3",
+                  "lesson-4",
+                  "lesson-5",
+                  "lesson-6",
+                  "lesson-7",
+                  "lesson-8",
+                  "lesson-9",
+                  "lesson-10",
+                  "lesson-11",
+                  "lesson-12",
+                  "lesson-13",
+                  "lesson-14"
+                ],
+                "dateAttributionRuleVersion": "synthetic-finish-kst.1",
+                "days": 14,
+                "deliveryMode": "STREAMING_ONLY",
+                "lectureReuse": "FORBIDDEN",
+                "metric": "EFFECTIVE_TIME_RATIO",
+                "metricRuleVersion": "synthetic-metric.1",
+                "normalCloseRequired": true,
+                "requirementId": "learning",
+                "speedPolicy": "NOT_REQUIRED",
+                "thresholdBps": 8000,
+                "uniqueDay": true
+              }
+            ],
+            "amount": {
+              "basis": "SYNTHETIC_ASSUMPTION",
+              "decimals": 6,
+              "kind": "FIXED_SYNTHETIC_NET",
+              "netAtoms": "42000000",
+              "token": "TEST"
+            },
+            "deadlines": {
+              "allocationUntil": 1899990000,
+              "claimUntil": 1900594800,
+              "evidenceFrom": 1898521200,
+              "evidenceUntil": 1899730800,
+              "finalizeUntil": 1899903600,
+              "minClaimWindowSeconds": 604800,
+              "supplementUntil": 1899817200
+            },
+            "selection": {
+              "officialRule": "OPEN",
+              "syntheticRule": "EXPLICIT_SINGLE_TIER_NO_TOPUP"
+            },
+            "questions": [],
+            "capabilities": {
+              "conditionAmountTiers": [
+                75
+              ],
+              "excludedTiers": [
+                500
+              ],
+              "precheckOnlyTiers": [],
+              "profileVersion": "third-demo-capabilities.1"
+            }
+          },
+          "acknowledgementScope": "SYNTHETIC_ACK_ONLY",
+          "userConsentVerified": false,
+          "sourceVerified": false,
+          "productEligible": false,
+          "paymentAllowed": false,
+          "grant": "HOLD",
+          "outbox": "HOLD",
+          "independentClaim": "NO_GO",
+          "version": "clear-mvp-student-http.1",
+          "dataMode": "SYNTHETIC",
+          "authenticationScope": "INVITED_WALLET_SESSION",
+          "identityVerified": false,
+          "policyPublished": false,
+          "fundingStatus": "UNKNOWN",
+          "eligibilityStatus": "NOT_EVALUATED",
+          "sourceStatus": "UNVERIFIED",
+          "documentSubmissionReady": false
+        },
+        "displayHash": "0x74de7d13e400664f796215e4a22c6b9a35853e3002bb8210a23f315423fe55e1",
+        "acknowledgementScope": "SYNTHETIC_ACK_ONLY",
+        "userConsentVerified": false,
+        "sourceVerified": false,
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "version": "clear-mvp-student-http.1",
+        "dataMode": "SYNTHETIC",
+        "authenticationScope": "INVITED_WALLET_SESSION",
+        "identityVerified": false,
+        "policyPublished": false,
+        "fundingStatus": "UNKNOWN",
+        "eligibilityStatus": "NOT_EVALUATED",
+        "sourceStatus": "UNVERIFIED",
+        "documentSubmissionReady": false,
+        "previewHash": "0x62bd0617128a6a9a56b25e3268d62a3b1d12d1ce4ab1640339a9611aff16716c",
+        "policyCurrent": true
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/mvp/applications/0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428/agreement",
+      "request": {
+        "expectedRevision": 1,
+        "previewHash": "0x62bd0617128a6a9a56b25e3268d62a3b1d12d1ce4ab1640339a9611aff16716c",
+        "acknowledgement": "SYNTHETIC_ACK_ONLY"
+      },
+      "idempotencyKey": "agree-example",
+      "httpStatus": 200,
+      "responseProjection": {
+        "operationId": "student-op-289d9189-d8a9-4f80-b950-6289f9887cad",
+        "applicationId": "0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428",
+        "applicationRevision": 2,
+        "state": "RECORDED",
+        "current": true,
+        "reason": null,
+        "result": {
+          "applicationId": "0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428",
+          "state": "ACKNOWLEDGED_SYNTHETIC",
+          "workflowRevision": 2,
+          "agreementScope": "SYNTHETIC_ACK_ONLY",
+          "acknowledgment": {
+            "acknowledgmentId": "ack-93663e9b-117d-4226-8fe1-547a893b79ab",
+            "acknowledgmentHash": "0xef7ecaec2508c9c16a59a32703d6459c63d18c7baad2c56b2f99cfe2a4fe9643",
+            "current": true
+          },
+          "userConsentVerified": false,
+          "identityVerified": false,
+          "paymentAllowed": false,
+          "documentSubmissionReady": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/mvp/applications/0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428/agreement",
+      "idempotencyKey": "stale-example",
+      "request": {
+        "expectedRevision": 1,
+        "previewHash": "0x62bd0617128a6a9a56b25e3268d62a3b1d12d1ce4ab1640339a9611aff16716c",
+        "acknowledgement": "SYNTHETIC_ACK_ONLY"
+      },
+      "httpStatus": 409,
+      "response": {
+        "code": "MVP_STALE",
+        "message": "요청을 완료하지 못했습니다.",
+        "retryable": false,
+        "nextAction": "CHECK_REQUEST",
+        "requestId": "49e0a792-532a-4cc9-8383-fc5a5bf20abb"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/mvp/applications/0x619b39199513eeea5b620c0af961787cdcdaa29ae59992682d13c1765fada428",
+      "actor": "OTHER_SYNTHETIC_PARTICIPANT",
+      "httpStatus": 404,
+      "response": {
+        "code": "MVP_NOT_FOUND",
+        "message": "요청을 완료하지 못했습니다.",
+        "retryable": false,
+        "nextAction": "CHECK_REQUEST",
+        "requestId": "77be6a8d-920e-4a4d-a980-2fa53c46e5d0"
+      }
+    }
+  ]
+}

@@ -1,5 +1,9 @@
 # 개발 현황
 
+## 2026-10-15 C1 학생 신청·합성 확인 후속 Draft
+
+PR59정확head11e27ac 의존, 별도codex/mvp-student-application-http, 코드7c56442/680bce3. 학생본인신청·host합성조건/정확표시hash·SYNTHETIC_ACK_ONLY·단일DB원자멱등/GET복구·정책변경시명시선택/새확인·불변이력/restart를 연결했다. 신규학생HTTP/HTTPS11포함관련278개·기존dev33개·검증HTTPS서명로그인/재시작demo·보존/공개검사PASS. 파일접수/문서검토/보완C2·실동의/게시·운영Evidence/재원·실제화면은미구현이다. source/student버전과팀원복붙지침은[단일인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md)를따른다. 프론트관측head9c03b7b/서준형소유를읽기확인했고web편집0. PR59의조건부develop병합은추가승인됐으나아직리뷰대기이며학생후속PR은Draft·자동병합없음. 예치/보관/배정/충전OPEN·400%자동자격/지급금지·500%제외·grant/outboxHOLD·독립claimNO-GO유지.
+
 ## 2026-10-15 원문 HTTP 연결 Draft #59
 
 [프론트 인계·API 정본](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), 코드032215f, 기준develop7f60965. A/B의초대지갑세션·operator/CSRF/loopbackHTTPS·새DB 원문등록/조회→mock초안→정확표시검토·취소/멱등/CAS·GET복구/재시작을 연결했다. 관련267개(신규HTTP/HTTPS15포함)·기존dev33개·새합성HTTPS데모·보존/공개검사PASS. 실제사이트/유료모델0, 기존사용자DB/키/체인접근0. 서준형이web/소유자이며 통합세션은web/를편집하지않았다. 학생신청/실동의/업로드·문서검토/보완HTTP(C)와실제화면·운영Evidence/재원은미구현이다. Draft59는미병합이며최종head원격CI는PR을따른다. 예치/배정/충전OPEN·400%자동자격/지급금지·500%제외·grant/outboxHOLD·독립claimNO-GO를유지한다.

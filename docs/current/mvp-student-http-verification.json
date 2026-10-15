@@ -1,0 +1,64 @@
+{
+  "version": "clear-mvp-student-http-verification.1",
+  "date": "2026-10-15",
+  "baseDevelop": "7f6096552f06492b4add8bd5653a2ff390cf7d3c",
+  "dependsOn": {
+    "pullRequest": 59,
+    "exactHead": "11e27aca483441aecda757686c2d3826e5360ac4",
+    "currentlyDraft": true
+  },
+  "implementationCommits": [
+    "7c564429b5c55665b8575491a8c417040a8805ef",
+    "680bce36c2306b38615a3731da611fececa71a7b"
+  ],
+  "status": "DRAFT_REVIEW",
+  "requestedExecution": {
+    "model": "gpt-6.1-sol",
+    "thinking": "medium",
+    "runtimeModelIdIndependentlyVerified": false
+  },
+  "implemented": [
+    "participant-owned application HTTP",
+    "host-configured synthetic conditions and exact display hashes",
+    "SYNTHETIC_ACK_ONLY immutable acknowledgment",
+    "actor/route/key atomic command and GET recovery",
+    "explicit policy revision selection/reacknowledgment",
+    "restart and historical acknowledgment/current-state separation"
+  ],
+  "notImplemented": [
+    "student file upload/bytes receipt/document review run/supplement/resubmission C2",
+    "real consent or identity",
+    "policy publication or source draft promotion",
+    "authenticated operational Evidence/M2 decisions/funding",
+    "teammate-owned frontend"
+  ],
+  "tests": {
+    "newStudentHttpHttps": 11,
+    "relatedIncludingPriorSourceAndApplicationAi": 278,
+    "existingDevelopment": 33,
+    "verifiedHttpsNewWalletRestartDemo": "PASS",
+    "workspaceOriginalLegacyFiles": 191,
+    "dependencies": "PASS",
+    "publicHistory": "PASS"
+  },
+  "frontend": {
+    "owner": "서준형",
+    "observedRemoteHead": "9c03b7bbb612ebf1f18fb2181944382468d40ba7",
+    "webEdited": false,
+    "externalMessageSent": false
+  },
+  "existingUserDatabaseChainKeyAccess": false,
+  "actualWebsiteFetches": 0,
+  "paidModelCalls": 0,
+  "newPrMerged": false,
+  "gates": {
+    "depositStorageAllocationTopup": "OPEN",
+    "eligibilityAndFunding": "SEPARATE",
+    "tier400": "PRECHECK_ONLY_NO_AUTOMATIC_ELIGIBILITY_OR_PAYMENT",
+    "tier500": "EXCLUDED",
+    "sourceAndIdentity": "ON_HOLD",
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO"
+  }
+}
