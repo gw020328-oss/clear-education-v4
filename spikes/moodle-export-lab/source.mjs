@@ -5,8 +5,10 @@ import { freeze, requireRule as check } from '../../src/policy/values.mjs';
 
 export const EXPORT_PROFILE = 'synthetic-moodle-export.1';
 const encode = value => JSON.stringify(JSON.stringify(value)); // Moodle PARAM_RAW-style REST wrapping.
-function seal(input, revision) {
+function seal(input, revision, activityIds) {
   const f = structuredClone(input); f.snapshot.sourceRevision = revision;
+  const observed = new Set(f.records.map(r => r.activityId));
+  check(f.records.every(r => activityIds.includes(r.activityId)) && activityIds.every(id => observed.has(id)), 'EXPORT_INVENTORY_INCOMPLETE');
   for (const row of f.records) row.recordRevision = revision;
   const s = f.snapshot, pages = [];
   for (let offset = 0; offset < f.records.length; offset += 100) {
@@ -23,10 +25,15 @@ function seal(input, revision) {
 
 // An isolated in-memory protocol model, not a Moodle plugin or institution API.
 // Each committed head is immutable; read clients have no mutation capability.
-export function createSyntheticExportLab(seed, sourceBinding) {
+export function createSyntheticExportLab(seed, sourceBinding, allowedActivityIds) {
   validateLearningFactsShape(seed); validateContract('SourceBinding', sourceBinding);
   check(seed.dataMode === 'SYNTHETIC', 'EXPORT_SYNTHETIC_ONLY');
-  const sb = structuredClone(sourceBinding); let revision = 1, head = seal(seed, 'r1');
+  check(Array.isArray(allowedActivityIds) && allowedActivityIds.length > 0 && allowedActivityIds.length <= 10000
+    && new Set(allowedActivityIds).size === allowedActivityIds.length
+    && allowedActivityIds.every(id => typeof id === 'string')
+    && digest('CLEAR-MVP-ACTIVITIES', allowedActivityIds) === seed.inventory.activitySetHash, 'EXPORT_INVENTORY_PIN');
+  const activityIds = structuredClone(allowedActivityIds), sb = structuredClone(sourceBinding);
+  let revision = 1, head = seal(seed, 'r1', activityIds);
   const audit = [freeze({ revision: 'r1', previousRevision: null, reason: 'INITIAL_SYNTHETIC_EXPORT', factsHash: head.snapshot.normalizedDigest })];
   return {
     // Explicit internal resolver access, not a value copied from readManifest.
@@ -36,7 +43,7 @@ export function createSyntheticExportLab(seed, sourceBinding) {
       check(expectedRevision === head.snapshot.sourceRevision, 'EXPORT_REVISION_CONFLICT');
       check(['RECORD_CORRECTION', 'SOURCE_UNAVAILABLE', 'SOURCE_RESTORED'].includes(reason), 'EXPORT_CORRECTION_REASON');
       const candidate = { ...head, records: structuredClone(records), snapshot: { ...head.snapshot, correctionState: 'CORRECTED' } };
-      const next = seal(candidate, 'r' + (revision + 1));
+      const next = seal(candidate, 'r' + (revision + 1), activityIds);
       audit.push(freeze({ revision: next.snapshot.sourceRevision, previousRevision: head.snapshot.sourceRevision,
         reason, factsHash: next.snapshot.normalizedDigest }));
       head = next; revision++; return head.snapshot.sourceRevision;

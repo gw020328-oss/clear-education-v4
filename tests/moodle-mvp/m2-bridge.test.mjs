@@ -50,3 +50,12 @@ test('partial current-period coverage is held by M2 even when L1 reports IN_PROG
   const result = b.run(); assert.equal(result.rules.find(r => r.ruleId === 'daily-learning').reason, 'COVERAGE_UNKNOWN');
   assert.equal(result.entitlement, null);
 });
+
+test('current period does not hide UNKNOWN observation behind FUTURE_DAYS (M2 38b18cd)', () => {
+  const f = dailyFixture(), b = bridge(f, { ...f.run().observation, status: 'UNKNOWN', value: null, days: null });
+  const from = f.compiled.policy.requirements.find(r => r.requirementId === 'learning').period.from;
+  b.fixture.input.context.evaluatedAt = from + 3600;
+  b.evidence.collectedAt = from + 3590; b.evidence.acceptedAt = from + 3591;
+  const result = b.run(), r = result.rules.find(r => r.ruleId === 'daily-learning');
+  assert.equal(r.state, 'UNKNOWN'); assert.equal(r.reason, 'SEMANTICS_UNKNOWN'); assert.equal(result.entitlement, null);
+});

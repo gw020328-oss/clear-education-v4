@@ -13,7 +13,8 @@ function labFixture(multiPage = false) {
     for (let i = 0; i < 5; i++) f.facts.records.push({ ...f.facts.records[0], sourceRecordRef: 'extra-' + i });
     repin(f);
   }
-  const lab = createSyntheticExportLab(f.facts, f.trusted.sourceBinding), client = lab.connect(), calls = [];
+  const lab = createSyntheticExportLab(f.facts, f.trusted.sourceBinding, f.compiled.policy.learningRules[0].allowedActivityIds);
+  const client = lab.connect(), calls = [];
   for (const method of ['readManifest', 'readPage', 'close']) {
     const fn = client[method].bind(client);
     client[method] = (...args) => { calls.push(method); return fn(...args); };
@@ -44,6 +45,14 @@ test('source writes commit one revision/audit entry; read clients cannot mutate'
   assert.throws(() => lab.correct('r2', rows, 'raw-personal-note'), /EXPORT_CORRECTION_REASON/);
   assert.equal(lab.audit().length, 2);
   const result = await f.collect(); assert.equal(result.reason, 'LEARNING_SOURCE_REVISION_CHANGED');
+});
+
+test('failed correction preserves the source head/audit and requires explicit missing activity state', () => {
+  const { f, lab } = labFixture(), before = lab.resolveSyntheticHead(), audit = lab.audit();
+  assert.throws(() => lab.correct('r1', f.facts.records.slice(1), 'RECORD_CORRECTION'), /EXPORT_INVENTORY_INCOMPLETE/);
+  const bad = structuredClone(f.facts.records); bad[0].effectiveMs = 42;
+  assert.throws(() => lab.correct('r1', bad, 'RECORD_CORRECTION'));
+  assert.deepEqual(lab.resolveSyntheticHead(), before); assert.deepEqual(lab.audit(), audit);
 });
 
 test('revision changes between pages never produce a partial collected result', async () => {
@@ -131,4 +140,14 @@ test('configured client receives independent query copies and has no write opera
 test('an HTTP/live transport cannot run through the synthetic driver', async () => {
   const { f, client, calls } = labFixture(); client.transport = 'HTTPS';
   assert.equal((await f.collect()).reason, 'LEARNING_TRANSPORT_BLOCKED'); assert.deepEqual(calls, []);
+});
+
+test('abort during a read ignores its later reply and returns no partial result', async () => {
+  const { f, client, calls } = labFixture(), controller = new AbortController();
+  const deferred = Promise.withResolvers();
+  client.readPage = () => { controller.abort(); return deferred.promise; };
+  const r = await f.collect({ signal: controller.signal });
+  assert.equal(r.reason, 'LEARNING_CANCELLED'); assert.equal(r.facts, null);
+  deferred.resolve(encode({ profile: 'synthetic-moodle-export.1', marker: 'SYNTHETIC_LATE_REPLY' }));
+  await Promise.resolve(); assert.equal(r.facts, null); assert.equal(calls.filter(c => c === 'close').length, 1);
 });
