@@ -56,6 +56,8 @@ test('known noncompliant speed is not a qualified day; OT remains inventory-driv
   const f = dailyFixture('siwon'); f.facts.records[0].speedCompliance = 'NON_COMPLIANT'; repin(f);
   assert.equal(f.run().observation.days, 99); assert.equal(f.run().learningStatus, 'NOT_MET');
   f.facts.records[0].speedCompliance = 'COMPLIANT'; f.facts.records[0].activityType = 'OT'; repin(f);
+  assert.equal(f.run().learningStatus, 'ON_HOLD');
+  f.trusted.activityMappings[0].activityType = 'OT';
   assert.equal(f.run().learningStatus, 'PASS');
 });
 

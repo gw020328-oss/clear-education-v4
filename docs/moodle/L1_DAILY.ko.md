@@ -12,7 +12,7 @@
 | --- | --- |
 | binding / sourceBinding | 공통 Binding/SourceBinding. 신청/주체/정책/수령인과 기관/provider/course/source account를 별도 검증 |
 | rawBinding | raw DTO의 더 넓은 별도 표현을 독립 pin. 공통 binding의 자동 alias가 아니며 learner/account 참조도 resolver가 연결 |
-| inventory / activityMappings | inventory 전체 pin, 활동별 lectureId·sourcePolicyHash·durationMs. 제품 policy hash와 activity별 원천 규칙 hash는 다른 식별자 |
+| inventory / activityMappings | inventory 전체 pin, 활동별 lectureId·activityType·sourcePolicyHash·durationMs. VIDEO/OT는 독립 승인된 유형과 일치해야 하며 미상/모의시험을 학습으로 전환하지 않음. 제품 policy hash와 activity별 원천 규칙 hash는 다른 식별자 |
 | factsHash / sourceRevision | 검증한 현재 export의 내용/현재 revision. 응답에서 trusted를 자동 재발급하지 않음 |
 | verification | authenticity/subject/semantics=VERIFIED_SYNTHETIC, completeness=COMPLETE_SYNTHETIC, correction=CURRENT를 각각 확인. 하나라도 UNKNOWN이면 보류 |
 | approvedCorrectionRevision / approvedSupersessions | 선택적인 별도 정정 승인. 정확한 새 revision과 old→new record 연결이 검토된 경우만 새 current 이력으로 재평가 |

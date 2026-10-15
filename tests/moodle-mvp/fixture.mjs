@@ -49,7 +49,7 @@ export function dailyFixture(name = 'third', compiled = compileExample(name)) {
     sourceRevision: 'r1', factsHash: null,
     verification: { authenticity: 'VERIFIED_SYNTHETIC', subject: 'VERIFIED_SYNTHETIC', semantics: 'VERIFIED_SYNTHETIC',
       completeness: 'COMPLETE_SYNTHETIC', correction: 'CURRENT' },
-    activityMappings: facts.records.map(r => ({ activityId: r.activityId, lectureId: r.lectureId,
+    activityMappings: facts.records.map(r => ({ activityId: r.activityId, lectureId: r.lectureId, activityType: r.activityType,
       sourcePolicyHash: r.sourcePolicyHash, durationMs: r.durationMs })) };
   const f = { compiled, facts, trusted, now };
   f.run = () => assessMvpDailyLearning(f.compiled, 'daily-learning', f.trusted, f.facts, f.now);
