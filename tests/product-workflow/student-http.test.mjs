@@ -99,10 +99,18 @@ test('removing the configured policy disables current acknowledgment without del
 
 test('configured policy rollback/conflicting revision fails closed and leaves the current policy unchanged',async t=>{
  const f=await studentHttpFixture(t,{policies:studentHttpExamplePolicies(2)});
- for(const definitions of [studentHttpExamplePolicies(1),studentHttpExamplePolicies(2).map(p=>({...p,draft:{...p.draft,policyVersion:'conflicting-version'}}))]){
+ for(const definitions of [studentHttpExamplePolicies(1),studentHttpExamplePolicies(2).map(p=>({...p,draft:{...p.draft,policyVersion:'conflicting-version'}})),studentHttpExamplePolicies(2).map(p=>({...p,revision:3}))]){
   assert.throws(()=>createStudentWorkflowService({directory:f.directory,authentication:f.service,instanceId:'student-test',policies:definitions}),/MVP_POLICY_(ROLLBACK|CONFLICT)/);
  }
  assert.equal((await f.request('/mvp/policies')).body.policies[0].policyRevision,2);
+});
+
+test('clock reversal cannot timestamp a new acknowledgment before the prior application revision',async t=>{
+ const f=await studentHttpFixture(t),created=await f.create(),id=created.body.applicationId,p=(await f.request(appPath(id)+'/agreement-preview')).body;
+ const body={expectedRevision:1,previewHash:p.previewHash,acknowledgement:'SYNTHETIC_ACK_ONLY'};f.setTime(99);
+ const denied=await post(f,appPath(id)+'/agreement',body,'clock-a');assert.equal(denied.status,422);assert.equal(denied.body.code,'MVP_CLOCK');
+ assert.equal((await f.request(appPath(id))).body.workflowRevision,1);assert.equal((await f.request(appPath(id)+'/agreements')).body.length,0);
+ f.setTime(101);assert.equal((await post(f,appPath(id)+'/agreement',body,'clock-a')).body.result.state,'ACKNOWLEDGED_SYNTHETIC');
 });
 
 test('two competing acknowledgment requests accept one revision and retain one immutable acknowledgment',async t=>{
