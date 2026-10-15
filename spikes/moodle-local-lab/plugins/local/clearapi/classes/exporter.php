@@ -52,6 +52,8 @@ class exporter {
                 LEFT JOIN (SELECT contextid,COUNT(*) AS filecount,MIN(contenthash) AS mediahash FROM {files}
                     WHERE component='mod_videocheck' AND filearea='video' AND itemid=0 AND filename<>'.' GROUP BY contextid) files ON files.contextid=ctx.id
                 WHERE cm.id $insql";
+            // Lower bound precedes the atomic SQL observation; completion time is only an upper bound.
+            $coverageObserved=(int)floor(microtime(true));
             $source=$DB->get_records_sql($query,$params);
             foreach($c['activities'] as $a) {
                 $base=['activityId'=>$a['activityId'],'lectureId'=>$a['lectureId'],'cmid'=>$a['cmid'],'activityType'=>$a['activityType']];
@@ -91,7 +93,9 @@ class exporter {
             if ($head->artifact!=='') { self::changed($userid,$courseid,$head->fingerprint===$fingerprint?'CACHE_REFRESH':'OBSERVED_CHANGE'); $head=$DB->get_record('local_clearapi_head',compact('userid','courseid')); }
             // Upper-second observation bound is explicit; client must wait until
             // that second before freshness checks. Record milliseconds stay exact.
-            $observed=(int)ceil(microtime(true)); $revision='r'.$head->generation; $pages=[];
+            $observed=(int)ceil(microtime(true));
+            if ($coverageObserved>$observed || $observed>$coverageObserved+300) throw new \invalid_parameter_exception('EXPORT_OBSERVATION_WINDOW');
+            $revision='r'.$head->generation; $pages=[];
             foreach($rows as &$row) $row['recordRevision']=$revision; unset($row);
             $pageSize=$c['pageSize'];
             for($offset=0;$offset<count($rows);$offset+=$pageSize) {
@@ -100,8 +104,8 @@ class exporter {
             }
             $cause=$DB->get_field('local_clearapi_audit','causekey',['userid'=>$userid,'courseid'=>$courseid,'generation'=>$head->generation]);
             $artifact=['profile'=>'clear-local-moodle.1','sourceBinding'=>$c['sourceBinding'],'revision'=>$revision,'cause'=>$cause,'sourceVersions'=>$versions,
-                'observedAt'=>$observed,'validUntil'=>$observed+300,'periodStart'=>$c['periodStart'],'periodEndExclusive'=>$c['periodEndExclusive'],
-                'coverageStart'=>$c['periodStart'],'coverageEndExclusive'=>min($observed,$c['periodEndExclusive']),
+                'observationLowerBound'=>$coverageObserved,'observedAt'=>$observed,'validUntil'=>$coverageObserved+300,'periodStart'=>$c['periodStart'],'periodEndExclusive'=>$c['periodEndExclusive'],
+                'coverageStart'=>$c['periodStart'],'coverageEndExclusive'=>min($coverageObserved,$c['periodEndExclusive']),
                 'activitySetHash'=>$c['activitySetHash'],'inventoryVersion'=>$c['inventoryVersion'],'totalRows'=>count($rows),
                 'pages'=>$pages,'terminalPageId'=>$pages[count($pages)-1]['pageId'],'labOnly'=>true];
             $artifact['manifestHash']=self::hash('CLEAR-LOCAL-MANIFEST',$artifact); $artifact['rows']=$rows;

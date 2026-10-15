@@ -77,3 +77,11 @@ Video Checkpoints upstream URL은 제공 패키지의 provenance를 사용한다
 최종 리뷰 보정: registry/sourcePin을 요청 시작 때 고정 복사해 비동기 caller 변경을 차단하며, 정리 중 취소도 최종 facts를 반환하지 않는다. 합성 transport 회귀2개를 추가했다. 기존 실제 로컬15/15·사후6/6 결과는 보정 전 source 기록이며 새 실제 재생을 실행한 것으로 표시하지 않는다.
 
 공통 최종 통합: LOCAL 합성 transport/정규화 회귀30개를 네트워크 차단과 함께 필수 Public synthetic tests에 편입했다. 실제 Docker 재생은 CI 대상이 아니다. #45의 관측 시각 기준 기간 종료 보정과 #53의 전용 Chrome target 검사를 포함하며, 위 선행 실패 기록은 당시 이력이다. 과거 실패 원인의 미확정은 유지한다.
+
+## 최종 관측 시간 경계 보정
+
+`clearapi=2026101502`는 learner lock 안에서 SELECT 직전 `floor(clock)`를 `observationLowerBound`로 고정한다. 처리 뒤 `ceil(clock)`인 observedAt은 포함된 밀리초 기록의 상한이며, 기간이 완료됐다는 근거가 아니다. coverageEnd는 min(lower,periodEnd), validUntil은 lower+300이다. 역행 시계·300초를 넘긴 처리·잘못된 window는 거부한다. 기존 캐시에는 새 시각을 붙이지 않으며 옛 artifact의 하한/만료를 보존한다. 이전 clearapi 버전은 독립 registry pin에서 거부한다.
+
+LOCAL 평가만 이 확정된 coverage prefix로 날짜 누락과 기간 완료를 판정한다. SELECT가 종료 1초 이내에 시작됐거나 처리 도중 자정을 넘더라도 새 관측 하한이 경계를 포함하기 전에는 최종 PASS/NOT_MET로 승격하지 않는다. 정상 종료 기록의 밀리초 시각은 observedAt 상한으로 검사하므로 같은 초의 유효 기록을 버리지 않는다. 전체 하한은 신뢰한 localExpectation에서 전달하며 maxAge도 하한으로 검사한다. SYNTHETIC의 관측 의미는 유지한다.
+
+공통 보정 후 LOCAL39개와 일별/driver/M2 bridge60개, 총99개 오프라인 회귀 PASS. 변경 PHP는 기존 고정 이미지의 네트워크 없는 일회성 컨테이너에서 syntax PASS를 확인했다. 실제 Moodle DB/기존 컨테이너·토큰·키에는 접근하지 않았다. 위 실제15+6 기록은 clearapi2026101501의 과거 근거다. 새 버전의 실제 재생/DB 실행은 아직 재검증하지 않았으며, 이 차이를 실제 완료로 표시하지 않는다.

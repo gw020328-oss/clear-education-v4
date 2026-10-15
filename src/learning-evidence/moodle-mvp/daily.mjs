@@ -78,7 +78,18 @@ function assessDaily(compiled, ruleId, trusted, input, now, profile) {
     check(s.validUntil !== null && observed <= now && now <= seconds(s.validUntil)
       && now - observed <= req.maxAgeSeconds, 'LEARNING_STALE');
     check(s.coverageStart !== null && s.coverageEndExclusive !== null
-      && seconds(s.coverageStart) <= period.from && seconds(s.coverageEndExclusive) >= Math.min(observed, period.until), 'LEARNING_COVERAGE');
+      && seconds(s.coverageStart) <= period.from, 'LEARNING_COVERAGE');
+    const coveredUntil = seconds(s.coverageEndExclusive);
+    // Local observedAt is an upper-second bound for record timestamps. The
+    // SQL observation's lower bound controls completed days, never wall time.
+    if (profile.mode === 'LOCAL_LAB') {
+      const lower = trusted.observationLowerBound;
+      check(Number.isSafeInteger(lower) && lower >= period.from && lower <= observed
+        && coveredUntil === Math.min(lower, period.until), 'LEARNING_COVERAGE');
+      check(now - lower <= req.maxAgeSeconds, 'LEARNING_STALE');
+    }
+    else check(coveredUntil >= Math.min(observed, period.until), 'LEARNING_COVERAGE');
+    const decisionTime = profile.mode === 'LOCAL_LAB' ? coveredUntil : observed;
     check(s.totalRows === f.records.length && s.pageManifest !== null, 'LEARNING_MANIFEST');
     const manifest = s.pageManifest; let offset = 0;
     check(manifest.pages.length > 0 && manifest.terminalPageId === manifest.pages.at(-1).pageId, 'LEARNING_PAGE_CHAIN');
@@ -153,12 +164,12 @@ function assessDaily(compiled, ruleId, trusted, input, now, profile) {
     let openDay = false;
     for (let i = 0; i < l.days; i++) {
       const label = date.toISOString().slice(0, 10), end = Date.parse(label + 'T00:00:00+09:00') / 1000 + 86400;
-      if (!daily.has(label)) { if (observed < end) openDay = true; else missing.push(label); }
+      if (!daily.has(label)) { if (decisionTime < end) openDay = true; else missing.push(label); }
       date.setUTCDate(date.getUTCDate() + 1);
     }
     const min = daily.size ? Math.min(...daily.values()) : 0;
     if (missing.length) return result('NOT_MET', 'LEARNING_CONFIRMED_MISSING_DATES', credited, missing, min);
-    if (openDay || observed < period.until) return result('IN_PROGRESS', 'LEARNING_PERIOD_OPEN', credited);
+    if (openDay || decisionTime < period.until) return result('IN_PROGRESS', 'LEARNING_PERIOD_OPEN', credited);
     return result(credited.length === l.days ? 'PASS' : 'NOT_MET', 'LEARNING_DAILY_SUMMARY', credited, missing, min);
   } catch (error) {
     if (!(error instanceof RuleError)) throw error;

@@ -20,6 +20,11 @@ export async function collectLocalMoodleFacts(registry, sourcePin, client, { now
       && same(m.sourceVersions, registry.sourceVersions)
       && m.inventoryVersion === registry.inventory.activitySetVersion && m.periodStart === registry.period.from
       && m.periodEndExclusive === registry.period.until && m.pages.length <= 100 && m.totalRows <= 10000, 'LOCAL_SOURCE_SCOPE');
+    check(Number.isSafeInteger(m.observationLowerBound) && Number.isSafeInteger(m.observedAt)
+      && Number.isSafeInteger(m.validUntil) && m.observationLowerBound >= m.periodStart
+      && m.observationLowerBound <= m.observedAt && m.observedAt <= m.validUntil
+      && m.validUntil <= m.observationLowerBound + 300
+      && m.coverageEndExclusive === Math.min(m.observationLowerBound, m.periodEndExclusive), 'LOCAL_OBSERVATION_WINDOW');
     let offset = 0; const ids = new Set(), rows = [];
     for (const p of m.pages) {
       check(!ids.has(p.pageId) && p.offset === offset && p.rowCount > 0 && p.rowCount <= 100, 'LOCAL_PAGE_CHAIN'); ids.add(p.pageId);
@@ -73,7 +78,7 @@ export async function collectLocalMoodleFacts(registry, sourcePin, client, { now
       productConnected:false,sourceSignatureVerified:false,humanAttentionProven:false,paymentAllowed:false };
   } catch(e) {
     const codes = new Set(['LOCAL_ACCOUNT_BINDING','LOCAL_MANIFEST_PIN','LOCAL_SOURCE_SCOPE','LOCAL_PAGE_CHAIN','LOCAL_EXPORT_CHANGED','LOCAL_ACTIVITY_BINDING','LOCAL_MEDIA_PIN',
-      'LOCAL_ACTIVITY_MISSING','LOCAL_STALE','LOCAL_REVISION_CHANGED','LOCAL_AUTH_REJECTED','LOCAL_ACCESS_REJECTED','LOCAL_CANCELLED','LOCAL_TIMEOUT','LOCAL_AUTH_UNAVAILABLE','LOCAL_RESPONSE_LIMIT','LOCAL_SOURCE_UNAVAILABLE']);
+      'LOCAL_OBSERVATION_WINDOW','LOCAL_ACTIVITY_MISSING','LOCAL_STALE','LOCAL_REVISION_CHANGED','LOCAL_AUTH_REJECTED','LOCAL_ACCESS_REJECTED','LOCAL_CANCELLED','LOCAL_TIMEOUT','LOCAL_AUTH_UNAVAILABLE','LOCAL_RESPONSE_LIMIT','LOCAL_SOURCE_UNAVAILABLE']);
     output = {status:'ON_HOLD',mode:'LOCAL_LAB',reason:codes.has(e?.message)?e.message:'LOCAL_SOURCE_UNAVAILABLE',facts:null,productConnected:false,paymentAllowed:false};
   } finally { try { await client.close(); } catch { output={status:'ON_HOLD',mode:'LOCAL_LAB',reason:'LOCAL_CLEANUP_FAILED',facts:null,productConnected:false,paymentAllowed:false}; } }
   if (signal?.aborted) output = {status:'ON_HOLD',mode:'LOCAL_LAB',reason:'LOCAL_CANCELLED',facts:null,productConnected:false,paymentAllowed:false};

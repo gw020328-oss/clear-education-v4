@@ -16,7 +16,7 @@ function fixture(){
   const m={profile:'clear-local-moodle.1',labOnly:true,revision:'r1',cause:'INITIAL_EXPORT',sourceVersions:registry.sourceVersions,
     sourceBinding:registry.sourceBinding,inventoryVersion:config.inventoryVersion,activitySetHash:l.activitySetHash,
     periodStart:registry.period.from,periodEndExclusive:registry.period.until,coverageStart:registry.period.from,
-    coverageEndExclusive:registry.period.from+1,observedAt:registry.period.from+1,validUntil:registry.period.from+301,
+    observationLowerBound:registry.period.from+1,coverageEndExclusive:registry.period.from+1,observedAt:registry.period.from+1,validUntil:registry.period.from+301,
     totalRows:rows.length,terminalPageId:'page-0',pages:[]};
   let closed=0;
   const client={profile:m.profile,transport:'LOOPBACK_HTTP_ONLY',identity:async()=>({labOnly:true,sourceBinding:registry.sourceBinding}),
@@ -72,4 +72,18 @@ test('pre-cancel and cancellation during cleanup never return collected facts',a
   const f=fixture(), active=new AbortController();f.client.close=async()=>active.abort();
   const late=await collectLocalMoodleFacts(f.registry,f.pin(),f.client,{now:()=>f.m.observedAt,signal:active.signal});
   assert.equal(late.reason,'LOCAL_CANCELLED');assert.equal(late.facts,null);
+});
+
+test('prior ceil-only export version cannot authorize the corrected time semantics',async()=>{
+  const f=fixture();f.m.sourceVersions={...f.m.sourceVersions,clearapi:'2026101501'};
+  const r=await f.run();assert.equal(r.status,'ON_HOLD');assert.equal(r.reason,'LOCAL_SOURCE_SCOPE');
+});
+
+for(const [name,change] of [
+  ['missing lower bound',m=>{delete m.observationLowerBound;}],
+  ['clock moved backward',m=>{m.observationLowerBound=m.observedAt+1;}],
+  ['ceil coverage',m=>{m.observationLowerBound--; }],
+  ['expiry renewed after slow read',m=>{m.observedAt+=300;m.validUntil+=300;}],
+])test(name+' cannot be normalized under the new source version',async()=>{
+  const f=fixture();change(f.m);const r=await f.run();assert.equal(r.reason,'LOCAL_OBSERVATION_WINDOW');assert.equal(r.facts,null);
 });
