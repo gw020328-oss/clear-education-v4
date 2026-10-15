@@ -109,7 +109,7 @@ test('clock reversal cannot timestamp a new acknowledgment before the prior appl
  const f=await studentHttpFixture(t),created=await f.create(),id=created.body.applicationId,p=(await f.request(appPath(id)+'/agreement-preview')).body;
  const body={expectedRevision:1,previewHash:p.previewHash,acknowledgement:'SYNTHETIC_ACK_ONLY'};f.setTime(99);
  const denied=await post(f,appPath(id)+'/agreement',body,'clock-a');assert.equal(denied.status,422);assert.equal(denied.body.code,'MVP_CLOCK');
- assert.equal((await f.request(appPath(id))).body.workflowRevision,1);assert.equal((await f.request(appPath(id)+'/agreements')).body.length,0);
+ f.setTime(100);assert.equal((await f.request(appPath(id))).body.workflowRevision,1);assert.equal((await f.request(appPath(id)+'/agreements')).body.length,0);
  f.setTime(101);assert.equal((await post(f,appPath(id)+'/agreement',body,'clock-a')).body.result.state,'ACKNOWLEDGED_SYNTHETIC');
 });
 
@@ -120,4 +120,33 @@ test('two competing acknowledgment requests accept one revision and retain one i
  assert.deepEqual(replies.map(r=>r.status).sort(),[200,409]);assert.equal((await f.request(appPath(id)+'/agreements')).body.length,1);
  const db=new DatabaseSync(join(f.directory,'mvp-student.sqlite'));
  assert.throws(()=>db.prepare('UPDATE acknowledgments SET record=?').run('{}'),/IMMUTABLE_STUDENT_ACK/);db.close();
+});
+
+
+test('clock reversal cannot expose a future application or acknowledgment through reads or replay',async t=>{
+ const f=await studentHttpFixture(t),created=await f.create(),id=created.body.applicationId,p=(await f.request(appPath(id)+'/agreement-preview')).body;
+ f.setTime(200);const body={expectedRevision:1,previewHash:p.previewHash,acknowledgement:'SYNTHETIC_ACK_ONLY'};
+ const ack=await post(f,appPath(id)+'/agreement',body,'future-ack');assert.equal(ack.status,200);f.setTime(150);
+ for(const path of [appPath(id),appPath(id)+'/agreement-preview',appPath(id)+'/agreements','/mvp/applications','/mvp/student-operations/'+ack.body.operationId,appPath(id)+'/operations/agreement/future-ack']){
+  const r=await f.request(path);assert.equal(r.status,422,path);assert.equal(r.body.code,'MVP_CLOCK');
+ }
+ assert.equal((await post(f,appPath(id)+'/agreement',body,'future-ack')).body.code,'MVP_CLOCK');
+ assert.equal((await f.request(appPath(id),{headers:headersFor(f.bobContext)})).status,404);
+ assert.equal((await f.request(appPath(id),{headers:headersFor(f.operatorContext)})).status,403);
+ await f.restart();assert.equal((await f.request(appPath(id))).body.code,'MVP_CLOCK');
+ f.setTime(201);assert.deepEqual((await f.request('/mvp/student-operations/'+ack.body.operationId)).body,ack.body);
+});
+
+test('same-key POST replay revalidates the session inside the command transaction',async t=>{
+ const f=await studentHttpFixture(t);let armed=false,calls=0;
+ const authentication={origin:f.service.origin,authorizeWorkflow(context,write){
+  if(armed&&++calls===2)f.service.logout(context);
+  return f.service.authorizeWorkflow(context,write);
+ }};
+ const service=createStudentWorkflowService({directory:join(f.directory,'transaction-replay'),authentication,instanceId:'replay-test',policies:studentHttpExamplePolicies(),now:()=>100});
+ try{
+  const body={policyHash:service.policies(f.aliceContext).policies[0].policyHash};service.create(f.aliceContext,body,'replay');armed=true;
+  assert.throws(()=>service.create(f.aliceContext,body,'replay'),/AUTH_REQUIRED/);assert.equal(calls,2);
+  const fresh=await f.login(f.alice);assert.equal(service.recover(fresh,'applications','replay').state,'RECORDED');
+ }finally{service.close();}
 });

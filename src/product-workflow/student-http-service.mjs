@@ -44,7 +44,7 @@ export function createStudentWorkflowService({directory,authentication,instanceI
  });}catch(error){store.close();throw error;}
  const actor=(context,write=false)=>{check(!closed,'MVP_CLOSED');const s=authentication.authorizeWorkflow(context,write);check(s.role==='participant','FORBIDDEN');return s;};
  const load=id=>{hash32(id);const a=db.prepare('SELECT * FROM applications WHERE id=?').get(id);check(a,'MVP_NOT_FOUND');return a;};
- const owned=(id,s)=>{const a=load(id);check(a.wallet===s.wallet,'MVP_NOT_FOUND');return a;};
+ const owned=(id,s)=>{const a=load(id);check(a.wallet===s.wallet,'MVP_NOT_FOUND');check(clock()>=a.updated_at,'MVP_CLOCK');return a;};
  function policy(hash){hash32(hash);const row=db.prepare('SELECT * FROM policies WHERE hash=?').get(hash);check(row,'MVP_POLICY_UNAVAILABLE');
   const p=JSON.parse(row.record),c=compileMvpPolicy(p.draft,{sources:p.sources,capabilities:p.capabilities});check(c.policyHash===hash&&p.policyId===row.policy_id&&p.revision===row.revision,'MVP_STUDENT_INTEGRITY');return {row,definition:p,compiled:c};}
  function availability(a){const h=db.prepare('SELECT * FROM policy_heads WHERE id=?').get(a.policy_id);return !h?.active?'POLICY_UNAVAILABLE':h.hash!==a.policy_hash?'POLICY_CHANGED':null;}
@@ -62,7 +62,7 @@ export function createStudentWorkflowService({directory,authentication,instanceI
    policyHash:a.policy_hash,policyVersion:c.policy.policyVersion,productId:c.policy.productId,cohortId:c.policy.cohortId};validateContract('Binding',b);return b;}
  function ackView(row,a){const r=JSON.parse(row.record);check(r.applicationId===a.id&&digest('CLEAR-MVP-STUDENT-ACK.1',r.payload)===r.acknowledgmentHash,'MVP_STUDENT_INTEGRITY');
   return freeze({...r,current:!availability(a)&&a.ack_id===r.acknowledgmentId,...gates});}
- function view(a){const problem=availability(a),p=policy(a.policy_hash),ack=a.ack_id?db.prepare('SELECT * FROM acknowledgments WHERE id=?').get(a.ack_id):null;
+ function view(a){check(clock()>=a.updated_at,'MVP_CLOCK');const problem=availability(a),p=policy(a.policy_hash),ack=a.ack_id?db.prepare('SELECT * FROM acknowledgments WHERE id=?').get(a.ack_id):null;
   check((a.state==='ACKNOWLEDGED_SYNTHETIC')===!!ack,'MVP_STUDENT_INTEGRITY');
   return freeze({applicationId:a.id,learner:a.wallet,policyId:a.policy_id,policyHash:a.policy_hash,policyRevision:p.row.revision,workflowRevision:a.revision,
    state:problem??a.state,policyCurrent:!problem,agreementScope:ack?'SYNTHETIC_ACK_ONLY':'NONE',acknowledgment:ack?ackView(ack,a):null,
@@ -71,10 +71,11 @@ export function createStudentWorkflowService({directory,authentication,instanceI
   binding:binding(a),policyId:a.policy_id,policyRevision:p.policyRevision,policyHash:a.policy_hash,display:p.display,displayHash:p.displayHash,acknowledgementScope:'SYNTHETIC_ACK_ONLY',...gates};
   return freeze({...payload,previewHash:digest('CLEAR-MVP-STUDENT-PREVIEW.1',payload),policyCurrent:!availability(a)});}
  function commandView(row){const a=load(row.application_id),problem=availability(a),current=a.revision===row.application_revision&&!problem;
-  check(a.wallet===row.actor,'MVP_STUDENT_INTEGRITY');return freeze({operationId:row.id,applicationId:a.id,applicationRevision:row.application_revision,state:'RECORDED',
+  check(a.wallet===row.actor,'MVP_STUDENT_INTEGRITY');check(clock()>=a.updated_at,'MVP_CLOCK');return freeze({operationId:row.id,applicationId:a.id,applicationRevision:row.application_revision,state:'RECORDED',
    current,reason:current?null:problem??'STALE_CONTEXT',result:current?JSON.parse(row.result):null,...gates});}
- function command(s,route,key,body,fn){identifier(key);const requestHash=digest('CLEAR-MVP-STUDENT-COMMAND.1',body);
+ function command(context,s,route,key,body,fn){identifier(key);const requestHash=digest('CLEAR-MVP-STUDENT-COMMAND.1',body);
   return transaction(()=>{
+   actor(context,true);
    const old=db.prepare('SELECT * FROM commands WHERE actor=? AND route=? AND key=?').get(s.wallet,route,key);
    if(old){check(old.request_hash===requestHash,'IDEMPOTENCY_CONFLICT');return commandView(old);}
    check(db.prepare('SELECT COUNT(*) AS n FROM commands').get().n<2000,'MVP_BUSY');
@@ -90,7 +91,7 @@ export function createStudentWorkflowService({directory,authentication,instanceI
   get(context,id){return view(owned(id,actor(context)));},
   preview(context,id){return preview(owned(id,actor(context)));},
   create(context,body,key){const s=actor(context,true);exactKeys(body,['policyHash'],'MVP_STUDENT_CREATE');hash32(body.policyHash);
-   return command(s,'applications',key,body,()=>{actor(context,true);const p=policy(body.policyHash),h=db.prepare('SELECT * FROM policy_heads WHERE id=?').get(p.row.policy_id);
+   return command(context,s,'applications',key,body,()=>{const p=policy(body.policyHash),h=db.prepare('SELECT * FROM policy_heads WHERE id=?').get(p.row.policy_id);
     check(h?.active&&h.hash===body.policyHash,'MVP_POLICY_UNAVAILABLE');check(!db.prepare('SELECT id FROM applications WHERE wallet=? AND policy_id=?').get(s.wallet,p.row.policy_id),'MVP_APPLICATION_EXISTS');
     check(db.prepare('SELECT COUNT(*) AS n FROM applications').get().n<500,'MVP_BUSY');
     const id='0x'+randomBytes(32).toString('hex'),t=clock();
@@ -98,7 +99,7 @@ export function createStudentWorkflowService({directory,authentication,instanceI
    });},
   acknowledge(context,id,body,key){const s=actor(context,true);exactKeys(body,['expectedRevision','previewHash','acknowledgement'],'MVP_STUDENT_ACK');revision(body.expectedRevision);hash32(body.previewHash);
    check(body.acknowledgement==='SYNTHETIC_ACK_ONLY','MVP_STUDENT_ACK');owned(id,s);
-   return command(s,id+'/agreement',key,body,()=>{actor(context,true);const a=owned(id,s);check(!availability(a),'MVP_STALE');check(a.revision===body.expectedRevision&&a.state==='DRAFT','MVP_STALE');
+   return command(context,s,id+'/agreement',key,body,()=>{const a=owned(id,s);check(!availability(a),'MVP_STALE');check(a.revision===body.expectedRevision&&a.state==='DRAFT','MVP_STALE');
     const displayed=preview(a);check(displayed.previewHash===body.previewHash,'MVP_STALE');const acknowledgmentId='ack-'+randomUUID(),t=clock();check(t>=a.updated_at,'MVP_CLOCK');
     const payload={applicationId:id,applicationRevision:a.revision+1,recordedAt:t,actor:s.wallet,preview:displayed,scope:'SYNTHETIC_ACK_ONLY'};
     const record={acknowledgmentId,applicationId:id,acknowledgmentHash:digest('CLEAR-MVP-STUDENT-ACK.1',payload),payload,...gates};
@@ -106,7 +107,7 @@ export function createStudentWorkflowService({directory,authentication,instanceI
     db.prepare("UPDATE applications SET revision=revision+1,state='ACKNOWLEDGED_SYNTHETIC',ack_id=?,updated_at=? WHERE id=?").run(acknowledgmentId,t,id);return load(id);
    });},
   selectPolicy(context,id,body,key){const s=actor(context,true);exactKeys(body,['expectedRevision','policyHash'],'MVP_STUDENT_POLICY');revision(body.expectedRevision);hash32(body.policyHash);owned(id,s);
-   return command(s,id+'/policy-selection',key,body,()=>{actor(context,true);const a=owned(id,s),p=policy(body.policyHash),h=db.prepare('SELECT * FROM policy_heads WHERE id=?').get(a.policy_id);
+   return command(context,s,id+'/policy-selection',key,body,()=>{const a=owned(id,s),p=policy(body.policyHash),h=db.prepare('SELECT * FROM policy_heads WHERE id=?').get(a.policy_id);
     check(a.revision===body.expectedRevision,'MVP_STALE');check(p.row.policy_id===a.policy_id&&h?.active&&h.hash===body.policyHash&&a.policy_hash!==body.policyHash,'MVP_POLICY_UNAVAILABLE');
     const t=clock();check(t>=a.updated_at,'MVP_CLOCK');
     db.prepare("UPDATE applications SET policy_hash=?,revision=revision+1,binding_revision=binding_revision+1,state='DRAFT',ack_id=NULL,updated_at=? WHERE id=?").run(body.policyHash,t,id);return load(id);
