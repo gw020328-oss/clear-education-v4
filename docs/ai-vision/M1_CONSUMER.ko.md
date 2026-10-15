@@ -75,3 +75,5 @@
 ## 충돌 보류 후속
 
 `ai-policy-proposal.2`부터 OPEN 질문에 관련된 threshold/days는 초안에서 null로 보류하고, 후보 숫자·근거·미확정 질문을 별도 검토 자료로 보존한다. 문서 관찰도 대상 필드 질문/flag가 있으면 null/NEEDS_REVIEW로 내린다. 늦은 current=false record는 소비 값도 null이다. 기존 25개 소비자/7개 mock 평가는 당시 결과이며 후속 검증과 구분한다. [결정적 경계와 한계](CONFLICT_HOLD.ko.md)를 따른다. 운영 Evidence 자동 승격/지급 권한은 추가하지 않았다.
+
+공통 M1 #43의 최종 develop merge `3781f5831f4482b62a928407ce432a2eaebb7ad8`를 수신하여 이력 반영했다. 최종 M1의 schema/API 필드는 같으며 후속 로컬 회귀 193개가 통과했다. M2 #46 최종 병합과 운영 Evidence 소비는 아직 별도다.
