@@ -128,6 +128,7 @@ test('policy disable and source expiry make immutable accepted summaries histori
   if(disable)await f.restart([]);else f.setTime(f.configuration.source.snapshot.expiresAt);
   const historical=(await f.request(path(app)+'/review-runs/'+run.body.result.runId)).body;assert.equal(historical.current,false);assert.equal(historical.summary,null);
   assert.ok([409,410].includes((await f.request(path(app)+'/document-preview')).status));
+  if(!disable){const db=new DatabaseSync(join(f.directory,'sources.sqlite'));assert.equal(db.prepare('SELECT COUNT(*) AS n FROM artifacts').get().n,0);db.close();}
  }
 });
 

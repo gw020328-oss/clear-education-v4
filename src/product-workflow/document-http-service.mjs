@@ -42,7 +42,7 @@ export function createDocumentWorkflowService({directory,authentication,student,
   const pin=policy.compiled.policy.sources.find(s=>s.sourceId===configuration.source.snapshot.sourceId),snapshot=configuration.source.snapshot;
   check(pin&&pin.capturedAt===snapshot.collectedAt&&pin.rawHash===snapshot.artifacts.find(a=>a.role==='RESPONSE_BODY')?.sha256&&pin.normalizedHash===snapshot.artifacts.find(a=>a.role==='EXTRACTED_TEXT')?.sha256,'DOC_CONFIGURATION_REQUIRED');
   check(configuration.bundle.entries[0].snapshotHash===sourceSnapshotHash(configuration.source.snapshot),'DOC_CONFIGURATION_REQUIRED');
-  archive.putSnapshot(configuration.source.snapshot,configuration.source.blobs);archive.putBundle(configuration.bundle);
+  archive.purgeExpired();archive.putSnapshot(configuration.source.snapshot,configuration.source.blobs);archive.putBundle(configuration.bundle);
   ledger=openReviewLedger({directory,environment:{instanceId,origin:authentication.origin,mode:'SYNTHETIC'},now});
   // No raw survives restart. Recover stored receipts only, never dispatch a model.
   for(const r of db.prepare("SELECT * FROM runs WHERE state IN ('RESERVED','RUNNING')").all()){
@@ -55,7 +55,7 @@ export function createDocumentWorkflowService({directory,authentication,student,
  const head=app=>db.prepare('SELECT * FROM heads WHERE app=?').get(app);
  function wipe(sub){const value=raw.get(sub);if(value){clearTimeout(value.timer);for(const f of value.files)f.bytes.fill(0);value.posts=[];raw.delete(sub);}}
  function stopApp(app,supersede=false){for(const slot of slots)if(slot.app===app)slot.controller.abort();for(const [run,value]of active)if(value.app===app){value.controller.abort();if(!supersede)try{ledger.cancel(run);}catch{}}for(const s of db.prepare('SELECT id FROM submissions WHERE app=?').all(app))wipe(s.id);}
- function sourceCurrent(){const b=archive.getBundle(configuration.sourceBundleHash);for(const entry of b.entries){const s=archive.getSnapshot(entry.snapshotHash);for(const a of s.artifacts)archive.getArtifact(entry.snapshotHash,a.artifactId);}return b;}
+ function sourceCurrent(){archive.purgeExpired();const b=archive.getBundle(configuration.sourceBundleHash);for(const entry of b.entries){const s=archive.getSnapshot(entry.snapshotHash);for(const a of s.artifacts)archive.getArtifact(entry.snapshotHash,a.artifactId);}return b;}
  function resolve(context,app,write=false){
   const s=actor(context,write),a=student.get(context,app),c1=student.preview(context,app); // ownership before configuration/clock details
   check(a.state==='ACKNOWLEDGED_SYNTHETIC'&&a.policyCurrent&&a.acknowledgment?.current,'DOC_CONFIGURATION_REQUIRED');
