@@ -1,6 +1,6 @@
 # 제품 연결 API·저장 계약 — M3-0
 
-상태: **DRAFT / 의존 구현용 계약 / develop 미병합**. 버전 `clear-product-workflow.1`, 선행 develop `4ae548b`(PR #54), 검토 PR [#58](https://github.com/gw020328-oss/clear-education-v4/pull/58), 추적 #55·#39·#40. 이 문서는 새 연결의 정본 제안이며 기존 실행 API·application DB schema4·V4 동의/금고와 별도다. 병합 전 소비자는 정확한 계약 커밋을 이력 병합하고 Draft 의존임을 표시한다.
+상태: **M3-0 합성 모듈 계약 / PR #58 develop 병합 `5f902dc`**. 버전 `clear-product-workflow.1`, 최초 기준 develop `4ae548b`(PR #54), 추적 #55·#39·#40. 기존 실행 API·application DB schema4·V4 동의/금고와 별도다. 아래 M3-1 이후의 HTTP·정책/동의·Evidence·재원 API는 여전히 제안이며 운영 구현 완료가 아니다. 소비자는 정확한 계약 이력을 반영한다.
 
 ## 단계와 구현 경계
 
