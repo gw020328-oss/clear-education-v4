@@ -61,7 +61,7 @@ AI는 이 context와 현재 bytes를 확인하고 기존 엄격 locator(`post/..
 
 ## URL 원문과 보완
 
-`source-contract.mjs`의 SourceSnapshot/SourceBundle/resolveSourceBundle을 따른다. sourceType은 PUBLIC_URL/PASTE/FILE, collectedAt·expiresAt(시연30일), 요청/최종URL·HTTP 상태·COLLECTED/PARTIAL/FAILED·추출버전·한계와 artifact별 raw/text/image 지문을 결합한다. HTML raw와 추출 텍스트 hash를 혼용하지 않는다. 원본 보관이 없거나 hash가 다르면 lookup 실패로 보류한다. 원문 만료/삭제 시 초안은 SOURCE_UNAVAILABLE로 보완하며, 확정·동의 자료의 운영 보관/아카이브 정책은 OPEN이라 실제 정책 공개를 차단한다. 운영자 등록/확정이 공식 발행자 진위·기수 적용성·계약/기관 승인 증명은 아니다.
+`source-contract.mjs`의 SourceSnapshot/SourceBundle/resolveSourceBundle을 따른다. sourceType은 PUBLIC_URL/PASTE/FILE이고 institutionId/productId/cohortId를 고정한다. collectedAt·expiresAt(시연30일), 요청/최종URL·HTTP 상태·COLLECTED/PARTIAL/FAILED·추출버전·한계와 artifact별 raw/text/image 지문을 결합한다. HTML raw와 추출 텍스트 hash를 혼용하지 않는다. 원본 보관이 없거나 hash가 다르면 lookup 실패로 보류한다. 원문 만료/삭제 시 초안은 SOURCE_UNAVAILABLE로 보완하며, 확정·동의 자료의 운영 보관/아카이브 정책은 OPEN이라 실제 정책 공개를 차단한다. 운영자 등록/확정이 공식 발행자 진위·기수 적용성·계약/기관 승인 증명은 아니다.
 
 처음 allowlist는 기존 근거의 YBM 상품 페이지, 시원스쿨 상품 페이지·공지901, 명시 Naver 가이드다. exact HTTPS URL만 허용하고 이미지·redirect도 별도 등록 URL만 같은 검사로 요청한다. URL 사용자가 임의 hostname/path/port를 추가하는 기능은 없다. 계정/암호·임의 포트·file·loopback/private/link-local/metadata 주소 거부, DNS public address 확인 후 해당 주소에 연결을 고정하고 TLS hostname을 검증한다. redirect 각 단계 재검사, 최대2회/8리소스·HTML2MiB/이미지8MiB·총16MiB, 요청10초/전체30초. 쿠키/사용자 header·script·form·자동 링크 추적 없음. 자동 텍스트 추출은 휴리스틱임을 남기고 JS/필요이미지 누락을 완전 확보로 표시하지 않는다. 보완 paste/file은 별도 새 source revision이다.
 
@@ -74,3 +74,9 @@ AI는 common getSnapshot/getArtifact lookup으로 텍스트 blocks와 이미지 
 공통 소유: src/product-workflow, specs/m3, API/DB/정본문서/rootCI. AI 소유: src/ai-policy의 source 소비 adapter, src/document-precheck의 bytes/run 연결 adapter와 전용 tests/docs. 기존 공통 타입을 AI가 복제/변경하지 않는다. F0 원격 codex/frontend-shell의 엄격한 view와 list/get adapter를 확인했으며 새 화면/경로는 미연결, 소비자 수락은 PENDING이다. 허용된 세션 외 동료에게 메시지를 보내거나 web/를 변경하지 않는다.
 
 실명인증·기관 협의/공식 적용성·실제 source 검증은 후속, 예치율/풀/배정 순위/충전·회수 정책 OPEN이다. 자격/산술 후보와 재원은 별도다. 400% 사전검토만/자동 자격·지급 금지,500%제외,grant/outbox HOLD·독립claim NO-GO 및 기존 금고/DB/체인/키 보존을 유지한다. 실제 AI 호출·YBM 재로그인·공개 체인·실자금·배포·자동 병합은 이번 작업에 포함되지 않는다.
+
+## 원문 → M1 Source pin의 명시적 매핑
+
+호스트의 독립 M1 Source pin은 sourceId/institutionId/productId/cohortId와 capturedAt=collectedAt을 대조한다. rawHash는 유일한 RESPONSE_BODY artifact.sha256, normalizedHash는 textArtifactId의 EXTRACTED_TEXT.sha256, normalizerVersion은 extractionVersion이다. 텍스트가 없으면 normalizedHash/normalizerVersion 둘 다 null이다. locators는 resolve가 반환한 정확한 text block locator다. snapshotHash/bundleHash는 이 M1 지문과 별도로 보존한다. 기관 범위/원문 bytes의 일치가 발행자 진위·적용성·기관 승인은 아니다. PUBLIC_URL/PASTE/FILE provenance를 지우거나 SYNTHETIC으로 재표시하지 않는다. M1 origin/applicability는 신뢰 호스트가 별도로 제공하는 미확인 주장이고, 소비자가 응답으로부터 자동 repin/승격하지 않는다. 이미지-only·미수집 자료는 텍스트 quote를 만들어 채우지 않고 보완 질문으로 남긴다.
+
+lookup은 snapshot을 await 직후 고정 복사하고 각 artifact bytes를 복사·대조한다. 전체 lookup 종료 시 만료도 다시 검사한다. 외부 callback이 같은 mutable 객체를 재사용해도 이미 확인한 scope/지문을 바꿀 수 없다. 실제 archive는 별도 sources.sqlite를 사용하며 30일 만료 뒤 조회 차단과 명시적 purge를 제공한다. purge는 논리적 삭제이며 SQLite/디스크 잔재 완전 삭제 보장은 아니다. 확정 정책의 장기 보관/아카이브·운영 개인자료 수명은 후속 관문이다.
