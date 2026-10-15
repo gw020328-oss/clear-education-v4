@@ -1,0 +1,33 @@
+name: Reclaim private wrapper spike
+on:
+  pull_request:
+    branches: [develop]
+    paths: ['spikes/reclaim-private-wrapper/**', 'src/ybm-collector/source-policy.mjs', 'src/ybm-collector/history-policy.mjs', 'src/ybm-collector/values.mjs', 'src/ybm-collector/package*.json', '.github/workflows/reclaim-wrapper-spike.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  wrapper:
+    name: Real synthetic private wrapper proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Install separate pinned dependencies without lifecycle scripts
+        run: |
+          ./tools/npm ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/ybm-collector ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix spikes/reclaim-private-wrapper ci --ignore-scripts --no-audit --no-fund
+      - name: Offline source counterexamples and real circuit constraint tests
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test spikes/reclaim-private-wrapper/*.test.mjs
+      - name: Fetch hash-pinned public universal setup data
+        run: ./tools/node spikes/reclaim-private-wrapper/prepare-crs.mjs
+      - name: Generate and verify blinded proof offline
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs spikes/reclaim-private-wrapper/prove.mjs
+      - name: Verify generated contract on fresh in-memory EVM
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs spikes/reclaim-private-wrapper/evm-check.mjs
