@@ -4,7 +4,9 @@ define('CLI_SCRIPT',true); require('/var/www/html/config.php');
 if($CFG->wwwroot!=='http://127.0.0.1:18765')throw new Exception('LOCAL_ONLY');
 $marker=json_decode(file_get_contents('/lab-runtime/local-instance.json'),true);
 if(($marker['name']??'')!=='clear-moodle-local-api40')throw new Exception('LOCAL_MARKER');
-$path='/lab-runtime/retest1502-baseline.json'; $fixturepath='/var/moodledata/local-api-fixture.json';
+$key=$argv[2]??'retest1502';if(!preg_match('/^retest1502(?:-attempt[2-9][0-9]*)?$/',$key))throw new Exception('RETEST_KEY');
+$path='/lab-runtime/'.$key.'-baseline.json'; $fixturepath='/var/moodledata/local-api-fixture.json';
+$backup='/var/moodledata/local-api-fixture-before-'.$key.'.json';
 $mode=$argv[1]??'';
 function saved_rows($table,$conditions=[]){global $DB;return array_values($DB->get_records($table,$conditions,'id'));}
 function verify_prior($baseline){
@@ -22,7 +24,7 @@ function verify_prior($baseline){
     }
 }
 if($mode==='capture'){
-    if(file_exists($path)||file_exists('/var/moodledata/local-api-fixture-before1502.json'))throw new Exception('BASELINE_ALREADY_CAPTURED');
+    if(file_exists($path)||file_exists($backup))throw new Exception('BASELINE_ALREADY_CAPTURED');
     $states=saved_rows('local_clearwatch_state');
     if(count($states)!==6)throw new Exception('EXPECTED_SIX_PRESERVED_STATES');
     $users=array_values($DB->get_records_select('user',"username LIKE 'lab-one%' OR username LIKE 'lab-two%'",[],'id','id,username,suspended'));
@@ -35,11 +37,18 @@ if($mode==='capture'){
     $baseline=['states'=>$states,'users'=>$users,'services'=>$services,'nextRun'=>'run'.($n+1)];
     verify_prior($baseline);
     file_put_contents($path,json_encode($baseline));chmod($path,0600);
-    copy($fixturepath,'/var/moodledata/local-api-fixture-before1502.json');chmod('/var/moodledata/local-api-fixture-before1502.json',0600);
+    copy($fixturepath,$backup);chmod($backup,0600);
     echo json_encode(['status'=>'PASS','priorRows'=>count($states),'nextRun'=>$baseline['nextRun']]);exit;
 }
 $baseline=json_decode(file_get_contents($path));verify_prior((array)$baseline);
 if($mode==='verify'){echo json_encode(['status'=>'PASS','priorRows'=>count($baseline->states)]);exit;}
+if($mode==='credentials'){
+    $f=json_decode(file_get_contents($fixturepath),true);$s=json_decode(file_get_contents('/lab-runtime/secrets.json'),true);
+    $u=$DB->get_record('user',['id'=>$f['users']['one']]);
+    $peppers=get_password_peppers();$pepper=$peppers?reset($peppers):'';
+    echo json_encode(['newSyntheticPasswordVerifies'=>password_verify($s['learnerPassword'].$pepper,$u->password),
+        'active'=>!$u->suspended,'confirmed'=>(bool)$u->confirmed,'manualAuth'=>$u->auth==='manual']);exit;
+}
 if($mode!=='cleanup')throw new Exception('RETEST_ACTION');
 $f=json_decode(file_get_contents($fixturepath),true);$sid=$f['serviceid'];
 if(in_array($sid,array_column($baseline->services,'id')))throw new Exception('PRIOR_SERVICE_NOT_OWNED_BY_RETEST');

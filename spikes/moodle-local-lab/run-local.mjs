@@ -63,7 +63,11 @@ try{
   browser=await chromium.launch({headless:true});const context=await browser.newContext(),page=await context.newPage();
   await page.goto('http://127.0.0.1:18765/login/index.php');await page.locator('#username').fill(privateFixture.usernames?.one??'lab-one');
   await page.locator('#password').fill(secrets.learnerPassword);await page.locator('#loginbtn').click();
-  await page.waitForURL(url=>!url.pathname.includes('/login/'));
+  try{await page.waitForURL(url=>!url.pathname.includes('/login/'));}
+  catch{
+    report.loginFailure={path:new URL(page.url()).pathname,loginErrorPresent:await page.locator('#loginerrormessage').count()>0};
+    throw Error('LOCAL_BROWSER_LOGIN_FAILED');
+  }
   async function open(label){await page.goto('http://127.0.0.1:18765/mod/videocheck/view.php?id='+privateFixture.modules[label]);
     await page.waitForFunction(()=>document.querySelector('[data-clear-ready="true"]')||document.querySelector('[data-clear-error="true"]'),null,{timeout:30000});await check();}
   async function check(){if(await page.locator('[data-clear-error="true"]').count())throw Error('LOCAL_TRACKER_ERROR');}
@@ -136,7 +140,7 @@ try{
 }catch(e){
   report.status='FAIL';report.failedPhase=phase;report.errorType=e?.name??'Error';
   let diagnostic=String(e?.stack??e);for(const value of [...Object.values(secrets),...Object.values(privateFixture.tokens)])diagnostic=diagnostic.replaceAll(value,'[REDACTED]');
-  await writeFile(resolve(runtime,'run-diagnostic.txt'),diagnostic,{mode:0o600});process.exitCode=1;
+  await writeFile(resolve(runtime,reportName.replace(/\.json$/,'-diagnostic.txt')),diagnostic,{mode:0o600});process.exitCode=1;
 }finally{
   await browser?.close();report.finishedAt=new Date().toISOString();
   await writeFile(resolve(runtime,reportName),JSON.stringify(report,null,2)+'\n',{mode:0o600});
