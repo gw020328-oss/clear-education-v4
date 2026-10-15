@@ -70,7 +70,7 @@
 
 로컬 결과: 신규 소비자 25개, 준비 평가기 15개, 기존 정책 112개, M1 공통 10개를 각 실행 범위에서 PASS로 확인했다. mock 계약 소비 평가 7/7 PASS이며 실제 모델 호출 0이다. M0 예제·원본 191개/공개 참고 4개 지문·의존성 그래프 보존도 PASS다. 검토 중 잘린 근거/추가 승인·타임아웃과 취소 경합·미제출 모델 호출·낡은 run·미결과 누락의 동시 표시를 확인하고 관련 회귀를 포함했다.
 
-공개 이력·원격 CI 결과는 PR/이슈 #39에 기록한다. 신규 소비자 시험의 루트 CI 편입은 공통 담당과 합의할 후속이며 이 PR이 workflow를 변경하지 않는다. 원격 기존 필수 CI와 신규 로컬 검사를 구분한다.
+공개 이력·원격 CI 결과는 PR/이슈 #39에 기록한다. 초기 소비자 구현은 로컬 시험까지였고, 아래 공통 최종 리뷰에서 루트 CI 편입을 확인했다. 당시 원격 기존 필수 CI와 신규 로컬 검사를 구분한다.
 
 ## 충돌 보류 후속
 
@@ -79,3 +79,7 @@
 공통 M1 #43의 최종 develop merge `3781f5831f4482b62a928407ce432a2eaebb7ad8`를 수신하여 이력 반영했다. 최종 M1의 schema/API 필드는 같으며 후속 로컬 회귀 193개가 통과했다. M2 #46 최종 병합과 운영 Evidence 소비는 아직 별도다.
 
 M2 #46 최종 develop merge `1f98d5f26dfcea34af769e5b74528241224702fc`도 이력 반영했다. 공통 M1/M2 27개와 전용/기존 소비 회귀를 함께 실행해 당시 211 PASS이며, 세 프로필의 CHECKED DocumentPrecheck→M2 Evidence 직접 투입은 거부한다. 후속 순수 모듈의 실제 hash 결합과 운영 Evidence adapter 미구현은 [결합 기록](POLICY_BINDING.ko.md)에서 구분한다. [v3 실제 Gemini 평가](GEMINI_V3_REEVALUATION.ko.md)는 mock 회귀와 별도다.
+
+2026-10-15 공통 최종 리뷰: 전용 AI/문서 *.test.mjs와 7개 mock 소비 사례를 Public synthetic tests CI에 편입하고 외부 통신 tripwire를 적용했다. 실제 Gemini 실행 CLI는 CI에 포함하지 않는다. reviewPlan→정책 결합은 후속 #51의 별도 모듈로 검토하며 이 기존 사전검토 API는 자동 Evidence/자격을 생성하지 않는다.
+
+#47 최종 develop merge `b2a19330436d09da9873e5f7abb995e4c4426250`를 #51에 정상 이력 반영했다. 문서 충돌은 위 공통 CI 기록과 후속 결합/평가 기록을 모두 보존해 해결했다. 통합 후 외부 통신 tripwire를 적용한 관련 회귀 231 PASS, mock 7/7, 이전 응답 offline replay·결합 예제 재생·M0·workspace portable/local을 확인했다. 실제 Gemini 추가 호출은 없다. 최종 CI·공통 리뷰/병합 상태는 #51과 #39의 최신 기록을 따른다.

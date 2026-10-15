@@ -23,7 +23,9 @@ OPEN plan 옵션·근거 또는 OPEN 원천이 하나라도 있으면 preview는
 
 CODE는 bound policy에서 해당 버전 plan을 선택한다. TEXT_AI/VISION은 표시된 method/field 목록/prompt 버전과 맞아야 observer를 호출하며, 여전히 MOCK adapter만 허용한다. 임의 plan이나 선언되지 않은 관찰 필드로 실행할 수 없다.
 
-결과 envelope는 실제 policyHash/ruleHash와 plan/display/manifest/원천 텍스트/method/input/preview 지문 및 제출·경로 revision/runId를 포함한다. 표시/수락 시 `reviewPrecheckEnvelope`에 **신뢰한 최신 bound policy·context·입력**을 다시 제공해야 한다. 정책·plan·원문·기수·입력·revision·retry가 바뀌면 이전 결과의 소비 값을 null, current=false, NEEDS_REVIEW로 내린다. 늦은 비동기 응답도 같은 검사를 거친다. 한번 낡아진 envelope는 이전 context를 재제출해도 부활하지 않는다.
+결과 envelope는 실제 policyHash/ruleHash와 plan/display/manifest/원천 텍스트/method/input/preview 지문 및 제출·경로 revision/runId를 포함한다. 표시/수락 시 `reviewPrecheckEnvelope`에 **신뢰한 최신 bound policy·context·입력**을 다시 제공해야 한다. 정책·plan·원문·기수·입력 DTO·revision·retry가 바뀌면 이전 결과의 소비 값을 null, current=false, NEEDS_REVIEW로 내린다. 늦은 비동기 응답도 같은 검사를 거친다. 한번 낡아진 envelope는 이전 context를 재제출해도 부활하지 않는다.
+
+현재 submission은 본문과 이미지 **메타데이터 DTO**다. 동일 메타데이터를 유지한 실제 이미지 바이트 교체는 이 inputHash로 탐지할 수 없다. 실제 업로드 바이트/변환본 hash·OCR·픽셀 근거 결합은 아직 없고 MOCK observer만 사용한다. 이 결과를 실제 파일 무결성 검증으로 표시하지 않는다.
 
 핸들은 in-process WeakSet/WeakMap으로 식별한다. JSON으로 복사한 ack/envelope를 승인 핸들로 재사용할 수 없다. 서버 영속 revision/CAS, 다중 프로세스 결과 수락, HTTP 인증/멱등성은 이 모듈 밖이다. caller가 최신 resolver 대신 낡은 상태를 제공하는 것을 탐지하는 독립 저장소도 없다. 기존 자유 plan 소비 API는 하위 순수 모듈로 남아 있으므로 후속 운영 연결은 이 결합 API의 검사를 우회하지 않아야 한다.
 
