@@ -1,0 +1,29 @@
+name: clear-moodle-local-api40
+services:
+  db:
+    image: postgres@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54
+    env_file: ../../var/moodle-local-api/db.env
+    volumes:
+      - local40db:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U moodle -d moodle']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  web:
+    image: moodlehq/moodle-php-apache@sha256:501f19fa75ad3cdc8962f2a742f39d179b8aa8ffdc2ff233d8d27a32f14e0e05
+    ports: ['127.0.0.1:18765:80']
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../../var/moodle-local-api/moodle:/var/www/html
+      - ../../var/moodle-local-api/videocheck:/var/www/html/mod/videocheck:ro
+      - ./plugins/local/clearwatch:/var/www/html/local/clearwatch:ro
+      - ./plugins/local/clearapi:/var/www/html/local/clearapi:ro
+      - ./scripts:/lab-scripts:ro
+      - ../../var/moodle-local-api:/lab-runtime
+      - local40data:/var/moodledata
+volumes:
+  local40db:
+  local40data:

@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "servicesRevoked": 2,
+  "syntheticUsersSuspended": 4,
+  "remainingTokens": 0,
+  "learningStateRows": 6,
+  "learningRecordsPreserved": true,
+  "revokedTokenActuallyRejected": true,
+  "ownContainersStopped": true,
+  "volumesPreserved": true,
+  "kind": "ACTUAL_LOCAL_LAB_CLEANUP"
+}

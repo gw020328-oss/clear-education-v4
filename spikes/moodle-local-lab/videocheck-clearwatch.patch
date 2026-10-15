@@ -1,0 +1,42 @@
+diff --git a/classes/external/update_progress.php b/classes/external/update_progress.php
+index bdc9950..9849a43 100644
+--- a/classes/external/update_progress.php
++++ b/classes/external/update_progress.php
+@@ -76,6 +76,10 @@ class update_progress extends external_api {
+         self::validate_context($context);
+         require_capability('mod/videocheck:submit', $context);
+ 
++        if (get_config('local_clearwatch', 'version') && $DB->record_exists('local_clearwatch_policy', ['cmid' => $cm->id])) {
++            throw new \invalid_parameter_exception('CLEAR_SESSION_REQUIRED');
++        }
++
+         $activity = $DB->get_record('videocheck', ['id' => $cm->instance], '*', MUST_EXIST);
+         return (new progress_manager())->update(
+             $activity,
+diff --git a/view.php b/view.php
+index b126a40..0a8d21c 100644
+--- a/view.php
++++ b/view.php
+@@ -169,6 +169,16 @@ if (has_capability('mod/videocheck:managecheckpoints', $context) ||
+ }
+ echo $OUTPUT->render_from_template('mod_videocheck/player', $template);
+ 
++$clearpolicy = get_config('local_clearwatch', 'version')
++    ? $DB->get_record('local_clearwatch_policy', ['cmid' => $cm->id]) : false;
++if ($clearpolicy) {
++    if ($activity->videosource !== 'upload' || $totalcheckpoints > 0) {
++        throw new invalid_parameter_exception('CLEAR prototype supports uploaded video without checkpoints only.');
++    }
++    $PAGE->requires->js_call_amd('local_clearwatch/tracker', 'init', [[
++        'cmid' => (int)$cm->id, 'playerid' => $playerid, 'rootid' => $rootid,
++    ]]);
++} else {
+ $PAGE->requires->js_call_amd('mod_videocheck/player', 'init', [[
+     'cmid' => (int)$cm->id,
+     'rootid' => $rootid,
+@@ -191,4 +201,5 @@ $PAGE->requires->js_call_amd('mod_videocheck/player', 'init', [[
+     ],
+ ]]);
+ 
++}
+ echo $OUTPUT->footer();
