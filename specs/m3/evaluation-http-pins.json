@@ -1,0 +1,103 @@
+{
+  "ybm": {
+    "policyHash": "0x390ab28cf5d12be750bc84a7bf8d283616f2785926bd73c8671e2c9d68dcce3e",
+    "sources": [
+      {
+        "sourceId": "ybm-synthetic-terms",
+        "institutionId": "synthetic-ybm",
+        "productId": "ybm-750-demo",
+        "cohortId": "demo-2030",
+        "capturedAt": 1898521200,
+        "origin": "SYNTHETIC_ASSUMPTION",
+        "rawHash": "0x23ea50ac3b67c6d9249acae493b3c361fccd4769b8afa4209bd75bb23bfe7304",
+        "normalizedHash": null,
+        "normalizerVersion": null,
+        "applicability": "SYNTHETIC_ONLY",
+        "locators": [
+          "S-1/S-2/S-3 synthetic agreement",
+          "S-8 synthetic selection and amount",
+          "Synthetic baseline 730 days; target 750",
+          "Synthetic third profile"
+        ]
+      },
+      {
+        "sourceId": "ybm-snapshot-20261014",
+        "institutionId": "synthetic-ybm",
+        "productId": "ybm-750-demo",
+        "cohortId": null,
+        "capturedAt": 1791945020,
+        "origin": "OFFICIAL_SNAPSHOT",
+        "rawHash": "0x98133f30b03d1ac7ebcd125caa321527beeae9e08af8fc27137139c258b26b18",
+        "normalizedHash": null,
+        "normalizerVersion": null,
+        "applicability": "OPEN",
+        "locators": [
+          "M0 O-Y1..O-Y4; HTML 2024-2222"
+        ]
+      }
+    ],
+    "capabilities": {
+      "profileVersion": "ybm-demo-capabilities.1",
+      "conditionAmountTiers": [
+        100
+      ],
+      "precheckOnlyTiers": [],
+      "excludedTiers": [
+        500
+      ]
+    }
+  },
+  "siwon": {
+    "policyHash": "0xd660a9730be78bd8021864ae3e03722cf8496276fedf5fb1bb85d80fb9b506c4",
+    "sources": [
+      {
+        "sourceId": "siwon-synthetic-terms",
+        "institutionId": "synthetic-siwon",
+        "productId": "siwon-750-demo",
+        "cohortId": "demo-2030",
+        "capturedAt": 1898521200,
+        "origin": "SYNTHETIC_ASSUMPTION",
+        "rawHash": "0xfc2112be914bc2455aad543fb7ec6b43703ba92f6a84b690e4e705449a80fd08",
+        "normalizedHash": null,
+        "normalizerVersion": null,
+        "applicability": "SYNTHETIC_ONLY",
+        "locators": [
+          "S-1/S-2/S-3 synthetic agreement",
+          "S-8 synthetic selection and amount",
+          "Synthetic baseline 730 days; target 750",
+          "Synthetic third profile"
+        ]
+      },
+      {
+        "sourceId": "siwon-snapshot-20261014",
+        "institutionId": "synthetic-siwon",
+        "productId": "siwon-750-demo",
+        "cohortId": null,
+        "capturedAt": 1791945020,
+        "origin": "OFFICIAL_SNAPSHOT",
+        "rawHash": "0x093c3e3f2f12cf46cd3c048ff837fb01a30c58f8b6e575faef58fd405dbff651",
+        "normalizedHash": null,
+        "normalizerVersion": null,
+        "applicability": "OPEN",
+        "locators": [
+          "M0 O-S4..O-S8; HTML 3667-3755"
+        ]
+      }
+    ],
+    "capabilities": {
+      "profileVersion": "siwon-demo-capabilities.1",
+      "conditionAmountTiers": [
+        50,
+        100,
+        200,
+        300
+      ],
+      "precheckOnlyTiers": [
+        400
+      ],
+      "excludedTiers": [
+        500
+      ]
+    }
+  }
+}

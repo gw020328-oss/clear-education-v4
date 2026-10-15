@@ -11,40 +11,48 @@ import { createWorkflowHttpService } from './http-service.mjs';
 import { sourceHttpExample } from '../../specs/m3/source-http-example.mjs';
 import { studentHttpExamplePolicies } from '../../specs/m3/student-http-example.mjs';
 import { createDocumentWorkflowService,DOCUMENT_HTTP_VERSION } from './document-http-service.mjs';
+import {createEvaluationWorkflowService,EVALUATION_HTTP_VERSION} from './evaluation-http-service.mjs';
+import {evaluationHttpExample} from '../../specs/m3/evaluation-http-example.mjs';
 import { documentHttpExample } from '../../specs/m3/document-http-example.mjs';
 import { createStudentWorkflowService, STUDENT_HTTP_VERSION } from './student-http-service.mjs';
 const marker='CLEAR_SYNTHETIC_SOURCE_HTTP_1';
 function validate(c){
  check(c.marker===marker&&c.captureMode==='MOCK'&&(c.documentMode===undefined||typeof c.documentMode==='boolean'),'MVP_DEV_CONFIG');
+ check(c.evaluationProfile===undefined||['ybm','siwon'].includes(c.evaluationProfile),'MVP_DEV_CONFIG');
+ check(!(c.documentMode&&c.evaluationProfile),'MVP_DEV_CONFIG');
  const u=new URL(c.origin);check(u.protocol==='https:'&&u.hostname==='127.0.0.1'&&u.origin===c.origin&&Number(u.port)>=1024,'MVP_DEV_CONFIG');
  check(Number.isSafeInteger(c.chainId)&&c.chainId>0&&Number.isSafeInteger(c.fixtureEpoch)&&c.fixtureEpoch>0,'MVP_DEV_CONFIG');
  return c;
 }
-export function initializeSourceDevelopment({directory,port=9443,chainId=431701,operator,participant,documentMode=false}){
- check(typeof documentMode==='boolean','MVP_DEV_CONFIG');
+export function initializeSourceDevelopment({directory,port=9443,chainId=431701,operator,participant,documentMode=false,evaluationProfile}){
+ check(typeof documentMode==='boolean'&&(evaluationProfile===undefined||['ybm','siwon'].includes(evaluationProfile))&&!(documentMode&&evaluationProfile),'MVP_DEV_CONFIG');
  check(Number.isInteger(port)&&port>=1024&&port<=65535,'MVP_DEV_PORT');
  mkdirSync(directory,{mode:0o700});const root=privateDirectory(directory);
- const fingerprint=createCertificates(root),config=validate({marker,documentMode,captureMode:'MOCK',origin:'https://127.0.0.1:'+port,chainId,operator,participant,
+ const fingerprint=createCertificates(root),config=validate({marker,documentMode,...(evaluationProfile?{evaluationProfile}:{}),captureMode:'MOCK',origin:'https://127.0.0.1:'+port,chainId,operator,participant,
   instanceId:'0x'+randomBytes(32).toString('hex'),fixtureEpoch:Math.floor(Date.now()/1000),fingerprint});
  // Validate roles/addresses without creating or opening any user database.
  const authDirectory=join(root,'authentication');mkdirSync(authDirectory,{mode:0o700});
  const service=createApplicationService({directory:authDirectory,origin:config.origin,chainId,instanceId:config.instanceId,participants:[participant],operators:[operator]});service.close();
  writeJson(join(root,'source-http.json'),config);return {origin:config.origin,chainId,captureMode:'MOCK',participant,operator};
 }
-export async function startSourceDevelopment({directory,webRoot,studentPolicies,documentNow}){
+export async function startSourceDevelopment({directory,webRoot,studentPolicies,documentNow,evaluationNow}){
  const root=privateDirectory(directory),config=validate(readJson(join(root,'source-http.json'))),release=lock(root);
- let authentication,workflow,studentWorkflow,documentWorkflow,server,publicConfig;const pending=new Set();
+ let authentication,workflow,studentWorkflow,documentWorkflow,evaluationWorkflow,server,publicConfig;const pending=new Set();
  try{
  const documents=config.documentMode===true?documentHttpExample():null;
- studentPolicies??=documents?.studentPolicies??studentHttpExamplePolicies();
+ const evaluation=config.evaluationProfile?evaluationHttpExample(config.evaluationProfile):null;
+ const evaluationClock=evaluationNow??(()=>evaluation.scenarioStart+Math.floor(Date.now()/1000)-config.fixtureEpoch);
+ studentPolicies??=evaluation?.studentPolicies??documents?.studentPolicies??studentHttpExamplePolicies();
  publicConfig={version:'clear-mvp-source-http.1',origin:config.origin,chainId:config.chainId,captureMode:'MOCK',operator:config.operator,participant:config.participant,
   dataMode:'SYNTHETIC',paymentAllowed:false,policyPublished:false,identityVerified:false,
-  studentHttpVersion:STUDENT_HTTP_VERSION,studentApplicationHttpImplemented:true,studentSubmissionHttpImplemented:!!documents,documentHttpVersion:documents?DOCUMENT_HTTP_VERSION:null,syntheticDocumentSubmissionReady:!!documents,documentSubmissionReady:false,realDataAllowed:false,imageDecodeReady:false};
+  studentHttpVersion:STUDENT_HTTP_VERSION,studentApplicationHttpImplemented:true,studentSubmissionHttpImplemented:!!documents,documentHttpVersion:documents?DOCUMENT_HTTP_VERSION:null,syntheticDocumentSubmissionReady:!!documents,documentSubmissionReady:false,realDataAllowed:false,imageDecodeReady:false,evaluationHttpVersion:evaluation?EVALUATION_HTTP_VERSION:null,syntheticEvidenceAcceptanceReady:!!evaluation,evidenceAcceptanceReady:false,
+  evaluationClockMode:evaluation?'PUBLIC_SYNTHETIC_SCENARIO':null,evaluationProfile:config.evaluationProfile??null};
   authentication=createApplicationService({directory:join(root,'authentication'),origin:config.origin,chainId:config.chainId,instanceId:config.instanceId,participants:[config.participant],operators:[config.operator]});
   workflow=createWorkflowHttpService({directory:join(root,'source-workflow'),authentication,instanceId:'mvp-'+config.instanceId.slice(2,18),...sourceHttpExample(config.fixtureEpoch)});
-  studentWorkflow=createStudentWorkflowService({directory:join(root,'student-workflow'),authentication,instanceId:'mvp-'+config.instanceId.slice(2,18),policies:studentPolicies,...(documents&&documentNow?{now:documentNow}:{})});
+  studentWorkflow=createStudentWorkflowService({directory:join(root,'student-workflow'),authentication,instanceId:'mvp-'+config.instanceId.slice(2,18),policies:studentPolicies,...(evaluation?{now:evaluationClock}:documents&&documentNow?{now:documentNow}:{})});
   if(documents)documentWorkflow=createDocumentWorkflowService({directory:join(root,'document-workflow'),authentication,student:studentWorkflow,instanceId:'mvp-'+config.instanceId.slice(2,18),configuration:documents,...(documentNow?{now:documentNow}:{})});
-  const api=createApplicationHandler(authentication,{workflow,studentWorkflow,documentWorkflow}),assets=webRoot&&existsSync(webRoot)?loadPublicAssets(resolve(webRoot)):new Map();
+  if(evaluation)evaluationWorkflow=createEvaluationWorkflowService({directory:join(root,'evaluation-workflow'),authentication,student:studentWorkflow,instanceId:'mvp-'+config.instanceId.slice(2,18),configuration:evaluation,now:evaluationClock});
+  const api=createApplicationHandler(authentication,{workflow,studentWorkflow,documentWorkflow,evaluationWorkflow}),assets=webRoot&&existsSync(webRoot)?loadPublicAssets(resolve(webRoot)):new Map();
   const expected=new URL(config.origin);
   const handler=async(req,res)=>{
    if(/^\/(auth|mvp|applications|policies|runtimes)(?:\/|\?|$)/.test(req.url))return api(req,res);
@@ -61,7 +69,7 @@ export async function startSourceDevelopment({directory,webRoot,studentPolicies,
    const task=Promise.resolve(handler(req,res));pending.add(task);task.catch(()=>{if(!res.headersSent){res.writeHead(500,{'Content-Type':'application/json'});res.end('{"code":"INTERNAL_ERROR"}');}else res.destroy();}).finally(()=>pending.delete(task));
   });server.maxConnections=32;
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(Number(expected.port),'127.0.0.1',()=>{server.removeListener('error',reject);resolve();});});
- }catch(error){await documentWorkflow?.close();studentWorkflow?.close();workflow?.close();authentication?.close();release();throw error;}
+ }catch(error){await documentWorkflow?.close();evaluationWorkflow?.close();studentWorkflow?.close();workflow?.close();authentication?.close();release();throw error;}
  let closing;
- return {config:publicConfig,close(){return closing??=(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));await Promise.allSettled([...pending]);await documentWorkflow?.close();studentWorkflow.close();workflow.close();authentication.close();release();})();}};
+ return {config:publicConfig,close(){return closing??=(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));await Promise.allSettled([...pending]);await documentWorkflow?.close();evaluationWorkflow?.close();studentWorkflow.close();workflow.close();authentication.close();release();})();}};
 }

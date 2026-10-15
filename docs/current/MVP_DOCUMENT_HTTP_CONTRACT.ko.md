@@ -1,5 +1,7 @@
 # C2 합성 파일 접수·문서 검토 HTTP 구현 계약
 
+최신 병합: PR63 최종head230a951·CI6/6·관련312/312, develop `890ad93cfb3677c5b4107428095c6f0b15efa9a4`. 아래 Draft는 당시 구현 기록이다.
+
 2026-10-15 / 합성 C2 구현·Draft 검토 / 상위 #55, 하위 #62. C1 선행 PR61 최종 head `95b397cc662b255fc777afc898e7b56cc6a444d9`, develop merge `0590fd0728ce3a4525129cbad753c3ba9b2f781b`. C2 branch `codex/mvp-document-http`. 구현 코드 `0a9945b98a190ae43abeedd15d169be91c2eb988`, 시작 정리/공개 fixture 입력 시험 `04efb92acf7ad890f3571fc8ef443d8e0498fde4`, Draft PR63. 아래 endpoint는 명시 documentMode 합성 host에서 동작하며 운영 documentSubmissionReady=false다.
 
 ## 범위와 기존 모듈

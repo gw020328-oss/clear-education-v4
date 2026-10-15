@@ -1,9 +1,11 @@
 <!-- 최신 C2 구현 절이 아래의 과거 계약/미구현 상태보다 우선한다. -->
 # MVP HTTP 연결·서준형 프론트 인계
 
+**최신 병합 완료:** PR63 최종 head `230a951e0e22babc3c1e751e52bba196e41aefba`, develop merge `890ad93cfb3677c5b4107428095c6f0b15efa9a4` (2026-10-15 12:21:11 UTC). push38733401299·PR38733410892 CI6/6 SUCCESS, 관련312/312 PASS. 보호 우회 없이 정상 병합했으며 아래 과거 Draft/병합대기 기록보다 이 문장이 우선한다.
+
 **최신 리뷰/연결 지침:** [Claude Code 복붙용 단계별 프론트 지침](MVP_FRONTEND_CONNECTION_PROMPT.ko.md). PR63 최종 실질 리뷰에서 TTL 만료가 진행 중 관측의 복사본까지 중단하도록 보완했다. 아래 Draft/자동 병합 불가 표기는 이전 권한의 기록이며, 이번에는 사용자 승인 아래 최종 head CI/보호 규칙 확인 후 develop 정상 병합한다. 실제 병합 SHA는 후속 최신 병합 기록을 따른다.
 
-버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **원문 PR59·C1 PR61 develop 병합 완료 / C2 PR63 합성 구현·Draft**.
+버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **원문 PR59·C1 PR61·합성 C2 PR63 develop 병합 완료**.
 C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 쓰기 transaction 내부 세션 재검사 코드 `922ada6fe45dde53135ece116e90531aa0b662a9`, 최초 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`에서 출발했으며, PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 develop merge `2bb6d291b77ba397f8544995557db78b3ce54724`를 정상 merge로 포함했다. 병합 완료 [PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
 현재 기반 develop `0590fd0728ce3a4525129cbad753c3ba9b2f781b`(#56/#58/#57/#59/#61 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 병합 완료 [PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
 
@@ -14,7 +16,7 @@ C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c556
 | A: 기존 서명 로그인·역할/CSRF, 별도 저장소·멱등/CAS·개발 listener | PR59 develop 병합 완료 |
 | B: 등록 URL ID→원문 archive/부분 상태→조회→mock 초안→정확 표시 확인 기록 | PR59 develop 병합 완료. 실행 예시는 **MOCK**, 실제 URL/유료 모델 호출0 |
 | C1: 학생 본인 신청·서버 합성 조건 표시·합성 확인/정책 변경 재확인 | PR61 develop 병합 완료. `clear-mvp-student-http.1`, 아래 C1 API만 가용. **실제 동의 아님** |
-| C2: 합성 fixture 실bytes 접수·검토run·보완/재제출 | PR63 Draft 구현. 명시 documentMode만. `syntheticDocumentSubmissionReady:true`, 운영 `documentSubmissionReady:false` |
+| C2: 합성 fixture 실bytes 접수·검토run·보완/재제출 | PR63 develop890ad93 병합 완료. 명시 documentMode만. `syntheticDocumentSubmissionReady:true`, 운영 `documentSubmissionReady:false` |
 | D: 새 원문 HTTP용 브라우저 adapter·예제·검사 | PR59 develop에 제공. 실제 `web/` 연결은 서준형 담당/미연결 |
 | 운영 원천 진위/적용성/동일인·정책 게시·실동의·Evidence/M2 영속 판정·재원 | **미완료**. mock/검토 기록은 운영 보장이 아님 |
 
@@ -346,3 +348,26 @@ Claude Code 후속: 최신 origin/develop·PR63의 exact head/Checks 및 이 문
 요청 설정 GPT-6 Astra / High. 런타임 모델 ID는 독립 확인하지 못했다. 접수 원본의 TTL 만료가 캐시만 지우고 진행 중 observer 복사본을 최대 worker timeout까지 남기는 문제를 새 합성 시험에서 재현했다. wipe가 해당 worker AbortSignal도 중단하며, 인증된 resolver 접근과 타이머가 같은 만료 정리를 사용한다. 자료 GET·run GET·타이머 세 경로에서 observer 중단/소유 bytes zero·늦은 결과 비수락을 검사한다. raw 1800초 상한과 JS/OS 잔재 보장 제외는 유지한다. 최종 검증/정확 head·병합 근거는 PR63 기록을 따른다.
 
 최종 리뷰 수정 뒤 관련312/312(새 TTL3개 포함), diff 검사가 통과했다. 개발환경33/33·원본191개/의존성의 기존 성공은 해당 코드/설정 변경이 없어 근거 없이 반복하지 않았다. 최신 push/PR CI는 변경 head에서 새로 확인한다. 프론트 복붙 문서는 PR60 리뷰의 정책·UX·레퍼런스를 반영하며 web/·PR60의 코드/상태는 변경하지 않는다.
+
+## 최신 C3 증거 수락·평가 저장 연결 (2026-10-15, Draft)
+
+선행 C2 PR63은 develop `890ad93cfb3677c5b4107428095c6f0b15efa9a4`에 정상 병합 완료다. 이후 이슈65·`codex/mvp-evidence-evaluation-http`에서 별도 `clear-mvp-evidence-http.1` 합성 수락→기존 M2→불변 결과/근거·금액 계산·보완/재시작 조회를 구현했다. **PR67은 사용자 승인으로 최종 실질 리뷰·검사 후 develop 정상 병합 대상이다.** 최신 PR/정확 head/CI에서 가용 기반을 확인한다.
+
+[상세 C3 계약/DTO/오류/실행](MVP_EVIDENCE_HTTP_CONTRACT.ko.md), [Claude 복붙 지침](MVP_FRONTEND_CONNECTION_PROMPT.ko.md)의 C3 추가 절, [검증 HTTPS 생성 응답](../../specs/m3/evaluation-http-responses.json)을 따른다. C1의 본인 합성 조건 ACK를 먼저 요구한다. C2 문서 ACK/plan/third policy를 YBM·시원스쿨 C3로 바꿔 끼우지 않는다. C2 CHECKED/ACCEPTED import API는 없으며 실제 Reclaim/Moodle/Vision 결과 자동 수락도 없다.
+
+C3 host는 새 `tools/mvp-evaluation-dev.mjs`/`var/mvp-evaluations/<new-name>` 환경과 ybm 또는 siwon profile을 명시한다. `__dev/config.evaluationHttpVersion`, syntheticEvidenceAcceptanceReady=true·evidenceAcceptanceReady=false, evaluationClockMode=PUBLIC_SYNTHETIC_SCENARIO를 확인한다. 실제 세션 만료와 별개로 기존 M1의2030 합성 일정에서 시작하는 시계이며 일반 CLI는 초기화 후 경과 시간만큼 진행한다. 빠른 demo만 신뢰한 host가 합성 단계를 이동한다. 실제 자료의 시각/점수는 사용하거나 바꾸지 않는다.
+
+브라우저는 evaluation-preview→등록 fixture ID의 evidence-receipts→정확 selectionPreviewHash/SYNTHETIC_SELECTION_ONLY→evaluations→GET 저장 결과를 연결한다. 보완은 새 key/기대 revision의 명시 수락·재평가다. 최종화는 정정 종료 시각·현재 facts/selection revision·SYNTHETIC_FINALIZATION_ONLY를 명시하며 M2 FINAL_SYNTHETIC을 실제 자격/권리로 표시하지 않는다. 과거 결과는 current=false/result=null/historicalResult로 구분한다. 요약·금액 후보·최종성·재원/지급은 각각 표시한다. body의 점수/PASS/verified/Context/Evidence/Binding·원천 pin은 거부된다.
+
+정책/ACK 변경·비활성은 기존 결과를 이력으로 내리고 readiness=false로 만든다. 새 host 정책/fixture 지문을 기존 DB에 자동 이관하지 않는다. 한 신청의 최초 시험은 잠기며 다른 시험 교체를 거부한다. 같은 시험의 명시 정정만 새 evidence revision으로 기록하고 최초 참조는 보존한다. GET/재시작/같은 revision 평가 재요청은 저장된 결과만 읽는다. 기존 원문·C1·C2 endpoint와 operation 이름을 혼용하지 않는다.
+
+실제 근거/동일인·실동의·자격·개인자료 수명·재원·지급은 미완료다. 예치/보관/배정/충전/회수OPEN, 자격재원분리,400%PRECHECK_ONLY·자동자격지급금지,500%제외,grant/outboxHOLD·independentClaimNO_GO를 유지한다. web/PR60·독립 청구 소유 파일은 수정하지 않았다.
+
+C3 최종 리뷰 보완: 인증된 요청에서 정책/ACK 문맥 불가 또는 변경을 관측하면 invalidated를 영속 기록하고 head/facts/selection revision을 증가시킨다. 이후 같은 정책을 다시 켜더라도 과거 decision을 current로 자동 복원하지 않는다. 기존 snapshot/최초 시험은 보존하며 이번 고정 합성 host는 새 검토 환경을 요구한다. 외부 정책 시스템의 모든 비활성/재활성 이벤트를 감시하는 기능은 아니다. 이 경계는 새 합성 DB 회귀에서 실패를 재현한 뒤 보완했다.
+
+C3 최종 로컬 검증은 관련361/361(C3 HTTP19+HTTPS3 포함), 기존 개발환경33/33·원본legacy191개/의존성graph보존·diff PASS다. 검토 기록과 정확 head CI는 이슈65의 연결 Draft PR에서 확인한다. 현재는 화면 연결/사용성 시험 완료를 주장하지 않는다.
+
+C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https://github.com/gw020328-oss/clear-education-v4/pull/67), 상위55/하위65. 최종 문서 head의 원격 CI/검토 근거는 PR67을 따른다. 최신 가용 여부와 실제 merge SHA는 PR67 완료 기록을 따른다.
+
+
+최신 PR67 검토: [Mac 원인·영속 무효화 rollback 수정·검증 근거](PR67_FINAL_REVIEW.ko.md)를 따른다. 쿠키 변조는 실제 서버403까지 가로채기를 유지한다. C3 정책 무효화는 거부된 transaction 뒤에도 남아 과거 결과가 되살아나지 않는다. 관련363/363·Mac62/62 로컬 통과이며 최종 head CI/대화 및 실제 develop merge SHA는 [PR67 완료 기록](https://github.com/gw020328-oss/clear-education-v4/pull/67)을 확인한다. 위 Draft/미승인·원인 미확정 문구는 이전 시점 기록이다. DTO/version과 합성 전용 제약은 유지된다.

@@ -1,7 +1,7 @@
 {
   "version": "clear-mvp-document-http-verification.1",
   "date": "2026-10-15",
-  "status": "FINAL_SUBSTANTIVE_REVIEW_CI_PENDING",
+  "status": "MERGED_DEVELOP_SYNTHETIC",
   "issue": 62,
   "parentIssue": 55,
   "baseDevelop": "0590fd0728ce3a4525129cbad753c3ba9b2f781b",
@@ -47,8 +47,13 @@
     "workspaceOriginalLegacyFiles": 191,
     "dependencies": "PASS",
     "diff": "PASS",
-    "publicHistory": "PASS_BEFORE_FINAL_REVIEW_PUSH",
-    "remoteCi": "SEE_PR63_FINAL_HEAD_CHECKS",
+    "publicHistory": "PASS_258_COMMITS_1429_BLOBS_ZERO_FINDINGS",
+    "remoteCi": {
+      "head": "230a951e0e22babc3c1e751e52bba196e41aefba",
+      "pushRun": 38733401299,
+      "prRun": 38733410892,
+      "checks": "6_OF_6_SUCCESS"
+    },
     "startupCleanupIncluded": true,
     "expiryAndHttpsFocusedAfterSourceFix": 3,
     "latestCodeRelated": "312_OF_312_PASS",
@@ -73,5 +78,7 @@
   "publicSourceExpiryFixCommit": "43ffe3243e70d6db10213cc5fe82fab1d0e897a9",
   "readinessFixCommit": "f5873062293fef4a4c3a1decb9fd6ada3701a71d",
   "requestedFinalReviewSetting": "GPT-6 Astra / High",
-  "finalReviewFinding": "RAW_TTL_DID_NOT_ABORT_OBSERVER_COPIES_REPRODUCED_AND_FIXED"
+  "finalReviewFinding": "RAW_TTL_DID_NOT_ABORT_OBSERVER_COPIES_REPRODUCED_AND_FIXED",
+  "finalReviewHead": "230a951e0e22babc3c1e751e52bba196e41aefba",
+  "mergeCommit": "890ad93cfb3677c5b4107428095c6f0b15efa9a4"
 }
