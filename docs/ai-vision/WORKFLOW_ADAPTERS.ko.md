@@ -14,7 +14,7 @@ mock 요청에는 정확한 원본 바이트의 adapter 소유 복사본과 asse
 
 현재 manifest 검사는 **SIGNATURE_ONLY_NOT_DECODED**다. Vision에 파일이 있으면 IMAGE_NOT_DECODED를 남기고 CHECKED를 허용하지 않는다. 이것은 OCR/완전 decode/진위 보장이 아니다. CODE의 문자수·제출 파일수 충족도 게시·작성자·자격·지급 검증이 아니다. 모든 권한 제한은 공통 GATES가 별도로 유지한다.
 
-입력·context를 async 호출 전에 캡처한다. adapter 소유 원본/observer 복사본은 성공·오류·취소·timeout의 finally에서 zero-fill한다. 30초 이하 mock timeout을 사용하며, 관측된 작업시간이 공통 run 300초 또는 raw 30분 한도를 넘으면 TIMED_OUT으로 보류한다. caller 원본은 호스트가 폐기해야 한다. JS 문자열·GC, 외부 라이브러리가 따로 만든 복사본, abort를 무시하는 callback, 강제 종료 후 완전 삭제를 보장하지 않는다. 실제 디스크 업로드·개인자료 처리·외부 전송을 활성화하지 않는다.
+입력·context를 async 호출 전에 캡처한다. adapter 소유 원본/observer 복사본은 성공·오류·취소·timeout의 finally에서 zero-fill한다. 30초 이하 mock timeout을 사용하며, 관측된 작업시간이 공통 run 300초 또는 raw 30분 한도를 넘으면 TIMED_OUT으로 보류한다. 선택적 시험 clock `nowMs`는 밀리초이며 공통 source/ledger의 초 단위 now와 구분한다. caller 원본은 호스트가 폐기해야 한다. JS 문자열·GC, 외부 라이브러리가 따로 만든 복사본, abort를 무시하는 callback, 강제 종료 후 완전 삭제를 보장하지 않는다. 실제 디스크 업로드·개인자료 처리·외부 전송을 활성화하지 않는다.
 
 호스트가 완료 직전 최신 context/취소/기한을 다시 확인해야 한다. adapter 반환 후 정책·제출이 바뀌거나 늦게 반환된 summary도 공통 CAS가 거부해야 하며, 기존 WeakMap ack/envelope를 직렬화해 복원하지 않는다.
 

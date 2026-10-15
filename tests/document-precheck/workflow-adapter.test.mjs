@@ -64,6 +64,6 @@ test('context and submission are captured across await; host owns late-result CA
 });
 test('wall-clock expiry cannot return checked and cleanup still executes',async()=>{
  const f=workflowFixture('VISION');let time=0,assets;
- const r=await reviewWorkflowDocument(f,observer(request=>{assets=request.assets;time=1800000;return readable;}),{now:()=>time});
+ const r=await reviewWorkflowDocument(f,observer(request=>{assets=request.assets;time=1800000;return readable;}),{nowMs:()=>time});
  assert.ok(r.reasons.some(r=>r.code==='TIMED_OUT'));assert.ok(assets[0].bytes.every(b=>b===0));
 });

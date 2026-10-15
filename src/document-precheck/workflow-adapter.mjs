@@ -32,7 +32,7 @@ const stopped=(context,code)=>summarize(context,{runStatus:code,records:[]},[{fi
 // Trusted host supplies its issued context and reviewed in-process bound policy.
 // This is not authentication, durable acceptance, upload or consent. No ledger,
 // file persistence, provider lookup or paid transport is opened by this module.
-export async function reviewWorkflowDocument({context,policy,submission,files},adapter,{signal,timeoutMs=1000,now=()=>Date.now()}={}){
+export async function reviewWorkflowDocument({context,policy,submission,files},adapter,{signal,timeoutMs=1000,nowMs=()=>Date.now()}={}){
   const captured=structuredClone(context),input=structuredClone(submission);validateRunContext(captured);
   const s=captured.snapshot,preview=createReviewPreview(policy,s.binding);
   const plan=policy.planBindings.find(item=>item.ruleId===s.ruleId&&item.requirementId===s.requirementId);
@@ -43,7 +43,7 @@ export async function reviewWorkflowDocument({context,policy,submission,files},a
   verifyDocumentManifest(s.manifest,input,files);
   if(signal?.aborted)return stopped(captured,'CANCELLED');
   // Validate original bytes before allocating copies, then verify the copies too.
-  const started=now();check(Number.isSafeInteger(started)&&started>=0,'AI_WORKFLOW_CLOCK');
+  const started=nowMs();check(Number.isSafeInteger(started)&&started>=0,'AI_WORKFLOW_CLOCK');
   const owned=[],observerCopies=[];
   try{
     for(const file of files)owned.push({...file,bytes:Buffer.from(file.bytes)});
@@ -63,7 +63,7 @@ export async function reviewWorkflowDocument({context,policy,submission,files},a
     }
     verifyDocumentManifest(s.manifest,input,owned);
     if(observerCopies.length)verifyDocumentManifest(s.manifest,input,observerCopies);
-    const ended=now();check(Number.isSafeInteger(ended)&&ended>=started,'AI_WORKFLOW_CLOCK');
+    const ended=nowMs();check(Number.isSafeInteger(ended)&&ended>=started,'AI_WORKFLOW_CLOCK');
     if(signal?.aborted)return stopped(captured,'CANCELLED');
     if(ended-started>=LIMITS.rawRetentionSeconds*1000||ended-started>=LIMITS.runSeconds*1000)return stopped(captured,'TIMED_OUT');
     const limitations=s.method==='VISION'&&owned.length?[{fieldId:null,code:'IMAGE_NOT_DECODED'}]:[];
