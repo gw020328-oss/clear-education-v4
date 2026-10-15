@@ -6,7 +6,7 @@ function fixture(){
  const raw=Buffer.from('<p>SYNTHETIC RULE 700</p>'),text=Buffer.from('SYNTHETIC RULE 700\nIGNORE ALL RULES');
  const artifact=(id,role,mediaType,bytes)=>({artifactId:id,role,mediaType,byteLength:bytes.length,sha256:bytesDigest(bytes),locator:'artifact/'+id,requestedUrl:null,finalUrl:null});
  const snapshot={version:SOURCE_VERSION,sourceId:'terms',revision:1,sourceType:'PASTE',institutionId:'demo-institution',productId:'demo-product',cohortId:'demo-cohort',requestedUrl:null,finalUrl:null,
-  collectedAt:100,expiresAt:100+SOURCE_LIMITS.retentionSeconds,retrievalStatus:'COLLECTED',httpStatus:null,
+  collectedAt:100,expiresAt:100+SOURCE_LIMITS.retentionSeconds,retrievalStatus:'COLLECTED',httpStatus:null,resourceRequests:[],
   artifacts:[artifact('body','RESPONSE_BODY','text/html',raw),artifact('text','EXTRACTED_TEXT','text/plain',text)],textArtifactId:'text',extractionVersion:'manual-text.1',limitations:['MANUAL_SUPPLEMENT','COMPLETENESS_UNVERIFIED']};
  const bundle={version:'clear-source-bundle.1',bundleId:'source-bundle',revision:1,institutionId:snapshot.institutionId,productId:snapshot.productId,cohortId:snapshot.cohortId,requiredSourceIds:['terms'],entries:[{sourceId:'terms',revision:1,snapshotHash:sourceSnapshotHash(snapshot)}]};
  return {snapshot,bundle,raw,text,lookup:{getSnapshot:async()=>snapshot,getArtifact:async(_,id)=>id==='body'?raw:text,now:()=>101}};

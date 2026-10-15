@@ -8,24 +8,33 @@ export const SOURCE_LIMITS=freeze({maxBodyBytes:2097152,maxImageBytes:8388608,ma
 export const SOURCE_LIMITATIONS=freeze(['JS_NOT_EXECUTED','IMAGES_NOT_COLLECTED','HEURISTIC_TEXT','RESOURCE_FAILED','MANUAL_SUPPLEMENT','COMPLETENESS_UNVERIFIED','EXTRACTION_FAILED']);
 export function validateSourceSnapshot(s){
   exactKeys(s,['version','sourceId','revision','sourceType','institutionId','productId','cohortId','requestedUrl','finalUrl','collectedAt','expiresAt',
-    'retrievalStatus','httpStatus','artifacts','textArtifactId','extractionVersion','limitations'],'SOURCE_SNAPSHOT');
+    'retrievalStatus','httpStatus','resourceRequests','artifacts','textArtifactId','extractionVersion','limitations'],'SOURCE_SNAPSHOT');
   check(s.version===SOURCE_VERSION&&['PUBLIC_URL','PASTE','FILE'].includes(s.sourceType),'SOURCE_VERSION');
   for(const k of ['sourceId','institutionId','productId','cohortId','extractionVersion'])identifier(s[k]);revision(s.revision);
   check(Number.isSafeInteger(s.collectedAt)&&s.collectedAt>=0&&s.expiresAt===s.collectedAt+SOURCE_LIMITS.retentionSeconds,'SOURCE_TIME');
   for(const value of [s.requestedUrl,s.finalUrl])check(value===null||typeof value==='string'&&value.length<=2048,'SOURCE_URL');
   check(s.sourceType==='PUBLIC_URL'?s.requestedUrl!==null:s.requestedUrl===null&&s.finalUrl===null,'SOURCE_TYPE');
   check(['COLLECTED','PARTIAL','FAILED'].includes(s.retrievalStatus)&&(s.httpStatus===null||Number.isInteger(s.httpStatus)&&s.httpStatus>=100&&s.httpStatus<=599),'SOURCE_STATUS');
+  array(s.resourceRequests,SOURCE_LIMITS.maxResources,'SOURCE_LIMIT');
+  const urlShape=value=>{if(value===null)return;check(typeof value==='string'&&value.length<=2048,'SOURCE_URL');let u;try{u=new URL(value);}catch{check(false,'SOURCE_URL');}check(u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&!u.hash,'SOURCE_URL');};
+  urlShape(s.requestedUrl);urlShape(s.finalUrl);
+  check(new Set(s.resourceRequests.map(r=>r?.resourceId)).size===s.resourceRequests.length,'SOURCE_DUPLICATE');
+  for(const r of s.resourceRequests){exactKeys(r,['resourceId','role','requestedUrl','finalUrl','httpStatus','status'],'SOURCE_RESOURCE');identifier(r.resourceId);urlShape(r.requestedUrl);urlShape(r.finalUrl);
+    check(r.requestedUrl!==null&&['PAGE','IMAGE'].includes(r.role)&&['COLLECTED','FAILED'].includes(r.status)&&(r.httpStatus===null||Number.isInteger(r.httpStatus)&&r.httpStatus>=100&&r.httpStatus<=599),'SOURCE_RESOURCE');}
+  check(s.sourceType==='PUBLIC_URL'?s.resourceRequests.some(r=>r.role==='PAGE'&&r.requestedUrl===s.requestedUrl):s.resourceRequests.length===0,'SOURCE_RESOURCE');
   array(s.artifacts,10,'SOURCE_LIMIT');check(new Set(s.artifacts.map(a=>a?.artifactId)).size===s.artifacts.length,'SOURCE_DUPLICATE');let total=0;
   for(const a of s.artifacts){exactKeys(a,['artifactId','role','mediaType','byteLength','sha256','locator','requestedUrl','finalUrl'],'SOURCE_ARTIFACT');identifier(a.artifactId);hash32(a.sha256);
     check(['RESPONSE_BODY','IMAGE','EXTRACTED_TEXT'].includes(a.role)&&['text/html','text/plain','image/png','image/jpeg'].includes(a.mediaType),'SOURCE_MEDIA');
-    check(Number.isSafeInteger(a.byteLength)&&a.byteLength>0&&a.byteLength<=(a.role==='IMAGE'?SOURCE_LIMITS.maxImageBytes:SOURCE_LIMITS.maxBodyBytes),'SOURCE_LIMIT');
+    check(Number.isSafeInteger(a.byteLength)&&a.byteLength>0&&a.byteLength<=(a.role==='IMAGE'||a.mediaType.startsWith('image/')?SOURCE_LIMITS.maxImageBytes:SOURCE_LIMITS.maxBodyBytes),'SOURCE_LIMIT');
     check(typeof a.locator==='string'&&a.locator===('artifact/'+a.artifactId),'SOURCE_LOCATOR');
-    for(const url of [a.requestedUrl,a.finalUrl])check(url===null||typeof url==='string'&&url.length<=2048,'SOURCE_URL');total+=a.byteLength;
+    for(const url of [a.requestedUrl,a.finalUrl])urlShape(url);total+=a.byteLength;
   }
   check(total<=SOURCE_LIMITS.maxTotalBytes,'SOURCE_LIMIT');array(s.limitations,8,'SOURCE_LIMIT');
   check(s.limitations.every(v=>SOURCE_LIMITATIONS.includes(v))&&new Set(s.limitations).size===s.limitations.length,'SOURCE_LIMITATIONS');
   check(s.limitations.includes('COMPLETENESS_UNVERIFIED'),'SOURCE_COMPLETENESS');
   check(s.textArtifactId===null||s.artifacts.some(a=>a?.artifactId===s.textArtifactId&&a.role==='EXTRACTED_TEXT'&&a.mediaType==='text/plain'),'SOURCE_TEXT');
+  for(const r of s.resourceRequests)if(r.status==='COLLECTED')check(s.artifacts.some(a=>a.role===(r.role==='PAGE'?'RESPONSE_BODY':'IMAGE')&&a.requestedUrl===r.requestedUrl&&a.finalUrl===r.finalUrl),'SOURCE_RESOURCE_ARTIFACT');
+  if(s.resourceRequests.some(r=>r.status==='FAILED'))check(s.retrievalStatus!=='COLLECTED','SOURCE_PARTIAL');
   check(s.artifacts.filter(a=>a.role==='RESPONSE_BODY').length<2,'SOURCE_RAW_BODY');
   if(s.retrievalStatus!=='FAILED')check(s.artifacts.some(a=>a.role==='RESPONSE_BODY'),'SOURCE_RAW_BODY');
   if(s.retrievalStatus==='FAILED')check(s.textArtifactId===null,'SOURCE_STATUS');return s;

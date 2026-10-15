@@ -45,7 +45,7 @@ test('collector archives response and normalized text separately and reports HTM
 });
 test('image fetch failure and invalid text decoding preserve raw body and partial state',async()=>{
  const f=await collectSourceSnapshot({...input,imageUrls:[OFFICIAL_URLS[1]]},{now:()=>100,fetchResource:async(value,{kind})=>{if(kind==='IMAGE')throw Error('SYNTHETIC_PROVIDER_PRIVATE');return {requestedUrl:value,finalUrl:value,status:200,mediaType:'text/html',bytes:Buffer.from([255,254])};}});
- assert.equal(f.snapshot.retrievalStatus,'PARTIAL');assert.equal(f.snapshot.textArtifactId,null);assert.deepEqual(f.snapshot.artifacts.map(a=>a.role),['RESPONSE_BODY']);assert.ok(f.snapshot.limitations.includes('RESOURCE_FAILED'));
+ assert.equal(f.snapshot.retrievalStatus,'PARTIAL');assert.equal(f.snapshot.textArtifactId,null);assert.deepEqual(f.snapshot.artifacts.map(a=>a.role),['RESPONSE_BODY']);assert.ok(f.snapshot.limitations.includes('RESOURCE_FAILED'));assert.equal(f.snapshot.resourceRequests[1].status,'FAILED');assert.equal(f.snapshot.resourceRequests[1].requestedUrl,OFFICIAL_URLS[1]);
 });
 test('source archives are immutable, private, recoverable and expired bytes cannot be resurrected',async t=>{
  const directory=realpathSync(mkdtempSync(join(tmpdir(),'clear-source-')));let time=101,store=openSourceStore({directory,environment:env,now:()=>time});t.after(()=>{store.close();rmSync(directory,{recursive:true,force:true});});
@@ -57,4 +57,18 @@ test('source archives are immutable, private, recoverable and expired bytes cann
  const next=structuredClone(bundle);next.revision++;next.requiredSourceIds=[input.sourceId];store.putBundle(next);assert.equal(store.getCurrentBundleHash(bundle.bundleId),sourceBundleHash(next));assert.deepEqual(store.getBundle(bHash),bundle);
  const different=createSourceSupplement({...input,sourceType:'PASTE',bytes:Buffer.from('SYNTHETIC changed'),collectedAt:100});assert.throws(()=>store.putSnapshot(different.snapshot,different.blobs),/VERSION_CONFLICT/);
  time=collected.snapshot.expiresAt;assert.equal(store.purgeExpired().deletedArtifacts,2);assert.throws(()=>store.getArtifact(hash,'body'),/EXPIRED/);assert.throws(()=>store.putSnapshot(collected.snapshot,collected.blobs),/EXPIRED/);
+});
+test('cancellation during DNS does not dispatch a late resolved request',async()=>{
+ const c=new AbortController();let finish,calls=0;
+ const pending=fetchPublicResource(url,{signal:c.signal,lookup:()=>new Promise(r=>{finish=r;}),request:async()=>{calls++;return page();}});
+ c.abort();await assert.rejects(pending,/CANCELLED/);finish([publicIp]);await Promise.resolve();assert.equal(calls,0);
+});
+
+test('cross-brand redirects stay blocked even when both URLs are independently allowlisted',async()=>{
+ await assert.rejects(fetchPublicResource(url,{lookup,request:async()=>({status:302,location:OFFICIAL_URLS[1]})}),/REDIRECT_ORIGIN/);
+});
+test('HTTP failure status and the exact attempted resource remain part of the failed snapshot',async()=>{
+ const e=Error('SOURCE_HTTP_STATUS');e.httpStatus=404;
+ const r=await collectSourceSnapshot(input,{now:()=>100,fetchResource:async()=>{throw e;}});
+ assert.equal(r.snapshot.retrievalStatus,'FAILED');assert.equal(r.snapshot.httpStatus,404);assert.equal(r.snapshot.resourceRequests[0].httpStatus,404);assert.equal(r.snapshot.resourceRequests[0].requestedUrl,url);
 });
