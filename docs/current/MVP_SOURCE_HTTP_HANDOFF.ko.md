@@ -1,6 +1,7 @@
+<!-- 최신 C2 구현 절이 아래의 과거 계약/미구현 상태보다 우선한다. -->
 # MVP HTTP 연결·서준형 프론트 인계
 
-버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **원문 PR59·C1 PR61 develop 병합 완료 / C2 계약·구현 전**.
+버전 `clear-mvp-source-http.1` + C1 `clear-mvp-student-http.1` / 2026-10-15 / **원문 PR59·C1 PR61 develop 병합 완료 / C2 PR63 합성 구현·Draft**.
 C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c55665b8575491a8c417040a8805ef` + clock/정책 alias 보정 `680bce36c2306b38615a3731da611fececa71a7b`, 쓰기 transaction 내부 세션 재검사 코드 `922ada6fe45dde53135ece116e90531aa0b662a9`, 최초 선행 PR59 head `11e27aca483441aecda757686c2d3826e5360ac4`에서 출발했으며, PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 develop merge `2bb6d291b77ba397f8544995557db78b3ce54724`를 정상 merge로 포함했다. 병합 완료 [PR #61](https://github.com/gw020328-oss/clear-education-v4/pull/61), 최종 CI는 해당 PR과 이슈55를 확인한다.
 현재 기반 develop `0590fd0728ce3a4525129cbad753c3ba9b2f781b`(#56/#58/#57/#59/#61 통합), 구현 브랜치 `codex/mvp-http-integration`. 구현 코드 커밋 `032215f2d50261808c62675d9880b45ef2e00cb0`, 병합 완료 [PR #59](https://github.com/gw020328-oss/clear-education-v4/pull/59). 이후 인계/검증 문서 커밋은 코드 변경과 구분한다. 이 문서가 이번 프론트 연결의 단일 시작점이다.
 
@@ -11,7 +12,7 @@ C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c556
 | A: 기존 서명 로그인·역할/CSRF, 별도 저장소·멱등/CAS·개발 listener | PR59 develop 병합 완료 |
 | B: 등록 URL ID→원문 archive/부분 상태→조회→mock 초안→정확 표시 확인 기록 | PR59 develop 병합 완료. 실행 예시는 **MOCK**, 실제 URL/유료 모델 호출0 |
 | C1: 학생 본인 신청·서버 합성 조건 표시·합성 확인/정책 변경 재확인 | PR61 develop 병합 완료. `clear-mvp-student-http.1`, 아래 C1 API만 가용. **실제 동의 아님** |
-| C2: 파일 접수/bytes·문서 검토run·보완/재제출 | **미구현**. `documentSubmissionReady:false`, 업로드/검토 API 호출 금지 |
+| C2: 합성 fixture 실bytes 접수·검토run·보완/재제출 | PR63 Draft 구현. 명시 documentMode만. `syntheticDocumentSubmissionReady:true`, 운영 `documentSubmissionReady:false` |
 | D: 새 원문 HTTP용 브라우저 adapter·예제·검사 | PR59 develop에 제공. 실제 `web/` 연결은 서준형 담당/미연결 |
 | 운영 원천 진위/적용성/동일인·정책 게시·실동의·Evidence/M2 영속 판정·재원 | **미완료**. mock/검토 기록은 운영 보장이 아님 |
 
@@ -274,3 +275,59 @@ C1 displayHash/previewHash와 기존 AI 문서 plan의 displayHash/previewHash�
 Claude Code 추가 지침: PR61은 develop0590fd0에 병합됐지만 C2는 계약 단계다. 최신 PR/정확 backend SHA/Checks/capability를 다시 확인하고 구현 전 C2 endpoint를 가정하거나 합성 성공 UI를 만들지 않는다. web/·지갑/F0/화면은 서준형 소유로 유지하고 백엔드 질문은 사용자 경유로 전달한다. C2 별도 adapter가 제공된 후 같은 검증 HTTPS9443·기존 signed session/CSRF에서만 연결한다. localStorage/sessionStorage에 파일·텍스트·token/서명·모델 출력/키를 저장하지 않는다. 실제 제출/유료 모델/외부 사이트 호출을 켜지 않는다.
 
 이번 PR61 실질리뷰·C2 계약 단위의 요청 설정은 GPT-6.1 Sol / High이며 런타임 모델 ID는 별도 검증하지 못했다. 일반 endpoint/adapter 구현은 다음 실제 후속 설정 GPT-6.1 Sol / Medium으로 요청한다. 문구 출력만으로 설정이 바뀌었다고 주장하지 않는다. 새 C2 PR은 develop 대상 Draft·검토/CI 준비까지만이며 자동 병합하지 않는다. 예치/보관/배정/충전OPEN·자격재원분리·400%자동자격지급금지·500%제외·원천동일인보류·grant/outboxHOLD·독립claimNO_GO를 유지한다.
+
+
+## 최신 C2 실행·프론트 연결 인계 (2026-10-15)
+
+C2 버전 `clear-mvp-document-http.1`, 구현 코드 `0a9945b98a190ae43abeedd15d169be91c2eb988`, 시작 실패 정리/공개 fixture 시험 `04efb92acf7ad890f3571fc8ef443d8e0498fde4`, [Draft PR63](https://github.com/gw020328-oss/clear-education-v4/pull/63), 상위55/하위62. 선행 PR61은 develop0590fd0에 병합됐다. PR61 추가 push Mac은 최종 **cancelled**(2026-10-15 11:20:52 UTC)로 확인했으며 종료 원인을 추정하거나 재실행하지 않았다. 필수CI4/4·추가PR Mac 성공과 구분한다. 아래 이 C2 절이 위 계약 단계/미구현 과거 기록보다 최신이다.
+
+실행은 새 공개 TEST 지갑 주소와 **새 이름**의 별도 합성 환경에서만 한다. 기존 source-demo/C1/개인 DB/키/체인을 가져오거나 변환하지 않는다.
+
+```sh
+./tools/node tools/mvp-document-dev.mjs init --name document-demo --port 9443 --chain-id 431701 --operator "$CLEAR_MVP_OPERATOR" --participant "$CLEAR_MVP_PARTICIPANT"
+./tools/node tools/mvp-document-dev.mjs start --name document-demo
+# 자동 합성 demo: 새 임시 CA/DB/TEST 지갑, CA 검증 HTTPS, 종료 후 정리
+./tools/node --import ./tests/ybm-collector/network-guard.mjs specs/m3/document-http-demo.mjs
+```
+
+일반 CLI의 baseURL은 https://127.0.0.1:9443이며 기존 same-origin signed wallet 세션/HttpOnly Secure cookie·wallet/chain/CSRF·명시 Idempotency-Key를 사용한다. 등록한 공개 주소만으로 로그인되는 것은 아니며 그 새 TEST 지갑의 서명이 필요하다. 새 `var/mvp-documents/document-demo/ca.pem`만 검토/신뢰하고 TLS 검증을 끄지 않는다. 별도5173/CORS 우회는 없다. web/dist가 준비돼 있으면 기존 공개 자산 규칙으로만 제공하며 web/를 수정하지 않았다. 백엔드/Node·키·DB/specs 예제 모듈을 브라우저 번들에 복사하지 않는다.
+
+`/__dev/config`는 documentHttpVersion/명시 합성 capability를 알려준다. 일반 source/C1 host는 C2를 설치하지 않으므로 해당 route는404다. C2 host의 studentSubmissionHttpImplemented와 syntheticDocumentSubmissionReady는 합성 기능만 뜻하며 documentSubmissionReady/realDataAllowed/imageDecodeReady는 false다. 신청의 현재 bound 합성 정책·C1 ACK와 별도 문서 ACK가 준비돼야 파일을 수락한다. 지원 requirement/method는 document-preview.documentRequirements에 명시한다. 성적/학습·실동의·자격·재원 기능의 완료 표시가 아니다.
+
+브라우저는 별도 `src/product-workflow/document-http-client.mjs` 한 파일에 인증된 walletClient.request를 주입한다. F0 ApplicationView/기존 학생·원문 adapter는 유지한다. 파일 접수는 다음 순서다.
+
+1. C1 본인 신청과 정확 조건 SYNTHETIC_ACK_ONLY를 확인한다. 기존 정책이면 명시 정책 선택→새 C1 표시/확인이 먼저다.
+2. document-preview의 C1 확인 hash/Binding·문서 기준 전체/plan/source·합성/미확인 표시를 보여준다. exact documentPreviewHash로 SYNTHETIC_DOCUMENT_ACK_ONLY를 기록한다. C1 previewHash를 대체해서 보내지 않는다.
+3. `specs/m3/document-http-fixtures.json`의 공개 합성 fixtureId/files만 접수한다. 이 JSON은 브라우저용 공개 샘플이며 서버의 권한 pin이 아니다. 임의 텍스트/실학생 파일을 받지 않는다. name은 basename만 허용되며 저장하지 않는다. 실제 bytes/base64·MIME·file set·서버 fixture hash를 검사한다.
+4. 현재 expectedWorkflowRevision/expectedSubmissionRevision·documentAcknowledgmentHash로 submit하고, 반환된 submissionId/revision/workflowRevision으로 review-runs를 시작한다. POST 응답 유실은 같은 actor/route/key GET 복구만 사용한다.
+5. GET run의 RUNNING/ACCEPTED/CANCELLED/TIMED_OUT/INTERRUPTED/SUPERSEDED·current/summary/reasons를 표시한다. 보완은 새 key의 명시 submit→새 revision/run이며 옛 결과는 이력/current=false다. 브라우저 network abort는 이미 기록된 run 취소와 다르며 cancel endpoint로 명시 취소한다.
+
+정확한 payload는 [상세 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)의 표와 [검증 HTTPS 생성 응답](../../specs/m3/document-http-responses.json)을 따른다. 생성 응답의 임시 포트/TEST 주소·ID는 예시이며 고정9443 실운영 계정이 아니다. 최소 호출 형태는 다음과 같다.
+
+```js
+const preview = await documentClient.preview(applicationId);
+const ack = await documentClient.acknowledge(applicationId, {
+  expectedWorkflowRevision: preview.expectedWorkflowRevision,
+  documentPreviewHash: preview.documentPreviewHash,
+  acknowledgement: 'SYNTHETIC_DOCUMENT_ACK_ONLY'
+}, { idempotencyKey: 'explicit-document-confirmation-1' });
+const current = await documentClient.preview(applicationId);
+const accepted = await documentClient.submit(applicationId, {
+  expectedWorkflowRevision: current.expectedWorkflowRevision,
+  expectedSubmissionRevision: 0, // 보완 시 직전 submissionRevision
+  documentAcknowledgmentHash: ack.result.documentAcknowledgmentHash,
+  fixtureId: syntheticFixture.fixtureId, files: syntheticFixture.files
+}, { idempotencyKey: 'explicit-synthetic-submission-1' });
+```
+
+오류는401 재로그인,403 역할/CSRF/동일출처,404 없음/범위밖,409 MVP_STALE/IDEMPOTENCY_CONFLICT·DOC_CONFIGURATION_REQUIRED/DOC_DISPLAY_CHANGED/DOC_RAW_UNAVAILABLE/DOC_BUSY/DOC_LIMIT,410 SOURCE_EXPIRED,413 BODY_SIZE,408 DOC_RECEIVE_TIMEOUT,422 DOC_SYNTHETIC_ONLY/DOC_MEDIA/DOC_FILE_NAME/DOC_FILE_SET/DOC_CANCELLED/MVP_CLOCK으로 구분한다. timeout/network 실패를 성공이나 빈 목록으로 만들지 않는다. 서버는 raw/provider/파일명/경로/stack을 오류에 넣지 않으며 POST/DELETE는 자동 재전송하지 않는다.
+
+raw는 디스크에 저장하지 않고 최대1800초·run 종료/logout/취소/대체/명시 삭제/종료 때 메모리 소유 buffer를 폐기한다. 파일4/각64KiB/합계256KiB·body384KiB/수신10초·수신전역2/actor1·원본전역1MiB, 동시 worker2로 복사본도 제한한다. 받아들인 raw가 없으면 새 제출이 필요하며, 이미 저장된 최소 요약은 재시작 뒤 같은 지문으로 재조회할 수 있다. hard-kill/GC/OS 잔재나 JS 문자열의 물리 삭제를 보장하지 않는다. full image decode가 없으므로 어떤 method든 이미지가 있으면 IMAGE_NOT_DECODED 보류이며 CODE 텍스트 통과를 문서 전체 판독 완료로 표시하지 않는다. ACCEPTED는 요약 저장이지 진위/동일인·실동의·자격/재원·지급 승인이 아니다.
+
+공개 원문 fixture는2026-10-15 00:00 UTC부터30일이며 일반 CLI는 현재 시각으로 만료를 검사한다. 만료/정책·fixture·model 설정 변경은 새 검토 버전/새 합성 환경이 필요하고 자동 repin/기존 DB 이관을 하지 않는다. TLS demo/회귀는 고정 합성 시계를 명시 주입한 재생으로 실제 원문 신선도 증거가 아니다.
+
+검증: 관련306/306(C2 HTTP19+TLS1+공통DELETE1 포함), 기존 개발환경33/33, 이후 추가 시작 실패 정리1·TLS 데모 재검사 통과, 원본legacy191개·의존성·diff PASS. 권한/입력/정확두표시·bytes/유실응답·보완/stale·cancel/logout/late·TTL/clock·10초수신제한·부분업로드/슬롯·두DB중간상태·최소DB/불변이력을 검사했다. 최종 exact head의 원격 CI는 PR63/이슈55·62를 확인한다. PR63은 Draft·자동 병합하지 않는다. 실제 개인서류/사이트/유료/기존DB키체인접근0, web/수정·외부연락0이다.
+
+Claude Code 후속: 최신 origin/develop·PR63의 exact head/Checks 및 이 문서 최신 C2절을 읽는다. API가 develop에 이미 병합됐다고 가정하지 않는다. 자신의 web/ 미커밋 변경을 보존하고 사용자 승인 범위의 정상 merge만 한다. 제공된 별도 document client와 공개 합성 fixture JSON을 같은9443 출처에 연결하며 server-only example/pins/DB/Node 모듈은 번들에 넣지 않는다. 확인 기준과 미확인/보완 이유를 사용자 언어로 표시하고 hash/DB/모델 내부값을 일반 화면의 설명으로 강요하지 않는다. 파일/텍스트·token/서명·키/모델 출력은 브라우저 저장소/로그에 넣지 않는다. 스스로 실제 업로드/개인자료/유료/학교·Moodle/YBM 호출이나 지급 기능을 켜지 않는다. 경로/DTO 의미가 애매하면 사용자 경유로 백엔드에 질문한다. 좁은 화면/키보드·로딩/없음/오류/보완·지갑 거절/변경/만료·동일출처·중복/취소·restart·stale 수용 시험과 남은 미연결을 기록한다.
+
+이번 일반 구현의 요청 설정은 GPT-6.1 Sol / Medium이며 런타임 모델ID는 별도 검증하지 못했다. 미해결 민감정보/동시성 설계 충돌은 발견되지 않았고 실제 운영의 개인자료/동의/decode 관문을 추정해 열지 않았다. 예치/보관/배정/충전OPEN·자격재원분리·400%PRECHECK_ONLY/자동자격지급금지·500%제외·원천동일인보류·grant/outboxHOLD·독립claimNO_GO를 유지한다.

@@ -1,13 +1,13 @@
 {
   "version": "clear-mvp-document-http-verification.1",
   "date": "2026-10-15",
-  "status": "CONTRACT_ONLY_NOT_IMPLEMENTED",
+  "status": "IMPLEMENTED_SYNTHETIC_DRAFT_REVIEW",
   "issue": 62,
   "parentIssue": 55,
   "baseDevelop": "0590fd0728ce3a4525129cbad753c3ba9b2f781b",
-  "implementationCommit": null,
+  "implementationCommit": "0a9945b98a190ae43abeedd15d169be91c2eb988",
   "proposedHttpVersion": "clear-mvp-document-http.1",
-  "runtimeCapabilityEnabled": false,
+  "runtimeCapabilityEnabled": "ONLY_EXPLICIT_DOCUMENT_MODE",
   "documentSubmissionReady": false,
   "actualUploads": 0,
   "actualWebsiteFetches": 0,
@@ -30,5 +30,40 @@
     "grant": "HOLD",
     "outbox": "HOLD",
     "independentClaim": "NO_GO"
-  }
+  },
+  "startupCleanupTestCommit": "04efb92acf7ad890f3571fc8ef443d8e0498fde4",
+  "httpVersion": "clear-mvp-document-http.1",
+  "syntheticDocumentSubmissionReady": true,
+  "syntheticFixtureBytesReceived": true,
+  "rawDiskPersistence": false,
+  "boundPolicyHash": "0xbcbb9e96ec6e27ebdc9784c447e9ff5d8026f8a8384df87331e92471b3ed777e",
+  "tests": {
+    "combinedRelated": 306,
+    "newC2Http": 19,
+    "newC2HttpsIncluded": 1,
+    "newSharedDeleteTransportIncluded": 1,
+    "additionalStartupCleanup": 1,
+    "existingDevelopment": 33,
+    "verifiedHttpsSignedWalletRestartDemo": "PASS_SYNTHETIC_FIXED_CLOCK",
+    "workspaceOriginalLegacyFiles": 191,
+    "dependencies": "PASS",
+    "diff": "PASS",
+    "publicHistory": "PENDING_FINAL_HEAD",
+    "remoteCi": "SEE_PR63_FINAL_HEAD_CHECKS"
+  },
+  "requestedImplementationSetting": "GPT-6.1 Sol / Medium",
+  "priorPr61AdditionalMac": {
+    "run": 38724292331,
+    "state": "CANCELLED",
+    "completedAt": "2026-10-15T11:20:52Z",
+    "rootCause": "UNKNOWN",
+    "rerun": false
+  },
+  "remaining": [
+    "full image decode and arbitrary/real student files",
+    "real consent/identity and authority/policy publication",
+    "operational private-data retention/deletion",
+    "authenticated Evidence/M2/funding",
+    "teammate-owned frontend connection"
+  ]
 }

@@ -1,3 +1,5 @@
+2026-10-15 C2 최신: PR63 Draft, 구현0a9945b·시작정리/fixture04efb92. 합성문서 exact C1/C2확인·서버Binding/실bytes·검토/보완·GET/재시작·메모리수명 연결. 관련306·기존dev33·추가시작정리1·TLS데모/의존성/191개보존 PASS, 최종headCI는PR63. PR61 추가pushMac은cancelled/원인UNKNOWN, 재실행0. full decode/실동의/운영개인자료·Evidence/M2/재원/실화면 미완료. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 상태 기록이다.
+
 2026-10-15 최신: PR61 실질리뷰 fix8c5411b·최종95b397c, 필수CI4/4 성공 후 정상 develop merge0590fd0. 추가Mac PR성공/push진행중(미확정)을 분리 기록했다. C2는 최신develop의codex/mvp-document-http·하위#62에서 계약만 정리했으며 HTTP/업로드/실동의 미구현. 다음 일반 구현 요청은 Sol/Medium. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), [C2 계약](current/MVP_DOCUMENT_HTTP_CONTRACT.ko.md). 아래는 이전 기록이다.
 
 2026-10-15 PR61 실질 검토: 코드8c5411b에서 시계 역행 중 저장된 확인/신청 조회와 POST재생의 transaction 내부 session 재검사 누락을 보완. 관련285·학생HTTPS재시작·원본보존 PASS. 사용자 승인된 develop 정상병합은 정확 최종head CI 뒤 진행한다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 상태 기록이다.

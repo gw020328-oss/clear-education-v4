@@ -105,8 +105,9 @@
       "pullRequestRun": 38724301462,
       "pushRun": 38724292331,
       "additionalMacPr": "SUCCESS",
-      "additionalMacPush": "IN_PROGRESS_FINAL_CAUSE_UNKNOWN",
-      "sixOfSixClaimed": false
+      "additionalMacPush": "CANCELLED_ROOT_CAUSE_UNKNOWN",
+      "sixOfSixClaimed": false,
+      "additionalMacPushCompletedAt": "2026-10-15T11:20:52Z"
     },
     "merge": "0590fd0728ce3a4525129cbad753c3ba9b2f781b",
     "finalHead": "95b397cc662b255fc777afc898e7b56cc6a444d9",

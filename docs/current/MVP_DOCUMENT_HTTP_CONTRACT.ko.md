@@ -1,6 +1,6 @@
 # C2 합성 파일 접수·문서 검토 HTTP 구현 계약
 
-2026-10-15 / 설계 확정·구현 전 / 상위 #55, 하위 #62. C1 선행 PR61 최종 head `95b397cc662b255fc777afc898e7b56cc6a444d9`, develop merge `0590fd0728ce3a4525129cbad753c3ba9b2f781b`. C2 branch `codex/mvp-document-http`. 이 문서만으로 endpoint가 존재하거나 documentSubmissionReady=true가 되지 않는다.
+2026-10-15 / 합성 C2 구현·Draft 검토 / 상위 #55, 하위 #62. C1 선행 PR61 최종 head `95b397cc662b255fc777afc898e7b56cc6a444d9`, develop merge `0590fd0728ce3a4525129cbad753c3ba9b2f781b`. C2 branch `codex/mvp-document-http`. 구현 코드 `0a9945b98a190ae43abeedd15d169be91c2eb988`, 시작 정리/공개 fixture 입력 시험 `04efb92acf7ad890f3571fc8ef443d8e0498fde4`, Draft PR63. 아래 endpoint는 명시 documentMode 합성 host에서 동작하며 운영 documentSubmissionReady=false다.
 
 ## 범위와 기존 모듈
 
@@ -8,7 +8,7 @@
 
 첫 C2는 서버에 등록된 공개 합성 fixture의 **정확한 텍스트·실제 bytes만** 접수한다. client의 dataMode=SYNTHETIC 선언만으로 실제 서류를 허용하지 않는다. host fixture registry의 metadata 및 내용 hash와 수신한 파일 전체를 대조한다. 불일치·임의 텍스트/파일은 worker/영속 저장 전에 고정 오류로 거부한다. 실제 개인자료·학교/YBM/Moodle·원천 URL·유료 모델은 호출하지 않는다. 파일명은 표시용 입력 검증 후 버리며 hash로 경로를 만들거나 읽지 않는다.
 
-API version 제안 `clear-mvp-document-http.1`, capability는 `documentHttpVersion`, `syntheticDocumentSubmissionReady`, `documentSubmissionReady:false`, `realDataAllowed:false`, `imageDecodeReady:false`다. 기존 C1의 documentSubmissionReady=false는 운영/임의 파일 접수 불가 의미로 유지한다. 새 capability는 준비된 host 합성 policy/plan·fixture·source archive가 정확히 연결된 신청에만 true다. 준비되지 않은 기존 C1 신청은 DOC_CONFIGURATION_REQUIRED로 차단한다. capability는 신청의 REVIEW/BLOG requirement별로 제공하고, 성적·학습 조건까지 완료됐다고 표시하지 않는다.
+API version `clear-mvp-document-http.1`, capability는 `documentHttpVersion`, `syntheticDocumentSubmissionReady`, `documentSubmissionReady:false`, `realDataAllowed:false`, `imageDecodeReady:false`다. 기존 C1의 documentSubmissionReady=false는 운영/임의 파일 접수 불가 의미로 유지한다. 새 capability는 준비된 host 합성 policy/plan·fixture·source archive가 정확히 연결된 신청에만 true다. 준비되지 않은 기존 C1 신청은 DOC_CONFIGURATION_REQUIRED로 차단한다. capability는 신청의 REVIEW/BLOG requirement별로 제공하고, 성적·학습 조건까지 완료됐다고 표시하지 않는다.
 
 ## C1과 검토 기준의 결합
 
@@ -34,7 +34,7 @@ API version 제안 `clear-mvp-document-http.1`, capability는 `documentHttpVersi
 | GET `/document-operations/:operationId` 및 `/document-operations/:kind/:key` | actor/route/key 복구. kind는 document-agreement/submissions/review-runs/cancel의 고정 allowlist. POST 자동 재호출·새 key 생성 없음 |
 | DELETE `/submissions/:submissionId/raw` | 본인·CSRF 및 멱등 key. 보유 메모리 폐기/작업 중단. 제출/receipt/중복 방지 tombstone은 보존하며 다음 수락을 차단 |
 
-kind별 정확한 JSON keys/상태 enum·합성 request/response 예제는 구현 테스트와 함께 같은 버전으로 고정한다. path/UUID를 body에서 대체하거나 임의 파일 경로를 받지 않는다. 문서 파일 다운로드/공개 blob·운영자 개인파일 조회 API는 제공하지 않는다.
+정확한 JSON keys는 document-http-service의 exactKeys가 정본이며, 실행 합성 request 파일 document-http-fixtures.json과 검증 HTTPS 응답 document-http-responses.json을 같은 버전으로 제공한다. path/UUID를 body에서 대체하거나 임의 파일 경로를 받지 않는다. 문서 파일 다운로드/공개 blob·운영자 개인파일 조회 API는 제공하지 않는다.
 
 ## 파일·메모리·수명
 
@@ -70,3 +70,12 @@ GET 복구는 **이미 저장된** run/receipt만 화해하며 모델/업로드�
 C2 실행은 새 합성 환경을 명시 생성하는 별도 개발 진입점을 사용하고 기존 var/source-demo·C1 환경/DB를 자동 변환하지 않는다. 새 환경에서도 loopback HTTPS9443과 기존 세션을 재사용하고 C2 host 설정이 없으면 capability=false다.
 
 단일 `MVP_SOURCE_HTTP_HANDOFF.ko.md`에 exact backend SHA/PR·TLS9443/세션·별도 adapter·DTO/오류·capability/보완·stale/멱등/restart·미완료/Claude Code 지침을 갱신한다. 실제 web 연결은 담당자에게 사용자 경유로 인계한다. 이번 C2 PR은 develop 대상 Draft·attach·최종 CI/리뷰 준비까지만이며 자동 병합하지 않는다.
+
+
+## 구현 검증·운영과 구분한 한계
+
+구현은 별도 document-http-service/client, 제한 body 수신/세션 종료 hook, 전용 CLI와 서버용 example·고정 독립 pins·공개 합성 fixture/응답이다. C1/source/F0 DTO와 web/는 변경하지 않았다. 새 document-http.sqlite의 commands/ACK·submission 내용은 불변이며 raw 삭제 flag만 변경한다. 명시 raw 삭제는 현재 ledger를 invalidate해 이미 저장된 요약도 이력으로 둔다. 같은 raw를 다른 키로 다시 삭제해도 document revision을 재증가시키지 않는다.
+
+관련306/306(이 단위 C2 HTTP19+TLS1+공통 client DELETE1 포함), 기존dev33/33, 이후 별도 새 시작 실패 정리 회귀1·TLS demo 재통과, 의존성/원본legacy191개/diff PASS. 최종 원격 head CI는 PR63 Checks를 정본으로 확인한다. 두 DB crash 검사는 새 합성 SQLite에 중간 상태를 구성한 것이며 실제 사용자 DB/강제종료 실측으로 주장하지 않는다.
+
+정규 개발 CLI는 현재 시계를 사용한다. 공개 fixture 원문은 2026-10-15 00:00 UTC부터30일이며 만료 시 시작/조회가 차단된다. 갱신하려면 예제/독립 기대 pins를 새 버전 PR로 검토하며 자동 repin하지 않는다. 합성 TLS 데모/회귀는 고정 fixture 시계를 명시 주입하므로 날짜에 의존하지 않는 합성 재생이고 실제 원문 신선도 증거가 아니다. document policy/fixture/model 설정 지문 변경은 같은 DB를 자동 이관하지 않고 새 합성 환경을 요구한다. 일반 파일/실제 개인정보·완전 decode·실동의/정책 게시·운영Evidence/M2/재원·실화면은 미완료다.
