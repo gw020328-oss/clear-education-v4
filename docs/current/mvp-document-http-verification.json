@@ -38,18 +38,18 @@
   "rawDiskPersistence": false,
   "boundPolicyHash": "0xbcbb9e96ec6e27ebdc9784c447e9ff5d8026f8a8384df87331e92471b3ed777e",
   "tests": {
-    "combinedRelated": 306,
-    "newC2Http": 19,
-    "newC2HttpsIncluded": 1,
+    "combinedRelated": 309,
+    "newC2Http": 21,
+    "newC2HttpsIncluded": 2,
     "newSharedDeleteTransportIncluded": 1,
-    "additionalStartupCleanup": 1,
     "existingDevelopment": 33,
     "verifiedHttpsSignedWalletRestartDemo": "PASS_SYNTHETIC_FIXED_CLOCK",
     "workspaceOriginalLegacyFiles": 191,
     "dependencies": "PASS",
     "diff": "PASS",
     "publicHistory": "PENDING_FINAL_HEAD",
-    "remoteCi": "SEE_PR63_FINAL_HEAD_CHECKS"
+    "remoteCi": "SEE_PR63_FINAL_HEAD_CHECKS",
+    "startupCleanupIncluded": true
   },
   "requestedImplementationSetting": "GPT-6.1 Sol / Medium",
   "priorPr61AdditionalMac": {
@@ -65,5 +65,6 @@
     "operational private-data retention/deletion",
     "authenticated Evidence/M2/funding",
     "teammate-owned frontend connection"
-  ]
+  ],
+  "lifetimeFixCommit": "24e75f2f467805162aac814c921f1c1c50bfd802"
 }

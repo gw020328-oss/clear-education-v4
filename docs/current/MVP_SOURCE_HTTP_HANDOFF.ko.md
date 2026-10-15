@@ -326,8 +326,11 @@ raw는 디스크에 저장하지 않고 최대1800초·run 종료/logout/취소/
 
 공개 원문 fixture는2026-10-15 00:00 UTC부터30일이며 일반 CLI는 현재 시각으로 만료를 검사한다. 만료/정책·fixture·model 설정 변경은 새 검토 버전/새 합성 환경이 필요하고 자동 repin/기존 DB 이관을 하지 않는다. TLS demo/회귀는 고정 합성 시계를 명시 주입한 재생으로 실제 원문 신선도 증거가 아니다.
 
-검증: 관련306/306(C2 HTTP19+TLS1+공통DELETE1 포함), 기존 개발환경33/33, 이후 추가 시작 실패 정리1·TLS 데모 재검사 통과, 원본legacy191개·의존성·diff PASS. 권한/입력/정확두표시·bytes/유실응답·보완/stale·cancel/logout/late·TTL/clock·10초수신제한·부분업로드/슬롯·두DB중간상태·최소DB/불변이력을 검사했다. 최종 exact head의 원격 CI는 PR63/이슈55·62를 확인한다. PR63은 Draft·자동 병합하지 않는다. 실제 개인서류/사이트/유료/기존DB키체인접근0, web/수정·외부연락0이다.
+검증: 관련309/309(C2 HTTP21+TLS2+공통DELETE1 포함), 기존 개발환경33/33·TLS 데모 통과, 원본legacy191개·의존성·diff PASS. 권한/입력/정확두표시·bytes/유실응답·보완/stale·cancel/logout/late·TTL/clock·10초수신제한·부분업로드/슬롯·두DB중간상태·최소DB/불변이력을 검사했다. 최종 exact head의 원격 CI는 PR63/이슈55·62를 확인한다. PR63은 Draft·자동 병합하지 않는다. 실제 개인서류/사이트/유료/기존DB키체인접근0, web/수정·외부연락0이다.
 
 Claude Code 후속: 최신 origin/develop·PR63의 exact head/Checks 및 이 문서 최신 C2절을 읽는다. API가 develop에 이미 병합됐다고 가정하지 않는다. 자신의 web/ 미커밋 변경을 보존하고 사용자 승인 범위의 정상 merge만 한다. 제공된 별도 document client와 공개 합성 fixture JSON을 같은9443 출처에 연결하며 server-only example/pins/DB/Node 모듈은 번들에 넣지 않는다. 확인 기준과 미확인/보완 이유를 사용자 언어로 표시하고 hash/DB/모델 내부값을 일반 화면의 설명으로 강요하지 않는다. 파일/텍스트·token/서명·키/모델 출력은 브라우저 저장소/로그에 넣지 않는다. 스스로 실제 업로드/개인자료/유료/학교·Moodle/YBM 호출이나 지급 기능을 켜지 않는다. 경로/DTO 의미가 애매하면 사용자 경유로 백엔드에 질문한다. 좁은 화면/키보드·로딩/없음/오류/보완·지갑 거절/변경/만료·동일출처·중복/취소·restart·stale 수용 시험과 남은 미연결을 기록한다.
 
 이번 일반 구현의 요청 설정은 GPT-6.1 Sol / Medium이며 런타임 모델ID는 별도 검증하지 못했다. 미해결 민감정보/동시성 설계 충돌은 발견되지 않았고 실제 운영의 개인자료/동의/decode 관문을 추정해 열지 않았다. 예치/보관/배정/충전OPEN·자격재원분리·400%PRECHECK_ONLY/자동자격지급금지·500%제외·원천동일인보류·grant/outboxHOLD·독립claimNO_GO를 유지한다.
+
+
+최종 수명 보완 코드 `24e75f2f467805162aac814c921f1c1c50bfd802`: 대기 중인 업로드도 logout/정상 종료/C1 정책·확인 변경 시 AbortSignal로 즉시 중단하고 고정 DOC_CANCELLED를 반환한다. C1 같은키 확인 재생에서 현재 기준이 그대로면 보유 raw를 지우지 않는다. 완료 뒤 재인증/CAS와 별개로 수신 중 메모리 경계도 검사했다. 새 회귀2개 포함 관련309/309가 통과했다. 공개 합성 fixture JSON은 프론트 빌드에 필요한 부분만 넣거나 로컬 샘플 생성에 사용한다. 서버가 specs/*.json을 정적 URL로 제공한다는 뜻이 아니며 private 설정/Node 예제/pins는 번들에 포함하지 않는다.

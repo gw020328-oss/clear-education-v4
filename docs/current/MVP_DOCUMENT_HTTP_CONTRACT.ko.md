@@ -76,6 +76,8 @@ C2 실행은 새 합성 환경을 명시 생성하는 별도 개발 진입점을
 
 구현은 별도 document-http-service/client, 제한 body 수신/세션 종료 hook, 전용 CLI와 서버용 example·고정 독립 pins·공개 합성 fixture/응답이다. C1/source/F0 DTO와 web/는 변경하지 않았다. 새 document-http.sqlite의 commands/ACK·submission 내용은 불변이며 raw 삭제 flag만 변경한다. 명시 raw 삭제는 현재 ledger를 invalidate해 이미 저장된 요약도 이력으로 둔다. 같은 raw를 다른 키로 다시 삭제해도 document revision을 재증가시키지 않는다.
 
-관련306/306(이 단위 C2 HTTP19+TLS1+공통 client DELETE1 포함), 기존dev33/33, 이후 별도 새 시작 실패 정리 회귀1·TLS demo 재통과, 의존성/원본legacy191개/diff PASS. 최종 원격 head CI는 PR63 Checks를 정본으로 확인한다. 두 DB crash 검사는 새 합성 SQLite에 중간 상태를 구성한 것이며 실제 사용자 DB/강제종료 실측으로 주장하지 않는다.
+관련309/309(이 단위 C2 HTTP21+TLS2+공통 client DELETE1 포함), 기존dev33/33·TLS demo 통과, 의존성/원본legacy191개/diff PASS. 최종 원격 head CI는 PR63 Checks를 정본으로 확인한다. 두 DB crash 검사는 새 합성 SQLite에 중간 상태를 구성한 것이며 실제 사용자 DB/강제종료 실측으로 주장하지 않는다.
 
 정규 개발 CLI는 현재 시계를 사용한다. 공개 fixture 원문은 2026-10-15 00:00 UTC부터30일이며 만료 시 시작/조회가 차단된다. 갱신하려면 예제/독립 기대 pins를 새 버전 PR로 검토하며 자동 repin하지 않는다. 합성 TLS 데모/회귀는 고정 fixture 시계를 명시 주입하므로 날짜에 의존하지 않는 합성 재생이고 실제 원문 신선도 증거가 아니다. document policy/fixture/model 설정 지문 변경은 같은 DB를 자동 이관하지 않고 새 합성 환경을 요구한다. 일반 파일/실제 개인정보·완전 decode·실동의/정책 게시·운영Evidence/M2/재원·실화면은 미완료다.
+
+수명 보완 코드 `24e75f2f467805162aac814c921f1c1c50bfd802`는 pending upload 슬롯에도 abort signal을 결합해 logout/종료·C1 기준 변경 시 수신을 중단한다. C1 idempotent ACK 재생으로 기준이 그대로면 raw를 폐기하지 않는다. 관련 회귀2개를 포함한 최종 로컬 합계는309/309다.
