@@ -1,0 +1,57 @@
+name: Main documentation CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'codex/main-docs-ci*', 'codex/public-progress-docs*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  public-content:
+    name: Public content history
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Test redacted history scanner
+        run: ./tools/node --test .github/tests/public-content.test.mjs
+      - name: Scan reachable Git history without printing values
+        run: ./tools/node .github/scripts/check-public-content.mjs HEAD
+
+  synthetic-tests:
+    name: Public synthetic tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Test main documentation boundaries
+        run: ./tools/node --test .github/tests/main-docs.test.mjs
+      - name: Check public entry points and changed Markdown links
+        run: ./tools/node .github/scripts/check-main-docs.mjs
+      - name: Install existing main proof-adapter dependencies without lifecycle scripts
+        run: ./tools/npm --prefix spikes/w02-proof-adapter ci --ignore-scripts
+      - name: Run existing main offline synthetic tests
+        run: ./tools/npm --prefix spikes/w02-proof-adapter test
