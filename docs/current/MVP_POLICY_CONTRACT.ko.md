@@ -19,6 +19,12 @@
 
 `PolicyDraft`는 OFFICIAL_DRAFT를 표현하지만 실행 컴파일은 거부한다. unresolved question, OFFICIAL_OPEN rule, 없는 근거 locator·다른 상품/기수·누락/중복/미참조 규칙·잘못된 단위/기간/금액도 거부한다. 근거 locator는 고정한 source 목록에 존재하는지 검사하며 의미 지지·발행자 진위·적용성은 자동 입증하지 않는다. 정규화 지문/버전은 둘 다 null이거나 둘 다 있어야 한다. sourceSetHash와 policyHash는 지문이며 서명/승인권이 아니다.
 
+## 사전검토 계획의 내부 Source 결합
+
+[AI 정책 결합 모듈](../ai-vision/POLICY_BINDING.ko.md)은 기존 Source 스키마의 별도 `review-plan.1.*` namespace를 사용한다. origin/applicability는 SYNTHETIC_ASSUMPTION/SYNTHETIC_ONLY이며 rawHash는 계획·규칙·요구·원천 집합·표시 원문 manifest의 digest, normalizedHash는 정확한 표시 DTO digest다. 이는 공식 원문이나 서명된 원천의 의미로 사용할 수 없다. locator에 전체 manifest digest를 포함하여 실제 공통 policyHash/ruleHash에도 계획 변경이 반영된다.
+
+외부에서 고정한 승인 manifest/source/capability/원문 pins를 요구하고, 내부 Source 추가 전 원래 정책부터 컴파일한다. 내부 합성 근거로 잘못된 원래 규칙을 통과시키거나 OPEN 공식 원천을 승인하지 않는다. 정확한 preview DTO acknowledgment와 최신 정책/입력/revision 검사도 in-process 합성 모듈이며 실제 동의·서명·HTTP·DB·Evidence 수락이 아니다. 이미지 inputHash는 제출 메타데이터 DTO만 묶으며 원본 bytes·작성자·게시 진위를 검증하지 않는다. 원문 bytes↔공식 rawHash·의미 적용성은 별도 신뢰 resolver의 미구현 경계다.
+
 ## 제한된 규칙과 범위
 
 `commonRuleIds`는 ALL이며 tier마다 `alternatives`가 ANY, 각 대안의 `allRuleIds`가 ALL이다. 빈 경로·임의 재귀 AST·실행 코드·수식 문자열은 없다. 연산은 SCORE_LT/GTE/EQ, BASELINE_LT, DAILY_TIME, DAILY_PROGRESS, BOOLEAN으로 제한한다. SCORE=0..990, BPS=0..10000, BOOLEAN=bool. BASELINE과 LEARNING은 COMPLETE_PERIOD 및 고정 기간을 요구한다. 존재 성적과 최고점/미응시/전체 이력을 같은 증거로 취급하지 않는다.

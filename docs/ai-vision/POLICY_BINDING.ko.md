@@ -41,3 +41,5 @@ CODE는 bound policy에서 해당 버전 plan을 선택한다. TEXT_AI/VISION은
 전용 13개 회귀는 세 프로필의 실제 해시 변화, 독립 승인/pin 불일치, 표시 변조, OPEN 보류, 기존 잘못된 규칙의 내부 Source 세탁 거부, 정책/입력/retry 변경, 늦은 관찰, 참가자 경계, 복사 핸들 거부와 sticky stale을 검사한다. M1/M2의 계약이나 인증된 Evidence adapter를 추가하지 않았다. 모든 최종 결과의 `userConsentVerified`, `automaticEligibility`, `paymentAllowed`는 false다. 게시·연속 공개·작성자·진위도 검증되지 않았다.
 
 Source-authority와 실제 동의/Evidence 경계에 대한 공통 최종 리뷰는 Astra / High 권장 범위다. 예치 정책 OPEN, 400% 사전검토만/500% 제외, 원천·동일인 미확인 보류, grant/outbox HOLD·독립 claim NO-GO를 유지한다. 기존 금고·DB·키·체인은 수정하지 않았다.
+
+공통 최종 통합에서 전용 회귀·mock과 함께 과거 실제 합성 응답의 오프라인 재처리, 정확한 binding 예제 재생/파일 대조를 필수 CI에 편입했다. 모든 명령에 외부 네트워크 차단을 적용하며 키·실제 모델 호출은 사용하지 않는다.
