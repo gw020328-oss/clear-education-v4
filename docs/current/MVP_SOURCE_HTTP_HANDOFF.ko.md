@@ -12,7 +12,7 @@ C1 브랜치 `codex/mvp-student-application-http`, 초기 코드 `7c564429b5c556
 | B: 등록 URL ID→원문 archive/부분 상태→조회→mock 초안→정확 표시 확인 기록 | PR59 develop 병합 완료. 실행 예시는 **MOCK**, 실제 URL/유료 모델 호출0 |
 | C1: 학생 본인 신청·서버 합성 조건 표시·합성 확인/정책 변경 재확인 | 후속 Draft 구현. `clear-mvp-student-http.1`, 아래 C1 API만 가용. **실제 동의 아님** |
 | C2: 파일 접수/bytes·문서 검토run·보완/재제출 | **미구현**. `documentSubmissionReady:false`, 업로드/검토 API 호출 금지 |
-| D: 새 원문 HTTP용 브라우저 adapter·예제·검사 | 이번 Draft 제공. 실제 `web/` 연결은 서준형 담당/미연결 |
+| D: 새 원문 HTTP용 브라우저 adapter·예제·검사 | PR59 develop에 제공. 실제 `web/` 연결은 서준형 담당/미연결 |
 | 운영 원천 진위/적용성/동일인·정책 게시·실동의·Evidence/M2 영속 판정·재원 | **미완료**. mock/검토 기록은 운영 보장이 아님 |
 
 소유 확인: 공개 열린 PR0개를 조회했으며, 원격 `codex/frontend-shell`의 최신 `dc9bc62629daaf498e073a6aaab6527fed6d6fed`는 작성 계정 `puppy57201-stack`, 문서상 담당 서준형의 F0다. 이는 최초 원문 HTTP 단위의 관측이다. C1 시작 시 다시 조회한 원격 head는 `9c03b7bbb612ebf1f18fb2181944382468d40ba7`이며 서준형의 조건/정책/검증단계 화면과 develop 이력 merge가 추가됐다. 이후 공개된 [프론트 PR #60](https://github.com/gw020328-oss/clear-education-v4/pull/60)의 head `4219a53bb5cb7efa2ca3e48939bd82de69e071d7`와 web-only 수정 경로를 다시 확인했다. `web/`의 새 policy-view/conditions/step-detail/timeline·시험과 두 반 안내문 반영은 서준형 작업이며 이 백엔드 PR에서 수정하지 않는다. 공개 후속 commit/PR 부재가 미공개 로컬 변경 부재를 뜻하지 않는다. 사용자 답변으로 **web/·지갑 UI·기존 F0 adapter는 서준형 소유**를 확정했다. 통합 세션은 `web/`를 편집하거나 팀원에게 직접 외부 메시지를 보내지 않는다.
@@ -245,3 +245,6 @@ C1은 별도 Draft [PR61](https://github.com/gw020328-oss/clear-education-v4/pul
 ## PR59 병합·C1 기반 갱신 (2026-10-15)
 
 PR59 최종 head `112e93a36c2b19cdddef15cd44f7c106eb6030be`의 [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38715507758)·[PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38715523867) CI6/6 SUCCESS 후 develop merge `2bb6d291b77ba397f8544995557db78b3ce54724`로 병합했다. 병합 커밋 자체의 CI 성공을 뜻하지 않는다. C1 기존 head2354b70을 보존하고 최신 develop을 정상 merge했으며 충돌은 이 단일 인계 문서의 상태/추가 절뿐이었다. C1 API 절과 PR59 보완 기록을 모두 유지했다. 코드 충돌·web/변경은 없다. PR61은 Draft이고 C2·실동의는 미완료다. 기반 갱신 뒤의 로컬/최종 CI는 후속 기록으로 확인한다.
+
+
+기반 merge `c19a10fc85216e5428b6434ac9c09d85096ea7d2` 뒤 관련283/283(학생11개와 PR59 보완5개 포함), 기존 개발환경33/33, source·student 합성 HTTPS 서명 지갑/재시작 데모, 의존성·원본/legacy191개·diff PASS. source HTTP/store는 develop과 동일하며 기존 C1 코드와 원문 보완을 함께 보존했다. 최종 원격 CI는 PR61 정확 head의 Checks/본문·이슈55에서 확인한다. PR61은 Draft·미병합, C2/실동의 미완료다. 다음 C2 일반 구현은 별도 작업 단위에서 GPT-6.1 Sol / Medium으로 선정한다.

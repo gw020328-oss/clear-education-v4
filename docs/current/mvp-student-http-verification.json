@@ -1,11 +1,15 @@
 {
   "version": "clear-mvp-student-http-verification.1",
   "date": "2026-10-15",
-  "baseDevelop": "7f6096552f06492b4add8bd5653a2ff390cf7d3c",
+  "baseDevelop": "2bb6d291b77ba397f8544995557db78b3ce54724",
   "dependsOn": {
     "pullRequest": 59,
-    "exactHead": "11e27aca483441aecda757686c2d3826e5360ac4",
-    "currentlyDraft": true
+    "exactHead": "112e93a36c2b19cdddef15cd44f7c106eb6030be",
+    "currentlyDraft": false,
+    "initialHead": "11e27aca483441aecda757686c2d3826e5360ac4",
+    "state": "MERGED",
+    "mergeCommit": "2bb6d291b77ba397f8544995557db78b3ce54724",
+    "satisfied": true
   },
   "implementationCommits": [
     "7c564429b5c55665b8575491a8c417040a8805ef",
@@ -64,5 +68,22 @@
     "outbox": "HOLD",
     "independentClaim": "NO_GO"
   },
-  "pullRequest": 61
+  "pullRequest": 61,
+  "initialBaseDevelop": "7f6096552f06492b4add8bd5653a2ff390cf7d3c",
+  "baseIntegration": {
+    "preservedHead": "2354b70bd1f5cb6f4402c73ce0c40efeb3ca08d9",
+    "normalMergeCommit": "c19a10fc85216e5428b6434ac9c09d85096ea7d2",
+    "requestedSetting": "GPT-6.1 Sol / High (PR59 review and dependency integration unit)",
+    "codeConflicts": false,
+    "conflictResolution": "single handoff document status/additions preserved both C1 and PR59 sections",
+    "relatedTests": 283,
+    "existingDevelopmentTests": 33,
+    "sourceAndStudentHttpsRestartDemos": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "webEdited": false,
+    "finalHeadCi": "PENDING",
+    "c2Implemented": false,
+    "realConsentImplemented": false
+  }
 }

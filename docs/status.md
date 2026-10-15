@@ -1,3 +1,5 @@
+2026-10-15 최신 통합: PR59 최종head112e93a·CI6/6 성공 후 develop `2bb6d291b77ba397f8544995557db78b3ce54724` 정상 병합 완료. C1 기존2354b70을 보존하고 최신develop을 정상 merge(c19a10f), 선행 의존 해소. 관련283/기존dev33·source/student HTTPS재시작·보존/의존성 PASS. PR61은 Draft·미병합, 최종headCI 확인은 PR61/이슈55. C2·실동의 미완료, PR60/web은 별도 소유다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 시점 기록이다.
+
 <!-- PR59 review update: historical entries below retain their original dates. -->
 2026-10-15 PR59 최종 실질 검토: `7402f7f`에서 COMMITTING 첫 preview 혼합, 시계 역행 시 미만료 draft 조기 삭제, 생성/검토 시각 이전 결과 노출을 보완했다. 관련272·기존 개발환경33·합성 HTTPS 재시작·의존성/원본 보존 PASS. 최종 원격 CI 후 사용자 승인된 develop 정상 병합 예정이며, C1 PR61은 `2354b70`으로 보존해 그 뒤 기반 갱신한다. C2/실동의·PR60/web은 이 검토 범위 밖이다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md).
 

@@ -1,6 +1,6 @@
 # 제품 연결 API·저장 계약 — M3-0
 
-2026-10-15 C1 학생 후속 Draft: [단일 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-student-http.1`은 PR59 head11e27ac에 의존해 학생 본인 신청·서버 합성 조건/정확 표시 확인·정책 변경 재확인·원자 멱등/GET복구를 추가한다. 실제 동의/게시·C2 파일/문서 검토·운영 Evidence/재원·화면은 미구현이다. F0/web은 서준형 소유로 유지한다. 아래 이전 C 전체 미구현 표기는 이전 단위의 기록이다.
+2026-10-15 C1 학생 후속 Draft: [단일 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-student-http.1`은 병합된 PR59/develop2bb6d29를 정상 merge해 학생 본인 신청·서버 합성 조건/정확 표시 확인·정책 변경 재확인·원자 멱등/GET복구를 추가한다. 실제 동의/게시·C2 파일/문서 검토·운영 Evidence/재원·화면은 미구현이다. F0/web은 서준형 소유로 유지한다. PR59 원문 API는 develop에 병합 완료됐고 PR61은 Draft로 유지한다. 아래 이전 Draft/C 전체 미구현 표기는 이전 단위의 기록이다.
 
 2026-10-15 신규 Draft: [원문 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-source-http.1`은 별도 loopback HTTPS에서 operator 원문 등록/조회·mock 초안·개발용 검토 기록을 연결한다. 기존 F0/web은 서준형 소유로 보존한다. 수강생 신청·동의·업로드/문서 검토 HTTP와 실제 화면 연결은 이 단위에 아직 없다. 아래 이전 미연결/예약 문구는 해당 경로 또는 이전 시점의 기록이며 새 구현 subset과 구분한다.
 
