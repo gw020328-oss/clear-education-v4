@@ -69,6 +69,8 @@ jobs:
         run: ./tools/npm run test:mvp-policy
       - name: Offline Moodle preparation vectors and package checks
         run: ./tools/node --test tests/moodle-preparation/*.test.mjs
+      - name: Synthetic Moodle daily evaluation and export boundaries
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/moodle-mvp/*.test.mjs
       - name: M0 contracts and two-stage exam lifecycle examples
         run: ./tools/node specs/m0/check.mjs
       - name: Isolated TEST partial funding, allocation and recovery
