@@ -53,7 +53,7 @@ class exporter {
                     WHERE component='mod_videocheck' AND filearea='video' AND itemid=0 AND filename<>'.' GROUP BY contextid) files ON files.contextid=ctx.id
                 WHERE cm.id $insql";
             // Lower bound precedes the atomic SQL observation; completion time is only an upper bound.
-            $coverageObserved=(int)floor(microtime(true));
+            $queryStarted=microtime(true); $coverageObserved=(int)floor($queryStarted);
             $source=$DB->get_records_sql($query,$params);
             foreach($c['activities'] as $a) {
                 $base=['activityId'=>$a['activityId'],'lectureId'=>$a['lectureId'],'cmid'=>$a['cmid'],'activityType'=>$a['activityType']];
@@ -93,8 +93,8 @@ class exporter {
             if ($head->artifact!=='') { self::changed($userid,$courseid,$head->fingerprint===$fingerprint?'CACHE_REFRESH':'OBSERVED_CHANGE'); $head=$DB->get_record('local_clearapi_head',compact('userid','courseid')); }
             // Upper-second observation bound is explicit; client must wait until
             // that second before freshness checks. Record milliseconds stay exact.
-            $observed=(int)ceil(microtime(true));
-            if ($coverageObserved>$observed || $observed>$coverageObserved+300) throw new \invalid_parameter_exception('EXPORT_OBSERVATION_WINDOW');
+            $queryFinished=microtime(true); $observed=(int)ceil($queryFinished);
+            if ($queryFinished<$queryStarted || $coverageObserved>$observed || $observed>$coverageObserved+300) throw new \invalid_parameter_exception('EXPORT_OBSERVATION_WINDOW');
             $revision='r'.$head->generation; $pages=[];
             foreach($rows as &$row) $row['recordRevision']=$revision; unset($row);
             $pageSize=$c['pageSize'];
