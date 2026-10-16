@@ -200,6 +200,9 @@ function payoutItem(payout) {
     rows.length
       ? el('p.note.pay-token', { text: `${payout.note} (${payout.token})` })
       : el('span.note', { text: payout.note }),
+    // 계산된 금액과 실제로 확보된 재원은 다르다. 화면이 재원을 모르면
+    // 모른다고 적는다 — 적지 않으면 계산 결과가 곧 지급으로 읽힌다.
+    payout.funding ? el('p.note.pay-funding', { text: payout.funding }) : null,
   ]);
 }
 
@@ -316,10 +319,10 @@ function sectionRows(model, view, {
     }),
 
     tiered ? el('p.muted.tier-help', {
-      text: '이 반은 환급률 구간이 여럿입니다. 미리 고르지 않습니다. '
-        + '달성한 조건에 따라 정해집니다. 환급률은 최초 제출한 성적으로 '
-        + '결정되고, 하나의 성적표로 한 번만 환급받을 수 있습니다. '
-        + '구간을 눌러 조건과 금액을 비교해 보세요.',
+      text: '이 반은 환급률 구간이 여럿입니다. 안내문에 따르면 환급률은 '
+        + '최초 제출한 성적으로 결정되고, 하나의 성적표로 한 번만 환급받을 '
+        + '수 있습니다. 어느 구간이 적용되는지 정하는 규칙은 아직 확정되지 '
+        + '않았습니다. 아래 탭은 구간별 조건과 금액을 비교해 보는 자리입니다.',
     }) : null,
     tiered ? tierTabs(model, shownId, onSelect, counting) : null,
 

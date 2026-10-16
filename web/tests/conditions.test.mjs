@@ -18,7 +18,7 @@ import {
 import { daysLeftText } from '../src/ui/policy-view.js';
 import { checkPolicyView, checkApplicationView } from '../src/adapter/contract.js';
 import { createSyntheticAdapter } from '../src/adapter/synthetic.js';
-import { SYNTHETIC_APPLICATIONS } from '../src/fixtures/applications.js';
+import { SYNTHETIC_APPLICATIONS, SCENARIOS } from '../src/fixtures/applications.js';
 
 /** 진행 상황을 붙여 볼 기준 신청. 마지막 단계라야 조건이 쌓이기 시작한다 */
 const PROGRESS_VIEW = SYNTHETIC_APPLICATIONS[SYNTHETIC_APPLICATIONS.length - 1];
@@ -86,10 +86,33 @@ test('받을 금액과 보낼 토큰이 1 대 1로 맞는다', () => {
   }
 });
 
-test('금액이 어긋나면 계약 검사가 잡는다', () => {
+test('토큰 환산이 어긋나면 계약 검사가 잡는다', () => {
+  // 1 TEST = 1원 규칙이 깨지면 화면이 말한 금액과 계약이 보내는 양이 달라진다.
+  // 얼마를 예치할지를 검사하는 것이 아니다 — 그건 아직 정해지지 않았다.
   const c = copy();
   c.policy = { ...c.policy, amount: '1' };
-  assert.ok(checkPolicyView(c).some((m) => m.includes('토큰 수량이 다르다')));
+  assert.ok(checkPolicyView(c).some((m) => m.includes('환산이 맞지 않는다')));
+});
+
+test('예치액을 화면이 정하지 않는다', () => {
+  // 전에는 '가장 높은 구간의 실수령과 같아야 한다' 고 막았다. 그것은
+  // 예치율을 화면이 정하는 것이었고, 예치율은 아직 OPEN 이다.
+  const c = {
+    ...ALTERNATIVE_POLICY,
+    policy: { ...ALTERNATIVE_POLICY.policy, amount: '1000000000' },
+  };
+  assert.deepEqual(checkPolicyView(c), [], '예치액을 바꿨다고 거부하면 안 된다');
+});
+
+test('400% 는 싣지 않는다', () => {
+  // CLEAR 가 집행하지 않기로 했다(조건 구조화와 서류 사전 검토까지만).
+  // 안내문에 있다고 해서 화면이 집행을 약속하면 안 된다.
+  const rates = ALTERNATIVE_POLICY.policy.conditionTiers.map((t) => t.rate);
+  assert.deepEqual(rates, ['50%', '100%', '200%', '300%']);
+  const ids = ALTERNATIVE_POLICY.policy.conditionTiers
+    .flatMap((t) => t.groups).flatMap((g) => g.items).map((i) => i.id);
+  assert.ok(!ids.includes('exam990'));
+  assert.ok(!ids.includes('challenge14'));
 });
 
 test('공제 산수가 틀리면 계약 검사가 잡는다', () => {
@@ -172,7 +195,7 @@ test('모든 구간이 한 계약 안에 있고 금액을 가진다', () => {
   // 구간은 계약 시점에 정해지지 않는다. 달성한 것에 따라 판정 때 갈린다.
   // '계약 밖' 인 구간은 없다.
   const model = conditionsFrom(ALTERNATIVE_POLICY);
-  assert.equal(model.tiers.length, 5);
+  assert.equal(model.tiers.length, 4, '400% 는 CLEAR 가 집행하지 않아 싣지 않는다');
   for (const tier of model.tiers) {
     assert.ok(Number.isInteger(topNet(tier)), `${tier.rate} 에 금액이 없다`);
   }
@@ -187,15 +210,6 @@ test('구간이 환급률 오름차순이고 금액도 함께 오른다', () => 
   }
 });
 
-test('예치액은 가장 높은 경로 기준이다', () => {
-  // 400% 달성자에게 주려면 처음부터 그 금액이 금고에 있어야 한다.
-  // 100% 처럼 경로마다 금액이 다르면 그중 큰 쪽을 감당해야 한다.
-  const p = ALTERNATIVE_POLICY.policy;
-  const tiers = conditionsFrom(ALTERNATIVE_POLICY).tiers;
-  const top = topNet(tiers[tiers.length - 1]);
-  assert.equal(top, 1072812, '400% 는 응시료 2배 환급까지 포함한다');
-  assert.equal(p.amount, String(BigInt(top) * 10n ** BigInt(p.tokenDecimals)));
-});
 
 test('가산을 빼먹은 내역은 계약 검사가 잡는다', () => {
   // 응시료를 더하지 않고 세금만 빼면 실수령이 맞지 않는다.
@@ -357,7 +371,7 @@ test('진행 상황은 조건 id 로 붙는다', () => {
 test('같은 조건은 구간이 달라도 한 번에 채워진다', () => {
   // 출석 100일은 한 번 해내면 200%·300%·400% 어디에나 걸리는 하나의 사실이다.
   const model = conditionsFrom(ALTERNATIVE_POLICY, { attend100: { state: 'MET' } });
-  for (const id of ['r200', 'r300', 'r400']) {
+  for (const id of ['r200', 'r300']) {
     const tier = model.tiers.find((t) => t.id === id);
     const attend = tier.groups[0].items.find((i) => i.id === 'attend100');
     assert.equal(progressOf(attend).state, 'MET', `${id} 에 안 붙었다`);
@@ -434,26 +448,7 @@ test('후기의 내용 판단은 사람이 한다고 말한다', () => {
   assert.ok(review.detail.includes('환급률이 바뀔 수 있습니다'));
 });
 
-test('블로그 챌린지만 참가자가 직접 낸다', () => {
-  // 개인 네이버 블로그는 학원 시스템 밖이다. 안내문이 URL 인증을 요구하는
-  // 유일한 조건이기도 하다.
-  const r400 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r400');
-  const challenge = r400.groups[0].items.find((i) => i.id === 'challenge14');
-  assert.equal(challenge.evidence, EVIDENCE.BLOG);
-  assert.equal(verifyOf(challenge), VERIFY.SUBMIT);
 
-  // 이 구간에서 참가자가 직접 움직여야 하는 것은 성적 조회와 챌린지뿐이다.
-  const actors = r400.groups[0].items.filter((i) => verifyOf(i).actor).map((i) => i.id);
-  assert.deepEqual(actors, ['exam990', 'challenge14']);
-});
-
-test('안내문에 적힌 조건 이름을 그대로 쓴다', () => {
-  // '2주 열공챌린지' 가 조건 이름이고 '블로그 14회' 는 인증 방법이다.
-  // 이름을 바꿔 적으면 참가자가 안내문에서 찾지 못한다.
-  const r400 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r400');
-  const challenge = r400.groups[0].items.find((i) => i.id === 'challenge14');
-  assert.equal(challenge.label, '2주 열공챌린지');
-});
 
 test('성적 인정 기간을 안내문보다 넓게 적지 않는다', () => {
   // 안내문 2-2) 는 '수강시작일로부터 100일 이내 치른 성적표' 다.
@@ -504,4 +499,30 @@ test('종류만으로 확인 방법이 정해져 덮어쓸 일이 없다', () =>
   const history = groups.flatMap((g) => g.items).find((i) => i.id === 'history2y');
   assert.equal(history.verify, null, '덮어쓰기가 남아 있다');
   assert.equal(verifyOf(history), VERIFY.SELF_LOGIN_SHARED);
+});
+
+test('계산 결과를 확정 지급액이라고 말하지 않는다', () => {
+  // 결제금액·수수료가 우리가 세운 시연 가정이다. '실제 지급은 이 금액' 이라고
+  // 적으면 안내문이 확정한 금액처럼 읽힌다.
+  const { payout } = conditionsFrom(ALTERNATIVE_POLICY).tiers[0];
+  assert.ok(payout.note.includes('시연 가정'));
+  assert.ok(!payout.note.includes('실제 지급은 이 금액'));
+});
+
+test('확보된 재원은 모른다고 적는다', () => {
+  // 약정/계산 금액 · 확보된 재원 · 신청별 배정액은 서로 다른 값이다.
+  // 재원을 못 받았으면 못 받았다고 해야 계산 결과가 지급으로 읽히지 않는다.
+  // 100% 처럼 금액이 경로에 붙은 구간도 빠지면 안 된다.
+  for (const { at, payout } of payoutsOf(conditionsFrom(ALTERNATIVE_POLICY))) {
+    assert.ok(payout.funding.includes('확인 전'), at);
+  }
+});
+
+test('YBM 시험 인정 기간이 한 기준으로만 적힌다', () => {
+  // 정책과 진행 상황이 다르게 적으면 어느 시험이 인정되는지가 달라진다.
+  const exam = YBM_POLICY.policy.conditionGroups[0].items.find((i) => i.id === 'exam750');
+  assert.ok(exam.detail.includes('수강시작일 이후'));
+  const progress = SCENARIOS.ybmProgress.items[0].conditionProgress.exam750;
+  assert.ok(progress.note.includes('수강시작일 이후'));
+  assert.ok(!progress.note.includes('수강종료 후'));
 });

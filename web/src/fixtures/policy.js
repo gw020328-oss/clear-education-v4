@@ -102,7 +102,12 @@ export const SYNTHETIC_POLICY = Object.freeze({
 // 건드리지 않는다. 다만 구간마다 금액이 달라지는 지급은 계약이 받아야 한다 —
 // CourseRefundVaultV4.sol:92 의 require(g.amount == config.amount) 를 <= 로
 // 열고, _pay 가 grant 금액을 보내고 남은 몫을 sponsor 에게 돌려주면 된다.
-// 예치는 가장 높은 경로 기준이므로 config.amount 는 그 값이다.
+//
+// 얼마를 미리 예치할지는 **아직 정해지지 않았다.** 화면은 그 결정을 대신
+// 내리지 않고, 서버가 준 값과 상태를 그대로 보여준다.
+//
+// 400% 구간은 싣지 않는다. CLEAR 가 집행하지 않기로 했고(조건 구조화와
+// 서류 사전 검토까지만), 안내문에 있다고 해서 화면이 집행을 약속하면 안 된다.
 
 // 2026-12-05 09:00 KST
 const ALT_SUBMIT_AT = 1796428800;
@@ -241,10 +246,11 @@ export const ALTERNATIVE_POLICY = Object.freeze({
     supplementEndAt: String(ALT_SUBMIT_AT + 259200),
     claimUntil: String(ALT_SUBMIT_AT + 864000),
 
-    // 예치는 가장 높은 구간의 가장 높은 경로 기준이다. 400% 달성자에게
-    // 주려면 처음부터 그 금액이 금고에 있어야 한다.
-    // 1,072,812원 = 1,072,812 TEST (응시료 2배 환급 포함)
-    amount: '1072812000000',
+    // 계약에 설정된 토큰 수량이다. 1 TEST = 1원 규칙으로 환산한 값일 뿐,
+    // **예치율·보관율을 정한 값이 아니다.** 얼마를 미리 확보할지는 아직
+    // 정해지지 않았고(OPEN), 그 결정을 화면이 대신 내리지 않는다.
+    // 약정 금액 · 확보된 재원 · 신청별 배정액은 서로 다른 값이다.
+    amount: '782262000000',
     tokenDecimals: 6,
     sourcePolicySetHash: hash('4f'),
     privacyNoticeVersion: 'privacy-notice-1',
@@ -319,23 +325,6 @@ export const ALTERNATIVE_POLICY = Object.freeze({
             + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
         ]),
       ], siwon(300, 1)),
-      tier('r400', '400%', [
-        path(null, [
-          cond('attend100', 'LEARNING', '출석', '100일', '연속', '매일 다른 강의로 진도율 60% 이상'),
-          cond('exam990', 'EXAM', '시험', '990점', null,
-            'TOEIC_LR 만점 · 수강시작일 +100일 이내 응시분만 인정'),
-          cond('history2y', 'BASELINE', '과거 이력', '2년 내 750점 미만', null,
-            '본인 계정의 성적 조회 결과'),
-          cond('review', 'REVIEW', '후기', '200byte', '이상',
-            '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
-            + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
-          // 외부 블로그 게시물은 자동으로 확인할 수단이 없다. 지원 여부와
-          // 무관하게, 안내문에 있으므로 빠뜨리지 않고 적는다.
-          cond('challenge14', 'BLOG', '2주 열공챌린지', '블로그 14회', '연속 포스팅',
-            '개인 네이버 블로그에 1일 1개씩 · 수강시작일 +100일 내 · 정해진 포스팅 '
-            + '가이드를 지켜야 인정 · 검수 전 삭제·비공개한 글은 인정되지 않습니다.'),
-        ]),
-      ], siwon(400, 2)),
     ]),
   }),
 });

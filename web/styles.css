@@ -658,3 +658,98 @@ body::before {
 }
 .scenario-note .muted { margin: 0; font-size: 11.5px; }
 
+
+/* ── 운영자 검토 (F3) ─────────────────────────────────────────────────────
+   왼쪽 안내문과 오른쪽 값이 이어져 보여야 한다. 둘을 따로 두면 운영자가
+   대조할 수 없고, 대조가 이 화면의 전부다 */
+.rv-status {
+  font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted);
+}
+.rv-status[data-held="yes"] {
+  border-color: var(--warn-tag-fg); color: var(--warn-tag-fg); background: var(--warn-tag-bg);
+}
+/* 승인을 막는 것이 무엇인지 적는 자리. 버튼 대신 사실을 쓴다 */
+.rv-gate {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px;
+  margin: 10px 0 0; padding: 9px 12px; font-size: 13px; line-height: 1.6;
+  border: 1px dashed var(--line); border-radius: 10px; color: var(--muted);
+}
+.rv-gate-tag { font-size: 11px; font-weight: 800; color: var(--warn-tag-fg); }
+
+.rv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.rv-col { min-width: 0; }
+.rv-col-head {
+  margin: 0 0 8px; font-size: 12px; font-weight: 800; letter-spacing: -0.2px;
+  color: var(--muted);
+}
+.rv-src { display: grid; gap: 6px; }
+.src-block {
+  display: grid; gap: 3px; text-align: left; font: inherit; cursor: pointer;
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--card); color: var(--fg);
+}
+.src-block:hover { border-color: var(--accent); }
+/* 값이 나온 줄과 그렇지 않은 줄을 구분한다 */
+.src-block[data-used="no"] { opacity: 0.6; }
+.src-block[data-picked="yes"] { border-color: var(--accent); background: var(--accent-soft); }
+.src-loc {
+  font-size: 10.5px; font-weight: 800; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.src-text { font-size: 12.5px; line-height: 1.6; word-break: keep-all; }
+.src-used { font-size: 11px; font-weight: 700; color: var(--accent); }
+
+.rv-fields { display: grid; gap: 8px; }
+.rv-field {
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card);
+}
+.rv-field[data-picked="yes"] { border-color: var(--accent); background: var(--accent-soft); }
+.rv-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.rv-label { font-size: 12px; font-weight: 800; }
+.rv-state {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 800; color: var(--muted);
+}
+.rv-mark { font-weight: 900; }
+.rv-field[data-tone="ok"] .rv-state { color: var(--accent); }
+.rv-field[data-tone="held"] .rv-state { color: var(--warn-tag-fg); }
+.rv-loc {
+  margin-left: auto; font: inherit; font-size: 10.5px; font-weight: 800;
+  font-variant-numeric: tabular-nums; cursor: pointer;
+  color: var(--muted); background: transparent;
+  border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px;
+}
+.rv-loc:hover { border-color: var(--accent); color: var(--accent); }
+.rv-value {
+  display: block; margin-top: 5px; font-size: 20px; font-weight: 800;
+  letter-spacing: -0.5px; font-variant-numeric: tabular-nums; color: var(--fg);
+}
+.rv-value em { font-style: normal; color: var(--accent); }
+/* 빈칸이 이 화면의 요지다. 채워진 값처럼 보이면 안 된다 */
+.rv-empty { color: var(--muted); font-size: 15px; font-weight: 700; }
+.rv-why {
+  display: flex; flex-wrap: wrap; gap: 4px 7px; align-items: baseline;
+  margin: 7px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--fg);
+}
+.rv-why-tag {
+  font-size: 10.5px; font-weight: 800; color: var(--warn-tag-fg);
+  background: var(--warn-tag-bg); border-radius: 4px; padding: 1px 6px;
+}
+/* AI 가 본 값. 확정된 값과 섞이면 안 되므로 작고 흐리게 둔다 */
+.rv-seen { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+
+.rv-asks { margin-top: 14px; }
+.rv-ask {
+  display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline;
+  margin: 0 0 6px; padding: 9px 12px; font-size: 13px; line-height: 1.6;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--card);
+}
+.rv-ask-tag { font-size: 11px; font-weight: 800; color: var(--accent); }
+
+@media (max-width: 720px) {
+  .rv-cols { grid-template-columns: 1fr; }
+}
+/* 계산된 금액과 확보된 재원은 다르다. 모르는 것은 모른다고 적는다 */
+.pay-funding { margin-top: 6px; }

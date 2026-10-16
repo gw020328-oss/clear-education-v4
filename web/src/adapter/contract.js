@@ -201,7 +201,12 @@ function tierTopNet(tier) {
   return nets.length ? Math.max(...nets) : null;
 }
 
-/** 시연은 1 TEST 를 1원으로 둔다. 예치 수량이 금액과 어긋나면 안 된다 */
+/**
+ * 1 TEST = 1원 환산이 맞는가.
+ *
+ * 시연에서 토큰 수량과 원화 금액을 잇는 규칙일 뿐, **얼마를 예치할지를
+ * 정하는 검사가 아니다.** 예치율·보관율은 아직 정해지지 않았다.
+ */
 function checkTokenMatchesNet(net, p, message) {
   if (!Number.isInteger(net)) return [];
   const expected = String(BigInt(net) * 10n ** BigInt(p.tokenDecimals ?? 0));
@@ -273,15 +278,21 @@ export function checkPolicyView(compiled) {
           problems.push(`구간이 오름차순이 아니다 — ${tiers[i].rate} 가 ${tiers[i - 1].rate} 보다 크지 않다`);
         }
       }
-      // 예치는 가장 높은 구간의 가장 높은 경로 기준이어야 한다. 그보다
-      // 적으면 그 경로로 달성한 사람에게 지급할 재원이 없다.
-      problems.push(...checkTokenMatchesNet(tierTopNet(tiers[tiers.length - 1]), p,
-        '예치액이 가장 높은 경로의 실수령과 다르다'));
+      // 예치액을 여기서 강제하지 않는다.
+      //
+      // 전에는 '가장 높은 구간의 실수령과 같아야 한다' 고 막았는데, 그것은
+      // 예치율을 화면이 정하는 것이었다. 얼마를 미리 확보할지는 아직
+      // 정해지지 않았고(OPEN), 400% 를 뺀다고 곧바로 300% 전액 예치로
+      // 확정되는 것도 아니다.
+      //
+      // 약정 금액 · 확보된 재원 · 신청별 배정액 · 지급 가능 여부는 서로
+      // 다른 값이다. 서버가 주는 것을 그대로 보여주고, 받지 못한 것은
+      // '확인 전' 이라고 적는다.
     }
   }
   if ('payoutBreakdown' in p) {
     problems.push(...checkPayoutAmounts(p.payoutBreakdown));
-    problems.push(...checkTokenMatchesNet(p.payoutBreakdown.net, p, '실수령과 토큰 수량이 다르다'));
+    problems.push(...checkTokenMatchesNet(p.payoutBreakdown.net, p, '실수령과 토큰 수량의 환산이 맞지 않는다'));
   }
 
   // 컴파일러가 강제하는 기간 순서를 화면에서도 확인한다
@@ -346,5 +357,112 @@ export function checkApplicationView(view) {
   if (view.consentScope === 'APPLICATION_ONLY' && view.contractConsentRequired !== true) {
     problems.push('consentScope 가 APPLICATION_ONLY 인데 contractConsentRequired 가 true 가 아니다');
   }
+  return problems;
+}
+
+// ── 운영자 검토 (F3) ───────────────────────────────────────────────────────
+//
+// src/ai-policy/field-review.mjs 의 reviewFields() 출력에 맞춘다.
+// 화면이 여기서 기대하는 것은 하나다 — **AI 가 못 뽑은 값은 비어 있어야 한다.**
+// 보류된 값이 채워진 채로 오면 운영자가 확인 없이 승인하게 되고, 그게 이
+// 제품이 없애려는 문제다.
+
+const FIELD_STATES = Object.freeze(['OBSERVED', 'HELD', 'UNOBSERVED']);
+
+/** 보류 사유 표기. field-review.mjs 가 'QUESTION:0'·'FLAG:0'·'NO_VALUE' 로 적는다 */
+const isReason = (value) =>
+  typeof value === 'string' && /^(QUESTION|FLAG):\d+$/.test(value) === false
+    ? value === 'NO_VALUE'
+    : typeof value === 'string';
+
+export function checkReviewView(view) {
+  const problems = [];
+  if (view === null || typeof view !== 'object') return ['검토가 객체가 아니다'];
+
+  for (const field of ['version', 'reviewId', 'title', 'blocks', 'fields', 'questions', 'flags', 'provenance', 'status', 'publishable']) {
+    if (!(field in view)) problems.push(`${field} 가 빠졌다`);
+  }
+  // 승인 전에는 게시할 수 없다. 화면이 이 값을 바꿔 읽지 않는다.
+  if (view.publishable !== false) problems.push('publishable 이 false 가 아니다');
+  if (!['NEEDS_REVIEW', 'OBSERVED_ONLY'].includes(view.status)) {
+    problems.push(`status 가 ${view.status} 다`);
+  }
+
+  const locators = new Set((view.blocks ?? []).map((block) => block?.locator));
+  if (!Array.isArray(view.blocks) || view.blocks.length === 0) problems.push('blocks 가 비었다');
+  (view.blocks ?? []).forEach((block, i) => {
+    for (const key of ['locator', 'text']) {
+      if (typeof block?.[key] !== 'string' || block[key] === '') problems.push(`blocks[${i}].${key} 가 없다`);
+    }
+  });
+
+  if (!Array.isArray(view.fields) || view.fields.length === 0) problems.push('fields 가 비었다');
+  const seen = new Set();
+  (view.fields ?? []).forEach((field, i) => {
+    const at = `fields[${i}]`;
+    if (field === null || typeof field !== 'object') { problems.push(`${at} 가 객체가 아니다`); return; }
+    for (const key of ['fieldId', 'label']) {
+      if (typeof field[key] !== 'string' || field[key] === '') problems.push(`${at}.${key} 가 없다`);
+    }
+    if (seen.has(field.fieldId)) problems.push(`${at}.fieldId 가 중복이다`);
+    seen.add(field.fieldId);
+    if (!FIELD_STATES.includes(field.state)) problems.push(`${at}.state 가 ${FIELD_STATES.join('/')} 가 아니다`);
+    if (field.value !== null && typeof field.value !== 'string') problems.push(`${at}.value 가 문자열도 null 도 아니다`);
+    // 여기가 요지다. 보류·미관측인데 값이 들어 있으면 운영자가 확인 없이
+    // 승인하게 된다.
+    if (field.state !== 'OBSERVED' && field.value !== null) {
+      problems.push(`${at} 는 ${field.state} 인데 값이 들어 있다 — 보류된 값은 비어 있어야 한다`);
+    }
+    if (field.state === 'OBSERVED' && field.value === null) {
+      problems.push(`${at} 는 OBSERVED 인데 값이 없다`);
+    }
+    // 값이 있으면 안내문 어디서 나왔는지 가리켜야 한다. 멘토가 평가지표로
+    // 꼽은 '원문 인용 위치 매핑' 이 이것이다.
+    if (field.value !== null && !locators.has(field.location)) {
+      problems.push(`${at}.location 이 blocks 에 없다 — 값이 어디서 왔는지 가리키지 못한다`);
+    }
+    if (!Array.isArray(field.reasons)) problems.push(`${at}.reasons 가 배열이 아니다`);
+    if (field.state === 'OBSERVED' && (field.reasons ?? []).length > 0) {
+      problems.push(`${at} 는 OBSERVED 인데 보류 사유가 있다`);
+    }
+    if (field.state !== 'OBSERVED' && (field.reasons ?? []).length === 0) {
+      problems.push(`${at} 는 ${field.state} 인데 사유가 없다`);
+    }
+    (field.reasons ?? []).forEach((reason, ri) => {
+      if (!isReason(reason)) problems.push(`${at}.reasons[${ri}] 모양이 아니다`);
+    });
+  });
+
+  const ids = new Set(seen);
+  (view.questions ?? []).forEach((question, i) => {
+    const at = `questions[${i}]`;
+    for (const key of ['questionId', 'text']) {
+      if (typeof question?.[key] !== 'string' || question[key] === '') problems.push(`${at}.${key} 가 없다`);
+    }
+    if (!Array.isArray(question?.fieldIds) || question.fieldIds.length === 0) {
+      problems.push(`${at}.fieldIds 가 비었다`);
+    }
+    for (const id of question?.fieldIds ?? []) {
+      if (!ids.has(id)) problems.push(`${at} 가 없는 값 ${id} 를 가리킨다`);
+    }
+  });
+
+  (view.flags ?? []).forEach((flag, i) => {
+    if (typeof flag?.code !== 'string' || flag.code === '') problems.push(`flags[${i}].code 가 없다`);
+    for (const id of flag?.fieldIds ?? []) {
+      if (!ids.has(id)) problems.push(`flags[${i}] 가 없는 값 ${id} 를 가리킨다`);
+    }
+  });
+
+  // AI 가 관측한 값은 보류되어도 버리지 않는다. 운영자가 판단할 재료다.
+  const observed = new Set((view.provenance ?? []).map((row) => row?.fieldId));
+  for (const id of ids) {
+    if (!observed.has(id)) problems.push(`provenance 에 ${id} 가 없다 — 관측 기록이 빠졌다`);
+  }
+
+  // 보류가 하나라도 있으면 검토가 필요하다고 말해야 한다.
+  const held = (view.fields ?? []).some((field) => field?.state !== 'OBSERVED');
+  if (held && view.status !== 'NEEDS_REVIEW') problems.push('보류된 값이 있는데 status 가 NEEDS_REVIEW 가 아니다');
+
   return problems;
 }
