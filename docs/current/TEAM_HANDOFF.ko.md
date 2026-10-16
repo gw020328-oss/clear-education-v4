@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+2026-10-16 최신 범위: [범위·판정 이력·지급 설계 결정 기록](MVP_DECISIONS_20261016.ko.md)을 먼저 읽는다. **400% 전용 기능·시연과500% 제외**, 일반 후기 AI/Vision 검토, 독립 청구 우선이다. 아래400% 사전검토/블로그 주시연 설명은 이전 범위다. 72시간 양측 확인·이의 및 최대120시간 종료는 설계 후보이며, 실패 시 최초 결과 유지·예치 정책은 멘토 검토 대기다. 기존 코드/HTTP/DB/지급 관문을 변경하지 않는다.
+
 2026-10-15 최신 C3 Draft: 선행 PR63은 develop890ad93에 병합됐고, 이슈65의 별도 합성 증거 수락→M2 평가→불변 결과/보완·재시작 조회를 구현했다. [단일 HTTP 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)와 [C3 계약](MVP_EVIDENCE_HTTP_CONTRACT.ko.md)을 따른다. 기존 F0/운영 API와 다른 namespace이며 실제 자격·지급/원천·개인자료는 미완료다. web/PR60·독립 청구 파일은 각 담당 소유다.
 
 2026-10-15 C2 최신: Draft PR63/코드0a9945b에서 합성 fixture 실bytes 접수·별도 문서 확인·검토run/보완·멱등/restart를 구현했다. [단일 인계 최신 C2절](MVP_SOURCE_HTTP_HANDOFF.ko.md)과 [상세 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)을 따른다. 운영 documentSubmissionReady=false·full decode/실동의/개인자료/재원 미완료, web/는 서준형 소유다. 아래 계약 단계/미구현 문구는 이전 기록이다.
