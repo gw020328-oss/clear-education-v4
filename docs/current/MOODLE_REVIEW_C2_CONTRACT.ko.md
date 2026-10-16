@@ -1,5 +1,7 @@
 # Moodle 후기 → C2 제출·AI 관찰 연결 계약 제안
 
+2026-10-17 후속: [고정 bridge v1·양쪽 소비/인수 계약](REVIEW_BRIDGE_V1.ko.md)을 우선한다. 기존 아래 plain-only/fixture acquisition은 역사적 proposal이며 새 query/acquisition/projection namespace로 대체한다. 제한 HTML과 원문 registry/lease adapter는 공통 담당만 구현하고 제품 수락·HTTP/DB는 계속 비활성이다.
+
 2026-10-16. `clear-review-source-binding-proposal.1`, 검토 가능한 **계약/오프라인 fixture 단계**다. 제품 schema·HTTP·DB 연결이나 LOCAL 수락을 구현하지 않는다. 요청 설정 Sol/High(여러 모듈·상태/저장 계약), 실제 런타임 모델 ID는 독립 확인하지 못했다. 자동 병합 승인은 없다.
 
 ## 기준과 소유 범위

@@ -1,7 +1,7 @@
 {
   "version": "clear-moodle-review-c2-verification-proposal.1",
-  "date": "2026-10-16",
-  "status": "CONTRACT_FIXTURE_DRAFT_NOT_PRODUCT_INTEGRATION",
+  "date": "2026-10-17",
+  "status": "FROZEN_BRIDGE_CONTRACT_FOR_PARALLEL_CONSUMERS",
   "requestedSetting": "GPT-6.1 Sol / High",
   "runtimeModelIdIndependentlyVerified": false,
   "baseDevelop": "4756589659a40c8f8fe45452a698b8a56487628c",
@@ -17,15 +17,16 @@
   "fixtures": "specs/m3/review-source-binding-fixture.mjs",
   "tests": {
     "focused": "22_OF_22_PASS",
-    "related": "259_OF_259_PASS_INCLUDING_NEW_22",
+    "related": "263_OF_263_PASS_INCLUDING_OLD_22_AND_FIXED_4",
     "network": "LOOPBACK_ONLY_GUARD_NO_REQUESTS",
     "remoteCi": "SEE_DRAFT_PR_EXACT_HEAD_CHECKS",
     "originalLegacy": "191_FILES_PRESERVED",
     "dependencyGraph": "UNCHANGED",
-    "publicHistory": "SEE_DRAFT_PR_EXACT_COMMIT_SCAN"
+    "publicHistory": "SEE_DRAFT_PR_EXACT_COMMIT_SCAN",
+    "fixedContract": "4_OF_4_PASS"
   },
   "scope": {
-    "productionCodeChanged": false,
+    "productionCodeChanged": true,
     "schemaHttpDatabaseChanged": false,
     "ciDependencyChanged": false,
     "moodleOwnedFilesChanged": false,
@@ -36,7 +37,8 @@
     "modelCalls": 0,
     "existingUserDatabaseKeyChainAccess": false,
     "mergeAuthorized": false,
-    "mainOrDeployment": false
+    "mainOrDeployment": false,
+    "commonInternalContractsAdded": true
   },
   "gates": {
     "usableForAcceptance": false,
@@ -58,5 +60,9 @@
     "C2 event coordinator plus atomic correlation ledger and crash recovery",
     "LOCAL source receipt to AI projection/result consumer",
     "realData permission, source/identity/consent, operational Evidence and eligibility/funding/payment"
-  ]
+  ],
+  "fixedContract": "REVIEW_BRIDGE_V1.ko.md",
+  "fixedCode": "src/review-evidence/common/contract.mjs",
+  "fixedExample": "specs/m3/review-bridge-example.mjs",
+  "dispatch": "PENDING_FIXED_COMMIT_PUBLISH"
 }
