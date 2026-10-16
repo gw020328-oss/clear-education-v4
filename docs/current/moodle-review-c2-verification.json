@@ -1,0 +1,61 @@
+{
+  "version": "clear-moodle-review-c2-verification-proposal.1",
+  "date": "2026-10-16",
+  "status": "CONTRACT_FIXTURE_DRAFT_NOT_PRODUCT_INTEGRATION",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "baseDevelop": "4756589659a40c8f8fe45452a698b8a56487628c",
+  "references": {
+    "pr71": "45a682fc5efcbd474903241ae06f596da9b4cd3e",
+    "pr72": "bc1fac3037b45cdaddb12c0eb89cf2f7b6f22f5d",
+    "pr70Scope": "2ec686c6e1545ed6d9bafaf19e897d7841723770"
+  },
+  "referencesMerged": false,
+  "contract": "MOODLE_REVIEW_C2_CONTRACT.ko.md",
+  "executableProposal": "specs/m3/review-source-binding.mjs",
+  "fixtures": "specs/m3/review-source-binding-fixture.mjs",
+  "tests": {
+    "focused": "22_OF_22_PASS",
+    "related": "259_OF_259_PASS_INCLUDING_NEW_22",
+    "network": "LOOPBACK_ONLY_GUARD_NO_REQUESTS",
+    "remoteCi": "SEE_DRAFT_PR_EXACT_HEAD_CHECKS",
+    "originalLegacy": "191_FILES_PRESERVED",
+    "dependencyGraph": "UNCHANGED",
+    "publicHistory": "SEE_DRAFT_PR_EXACT_COMMIT_SCAN"
+  },
+  "scope": {
+    "productionCodeChanged": false,
+    "schemaHttpDatabaseChanged": false,
+    "ciDependencyChanged": false,
+    "moodleOwnedFilesChanged": false,
+    "aiOwnedFilesChanged": false,
+    "webChanged": false,
+    "independentClaimOwnedFilesChanged": false,
+    "actualMoodleRetests": 0,
+    "modelCalls": 0,
+    "existingUserDatabaseKeyChainAccess": false,
+    "mergeAuthorized": false,
+    "mainOrDeployment": false
+  },
+  "gates": {
+    "usableForAcceptance": false,
+    "realDataAllowed": false,
+    "identityVerified": false,
+    "academyAcceptance": "UNKNOWN",
+    "automaticEligibility": false,
+    "paymentAllowed": false,
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO",
+    "new400And500Scope": "EXCLUDED",
+    "depositAllocationRecoveryPgDisputePolicy": "OPEN"
+  },
+  "unimplemented": [
+    "host-issued acquisition reader/pin receipt",
+    "HTML/Moodle/Markdown normalization and attachment matching",
+    "production freshness and metadata retention policy",
+    "C2 event coordinator plus atomic correlation ledger and crash recovery",
+    "LOCAL source receipt to AI projection/result consumer",
+    "realData permission, source/identity/consent, operational Evidence and eligibility/funding/payment"
+  ]
+}
