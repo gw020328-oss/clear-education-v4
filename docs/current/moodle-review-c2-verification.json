@@ -1,7 +1,7 @@
 {
   "version": "clear-moodle-review-c2-verification-proposal.1",
   "date": "2026-10-17",
-  "status": "COMMON_MEMORY_ADAPTER_IMPLEMENTED_CONSUMERS_DISPATCHED",
+  "status": "OFFLINE_SOURCE_COMMON_AI_COMPOSITION_VERIFIED_DRAFT",
   "requestedSetting": "GPT-6.1 Sol / High",
   "runtimeModelIdIndependentlyVerified": false,
   "baseDevelop": "4756589659a40c8f8fe45452a698b8a56487628c",
@@ -24,7 +24,9 @@
     "dependencyGraph": "UNCHANGED",
     "publicHistory": "SEE_DRAFT_PR_EXACT_COMMIT_SCAN",
     "fixedContract": "4_OF_4_PASS",
-    "fixedContractAndAdapter": "30_OF_30_PASS"
+    "fixedContractAndAdapter": "30_OF_30_PASS",
+    "combinedModules": "420_OF_420_PASS_IN_ISOLATED_CHECKOUT",
+    "composition": "7_OF_7_PASS_ACTUAL_HTTP_MODEL_CALLS_ZERO"
   },
   "scope": {
     "productionCodeChanged": true,
@@ -55,11 +57,11 @@
     "depositAllocationRecoveryPgDisputePolicy": "OPEN"
   },
   "unimplemented": [
-    "consumer module completion and combined source-to-AI integration check",
     "general HTML/Moodle/Markdown normalization and attachments beyond restricted subset",
     "production freshness and metadata retention policy",
     "C2 event coordinator plus atomic correlation ledger and crash recovery",
-    "realData permission, identity/consent, operational Evidence and eligibility/funding/payment"
+    "realData permission, identity/consent, operational Evidence and eligibility/funding/payment",
+    "actual source plus model/identity/private-data integration and title/image-region locators"
   ],
   "fixedContract": "REVIEW_BRIDGE_V1.ko.md",
   "fixedCode": "src/review-evidence/common/contract.mjs",
@@ -71,5 +73,10 @@
     "completed": true,
     "newThreadsCreated": false
   },
-  "fixedContractCommit": "31879659e11d9cbfa0aa88e48d825047080f4e39"
+  "fixedContractCommit": "31879659e11d9cbfa0aa88e48d825047080f4e39",
+  "consumerHeads": {
+    "pr71": "988091d4212216d1c011e5356681706b161d0a4a",
+    "pr72": "244beb2b7fabde395782193c6e2819ce0680abae"
+  },
+  "compositionEvidence": "specs/m3/review-bridge-integration-result.json"
 }
