@@ -15,11 +15,11 @@
   },
   "tests": {
     "hostIpcReuse": {
-      "pass": 60,
+      "pass": 61,
       "fail": 0
     },
     "v1AndV2HostRegression": {
-      "pass": 90,
+      "pass": 91,
       "fail": 0
     },
     "parserAcvm": {

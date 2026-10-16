@@ -9,7 +9,8 @@ const a=record({recipient:wallet.address.toLowerCase()}),b=record({...a,applicat
 const options={key:Buffer.alloc(32,42),registrations:[a,b],signer:fixtureSigner().address.toLowerCase(),clock:()=>NOW};
 test('concurrent different-wallet source registration has exactly one winner',async()=>{
  const lab=registrationAuthorityLab(options);try{
-  const result=await Promise.allSettled([lab.register({application:a.application,proof:await proof({r:a})}),lab.register({application:b.application,proof:await proof({r:b})})]);
+  const [pa,pb]=await Promise.all([proof({r:a}),proof({r:b})]);
+  const result=await Promise.allSettled([lab.register({application:a.application,proof:pa}),lab.register({application:b.application,proof:pb})]);
   assert.equal(result.filter(r=>r.status==='fulfilled').length,1);
   assert.match(result.find(r=>r.status==='rejected').reason.message,/SOURCE_ALREADY_REGISTERED/);
  }finally{lab.close();}
