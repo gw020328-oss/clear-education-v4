@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "scope": "PUBLIC_HTTPS_REGISTRY_OBSERVATION_NOT_PRODUCTION_RELEASE",
+  "source": "https://api.reclaimprotocol.org/api/attestors",
+  "retrievedAt": "2026-10-16T06:57:49.900Z",
+  "rawSha256": "2d93ac5fede93d5aef2b120715b097f1a5feced0cd571ffc02764d7bc0fa87fa",
+  "addresses": [
+    "0x15ea90114bffea9bb996e8775bf6ca0a338e97e5",
+    "0x1be31a94361a391bbafb2a4ccd704f57dc04d4bb",
+    "0x244897572368eadf65bfbc5aec98d8e5443a9072"
+  ],
+  "epoch": {
+    "claimValue": 1,
+    "meaning": "SDK_V1_COMPATIBILITY_CONSTANT_NOT_TIME_EPOCH",
+    "sourceCommit": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+    "sourcePath": "src/server/handlers/claimTunnel.ts",
+    "registryHasEpochWindows": false
+  },
+  "liveReady": false
+}

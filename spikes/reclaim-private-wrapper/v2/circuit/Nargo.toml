@@ -1,0 +1,6 @@
+[package]
+name = "bounded_private_table"
+type = "bin"
+authors = ["CLEAR research"]
+compiler_version = "=1.0.0-beta.3"
+[dependencies]
