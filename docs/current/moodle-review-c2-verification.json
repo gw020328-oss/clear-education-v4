@@ -1,7 +1,7 @@
 {
   "version": "clear-moodle-review-c2-verification-proposal.1",
   "date": "2026-10-17",
-  "status": "FROZEN_BRIDGE_CONTRACT_FOR_PARALLEL_CONSUMERS",
+  "status": "COMMON_MEMORY_ADAPTER_IMPLEMENTED_CONSUMERS_DISPATCHED",
   "requestedSetting": "GPT-6.1 Sol / High",
   "runtimeModelIdIndependentlyVerified": false,
   "baseDevelop": "4756589659a40c8f8fe45452a698b8a56487628c",
@@ -17,13 +17,14 @@
   "fixtures": "specs/m3/review-source-binding-fixture.mjs",
   "tests": {
     "focused": "22_OF_22_PASS",
-    "related": "263_OF_263_PASS_INCLUDING_OLD_22_AND_FIXED_4",
+    "related": "289_OF_289_PASS_INCLUDING_OLD_22_AND_FIXED_4_AND_ADAPTER_26",
     "network": "LOOPBACK_ONLY_GUARD_NO_REQUESTS",
     "remoteCi": "SEE_DRAFT_PR_EXACT_HEAD_CHECKS",
     "originalLegacy": "191_FILES_PRESERVED",
     "dependencyGraph": "UNCHANGED",
     "publicHistory": "SEE_DRAFT_PR_EXACT_COMMIT_SCAN",
-    "fixedContract": "4_OF_4_PASS"
+    "fixedContract": "4_OF_4_PASS",
+    "fixedContractAndAdapter": "30_OF_30_PASS"
   },
   "scope": {
     "productionCodeChanged": true,
@@ -54,15 +55,21 @@
     "depositAllocationRecoveryPgDisputePolicy": "OPEN"
   },
   "unimplemented": [
-    "host-issued acquisition reader/pin receipt",
-    "HTML/Moodle/Markdown normalization and attachment matching",
+    "consumer module completion and combined source-to-AI integration check",
+    "general HTML/Moodle/Markdown normalization and attachments beyond restricted subset",
     "production freshness and metadata retention policy",
     "C2 event coordinator plus atomic correlation ledger and crash recovery",
-    "LOCAL source receipt to AI projection/result consumer",
-    "realData permission, source/identity/consent, operational Evidence and eligibility/funding/payment"
+    "realData permission, identity/consent, operational Evidence and eligibility/funding/payment"
   ],
   "fixedContract": "REVIEW_BRIDGE_V1.ko.md",
   "fixedCode": "src/review-evidence/common/contract.mjs",
   "fixedExample": "specs/m3/review-bridge-example.mjs",
-  "dispatch": "PENDING_FIXED_COMMIT_PUBLISH"
+  "dispatch": {
+    "moodle": "01a143a6-2808-7e62-9a01-a0639e2a8df8",
+    "ai": "01a143a6-9e97-70e0-94ab-1a6a1204a0f6",
+    "setting": "GPT-6.1 Sol / Medium",
+    "completed": true,
+    "newThreadsCreated": false
+  },
+  "fixedContractCommit": "31879659e11d9cbfa0aa88e48d825047080f4e39"
 }

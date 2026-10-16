@@ -72,3 +72,13 @@ registry는 기존 전체 Binding·SourceBinding·reader/target·requirement/pos
 통합 순서: 공통 fixed commit 정상 이력 반영→Moodle·AI 전용 어댑터 각각 Draft→공통 제한 HTML/registry/lease adapter 별도 검증→양쪽 exact commit을 통합 작업 브랜치에서만 연결 시험→전체 수락/HTTP/DB는 별도 승인/작은 PR. develop/main PR 병합은 이번 범위가 아니다. source 전용 실제 로컬 시험과 공통/AI 오프라인 합성 시험, 실제 Gemini 품질을 분리한다.
 
 400/500 신규범위 제외, 예치율/배정/충전/PG/회수/분쟁시간 OPEN, grant/outbox HOLD·독립청구 NO_GO·paymentAllowed=false. 팀원 web/와 독립 청구 작업은 변경하지 않는다.
+
+## 공통 adapter 구현 기록 (2026-10-17)
+
+계약 고정 commit은 `31879659e11d9cbfa0aa88e48d825047080f4e39`이며 양쪽 기존 세션에 Sol/Medium으로 발신했다. 고정 DTO는 유지한다. 후속 adapter는 `createReviewBridgeSession({compiled,context,submission,files,registry,sourceRunId,sourceGeneration,attempt,rawExpiresAtMs,authorizationExpiresAtMs,resolveCurrent,now})`로 만든다. 반환 query를 host current 상태에 예약한 뒤 `.correlate({facts,acquisition})` 또는 `.unavailable()`을 호출한다. 반환은 `{projection,sources}`이고 `.signal`/`.close()`로 취소한다.
+
+trusted resolver는 `{context,registry,currentQueryHash,rawAvailable,authorizationValid,rawExpiresAtMs,authorizationExpiresAtMs}`를 반환한다. 이것은 인증 구현이 아니며 호출자가 이미 검증한 host 상태여야 한다. 시작/완료의 현재성·lease 대조 및 최초 lease 타이머, 무효화/오류 뒤 재활성 불가, close 시 소유한 submission 참조 해제를 구현했다. C2 권한/로그아웃 이벤트의 즉시 close 연결은 아직 없으므로 callback/timer만으로 외부 이벤트를 항상 감시한다고 주장하지 않는다. 반환 sources의 호출자 소유 복사본/JS 문자열 물리적 삭제는 보장하지 않는다.
+
+최소 범위는 단일 REVIEW post의 제목/본문이며 images/tags/links/files는 거부한다. 원문 지문과 normalizer profile이 registry에 맞아야 한다. 고정 계약의 공개 HTML 소비 벡터에서 registry.normalizer가 plain으로 남았던 fixture 불일치는 후속에서 HTML profile로 교정했다. DTO/API는 바꾸지 않았으며 parser 실제 출력과 projection 전체를 비교한다. 이는 실제 API·AI 연결 실측이 아니다.
+
+추가 검증은 제한 문법·entity/구조적 LF/공백·빈 단락·원문 소스 보존, script/hidden/style/link/img/불균형/혼합block/미지원entity·한도 거부, source/query/registry/권한/expiry·타이머·무효화 후 재활성 거부다. 초기 adapter 시험은 잘못된 same import 1건에서 실패했고 올바른 기존 policy/mvp 모듈 import로 보정했다. 고정 계약 파일은 변경하지 않았다.
