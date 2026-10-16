@@ -7,7 +7,7 @@
 기반 develop `4756589659a40c8f8fe45452a698b8a56487628c`(PR67). 읽기 전용 참조:
 
 - [PR71](https://github.com/gw020328-oss/clear-education-v4/pull/71), head `45a682fc5efcbd474903241ae06f596da9b4cd3e`: 격리 Moodle4.5.15·합성 계정의 실제 API13/13, 새 오프라인31+기존6. `clear-local-moodle-review.1`은 LOCAL source facts, `submissionContentBinding=NOT_ESTABLISHED`, `usableForAcceptance=false`다. 이번 작업에서 lab을 재실행하지 않는다.
-- [PR72](https://github.com/gw020328-oss/clear-education-v4/pull/72), 검토 head `bc1fac3037b45cdaddb12c0eb89cf2f7b6f22f5d`: `clear-review-source-fixture.1`와 `clear-review-precheck-proposal.1`은 합성 proposal. 실제 Gemini 합성8건의 literal/null8/8은 보완사유·근거 위치 품질 통과가 아니다. 추가 호출 승인은 소진됐다. AI 담당의 후속 개선은 별도 이력으로 검토한다.
+- [PR72](https://github.com/gw020328-oss/clear-education-v4/pull/72), 검토 head `bc1fac3037b45cdaddb12c0eb89cf2f7b6f22f5d`: `clear-review-source-fixture.1`와 `clear-review-precheck-proposal.1`은 합성 proposal. 실제 Gemini 합성8건의 literal/null8/8은 보완사유·근거 위치 품질 통과가 아니다. 추가 호출 승인은 소진됐다. 후속 head `bdbd7ccdadd161f3141a30244e89279ff8fa7776`의 `clear-review-grounding.1`도 변경분을 읽었다. 원문 인용/명시 사유 후처리 개선이며 추가 유료 호출0·v2 실제 모델 미검증이다.
 - [PR70 범위 결정](https://github.com/gw020328-oss/clear-education-v4/blob/2ec686c6e1545ed6d9bafaf19e897d7841723770/docs/current/MVP_DECISIONS_20261016.ko.md): YBM750+·시원스쿨50~300% 일반 후기가 대상이고 신규400/500%는 제외한다. PR70/71/72는 이 문서 작성 시 Draft·미병합이다. 해당 결정을 develop에 이미 반영한 것으로 표현하지 않는다.
 
 공통 `docs/current/`와 아래 계약 fixture/검사만 이 단위에서 변경한다. Moodle 전용 모듈, AI 전용 `src/document-precheck/review/`, `tests/ai-review-precheck/`, `docs/ai-vision/REVIEW_PRECHECK*`, web/와 독립 청구 파일은 각 담당 소유다. 타 PR을 선별 복사하거나 병합하지 않는다.
@@ -56,6 +56,8 @@ PR71은 pin.readerId와 API site_info.userid를 비교하지만 반환 facts에 
 PR72의 `clear-review-source-fixture.1`에 LOCAL receipt를 끼워 넣지 않는다. `sourceBundleHash`를 후기 facts hash로 재해석하지 않는다. 후속 공통 host는 새 projection version에서 receipt hash, field별 원천 locator(값 자체는 ephemeral), normalized content hash·normalizer, query/generation/observedAt를 고정하고 필요한 allowlist 필드만 전달해야 한다. AI 담당이 이를 소비하는 어댑터 변경을 별도 검토한다.
 
 AI는 API/token/URL/registry에 접근하지 않는다. 모델에 실제 author ID·지갑·불필요한 계정/receipt 원문·비교 정답을 보내지 않는다. 입력 본문/이미지의 지시문은 데이터이며 도구 실행 권한이 없다. 일치는 게시·실명·내용 진실·학원 인정을 인증하지 않고, 불일치는 CONFLICT를 보존하며 API/AI 한쪽으로 조용히 덮어쓰지 않는다. 원천 실패로 본문 자체를 MISSING으로 바꾸지 않고 `contentStatus`와 `sourceStatus`를 나눠 표시한다.
+
+PR72 후속 grounding의 TEXT_SPAN은 **변환하지 않은 제출 원문 UTF-16 offset과 원본 UTF-8 SHA-256**에 결합한다. Moodle 동일성 비교용 NFC/LF 정규화 텍스트의 offset을 C2 원문 위치로 복사하지 않는다. host가 원문 sourceId/sha256을 C2 post/inputHash에 pin하고, 정규화 텍스트를 별도 관찰 입력으로 쓸 경우에는 별도 sourceId·변환 버전/hash·위치 대응 규칙부터 합의한다. 현재 최소 계약에는 변환 offset map이 없어 원문 위치로 되돌리는 기능은 미지원이다. IMAGE_ASSET/전체 파일 hash는 이미지 내부 행/영역의 정확한 위치나 내용 진위가 아니다. grounding 반환값의 원문/quote/후보값은 임시 자료이고 공통 ledger에는 요약/hash만 저장한다.
 
 PR72 현재 결과의 current와 메모리 isCurrent는 DB 수락 조건을 대체하지 않는다. 새 결과 envelope/검토 요약의 소비 합의와 model/prompt/profile/receipt binding이 끝나기 전 기존 C2 ReviewSummary나 C3 Evidence로 import하지 않는다. 날짜/분량/사진 조건도 확정된 정책만 검사한다.
 

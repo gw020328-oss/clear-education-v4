@@ -8,7 +8,8 @@
   "references": {
     "pr71": "45a682fc5efcbd474903241ae06f596da9b4cd3e",
     "pr72": "bc1fac3037b45cdaddb12c0eb89cf2f7b6f22f5d",
-    "pr70Scope": "2ec686c6e1545ed6d9bafaf19e897d7841723770"
+    "pr70Scope": "2ec686c6e1545ed6d9bafaf19e897d7841723770",
+    "pr72GroundingFollowup": "bdbd7ccdadd161f3141a30244e89279ff8fa7776"
   },
   "referencesMerged": false,
   "contract": "MOODLE_REVIEW_C2_CONTRACT.ko.md",
