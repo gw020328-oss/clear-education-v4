@@ -98,7 +98,8 @@ const YBM_PROGRESS = Object.freeze({
   mock1: Object.freeze({ state: 'MET', value: '1회 응시', at: '1793404800' }),
   exam750: Object.freeze({
     state: 'WAITING',
-    note: '수강시작일 이후 응시한 성적을 본인 계정으로 불러오면 확인됩니다.',
+    note: '본인 계정으로 성적을 불러오면 확인됩니다. 다만 어느 시험이 인정되는지가 '
+      + '아직 확정되지 않아, 불러온 뒤에도 기간 확인이 남습니다.',
   }),
   review: Object.freeze({ state: 'WAITING' }),
 });

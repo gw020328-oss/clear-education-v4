@@ -23,6 +23,7 @@ import { SYNTHETIC_APPLICATIONS, SCENARIOS } from '../src/fixtures/applications.
 /** 진행 상황을 붙여 볼 기준 신청. 마지막 단계라야 조건이 쌓이기 시작한다 */
 const PROGRESS_VIEW = SYNTHETIC_APPLICATIONS[SYNTHETIC_APPLICATIONS.length - 1];
 import { SYNTHETIC_POLICY, ALTERNATIVE_POLICY, YBM_POLICY } from '../src/fixtures/policy.js';
+import { YBM_REVIEW } from '../src/fixtures/review.js';
 
 const copy = () => ({ ...SYNTHETIC_POLICY, policy: { ...SYNTHETIC_POLICY.policy } });
 
@@ -525,13 +526,20 @@ test('확보된 재원은 모른다고 적는다', () => {
   }
 });
 
-test('YBM 시험 인정 기간이 한 기준으로만 적힌다', () => {
-  // 정책과 진행 상황이 다르게 적으면 어느 시험이 인정되는지가 달라진다.
+test('YBM 시험 인정 기간은 확정하지 않는다', () => {
+  // 안내문에 「수강시작일 이후 응시」(L36)와 「수료 후 정기 토익」(L78)이
+  // 함께 있다. 운영자 검토는 이걸 보류로 두는데, 학생 화면만 한쪽으로
+  // 확정하면 두 화면이 서로 다른 결론을 보여준다.
   const exam = YBM_POLICY.policy.conditionGroups[0].items.find((i) => i.id === 'exam750');
-  assert.ok(exam.detail.includes('수강시작일 이후'));
+  assert.ok(exam.detail.includes('확인 중'), '확정해서 적으면 안 된다');
+  assert.ok(exam.detail.includes('수료 후'), '어느 둘이 엇갈리는지 밝혀야 한다');
+
   const progress = SCENARIOS.ybmProgress.items[0].conditionProgress.exam750;
-  assert.ok(progress.note.includes('수강시작일 이후'));
-  assert.ok(!progress.note.includes('수강종료 후'));
+  assert.ok(progress.note.includes('확정되지 않아'), progress.note);
+
+  // 운영자 검토도 같은 자리를 보류로 두고 있어야 두 화면이 어긋나지 않는다.
+  const field = YBM_REVIEW.fields.find((f) => f.fieldId === 'examWindow');
+  assert.equal(field.state, 'HELD');
 });
 
 test('가져온 것과 전부인 것을 구분한다', () => {
