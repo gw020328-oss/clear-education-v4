@@ -16,8 +16,9 @@ export function openSourceStore({directory,environment,now=()=>Math.floor(Date.n
   check(environment.mode==='PUBLIC_SOURCE_ONLY'&&new URL(environment.origin).origin===environment.origin&&new URL(environment.origin).protocol==='https:','SOURCE_ENVIRONMENT');
   const store=openPrivateDb(directory,'sources.sqlite',environment,schema,['snapshots','artifacts','bundles','bundle_heads']),{db,transaction}=store;
   const clock=()=>{const t=now();check(Number.isSafeInteger(t)&&t>=0&&t<=4102444800,'SOURCE_TIME');return t;};
-  function getSnapshot(hash){hash32(hash);const r=db.prepare('SELECT * FROM snapshots WHERE hash=?').get(hash);check(r,'SOURCE_NOT_FOUND');
-    const s=JSON.parse(r.record);check(s.collectedAt<=clock()&&clock()<r.expires_at,'SOURCE_EXPIRED');validateSourceSnapshot(s);check(sourceSnapshotHash(s)===hash,'SOURCE_INTEGRITY');return freeze(s);}
+  function readSnapshot(hash){hash32(hash);const r=db.prepare('SELECT * FROM snapshots WHERE hash=?').get(hash);check(r,'SOURCE_NOT_FOUND');
+    const s=JSON.parse(r.record);validateSourceSnapshot(s);check(sourceSnapshotHash(s)===hash&&r.expires_at===s.expiresAt,'SOURCE_INTEGRITY');return s;}
+  function getSnapshot(hash){const s=readSnapshot(hash),t=clock();check(s.collectedAt<=t&&t<s.expiresAt,'SOURCE_EXPIRED');return freeze(s);}
   return {
     close:store.close,
     putSnapshot(snapshot,blobs){validateSourceSnapshot(snapshot);const hash=sourceSnapshotHash(snapshot),t=clock();check(snapshot.collectedAt<=t&&t<snapshot.expiresAt,'SOURCE_EXPIRED');
@@ -31,6 +32,9 @@ export function openSourceStore({directory,environment,now=()=>Math.floor(Date.n
       });
     },
     getSnapshot,
+    // Internal retention metadata only. Expired records/bytes remain inaccessible
+    // through getSnapshot/getArtifact; no HTTP route exposes this helper.
+    getSnapshotRetention(hash){const s=readSnapshot(hash);return freeze({collectedAt:s.collectedAt,expiresAt:s.expiresAt});},
     getArtifact(hash,id){identifier(id);const snapshot=getSnapshot(hash),meta=snapshot.artifacts.find(a=>a.artifactId===id);check(meta,'SOURCE_NOT_FOUND');
       const row=db.prepare('SELECT bytes FROM artifacts WHERE snapshot_hash=? AND artifact_id=?').get(hash,id);check(row&&row.bytes.byteLength===meta.byteLength&&bytesDigest(row.bytes)===meta.sha256,'SOURCE_BYTES_CHANGED');return Buffer.from(row.bytes);},
     putBundle(bundle){validateSourceBundle(bundle);for(const e of bundle.entries){const s=getSnapshot(e.snapshotHash);check(s.sourceId===e.sourceId&&s.revision===e.revision&&s.institutionId===bundle.institutionId&&s.productId===bundle.productId&&s.cohortId===bundle.cohortId,'SOURCE_SCOPE');}

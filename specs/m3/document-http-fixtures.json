@@ -1,0 +1,42 @@
+{
+  "kind": "PUBLIC_SYNTHETIC_C2_FIXTURES_ONLY",
+  "notice": "Never select actual student documents. Server verifies these exact fixture bytes.",
+  "fixtures": [
+    {
+      "fixtureId": "ready-text",
+      "files": []
+    },
+    {
+      "fixtureId": "missing",
+      "files": []
+    },
+    {
+      "fixtureId": "image",
+      "files": [
+        {
+          "postId": "post-a",
+          "imageId": "image-a",
+          "name": "synthetic.png",
+          "mediaType": "image/png",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1ZkAAAAASUVORK5CYII="
+        }
+      ]
+    },
+    {
+      "fixtureId": "unreadable",
+      "files": [
+        {
+          "postId": "post-a",
+          "imageId": "image-a",
+          "name": "synthetic.png",
+          "mediaType": "image/png",
+          "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1ZkAAAAASUVORK5CYII="
+        }
+      ]
+    },
+    {
+      "fixtureId": "conflict",
+      "files": []
+    }
+  ]
+}

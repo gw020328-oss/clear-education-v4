@@ -58,7 +58,7 @@ test('controlled startup navigation: old checker fails, dedicated target proves 
  assert.equal(result.httpOnlyCookieRoundTrip,true);assert.equal(raceNew.evidence.ownedTarget,true);assert.equal(raceNew.evidence.competingNavigation,true);await stopped(current.session);
 });
 test('actual Chrome delivers an altered synthetic Cookie header and the checker rejects it',actual,async t=>{
- const {session}=await setup(t);
+ const {session}=await setup(t);let requestCount=0,responseCount=0;
  const launchChrome=async(s,options)=>{
   const browser=await startChrome(s,options),send=browser.send;
   return {...browser,async send(method,params,sessionId){
@@ -69,11 +69,18 @@ test('actual Chrome delivers an altered synthetic Cookie header and the checker 
     off=browser.on('Fetch.requestPaused',(e,id)=>{
      if(id!==attached.sessionId)return;
      void (async()=>{
+      if(e.responseStatusCode!==undefined||e.responseErrorReason){
+       responseCount++;assert.equal(e.responseErrorReason,undefined);assert.equal(e.responseStatusCode,403,'real checker must receive the altered cookie');
+       await send('Fetch.continueResponse',{requestId:e.requestId},id);
+       off();await send('Fetch.disable',{},id);resolveIntercept();return;
+      }
+      requestCount++;
       const headers=Object.entries(e.request.headers).filter(([name])=>name.toLowerCase()!=='cookie').map(([name,value])=>({name,value}));
       headers.push({name:'Cookie',value:'clear_synthetic=SYNTHETIC_WRONG'});
-      await send('Fetch.continueRequest',{requestId:e.requestId,headers},id);
-      off();await send('Fetch.disable',{},id);
-     })().then(resolveIntercept,rejectIntercept);
+      // An ACK is earlier than Chrome's network-stage Cookie override. Keep
+      // Fetch attached until the actual server response proves transmission.
+      await send('Fetch.continueRequest',{requestId:e.requestId,headers,interceptResponse:true},id);
+     })().catch(rejectIntercept);
     });
     await send('Fetch.enable',{patterns:[{urlPattern:params.url+'check',requestStage:'Request'}]},attached.sessionId);
     await Promise.all([send('Page.navigate',{url:params.url},attached.sessionId),intercepted]);return created;
@@ -81,7 +88,7 @@ test('actual Chrome delivers an altered synthetic Cookie header and the checker 
    return send(method,params,sessionId);
   }};
  };
- await assert.rejects(syntheticBrowserCheck(session,{}, {launchChrome}),{message:'SYNTHETIC_COOKIE_MISMATCH'});await stopped(session);
+ await assert.rejects(syntheticBrowserCheck(session,{}, {launchChrome}),{message:'SYNTHETIC_COOKIE_MISMATCH'});assert.equal(requestCount,1);assert.equal(responseCount,1);await stopped(session);
 });
 test('actual Chrome cancellation after creating the owned target still closes the process group',actual,async t=>{
  const {session}=await setup(t),control=new AbortController();

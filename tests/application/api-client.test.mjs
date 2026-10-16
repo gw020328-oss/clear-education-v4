@@ -138,3 +138,11 @@ test('invalid paths, methods, headers and unserializable input never call fetch 
   assert.equal(calls, 0);
   assert.throws(() => createSameOriginApi({ origin: 'secret-input' }), { message: 'ORIGIN_CONFIG' });
 });
+
+test('only the C2 raw deletion route allows DELETE and a lost mutation response requires result lookup',async()=>{
+ const path='/mvp/applications/0x'+'11'.repeat(32)+'/submissions/submission-example/raw';let calls=0;
+ const api=apiFor(async(url,options)=>{calls++;assert.equal(options.method,'DELETE');throw Error('lost');});
+ const error=await errorOf(api(path,{method:'DELETE'}));assert.equal(error.nextAction,'CHECK_RESULT');assert.equal(error.outcome,'UNKNOWN');
+ assert.equal((await errorOf(api('/applications',{method:'DELETE'}))).outcome,'NOT_SENT');
+ assert.equal((await errorOf(api(path,{method:'DELETE',body:{}}))).outcome,'NOT_SENT');assert.equal(calls,1);
+});

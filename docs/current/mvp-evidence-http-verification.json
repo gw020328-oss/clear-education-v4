@@ -1,0 +1,83 @@
+{
+  "version": "clear-mvp-evidence-http-verification.1",
+  "date": "2026-10-15",
+  "status": "REVIEWED_SYNTHETIC_PENDING_FINAL_HEAD_CI",
+  "issue": 65,
+  "parentIssue": 55,
+  "baseDevelop": "890ad93cfb3677c5b4107428095c6f0b15efa9a4",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "httpVersion": "clear-mvp-evidence-http.1",
+  "database": "NEW_SINGLE_EVALUATION_DB_NO_MIGRATION",
+  "profiles": [
+    "ybm",
+    "siwon"
+  ],
+  "clockMode": "PUBLIC_SYNTHETIC_SCENARIO_WITH_TRUSTED_TEST_PHASES_IN_DEMO",
+  "evidenceAcceptanceReady": false,
+  "realDataAllowed": false,
+  "c2ReceiptImport": false,
+  "actualWebsiteFetches": 0,
+  "paidModelCalls": 0,
+  "existingUserDatabaseChainKeyAccess": false,
+  "webEdited": false,
+  "independentClaimOwnedFilesEdited": false,
+  "newPrMergeAuthorized": true,
+  "tests": {
+    "focused": 24,
+    "combinedRelated": "363_OF_363_PASS",
+    "existingDevelopment": "33_OF_33_PASS",
+    "httpsProfiles": [
+      "ybm",
+      "siwon"
+    ],
+    "remoteCi": "SEE_PR67_EXACT_FINAL_HEAD_CHECKS",
+    "workspaceOriginalLegacy": "191_FILES_PRESERVED",
+    "dependencyGraph": "PRESERVED_NO_DEPENDENCY_CHANGE",
+    "diff": "PASS",
+    "publicHistory": "PASS_AT_IMPLEMENTATION_260_COMMITS_1453_BLOBS_ZERO_FINDINGS",
+    "macRecovery": "62_OF_62_PASS"
+  },
+  "gates": {
+    "depositStorageAllocationTopupReclaim": "OPEN",
+    "eligibilityAndFunding": "SEPARATE",
+    "tier400": "PRECHECK_ONLY",
+    "tier500": "EXCLUDED",
+    "sourceAndIdentity": "HOLD",
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO",
+    "paymentAllowed": false
+  },
+  "remaining": [
+    "live Reclaim/Moodle/Vision receipt verification and import",
+    "real consent/identity/publication",
+    "actual personal-data retention and migration",
+    "operational eligibility/funding/claim",
+    "teammate frontend connection and usability"
+  ],
+  "limits": {
+    "commands": 2000,
+    "evidenceReceipts": 1000,
+    "decisions": 500,
+    "receiptList": 100,
+    "decisionList": 50,
+    "bodyBytes": 65536
+  },
+  "reviewNotes": [
+    "C1 current ACK and exact host policy required; changed policy blocks old facts",
+    "fixed public fixture ID only; no browser authority fields",
+    "same exam correction is explicit; another first exam rejected",
+    "selection and finalization separate from M2 condition/quote/funding",
+    "single transaction stores evidence/result and command; GET never reexecutes",
+    "configuration changes require new reviewed environment; no automatic repin",
+    "observed policy/ACK invalidation is durably latched; re-enabling cannot revive old decisions",
+    "Authenticated epoch invalidation survives rejected transaction rollback; HTTP interleaving and direct service preview regressions added"
+  ],
+  "pullRequest": 67,
+  "implementationCommit": "6d4cd6baed0be7d64afdd5567af14eadba4849fd",
+  "finalReviewRequestedSetting": "GPT-6 Astra / High",
+  "mergeScope": "DEVELOP_ONLY_NORMAL_PR_MERGE_AFTER_CHECKS",
+  "mergeEvidence": "https://github.com/gw020328-oss/clear-education-v4/pull/67",
+  "finalReview": "PR67_FINAL_REVIEW.ko.md"
+}

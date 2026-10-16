@@ -90,6 +90,10 @@ export function createApplicationService({ directory, origin, chainId, instanceI
     ...funding.methods,
     ...createProofSessionService({ db, transaction, session, owned, clock, digest, secret, signatureShape, vaultReader, policy, proofSourceSigner }),
     origin, chainId, close: store.close,
+    // Internal development workflow bridge. Never accept wallet/role from JSON.
+    authorizeWorkflow(context, write = false) {
+      const s = session(context, write); return { wallet: s.wallet, role: s.role };
+    },
     challenge(body) {
       exactKeys(body, ['wallet', 'chainId'], 'AUTH_SCHEMA');
       const wallet = address(body.wallet);

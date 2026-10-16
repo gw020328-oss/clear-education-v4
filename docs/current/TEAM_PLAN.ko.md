@@ -1,5 +1,15 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-15 최신 C3 Draft: 선행 PR63은 develop890ad93에 병합됐고, 이슈65의 별도 합성 증거 수락→M2 평가→불변 결과/보완·재시작 조회를 구현했다. [단일 HTTP 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)와 [C3 계약](MVP_EVIDENCE_HTTP_CONTRACT.ko.md)을 따른다. 기존 F0/운영 API와 다른 namespace이며 실제 자격·지급/원천·개인자료는 미완료다. web/PR60·독립 청구 파일은 각 담당 소유다.
+
+2026-10-15 C2 최신: Draft PR63/코드0a9945b에서 합성 fixture 실bytes 접수·별도 문서 확인·검토run/보완·멱등/restart를 구현했다. [단일 인계 최신 C2절](MVP_SOURCE_HTTP_HANDOFF.ko.md)과 [상세 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)을 따른다. 운영 documentSubmissionReady=false·full decode/실동의/개인자료/재원 미완료, web/는 서준형 소유다. 아래 계약 단계/미구현 문구는 이전 기록이다.
+
+2026-10-15 최신: PR61은 최종head95b397c의 필수CI 통과 후 develop0590fd0에 정상 병합했다. 추가 push Mac 검사는 종료 미확정으로6/6 성공을 주장하지 않는다. C2는 하위#62·[구현 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)을 정리한 단계이며 endpoint/파일접수는 미구현이다. [단일 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)를 시작점으로 삼는다. 아래 Draft 표기는 이전 기록이다.
+
+2026-10-15 C1 학생 후속 Draft: [단일 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-student-http.1`은 병합된 PR59/develop2bb6d29를 정상 merge해 학생 본인 신청·서버 합성 조건/정확 표시 확인·정책 변경 재확인·원자 멱등/GET복구를 추가한다. 실제 동의/게시·C2 파일/문서 검토·운영 Evidence/재원·화면은 미구현이다. F0/web은 서준형 소유로 유지한다. PR59 원문 API는 develop에 병합 완료됐고 PR61은 Draft로 유지한다. 아래 이전 Draft/C 전체 미구현 표기는 이전 단위의 기록이다.
+
+2026-10-15 신규 Draft: [원문 HTTP·프론트 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)의 `clear-mvp-source-http.1`은 별도 loopback HTTPS에서 operator 원문 등록/조회·mock 초안·개발용 검토 기록을 연결한다. 기존 F0/web은 서준형 소유로 보존한다. 수강생 신청·동의·업로드/문서 검토 HTTP와 실제 화면 연결은 이 단위에 아직 없다. 아래 이전 미연결/예약 문구는 해당 경로 또는 이전 시점의 기록이며 새 구현 subset과 구분한다.
+
 2026-10-15 통합 검토: [제품 API·저장 계약](PRODUCT_WORKFLOW_CONTRACT.ko.md)의 M3-0 합성 모듈은 PR #58로 develop `5f902dc`에 병합됐다. Moodle1502 실측 인계 PR #56은 `edb3efc`로 병합됐다. AI 소비자 PR #57은 이 기준을 이력 반영했으며 최신 병합 여부·CI는 해당 PR을 따른다. 기존 v4 API/DB·프론트 view는 유지하고 새 /mvp HTTP·실제 정책/동의·업로드/decode·운영 Evidence·M2 판정 저장·재원/화면 연결은 후속이다. 통합 검증 근거는 [현황](../status.md)의 최신 절을 우선한다.
 
 2026-10-15 최종 소비자 통합: M1/M2 #43/#46, AI 준비/소비자 #42/#47, Moodle 준비/일별/export/로컬 #41/#45/#48/#52, Mac 보정 #53은 develop에 병합됐다. 이 변경 #51은 충돌 필드 보류·정확한 계획/표시 기준의 정책 해시 결합·평가 원장과 실제 소규모 재평가를 추가한다. [최신 통합 현황](../status.md)과 [결합 경계](../ai-vision/POLICY_BINDING.ko.md)를 따른다. 합성 소비자 적합성은 확인했으나 운영 동의·Evidence 수락/DB·실제 기관 연결은 완료되지 않았다. clearapi1502 실제 재검증·AI 정상 자료 과잉 보류와 기존 정책/자격/지급 차단을 유지한다. 아래 날짜별 계획은 당시 범위다.

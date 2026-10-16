@@ -1,0 +1,79 @@
+{
+  "version": "clear-mvp-source-http-verification.1",
+  "date": "2026-10-15",
+  "baseDevelop": "7f6096552f06492b4add8bd5653a2ff390cf7d3c",
+  "implementationCommit": "032215f2d50261808c62675d9880b45ef2e00cb0",
+  "pullRequest": 59,
+  "status": "MERGED_TO_DEVELOP",
+  "stages": {
+    "A": "IMPLEMENTED_SYNTHETIC_DEVELOPMENT",
+    "B": "HTTP_MOCK_CONNECTED",
+    "C": "NOT_IMPLEMENTED",
+    "D": "BROWSER_ADAPTER_AND_TEAM_HANDOFF_ONLY"
+  },
+  "frontend": {
+    "owner": "서준형",
+    "observedBranch": "codex/frontend-shell",
+    "observedHead": "dc9bc62629daaf498e073a6aaab6527fed6d6fed",
+    "webFilesEdited": false,
+    "privateLocalWorkKnown": false,
+    "externalTeammateMessageSent": false
+  },
+  "tests": {
+    "related": 267,
+    "newHttpHttpsIncluded": 15,
+    "existingDevelopment": 33,
+    "verifiedHttpsSignedWalletRestartDemo": "PASS",
+    "crashMarkerSimulation": "NEW_SYNTHETIC_SQLITE_ONLY",
+    "originalLegacyFiles": 191,
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "publicHistory": "PASS"
+  },
+  "actualWebsiteFetches": 0,
+  "paidModelCalls": 0,
+  "existingUserDatabaseChainKeyAccess": false,
+  "productionAuthIdentityVerified": false,
+  "studentSubmissionOrUploadHttp": false,
+  "frontendConnected": false,
+  "newPrMerged": true,
+  "remaining": [
+    "student application/policy agreement/submission/review/retry HTTP and durable resolver",
+    "teammate-owned web/wallet UI and same-origin build",
+    "real identity/source authority, production policy publication and retention",
+    "authenticated Evidence/durable M2 decision/funding projection"
+  ],
+  "gates": {
+    "depositAllocationTopupPolicy": "OPEN",
+    "eligibilityAndFunding": "SEPARATE",
+    "tier400": "PRECHECK_ONLY_NO_AUTOMATIC_ELIGIBILITY_OR_PAYMENT",
+    "tier500": "EXCLUDED",
+    "sourceAndIdentity": "ON_HOLD",
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO"
+  },
+  "integrationReview": {
+    "date": "2026-10-15",
+    "requestedSetting": "GPT-6.1 Sol / High",
+    "fixCommit": "7402f7f97158b3dbf42247203dcf9e587aeb1178",
+    "relatedTests": 272,
+    "existingDevelopmentTests": 33,
+    "regressionsAdded": 5,
+    "fixes": [
+      "reconcile COMMITTING before source preview read and recheck head",
+      "purge draft result only on verified expiry rather than temporary unavailability",
+      "reject operations and review replay before recorded creation time"
+    ],
+    "httpsDemo": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "finalRemoteCi": "6_OF_6_SUCCESS",
+    "merge": "2bb6d291b77ba397f8544995557db78b3ce54724",
+    "c1PreservedHead": "2354b70bd1f5cb6f4402c73ce0c40efeb3ca08d9",
+    "finalHead": "112e93a36c2b19cdddef15cd44f7c106eb6030be",
+    "pushRun": 38715507758,
+    "pullRequestRun": 38715523867,
+    "mergedCommitCiClaimed": false
+  }
+}

@@ -4,13 +4,15 @@ const codes = new Map();
 for (const [status, names] of [
   [401, ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE']],
   [403, ['FORBIDDEN', 'SPONSOR_REQUIRED', 'NOT_INVITED', 'ORIGIN', 'CSRF', 'WALLET_CONTEXT_CHANGED', 'TRANSPORT', 'PROOF_BROWSER_SESSION']],
-  [404, ['APPLICATION_NOT_FOUND', 'POLICY_NOT_FOUND', 'ROUTE', 'PROOF_SESSION_NOT_FOUND']],
+  [404, ['APPLICATION_NOT_FOUND', 'POLICY_NOT_FOUND', 'ROUTE', 'PROOF_SESSION_NOT_FOUND', 'MVP_NOT_FOUND']],
   [409, ['IDEMPOTENCY_CONFLICT', 'POLICY_VERSION_CONFLICT', 'POLICY_SUPERSEDED', 'APPLICATION_STATE', 'CONSENT_CHALLENGE',
     'PROOF_SESSION_ACTIVE', 'PROOF_OWNER_REUSED', 'PROOF_NONCE_CONSUMED', 'PROOF_SESSION_CANCELLED', 'PROOF_ENROLLMENT_REQUIRED',
     'PROOF_ENROLLMENT_CHANGED', 'PROOF_ENROLLMENT_SETTLED', 'PROOF_GRANT_EXISTS', 'PROOF_SUBMISSION_CLOSED',
-    'PRODUCT_RESULT_CONFLICT', 'PRODUCT_AUTHORIZATION_REQUIRED', 'PRODUCT_RESULT_MISSING', 'PRODUCT_VERIFICATION_STALE', 'PROOF_SOURCE_INCOMPLETE']],
-  [410, ['PROOF_SESSION_EXPIRED']], [413, ['BODY_SIZE', 'PRODUCT_SIZE']], [429, ['AUTH_RATE_LIMIT', 'PRODUCT_VERIFIER_BUSY']],
-  [422, ['FINAL_CONSENT_CHALLENGE', 'FINAL_CONSENT_CONFLICT', 'FINAL_CONSENT_EXISTS', 'FINAL_CONSENT_EXPIRED',
+    'PRODUCT_RESULT_CONFLICT', 'PRODUCT_AUTHORIZATION_REQUIRED', 'PRODUCT_RESULT_MISSING', 'PRODUCT_VERIFICATION_STALE', 'PROOF_SOURCE_INCOMPLETE',
+    'MVP_STALE','MVP_TEMPLATE_REQUIRED','MVP_BUSY','MVP_CLOSED','MVP_POLICY_UNAVAILABLE','MVP_APPLICATION_EXISTS','DOC_CONFIGURATION_REQUIRED','DOC_DISPLAY_CHANGED','DOC_RAW_UNAVAILABLE','DOC_BUSY','DOC_LIMIT','EVAL_CONFIGURATION_REQUIRED','EVAL_DISPLAY_CHANGED','EVAL_LIMIT','EVAL_FINALIZED','EVAL_PERIOD','EVAL_ACQUISITION_TIME','EVAL_FIRST_SCORE_LOCKED']],
+  [408,['DOC_RECEIVE_TIMEOUT']],
+  [410, ['PROOF_SESSION_EXPIRED','SOURCE_EXPIRED']], [413, ['BODY_SIZE', 'PRODUCT_SIZE']], [429, ['AUTH_RATE_LIMIT', 'PRODUCT_VERIFIER_BUSY']],
+  [422, ['EVAL_INPUT','EVAL_SYNTHETIC_ONLY','EVAL_TIER','DOC_SYNTHETIC_ONLY','DOC_MEDIA','DOC_FILE_NAME','DOC_FILE_SET','DOC_CANCELLED','MVP_CLOCK','FINAL_CONSENT_CHALLENGE', 'FINAL_CONSENT_CONFLICT', 'FINAL_CONSENT_EXISTS', 'FINAL_CONSENT_EXPIRED',
     'FUNDING_CONFLICT', 'FUNDING_STATE', 'FUNDING_UNCONFIRMED', 'FUNDING_RECOVERY_REQUIRED', 'RUNTIME_CHANGED',
     'RUNTIME_NOT_BOUND', 'CHAIN_UNAVAILABLE', 'CHAIN_REORG', 'ENROLLMENT_CLOSED', 'PRODUCT_VERIFICATION_FAILED']],
   [500, ['INTERNAL_ERROR']],
@@ -25,7 +27,7 @@ function failure(code, { method, status = null, requestId = null, outcome, http 
     || status === 429 || (status !== null && status >= 500);
   const retryable = method === 'GET' && transient;
   let nextAction = 'CHECK_REQUEST';
-  if (outcome === 'UNKNOWN' && method === 'POST') nextAction = 'CHECK_RESULT';
+  if (outcome === 'UNKNOWN' && method !== 'GET') nextAction = 'CHECK_RESULT';
   else if (status === 401 || code === 'CSRF') nextAction = 'SIGN_IN_AGAIN';
   else if (code === 'WALLET_CONTEXT_CHANGED') nextAction = 'RECONNECT_WALLET';
   else if (code === 'PROOF_SOURCE_INCOMPLETE') nextAction = 'WAIT_FOR_SOURCE';
@@ -93,7 +95,8 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
       if (url.origin !== origin || url.search || url.hash) throw new Error();
     } catch { throw failure('API_ORIGIN', { method, outcome: 'NOT_SENT' }); }
     try {
-      if (!['GET', 'POST'].includes(method) || (method === 'GET' && body !== undefined)) throw new Error();
+      const documentDelete=method==='DELETE'&&/^\/mvp\/applications\/0x[0-9a-f]{64}\/submissions\/[a-z][a-z0-9.-]{0,63}\/raw$/.test(url.pathname);
+      if ((!['GET','POST'].includes(method)&&!documentDelete)||(['GET','DELETE'].includes(method)&&body!==undefined)) throw new Error();
       if (signal !== undefined && !(signal instanceof AbortSignal)) throw new Error();
       payload = body === undefined ? undefined : JSON.stringify(body);
       if (body !== undefined && payload === undefined) throw new Error();

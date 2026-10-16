@@ -1,0 +1,118 @@
+{
+  "version": "clear-mvp-student-http-verification.1",
+  "date": "2026-10-15",
+  "baseDevelop": "2bb6d291b77ba397f8544995557db78b3ce54724",
+  "dependsOn": {
+    "pullRequest": 59,
+    "exactHead": "112e93a36c2b19cdddef15cd44f7c106eb6030be",
+    "currentlyDraft": false,
+    "initialHead": "11e27aca483441aecda757686c2d3826e5360ac4",
+    "state": "MERGED",
+    "mergeCommit": "2bb6d291b77ba397f8544995557db78b3ce54724",
+    "satisfied": true
+  },
+  "implementationCommits": [
+    "7c564429b5c55665b8575491a8c417040a8805ef",
+    "680bce36c2306b38615a3731da611fececa71a7b",
+    "922ada6fe45dde53135ece116e90531aa0b662a9"
+  ],
+  "status": "MERGED_TO_DEVELOP",
+  "requestedExecution": {
+    "model": "gpt-6.1-sol",
+    "thinking": "medium",
+    "runtimeModelIdIndependentlyVerified": false
+  },
+  "implemented": [
+    "participant-owned application HTTP",
+    "host-configured synthetic conditions and exact display hashes",
+    "SYNTHETIC_ACK_ONLY immutable acknowledgment",
+    "actor/route/key atomic command and GET recovery",
+    "explicit policy revision selection/reacknowledgment",
+    "restart and historical acknowledgment/current-state separation"
+  ],
+  "notImplemented": [
+    "student file upload/bytes receipt/document review run/supplement/resubmission C2",
+    "real consent or identity",
+    "policy publication or source draft promotion",
+    "authenticated operational Evidence/M2 decisions/funding",
+    "teammate-owned frontend"
+  ],
+  "tests": {
+    "newStudentHttpHttps": 11,
+    "relatedIncludingPriorSourceAndApplicationAi": 278,
+    "existingDevelopment": 33,
+    "verifiedHttpsNewWalletRestartDemo": "PASS",
+    "workspaceOriginalLegacyFiles": 191,
+    "dependencies": "PASS",
+    "publicHistory": "PASS"
+  },
+  "frontend": {
+    "owner": "서준형",
+    "observedRemoteHead": "4219a53bb5cb7efa2ca3e48939bd82de69e071d7",
+    "webEdited": false,
+    "externalMessageSent": false,
+    "initialC1ObservedRemoteHead": "9c03b7bbb612ebf1f18fb2181944382468d40ba7",
+    "observedPullRequest": 60
+  },
+  "existingUserDatabaseChainKeyAccess": false,
+  "actualWebsiteFetches": 0,
+  "paidModelCalls": 0,
+  "newPrMerged": true,
+  "gates": {
+    "depositStorageAllocationTopup": "OPEN",
+    "eligibilityAndFunding": "SEPARATE",
+    "tier400": "PRECHECK_ONLY_NO_AUTOMATIC_ELIGIBILITY_OR_PAYMENT",
+    "tier500": "EXCLUDED",
+    "sourceAndIdentity": "ON_HOLD",
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO"
+  },
+  "pullRequest": 61,
+  "initialBaseDevelop": "7f6096552f06492b4add8bd5653a2ff390cf7d3c",
+  "baseIntegration": {
+    "preservedHead": "2354b70bd1f5cb6f4402c73ce0c40efeb3ca08d9",
+    "normalMergeCommit": "c19a10fc85216e5428b6434ac9c09d85096ea7d2",
+    "requestedSetting": "GPT-6.1 Sol / High (PR59 review and dependency integration unit)",
+    "codeConflicts": false,
+    "conflictResolution": "single handoff document status/additions preserved both C1 and PR59 sections",
+    "relatedTests": 283,
+    "existingDevelopmentTests": 33,
+    "sourceAndStudentHttpsRestartDemos": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "webEdited": false,
+    "finalHeadCi": "PENDING",
+    "c2Implemented": false,
+    "realConsentImplemented": false
+  },
+  "substantiveReview": {
+    "requestedModel": "gpt-6.1-sol",
+    "requestedReasoning": "high",
+    "runtimeModelIdIndependentlyVerified": false,
+    "fixCommit": "8c5411bebf42a2aa61aa8c37db5f352ca84475c6",
+    "regressionTestsAdded": 2,
+    "relatedTests": 285,
+    "studentHttpHttps": 13,
+    "fixes": [
+      "reject reads and replay before application update time after ownership check",
+      "reauthorize session/CSRF within transaction for same-key command replay too"
+    ],
+    "studentHttpsRestartDemo": "PASS",
+    "workspace": "PASS",
+    "finalHeadCi": {
+      "requiredChecks": "4_OF_4_SUCCESS_PR_AND_PUSH",
+      "pullRequestRun": 38724301462,
+      "pushRun": 38724292331,
+      "additionalMacPr": "SUCCESS",
+      "additionalMacPush": "CANCELLED_ROOT_CAUSE_UNKNOWN",
+      "sixOfSixClaimed": false,
+      "additionalMacPushCompletedAt": "2026-10-15T11:20:52Z"
+    },
+    "merge": "0590fd0728ce3a4525129cbad753c3ba9b2f781b",
+    "finalHead": "95b397cc662b255fc777afc898e7b56cc6a444d9",
+    "protectionBypassed": false,
+    "mergedCommitCiClaimed": false
+  },
+  "mergeCommit": "0590fd0728ce3a4525129cbad753c3ba9b2f781b"
+}

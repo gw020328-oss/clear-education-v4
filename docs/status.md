@@ -1,4 +1,25 @@
+2026-10-15 C2 최종 수명 보완24e75f2: pending upload도logout/C1기준변경에서중단, 동일ACK재생은보존. 관련309/309(C2 HTTP21/TLS2·공통DELETE1 포함)·기존dev33·TLS/의존성/191개보존 PASS. PR63 Draft최종headCI는후속기록정본, 자동병합금지.
+
+2026-10-15 C2 최신: PR63 Draft, 구현0a9945b·시작정리/fixture04efb92. 합성문서 exact C1/C2확인·서버Binding/실bytes·검토/보완·GET/재시작·메모리수명 연결. 관련306·기존dev33·추가시작정리1·TLS데모/의존성/191개보존 PASS, 최종headCI는PR63. PR61 추가pushMac은cancelled/원인UNKNOWN, 재실행0. full decode/실동의/운영개인자료·Evidence/M2/재원/실화면 미완료. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 상태 기록이다.
+
+2026-10-15 최신: PR61 실질리뷰 fix8c5411b·최종95b397c, 필수CI4/4 성공 후 정상 develop merge0590fd0. 추가Mac PR성공/push진행중(미확정)을 분리 기록했다. C2는 최신develop의codex/mvp-document-http·하위#62에서 계약만 정리했으며 HTTP/업로드/실동의 미구현. 다음 일반 구현 요청은 Sol/Medium. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), [C2 계약](current/MVP_DOCUMENT_HTTP_CONTRACT.ko.md). 아래는 이전 기록이다.
+
+2026-10-15 PR61 실질 검토: 코드8c5411b에서 시계 역행 중 저장된 확인/신청 조회와 POST재생의 transaction 내부 session 재검사 누락을 보완. 관련285·학생HTTPS재시작·원본보존 PASS. 사용자 승인된 develop 정상병합은 정확 최종head CI 뒤 진행한다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 상태 기록이다.
+
+2026-10-15 최신 통합: PR59 최종head112e93a·CI6/6 성공 후 develop `2bb6d291b77ba397f8544995557db78b3ce54724` 정상 병합 완료. C1 기존2354b70을 보존하고 최신develop을 정상 merge(c19a10f), 선행 의존 해소. 관련283/기존dev33·source/student HTTPS재시작·보존/의존성 PASS. PR61은 Draft·미병합, 최종headCI 확인은 PR61/이슈55. C2·실동의 미완료, PR60/web은 별도 소유다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 시점 기록이다.
+
+<!-- PR59 review update: historical entries below retain their original dates. -->
+2026-10-15 PR59 최종 실질 검토: `7402f7f`에서 COMMITTING 첫 preview 혼합, 시계 역행 시 미만료 draft 조기 삭제, 생성/검토 시각 이전 결과 노출을 보완했다. 관련272·기존 개발환경33·합성 HTTPS 재시작·의존성/원본 보존 PASS. 최종 원격 CI 후 사용자 승인된 develop 정상 병합 예정이며, C1 PR61은 `2354b70`으로 보존해 그 뒤 기반 갱신한다. C2/실동의·PR60/web은 이 검토 범위 밖이다. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md).
+
 # 개발 현황
+
+## 2026-10-15 C1 학생 신청·합성 확인 후속 Draft #61
+
+PR59정확head11e27ac 의존, 별도codex/mvp-student-application-http, 코드7c56442/680bce3. 학생본인신청·host합성조건/정확표시hash·SYNTHETIC_ACK_ONLY·단일DB원자멱등/GET복구·정책변경시명시선택/새확인·불변이력/restart를 연결했다. 신규학생HTTP/HTTPS11포함관련278개·기존dev33개·검증HTTPS서명로그인/재시작demo·보존/공개검사PASS. 파일접수/문서검토/보완C2·실동의/게시·운영Evidence/재원·실제화면은미구현이다. source/student버전과팀원복붙지침은[단일인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md)를따른다. 프론트PR60/head4219a53/서준형소유와web-only경로를읽기확인했고web편집0. PR59의조건부develop병합은추가승인됐으나아직리뷰대기이며학생후속PR은Draft·자동병합없음. 예치/보관/배정/충전OPEN·400%자동자격/지급금지·500%제외·grant/outboxHOLD·독립claimNO-GO유지.
+
+## 2026-10-15 원문 HTTP 연결 Draft #59
+
+[프론트 인계·API 정본](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), 코드032215f, 기준develop7f60965. A/B의초대지갑세션·operator/CSRF/loopbackHTTPS·새DB 원문등록/조회→mock초안→정확표시검토·취소/멱등/CAS·GET복구/재시작을 연결했다. 관련267개(신규HTTP/HTTPS15포함)·기존dev33개·새합성HTTPS데모·보존/공개검사PASS. 실제사이트/유료모델0, 기존사용자DB/키/체인접근0. 서준형이web/소유자이며 통합세션은web/를편집하지않았다. 학생신청/실동의/업로드·문서검토/보완HTTP(C)와실제화면·운영Evidence/재원은미구현이다. Draft59는미병합이며최종head원격CI는PR을따른다. 예치/배정/충전OPEN·400%자동자격/지급금지·500%제외·grant/outboxHOLD·독립claimNO-GO를유지한다.
 
 ## 2026-10-15 PR56 → PR58 → PR57 통합 검토
 
@@ -175,3 +196,9 @@ PR #4의 초기 400개·후속 407개, PR #6의 519개, PR #7의 577개, PR #8�
 5. 타 사용자 자기 PC/계정 실제 수집 최소 1건과 비개발자 2명 합성 과업 시험을 별도 결과로 보고한다.
 
 이 항목들은 후속이며 이번 문서 갱신에서 실제 로그인·새 증명·자금 이동·배포를 실행하지 않았다. main 통합은 전체 통합 검증 뒤 별도 develop→main PR로 진행한다. 실명 확인·실제 학원 API·원화 지급·공개 Amoy 지급·여러 교육기관 지원은 후속이다. [원래 PRD](reference/PRD.ko.md)와 [최신 Mac MVP](current/MAC_MVP.ko.md)를 함께 읽고 날짜별 계획을 완료 사실로 해석하지 않는다.
+
+## 2026-10-15 C2 병합·C3 합성 증거/평가 저장 Draft
+
+PR63 최종head230a951의 raw TTL observer 정리 보완·관련312/312·CI6/6 이후 develop890ad93cfb3677c5b4107428095c6f0b15efa9a4로 정상 병합했다. [프론트 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md)·[복붙 지침](current/MVP_FRONTEND_CONNECTION_PROMPT.ko.md)에 실제 병합 근거를 반영했다.
+
+후속 이슈65/C3는 최신 develop에서 새 evidence/evaluation 단일 DB·본인 세션/서버 binding·최초 시험/명시 선택/합성 최종성·보완/stale·원자 명령/결과 저장·GET/재시작을 연결하는 Draft다. YBM과 시원스쿨은 같은 인터페이스의 host 합성 profile이며 실제 원천/동일인·실동의·개인자료/금고·재원/지급을 연결하지 않는다. [상세 계약](current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md)·최종 검증 JSON/PR의 exact head를 따른다. 새 PR 자동 병합 미승인.
