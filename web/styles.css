@@ -753,3 +753,18 @@ body::before {
 }
 /* 계산된 금액과 확보된 재원은 다르다. 모르는 것은 모른다고 적는다 */
 .pay-funding { margin-top: 6px; }
+
+/* 다른 경로. 고른 경로를 막지 않으면서 '또 다른 길이 있다' 를 알린다.
+   여기 조건을 위 목록에 섞으면 OR 가 AND 가 된다 */
+.alt { margin: 12px 0 0; padding: 14px 16px; background: var(--line-soft); border-radius: 10px; }
+.alt-head { margin: 0; font-size: 11.5px; font-weight: 800; letter-spacing: 0.3px; color: var(--muted); }
+.alt-row {
+  display: block; width: 100%; margin: 9px 0 0; padding: 10px 12px;
+  text-align: left; font: inherit; cursor: pointer;
+  background: var(--card); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 8px;
+}
+.alt-row:hover { border-color: var(--accent); }
+.alt-name { display: block; font-size: 13.5px; font-weight: 800; }
+.alt-items { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+.alt .note { margin-top: 9px; }

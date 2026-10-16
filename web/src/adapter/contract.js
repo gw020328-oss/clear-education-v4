@@ -239,6 +239,14 @@ export function checkPolicyView(compiled) {
   // 금액은 문자열이다. 부동소수점으로 다루지 않는다.
   if (typeof p.amount !== 'string') problems.push('policy.amount 가 문자열이 아니다');
 
+  // 반 이름. 참가자 화면 맨 위에 와야 하는 값인데 서버가 아직 주지 않는다.
+  // 없으면 화면이 반 이름을 적지 않는다 — cohortId 같은 기계 값을 대신
+  // 보여주거나 이름을 지어내지 않는다.
+  if (p.productName !== undefined
+    && (typeof p.productName !== 'string' || p.productName === '')) {
+    problems.push('policy.productName 이 비어 있지 않은 문자열이 아니다');
+  }
+
   // conditionGroups 는 선택 필드다. 그룹 안은 AND, 그룹끼리는 OR 이고,
   // 반마다 환급받는 길이 여럿일 수 있어서 둔다. 없으면 기존처럼 동작한다.
   // 있으면 모양만 본다 — 내용(값·문구)은 정책이 정하고 화면은 그대로 그린다.

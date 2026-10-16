@@ -548,3 +548,17 @@ test('가져온 것과 전부인 것을 구분한다', () => {
   const item = r200.groups[0].items.find((i) => i.id === 'history2y');
   assert.equal(progressOf(item).label, '추가 확인 필요');
 });
+
+test('반 이름은 선택 필드다 — 없으면 지어내지 않는다', () => {
+  // 참가자 화면 맨 위에 와야 하는 값인데 서버가 아직 주지 않는다.
+  // cohortId 같은 기계 값을 대신 보여주거나 이름을 만들면 안 된다.
+  assert.equal(ALTERNATIVE_POLICY.policy.productName, '시원스쿨 시작이반 750점반');
+  assert.equal(YBM_POLICY.policy.productName, 'YBM 750+ 환급코스');
+
+  const noName = { ...YBM_POLICY, policy: { ...YBM_POLICY.policy } };
+  delete noName.policy.productName;
+  assert.deepEqual(checkPolicyView(noName), [], '없어도 계약을 어기지 않는다');
+
+  const bad = { ...YBM_POLICY, policy: { ...YBM_POLICY.policy, productName: '' } };
+  assert.ok(checkPolicyView(bad).some((m) => m.includes('productName')));
+});

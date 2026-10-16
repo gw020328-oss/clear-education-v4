@@ -206,21 +206,52 @@ function payoutItem(payout) {
   ]);
 }
 
-/** 한 구간(또는 구간이 없는 반)의 조건 본문 */
-function conditionBody(view) {
-  // 금액이 경로마다 붙어 있으면 경로 안에서 그린다. 구간 아래에 한 번
-  // 그리면 어느 경로의 금액인지 말할 수 없다.
+/**
+ * 고른 경로 하나의 조건.
+ *
+ * 경로가 여럿이어도 한 번에 하나만 그린다. 전에는 모두 늘어놓고 사이에
+ * '또는' 을 끼웠는데, 길어지면 '또는' 이 묻혀서 **전부 충족해야 하는 것처럼**
+ * 읽혔다. 출석으로 가는 사람에게 성적을 요구하는 화면이 된다.
+ *
+ * 다른 경로는 막지 않는다. 아래에 따로 적고 눌러서 옮겨 간다.
+ */
+function conditionBody(view, shownGroupId) {
   const perPath = hasPathPayouts(view);
-  const body = [];
-  view.groups.forEach((group, index) => {
-    if (index > 0) body.push(el('p.cond-or', { text: '또는' }));
-    body.push(conditionGroup(group, { withPayout: perPath }));
-  });
-  if (!perPath && view.payout) {
+  const shown = view.groups.find((g) => g.id === shownGroupId) ?? view.groups[0];
+  const body = [conditionGroup(shown, { withPayout: false })];
+
+  const payout = perPath ? shown.payout : view.payout;
+  if (payout) {
     body.push(el('p.cond-and', { text: '충족 시' }));
-    body.push(payoutItem(view.payout));
+    body.push(payoutItem(payout));
   }
   return body;
+}
+
+/**
+ * 같은 구간의 다른 경로들.
+ *
+ * 고른 경로를 막지 않으면서 '또 다른 길이 있다' 를 알린다. 여기 조건을
+ * 고른 경로의 목록에 섞으면 OR 가 AND 가 된다.
+ */
+function otherPaths(view, shownGroupId, onPick) {
+  const others = view.groups.filter((group) => group.id !== shownGroupId);
+  if (others.length === 0) return null;
+  return el('div.alt', {}, [
+    el('p.alt-head', { text: '이 구간에는 다른 길도 있습니다' }),
+    ...others.map((group) => el('button.alt-row', {
+      type: 'button',
+      onClick: () => onPick(group.id),
+    }, [
+      el('span.alt-name', { text: group.label ?? '다른 경로' }),
+      el('span.alt-items', {
+        text: group.items.map((item) => item.label).join(' + '),
+      }),
+    ])),
+    el('p.note', {
+      text: '둘 중 하나만 충족하면 됩니다. 어느 경로로 환급되는지는 환급 신청 뒤에 정해집니다.',
+    }),
+  ]);
 }
 
 /**
@@ -272,28 +303,38 @@ export function policySection(compiled, { progress = null, fixed = true } = {}) 
   // 가장 낮은 구간을 먼저 띄운다. 높은 구간을 기본으로 두면 받을 금액이
   // 그것인 양 읽힌다.
   let shownId = tiered ? model.tiers[0].id : null;
+  // 구간 안에서 어느 경로를 보고 있는가. 구간을 바꾸면 그 구간의 첫 경로로
+  // 돌아간다 — 구간마다 경로 구성이 다르기 때문이다.
+  let shownPathId = null;
 
   const section = el('section', {});
   const render = () => {
     const view = tiered ? model.tiers.find((t) => t.id === shownId) : model;
     const multi = view.groups.length > 1;
-    const total = view.groups.reduce((sum, g) => sum + g.items.length, 0);
+    const shown = view.groups.find((g) => g.id === shownPathId) ?? view.groups[0];
+    // 머리글은 **고른 경로의** 조건만 센다. 경로를 합쳐 세면 다른 경로의
+    // 조건까지 충족해야 하는 것처럼 읽힌다 — OR 가 AND 가 된다.
+    const total = shown.items.length;
 
-    const head = multi
-      ? '아래 경로 중 하나를 충족하면 환급 대상'
-      : total === 1 ? '아래 조건을 충족해야 환급 대상' : `${total}개 조건을 모두 충족해야 환급 대상`;
+    const where = [tiered ? `${view.rate} 환급` : null, multi ? shown.label : null]
+      .filter(Boolean).join(' · ');
+    const head = total === 1
+      ? `${where || '환급 조건'} — 아래 조건을 충족해야 합니다`
+      : `${where || '환급 조건'} — 아래 ${total}개를 모두 충족해야 합니다`;
 
     clear(section);
     // el() 은 null 자식을 걸러내지만 append 는 'null' 문자열로 바꾼다.
     // 여기서 직접 붙이므로 걸러낸 뒤 넣는다.
     const rows = sectionRows(model, view, {
       tiered, head, multi, shownId,
+      shownPathId: shown.id,
+      onPickPath: (id) => { shownPathId = id; render(); },
       perPath: multi && hasPathPayouts(view),
       fixed,
       // 진행 상황이 하나라도 들어와 있을 때만 세는 자리를 둔다. 비어 있는데
       // '0/4 충족' 이라고 적으면 아직 시작도 안 한 것을 못 했다고 말하게 된다.
       counting: model.tiers ? model.tiers.some(hasProgress) : hasProgress(model),
-      onSelect: (id) => { shownId = id; render(); },
+      onSelect: (id) => { shownId = id; shownPathId = null; render(); },
     });
     section.append(...rows.filter(Boolean));
   };
@@ -302,7 +343,8 @@ export function policySection(compiled, { progress = null, fixed = true } = {}) 
 }
 
 function sectionRows(model, view, {
-  tiered, head, multi, shownId, perPath, counting, fixed, onSelect,
+  tiered, head, multi, shownId, shownPathId,
+  perPath, counting, fixed, onSelect, onPickPath,
 }) {
   return [
     el('div.sec-head', {}, [
@@ -329,7 +371,7 @@ function sectionRows(model, view, {
     el('div.cond-wrap', {}, [
       el('p.cond-wrap-head', { text: head }),
       el('div.cond-wrap-body', {}, [
-        el('div.cond', {}, conditionBody(view)),
+        el('div.cond', {}, conditionBody(view, shownPathId)),
       ]),
       // 경로가 여럿이면 '한 조건만 충족해도 지급되지 않는다'가 거짓이 된다.
       // 한 경로만 충족하면 되기 때문이다. 문구를 구조에 맞춘다.
@@ -338,10 +380,13 @@ function sectionRows(model, view, {
           ? '부분 지급은 없습니다. 한 경로의 조건을 모두 충족해야 지급되며, '
             + '같은 환급률이라도 경로에 따라 받는 금액이 다릅니다.'
           : multi
-            ? '부분 지급은 없습니다. 한 경로의 조건을 모두 충족해야 지급됩니다.'
+            ? '부분 지급은 없습니다. 이 경로의 조건을 모두 충족해야 지급됩니다.'
             : '부분 지급은 없습니다. 일부만 충족해도 지급되지 않습니다.',
       }),
     ]),
+
+    // 다른 경로. 고른 경로를 막지 않고 따로 적는다.
+    multi ? otherPaths(view, shownPathId, onPickPath) : null,
     el('p.pending-line', {}, [
       el('span.pending-dot', { 'aria-hidden': 'true', text: '○' }),
       el('span', { text: counting ? PROGRESS_NOT_FINAL : PROGRESS_NOT_YET }),

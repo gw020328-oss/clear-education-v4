@@ -25,6 +25,8 @@ export const SYNTHETIC_POLICY = Object.freeze({
   policy: Object.freeze({
     schemaVersion: 4,
     cohortId: 'demo-cohort-001',
+    // 참가자가 맨 처음 봐야 하는 것. cohortId 는 기계용이라 쓸 수 없다.
+    productName: '합성 데모 환급반',
     policyVersion: '1',
     dataMode: 'SYNTHETIC',
     examType: 'TOEIC_LR',
@@ -219,6 +221,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
   policy: Object.freeze({
     schemaVersion: 4,
     cohortId: 'demo-cohort-002',
+    productName: '시원스쿨 시작이반 750점반',
     policyVersion: '1',
     dataMode: 'SYNTHETIC',
     examType: 'TOEIC_LR',
@@ -359,6 +362,7 @@ export const YBM_POLICY = Object.freeze({
   policy: Object.freeze({
     schemaVersion: 4,
     cohortId: 'ybm-750plus-001',
+    productName: 'YBM 750+ 환급코스',
     policyVersion: '1',
     dataMode: 'SYNTHETIC',
     examType: 'TOEIC_LR',
