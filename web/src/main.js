@@ -3,6 +3,8 @@
 // 해시 라우팅을 쓴다. 정적 파일만으로 돌아가므로 서버 rewrite 설정이 필요 없고,
 // 후속 C1 의 동일 origin 서버에 그대로 올릴 수 있다.
 //
+//   #/reviews                        운영자 검토 목록 (F3)
+//   #/reviews/<id>                   검토 한 건 — 안내문 ↔ AI가 뽑은 값
 //   #/applications                   신청 목록 (보통 1건이면 바로 아래로 보낸다)
 //   #/applications/<id>              신청 전체 — 상태 · 타임라인 · 조건 · 기한
 //   #/applications/<id>/steps/<n>    단계 상세 — 그 단계만
@@ -15,6 +17,8 @@ import {
   syntheticBanner, listView, dashboardView, loadingView, emptyView, errorView, notFoundView,
 } from './ui/views.js';
 import { stepDetailView } from './ui/step-detail.js';
+import { reviewSection } from './ui/review-view.js';
+import { REVIEWS } from './fixtures/review.js';
 import { brandHeader } from './ui/brand.js';
 import { STEP_ORDER } from './ui/state-labels.js';
 
@@ -32,6 +36,7 @@ let adapter = createSyntheticAdapter({ scenario: currentScenario() });
 function parseRoute() {
   const hash = window.location.hash.replace(/^#/, '');
   const parts = hash.split('/').filter(Boolean);
+  if (parts[0] === 'reviews') return { name: 'review', id: parts[1] ?? null };
   if (parts[0] !== 'applications' || !parts[1]) return { name: 'list' };
   if (parts[2] === 'steps' && parts[3]) return { name: 'step', id: parts[1], step: Number(parts[3]) };
   return { name: 'dashboard', id: parts[1] };
@@ -156,21 +161,76 @@ async function renderStep(id, step) {
   focusMain();
 }
 
+/**
+ * 운영자 검토 (F3).
+ *
+ * 참가자 화면과 같은 어댑터를 쓴다. 서버가 생기면 어댑터만 바뀌고 이
+ * 화면은 그대로다.
+ */
+async function renderReview(id) {
+  shell(loadingView('검토'));
+  try {
+    if (!id) {
+      const items = await adapter.listReviews();
+      if (items.length === 0) return shell(el('p.muted', { text: '검토할 안내문이 없습니다.' }));
+      window.location.hash = `#/reviews/${items[0].reviewId}`;
+      return undefined;
+    }
+    const view = await adapter.getReview(id);
+    shell(el('div', {}, [reviewSection(view), reviewSwitch(view)]));
+  } catch { renderFailure(() => renderReview(id)); }
+  focusMain();
+  return undefined;
+}
+
+/** 검토끼리 오가는 줄. 합성 상황이라 참가자 제품에는 없을 자리다 */
+function reviewSwitch(view) {
+  return el('p.scenario-note', {}, [
+    el('span.scenario-tag', { text: '합성 상황' }),
+    el('span', { text: '다른 반의 안내문' }),
+    ...Object.values(REVIEWS)
+      .filter((other) => other.reviewId !== view.reviewId)
+      .map((other) => el('button.scenario-swap', {
+        type: 'button',
+        onClick: () => { window.location.hash = `#/reviews/${other.reviewId}`; },
+      }, [el('span', { text: other.title })])),
+    el('button.scenario-swap', {
+      type: 'button',
+      onClick: () => { window.location.hash = '#/applications'; },
+    }, [el('span', { text: '참가자 화면으로' })]),
+  ]);
+}
+
 function render() {
   const route = parseRoute();
+  // 참가자/운영자를 오가면 머리말도 바뀌어야 한다.
+  renderChrome();
+  if (route.name === 'review') return renderReview(route.id);
   if (route.name === 'step') return renderStep(route.id, route.step);
   if (route.name === 'dashboard') return renderDashboard(route.id);
   return renderList();
 }
 
+/** 머리말과 배너. 참가자 화면과 운영자 화면이 다르다 */
+function renderChrome() {
+  const operator = parseRoute().name === 'review';
+  clear(chrome);
+  chrome.append(...[
+    syntheticBanner(),
+    operator
+      ? brandHeader({
+        who: '운영자 검토',
+        tagline: '안내문에서 뽑은 값을 확인하고 승인하면 조건이 고정됩니다.',
+      })
+      : brandHeader(),
+    // 반 전환은 참가자 화면의 장치다. 운영자 화면에는 아래쪽에 따로 둔다.
+    operator ? null : scenarioNote(),
+  ].filter(Boolean));
+}
+
 function boot() {
   adapter = createSyntheticAdapter({ scenario: currentScenario() });
-  clear(chrome);
-  chrome.append(
-    syntheticBanner(),
-    brandHeader(),
-    scenarioNote(),
-  );
+  renderChrome();
   if (!window.location.hash) window.location.hash = '#/applications';
   render();
 }

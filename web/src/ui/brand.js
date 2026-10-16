@@ -27,13 +27,19 @@ const svg = (d, size = 14) => {
 export const lockIcon = (size) => svg('M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z', size);
 
 /** 머리말 — 제품이 무엇을 보장하는지 한 줄로 */
-export const brandHeader = () => el('header.head', {}, [
+/**
+ * 머리말. 누가 보는 화면인지 말한다.
+ *
+ * 참가자 화면과 운영자 화면이 같은 머리말을 쓰면, 운영자 화면에서도
+ * '참가자 신청' 이라고 적혀 보는 사람이 헷갈린다.
+ */
+export const brandHeader = ({ who = '참가자 신청', tagline } = {}) => el('header.head', {}, [
   el('div.brand', {}, [
     el('span.brand-mark', { 'aria-hidden': 'true' }, [lockIcon(16)]),
     el('h1', { text: 'CLEAR' }),
-    el('span.brand-sub', { text: '참가자 신청' }),
+    el('span.brand-sub', { text: who }),
   ]),
-  el('p.tagline', { text: '조건을 먼저 고정하고, 기록이 증명합니다.' }),
+  el('p.tagline', { text: tagline ?? '조건을 먼저 고정하고, 기록이 증명합니다.' }),
 ]);
 
 /** 고정됨 봉인 — 바꿀 수 없다는 사실을 시각으로 한 번 더 */

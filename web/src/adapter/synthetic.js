@@ -7,9 +7,12 @@
 // 이 어댑터는 네트워크·쿠키·지갑을 전혀 쓰지 않는다. 그래서 인증·Secure cookie·
 // origin 검증을 '우회'하는 것이 아니라 아직 '연결하지 않은' 상태다.
 
-import { AdapterError, checkApplicationView, checkPolicyView } from './contract.js';
+import {
+  AdapterError, checkApplicationView, checkPolicyView, checkReviewView,
+} from './contract.js';
 import { SCENARIOS, DEFAULT_SCENARIO } from '../fixtures/applications.js';
 import { POLICIES } from '../fixtures/policy.js';
+import { REVIEWS } from '../fixtures/review.js';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -85,7 +88,36 @@ export function createSyntheticAdapter({ scenario = DEFAULT_SCENARIO, validate =
       }
       return policy;
     },
+
+    // 운영자 검토(F3). 안내문에서 AI 가 뽑은 결과를 사람이 확인하는 자리다.
+    // 서버 쪽은 PR #59(운영자 원문 검토 HTTPS)에서 온다.
+    async listReviews() {
+      await settle();
+      return Object.values(REVIEWS).map((review) => guardReview(review));
+    },
+
+    async getReview(reviewId) {
+      await settle();
+      const review = REVIEWS[reviewId];
+      if (!review) throw new AdapterError('API_REQUEST_FAILED');
+      return guardReview(review);
+    },
   };
+
+  /**
+   * 보류된 값이 채워진 채로 오면 화면에 그리기 전에 깨뜨린다.
+   *
+   * 운영자가 확인 없이 승인하게 되고, 그러면 조건을 사실과 다르게 고정한다.
+   * 이 제품이 없애려는 문제라 조용히 넘기지 않는다.
+   */
+  function guardReview(review) {
+    if (!validate) return review;
+    const problems = checkReviewView(review);
+    if (problems.length > 0) {
+      throw new Error(`검토 fixture 가 계약과 다르다: ${problems.join(' / ')}`);
+    }
+    return review;
+  }
 }
 
 export const SCENARIO_KEYS = Object.keys(SCENARIOS);
