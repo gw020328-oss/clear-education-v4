@@ -15,10 +15,14 @@ test('common fixed vector original sources validate without treating wire plan p
   assert.equal(validateLocalReviewSources(reviewBridgeExample()),true);
 });
 test('real bound-policy mock review returns exact minimal common DTO with LOCAL source pins',async()=>{
-  const f=localFixture(),s=session(f),r=await s.review(f,mock(f));
+  const f=localFixture();let rawReads=0;
+  const current={context:f.context,projection:f.projection};
+  Object.defineProperty(current,'raw',{enumerable:true,get(){rawReads++;throw Error('raw must not be read by current resolver');}});
+  const s=createLocalReviewProjectionSession(()=>current,{nowMs:()=>f.clock.value}),r=await s.review(f,mock(f));
   validateBoundReviewObservation(r,f);assert.equal(r.version,'clear-review-bound-observation.1');
   assert.equal(r.contentStatus,'CHECKED');assert.equal(r.sourceStatus,'OBSERVED_TARGET');assert.equal(r.sourceProjectionHash,reviewProjectionHash(f.projection));
   assert.equal(r.sourceReceiptHash,f.projection.sourceReceiptHash);assert.equal(s.consume(r),r);
+  assert.equal(rawReads,0);
   assert.equal(JSON.stringify(r).includes('합성반'),false);assert.equal(Object.hasOwn(r,'grounding'),false);
   for(const [key,value] of Object.entries(BRIDGE_GATES))assert.equal(r[key],value);
 });
