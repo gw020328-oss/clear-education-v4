@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-17",
+  "scope": "PUBLIC_SYNTHETIC_V2_PRIVATE_PARSER_BACKEND",
+  "basePr": 73,
+  "baseHead": "089d6efa677a85af4c5a8c6159f313f563e6411e",
+  "native": {
+    "schemaVersion": 1,
+    "scope": "PUBLIC_SYNTHETIC_PRIVATE_PARSER_COMPONENT",
+    "backend": "UltraPlonk 0.82.2 OLD_API",
+    "sourceSha256": "675e82018c97c7c5ba8acd9cb31caa6c10bae86d445cc08628be5822a6d40605",
+    "programBytecodeSha256": "d14d2b988911d67b9a7275053c98375831b603fe956864a115f679a2c77b740d",
+    "generation": {
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 272923,
+      "peakRssKiB": 2866928,
+      "stopReason": null
+    },
+    "verification": {
+      "nativeValidProof": true,
+      "rejected": [
+        "proof-first",
+        "proof-last"
+      ],
+      "preflightRejected": [
+        "proof-truncated",
+        "proof-extended",
+        "changed-key"
+      ],
+      "rawTruncatedNativeVerification": "ABORT_OBSERVED_NOT_COUNTED_AS_SUCCESS",
+      "verifyMs": 32,
+      "publicInputSubstitution": "NOT_APPLICABLE_ZERO_PUBLIC_INPUTS"
+    },
+    "proofBytes": 2144,
+    "publicInputCount": 0,
+    "proofSha256": "656cbb9e9df396062eb3313b6800ae1f7307d1097a149ddb6abfeae80cbc5a65",
+    "vkSha256": "38797e984dda5db1bf889ad71e434635c73a0cd542a2ce0536858b82c6a0efb3",
+    "rawVkSha256": "9d5dd6b78f63f70dfeb6ffca2f566ada7cd43b3ec76b5f2dcf2f54af9f39b88e",
+    "soliditySha256": "3776cc5effb967fb531796789c86ff7553d83c24b3dcc5e2e6ee7cd50f17cbd9",
+    "osNetworkDenied": true,
+    "childWritesRestrictedToRunDirectory": true,
+    "syntheticWitnessFileRemoved": true,
+    "realYbm": false,
+    "officialSignatureIntegrated": false,
+    "policyIntegrated": false,
+    "independentClaim": "NO_GO",
+    "paymentAllowed": false
+  },
+  "evm": {
+    "scope": "FRESH_LOCAL_IN_MEMORY_EVM_PRIVATE_PARSER_COMPONENT",
+    "chainId": 431799,
+    "solc": "0.8.30+commit.73712a01.Emscripten.clang",
+    "validProof": true,
+    "tamperedProofRejected": true,
+    "truncatedProofRejected": true,
+    "unexpectedPublicInputRejected": true,
+    "publicInputCount": 0,
+    "verificationGas": "433632",
+    "verifierRuntimeBytes": 11048,
+    "soliditySha256": "3776cc5effb967fb531796789c86ff7553d83c24b3dcc5e2e6ee7cd50f17cbd9",
+    "vkSha256": "38797e984dda5db1bf889ad71e434635c73a0cd542a2ce0536858b82c6a0efb3",
+    "programBytecodeSha256": "d14d2b988911d67b9a7275053c98375831b603fe956864a115f679a2c77b740d",
+    "officialSignatureIntegrated": false,
+    "realYbm": false,
+    "publicChainExecuted": false,
+    "independentClaim": "NO_GO",
+    "paymentAllowed": false
+  },
+  "execution": "NATIVE_GENERATION_COMPLETED; VERIFICATION_RESUMED_AFTER_VK_NORMALIZATION_WITHOUT_REGENERATING_PROOF",
+  "wasm": {
+    "scope": "PUBLIC_PROGRAM_SIZE_ONLY",
+    "programSha256": "d14d2b988911d67b9a7275053c98375831b603fe956864a115f679a2c77b740d",
+    "status": "WASM_BAD_ALLOC",
+    "diagnostics": [
+      "Initializing bb wasm: initial memory 32 pages 2MiB; max memory: 65536 pages, 4096MiB; threads: 1; shared memory: true",
+      "libc++abi:  (mem: 3119.31MiB)",
+      "bad_alloc was thrown in -fno-exceptions mode (mem: 3119.31MiB)",
+      "WASM function acir_get_circuit_sizes aborted, error: RuntimeError: unreachable"
+    ],
+    "elapsedMs": 3446,
+    "proofGenerated": false
+  },
+  "nativeCircuitSize": {
+    "acirOpcodes": 1527243,
+    "gates": 1837617,
+    "subgroupCapacity": 2097152,
+    "crsG1Points": 2097153
+  },
+  "tests": {
+    "v1V2HostAndBackend": {
+      "pass": 96,
+      "fail": 0
+    },
+    "parserAcvm": {
+      "pass": 29,
+      "fail": 0,
+      "expectedKnownGapCounterexamples": 3
+    },
+    "actualOsBoundary": {
+      "pass": 1,
+      "fail": 0
+    },
+    "timeoutObservation": {
+      "stopReason": "TIME_LIMIT",
+      "signal": "SIGKILL",
+      "elapsedMs": 13
+    },
+    "workspacePreservation": {
+      "status": "PASS",
+      "originalFiles": 191,
+      "publishedReferences": 4
+    }
+  },
+  "rawTruncatedNativeVerifier": {
+    "exitCode": null,
+    "signal": "SIGABRT",
+    "stopReason": null
+  },
+  "vkNormalization": {
+    "rawKeysDiffer": true,
+    "differentByteCount": 11,
+    "fieldRepresentationsEqual": true,
+    "fieldCount": 115,
+    "inactiveIndexBytesZeroed": 64,
+    "lengthAndInactiveFlagsChecked": true,
+    "wholeCanonicalKeyHashPinned": true,
+    "bothGenerationKeysCanonicalizeEqually": true
+  },
+  "failedRunnerAttempt": {
+    "reason": "NON_NORMALIZED_SANDBOX_WRITE_PATH",
+    "elapsedMs": 275718,
+    "fix": "NORMALIZED_PATH_AND_OUTPUT_WRITE_PREFLIGHT",
+    "countedAsProofSuccess": false
+  },
+  "rejectedExperiments": [
+    {
+      "variant": "compact",
+      "sourceSha256": "552f3887df9277b8ae186fef9d28e572bc60571cec80a9c02dad6283bbd7c0e3",
+      "compressedBytes": 19783445,
+      "acirBytes": 466872998,
+      "wasmAllocatorMiB": 3394.94,
+      "status": "BAD_ALLOC_NOT_ADOPTED",
+      "negativeEquivalenceReviewed": false
+    },
+    {
+      "variant": "field-code",
+      "sourceSha256": "e0e11ba50f4219e140ab06f2fada3aac942220e265d484056ac0d8f8fcb1dc6c",
+      "compressedBytes": 16593712,
+      "acirBytes": 390105437,
+      "wasmAllocatorMiB": 3102.13,
+      "status": "BAD_ALLOC_NOT_ADOPTED",
+      "negativeEquivalenceReviewed": false
+    }
+  ],
+  "ci": {
+    "scope": "Existing wrapper CI: v1 real proof/EVM plus v2 host/backend regression. Native v2 proof/ACVM/OS test are LOCAL only.",
+    "exactHeadResults": "See Draft PR checks; not inferred from local tests"
+  },
+  "remainingGates": [
+    "VARIABLE_CANONICAL_JSON_AND_OFFICIAL_SIGNER_IN_ONE_CIRCUIT",
+    "HOST_CIRCUIT_SOURCE_MARKER_AND_DUPLICATE_EQUIVALENCE",
+    "ACTUAL_TABLE_CAPACITY_AND_GRAMMAR",
+    "REGISTRATION_OWNER_POLICY_FRESHNESS_PUBLIC_BINDING",
+    "PRIVATE_STABLE_SOURCE_REUSE",
+    "MANAGED_COLLECTOR_AND_PRIVATE_WITNESS_BOUNDARY",
+    "RELEASE_VK_AND_SIGNER_LIFECYCLE"
+  ],
+  "scopePolicy": {
+    "ybm": "750+",
+    "siwon": "50..300%",
+    "normalReviewAiVision": true,
+    "400Percent": "EXCLUDED",
+    "500Percent": "EXCLUDED",
+    "fundingRatioAllocationPgRecoveryDisputes": "OPEN",
+    "grantOutbox": "HOLD"
+  },
+  "realYbm": false,
+  "actualOfficialClaim": false,
+  "publicChainExecuted": false,
+  "independentClaim": "NO_GO",
+  "paymentAllowed": false,
+  "productionReady": false,
+  "loginRequested": false,
+  "review": "REVIEW.ko.md"
+}

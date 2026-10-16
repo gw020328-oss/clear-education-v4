@@ -1,5 +1,7 @@
 # 가변 비공개 표·공식 signer 준비·재사용 방지 후속
 
+2026-10-17 backend 후속: 동일 parser 프로그램의 네이티브 증명 생성·검증 경로와 WASM allocator/CRS 경로 원인을 [별도 보고서](backend/README.ko.md)에 정리했다. 아래 backend 미완료·v1만 proof 성공이라는 내용과 이 폴더의 verification.json은 PR73 당시 기록으로 보존하며, 최신 backend 실측은 [후속 verification.json](backend/verification.json)을 따른다. 공식 signer/정책과의 단일 회로 통합 및 독립 청구는 여전히 NO_GO다.
+
 2026-10-16. PR69 `49c37f828dea64babcb31c52879baa02142ea797`에 의존하는 별도 Draft 연구 단위다. 이전 v1 두 행/6자리/합성 signer의 실제 UltraPlonk·로컬 EVM 성공은 보존한다. **v2는 호스트 검증과 별도 parser 회로 구성요소이며, 실제 YBM의 통합 ZK wrapper 성공이 아니다.**
 
 현재 범위는 YBM750+, 시원스쿨50~300%, 일반 후기 AI/Vision 검토다. **400%는 전용 블로그 챌린지·사전검토 화면까지 제외하고 500%도 제외한다.** 예치 정책 OPEN, grant/outbox HOLD, 제품 independentClaim NO_GO다. 이 spike는 새 등록기관·KYC·지급 authority를 채택하지 않고, 제품 src/API/DB/금고/web/Windows/PR70 문서를 변경하지 않는다. 과거 v1 JSON의 `400% PRECHECK_ONLY`는 당시 실험 기록이며 소급 수정하지 않는다.
