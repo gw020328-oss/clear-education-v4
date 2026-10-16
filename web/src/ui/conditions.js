@@ -31,10 +31,10 @@ export const EVIDENCE = Object.freeze({
   BASELINE: '성적 증명',
   LEARNING: '학습 기록',
   MOCK_TEST: '학습 기록',
-  // 학원 시스템 안에 남는 기록. 수강후기가 여기다 — 참가자가 내는 것이
-  // 아니라 학원 사이트에 쓴 글이라, 출석과 같은 경로로 가져온다.
-  REVIEW: '학원 기록',
-  // 학원 밖에 있어서 참가자가 주소를 내야 하는 것. 개인 블로그 챌린지가 여기다.
+  // 수강후기. 학원 사이트에 쓰는 글이지만 우리가 그 사이트를 읽을 수단이
+  // 없어서, 참가자가 쓴 화면을 자료로 낸다. 낸 자료에서 작성일·분량을
+  // 읽지 못하면 보완을 요청한다.
+  REVIEW: '제출 서류',
   BLOG: '제출 서류',
   NONE: null,
 });
@@ -69,18 +69,11 @@ export const VERIFY = Object.freeze({
     actor: false,
     note: '학원 시스템 기록으로 자동 확인합니다. 참가자가 따로 낼 것은 없습니다.',
   }),
-  // 가져오는 것은 자동이지만 내용이 쓸 만한지는 사람이 본다. 시원스쿨
-  // 안내문이 '정상적인 수강후기가 아니라 판단되면 환급율이 변경' 이라고
-  // 적어 둔 자리다. 자동이라고만 하면 사람 판단이 끼는 것을 숨기게 된다.
-  AUTO_REVIEWED: Object.freeze({
-    tag: '자동 + 검수',
-    actor: false,
-    note: '학원 시스템 기록으로 자동 확인합니다. 다만 내용이 정상인지는 사람이 판단합니다.',
-  }),
   SUBMIT: Object.freeze({
     tag: '직접 제출',
     actor: true,
-    note: '참가자가 작성한 글의 주소를 냅니다.',
+    note: '참가자가 자료를 냅니다. 낸 자료에서 필요한 내용을 읽지 못하면 '
+      + '무엇이 빠졌는지 알려주고 다시 받습니다.',
   }),
 });
 
@@ -98,7 +91,7 @@ const VERIFY_BY_KIND = Object.freeze({
   BASELINE: 'SELF_LOGIN_SHARED',
   LEARNING: 'AUTO',
   MOCK_TEST: 'AUTO',
-  REVIEW: 'AUTO',
+  REVIEW: 'SUBMIT',
   BLOG: 'SUBMIT',
 });
 

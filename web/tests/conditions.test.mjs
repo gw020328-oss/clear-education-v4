@@ -429,22 +429,27 @@ test('진행 상황이 든 시나리오가 계약을 지킨다', async () => {
   }
 });
 
-test('수강후기는 학원 기록이라 자동으로 확인한다', () => {
-  // 후기는 학원 사이트에 쓰는 글이라 출석과 같은 자리에 있다. 참가자가
-  // 주소를 내는 것이 아니다 — 안내문도 블로그 챌린지에만 URL 인증을 적었다.
+test('수강후기는 참가자가 자료를 낸다', () => {
+  // 후기는 학원 사이트에 쓰는 글이지만 우리가 그 사이트를 읽을 수단이
+  // 없다. 그래서 참가자가 쓴 화면을 자료로 내고, 낸 자료에서 작성일·분량을
+  // 읽지 못하면 보완을 요청한다.
   const r200 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r200');
   const review = r200.groups[0].items.find((i) => i.id === 'review');
   assert.equal(review.evidence, EVIDENCE.REVIEW);
-  assert.equal(verifyOf(review).actor, false, '참가자가 따로 낼 것이 없다');
+  assert.equal(verifyOf(review), VERIFY.SUBMIT);
+  assert.equal(verifyOf(review).actor, true, '참가자가 할 일이다');
 });
 
-test('후기의 내용 판단은 사람이 한다고 말한다', () => {
-  // 안내문에 '정상적인 수강후기가 아니라 판단되면 환급율이 변경' 이 있다.
-  // 자동이라고만 적으면 사람 판단이 끼는 것을 숨기게 된다.
+test('낸 자료에서 못 읽은 것이 있으면 보완을 받는다고 말한다', () => {
+  // '검토 실패' 가 아니라 '무엇이 빠졌는지' 를 말해야 참가자가 고칠 수 있다.
+  assert.ok(VERIFY.SUBMIT.note.includes('읽지 못하면'));
+  assert.ok(VERIFY.SUBMIT.note.includes('다시 받습니다'));
+});
+
+test('후기 내용으로 환급률이 바뀔 수 있다는 조항을 적는다', () => {
+  // 안내문에 있는 학원 재량이다. 빠뜨리면 조건을 사실과 다르게 말하게 된다.
   const r200 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r200');
   const review = r200.groups[0].items.find((i) => i.id === 'review');
-  assert.equal(verifyOf(review), VERIFY.AUTO_REVIEWED);
-  assert.ok(verifyOf(review).note.includes('사람이 판단'));
   assert.ok(review.detail.includes('환급률이 바뀔 수 있습니다'));
 });
 

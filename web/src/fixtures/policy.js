@@ -273,7 +273,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
           cond('examBelow', 'EXAM', '시험', '목표 점수 미달성', null, '성적표 제출'),
           cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
-            + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
+            + '환급률이 바뀔 수 있습니다.'),
         ]),
       ], siwon(50)),
       // 100% 는 경로가 둘이고 받는 돈이 다르다. 응시료 환급은 성적 경로의
@@ -285,7 +285,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
             '매일 다른 강의로 진도율 60% 이상 수강 · 자정 기준 당일 인정'),
           cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
-            + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
+            + '환급률이 바뀔 수 있습니다.'),
         ], siwon(100)),
         path('경로 2 · 성적', [
           cond('exam750', 'EXAM', '시험', '750점', '이상',
@@ -298,7 +298,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
             '본인 계정의 성적 조회 결과로 판정합니다.'),
           cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
-            + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
+            + '환급률이 바뀔 수 있습니다.'),
         ], siwon(100, 1)),
       ], null),
       tier('r200', '200%', [
@@ -310,7 +310,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
             '본인 계정의 성적 조회 결과'),
           cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
-            + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
+            + '환급률이 바뀔 수 있습니다.'),
         ]),
       ], siwon(200, 1)),
       tier('r300', '300%', [
@@ -322,7 +322,7 @@ export const ALTERNATIVE_POLICY = Object.freeze({
             '본인 계정의 성적 조회 결과'),
           cond('review', 'REVIEW', '후기', '200byte', '이상',
             '수강시작일 +107일 이내 작성 · 정상적인 후기가 아니라고 판단되면 '
-            + '환급률이 바뀔 수 있습니다.', 'AUTO_REVIEWED'),
+            + '환급률이 바뀔 수 있습니다.'),
         ]),
       ], siwon(300, 1)),
     ]),

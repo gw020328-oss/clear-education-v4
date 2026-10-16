@@ -105,7 +105,7 @@ const EVIDENCE_KINDS = Object.freeze([
 /** 그 조건을 어떻게 확인하는가. 화면이 아는 코드만 받는다 — 모르는 코드가
     오면 확인 방법 없이 그려져서 참가자가 할 일을 못 본다 */
 const VERIFY_KINDS = Object.freeze([
-  'SELF_LOGIN', 'SELF_LOGIN_SHARED', 'AUTO', 'AUTO_REVIEWED', 'SUBMIT',
+  'SELF_LOGIN', 'SELF_LOGIN_SHARED', 'AUTO', 'SUBMIT',
 ]);
 
 /**
