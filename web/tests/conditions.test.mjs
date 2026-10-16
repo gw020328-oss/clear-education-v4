@@ -432,15 +432,24 @@ test('진행 상황이 든 시나리오가 계약을 지킨다', async () => {
   }
 });
 
-test('수강후기는 참가자가 자료를 낸다', () => {
-  // 후기는 학원 사이트에 쓰는 글이지만 우리가 그 사이트를 읽을 수단이
-  // 없다. 그래서 참가자가 쓴 화면을 자료로 내고, 낸 자료에서 작성일·분량을
-  // 읽지 못하면 보완을 요청한다.
+test('수강후기는 가져오는 것으로 끝난다', () => {
+  // 시연에서는 후기를 Moodle 게시판에 쓴다. API 로 읽을 수 있으므로
+  // 참가자가 CLEAR 에 파일을 내지 않는다. 사진이 필요한 반은 가져온 글에
+  // 붙은 사진을 Vision 이 보는데, 그것도 참가자가 할 일은 아니다.
   const r200 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r200');
   const review = r200.groups[0].items.find((i) => i.id === 'review');
   assert.equal(review.evidence, EVIDENCE.REVIEW);
-  assert.equal(verifyOf(review), VERIFY.SUBMIT);
-  assert.equal(verifyOf(review).actor, true, '참가자가 할 일이다');
+  assert.equal(verifyOf(review), VERIFY.AUTO);
+  assert.equal(verifyOf(review).actor, false, '참가자가 할 일이 아니다');
+});
+
+test('참가자가 직접 움직이는 조건은 성적뿐이다', () => {
+  // 출석·모의테스트·후기가 모두 자동이 되면서, 참가자가 할 일은 본인
+  // 계정으로 성적을 불러오는 것 하나만 남았다. 화면의 중심이 '할 일' 에서
+  // '어디까지 확인됐고 왜 그렇게 판단했나' 로 옮겨간다.
+  const r200 = conditionsFrom(ALTERNATIVE_POLICY).tiers.find((t) => t.id === 'r200');
+  const actors = r200.groups[0].items.filter((i) => verifyOf(i).actor).map((i) => i.id);
+  assert.deepEqual(actors, ['exam750']);
 });
 
 test('낸 자료에서 못 읽은 것이 있으면 보완을 받는다고 말한다', () => {

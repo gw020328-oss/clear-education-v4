@@ -31,10 +31,9 @@ export const EVIDENCE = Object.freeze({
   BASELINE: '성적 증명',
   LEARNING: '학습 기록',
   MOCK_TEST: '학습 기록',
-  // 수강후기. 학원 사이트에 쓰는 글이지만 우리가 그 사이트를 읽을 수단이
-  // 없어서, 참가자가 쓴 화면을 자료로 낸다. 낸 자료에서 작성일·분량을
-  // 읽지 못하면 보완을 요청한다.
-  REVIEW: '제출 서류',
+  // 수강후기. 시연에서는 Moodle 게시판에 쓰므로 API 로 가져온다. 참가자가
+  // CLEAR 에 파일을 내는 것이 아니다 — 쓰는 곳도 고치는 곳도 Moodle 이다.
+  REVIEW: '학원 기록',
   BLOG: '제출 서류',
   NONE: null,
 });
@@ -69,10 +68,12 @@ export const VERIFY = Object.freeze({
     note: '위 성적 조회와 같은 로그인에서 함께 가져옵니다. 따로 낼 것은 없지만, '
       + '받은 목록이 응시 전부인지는 아직 확인하지 못했습니다.',
   }),
+  // 에이전트가 알아서 불러와 검사한다. 참가자가 버튼을 눌러 시작하는
+  // 구조가 아니다.
   AUTO: Object.freeze({
     tag: '자동',
     actor: false,
-    note: '학원 시스템 기록으로 자동 확인합니다. 참가자가 따로 낼 것은 없습니다.',
+    note: '학원 기록을 가져와 확인합니다. 참가자가 따로 낼 것은 없습니다.',
   }),
   SUBMIT: Object.freeze({
     tag: '직접 제출',
@@ -96,7 +97,10 @@ const VERIFY_BY_KIND = Object.freeze({
   BASELINE: 'SELF_LOGIN_SHARED',
   LEARNING: 'AUTO',
   MOCK_TEST: 'AUTO',
-  REVIEW: 'SUBMIT',
+  // 후기는 Moodle 게시판에 쓰므로 가져오는 것으로 끝난다. 사진이 필요한
+  // 반은 가져온 글에 붙은 사진을 Vision 이 보는데, 그것도 참가자가 할
+  // 일은 아니다.
+  REVIEW: 'AUTO',
   BLOG: 'SUBMIT',
 });
 
