@@ -4,7 +4,9 @@
 
 **결론: 맞춤 attestor 확장 없이 표준 서명을 비공개 witness로 검증하는 최소 경로는 구현 가능하다. 공개 합성 signer + 전체 표 fixture에서 실제 blinded UltraPlonk proof 생성·독립 검증과 변조 거부를 실행했다. 실제 공식 YBM proof의 wrapper 검증·사업 범위 원천 중복 방지는 아직 완료하지 않았다.**
 
-예치 정책 OPEN, 400% PRECHECK_ONLY, 500% 제외, grant/outbox HOLD, 제품 independentClaim NO_GO 유지. 제품 src/API/DB/web/금고/Windows 변경 없음. 별도 package/lock과 격리 workflow만 추가한다. 실제 로그인·과거 비공개 proof/키/쿠키 읽기·유료 prover·공개 RPC/거래·실자금·운영자 연락/맞춤 배포 없음.
+현재 범위: 예치 정책 OPEN, **400% 전용 블로그 챌린지·사전검토 화면까지 제외**, 500% 제외, grant/outbox HOLD, 제품 independentClaim NO_GO 유지. 목표는 YBM750+·시원스쿨50~300%·일반 후기 AI/Vision 검토다. 아래 v1 측정과 verification.json은 과거 실험 기록이며 소급 수정하지 않는다.
+
+2026-10-16 후속: [가변 표 parser·공식 signer 준비·재사용 방지 v2](v2/README.ko.md)는 별도 Draft 연구 단위다. native 컴파일/ACVM 구성요소와 호스트 검증을 실제 통합 ZK 성공으로 합산하지 않는다. v1의 49c37f8 성공 기록을 보존한다. 제품 src/API/DB/web/금고/Windows 변경 없음. 별도 package/lock과 격리 workflow만 추가한다. 실제 로그인·과거 비공개 proof/키/쿠키 읽기·유료 prover·공개 RPC/거래·실자금·운영자 연락/맞춤 배포 없음.
 
 ## 이미 성공한 실제 경로를 출발점으로 삼는다
 
