@@ -72,7 +72,9 @@ export function createLocalReviewProjectionSession(resolveCurrent,{nowMs=()=>Dat
   const receipts=new WeakMap();let generation=0,clockFloor=0;
   const clock=()=>{const n=nowMs();checkMs(n);check(n>=clockFloor,'LOCAL_REVIEW_CLOCK');clockFloor=n;return n;};
   const latest=()=>{try{
-    const value=structuredClone(resolveCurrent());validateReviewProjection(value.projection,value.context);return value;
+    const {context,projection}=resolveCurrent();
+    const value={context:structuredClone(context),projection:structuredClone(projection)};
+    validateReviewProjection(value.projection,value.context);return value;
   }catch{check(false,'LOCAL_REVIEW_CURRENT_UNAVAILABLE');}};
   const fresh=(context,projection)=>{
     const current=latest();
