@@ -48,7 +48,7 @@ PR71은 pin.readerId와 API site_info.userid를 비교하지만 반환 facts에 
 - `rawBodyHash`는 JSON에서 디코드한 `source.body` 문자열의 UTF-8 bytes에 SHA-256을 적용한다. HTTP 응답 전체 bytes나 HTML 렌더링 지문으로 부르지 않는다. 원시 응답·토큰/헤더를 보관하지 않는다.
 - 최소 profile `clear-review-plain-nfc-lf.1`: [Moodle4.5 형식 상수](https://github.com/moodle/moodle/blob/MOODLE_405_STABLE/lib/weblib.php#L34-L56)의 `messageFormat=2`(plain text)만 허용, Unicode well-formed/NUL·128KiB 한도 확인, CRLF/CR→LF, NFC, 나머지 공백·NBSP·대소문자·문장부호·앞뒤 공백을 보존한다. 제목은 plain 문자열로 같은 규칙을 적용한다. `normalizerVersion + title + body`를 domain-separated canonical digest로 결합한다.
 - 정규화는 **내용 동일성 대조용**이다. 공식 분량·200byte·공백 계산 규칙이 아니고 C2 원본 inputHash를 바꾸지 않는다. 정규화 후 일치해도 원본 rawBodyHash와 inputHash는 각각 남는다.
-- HTML1/Moodle0/Markdown4는 현재 `RS_NORMALIZATION_UNSUPPORTED`. 정규식 태그 삭제나 임의 entity 해석으로 동일성을 만들지 않는다. HTML 후속은 inert parser의 정확한 버전, entity/block/br/NBSP/숨김·script/style·첨부·pluginfile 링크/상대표시 처리, 한도와 테스트를 먼저 고정한다. 원문은 DOM 실행·외부 URL/이미지 로드 없이 취급하고 sanitized 표시도 원문과 별도 지문/버전을 사용한다.
+- HTML1/Moodle0/Markdown4는 현재 `RS_NORMALIZATION_UNSUPPORTED`. 정규식 태그 삭제나 임의 entity 해석으로 동일성을 만들지 않는다. HTML 후속은 inert parser의 정확한 버전, entity/block/br/NBSP/숨김·script/style·첨부·pluginfile 링크/상대표시 처리, 한도와 테스트를 먼저 고정한다. 원문은 DOM 실행·외부 URL/이미지 로드 없이 취급하고 sanitized 표시도 원문과 별도 지문/버전을 사용한다. **PR71 실측 본문은 HTML이므로 이번 plain-text fixture 통과가 그 실측 본문과 C2의 호환 성공을 뜻하지 않는다.** HTML extractor가 합의되기 전 실제 lab 본문 연결은 미지원이다. API가 제공한 표시/가공 문자열과 Moodle DB의 작성 원본을 동일하다고 가정하지 않으며 rawBodyHash는 반환 표현의 지문만 뜻한다.
 - 최소 fixture는 **제목·본문 텍스트만** 연결한다. 이미지·첨부·태그·links·사진 진위/대표사진 대응은 미지원이며 해당 내용이 있으면 coverage 오류로 보류한다. 게시물 URL/ID와 screenshot이 같다는 이유만으로 bytes 동일성을 선언하지 않는다.
 
 ### 사실 → AI projection 경계
