@@ -309,7 +309,9 @@ test('조건마다 어떻게 확인하는지 붙는다', () => {
   assert.equal(verifyOf(attend).actor, false, '출석은 참가자가 할 일이 없다');
   assert.equal(verifyOf(exam).actor, true, '성적은 본인이 로그인해야 한다');
   assert.equal(verifyOf(history).actor, false, '과거 이력은 같은 로그인에서 함께 확인된다');
-  assert.equal(verifyOf(history).tag, '함께 확인');
+  assert.equal(verifyOf(history).tag, '함께 가져옴');
+  // 가져오는 것과 '전부가 맞다' 는 다르다. 수집만으로 끝난 것처럼 적지 않는다.
+  assert.ok(verifyOf(history).note.includes('전부인지는 아직 확인하지 못했'));
 });
 
 test('성적은 제출이 아니라 본인 로그인으로 확인한다', () => {
@@ -530,4 +532,19 @@ test('YBM 시험 인정 기간이 한 기준으로만 적힌다', () => {
   const progress = SCENARIOS.ybmProgress.items[0].conditionProgress.exam750;
   assert.ok(progress.note.includes('수강시작일 이후'));
   assert.ok(!progress.note.includes('수강종료 후'));
+});
+
+test('가져온 것과 전부인 것을 구분한다', () => {
+  // 2년 내 이력은 같은 로그인에서 목록을 받지만, 그 목록이 응시 전부인지는
+  // 모른다(listComplete=false). MET 로 적으면 확인되지 않은 것을 확인했다고
+  // 말하게 된다.
+  const progress = SCENARIOS.altProgress.items[0].conditionProgress.history2y;
+  assert.equal(progress.state, 'NEEDS_CHECK');
+  assert.notEqual(progress.state, 'MET');
+  assert.ok(progress.note.includes('전부인지'));
+
+  const model = conditionsFrom(ALTERNATIVE_POLICY, { history2y: progress });
+  const r200 = model.tiers.find((t) => t.id === 'r200');
+  const item = r200.groups[0].items.find((i) => i.id === 'history2y');
+  assert.equal(progressOf(item).label, '추가 확인 필요');
 });

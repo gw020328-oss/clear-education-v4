@@ -134,7 +134,9 @@ test('보류 사유를 사람 말로 바꾼다', () => {
 
 test('운영자가 확인할 것이 몇 개인지 센다', () => {
   assert.equal(heldCount(SIWON_REVIEW), 3);
-  assert.equal(heldCount(YBM_REVIEW), 1);
+  // YBM 은 금액이 표에 있어 보류가 적지만, 안내문 안에서 시험 인정 기간이
+  // 엇갈려서(L36 「수강시작일 이후 응시」 vs L78 「수료 후」) 그 값도 비어 있다.
+  assert.equal(heldCount(YBM_REVIEW), 2);
 });
 
 test('안내문 줄에서 그 줄로 뽑은 값을 되짚는다', () => {
@@ -142,4 +144,24 @@ test('안내문 줄에서 그 줄로 뽑은 값을 되짚는다', () => {
   assert.deepEqual(fieldsAt(SIWON_REVIEW, 'L27').map((f) => f.fieldId), ['targetScore']);
   // 보류된 값은 아직 근거가 아니므로 되짚지 않는다.
   assert.deepEqual(fieldsAt(SIWON_REVIEW, 'L53'), []);
+});
+
+test('안내문 안에서 근거가 충돌하면 고르지 않고 묻는다', () => {
+  // YBM 안내문은 L36 에서 '수강시작일 이후 응시', L78 에서 '수료 후 정기 토익'
+  // 이라고 한다. 어느 시험이 인정되는지가 달라지는데 AI 가 둘 중 하나를 고르면
+  // 참가자가 못 받을 시험을 받을 수 있다고 믿게 된다.
+  const field = YBM_REVIEW.fields.find((f) => f.fieldId === 'examWindow');
+  assert.equal(field.value, null, '충돌한 값을 채우면 안 된다');
+  assert.equal(field.state, 'HELD');
+
+  const asked = YBM_REVIEW.questions.find((q) => q.fieldIds.includes('examWindow'));
+  assert.ok(asked, '비워만 두고 묻지 않으면 운영자가 모른 채 넘어간다');
+  assert.ok(asked.text.includes('L36') && asked.text.includes('L78'),
+    '어느 줄끼리 어긋나는지 가리켜야 운영자가 대조한다');
+});
+
+test('운영자 화면이 AI 추출과 운영자 확인을 구분한다', () => {
+  // 'AI 가 뽑았다' 와 '사람이 확인했다' 는 다른 일이다. 섞으면 아무도 안 본
+  // 값이 승인된 것처럼 읽힌다.
+  assert.ok(!JSON.stringify(SIWON_REVIEW).includes('확인됨'));
 });

@@ -116,6 +116,7 @@ export const YBM_REVIEW = review({
   blocks: [
     block('L31', '[조건 1] 수강기간 90일 동안 매일 출석하여 1강 이상 완강 (강의 레슨 총 러닝타임의 90% 이상 수강시 인정)'),
     block('L32', '[조건 2] 토익 모의테스트 1회 응시 완료'),
+    block('L36', '- 제출 가능한 정기 토익, 토익스피킹 시험 성적은 수강시작일 이후 응시한 시험만 인정됩니다.'),
     block('L40', '- 환급 신청은 수강종료 후 30일 이내에 가능합니다.'),
     block('L77', '[750+ 환급코스] 100% | 출석+모의테스트 응시+750점 이상 | 170,040'),
     block('L78', '- 수료 후 정기 토익 시험 점수에서 750점 이상 달성 시 수강료를 100% 환급해 드립니다. (제세공과금 22% 공제한 금액)'),
@@ -123,14 +124,24 @@ export const YBM_REVIEW = review({
   fields: [
     field('targetScore', '목표 점수', '점', '750', 'L77', 'OBSERVED', []),
     field('attendDays', '출석 일수', '일', '90', 'L31', 'OBSERVED', []),
-    field('claimWindowDays', '신청 기한', '일', '30', 'L40', 'OBSERVED', []),
+    field('claimWindowDays', '환급 신청 기한', '일', '30', 'L40', 'OBSERVED', []),
+    // 안내문 안에서 두 표현이 엇갈린다. L36 은 '수강시작일 이후 응시', L78 은
+    // '수료 후 정기 토익'. 어느 시험이 인정되는지가 달라지는데, 둘 중 하나를
+    // AI 가 고르면 안 되는 자리다. 비우고 묻는다.
+    field('examWindow', '시험 인정 기간', null, null, 'L36', 'HELD', ['QUESTION:0']),
     field('taxBps', '제세공과금', 'bps', '2200', 'L78', 'OBSERVED', []),
     field('netAmount', '실수령', '원', '170040', 'L77', 'OBSERVED', []),
     // 안내문은 세후 금액만 준다. 세전 수강료는 역산해야 나오는데,
     // 역산은 AI 가 아니라 사람이 확인할 일이다.
-    field('paidAmount', '수강료', '원', null, 'L77', 'HELD', ['QUESTION:0']),
+    field('paidAmount', '수강료', '원', null, 'L77', 'HELD', ['QUESTION:1']),
   ],
   questions: [
+    {
+      questionId: 'exam-window-conflict',
+      fieldIds: ['examWindow'],
+      text: '안내문에 「수강시작일 이후 응시」(L36)와 「수료 후 정기 토익」(L78)이 '
+        + '함께 있습니다. 어느 기준입니까?',
+    },
     {
       questionId: 'gross-from-net',
       fieldIds: ['paidAmount'],
@@ -142,6 +153,7 @@ export const YBM_REVIEW = review({
     { fieldId: 'targetScore', observedValue: '750', location: 'L77' },
     { fieldId: 'attendDays', observedValue: '90', location: 'L31' },
     { fieldId: 'claimWindowDays', observedValue: '30', location: 'L40' },
+    { fieldId: 'examWindow', observedValue: null, location: 'L36' },
     { fieldId: 'taxBps', observedValue: '2200', location: 'L78' },
     { fieldId: 'netAmount', observedValue: '170040', location: 'L77' },
     { fieldId: 'paidAmount', observedValue: null, location: 'L77' },

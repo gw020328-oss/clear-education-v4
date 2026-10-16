@@ -220,7 +220,7 @@ function renderChrome() {
     operator
       ? brandHeader({
         who: '운영자 검토',
-        tagline: '안내문에서 뽑은 값을 확인하고 승인하면 조건이 고정됩니다.',
+        tagline: '안내문에서 AI가 뽑은 값을 사람이 확인하는 자리입니다.',
       })
       : brandHeader(),
     // 반 전환은 참가자 화면의 장치다. 운영자 화면에는 아래쪽에 따로 둔다.

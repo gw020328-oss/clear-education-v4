@@ -42,7 +42,7 @@ export const OPTIONAL_VIEW_FIELDS = Object.freeze([
 
 /** 조건 진행 상태. 화면이 아는 것만 받는다 */
 const PROGRESS_STATES = Object.freeze([
-  'MET', 'UNMET', 'IN_PROGRESS', 'WAITING', 'UNAVAILABLE',
+  'MET', 'UNMET', 'IN_PROGRESS', 'WAITING', 'NEEDS_CHECK', 'UNAVAILABLE',
 ]);
 
 /**

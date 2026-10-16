@@ -9,15 +9,23 @@
 <body>
 <main class="wrap">
 
-  <p class="demo">재설계 시안입니다. 실제 화면이 아니고, 합성 데이터입니다.</p>
+  <p class="demo">
+    재설계 시안입니다. 실제 화면이 아니고 합성 데이터이며,
+    아래 링크와 버튼은 <strong>서류 보완 화면으로 가는 것 말고는 동작하지 않습니다.</strong>
+  </p>
 
   <!-- 1. 반 이름 -->
   <h1>시원스쿨 시작이반 750점반</h1>
 
-  <!-- 2. 확정 여부 -->
+  <!-- 2. 지금 어느 구간·경로를 보고 있는가. 이것부터 말해야 아래 목록이 무슨
+       조건인지 알 수 있다 -->
   <p class="lede">
-    조건 4개 중 <strong>3개</strong> 확인됨 ·
+    <strong>100% 구간</strong>의 <strong>성적 경로</strong>를 보고 있습니다 ·
     환급 금액은 <strong>아직 정해지지 않았습니다</strong>
+  </p>
+  <p class="note">
+    이 반은 환급률 구간이 여럿이고, 구간마다 환급받는 길이 하나가 아닙니다.
+    아래는 지금 고른 경로의 조건입니다. <a href="#terms">다른 구간·경로 비교해 보기</a>
   </p>
 
   <!-- 3. 지금 할 일 하나 -->
@@ -28,18 +36,11 @@
     <a class="btn" href="./documents.html">무엇이 부족한지 보기</a>
   </section>
 
-  <!-- 4. 조건 목록 — 완료에는 표식을 붙이지 않는다 -->
-  <h2>환급 조건</h2>
-  <p class="note">아래를 모두 충족해야 환급 대상입니다.</p>
+  <!-- 4. 고른 경로의 조건. 다른 경로의 조건을 여기 섞지 않는다 -->
+  <h2>100% 환급 · 성적 경로</h2>
+  <p class="note">아래 <strong>3개</strong>를 모두 충족해야 이 경로로 환급받습니다. 지금 <strong>2개</strong> 확인됐습니다.</p>
 
   <ul class="tasks">
-    <li>
-      <div class="task-main">
-        <p class="task-name">출석 100일 연속</p>
-        <p class="task-hint">100일 / 100일 · 학원 기록에서 자동으로 확인됩니다</p>
-      </div>
-      <span class="state">충족</span>
-    </li>
     <li>
       <div class="task-main">
         <p class="task-name">토익 750점 이상</p>
@@ -50,9 +51,9 @@
     <li>
       <div class="task-main">
         <p class="task-name">2년 내 750점 미만 이력</p>
-        <p class="task-hint">위 성적 조회에서 함께 확인됩니다. 따로 할 일은 없습니다</p>
+        <p class="task-hint">같은 로그인으로 함께 가져옵니다 · 받은 목록이 전부인지는 아직 확인하지 못했습니다</p>
       </div>
-      <span class="state">함께 확인</span>
+      <span class="state flag">추가 확인 필요</span>
     </li>
     <li>
       <div class="task-main">
@@ -63,6 +64,23 @@
     </li>
   </ul>
 
+  <!-- 다른 경로를 막지 않는다. 출석으로 가는 길이 따로 있다는 것을 알려 준다 -->
+  <section class="other">
+    <p class="other-head">이 구간에는 다른 길도 있습니다</p>
+    <ul class="tasks tight">
+      <li>
+        <div class="task-main">
+          <p class="task-name">100% 환급 · 출석 경로</p>
+          <p class="task-hint">출석 100일 연속 + 수강후기 — 성적과 과거 이력이 필요 없습니다</p>
+        </div>
+        <span class="state">출석 100일 / 100일</span>
+      </li>
+    </ul>
+    <p class="note">
+      둘 중 <strong>하나만</strong> 충족하면 됩니다. 어느 경로로 환급되는지는 신청 뒤에 정해집니다.
+    </p>
+  </section>
+
   <!-- 5. 금액 — 확정이 아니라는 것이 먼저 -->
   <h2>환급 금액</h2>
   <dl class="pairs">
@@ -71,12 +89,12 @@
       <dd>아직 정해지지 않음</dd>
     </div>
     <div class="pair">
-      <dt>확보된 재원</dt>
+      <dt>이 신청에 배정된 금액</dt>
       <dd>확인 전</dd>
     </div>
     <div class="pair">
-      <dt>금고에 들어간 기록</dt>
-      <dd class="known">확인됨</dd>
+      <dt>확보된 재원</dt>
+      <dd>확인 전</dd>
     </div>
   </dl>
 

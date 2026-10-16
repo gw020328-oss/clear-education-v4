@@ -114,7 +114,13 @@ const ALT_PROGRESS = Object.freeze({
     state: 'UNMET', value: '780점',
     note: '목표 점수를 넘겨서 이 구간에는 해당하지 않습니다.',
   }),
-  history2y: Object.freeze({ state: 'MET', value: '2년 내 750점 이상 없음', at: '1795392000' }),
+  // 목록은 같은 로그인에서 받았지만 그것이 응시 전부인지는 모른다
+  // (EXAM_EVIDENCE.ko.md, listComplete=false). 그래서 MET 가 아니다.
+  history2y: Object.freeze({
+    state: 'NEEDS_CHECK',
+    value: '받은 목록에 750점 이상 없음',
+    note: '목록이 응시 전부인지 아직 확인하지 못했습니다.',
+  }),
   review: Object.freeze({ state: 'MET', value: '412byte', at: '1795651200' }),
   challenge14: Object.freeze({
     state: 'UNMET', value: '9회 / 14회',

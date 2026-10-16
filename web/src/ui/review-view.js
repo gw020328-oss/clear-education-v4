@@ -19,9 +19,15 @@
 
 import { el, clear } from './dom.js';
 
-/** 값이 지금 어떤 상태인가 */
+/**
+ * 값이 지금 어떤 상태인가.
+ *
+ * OBSERVED 를 '확인됨' 이라고 쓰면 안 된다. AI 가 안내문에서 뽑아낸 것일
+ * 뿐이고 운영자는 아직 보지 않았는데, 누가 승인한 값처럼 읽힌다.
+ * 추출과 확인은 다른 일이다.
+ */
 const STATE = Object.freeze({
-  OBSERVED: { label: '확인됨', tone: 'ok', mark: '✓' },
+  OBSERVED: { label: 'AI 추출됨', tone: 'ok', mark: '✓' },
   HELD: { label: '보류', tone: 'held', mark: '!' },
   UNOBSERVED: { label: '안내문에 없음', tone: 'none', mark: '—' },
 });
@@ -126,21 +132,28 @@ export function reviewSection(view) {
       el('div.sec-head', {}, [
         el('h3', { text: view.title }),
         el('span.rv-status', { 'data-held': held ? 'yes' : 'no' }, [
-          el('span', { text: held ? `확인 필요 ${held}개` : '값은 모두 확인됨' }),
+          el('span', {
+            text: held ? `확인 필요 ${held}개` : '추출 완료 · 운영자 검토 필요',
+          }),
         ]),
       ]),
       el('p.muted', {
-        text: `${view.source} 에서 AI가 뽑은 결과입니다. 아래 값을 확인하고 승인하면 조건이 고정됩니다.`,
+        // '승인하면 조건이 고정됩니다' 는 지금 할 수 있는 일보다 큰 말이다.
+        // 운영자 확인은 검토 기록이고, 정책을 게시하거나 계약을 고정하는 것은
+        // 별도 절차다. 서버만 붙이면 고정이 된다고 읽히게 두면 안 된다.
+        text: `${view.source} 에서 AI가 뽑은 결과입니다. 아래 값을 확인하면 검토 결과가 `
+          + '저장됩니다. 계약에 적용하는 것은 별도 확정 절차가 필요합니다.',
       }),
 
       // 승인 가능 여부는 데이터가 말한다. 버튼을 두지 않는 대신 무엇이
       // 막고 있는지는 분명히 적는다.
       el('p.rv-gate', { 'data-open': 'no' }, [
-        el('span.rv-gate-tag', { text: '승인 불가' }),
+        el('span.rv-gate-tag', { text: '검토 저장 불가' }),
         el('span', {
           text: held
             ? `비어 있는 값 ${held}개를 먼저 채워야 합니다.`
-            : '값은 모두 확인됐습니다. 승인은 정책을 고정하는 절차라 서버 연결 뒤에 열립니다.',
+            : '값은 모두 추출됐습니다. 검토 결과를 저장하는 자리는 서버 연결 뒤에 열립니다. '
+              + '저장해도 정책 게시나 계약 고정은 아닙니다.',
         }),
       ]),
 

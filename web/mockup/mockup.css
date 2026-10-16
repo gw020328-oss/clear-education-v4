@@ -113,3 +113,11 @@ h2.tight { margin-top: 40px; }
 
 .more { margin: 12px 0 0; font-size: 16px; }
 .more a { font-weight: 500; }
+
+/* 다른 경로. 지금 고른 경로를 막지 않으면서 '또 다른 길이 있다' 를 알린다.
+   OR 를 AND 로 뭉개면 출석으로 가는 사람에게 성적을 요구하게 된다 */
+.other { margin: 28px 0 0; padding: 18px 20px; background: var(--shade); border-radius: 4px; }
+.other-head { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.4px; color: var(--muted); }
+.tasks.tight { margin-top: 10px; border-top: none; }
+.tasks.tight li { padding: 10px 0 0; border-bottom: none; }
+.other .note { margin-top: 10px; }

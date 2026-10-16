@@ -59,10 +59,15 @@ export const VERIFY = Object.freeze({
     note: '참가자가 본인 계정으로 로그인합니다. 점수를 입력받지 않고 '
       + '로그인한 화면에서 증명이 만들어집니다.',
   }),
+  // 같은 로그인으로 가져올 수 있다는 것과, 받은 목록이 그 사람의 응시
+  // 전부라는 것은 다른 얘기다. '없다' 를 보이려면 목록이 완전해야 하는데
+  // 그 보증이 아직 없다(listComplete=false). '따로 할 일 없음' 이라고만
+  // 적으면 수집만으로 조건이 끝난 것처럼 읽힌다.
   SELF_LOGIN_SHARED: Object.freeze({
-    tag: '함께 확인',
+    tag: '함께 가져옴',
     actor: false,
-    note: '위 성적 조회와 같은 로그인에서 함께 확인됩니다. 따로 할 일은 없습니다.',
+    note: '위 성적 조회와 같은 로그인에서 함께 가져옵니다. 따로 낼 것은 없지만, '
+      + '받은 목록이 응시 전부인지는 아직 확인하지 못했습니다.',
   }),
   AUTO: Object.freeze({
     tag: '자동',
@@ -114,6 +119,10 @@ export const PROGRESS = Object.freeze({
   UNMET: Object.freeze({ label: '미충족', tone: 'unmet', mark: '✕' }),
   IN_PROGRESS: Object.freeze({ label: '진행 중', tone: 'doing', mark: '•' }),
   WAITING: Object.freeze({ label: '아직 확인 안 됨', tone: 'wait', mark: '?' }),
+  // 가져오기는 했는데 그것으로 조건이 끝났다고 말할 수 없는 상태.
+  // 2년 내 이력이 그렇다 — 목록은 받았지만 그게 전부인지를 모른다.
+  // MET 로 적으면 확인되지 않은 것을 확인했다고 말하게 된다.
+  NEEDS_CHECK: Object.freeze({ label: '추가 확인 필요', tone: 'unmet', mark: '!' }),
   UNAVAILABLE: Object.freeze({ label: '확인 불가', tone: 'unmet', mark: '!' }),
 });
 
