@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "scope": "PUBLIC_SYNTHETIC_V2_HOST_AND_PRIVATE_PARSER_COMPONENT",
+  "date": "2026-10-16",
+  "basePr": 69,
+  "baseHead": "49c37f828dea64babcb31c52879baa02142ea797",
+  "scopePolicy": {
+    "ybm": "750+",
+    "siwon": "50..300%",
+    "normalReviewAiVision": true,
+    "400Percent": "EXCLUDED_INCLUDING_BLOG_AND_PRECHECK",
+    "500Percent": "EXCLUDED",
+    "fundingPolicy": "OPEN",
+    "grantOutbox": "HOLD"
+  },
+  "tests": {
+    "hostIpcReuse": {
+      "pass": 61,
+      "fail": 0
+    },
+    "v1AndV2HostRegression": {
+      "pass": 91,
+      "fail": 0
+    },
+    "parserAcvm": {
+      "pass": 29,
+      "fail": 0,
+      "includesExpectedKnownGapCounterexamples": 3,
+      "blindedProofGenerated": false
+    }
+  },
+  "compiler": {
+    "version": "1.0.0-beta.3+ceaa1986628197bd1170147f6a07f0f98d21030a",
+    "platform": "darwin-arm64",
+    "finalRoute": "HASH_PINNED_NATIVE",
+    "capacityBytes": 2048,
+    "originalWasm64": "COMPILE_ONLY_PASS",
+    "originalWasm1024": "COMPILE_AND_SYNTHETIC_WITNESS_PASS",
+    "originalWasm2048": "WASM_UNREACHABLE",
+    "optimizedWasm2048WithoutUtf8Calendar": "COMPILE_AND_SYNTHETIC_WITNESS_PASS",
+    "finalWasm2048": "WASM_UNREACHABLE",
+    "finalNative2048": "COMPILE_PASS",
+    "finalNativeCompileSeconds": 43.74,
+    "finalNativeMaxRssBytes": 2635300864,
+    "finalNativePeakFootprintBytes": 5490776808,
+    "exactWasmTrapRootCause": "UNCONFIRMED_RESOURCE_PRESSURE_INFERRED"
+  },
+  "program": {
+    "bytecodeSha256": "d14d2b988911d67b9a7275053c98375831b603fe956864a115f679a2c77b740d",
+    "compressedBytes": 16747358,
+    "uncompressedAcirBytes": 394614745,
+    "sourceSha256": "675e82018c97c7c5ba8acd9cb31caa6c10bae86d445cc08628be5822a6d40605",
+    "allInputsPrivate": true
+  },
+  "backend": {
+    "version": "bb.js 0.82.2",
+    "gateCountStatus": "WASM_UNREACHABLE",
+    "gateCount": null,
+    "v2ProofGenerated": false,
+    "v2EvmExecuted": false
+  },
+  "officialSigner": {
+    "registryActuallyFetched": true,
+    "registryRawSha256": "2d93ac5fede93d5aef2b120715b097f1a5feced0cd571ffc02764d7bc0fa87fa",
+    "addressCount": 3,
+    "epochValue": 1,
+    "epochIsValidityWindow": false,
+    "snapshotTtlSeconds": 86400,
+    "realOfficialClaimInput": false,
+    "syntheticSignatureVerified": true,
+    "hostOnly": true,
+    "circuitIntegrated": false
+  },
+  "memory": {
+    "syntheticChildIpcTested": true,
+    "publicOutputContainsSource": false,
+    "waitsForChildClose": true,
+    "collectorIntegrated": false,
+    "liveModeEnabled": false,
+    "zeroizationGuarantee": false
+  },
+  "reuse": {
+    "privateHmacModel": true,
+    "operationalOprf": false,
+    "concurrentSameSourceOneWinner": true,
+    "trustedCheckpointRestartTested": true,
+    "keyRotationMismatchRejected": true,
+    "rollbackCounterexamplePreserved": true,
+    "offlineExerciseAfterInitialIssuerReceipt": true,
+    "requiresExtraRegistrationAuthority": true,
+    "sourceIdentifierSemanticsVerified": false,
+    "productAdopted": false
+  },
+  "review": "REVIEW.ko.md",
+  "remainingGates": [
+    "HOST_CIRCUIT_ATTRIBUTES_SOURCE_ROW_MARKER_AND_DUPLICATES",
+    "VARIABLE_JSON_PREIMAGE_SIGNATURE_CIRCUIT",
+    "BACKEND_RESOURCE_LIMIT",
+    "ACTUAL_TABLE_CAPACITY_AND_GRAMMAR",
+    "MANAGED_COLLECTOR_INTEGRATION",
+    "SAFE_DURABLE_SOURCE_REUSE",
+    "RELEASE_VK_AND_SIGNER_LIFECYCLE"
+  ],
+  "realYbm": false,
+  "independentClaim": "NO_GO",
+  "paymentAllowed": false,
+  "productionReady": false,
+  "loginRequested": false,
+  "ciScope": "Existing isolated wrapper workflow includes v2 host/IPC/reuse via v2.test.mjs; native v2 circuit is a separate LOCAL check. Exact head/run links are recorded in the Draft PR."
+}
