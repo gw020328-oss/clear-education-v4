@@ -70,3 +70,7 @@ git -C "$PUBLIC_MOODLE_REPO" archive 215f44380bdc3ccf852a3a22e34f8423ff64033a | 
 ```
 
 실제 Academy HTTPS/secret store·신청자 매핑 발급·후기 권한별 열람·감사 이력·retention·원천 freshness·원자 수락 및 자동 AI 소비는 후속이다. [공통 통합 제안](REVIEW_API_INTEGRATION.ko.md)을 먼저 검토해야 한다.
+
+## 2026-10-17 acquisition 후속
+
+고정 공통 계약 `31879659e11d9cbfa0aa88e48d825047080f4e39`를 정상 merge하고, 기존 facts v1을 보존한 별도 [query/acquisition wrapper](REVIEW_API_ACQUISITION.ko.md)를 추가했다. 같은 실제 read 실행의 site_info.userid를 공유 acquisition에 결합한다. 추가 검증은 오프라인44개이며 이번 실제 Moodle 재시험0건이다. 기존13/13과 합산하지 않는다. 공통 HTML/registry/lease·C2 내용 동일성/전체 수락은 여전히 후속이다.

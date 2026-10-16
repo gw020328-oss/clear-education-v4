@@ -25,3 +25,7 @@
 - 새31개 mock/offline + 기존6개 contract: 같은 초 수정·페이지 누락/반복·늦은 submission/route/workflow/run·매핑 변경·취소·clock·응답 한도·token timeout·인자 변경/함수 우회 거부. 실제 API 시험과 별도 분모다.
 - C2/M1 통합 지점은 기존 `src/product-workflow/contract.mjs`, `src/document-precheck/workflow-adapter.mjs` 및 `MVP_DOCUMENT_HTTP_CONTRACT.ko.md`; C3는 `MVP_EVIDENCE_HTTP_CONTRACT.ko.md`를 읽고 제안했다. 기존 파일은 수정하지 않았다.
 - 루트 CI 편입은 공통 담당의 별도 변경이다. 이번 CI 성공이 신규 후기31개나 실제Docker13개를 실행했다는 뜻이 아니다.
+
+## 2026-10-17 고정 계약 소비 현황
+
+위 문서는 최초 제안 이력이다. 후속 정본 [REVIEW_BRIDGE_V1](../current/REVIEW_BRIDGE_V1.ko.md)의 fixed commit `31879659e11d9cbfa0aa88e48d825047080f4e39`를 정상 merge하여 공유 query/acquisition DTO를 import했다. Moodle 전용 [readReviewAcquisition](REVIEW_API_ACQUISITION.ko.md)는 실제 같은 read의 reader 응답과 facts/query/pin/run을 묶고 시작·완료 hash/lease/current/cancel을 확인한다. 공통 normalizer/registry/lease projection·C2 내용 결합·영속 수락/HTTP/DB는 통합 담당의 별도 관문으로 남는다. 기존 facts v1과 proposal fixture는 변경하지 않았다.
