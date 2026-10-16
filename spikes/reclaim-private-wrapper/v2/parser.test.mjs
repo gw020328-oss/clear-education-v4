@@ -15,6 +15,9 @@ test('date separator normalizes; registration leading zeros stay distinct pendin
  const r=parse(table([{date:'2026-10-10',number:'00123456',score:'850'}]));assert.equal(r[0].fields.registration_number,'00123456');assert.equal(r[0].fields.exam_date,'2026-10-10');
 });
 const bad={
+ 'wrong source exam marker':()=>table().replace("name='TOE'","name='JPT'"),
+ 'missing source row name':()=>table().replace("name='TOE'",''),
+ 'missing source row class':()=>table().replace("class='trSB'",''),
  'duplicate source rows':()=>table([rows[0],rows[0]]),
  'same ID after date normalization':()=>table([rows[0],{...rows[0],date:'2026-10-10'}]),
  'ambiguous nested table':()=>table().replace('<td> TOEIC </td>','<td><table><tr><td>TOEIC</td></tr></table></td>'),

@@ -11,14 +11,14 @@ function tag(raw){
   const m=/^<(\/?)([a-z][a-z0-9]*)([\s\S]*?)>$/.exec(raw);if(!m)fail('HTML_TAG');
   const [,slash,name,attrs]=m;if(!containers.has(name))fail('HTML_UNSUPPORTED_TAG');
   if(slash){if(!spaces.test(attrs))fail('HTML_CLOSE');return {name,close:true};}
-  // Attribute names/values are not source facts. Parse quotes to forbid repair,
-  // duplicate attributes and tag/control delimiters hidden in attribute syntax.
-  let s=attrs;const seen=new Set();
+  // Only pinned row markers use attributes; dates/numbers/scores come from cells.
+  // Reject duplicate attributes and delimiters requiring browser HTML repair.
+  let s=attrs;const seen=new Set(),attributes=Object.create(null);
   while(s.length){if(spaces.test(s))break;
     const a=/^[\t\r\n ]+([a-zA-Z_:][a-zA-Z0-9_:.-]*)(?:[\t\r\n ]*=[\t\r\n ]*(?:"([^"<>]*)"|'([^'<>]*)'|([^\s"'=<>`]+)))?/.exec(s);
-    if(!a)fail('HTML_ATTRIBUTE');const key=a[1].toLowerCase();if(seen.has(key))fail('HTML_DUPLICATE_ATTRIBUTE');seen.add(key);s=s.slice(a[0].length);
+    if(!a)fail('HTML_ATTRIBUTE');const key=a[1].toLowerCase();if(seen.has(key))fail('HTML_DUPLICATE_ATTRIBUTE');seen.add(key);attributes[key]=a[2]??a[3]??a[4]??'';s=s.slice(a[0].length);
   }
-  return {name,close:false};
+  return {name,close:false,attributes};
 }
 export function parsePrivateTable(bytes){
   if(!(bytes instanceof Uint8Array)||!bytes.length||bytes.length>LIMITS.bytes)fail('HTML_SIZE');
@@ -57,7 +57,7 @@ export function parsePrivateTable(bytes){
       else if(t.name==='col'){if(parent!=='colgroup')fail('HTML_COLUMN');}
       else if(t.name==='tr'){
         if(!['table','thead','tbody','tfoot'].includes(parent)||current||rows.length>=LIMITS.rows)fail('HTML_ROW');
-        current={physicalIndex:rows.length,header:false,cells:[]};
+        current={physicalIndex:rows.length,header:false,cells:[],attributes:t.attributes};
       }else if(t.name==='td'||t.name==='th'){
         if(parent!=='tr'||!current||cell||current.cells.length>=LIMITS.cells)fail('HTML_CELL');
         if(current.cells.length&&current.header!==(t.name==='th'))fail('HTML_MIXED_ROW');
@@ -71,6 +71,7 @@ export function parsePrivateTable(bytes){
   const results=[],seen=new Set();
   for(const r of rows){
     if(r.header)continue;if(r.cells.length<4)fail('HTML_FACT_COLUMNS');
+    if(r.attributes.name!=='TOE'||!(r.attributes.class??'').split(/\s+/).includes('trSB'))fail('HTML_SOURCE_ROW_MARKER');
     const c=r.cells.slice(0,4).map(x=>x.trim());if(c.some(x=>/[<>&]/.test(x)))fail('HTML_FACT_ENCODING');
     if(c[0]!=='TOEIC')fail('HTML_UNSUPPORTED_EXAM');
     const date=/^(\d{4}([.-])\d{2}\2\d{2})\((월|화|수|목|금|토|일)\)$/.exec(c[1]);

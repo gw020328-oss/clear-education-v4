@@ -43,6 +43,7 @@ test('private bounded parser: actual ACVM constraints, not host-parser acceptanc
  for(const [name,html] of [
   ['duplicate exam in another row',table([rows[0],rows[0]])],
   ['duplicate HTML attribute',table(rows,{attrs:' id=x id=y'})],
+  ['source row marker missing',table().replace("name='TOE'",'')],
  ])await t.test('KNOWN GAP: '+name,async()=>{
   assert.throws(()=>parsePrivateTable(Buffer.from(html)));await run(html);
  });

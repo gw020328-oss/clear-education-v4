@@ -15,17 +15,17 @@
   },
   "tests": {
     "hostIpcReuse": {
-      "pass": 57,
+      "pass": 60,
       "fail": 0
     },
     "v1AndV2HostRegression": {
-      "pass": 87,
+      "pass": 90,
       "fail": 0
     },
     "parserAcvm": {
-      "pass": 28,
+      "pass": 29,
       "fail": 0,
-      "includesExpectedKnownGapCounterexamples": 2,
+      "includesExpectedKnownGapCounterexamples": 3,
       "blindedProofGenerated": false
     }
   },
@@ -93,7 +93,7 @@
   },
   "review": "REVIEW.ko.md",
   "remainingGates": [
-    "HOST_CIRCUIT_ATTRIBUTE_AND_DUPLICATE_EQUIVALENCE",
+    "HOST_CIRCUIT_ATTRIBUTES_SOURCE_ROW_MARKER_AND_DUPLICATES",
     "VARIABLE_JSON_PREIMAGE_SIGNATURE_CIRCUIT",
     "BACKEND_RESOURCE_LIMIT",
     "ACTUAL_TABLE_CAPACITY_AND_GRAMMAR",

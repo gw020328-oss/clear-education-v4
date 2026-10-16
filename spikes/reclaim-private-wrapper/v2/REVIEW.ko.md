@@ -4,6 +4,8 @@
 
 수정한 발견 사항:
 
+- 기존 YBM source-policy와 대조해 v2 호스트의 TOE/trSB 행 표시 검사를 보강했다. 이름/클래스 누락 또는 다른 시험 표시를 거부한다. 회로의 해당 속성 검사 미완료는 별도 수락 반례로 보존한다.
+
 - snapshot이 만료된 환경에서는 공식 목록에 없는 키 테스트가 signer 검사에 도달하지 않았다. freshness 판정과 서명 키 검사를 분리했다. 만료 결과를 공식 서명 검증 결과로 합산하지 않는다. start 포함/end 제외 경계도 명시했다.
 - private registry의 비동기 서명 검증 도중 close하면 종료 뒤 상태를 기록할 수 있었다. await 뒤 closed를 다시 확인하며 실제 동시 종료 회귀를 추가했다.
 - 자식의 호스트 검증 결과에 rowCount가 포함되어 원천 메타데이터가 불필요하게 노출될 수 있었다. 공개 결과에서 제거하고 부모가 정확한 고정 schema만 새로 구성하게 했다.
@@ -12,7 +14,7 @@
 
 의도적으로 미해결 상태를 보존한 사항:
 
-- 회로는 중복 원천 행/중복 HTML 속성을 host와 동일하게 거부하지 않는다. 두 반례는 실제 ACVM 수락을 확인하는 테스트다. 이것을 완성된 검증기의 허용 사례로 채택하지 않으며 live 모드가 없다.
+- 회로는 중복 원천 행/중복 HTML 속성/원천 행 표시 누락을 host와 동일하게 거부하지 않는다. 세 반례는 실제 ACVM 수락을 확인하는 테스트다. 이것을 완성된 검증기의 허용 사례로 채택하지 않으며 live 모드가 없다.
 - 가변 전체 표와 canonical claim JSON의 escaping/Keccak/EIP-191/signature가 아직 같은 회로에 없다. 호스트의 signatureVerified를 회로 사실로 소비하는 제품 경로를 만들지 않았다.
 - 공식 signer 공개 목록/TTL/epoch1의 의미는 호스트 adapter에 고정했지만 실제 공식 새 proof 검증/회로 signer pin/공식 key 회전 유효기간은 미검증이다.
 - native compiler는 2KiB 회로를 만들지만 bb.js gate-size 계산이 중단된다. ACVM PASS를 proof 생성 가능성이나 실제 EVM 성공으로 표시하지 않는다.

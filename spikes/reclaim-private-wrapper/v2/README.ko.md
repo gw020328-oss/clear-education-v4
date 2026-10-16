@@ -8,8 +8,8 @@
 
 | 구성 | 현재 검증 수준 | 제품에 쓰기 전 남은 조건 |
 | --- | --- | --- |
-| 가변 표 호스트 parser | 합성 3행·헤더·공백·속성·부가 마크업, 6~10자리, 날짜 정규화·중복 행·UTF-8·상한 검사 | 실제 새 YBM 마크업 적합성은 미확인. 8,192바이트/16행/12셀/깊이16 제한 |
-| 비공개 parser 회로 | 별도 ACVM 실행. 모든 원천 바이트 private, 선택한 행의 날짜/수험번호/점수 결합, 달력/UTF-8·2,048바이트/행·셀 경계 | 중복 행/속성 거부 및 모든 비선택 행 사실의 호스트 동등성 미완료. 서명된 canonical JSON preimage와 아직 단일 회로로 연결되지 않음 |
+| 가변 표 호스트 parser | 합성 3행·헤더·공백·속성·부가 마크업, 6~10자리, 날짜 정규화·중복 행·원천 행 name/class·UTF-8·상한 검사 | 실제 새 YBM 마크업 적합성은 미확인. 8,192바이트/16행/12셀/깊이16 제한 |
+| 비공개 parser 회로 | 별도 ACVM 실행. 모든 원천 바이트 private, 선택한 행의 날짜/수험번호/점수 결합, 달력/UTF-8·2,048바이트/행·셀 경계 | 중복 행/속성·원천 행 name/class 거부 및 모든 비선택 행 사실의 호스트 동등성 미완료. 서명된 canonical JSON preimage와 아직 단일 회로로 연결되지 않음 |
 | 공식 signer 호스트 adapter | 정확한 기존 historyParams, claim identifier, EIP-191 서명 복구·주소 pin, 등록/owner/context/정책/시간 검증 | 새 공식 서명 입력 없음. 회로 signer membership·VK/release pin·실제 proof 연결은 미완료 |
 | 메모리 IPC | 합성 전용 child, 원문 출력/파일 저장 경로 없음, 고정 결과만 반환, close 이후 완료, timeout/오류/취소 회귀 | 기존 관리형 collector 연결 미구현, 실제 모드 명시 차단. JS 버퍼 일부 덮어쓰기를 완전한 메모리 소거로 주장하지 않음 |
 | 비공개 HMAC registry | 재발급/다른 지갑/날짜 표기/동시 등록과 상태 재시작 모델 | 운영 OPRF·영속 DB·키 보관/회전·rollback 방지 없음 |
@@ -39,7 +39,7 @@
 
 `compiler-repro/original.nr`와 `compiler-probe.mjs`에 실패 구성을 보존했다. `native-compiler.mjs`는 공식 [beta.3 release](https://github.com/noir-lang/noir/releases/tag/v1.0.0-beta.3)의 고정 아카이브/실행 파일 해시를 검사하고 저장소 `.toolchain/wrapper-v2-nargo`만 사용한다. release API에는 발행자 digest가 없었으므로 이 pin은 HTTPS로 관찰한 바이트 고정이며 서명된 공급망 보증이 아니다. 전역 Node/Rust/nargo를 변경하지 않는다. native의 prerelease `compiler_version` 거부는 별도 도구 호환 문제로 분리하고 실행 파일 지문으로 정확한 버전을 고정한다.
 
-다음 구현 단위는 바이트마다 전체 HTML 상태기를 복제하는 방식을 **경계가 검증되는 토큰 구간 witness + 전체 바이트/UTF-8 검사**로 바꾸어 ACIR 크기를 줄이는 것이다. 토큰 힌트의 누락·겹침·가짜 경계가 회로에서 거부되어야 하며 단순 호스트 파싱 결과는 대체물이 아니다. 그 후 중복/속성 규칙과 JSON escaping→동일 서명 preimage 연결을 완성하고 prover 크기를 다시 측정한다. 다른 zkVM 비교도 대안이지만 이번에 설치/실행하지 않았다.
+다음 구현 단위는 바이트마다 전체 HTML 상태기를 복제하는 방식을 **경계가 검증되는 토큰 구간 witness + 전체 바이트/UTF-8 검사**로 바꾸어 ACIR 크기를 줄이는 것이다. 토큰 힌트의 누락·겹침·가짜 경계가 회로에서 거부되어야 하며 단순 호스트 파싱 결과는 대체물이 아니다. 그 후 중복/속성·원천 행 표시 규칙과 JSON escaping→동일 서명 preimage 연결을 완성하고 prover 크기를 다시 측정한다. 다른 zkVM 비교도 대안이지만 이번에 설치/실행하지 않았다.
 
 ## 공식 서명자와 시간 경계
 
