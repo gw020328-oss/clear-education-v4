@@ -1,5 +1,7 @@
 # 일반 수강 후기 검토 어댑터 — 2026-10-16
 
+2026-10-17 Python 부트캠프 P2 후속: P0 fixed03fa6432를 정상 merge하고 [회고3topic 전용 어댑터](REVIEW_PRECHECK_BOOTCAMP_P2.ko.md)를 추가했다. 새 wrapper/capability를 사용하며 기존 C2/EXAM/BOOLEAN 의미를 바꾸지 않는다. 기존 일반후기/LOCAL bridge 이력은 보존한다. 이번 새 모델/키조회0, 실제 회고 모델 품질은 미검증이다.
+
 2026-10-17 LOCAL 연결 후속: fixed common commit31879659를 정상 merge하고 [LOCAL 소비 어댑터](REVIEW_PRECHECK_LOCAL_BRIDGE.ko.md)를 추가했다. FIXTURE/grounding 경로는 보존하며 새319개 오프라인 검증과 실제API/모델 미실행을 구분한다. 전체 수락/HTTP/DB는 미구현이다.
 
 2026-10-16 오프라인 개선 후속: [보완 사유·근거 위치 v2](REVIEW_PRECHECK_GROUNDING_V2.ko.md)를 추가했다. 저장 응답 후처리 개선과 새 실제 모델 성능을 구분하며 v2 유료 호출은0이다. 아래 기존 실행 기록은 보존한다.
