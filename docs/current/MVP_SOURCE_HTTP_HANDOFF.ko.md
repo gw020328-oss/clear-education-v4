@@ -1,6 +1,8 @@
 <!-- 최신 C2 구현 절이 아래의 과거 계약/미구현 상태보다 우선한다. -->
 # MVP HTTP 연결·서준형 프론트 인계
 
+2026-10-17 추가 승인·계획 revision2: [MVP 보완 계약·실행 백로그](PYTHON_BOOTCAMP_R2.ko.md)를 우선한다. 기존 P0 동결03fa643과 네 조건/100 TEST·P1/P2는 유지한다. Oracle 승인·부족알림/영향 대기열·학생/운영자 두 화면·기존 relayer 가스 UX·실측 이벤트를 P3→P4→P5의 실제 구현 범위에 추가했다. 별도 v2 envelope/이행 인수이며 기존 v1 wire·ABI는 바꾸지 않는다. 현재 지급/production을 켜지 않으며 P4 권한·자금 코드는 Astra/High 경계 리뷰 후 격리 TEST로 진행한다. 아래의 종전 P3/P4/P5 계획만 정리한다는 문구는 이 추가 승인 이전 범위다.
+
 **최신 병합 완료:** PR63 최종 head `230a951e0e22babc3c1e751e52bba196e41aefba`, develop merge `890ad93cfb3677c5b4107428095c6f0b15efa9a4` (2026-10-15 12:21:11 UTC). push38733401299·PR38733410892 CI6/6 SUCCESS, 관련312/312 PASS. 보호 우회 없이 정상 병합했으며 아래 과거 Draft/병합대기 기록보다 이 문장이 우선한다.
 
 **최신 리뷰/연결 지침:** [Claude Code 복붙용 단계별 프론트 지침](MVP_FRONTEND_CONNECTION_PROMPT.ko.md). PR63 최종 실질 리뷰에서 TTL 만료가 진행 중 관측의 복사본까지 중단하도록 보완했다. 아래 Draft/자동 병합 불가 표기는 이전 권한의 기록이며, 이번에는 사용자 승인 아래 최종 head CI/보호 규칙 확인 후 develop 정상 병합한다. 실제 병합 SHA는 후속 최신 병합 기록을 따른다.
