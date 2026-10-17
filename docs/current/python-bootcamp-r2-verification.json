@@ -1,0 +1,71 @@
+{
+  "version": "clear-bootcamp-r2-verification.2",
+  "date": "2026-10-17",
+  "status": "R2_CONTRACT_AND_BACKLOG_READY_FOR_FIXED_COMMIT",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "baseP0FrozenCommit": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
+  "planRevision": 2,
+  "contract": "specs/bootcamp/p0-addendum-r2.json",
+  "canonical": "docs/current/PYTHON_BOOTCAMP_R2.ko.md",
+  "example": "specs/bootcamp/r2-example.json",
+  "referenceScope": "DESIGN_ARITHMETIC_METRICS_ONLY_NO_SIGNING_OR_PAYMENT_RUNTIME",
+  "tests": {
+    "p0V1": 20,
+    "r2Design": 9,
+    "existingV4RelayerSubset": 1,
+    "focusedPass": 30,
+    "focusedFail": 0,
+    "actualNewBridgeTransactions": 0,
+    "realExternalRpc": 0,
+    "officialHostedProofs": 0,
+    "modelCalls": 0,
+    "relatedPass": 319,
+    "relatedFail": 0,
+    "preservation": "191_SOURCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
+    "remote": "PENDING_EXACT_HEAD_CI"
+  },
+  "existingRelayer": {
+    "environment": "NEW_IN_MEMORY_GANACHE_EXISTING_IMMUTABLE_V4",
+    "thirdPartyNativeGasCharged": true,
+    "learnerNativeGasUnchanged": true,
+    "fixedLearnerReceivedTest": true,
+    "relayerReceivedTest": false,
+    "otherReservationPreserved": true,
+    "replayRejected": true,
+    "bootcampV2AuthorizationSupported": false
+  },
+  "implementation": {
+    "P0_R2": "CONTRACT_AND_BACKLOG_FIXED_AFTER_COMMIT",
+    "P1": "PR79_OFFLINE_SYNTHETIC_ONLY",
+    "P2": "PR80_HEAD_66893ea_TEST58_CI6_REPORTED_PENDING_CROSS_ACCEPTANCE",
+    "P3": "BACKLOG_NOT_IMPLEMENTED",
+    "P4": "BACKLOG_AUTHORITY_FUNDING_ASTRA_HIGH_GATE",
+    "P5": "BACKLOG_NOT_EXECUTED",
+    "webFilesChanged": false,
+    "liveWireOrAbiChanged": false,
+    "schemaMigrationImplemented": false
+  },
+  "dispatch": {
+    "status": "PENDING_FIXED_COMMIT",
+    "newSessionsOrSubagents": 0,
+    "interrupts": 0
+  },
+  "openGates": [
+    "P3_FIXED_DEADLINE_AND_UNRESOLVED_DISPOSITION",
+    "P4_SIGNER_TRUST_LIFECYCLE_AND_SIGNED_APPROVAL_REVOCATION_RACE",
+    "P4_FINAL_TYPED_ENCODING_AND_ONCHAIN_GUARDS",
+    "P4_ALLOCATION_ORDER_DEPOSIT_POLICY_AND_UNRESOLVED_FUNDS_OWNERSHIP",
+    "REAL_SOURCE_TRUST_PAIR_MAPPING_COLLECTOR",
+    "P3_WEB_OWNER_HANDOFF_AND_METRIC_BASELINE_COMPLETENESS"
+  ],
+  "gates": {
+    "paymentAllowed": false,
+    "productionEnabled": false,
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO"
+  },
+  "mergeAuthorized": false,
+  "deployment": false
+}
