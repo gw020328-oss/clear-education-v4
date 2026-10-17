@@ -104,3 +104,5 @@ P0 예제/새 합성 회고는 [p0-example.mjs](../../specs/bootcamp/p0-example.
 P0 동결 로컬 검증: 신규20/20 포함 기존 workflow/AI/document 회귀309/309, 원본/legacy191개·의존성 graph 보존·diff PASS. signer/원천·실제 runtime mapping·DB·지급 검증을 실행한 결과가 아니다. 원격CI와 각 dispatch/인수 결과는 Draft PR exact head 및 후속 검증 기록을 따른다.
 
 P0 고정 commit `03fa64324ef9cc2ce4fb442a612329a7b1285677`·[Draft PR78](https://github.com/gw020328-oss/clear-education-v4/pull/78)의 CI6/6을 확인했다. 기존 네 세션에 위 설정으로 실제 dispatch하고 작업 시작을 확인했다. API/Reclaim은 별도 새 worktree, Moodle/AI는 기존 전용 worktree를 사용하며 새 세션/하위 에이전트/턴중단은0이다. 이 기록은 P1/P2 검증 완료가 아니라 진행 개시 증거다. 이후 실제 검증/미구현은 각 exact head 인수 기록을 따른다.
+
+추가 승인 이후 상태: P1 PR79/0da3abe, Moodle PR71/488a09c, AI PR72/f98e104, API PR80/66893ea는 각 전용 구현·검증을 보고했고 exact-head CI6/6을 확인했다. 실제 원천 전체 연결/제품 수락은 미완료이며 Moodle lab은 정리 후 live-ready=false, Reclaim 공식 새 proof0/default blocked, AI 추가 유료호출0이다. [R2 인수·다음 구현](PYTHON_BOOTCAMP_R2.ko.md)에 따라 기존 API 세션이 공통 consumer와 P3 단위를 이어간다. 이 사실을 네 모듈 제품 통합 완료로 합산하지 않는다.

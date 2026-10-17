@@ -1,7 +1,7 @@
 {
   "version": "clear-bootcamp-r2-verification.2",
   "date": "2026-10-17",
-  "status": "R2_CONTRACT_AND_BACKLOG_READY_FOR_FIXED_COMMIT",
+  "status": "R2_FIXED_AND_EXISTING_API_SESSION_NEXT_UNIT_STARTED",
   "requestedSetting": "GPT-6.1 Sol / High",
   "runtimeModelIdIndependentlyVerified": false,
   "baseP0FrozenCommit": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
@@ -23,7 +23,9 @@
     "relatedPass": 319,
     "relatedFail": 0,
     "preservation": "191_SOURCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
-    "remote": "PENDING_EXACT_HEAD_CI"
+    "remote": "PENDING_EXACT_HEAD_CI",
+    "referenceClarification": "P0_PLUS_R2_29_OF_29_PASS_AFTER_DUPLICATE_APPLICATION_OBLIGATION_AND_FIXED_AMOUNT_GUARD",
+    "publicHistoryAtFixedContract": "274_COMMITS_1527_BLOBS_FINDINGS_0"
   },
   "existingRelayer": {
     "environment": "NEW_IN_MEMORY_GANACHE_EXISTING_IMMUTABLE_V4",
@@ -47,9 +49,21 @@
     "schemaMigrationImplemented": false
   },
   "dispatch": {
-    "status": "PENDING_FIXED_COMMIT",
+    "status": "ACCEPTED_AND_ACTIVE_CONFIRMED",
+    "threadId": "01a130ae-cde7-7763-95cb-2ea5469721ed",
+    "requestedModel": "gpt-6.1-sol",
+    "requestedThinking": "high",
+    "runtimeModelIdIndependentlyVerified": false,
+    "frozenInputCommit": "119f394eabc9f4bc3fda6e2ed5861cfd9d276095",
+    "scope": [
+      "P1_P2_VERSIONED_COMMON_CONSUMERS",
+      "P3_ROLE_SCOPED_PROJECTION",
+      "P3_DURABLE_METRICS",
+      "P3_CONSENT_OBJECTION_BLOCKED_STATE"
+    ],
     "newSessionsOrSubagents": 0,
-    "interrupts": 0
+    "interrupts": 0,
+    "extraHeadquartersOrDiscussionMessageSent": false
   },
   "openGates": [
     "P3_FIXED_DEADLINE_AND_UNRESOLVED_DISPOSITION",
@@ -67,5 +81,40 @@
     "independentClaim": "NO_GO"
   },
   "mergeAuthorized": false,
-  "deployment": false
+  "deployment": false,
+  "fixedContractCommit": "119f394eabc9f4bc3fda6e2ed5861cfd9d276095",
+  "peerHeadsRead": {
+    "reclaim": {
+      "pr": 79,
+      "head": "0da3abe89e2361ac75c19a331e7910afa7ecc70a",
+      "localReported": 102,
+      "ci": 6,
+      "officialProofs": 0,
+      "default": "UNCONFIGURED_BLOCKED"
+    },
+    "moodle": {
+      "pr": 71,
+      "head": "488a09ce8af62aad2067680dbb459eb0358f452e",
+      "offlineReported": 211,
+      "actualLocalApi": 22,
+      "harnessOfflineGuards": 2,
+      "ci": 6,
+      "historicalFixtureLiveReady": false
+    },
+    "ai": {
+      "pr": 72,
+      "head": "f98e1040c01034b59fba7f1d5fe1c230965d628a",
+      "offlineReported": 381,
+      "ci": 6,
+      "additionalPaidCalls": 0,
+      "usableForAcceptance": false
+    },
+    "apiStore": {
+      "pr": 80,
+      "head": "66893eab4bdafc574147ebee497e3f5a9edafb08",
+      "localReported": 58,
+      "ci": 6,
+      "realAcceptanceReady": false
+    }
+  }
 }

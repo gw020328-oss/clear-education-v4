@@ -9,10 +9,11 @@ const ref=value=>check(typeof value==='string'&&/^[a-z][a-z0-9.-]{0,63}$/.test(v
 // An allocation is the whole obligation, never a second additional obligation.
 export function referenceFunding({confirmedBalanceAtoms,obligations,allocations}){
  const balance=atoms(confirmedBalanceAtoms);check(Array.isArray(obligations)&&Array.isArray(allocations),'R2_FUNDING');
- const byId=new Map();let total=0n,reserved=0n;
+ const byId=new Map(),applications=new Set();let total=0n,reserved=0n;
  for(const row of obligations){ref(row.obligationId);ref(row.applicationRef);ref(row.recipientRef);check(!byId.has(row.obligationId),'R2_DUPLICATE_OBLIGATION');
   check(typeof row.decisionHash==='string'&&/^0x[0-9a-f]{64}$/.test(row.decisionHash),'R2_TARGET');
-  const amount=atoms(row.amountAtoms);check(amount>0n,'R2_AMOUNT');byId.set(row.obligationId,row);total+=amount;}
+  check(!applications.has(row.applicationRef),'R2_DUPLICATE_APPLICATION_OBLIGATION');applications.add(row.applicationRef);
+  const amount=atoms(row.amountAtoms);check(amount===BigInt(R2_ADDENDUM.funding.claimAmountAtoms),'R2_AMOUNT');byId.set(row.obligationId,row);total+=amount;}
  const allocated=new Set(),ids=new Set();
  for(const a of allocations){ref(a.allocationId);check(!ids.has(a.allocationId)&&!allocated.has(a.obligationId),'R2_DOUBLE_ALLOCATION');
   const o=byId.get(a.obligationId);check(o&&a.applicationRef===o.applicationRef&&a.decisionHash===o.decisionHash&&a.recipientRef===o.recipientRef&&a.amountAtoms===o.amountAtoms,'R2_ALLOCATION_TARGET');
