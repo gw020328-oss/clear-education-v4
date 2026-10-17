@@ -1,0 +1,89 @@
+{
+  "scope": "UNSIGNED_SYNTHETIC_HASH_VECTOR_ONLY",
+  "usableForClaim": false,
+  "ready": false,
+  "trustConfig": {
+    "version": "clear-hackerrank-trust.1",
+    "status": "REVIEWED",
+    "dataMode": "SYNTHETIC_FIXTURE",
+    "approvalRef": "synthetic-vector-only",
+    "sourceReview": "SYNTHETIC_ONLY",
+    "contextReview": "SYNTHETIC_ONLY",
+    "audience": "synthetic-bootcamp-verifier",
+    "notBefore": 1899996400,
+    "expiresAt": 1900003600,
+    "signers": [
+      "0x3333333333333333333333333333333333333333"
+    ],
+    "epochs": [
+      1
+    ],
+    "recipe": {
+      "version": "hackerrank-two-proof.1",
+      "recordShape": "username-certificate_id-certificate_name-status.1",
+      "account": {
+        "url": "https://www.hackerrank.com/dashboard",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "reclaim/0.0.1"
+        },
+        "responseRedactions": [],
+        "responseMatches": [
+          {
+            "type": "regex",
+            "value": "(?:^|\\r\\n\\r\\n)<synthetic-account-control>(?<username>[A-Za-z0-9_-]+)</synthetic-account-control>$"
+          }
+        ]
+      },
+      "certificate": {
+        "url": "https://www.hackerrank.com/community/v1/test_results/hacker_certificate",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "reclaim/0.0.1"
+        },
+        "responseRedactions": [],
+        "responseMatches": [
+          {
+            "type": "regex",
+            "value": "(?:^|\\r\\n\\r\\n)\\{\"data\":(?<records>\\[[\\s\\S]*\\])\\}$"
+          }
+        ]
+      }
+    },
+    "privacyKeyId": "synthetic-key.1"
+  },
+  "request": {
+    "version": "clear-hackerrank-request.1",
+    "audience": "synthetic-bootcamp-verifier",
+    "participantId": "participant-orchid",
+    "participantWallet": "0x1111111111111111111111111111111111111111",
+    "applicationId": "application-orchid",
+    "criterionId": "python-basic-certificate",
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "runtimeMappingHash": "0xedd712ce8ed4956a78599ff5f6879551df192f28d4aca879bd22ae23237a1517",
+    "recipeHash": "0x605f0efd661a502a93417afa19bb1fa4bcba050b6687023559890c75fa57b735",
+    "trustConfigHash": "0xf8a2251e390f2f2f3b7721e3e66c6c9af00229c5fe3f41f4f03921ea051da478",
+    "expectedClaimOwner": "0x2222222222222222222222222222222222222222",
+    "nonce": "0xa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+    "issuedAt": 1899999990,
+    "expiresAt": 1900000890,
+    "selectedCertificateId": null
+  },
+  "requestHash": "0x2ce86d5facf9ab63f94620b3c92c376be2791687ddae232d1e11eaa96d7e0f2b",
+  "nonceHash": "0x3fe96a2220775850559ec5cd9d4c97d0c80cc0bb89c5effa465adfc05e35a358",
+  "participantApprovalMessage": "CLEAR HackerRank evidence observation approval; not a payment authorization.\n{\"applicationId\":\"application-orchid\",\"audience\":\"synthetic-bootcamp-verifier\",\"criterionId\":\"python-basic-certificate\",\"expectedClaimOwner\":\"0x2222222222222222222222222222222222222222\",\"expiresAt\":1900000890,\"issuedAt\":1899999990,\"nonce\":\"0xa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1\",\"participantId\":\"participant-orchid\",\"participantWallet\":\"0x1111111111111111111111111111111111111111\",\"policyHash\":\"0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281\",\"recipeHash\":\"0x605f0efd661a502a93417afa19bb1fa4bcba050b6687023559890c75fa57b735\",\"runtimeMappingHash\":\"0xedd712ce8ed4956a78599ff5f6879551df192f28d4aca879bd22ae23237a1517\",\"selectedCertificateId\":null,\"trustConfigHash\":\"0xf8a2251e390f2f2f3b7721e3e66c6c9af00229c5fe3f41f4f03921ea051da478\",\"version\":\"clear-hackerrank-request.1\"}",
+  "clientContexts": {
+    "account": {
+      "clearSchema": "clear-hackerrank-context.1",
+      "clearRequestHash": "0x2ce86d5facf9ab63f94620b3c92c376be2791687ddae232d1e11eaa96d7e0f2b",
+      "clearSourceRole": "account",
+      "clearRecipeHash": "0x605f0efd661a502a93417afa19bb1fa4bcba050b6687023559890c75fa57b735"
+    },
+    "certificate": {
+      "clearSchema": "clear-hackerrank-context.1",
+      "clearRequestHash": "0x2ce86d5facf9ab63f94620b3c92c376be2791687ddae232d1e11eaa96d7e0f2b",
+      "clearSourceRole": "certificate",
+      "clearRecipeHash": "0x605f0efd661a502a93417afa19bb1fa4bcba050b6687023559890c75fa57b735"
+    }
+  }
+}

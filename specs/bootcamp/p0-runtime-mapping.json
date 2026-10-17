@@ -1,0 +1,17 @@
+{
+  "version":"clear-bootcamp-runtime-mapping.1",
+  "environmentLogicalId":"isolated-moodle-bootcamp-demo",
+  "mappingRevision":1,
+  "status":"PENDING_OWNER_VERIFIED_FIXTURE",
+  "policyId":"clear-python-bootcamp-demo",
+  "courseLogicalId":"clear-python-bootcamp-demo",
+  "targets":{
+    "python-intro-activity":{"kind":"MOODLE_ACTIVITY","actualIds":null,"completionConfigurationReceiptHash":null},
+    "python-practice-task":{"kind":"MOODLE_ASSIGNMENT","actualIds":null},
+    "python-reflection":{"kind":"MOODLE_REFLECTION_CONTAINER","actualIds":null},
+    "python-basic-certificate":{"kind":"HACKERRANK_CERTIFICATE_CLASS","certificateName":"Python (Basic)","accountOrCertificateIdPinned":false}
+  },
+  "fixtureReportRef":null,
+  "verifiedAt":null,
+  "ready":false
+}

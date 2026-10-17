@@ -1,0 +1,7 @@
+{
+  "version": "clear-hackerrank-trust.1",
+  "status": "UNCONFIGURED",
+  "reason": "LIVE_SIGNER_APPROVAL_AUTHENTICATED_SOURCE_RECIPE_AND_SIGNED_REQUEST_CONTEXT_NOT_VALIDATED",
+  "productionEnabled": false,
+  "paymentAllowed": false
+}
