@@ -1,0 +1,72 @@
+{
+  "version": "clear-bootcamp-mvp-addendum.2",
+  "planRevision": 2,
+  "baseFrozenCommit": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
+  "basePolicyVersion": "clear-python-bootcamp-policy.1",
+  "baseRecordVersion": "clear-bootcamp-records.1",
+  "compatibility": "ADDITIVE_SEPARATE_ENVELOPES_NO_V1_WIRE_OR_ABI_CHANGE",
+  "implementationStatus": "CONTRACT_AND_BACKLOG_ONLY_NOT_PAYMENT_RUNTIME",
+  "oracle": {
+    "sourceProofRole": "EXTERNAL_SOURCE_EVIDENCE_NOT_ORACLE",
+    "decisionAuthority": "TRUSTED_RULE_ENGINE_AFTER_SOURCE_AND_BINDING_VERIFICATION",
+    "aiSigningOrTransferAuthority": false,
+    "authorizationVersion": "clear-bootcamp-payment-authorization.2",
+    "authorizationStatus": "REQUIRED_FIELDS_NOT_FROZEN_EIP712_ABI",
+    "requiredDomainFields": ["chainId", "verifyingContract", "instanceId", "version"],
+    "requiredMessageFields": ["applicationId", "policyHash", "runtimeMappingHash", "decisionId", "decisionRevision", "decisionHash", "recipient", "token", "amountAtoms", "allocationId", "consentSetHash", "deadlinePolicyHash", "eligibilityRoute", "nonce", "issuedAt", "expiresAt", "signerKeyId", "authorizationEpoch"],
+    "eligibilityRoutes": ["BOTH_PARTIES_SAME_DECISION_CONSENT", "NO_VALID_OBJECTION_AFTER_FIXED_DEADLINE"],
+    "trustless": false,
+    "newApprovalDependsOnServer": true,
+    "alreadyFinalizedAllocatedRightExecution": "CONTRACT_GUARDS_AND_CHAIN_AVAILABILITY_STILL_REQUIRED",
+    "correctionCancellationRaceResolution": "P4_REVIEW_GATE_NO_OFFCHAIN_ONLY_REVOCATION_CLAIM"
+  },
+  "funding": {
+    "symbol": "TEST", "decimals": 6, "claimAmountAtoms": "100000000",
+    "availableFormula": "confirmedBalanceAtoms-reservedAtoms",
+    "shortfallFormula": "max(0,unallocatedObligationAtoms-availableAtoms)",
+    "confirmedObligationIncludesReserved": true,
+    "globalPauseOnShortfall": false,
+    "alreadyAllocatedClaimsProtected": true,
+    "topUpRequiresConfirmedTransferAndReevaluation": true,
+    "commercialDepositRatio": null,
+    "allocationOrder": null,
+    "unresolvedFundsOwnership": null
+  },
+  "projection": {
+    "version": "clear-bootcamp-operations-projection.2",
+    "evidenceStates": ["COMPLETE", "NEEDS_SUPPLEMENT", "REVERIFICATION_REQUIRED", "UNRESOLVED"],
+    "fundingStates": ["NOT_ALLOCATED", "FUNDING_PENDING", "FULLY_ALLOCATED"],
+    "paymentStates": ["BLOCKED", "PAYOUT_WAITING", "SUBMITTED", "CONFIRMED", "FAILED", "REORGED", "UNKNOWN"],
+    "requiredPins": ["ledgerSequence", "applicationId", "decisionId", "decisionRevision", "decisionHash", "runtimeMappingHash", "fundingSnapshotId"],
+    "operatorMayOverrideEligibility": false,
+    "operatorMayArbitrarilyReject": false
+  },
+  "wallet": {
+    "participantWalletRequired": true,
+    "participantApprovalSignaturesRequired": true,
+    "preferredGasRoute": "EXISTING_FIXED_RECIPIENT_RELAYER_FIRST",
+    "gasAsset": "CHAIN_NATIVE_TEST_GAS_DISTINCT_FROM_ERC20_TEST",
+    "aaEmbeddedWalletPaymasterSessionKeyOrCustodyAdded": false,
+    "supportStatus": "EXISTING_V4_LOCAL_EVM_RELAY_SUBSET_ONLY_NEW_BRIDGE_NOT_IMPLEMENTED"
+  },
+  "metrics": {
+    "version": "clear-bootcamp-metric-event.2",
+    "dedupKey": ["eventId"],
+    "conflictingDuplicate": "REJECT_AND_FLAG",
+    "logicalOperationKey": ["scenarioRunId", "applicationRef", "decisionRevision", "decisionHash", "operationId", "eventType"],
+    "eventTypes": ["CASE_STARTED", "CONDITION_VERIFIED", "AUTO_OPERATION_COMPLETED", "HUMAN_WORK_INTERVAL", "WAIT_INTERVAL", "SUPPLEMENT_REQUESTED", "REVERIFICATION_REQUESTED", "OPERATION_FAILED", "TX_CONFIRMED", "CASE_FINISHED"],
+    "provenance": ["MEASURED_ISOLATED_TEST", "SYNTHETIC_EXAMPLE"],
+    "unmeasured": null,
+    "rawPersonalDataAllowed": false,
+    "historicalMentorPercentOrCountAsMeasured": false
+  },
+  "phases": [
+    {"id":"P0", "owner":"INTEGRATION", "scope":"VERSIONED_BOUNDARIES_STATUS_EVENTS_WALLET_ACCEPTANCE"},
+    {"id":"P1", "owner":"RECLAIM", "scope":"REQUEST_BOUND_SOURCE_PROOF_CANDIDATE"},
+    {"id":"P2", "owner":"API_STORE_WITH_MOODLE_AI_PRODUCERS", "scope":"ATOMIC_EVIDENCE_DECISION_INTEGRATION"},
+    {"id":"P3", "owner":"API_STORE_AND_EXISTING_WEB_OWNER", "scope":"CONSENT_OBJECTION_SHARED_VIEWS_METRICS"},
+    {"id":"P4", "owner":"AUTHORITY_FUNDING_OWNER_ASTRA_HIGH_BEFORE_CODE", "scope":"ORACLE_AUTHORIZATION_FUNDING_QUEUE_RELAYER_TEST_GAS"},
+    {"id":"P5", "owner":"INTEGRATION_AND_EXISTING_WEB_OWNER", "scope":"SIX_SCENARIOS_TWO_VIEWS_TX_MEASURED_THREE_MINUTE_DEMO"}
+  ],
+  "gates": {"productEligible":false,"paymentAllowed":false,"grant":"HOLD","outbox":"HOLD","independentClaim":"NO_GO","productionEnabled":false}
+}
