@@ -1,0 +1,11 @@
+{
+  "dataMode":"SYNTHETIC_FIXTURE",
+  "text":"for 반복문으로 목록의 합계를 구하는 코드를 작성했습니다.\n빈 목록에서 결과가 달라져 초기값을 0으로 두고 다시 확인했습니다.\n초기값과 경계 입력을 함께 점검해야 한다는 점을 배웠습니다.",
+  "topicQuotes":{
+    "work-performed":"for 반복문으로 목록의 합계를 구하는 코드를 작성했습니다.",
+    "problem-solving-process":"빈 목록에서 결과가 달라져 초기값을 0으로 두고 다시 확인했습니다.",
+    "learning-takeaway":"초기값과 경계 입력을 함께 점검해야 한다는 점을 배웠습니다."
+  },
+  "actualMoodleIds":null,
+  "actualAccountOrProof":false
+}
