@@ -129,5 +129,12 @@
     "inputCommit": "69d6dc80caaf2bde963385e176068e3a0293e6b3",
     "ownedPath": "docs/bootcamp-authority-review/",
     "codeOrKeyOrTransactionsAuthorizedInThisReview": false
+  },
+  "rightFinalityDecision": {
+    "planRevision": 3,
+    "file": "specs/bootcamp/p4-right-finality-decision.json",
+    "humanSelected": "B_CANONICAL_ACCEPT_REVOKE_ORDER_PRESERVES_ACCEPTED_RIGHT",
+    "g1Resolved": true,
+    "otherGatesResolved": false
   }
 }
