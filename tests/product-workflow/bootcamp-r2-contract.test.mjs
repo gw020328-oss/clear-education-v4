@@ -21,6 +21,7 @@ test('confirmed top-up resolves arithmetic shortfall without pretending allocati
 });
 test('duplicate reservation, redirected recipient and stale decision allocation are rejected',()=>{
  const input=vector().fundingShortfall,a=input.allocations[0];
+ assert.throws(()=>referenceFunding({...input,obligations:[...input.obligations,{...input.obligations[0],obligationId:'renamed-obligation'}]}),/R2_DUPLICATE_APPLICATION_OBLIGATION/);
  assert.throws(()=>referenceFunding({...input,allocations:[a,{...a,allocationId:'allocation-other'}]}),/R2_DOUBLE_ALLOCATION/);
  for(const change of [{recipientRef:'recipient-other'},{decisionHash:'0x'+'9'.repeat(64)},{amountAtoms:'1'}])
   assert.throws(()=>referenceFunding({...input,allocations:[{...a,...change}]}),/R2_ALLOCATION_TARGET/);

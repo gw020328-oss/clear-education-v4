@@ -42,6 +42,8 @@ API/DB·producer·web 소유 파일을 통합 세션에서 중복 수정하지 �
 
 회계 snapshot은 동일 chain/blockHash/ledgerSequence에서 산출한다. `confirmedBalance B`, 살아 있는 `reserved R`, 확인된 미지급 의무 `O`(예약 의무 포함), `available A=B-R`, `unallocated U=O-R`, `shortfall S=max(0,U-A)`를 정수 atoms로 표시한다. `B>=R>=0`, `O>=R`, 의무당 살아 있는 배정 최대1개, 배정의 정확 app/decision/recipient/amount, 지급/회수된 금액 재예약 금지가 불변식이다. O와 R을 합쳐 부채를 이중 계산하지 않는다. chain reorg/미확정 입금은 B에 넣지 않는다. 다른 환경/토큰 잔액을 합치지 않는다.
 
+한 신청의 동일 100 TEST 권리를 새 obligation ID나 decision revision으로 중복 등록하지 않는다. 정정 후 기존 권리의 해제/대체가 확정되지 않았으면 새 의무를 추가하지 않고 UNRESOLVED로 둔다. 설계 벡터도 application별 살아 있는 의무1개·고정100 TEST를 검사한다.
+
 부족시 대상 신청/청구만 FUNDING_PENDING으로 두고 부족액·영향 대기열·알림 상태를 운영자에게 표시한다. 이미 배정된 청구의 예약을 빼앗거나 전체 풀 pause를 기본 동작으로 삼지 않는다. 부족이 아닌 signer 침해 등 비상정지는 별도 권한/기존 권리 영향 리뷰가 필요하다. queue entry는 obligation/application/decision/hash/recipient/amount와 연결하고 확정 순서나 우선순위를 암묵 구현하지 않는다. 상용 배정순서/충전의무/미해결 자금 귀속은 OPEN이며 격리 시연에서 사용할 순서도 명시 승인·pin 전에는 자동 배정하지 않는다.
 
 알림은 `shortfallIncidentId/fundingSnapshotId/status(OPEN/ACKNOWLEDGED/RESOLVED)`와 안전한 요약을 ledger에 기록한다. 동일 부족 재시도에서 알림을 중복 생성하지 않고 ACK는 자금 확보/해결이 아니다. 외부 메일/메신저 발신은 별도 승인 없이는 하지 않는다. 충전 거래 확인 → 새 balance snapshot → 기존 배정 보존 → 대기열의 current/기한/조건/동의 재검사 → 중복 없는 배정·승인/재개 순서다. 충전 버튼/tx 제출만으로 부족 해결·지급 완료를 표시하지 않는다.
@@ -110,3 +112,5 @@ P3/P4의 기한·권리해제·정정 이후 확정 권리·서명자 취소/교
 ## 이번 revision 검증 범위
 
 기존 P0 20개+추가 설계 벡터9개+기존 v4 relayer 부분검사1개 **30/30**, 관련 workflow/AI/document 회귀 **319/319** 통과했다. 원본/legacy191개·고정 의존성 graph·diff 검사도 통과했다. 가스 검사는 새 메모리 EVM의 기존 v4 부분 경로이며 새 bridge 지급0·실제 외부 RPC0·새 개인/공식 proof0·유료 모델호출0이다. r2-reference는 금액/계측 설계 oracle이고 서명·자금 저장·승인/취소·배정/송신을 구현하지 않는다. 성과 개선율은 실제 baseline/완전한 계측의 동등성 확인 전 N/A다. 원격 CI와 실제 후속 dispatch는 정확 head 기준의 후속 기록을 따른다.
+
+R2 최초 고정 `119f394eabc9f4bc3fda6e2ed5861cfd9d276095`을 push한 뒤 기존 API 세션(`01a130ae-cde7-7763-95cb-2ea5469721ed`)에 model=`gpt-6.1-sol`, thinking=`high`를 명시해 실제 전달했고 active 시작을 확인했다. 작업은 P1/P2 공통 consumer→P3 역할조회/계측/동의이의 차단 상태다. P4 자금/서명/송금은 이 Sol 단위에 위임하지 않았다. 이후 같은 신청의 의무를 새 ID로 중복 등록하는 설계 벡터 반례를 보강해 고정100 TEST와 함께 거부했다(P0+R2 29/29 재검증, 기존 relayer 코드는 변경 없음). 별도 본부/논의 채팅 발신은 하지 않았다.
