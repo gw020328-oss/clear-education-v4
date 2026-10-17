@@ -1,0 +1,32 @@
+{
+  "version": "clear-bootcamp-right-finality-decision.1",
+  "planRevision": 3,
+  "date": "2026-10-17",
+  "status": "HUMAN_SELECTED_DEMO_SEMANTICS_NOT_RUNTIME_ACTIVATION",
+  "baseR2Commit": "96bf49548ce1d798f8ccc7845106b0deb023e3c3",
+  "reviewSourceCommit": "c9c0ee069e01407eccca66022326136cf5dbe35f",
+  "selectedOption": "B_CANONICAL_ACCEPT_REVOKE_ORDER_PRESERVES_ACCEPTED_RIGHT",
+  "ordering": "CANONICAL_BLOCK_AND_TRANSACTION_INDEX",
+  "beforeAccept": {
+    "appEpochCancellationBeforeAccept": "REJECT_OLD_AUTHORIZATION",
+    "keyRevocationBeforeAccept": "REJECT_FIRST_ACCEPT_FROM_REVOKED_KEY",
+    "databaseStaleAloneRevokesEscapedSignature": false
+  },
+  "afterAccept": {
+    "fixedRecipientAndAmountPreserved": true,
+    "laterCorrectionOrKeyRevocationMayConfiscateRight": false,
+    "claimNeedsNewServerApproval": false,
+    "claimRechecksCurrentSignerOrAppEpoch": false,
+    "sameBlockAcceptThenClaimAddsChallengePeriod": false,
+    "canonicalReorgRequiresReevaluation": true,
+    "executionDeadlineAndReleasePolicy": "OPEN_NO_VALUE_INVENTED"
+  },
+  "separatePolicyGates": ["DEADLINE_AND_UNRESOLVED_OWNERSHIP", "ROLES_AND_KEY_LIFECYCLE", "OBLIGATION_ALLOCATION_ORDER", "CHAIN_FINALITY_AND_GAS", "ACTUAL_SOURCE_AND_P3_ACCEPTANCE"],
+  "nextUnit": "P4_01A_UNSIGNED_ENCODING_AND_STRICT_VALIDATION_ASTRA_HIGH",
+  "newChallengePeriodApproved": false,
+  "productionEnabled": false,
+  "paymentAllowed": false,
+  "grant": "HOLD",
+  "outbox": "HOLD",
+  "independentClaim": "NO_GO"
+}

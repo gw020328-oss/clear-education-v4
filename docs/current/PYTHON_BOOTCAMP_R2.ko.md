@@ -1,5 +1,7 @@
 # Python 부트캠프 MVP 추가 계약·실행 계획 revision 2
 
+추가 확정: [계획 revision3·권리 확정 기준](PYTHON_BOOTCAMP_R3.ko.md). 사용자가 canonical 체인 기록 순서에 따라 먼저 accept된 고정 권리를 보존하는 B안을 선택했다. G1만 해결하며 기존 기한/회수·배정 등 관문과 지급 차단은 유지한다.
+
 2026-10-17 사용자 추가 승인에 따른 정본이다. P0 `03fa64324ef9cc2ce4fb442a612329a7b1285677`/PR78의 네 조건 AND·100 TEST(100000000 atoms, decimals6)와 기존 P1/P2를 유지한다. [P0 정책·기록](PYTHON_BOOTCAMP_P0.ko.md)은 그대로 기초 계약이다. 이 문서와 [추가 계약 JSON](../../specs/bootcamp/p0-addendum-r2.json)은 `clear-bootcamp-mvp-addendum.2`/계획 revision2다. 아래 기능은 **실제 MVP 개발 백로그**이며 문서/합성 산식 예제로 구현 완료를 주장하지 않는다. P3/P4/P5를 계획에서 제외하던 종전 범위 문구는 이번 단계별 개발 승인으로 갱신한다. 상용 실자금·배포·자동 병합은 승인 범위 밖이다.
 
 ## 버전·이행·소유
@@ -12,7 +14,7 @@ P0 policy/record/observation v1의 field·enum·hash·amount·기존 예제 의�
 | P2 ledger | 단일 evidence/decision DB·nonce/CAS/current 인수 계속. v2 event/projection 대비 decision ID/revision/hash·불변 참조 유지 | 기존 API·저장 세션 |
 | P3 schema migration | 기존 DB를 읽고 안전한 별도 migration/version negotiation 설계. immutable decision을 고쳐 상태를 주입하지 않고 v2 부속 consent/objection/event/projection을 참조. 실패 rollback·재시작·이전 v1 조회 회귀 필수 | API·저장 세션 |
 | 학생/운영자 화면 | 동일 ledger sequence/decision/hash 기반 v2 DTO, role/field allowlist·오래된 view 재확인. 연결 전 mock/proposed 명시 | 기존 web 담당; 이 세션은 인계만 작성 |
-| P4 authorization/contract | 신규 domain/type·nonce/expiry·정정/취소·재원 불변식 Astra/High 실질 검토 후 격리 TEST 구현. 기존 v4 grant를 새 oracle 승인으로 이름만 바꿔 사용 금지 | 자금/권한 담당 작업 단위 미배정 |
+| P4 authorization/contract | 신규 domain/type·nonce/expiry·정정/취소·재원 불변식 Astra/High 실질 검토 후 격리 TEST 구현. 기존 v4 grant를 새 oracle 승인으로 이름만 바꿔 사용 금지 | 경계 리뷰는 기존 Reclaim Astra/High; 코드 소유·범위는 리뷰 후 고정 |
 
 API/DB·producer·web 소유 파일을 통합 세션에서 중복 수정하지 않는다. 새 세션/하위 에이전트는 만들지 않는다. 기존 진행 턴은 중단하지 않고 exact 고정 commit으로 다음 작업 단위에 전달한다. API Sol/High, Reclaim Astra/High, Moodle/AI Sol/Medium 요청을 유지한다. P4 코드 작성/검토에는 Astra/High를 실제 지정해야 하며 문서의 추천만으로 실행 모델을 바꿨다고 말하지 않는다.
 
@@ -100,7 +102,7 @@ API/DB·producer·web 소유 파일을 통합 세션에서 중복 수정하지 �
 | P3-01 | API: 동의/이의·정정과 고정 기한 정책 | 같은 decision 전액배정 전제, 양측동의/무유효이의기한·유효오류·미해결·반복요청의 인수. 기한 상수/미해결 종료·자금귀속 설계 OPEN. 안전한 차단/ledger는 먼저 구현 가능 |
 | P3-02 | API→기존 web 담당: 두 화면 공통 projection/role DTO | 위 6표시·동일 sequence/hash·이력/재시작·타인거부·오래된 view/CAS. 실제 화면 소유자 인계가 별도 필요 |
 | P3-03 | API+통합: metrics 저장/집계·수작업 baseline protocol | 안정 event ID·명령과 원자기록·dedup·active/wait 분리·N/A·동등 baseline/실측 출처. 현재 설계 산식만 있음 |
-| P4-01 | 자금/권한 담당 Astra/High: oracle authorization·signer lifecycle | 위 A의 domain·정정/취소/유출/승인 race·온체인 guard 검토 후 TEST 구현. Sol/High 문서로 코드 검토를 대체하지 않음 |
+| P4-01 | 기존 Reclaim Astra/High 경계 리뷰 → 자금/권한 코드 소유 확정: oracle authorization·signer lifecycle | 위 A의 domain·정정/취소/유출/승인 race·온체인 guard 검토 후 TEST 구현. Sol/High 문서로 코드 검토를 대체하지 않음 |
 | P4-02 | 같은 담당: 재원 ledger·알림/영향 queue·복구 | B/R/A/O/U/S·예약 보호·이중배정 방지·충전 확인·current 재검사·crash/retry/chain reorg. 예치율/배정순서/자금귀속 OPEN |
 | P4-03 | 같은 담당+API→web: worker/relayer TEST 지급·가스 UX | 최소 기존 대리 실행 경로부터 검증, 신규 bridge exact version/고정 수령인·가스 주체·tx 확정/유실복구. native gas와 ERC20 TEST 표시 |
 | P5 | 통합+API+기존 web: 3분 두화면 E2E | 아래 여섯 시나리오·정확 commit/tx·실측/합성 출처·baseline N/A 규칙. 현재 미실행 |
@@ -114,3 +116,5 @@ P3/P4의 기한·권리해제·정정 이후 확정 권리·서명자 취소/교
 기존 P0 20개+추가 설계 벡터9개+기존 v4 relayer 부분검사1개 **30/30**, 관련 workflow/AI/document 회귀 **319/319** 통과했다. 원본/legacy191개·고정 의존성 graph·diff 검사도 통과했다. 가스 검사는 새 메모리 EVM의 기존 v4 부분 경로이며 새 bridge 지급0·실제 외부 RPC0·새 개인/공식 proof0·유료 모델호출0이다. r2-reference는 금액/계측 설계 oracle이고 서명·자금 저장·승인/취소·배정/송신을 구현하지 않는다. 성과 개선율은 실제 baseline/완전한 계측의 동등성 확인 전 N/A다. 원격 CI와 실제 후속 dispatch는 정확 head 기준의 후속 기록을 따른다.
 
 R2 최초 고정 `119f394eabc9f4bc3fda6e2ed5861cfd9d276095`을 push한 뒤 기존 API 세션(`01a130ae-cde7-7763-95cb-2ea5469721ed`)에 model=`gpt-6.1-sol`, thinking=`high`를 명시해 실제 전달했고 active 시작을 확인했다. 작업은 P1/P2 공통 consumer→P3 역할조회/계측/동의이의 차단 상태다. P4 자금/서명/송금은 이 Sol 단위에 위임하지 않았다. 이후 같은 신청의 의무를 새 ID로 중복 등록하는 설계 벡터 반례를 보강해 고정100 TEST와 함께 거부했다(P0+R2 29/29 재검증, 기존 relayer 코드는 변경 없음). 별도 본부/논의 채팅 발신은 하지 않았다.
+
+P4-01 실제 리뷰 인계: 기존 Reclaim 세션에 model=`gpt-6-astra`, thinking=`high`로 R2 final 입력 `69d6dc80caaf2bde963385e176068e3a0293e6b3`과 기존 v4/FundingLab의 ABI·상태전이 대조를 전달했고 active 시작을 확인했다. 전용 `docs/bootcamp-authority-review/`만 소유하며 공통 계약/제품 코드·web 중복 수정·키/거래는 제외한다. 정정/취소/키 폐기와 채굴순서·확정 권리 보호·회계 불변식의 실질 분석/구현 권고를 먼저 내고, 최종 authorization/자금 코드는 그 리뷰 다음 Astra/High 단위다. 이는 새 지급 기능 완료나 배포/병합 승인이 아니다.
