@@ -1,0 +1,7 @@
+[package]
+name = "reclaim_private_wrapper"
+type = "bin"
+authors = ["CLEAR synthetic spike"]
+compiler_version = "=1.0.0-beta.3"
+
+[dependencies]
