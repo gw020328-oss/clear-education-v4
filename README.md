@@ -1,5 +1,7 @@
 # CLEAR
 
+2026-10-17 원격 현황: develop [4756589](https://github.com/gw020328-oss/clear-education-v4/commit/4756589659a40c8f8fe45452a698b8a56487628c)에 C1~C3 합성 HTTP/증거·평가 흐름, 격리 Moodle 실측, AI 후속이 병합됐습니다. main에는 기능 코드가 미반영입니다. [최신 병합·CI·실제/합성 구분](docs/status.md#2026-10-17-원격-확인)을 먼저 확인하세요. 아래 날짜별 상태는 당시 기록입니다.
+
 2026-10-15 11:22 KST 원격 확인: `develop`은 [PR #36 병합 `21776f5`](https://github.com/gw020328-oss/clear-education-v4/commit/21776f53d7660597b94a37c89139316e43eeb673)이며, `main`은 `375051e`로 아래 개발 결과가 미반영입니다. [최신 진행·PR·정확한 커밋의 CI](docs/status.md#2026-10-15-원격-확인)를 먼저 확인하세요. 아래 날짜별 안내는 당시 기준입니다.
 
 `develop`에는 제품 증명 세션·합성 결과 단회 수락, 등록 이력의 별도 영속 접수와 실제 수집기 연결, [격리 TEST 부분 충전·전액 배정·단회 지급 실험](docs/current/TEST_FUNDING_LAB.ko.md)이 병합됐습니다. [등록 이력의 저장된 실제 실행](docs/current/history-intake-verification.json)은 표 증명·독립 검증·접수 복구 범위이며 전체성·신원·제품 자격·지급은 미확인입니다. TEST 지급은 인공 자격 fixture와 새 인메모리 체인의 합성 결과입니다. 실제 Moodle·원천 자격 검증 차단, grant/outbox 보류, 독립 청구 제품 전환 NO-GO를 유지합니다.

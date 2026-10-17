@@ -1,5 +1,7 @@
 # CLEAR 문서
 
+최신 develop 진행은 [2026-10-17 원격 확인](status.md#2026-10-17-원격-확인)을 우선합니다. [C3 합성 증거/평가](current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md), [원문·C1·C2 HTTP 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), [격리 Moodle](moodle/LOCAL_API_LAB.ko.md), [AI workflow adapter](ai-vision/WORKFLOW_ADAPTERS.ko.md)는 각 구현 범위와 운영 차단을 함께 확인합니다. 과거 문서의 Draft/미구현 표현을 현재 병합 상태와 구분합니다.
+
 2026-10-15 11:22 KST 최신 원격 상태: `develop` [21776f5](https://github.com/gw020328-oss/clear-education-v4/commit/21776f53d7660597b94a37c89139316e43eeb673)(PR #36 병합), `main` `375051e` 미통합. [최신 현황·PR·CI](status.md#2026-10-15-원격-확인)를 먼저 읽습니다. 아래 날짜별 기준과 시험 수는 당시 기록입니다.
 
 - [등록 이력 → 목표 성적의 합성 계약](current/EXAM_LIFECYCLE.ko.md), [별도 영속 접수·수집기 연결](current/HISTORY_INTAKE.ko.md), [비식별 실제 실행 기록](current/history-intake-verification.json): PR #31~#35가 develop에 병합됐습니다. 표 증명·접수 성공과 전체 이력·신원·제품 자격·지급을 구분합니다.
