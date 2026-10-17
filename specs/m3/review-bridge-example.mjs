@@ -5,6 +5,7 @@ import {BRIDGE_GATES,PROJECTION_VERSION,HTML_NORMALIZER,bridgeHash,createReviewQ
  createReviewAcquisition,reviewAcquisitionHash,moodleSourceRevision,validateReviewProjection} from '../../src/review-evidence/common/contract.mjs';
 export function reviewBridgeExample(){
  const f=reviewSourceFixture(),{context,submission,files,registry}=f.input,time=f.input.facts.observed.startedAt;
+ registry.normalizer=HTML_NORMALIZER;
  const pin={instanceRef:registry.locator.instanceRef,courseId:registry.locator.courseId,forumId:registry.locator.forumId,
   postId:registry.locator.id,authorId:registry.locator.authorId,readerId:registry.readerId,sourceBinding:registry.sourceBinding,contextHash:f.input.facts.runContextHash};
  const query=createReviewQuery({context,registryHash:bridgeHash('REGISTRY',registry),pin,sourceRunId:'bridge-source-read',sourceGeneration:1,

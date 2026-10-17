@@ -1,3 +1,37 @@
+# 개발 현황
+
+## 2026-10-17 원격 확인
+
+확인 시각 **2026-10-17 11:08 KST**. develop은 [4756589659a40c8f8fe45452a698b8a56487628c](https://github.com/gw020328-oss/clear-education-v4/commit/4756589659a40c8f8fe45452a698b8a56487628c)(PR #67 병합), main은 `58261aa2465bfc4b34d181dde2757add6eec7283`(PR #50 문서 병합)이다. 아래 추가 구현은 develop 기준이며 main 기능 코드·배포 완료가 아니다. 시험·실제 API 결과는 저장된 공개 보고서를 대조했으며 이번 문서 작업의 재실행이 아니다.
+
+| develop 병합 PR | 확인한 추가 범위 | 미완료·구분 |
+| --- | --- | --- |
+| [#41](https://github.com/gw020328-oss/clear-education-v4/pull/41)~[#48](https://github.com/gw020328-oss/clear-education-v4/pull/48), [#51](https://github.com/gw020328-oss/clear-education-v4/pull/51) | M1 정책 계약·M2 증거/후보 평가·L1 합성 학습 평가·AI/Vision 준비/정책 결합 | 단계별 합성 구현이며 공식 원천 자격·제품 지급 성공이 아님 |
+| [#52](https://github.com/gw020328-oss/clear-education-v4/pull/52), [#56](https://github.com/gw020328-oss/clear-education-v4/pull/56) | [격리 Moodle API/재생](moodle/LOCAL_API_LAB.ko.md), [1502 재시험](moodle/RETEST_1502.ko.md): 새 합성 계정·강좌를 실제 로컬 Moodle/브라우저/API로 검사한 저장 결과 21/21 PASS | LOCAL_LMS_RECORD/LOCAL_LAB이며 실제 학원·장기 이력·집중·최종 자격·지급 검증이 아님 |
+| [#47](https://github.com/gw020328-oss/clear-education-v4/pull/47), [#54](https://github.com/gw020328-oss/clear-education-v4/pull/54), [#57](https://github.com/gw020328-oss/clear-education-v4/pull/57) | [Gemini 재평가](ai-vision/GEMINI_RECOVERY_EVALUATION.ko.md), [공통 workflow adapter](ai-vision/WORKFLOW_ADAPTERS.ko.md): 합성 자료의 실제 API 생성 5회/3사례, v4 작은 비교 3/3; 원문/문서 mock adapter 연결 | 실제 학생 서류·진위·저자·전체 이력 성능이 아님. 새 유료 호출·기존 승인 재사용 없음 |
+| [#58](https://github.com/gw020328-oss/clear-education-v4/pull/58), [#59](https://github.com/gw020328-oss/clear-education-v4/pull/59), [#61](https://github.com/gw020328-oss/clear-education-v4/pull/61), [#63](https://github.com/gw020328-oss/clear-education-v4/pull/63), [#67](https://github.com/gw020328-oss/clear-education-v4/pull/67) | [HTTP 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), [C3 합성 증거·평가 계약](current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md): 원문 archive/검토, C1 학생 신청/합성 표시 확인, C2 합성 bytes 접수/검토, C3 고정 fixture 수락→M2 결과 영속화·GET/재시작 복구 | 새 namespace/독립 DB의 합성 흐름. 실제 동의·C2 receipt의 C3 실연결·운영 원천/신원·개인자료·재원/지급·팀원 web 연결 미완료 |
+| [#53](https://github.com/gw020328-oss/clear-education-v4/pull/53) | Mac 합성 쿠키 검사를 초기 탭 탐색 경합에서 분리 | 해당 보정/CI 성공과 과거 모든 timeout 원인 해결을 동일시하지 않음 |
+
+[최신 C3 공개 검증](current/mvp-evidence-http-verification.json)은 `evidenceAcceptanceReady=false`, `realDataAllowed=false`, `c2ReceiptImport=false`를 유지한다. source/identity HOLD, grant/outbox HOLD, 독립 청구 NO_GO, 지급 불가, 400% 사전검토 전용·500% 제외를 유지한다. 등록 이력 실제 표 증명과 합성 TEST 지급은 별도 기록이며 전체 제품 자격·지급·타 사용자 시험으로 승격하지 않는다. 각 단계 시험 수는 합산하지 않는다.
+
+### 병합 head와 CI의 구분
+
+| PR / 정확한 최종 head | PR CI / push CI | 확인 결과 |
+| --- | --- | --- |
+| #67 `973ac05e56a89e8c76728f6b490cefbcf40a7a39` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38751820489) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38751808131) | Public content history·Public synthetic tests·Mac synthetic recovery 양쪽 모두 SUCCESS |
+| #63 `230a951e0e22babc3c1e751e52bba196e41aefba` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38733410892) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38733401299) | 세 검사 양쪽 모두 SUCCESS |
+| #61 `95b397cc662b255fc777afc898e7b56cc6a444d9` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38724301462) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38724292331) | PR 세 검사와 push 필수 두 검사 SUCCESS, push Mac CANCELLED. 6/6 성공으로 기록하지 않음 |
+
+위 CI는 해당 head의 공개/합성 검사이며 merge commit 자체·실제 계정·운영 지급 검증을 대신하지 않는다. 검증 JSON의 PENDING_FINAL_HEAD_CI 등 당시 상태와 현재 원격 병합 상태를 구분한다.
+
+### 진행 중인 별도 PR
+
+[#60](https://github.com/gw020328-oss/clear-education-v4/pull/60) · [#66](https://github.com/gw020328-oss/clear-education-v4/pull/66) · [#69](https://github.com/gw020328-oss/clear-education-v4/pull/69) · [#70](https://github.com/gw020328-oss/clear-education-v4/pull/70) · [#71](https://github.com/gw020328-oss/clear-education-v4/pull/71) · [#72](https://github.com/gw020328-oss/clear-education-v4/pull/72) · [#73](https://github.com/gw020328-oss/clear-education-v4/pull/73) · [#74](https://github.com/gw020328-oss/clear-education-v4/pull/74) · [#75](https://github.com/gw020328-oss/clear-education-v4/pull/75). 확인 시점 모두 develop 미병합이다. 프론트·독립 청구·Reclaim wrapper 연구·Moodle 후기/AI/C2 연결·범위 제안은 각 작성자의 작업이며 이 문서 자동화에서 수정·병합하지 않는다. 특히 열린 연구 PR의 proof/CI 성공을 현재 develop 또는 main 기능으로 설명하지 않는다.
+
+## 이전 시점 기록
+
+아래 날짜별 Draft·후속·열린 PR·차단 표기는 당시 스냅샷이다. 현재 병합 여부와 구현 범위는 위 확인 절을 우선하고 실제 기능 사용은 각 최신 계약의 한계를 확인한다.
+
 2026-10-16 후기 연결 계약 Draft: [Moodle 후기→C2/AI 공통 계약](current/MOODLE_REVIEW_C2_CONTRACT.ko.md)은 develop4756589와 미병합 PR71/72를 대조한 제안이다. registry·별도 사실 receipt/본문 지문·C2 revision/run 결합·원자 수락/원문 수명 후속을 정의한다. 제품 HTTP/DB 연결·LOCAL 수락·합성-only 제한 해제는 없으며 신규400/500 제외·grant/outbox HOLD·독립청구 NO_GO를 유지한다.
 
 2026-10-15 C2 최종 수명 보완24e75f2: pending upload도logout/C1기준변경에서중단, 동일ACK재생은보존. 관련309/309(C2 HTTP21/TLS2·공통DELETE1 포함)·기존dev33·TLS/의존성/191개보존 PASS. PR63 Draft최종headCI는후속기록정본, 자동병합금지.
