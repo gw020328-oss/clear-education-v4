@@ -1,5 +1,7 @@
 # CLEAR Python 부트캠프 P0 정책·기록 계약 고정
 
+2026-10-17 추가 승인·계획 revision2: [MVP 보완 계약·실행 백로그](PYTHON_BOOTCAMP_R2.ko.md)를 우선한다. 기존 P0 동결03fa643과 네 조건/100 TEST·P1/P2는 유지한다. Oracle 승인·부족알림/영향 대기열·학생/운영자 두 화면·기존 relayer 가스 UX·실측 이벤트를 P3→P4→P5의 실제 구현 범위에 추가했다. 별도 v2 envelope/이행 인수이며 기존 v1 wire·ABI는 바꾸지 않는다. 현재 지급/production을 켜지 않으며 P4 권한·자금 코드는 Astra/High 경계 리뷰 후 격리 TEST로 진행한다. 아래의 종전 P3/P4/P5 계획만 정리한다는 문구는 이 추가 승인 이전 범위다.
+
 2026-10-17. 사용자 승인에 따른 새 주 시연 정본이다. 요청 Sol/High(다중모듈 정책/계약), 실제 런타임 모델 ID 독립 확인 없음. 이전 당일 기획서의 내부퀴즈70점·활동2개 후보는 아래 HackerRank 보유형 정책으로 대체한다. 기존 YBM/시원 분석·연구/원문/회귀와 PR69/73/75 회로 연구는 보존한다. 이번 실제 구현 범위는 P0와 P1/P2 연결이며 P3/P4/P5는 관계·설계 관문/인수 계획까지만 정리한다. 지급·실자금·새 검증자 신뢰·production 활성화는 승인하지 않는다.
 
 ## P0 고정 정책
@@ -100,3 +102,7 @@ P0 예제/새 합성 회고는 [p0-example.mjs](../../specs/bootcamp/p0-example.
 실제 fixture mapping·P1 trusted signer/recipe/request binding·P2 런타임 capability/ledger/권한·원문 수명·P3/P4 미결은 각 정확 commit/시험으로 따로 인수한다. 확인할 수 없는 source/API 필드는 UNKNOWN/UNSUPPORTED다. grant/outbox HOLD·paymentAllowed=false·독립청구 NO_GO·개인자료/합성 업로드 제한을 유지하며 Draft PR만 만든다. 무조건 PR 병합/배포 승인은 없다.
 
 P0 동결 로컬 검증: 신규20/20 포함 기존 workflow/AI/document 회귀309/309, 원본/legacy191개·의존성 graph 보존·diff PASS. signer/원천·실제 runtime mapping·DB·지급 검증을 실행한 결과가 아니다. 원격CI와 각 dispatch/인수 결과는 Draft PR exact head 및 후속 검증 기록을 따른다.
+
+P0 고정 commit `03fa64324ef9cc2ce4fb442a612329a7b1285677`·[Draft PR78](https://github.com/gw020328-oss/clear-education-v4/pull/78)의 CI6/6을 확인했다. 기존 네 세션에 위 설정으로 실제 dispatch하고 작업 시작을 확인했다. API/Reclaim은 별도 새 worktree, Moodle/AI는 기존 전용 worktree를 사용하며 새 세션/하위 에이전트/턴중단은0이다. 이 기록은 P1/P2 검증 완료가 아니라 진행 개시 증거다. 이후 실제 검증/미구현은 각 exact head 인수 기록을 따른다.
+
+추가 승인 이후 상태: P1 PR79/0da3abe, Moodle PR71/488a09c, AI PR72/f98e104, API PR80/66893ea는 각 전용 구현·검증을 보고했고 exact-head CI6/6을 확인했다. 실제 원천 전체 연결/제품 수락은 미완료이며 Moodle lab은 정리 후 live-ready=false, Reclaim 공식 새 proof0/default blocked, AI 추가 유료호출0이다. [R2 인수·다음 구현](PYTHON_BOOTCAMP_R2.ko.md)에 따라 기존 API 세션이 공통 consumer와 P3 단위를 이어간다. 이 사실을 네 모듈 제품 통합 완료로 합산하지 않는다.
