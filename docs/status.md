@@ -1,5 +1,18 @@
 # 개발 현황
 
+## 2026-10-17 공개 현황
+
+확인 시각 **2026-10-17 11:08 KST**. main은 [`58261aa`](https://github.com/gw020328-oss/clear-education-v4/commit/58261aa2465bfc4b34d181dde2757add6eec7283)이며 제공 코드·의존성·기존 시작 명령은 그대로다. main에서 재현하는 경로는 기존 ProofAdapter 합성 테스트 36개와 문서 CI다. 아래 새 기능 코드는 main에 포함되지 않는다.
+
+develop은 [4756589659a40c8f8fe45452a698b8a56487628c](https://github.com/gw020328-oss/clear-education-v4/commit/4756589659a40c8f8fe45452a698b8a56487628c)(PR #67 병합)이다. [고정 커밋의 HTTP 인계](https://github.com/gw020328-oss/clear-education-v4/blob/4756589659a40c8f8fe45452a698b8a56487628c/docs/current/MVP_SOURCE_HTTP_HANDOFF.ko.md)와 [C3 계약](https://github.com/gw020328-oss/clear-education-v4/blob/4756589659a40c8f8fe45452a698b8a56487628c/docs/current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md)을 참고하면 원문/학생 신청·합성 표시 확인·C2 합성 문서 검토·C3 고정 fixture 수락과 M2 결과 영속 조회가 구현됐다. **develop 기준, main 미반영**이며 실제 동의·운영 원천/신원·개인자료·최종 자격/지급·팀원 화면 통합은 미완료다. 과거 공개 현황에서 열린 PR로 적은 #41~#48은 현재 develop에 병합됐다.
+
+[격리 Moodle 1502 재시험](https://github.com/gw020328-oss/clear-education-v4/blob/4756589659a40c8f8fe45452a698b8a56487628c/docs/moodle/RETEST_1502.ko.md)은 새 합성 계정/강좌를 실제 로컬 브라우저/API에서 확인한 저장 결과 21/21 PASS다. 실제 학원·장기 학습·집중·전체 환급 자격의 증거가 아니다. [Gemini 재평가](https://github.com/gw020328-oss/clear-education-v4/blob/4756589659a40c8f8fe45452a698b8a56487628c/docs/ai-vision/GEMINI_RECOVERY_EVALUATION.ko.md)는 합성 자료 3사례에 실제 생성 5회, v4 작은 비교 3/3 기록이며 실제 학생 문서·진위/전체 이력 성능이 아니다. 이번 자동화는 로그인·API 재실행·새 유료 호출을 하지 않았다.
+
+[#67 최종 head `973ac05`](https://github.com/gw020328-oss/clear-education-v4/pull/67)의 [PR CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38751820489)·[push CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/38751808131)는 세 검사 모두 SUCCESS다. 반면 [#61](https://github.com/gw020328-oss/clear-education-v4/pull/61)의 push Mac은 CANCELLED로 6/6 성공이 아니다. 정확한 head의 CI와 병합 커밋·실제 서비스 검증을 구분한다. source/identity·grant/outbox HOLD, 독립 청구 NO_GO, 지급 불가, 400% 사전검토 전용·500% 제외를 유지한다.
+
+열린 개발 PR은 [#60](https://github.com/gw020328-oss/clear-education-v4/pull/60) · [#66](https://github.com/gw020328-oss/clear-education-v4/pull/66) · [#69](https://github.com/gw020328-oss/clear-education-v4/pull/69) · [#70](https://github.com/gw020328-oss/clear-education-v4/pull/70) · [#71](https://github.com/gw020328-oss/clear-education-v4/pull/71) · [#72](https://github.com/gw020328-oss/clear-education-v4/pull/72) · [#73](https://github.com/gw020328-oss/clear-education-v4/pull/73) · [#74](https://github.com/gw020328-oss/clear-education-v4/pull/74) · [#75](https://github.com/gw020328-oss/clear-education-v4/pull/75)다. 모두 확인 시점 미병합이며 해당 연구/프론트/후기 연결 성과를 main 제공 기능으로 안내하지 않는다. 아래 이전 날짜의 기준 커밋과 열린 PR 표는 당시 기록이다.
+
+
 ## 2026-10-15 공개 현황
 
 원격 확인: **2026-10-15 11:52 KST**. 기본 브랜치 main의 제공 범위와 develop에서 진행한 구현·실험을 구분한다. 아래 저장된 실제 실행·시험 결과를 이번 문서 작업의 재실행으로 표현하지 않는다.
