@@ -1,0 +1,50 @@
+{
+  "version": "clear-python-bootcamp-p0-verification.1",
+  "date": "2026-10-17",
+  "status": "P0_CONTRACT_FROZEN_PENDING_DISPATCH",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "baseDevelop": "9c542c38892d0a5d5e71fcbe4f87f1017d8fe843",
+  "bridgeDependency": "2a0a8121161d6dbe24231c42f55300e529fa948f",
+  "sourceFeasibilityRead": "LOCAL_SUMMARY_AND_EXECUTOR_ONLY_NO_RAW_CLAIMS",
+  "replaySummaryBools": "SEPARATE_REPORTED_OBSERVATIONS_NOT_ASSERTED_BY_EXECUTOR",
+  "policy": "specs/bootcamp/p0-policy.json",
+  "contract": "specs/bootcamp/p0-contract.mjs",
+  "example": "specs/bootcamp/p0-example.mjs",
+  "runtimeMapping": "specs/bootcamp/p0-runtime-mapping.json",
+  "runtimeMappingReady": false,
+  "sourceIdentityCopiedToPublicFixture": false,
+  "signedProofTimeAsAchievementTime": false,
+  "newCapabilities": 4,
+  "testResults": {
+    "focused": "20_OF_20_PASS",
+    "related": "309_OF_309_PASS_INCLUDING_P0_20",
+    "remote": "SEE_DRAFT_PR_EXACT_HEAD",
+    "preservation": "191_FILES_AND_DEPENDENCY_GRAPH_PRESERVED"
+  },
+  "scope": {
+    "directProductSourceSchemaHttpDbEdits": false,
+    "commonContractSpecsAndDocs": true,
+    "actualSourceRetests": 0,
+    "modelCalls": 0,
+    "rawClaimEnvReads": false,
+    "chainTransactions": 0,
+    "mergeAuthorized": false,
+    "deployment": false
+  },
+  "gates": {
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "paymentAllowed": false,
+    "independentClaim": "NO_GO",
+    "realDataRestriction": "PRESERVED"
+  },
+  "unresolved": [
+    "Moodle verified runtime IDs and automatic-completion rule receipt",
+    "P1 reviewed signer/recipe/request binding and durable replay integration",
+    "P2 new capability runtime plus single ledger/current/crash recovery",
+    "P3 consent/objection deadlines and unresolved outcome",
+    "P4 allocation/release/ownership/keeper/TEST payout authority review",
+    "P5 E2E and measured benefit"
+  ]
+}

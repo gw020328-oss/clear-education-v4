@@ -1,0 +1,9 @@
+{
+  "tokensRemaining": 0,
+  "servicesDisabled": 6,
+  "syntheticUsersSuspended": 7,
+  "revokedTokenRejected": true,
+  "ownedContainersStopped": true,
+  "volumesPreserved": true,
+  "otherProjectsTouched": false
+}

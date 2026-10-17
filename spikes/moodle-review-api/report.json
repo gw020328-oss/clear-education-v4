@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-16",
+  "kind": "ACTUAL_LOCAL_MOODLE_SYNTHETIC_ACCOUNTS",
+  "moodleCommit": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+  "cases": [
+    {
+      "name": "synthetic_writer_authenticated",
+      "result": "PASS"
+    },
+    {
+      "name": "create_general_review_by_rest",
+      "result": "PASS"
+    },
+    {
+      "name": "read_actual_post_and_bound_source_facts",
+      "result": "PASS"
+    },
+    {
+      "name": "reader_token_write_denied",
+      "result": "PASS"
+    },
+    {
+      "name": "other_author_rejected",
+      "result": "PASS"
+    },
+    {
+      "name": "other_course_rejected",
+      "result": "PASS"
+    },
+    {
+      "name": "missing_account_mapping_rejected",
+      "result": "PASS"
+    },
+    {
+      "name": "unenrolled_reader_access_denied",
+      "result": "PASS"
+    },
+    {
+      "name": "edit_own_review_by_rest",
+      "result": "PASS"
+    },
+    {
+      "name": "hidden_forum_is_unavailable_not_unposted",
+      "result": "PASS"
+    },
+    {
+      "name": "delete_own_review_by_rest",
+      "result": "PASS"
+    },
+    {
+      "name": "deleted_post_not_found_is_not_absence_claim",
+      "result": "PASS"
+    },
+    {
+      "name": "invalid_token_separate_from_missing",
+      "result": "PASS"
+    }
+  ],
+  "complete": true,
+  "sourceFieldsObserved": [
+    "instanceRef",
+    "courseId",
+    "forumId",
+    "id",
+    "discussionId",
+    "authorId",
+    "subject",
+    "body",
+    "messageFormat",
+    "createdAt",
+    "modifiedAt",
+    "visible",
+    "deleted",
+    "privateReply"
+  ],
+  "bodyOrCredentialIncluded": false,
+  "productAcceptance": false,
+  "paymentAllowed": false
+}

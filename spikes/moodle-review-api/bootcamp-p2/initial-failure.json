@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-17",
+  "kind": "ACTUAL_ISOLATED_MOODLE_SYNTHETIC_ACCOUNTS",
+  "environmentRef": "bc-p2-20261017-run1",
+  "runRef": "run1",
+  "fixtureReportHash": "0xf0ce7a70c657495b17cdcd637bbe904a4b2443391c9b22c9983c7c5ca817091d",
+  "cases": [
+    {
+      "name": "actual_fixture_course_targets_participant_and_source_version",
+      "result": "PASS"
+    },
+    {
+      "name": "activity_incomplete_with_api_automatic_rule",
+      "result": "PASS"
+    },
+    {
+      "name": "read_token_cannot_mark_view_or_write",
+      "result": "PASS"
+    },
+    {
+      "name": "page_view_write_causes_system_automatic_complete",
+      "result": "PASS"
+    },
+    {
+      "name": "manual_completion_configuration_is_not_auto_verified",
+      "result": "PASS"
+    },
+    {
+      "name": "assignment_no_submission_is_not_submitted",
+      "result": "PASS"
+    },
+    {
+      "name": "save_online_text_is_draft_not_submitted",
+      "result": "PASS"
+    },
+    {
+      "name": "submit_for_grading_is_submitted_without_grade",
+      "result": "PASS"
+    }
+  ],
+  "complete": false,
+  "failedStage": "other_account_has_no_submission",
+  "apiWritesBySeparateFixtureHarness": true,
+  "productAcceptance": false,
+  "paymentAllowed": false
+}
