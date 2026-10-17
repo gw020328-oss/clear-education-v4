@@ -374,3 +374,9 @@ C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https:
 
 
 2026-10-16 후속 계약 제안: [Moodle 후기→C2 제출・AI 관찰](MOODLE_REVIEW_C2_CONTRACT.ko.md)을 참조한다. 미병합 PR71 LOCAL facts와 PR72 FIXTURE proposal을 그대로 import하지 않는다. sourceBundle/inputHash/기존 DTO는 유지하며 별도 receipt hash·registry/본문 결합·두DB 수락 경쟁/권한·수명은 후속 구현 관문이다. 현재 endpoint·합성-only 업로드·운영 수락 capability는 바꾸지 않았다.
+
+
+2026-10-17 후속: [후기 bridge v1 고정 계약·소비/인수](REVIEW_BRIDGE_V1.ko.md), 고정 commit31879659e11d9cbfa0aa88e48d825047080f4e39를 기준으로 기존 Moodle/AI 세션에 전용 어댑터 구현을 각각 Sol/Medium으로 전달했다. 공통 제한 HTML/registry/메모리 lease adapter는 통합 소유이며 현재 제품 수락·HTTP/DB 연결/운영 권한은 열지 않는다. 양쪽 구현/실제와 합성 검증·남은 관문은 PR71/72/74의 exact head 기록을 따른다. develop/main 미병합 유지.
+
+
+2026-10-17 새 P0 정본: [CLEAR Python 부트캠프 정책·기록 계약](PYTHON_BOOTCAMP_P0.ko.md)을 따른다. 활동완료·과제제출·회고3항목·HackerRank Python(Basic) 보유형 인증의 AND, 고정100 TEST/decimals6/100000000 atoms다. 실제 Moodle ID는 소유 fixture 검증 전null/ready=false이며 증명시각을 합격시각으로 바꾸지 않는다. P1/P2 연결만 구현하고 P3/P4/P5는 관계·관문/인수부터 정리한다. 제품 API/DB는 별도 기존 세션 단일 소유, 이 통합 세션은 docs/동결계약·교차인수만 담당한다.

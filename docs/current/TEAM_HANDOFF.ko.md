@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+2026-10-17 새 P0 정본: [CLEAR Python 부트캠프 정책·기록 계약](PYTHON_BOOTCAMP_P0.ko.md)을 따른다. 활동완료·과제제출·회고3항목·HackerRank Python(Basic) 보유형 인증의 AND, 고정100 TEST/decimals6/100000000 atoms다. 실제 Moodle ID는 소유 fixture 검증 전null/ready=false이며 증명시각을 합격시각으로 바꾸지 않는다. P1/P2 연결만 구현하고 P3/P4/P5는 관계·관문/인수부터 정리한다. 제품 API/DB는 별도 기존 세션 단일 소유, 이 통합 세션은 docs/동결계약·교차인수만 담당한다.
+
 2026-10-16 후기 연결 계약 Draft: [Moodle 후기→C2/AI 공통 계약](MOODLE_REVIEW_C2_CONTRACT.ko.md)은 develop4756589와 미병합 PR71/72를 대조한 제안이다. registry·별도 사실 receipt/본문 지문·C2 revision/run 결합·원자 수락/원문 수명 후속을 정의한다. 제품 HTTP/DB 연결·LOCAL 수락·합성-only 제한 해제는 없으며 신규400/500 제외·grant/outbox HOLD·독립청구 NO_GO를 유지한다.
 
 2026-10-15 최신 C3 Draft: 선행 PR63은 develop890ad93에 병합됐고, 이슈65의 별도 합성 증거 수락→M2 평가→불변 결과/보완·재시작 조회를 구현했다. [단일 HTTP 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)와 [C3 계약](MVP_EVIDENCE_HTTP_CONTRACT.ko.md)을 따른다. 기존 F0/운영 API와 다른 namespace이며 실제 자격·지급/원천·개인자료는 미완료다. web/PR60·독립 청구 파일은 각 담당 소유다.
@@ -129,3 +131,6 @@ Node **24.21.0**, npm **11.19.0**을 준비한다. 저장소의 `./tools/node`, 
 ## 작업을 마칠 때
 
 담당 범위, 변경 API/상태, 실행한 검사와 미실행 검사, 의존 PR, 알려진 제약을 PR에 남긴다. 상태·계약이 바뀌면 관련 인계 문서도 같은 PR에서 고친다. 날짜가 있는 과거 검증 기록은 덮어쓰지 않는다. 다음 LLM은 대화 기억 대신 최신 코드·문서·PR에서 이어간다.
+
+
+2026-10-17 후속: [후기 bridge v1 고정 계약·소비/인수](REVIEW_BRIDGE_V1.ko.md), 고정 commit31879659e11d9cbfa0aa88e48d825047080f4e39를 기준으로 기존 Moodle/AI 세션에 전용 어댑터 구현을 각각 Sol/Medium으로 전달했다. 공통 제한 HTML/registry/메모리 lease adapter는 통합 소유이며 현재 제품 수락·HTTP/DB 연결/운영 권한은 열지 않는다. 양쪽 구현/실제와 합성 검증·남은 관문은 PR71/72/74의 exact head 기록을 따른다. develop/main 미병합 유지.

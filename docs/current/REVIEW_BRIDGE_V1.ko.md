@@ -72,3 +72,30 @@ registry는 기존 전체 Binding·SourceBinding·reader/target·requirement/pos
 통합 순서: 공통 fixed commit 정상 이력 반영→Moodle·AI 전용 어댑터 각각 Draft→공통 제한 HTML/registry/lease adapter 별도 검증→양쪽 exact commit을 통합 작업 브랜치에서만 연결 시험→전체 수락/HTTP/DB는 별도 승인/작은 PR. develop/main PR 병합은 이번 범위가 아니다. source 전용 실제 로컬 시험과 공통/AI 오프라인 합성 시험, 실제 Gemini 품질을 분리한다.
 
 400/500 신규범위 제외, 예치율/배정/충전/PG/회수/분쟁시간 OPEN, grant/outbox HOLD·독립청구 NO_GO·paymentAllowed=false. 팀원 web/와 독립 청구 작업은 변경하지 않는다.
+
+## 공통 adapter 구현 기록 (2026-10-17)
+
+계약 고정 commit은 `31879659e11d9cbfa0aa88e48d825047080f4e39`이며 양쪽 기존 세션에 Sol/Medium으로 발신했다. 고정 DTO는 유지한다. 후속 adapter는 `createReviewBridgeSession({compiled,context,submission,files,registry,sourceRunId,sourceGeneration,attempt,rawExpiresAtMs,authorizationExpiresAtMs,resolveCurrent,now})`로 만든다. 반환 query를 host current 상태에 예약한 뒤 `.correlate({facts,acquisition})` 또는 `.unavailable()`을 호출한다. 반환은 `{projection,sources}`이고 `.signal`/`.close()`로 취소한다.
+
+trusted resolver는 `{context,registry,currentQueryHash,rawAvailable,authorizationValid,rawExpiresAtMs,authorizationExpiresAtMs}`를 반환한다. 이것은 인증 구현이 아니며 호출자가 이미 검증한 host 상태여야 한다. 시작/완료의 현재성·lease 대조 및 최초 lease 타이머, 무효화/오류 뒤 재활성 불가, close 시 소유한 submission 참조 해제를 구현했다. C2 권한/로그아웃 이벤트의 즉시 close 연결은 아직 없으므로 callback/timer만으로 외부 이벤트를 항상 감시한다고 주장하지 않는다. 반환 sources의 호출자 소유 복사본/JS 문자열 물리적 삭제는 보장하지 않는다.
+
+최소 범위는 단일 REVIEW post의 제목/본문이며 images/tags/links/files는 거부한다. 원문 지문과 normalizer profile이 registry에 맞아야 한다. 고정 계약의 공개 HTML 소비 벡터에서 registry.normalizer가 plain으로 남았던 fixture 불일치는 후속에서 HTML profile로 교정했다. DTO/API는 바꾸지 않았으며 parser 실제 출력과 projection 전체를 비교한다. 이는 실제 API·AI 연결 실측이 아니다.
+
+추가 검증은 제한 문법·entity/구조적 LF/공백·빈 단락·원문 소스 보존, script/hidden/style/link/img/불균형/혼합block/미지원entity·한도 거부, source/query/registry/권한/expiry·타이머·무효화 후 재활성 거부다. 초기 adapter 시험은 잘못된 same import 1건에서 실패했고 올바른 기존 policy/mvp 모듈 import로 보정했다. 고정 계약 파일은 변경하지 않았다.
+
+## 담당별 완료·결합 검증 기록
+
+- Moodle PR71 후속 `988091d4212216d1c011e5356681706b161d0a4a`: acquisition 전용44개 추가, 기존/공통 포함101/101 오프라인·원격6/6 성공. facts v1/기존 transport 보존, 추가 실제 Moodle 재시험0. 공통 파일 직접 변경0(고정318 의존 이력만 포함).
+- AI PR72 후속 `244beb2b7fabde395782193c6e2819ce0680abae`: LOCAL 소비16개·공통4개, 관련319/319 기준 뒤 최신 current metadata-only 조회 보정·회귀 추가. 원문 sourceId/hash·UTF-16 quote 및 source/content 분리. title 내부 인용 locator는 기존 C2 미지원이라 source hash 결합까지만 지원. 추가 유료/실제 API0. exact head 원격CI는 PR72 Checks가 정본.
+- 공통 후속 adapter `7b231540eea5519f97f091fe219218e3bdb06436`: 원격6/6 성공, 계약4+adapter26=30/30·관련289/289. 문서/결합 재현 추가 뒤 최종 PR74 head CI는 별도로 확인한다.
+
+세 exact commit을 기존 develop/main이 아닌 임시 detached Git 작업본에서 정상 이력 병합했다. `specs/m3/review-bridge-integration.mjs`를 그 작업본에서 실행해 7/7 조합(HTML/plain→facts/acquisition→공통projection→AI결과, 권한거부+내용정상, 본문변경/미지원HTML/옛query의AI전차단, 옛AI결과재사용거부)을 확인했다. 새 합성 source double을 통해 PR71의 실제 코드를 실행한 오프라인 시험이며 Moodle 서버를 재수집한 결과는 아니다. 실제 HTTP/모델/유료 호출0, mock 관찰4회다. 초기 diagnostic CLI가 Mac /tmp 실경로 차이로 진입하지 않는 것을 발견해 realpath 비교로 고친 뒤 결과7건이 실제 출력됨을 확인했다.
+
+[공개 결과/정확 의존 head](../../specs/m3/review-bridge-integration-result.json)를 따른다. 결합 전체420/420은 임시 작업본의 workflow/AI/document/Moodle/AI-review unit 묶음이며 이전 개별101·319·289와 중복 합산하지 않는다. 원격 root CI는 Moodle/AI 전용 신규 glob과 이 조합 script를 자동 실행하지 않으므로 로컬 결과와 분리한다. 재현은 최신 PR74 head를 새 detached 작업본에 놓고 위 PR71·PR72 exact head를 정상 merge한 뒤 다음 명령을 실행한다. 기존 사용자 DB/키/체인을 준비하거나 source lab을 띄울 필요가 없다.
+
+```sh
+./tools/node --import ./tests/ybm-collector/network-guard.mjs specs/m3/review-bridge-integration.mjs
+./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/product-workflow/*.test.mjs tests/ai-policy/*.test.mjs tests/document-precheck/*.test.mjs tests/moodle-review/*.test.mjs tests/ai-review-precheck/*.test.mjs
+```
+
+이것으로 내부 모듈의 오프라인 연결을 확인했으며 실제 source+AI/개인자료·영속 수락/HTTP/DB·기관 인정/자격/지급 완료를 뜻하지 않는다. 남은 관문: C2 mutation coordinator/단일 correlation ledger와 crash recovery·역할별 원문/메타데이터 열람·실동의/동일인·운영 freshness/보관·일반 HTML/이미지·title locator 범위·추가 예산이 필요한 실제 모델 품질. 세 PR은 Draft·미병합을 유지한다.
