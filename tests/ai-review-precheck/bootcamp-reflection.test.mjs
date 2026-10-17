@@ -130,6 +130,12 @@ test('expiry or cancellation in flight never promotes a delayed mock response',a
     assert.notEqual(r.contentStatus,'CHECKED');assert.ok(r.topics.every(t=>t.originalEvidenceLocator===null));
     if(cancel)assert.ok(r.topics.every(t=>t.reasonCode==='CANCELLED'));else assert.equal(r.current,false);
   }
+  const f=bootcampFixture();let rawAvailable=true,reads=0,release;
+  const s=createBootcampReflectionSession(()=>({context:f.context,rawAvailable}),{nowMs:()=>f.clock.value});
+  const output={};Object.defineProperty(output,'topics',{get(){reads++;return replay.response.topics;}});
+  const a=reflectionMock(f);a.observe=()=>new Promise(resolve=>{release=()=>resolve(output);});
+  const pending=s.review(f.input,a);while(!release)await new Promise(resolve=>setImmediate(resolve));
+  rawAvailable=false;release();assert.equal((await pending).contentStatus,'STALE');assert.equal(reads,0);
 });
 test('policy, original-input, run, mapping and request changes during observation discard late output',async()=>{
   for(const change of [c=>c.policyHash=p0Hash('NEW','policy'),c=>c.inputHash=p0Hash('NEW','body'),c=>c.runId='changed-run',

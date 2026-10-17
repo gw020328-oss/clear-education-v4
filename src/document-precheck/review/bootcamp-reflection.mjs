@@ -103,6 +103,8 @@ export function createBootcampReflectionSession(resolveCurrent,{nowMs=()=>Date.n
         }},{purpose:REFLECTION_CAPABILITY,contextHash:reflectionContextHash(context),profileHash:context.profileHash,promptVersion:context.promptVersion,
           instruction:REFLECTION_INSTRUCTION,topicIds:REFLECTION_TOPICS,sources:[{sourceId:context.sourceId,kind:'TEXT',text}]},
         {signal,timeoutMs:Math.min(timeoutMs,context.expiresAtMs-started)});
+        try{fresh(context);}catch{return stale();}
+        if(ticket!==generation)return stale();
         if(result.status==='SUCCEEDED'){try{topics=reviewTopics(result.output,context,text);}catch{topics=unknownTopics('MODEL_OUTPUT_INVALID');}}
         else topics=unknownTopics(result.status==='CANCELLED'?'CANCELLED':result.status==='TIMED_OUT'?'TIMED_OUT':'MODEL_FAILED');
       }
