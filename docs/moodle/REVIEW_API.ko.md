@@ -74,3 +74,7 @@ git -C "$PUBLIC_MOODLE_REPO" archive 215f44380bdc3ccf852a3a22e34f8423ff64033a | 
 ## 2026-10-17 acquisition 후속
 
 고정 공통 계약 `31879659e11d9cbfa0aa88e48d825047080f4e39`를 정상 merge하고, 기존 facts v1을 보존한 별도 [query/acquisition wrapper](REVIEW_API_ACQUISITION.ko.md)를 추가했다. 같은 실제 read 실행의 site_info.userid를 공유 acquisition에 결합한다. 추가 검증은 오프라인44개이며 이번 실제 Moodle 재시험0건이다. 기존13/13과 합산하지 않는다. 공통 HTML/registry/lease·C2 내용 동일성/전체 수락은 여전히 후속이다.
+
+## 2026-10-17 Python 부트캠프 P2
+
+새 주 시연 P0 fixed commit `03fa64324ef9cc2ce4fb442a612329a7b1285677`을 정상 merge하고 별도 [P2 활동/과제/회고 producer와 실제 fixture 보고](REVIEW_API_BOOTCAMP_P2.ko.md)를 추가했다. 기존 리뷰/학습 lab 볼륨은 보존하고 새 project/18767/새 합성 계정만 사용했다. 기존 facts v1/리뷰 host는 유지하며 transport·forum target 읽기만 소유 모듈 안에서 재사용했다. 공통 runtime schema/DB/HTTP 수락은 구현하지 않았다.
