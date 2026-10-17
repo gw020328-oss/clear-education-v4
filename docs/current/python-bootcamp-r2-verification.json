@@ -1,7 +1,7 @@
 {
   "version": "clear-bootcamp-r2-verification.2",
   "date": "2026-10-17",
-  "status": "R2_FIXED_AND_EXISTING_API_SESSION_NEXT_UNIT_STARTED",
+  "status": "R2_FIXED_API_IMPLEMENTATION_AND_AUTHORITY_REVIEW_STARTED",
   "requestedSetting": "GPT-6.1 Sol / High",
   "runtimeModelIdIndependentlyVerified": false,
   "baseP0FrozenCommit": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
@@ -25,7 +25,8 @@
     "preservation": "191_SOURCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
     "remote": "PENDING_EXACT_HEAD_CI",
     "referenceClarification": "P0_PLUS_R2_29_OF_29_PASS_AFTER_DUPLICATE_APPLICATION_OBLIGATION_AND_FIXED_AMOUNT_GUARD",
-    "publicHistoryAtFixedContract": "274_COMMITS_1527_BLOBS_FINDINGS_0"
+    "publicHistoryAtFixedContract": "274_COMMITS_1527_BLOBS_FINDINGS_0",
+    "publicHistoryAtCompatibilityCommit": "275_COMMITS_1532_BLOBS_FINDINGS_0"
   },
   "existingRelayer": {
     "environment": "NEW_IN_MEMORY_GANACHE_EXISTING_IMMUTABLE_V4",
@@ -42,7 +43,7 @@
     "P1": "PR79_OFFLINE_SYNTHETIC_ONLY",
     "P2": "PR80_HEAD_66893ea_TEST58_CI6_REPORTED_PENDING_CROSS_ACCEPTANCE",
     "P3": "BACKLOG_NOT_IMPLEMENTED",
-    "P4": "BACKLOG_AUTHORITY_FUNDING_ASTRA_HIGH_GATE",
+    "P4": "EXISTING_ASTRA_HIGH_SESSION_BOUNDARY_REVIEW_RUNNING_CODE_PENDING_REVIEW",
     "P5": "BACKLOG_NOT_EXECUTED",
     "webFilesChanged": false,
     "liveWireOrAbiChanged": false,
@@ -116,5 +117,17 @@
       "ci": 6,
       "realAcceptanceReady": false
     }
+  },
+  "latestCompatibilityCommit": "69d6dc80caaf2bde963385e176068e3a0293e6b3",
+  "authorityReviewDispatch": {
+    "existingRole": "Reclaim evidence owner, dedicated P4 boundary review only",
+    "requestedModel": "gpt-6-astra",
+    "requestedThinking": "high",
+    "runtimeModelIdIndependentlyVerified": false,
+    "accepted": true,
+    "started": true,
+    "inputCommit": "69d6dc80caaf2bde963385e176068e3a0293e6b3",
+    "ownedPath": "docs/bootcamp-authority-review/",
+    "codeOrKeyOrTransactionsAuthorizedInThisReview": false
   }
 }
