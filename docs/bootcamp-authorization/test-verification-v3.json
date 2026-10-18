@@ -41,7 +41,8 @@
     "authorizationSignatures": 0,
     "paymentTransactions": 0,
     "externalRpc": 0,
-    "persistentEvmTested": false
+    "persistentEvmTested": false,
+    "environment": "LOCAL_EXPLICIT_E2_RUN"
   },
   "notExecuted": [
     "REAL_SOURCE_ACCEPTANCE",
@@ -96,5 +97,6 @@
   "commonCiImportsOnly": [
     "tests/bootcamp-authorization/test-encoding-v3.test.mjs",
     "tests/bootcamp-authorization/test-hash-probe-v3.test.mjs"
-  ]
+  ],
+  "remoteHelperExecution": "Each successful shared CI synthetic job independently deploys its own fresh in-memory pure probe and performs90 calls. Do not sum repetitions as additional vectors or source/payment acceptance."
 }

@@ -19,7 +19,7 @@
 기존 로그 `.toolchain/bootcamp-authorization/tests-first.log`에서 전용43 + P0 20 + R2 9 = **72 PASS/0 FAIL**을 확인했다. 새 인수 시 같은 검사를 이유 없이 반복하지 않았다. JS TypedDataEncoder, 독립 literal ABI/keccak, Solidity pure helper를 기본값+모든23필드 mutation에서 대조했다. 새로운 메모리 EVM에서 pure probe 배포1건·pure eth_call72회이며 authorization signature0/payment transaction0/external RPC0이다. 임시 EVM transaction account만 메모리에서 사용했고 oracle/relayer 키·기존 사용자 키는 생성/읽지 않았다.
 
 ```sh
-./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-authorization/*.test.mjs tests/product-workflow/bootcamp-p0-contract.test.mjs tests/product-workflow/bootcamp-r2-contract.test.mjs
+./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-authorization/encoding.test.mjs tests/bootcamp-authorization/hash-probe.test.mjs tests/product-workflow/bootcamp-p0-contract.test.mjs tests/product-workflow/bootcamp-r2-contract.test.mjs
 ```
 
 구 v2 helper에는 pure 함수3개만 있고 accept/claim/role/key/funding 상태는 없다. 이 EVM 시험은 새 금고 지급 시험이 아니다. 이 디렉터리의 후속 결과 문서가 새 TEST 정책 인수와 실제 미결을 별도로 기록한다.

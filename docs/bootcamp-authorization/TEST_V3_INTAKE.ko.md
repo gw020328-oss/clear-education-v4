@@ -45,7 +45,7 @@ uint256/64/8은 canonical decimal string, 계산은 BigInt다. 0은 revalidation
 
 - 기존 v2 전용43 + P0 20 + R2 9 =72 PASS 기록을 확인했다. 기존 ABI/type/예제를 수정하지 않았다.
 - v3 구조/변조/경계/예제 **119 PASS**. E0 운영 reference **12 PASS**는 별도이며, E0가 말한41은 P0/R2 29개를 합한 분모다. 정책 reference를 실제 source/signature 인수로 세지 않는다.
-- v3 hash helper **1 PASS**: 기본값+domain5/message24의 모든29 mutation =30 vector, JS EIP712/독립 literal ABI+keccak/Solidity3방향 일치. helper는 pure 함수3개뿐이다. 새 memory EVM helper 배포1건·pure eth_call90회, 승인 서명0·지급거래0·외부RPC0. 기존 v2의 배포1건/72calls는 과거 별도 실행이다.
+- v3 hash helper **1 PASS**: 기본값+domain5/message24의 모든29 mutation =30 vector, JS EIP712/독립 literal ABI+keccak/Solidity3방향 일치. helper는 pure 함수3개뿐이다. 로컬 새 memory EVM helper 배포1건·pure eth_call90회, 승인 서명0·지급거래0·외부RPC0. 기존 v2의 배포1건/72calls는 과거 별도 실행이다.
 - 따라서 이번 v3+E0 최신 결과는 **132 PASS**(119+1+12). 보존된72와 중복 없이 함께 보면204개이며 같은 실행에서204개가 모두 재실행됐다는 뜻은 아니다. 이 숫자는 로컬 명시 실행 결과다. 이후 통합 교차 인수 요청에 따라 `tests/product-workflow/hackathon-authorization-v3.test.mjs`가 v3 구조119+helper1만 import하도록 추가했다. 기존 guarded glob이 실행하며 E0/P0/R2를 wrapper에서 다시 import하지 않는다. 실제 공유 CI 결과는 PR의 새 exact HEAD를 따른다.
 - 첫 v3 실행은111 PASS/2 FAIL였다. 실패는 동결된 deadlineRecord fixture를 직접 변조하려던 두 테스트의 TypeError였다. fixture를 복제해 실제 검증기 거부를 시험하도록 고쳤다. helper 비교는 첫 실행부터 통과했고 hash ABI가 바뀌지 않아 반복 배포하지 않았다.
 - 직접 리뷰에서 `consentSetHash`·deadline·nonce·현재 domain 대조, 임의 profile pin 거부, newValidError/현재MET/전액배정 검사, accepted 상태의 다른 신청 혼동 거부와 key/epoch 무관 경로를 보강했다. 실제 E4의 race/reorg/서명키 수명 보안 감사를 수행한 것은 아니다.
@@ -73,3 +73,5 @@ E4에서는 single TEST token/cohort·100전액·현재 MET 수락 ledger sequen
 수락 전 종료는 계약에서 NOT_ACCEPTED/종료 권한/유효 조건을 검사한 후 epoch·옛 승인 무효화 + 예약해제 + 의무 전이를 원자 처리해야 한다. DB stale/타이머는 대신할 수 없다. canonical accept-first이면 종료/해제 거부, terminate-first이면 옛 승인 거부, reorg는 재평가한다. accepted는 claim 만료·운영자 회수·새 서명·현재 key/epoch gate가 없다. FundingLab reclaimExpired를 가져오지 않는다.
 
 등록·배정/승인 signer/key admin/relayer를 분리하고 terminator 권한도 명시한다. 새 persistent 격리 local EVM은 backend만 중지해도 유지되어야 한다. 현재 ephemeral **hash helper**는 그 E4/E5 운영 환경을 검증한 것이 아니다. 실제 source0/앱 양측 인증0/authorization 서명0/금고 accept·claim·지급0이며, 별도 P4의40개 향후 반례를 이 시험 통과 수에 넣지 않는다. E1/E2/E3 경계 인수 뒤 E4를 진행하며 E5 worker/복구·E6 실제 source/E2E·E7 공개 추가 목표는 후속이다.
+
+공유 CI의 PR/push synthetic job은 각각 별도의 memory helper를 실행한다. 위 로컬 배포1건/90calls와 원격 반복 실행을 구분하며 반복된 vector를 새 시험·실제 원천·지급 건수로 더하지 않는다.
