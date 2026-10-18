@@ -1,0 +1,120 @@
+{
+  "version": "clear-bootcamp-r2-verification.2",
+  "date": "2026-10-17",
+  "status": "R2_FIXED_AND_EXISTING_API_SESSION_NEXT_UNIT_STARTED",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "baseP0FrozenCommit": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
+  "planRevision": 2,
+  "contract": "specs/bootcamp/p0-addendum-r2.json",
+  "canonical": "docs/current/PYTHON_BOOTCAMP_R2.ko.md",
+  "example": "specs/bootcamp/r2-example.json",
+  "referenceScope": "DESIGN_ARITHMETIC_METRICS_ONLY_NO_SIGNING_OR_PAYMENT_RUNTIME",
+  "tests": {
+    "p0V1": 20,
+    "r2Design": 9,
+    "existingV4RelayerSubset": 1,
+    "focusedPass": 30,
+    "focusedFail": 0,
+    "actualNewBridgeTransactions": 0,
+    "realExternalRpc": 0,
+    "officialHostedProofs": 0,
+    "modelCalls": 0,
+    "relatedPass": 319,
+    "relatedFail": 0,
+    "preservation": "191_SOURCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
+    "remote": "PENDING_EXACT_HEAD_CI",
+    "referenceClarification": "P0_PLUS_R2_29_OF_29_PASS_AFTER_DUPLICATE_APPLICATION_OBLIGATION_AND_FIXED_AMOUNT_GUARD",
+    "publicHistoryAtFixedContract": "274_COMMITS_1527_BLOBS_FINDINGS_0"
+  },
+  "existingRelayer": {
+    "environment": "NEW_IN_MEMORY_GANACHE_EXISTING_IMMUTABLE_V4",
+    "thirdPartyNativeGasCharged": true,
+    "learnerNativeGasUnchanged": true,
+    "fixedLearnerReceivedTest": true,
+    "relayerReceivedTest": false,
+    "otherReservationPreserved": true,
+    "replayRejected": true,
+    "bootcampV2AuthorizationSupported": false
+  },
+  "implementation": {
+    "P0_R2": "CONTRACT_AND_BACKLOG_FIXED_AFTER_COMMIT",
+    "P1": "PR79_OFFLINE_SYNTHETIC_ONLY",
+    "P2": "PR80_HEAD_66893ea_TEST58_CI6_REPORTED_PENDING_CROSS_ACCEPTANCE",
+    "P3": "BACKLOG_NOT_IMPLEMENTED",
+    "P4": "BACKLOG_AUTHORITY_FUNDING_ASTRA_HIGH_GATE",
+    "P5": "BACKLOG_NOT_EXECUTED",
+    "webFilesChanged": false,
+    "liveWireOrAbiChanged": false,
+    "schemaMigrationImplemented": false
+  },
+  "dispatch": {
+    "status": "ACCEPTED_AND_ACTIVE_CONFIRMED",
+    "threadId": "01a130ae-cde7-7763-95cb-2ea5469721ed",
+    "requestedModel": "gpt-6.1-sol",
+    "requestedThinking": "high",
+    "runtimeModelIdIndependentlyVerified": false,
+    "frozenInputCommit": "119f394eabc9f4bc3fda6e2ed5861cfd9d276095",
+    "scope": [
+      "P1_P2_VERSIONED_COMMON_CONSUMERS",
+      "P3_ROLE_SCOPED_PROJECTION",
+      "P3_DURABLE_METRICS",
+      "P3_CONSENT_OBJECTION_BLOCKED_STATE"
+    ],
+    "newSessionsOrSubagents": 0,
+    "interrupts": 0,
+    "extraHeadquartersOrDiscussionMessageSent": false
+  },
+  "openGates": [
+    "P3_FIXED_DEADLINE_AND_UNRESOLVED_DISPOSITION",
+    "P4_SIGNER_TRUST_LIFECYCLE_AND_SIGNED_APPROVAL_REVOCATION_RACE",
+    "P4_FINAL_TYPED_ENCODING_AND_ONCHAIN_GUARDS",
+    "P4_ALLOCATION_ORDER_DEPOSIT_POLICY_AND_UNRESOLVED_FUNDS_OWNERSHIP",
+    "REAL_SOURCE_TRUST_PAIR_MAPPING_COLLECTOR",
+    "P3_WEB_OWNER_HANDOFF_AND_METRIC_BASELINE_COMPLETENESS"
+  ],
+  "gates": {
+    "paymentAllowed": false,
+    "productionEnabled": false,
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO"
+  },
+  "mergeAuthorized": false,
+  "deployment": false,
+  "fixedContractCommit": "119f394eabc9f4bc3fda6e2ed5861cfd9d276095",
+  "peerHeadsRead": {
+    "reclaim": {
+      "pr": 79,
+      "head": "0da3abe89e2361ac75c19a331e7910afa7ecc70a",
+      "localReported": 102,
+      "ci": 6,
+      "officialProofs": 0,
+      "default": "UNCONFIGURED_BLOCKED"
+    },
+    "moodle": {
+      "pr": 71,
+      "head": "488a09ce8af62aad2067680dbb459eb0358f452e",
+      "offlineReported": 211,
+      "actualLocalApi": 22,
+      "harnessOfflineGuards": 2,
+      "ci": 6,
+      "historicalFixtureLiveReady": false
+    },
+    "ai": {
+      "pr": 72,
+      "head": "f98e1040c01034b59fba7f1d5fe1c230965d628a",
+      "offlineReported": 381,
+      "ci": 6,
+      "additionalPaidCalls": 0,
+      "usableForAcceptance": false
+    },
+    "apiStore": {
+      "pr": 80,
+      "head": "66893eab4bdafc574147ebee497e3f5a9edafb08",
+      "localReported": 58,
+      "ci": 6,
+      "realAcceptanceReady": false
+    }
+  }
+}
