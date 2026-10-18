@@ -71,6 +71,13 @@ export function predicate(c,f,{acquiredAt,originalBody,source}){
   optionalTime(f.achievementAt,acquiredAt);
   return f.issuerStatus==='UNKNOWN'?'UNKNOWN':f.issuerStatus==='test_passed'?'MET':'NOT_MET';
 }
+export function snapshotCandidate(candidate){
+  // Metadata is detached; originalBody remains an owner-guarded transient read.
+  const metadata={};for(const key of Object.keys(candidate))if(key!=='originalBody')metadata[key]=candidate[key];
+  const snapshot=structuredClone(metadata);
+  if(Object.hasOwn(candidate,'originalBody'))Object.defineProperty(snapshot,'originalBody',{enumerable:true,get:()=>candidate.originalBody});
+  return snapshot;
+}
 export function validateCandidate(candidate,request,guard,now){
   exactKeys(candidate,['requestHash','nonceHash','proofBundleHash','source','sourceVersion','sourceHash','acquiredAt',
     'verifiedAt','validUntilExclusive','facts','rawLocator','originalBody'],'BC_CANDIDATE');

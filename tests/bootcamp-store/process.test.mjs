@@ -9,11 +9,13 @@ async function child(t,directory,crashStage){
   const ready=once(p,'message');p.send({action:'prepare',directory,crashStage});assert.equal((await ready)[0].ready,true);return p;
 }
 for(const crashStage of ['after-nonce','after-evidence','after-decision','after-command'])test(`SIGKILL ${crashStage}: hot journal recovery exposes no partial acceptance`,{timeout:15000},async t=>{
-  const f=await storeFixture(t),a=f.create(),r=f.request(a),before=f.counts(),p=await child(t,f.directory,crashStage);
+  const f=await storeFixture(t),a=f.create(),r=f.request(a),before=f.counts(),beforeMetrics=f.store.getMetricEvents(f.aliceContext,a).events,p=await child(t,f.directory,crashStage);
   const body={requestId:r.record.target.requestId,expectedRevision:r.record.applicationRevision},key=f.key();
   const exited=once(p,'exit');p.send({action:'collect',context:f.aliceContext,applicationId:a,body,key});assert.deepEqual(await exited,[null,'SIGKILL']);
   f.restart();assert.deepEqual(f.counts(),before);assert.equal(f.store.getRequest(f.aliceContext,a,body.requestId).status,'PENDING');
+  assert.deepEqual(f.store.getMetricEvents(f.aliceContext,a).events,beforeMetrics);
   assert.equal((await f.store.collect(f.aliceContext,a,body,key)).current,true);assert.equal(f.counts().evidence,1);
+  assert.equal(f.store.getMetricEvents(f.aliceContext,a).events.filter(e=>e.eventType==='AUTO_OPERATION_COMPLETED').length,1);
 });
 test('independent processes contend for same nonce and SQLite CAS: exactly one receipt', {timeout:15000},async t=>{
   const f=await storeFixture(t),a=f.create(),r=f.request(a),p1=await child(t,f.directory),p2=await child(t,f.directory);

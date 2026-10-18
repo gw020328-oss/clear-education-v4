@@ -1,5 +1,7 @@
 # Python 부트캠프 P2: 단일 ledger 합성 수락 구현
 
+> PR80 첫 저장 단계의 역사적 기록이다. 이후 producer 연결·v2 운영 조회·원문 수명/최종 권한 보강과 최신 미구현 범위는 [R2_IMPLEMENTATION.ko.md](R2_IMPLEMENTATION.ko.md)를 따른다. 이 문서의 ‘미연결/OPEN’은 당시 상태이며 후속 TEST 운영 결정의 취소를 뜻하지 않는다.
+
 2026-10-17. 요청 설정 Sol / High, 현재 턴의 실제 모델 ID·설정은 독립 확인하지 않았다. P0 고정 `03fa64324ef9cc2ce4fb442a612329a7b1285677` / [Draft PR78](https://github.com/gw020328-oss/clear-education-v4/pull/78)에 의존하는 첫 저장 구현 단위다. P0 정본·계약·예제를 수정하지 않고 소비한다. 새 파일만 `src/bootcamp/`, `tests/bootcamp-store/`, 이 문서 경로에 두며 기존 workflow CI glob의 전용 진입점 하나를 추가했다. root package/CI·기존 C1/C2/C3 API/schema/DB·web에는 변경이 없다.
 
 이 단계는 **영속 요청/nonce·증거/판정·멱등 명령·current 무효화의 합성 인수**다. 실제 Moodle/AI/Reclaim 연결 완료가 아니다. 기본 `mode=DISABLED`, 활성 가능한 유일한 수집 모드는 `SYNTHETIC_FIXTURE`이며 `realAcceptanceReady=false`다. 실제 producer를 등록하는 모드, 임의 candidate/원문/proof HTTP 업로드는 없다. `MOCK_VERIFIED`를 실제 원천 검증으로 표시하지 않는다.
@@ -76,6 +78,6 @@ source 수정/삭제/접근불가·mapping/trust/lease/만료·clock reversal은
 
 P3 동의·이의는 exact current MET decision+고정 recipient+전액 배정 뒤 같은 결과를 겨냥해야 한다. 새 decision에 옛 동의를 재사용하지 않는다. 이의 RECEIVED는 UNASSESSED, deadline 자동 연장 없음. P4 자금 배정/회수/worker·TEST 거래·PG·분쟁 시간은 구현하지 않았다. 예치율·배정순서·충전의무·회수/PG/72·120h는 OPEN이다. P5 정상/수정/재원부족 E2E는 이번 저장 시험으로 완료 처리하지 않는다.
 
-기존 금고·DB·체인·키, 멘토 미결 정책, 400% 자동 자격·지급 금지, 500% 제외, Moodle·원천 검증 차단, grant/outbox HOLD, 독립 청구 NO_GO와 Mac 과거 실패 원인 미확정을 유지한다. 실제 자료 수락/로그인/유료 호출/실체인 실행/배포/자동 병합은 0건이다.
+기존 금고·DB·체인·키, 멘토 미결 정책, 400% 자동 자격·지급 금지, 500% 제외, Moodle·원천 검증 차단, grant/outbox HOLD, 독립 청구 NO_GO를 유지한다. Mac은 [PR67 검토](../current/PR67_FINAL_REVIEW.ko.md)에서 fixture 수명 경쟁을 재현하고 실제 403 응답까지 가로채기를 유지하도록 수정했다. 원래 실패 CI의 정확한 IPC 순서는 소급 미관측이다. 실제 자료 수락/로그인/유료 호출/실체인 실행/배포/자동 병합은 0건이다.
 
 검증 실행 및 exact commit/원격 CI는 [PRODUCT_VERIFICATION.ko.md](PRODUCT_VERIFICATION.ko.md)에 기록한다.

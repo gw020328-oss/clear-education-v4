@@ -1,10 +1,12 @@
 import {randomBytes,randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
-import {RuleError,canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
+import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 import {same} from '../policy/mvp/contract.mjs';
 import {openPrivateDb} from '../product-workflow/private-db.mjs';
 import {P0_GATES,p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
-import {compiled,criterion,id,epoch,revision,hash,validateGuard,guardExpiry,guardHash,validateCandidate,evidenceRecord,decisionRecord} from './model.mjs';
+import {compiled,criterion,id,epoch,revision,hash,validateGuard,guardExpiry,guardHash,snapshotCandidate,validateCandidate,evidenceRecord,decisionRecord} from './model.mjs';
+import {migrateR2,r2Ledger} from './r2-ledger.mjs';
+import {createOperations} from './operations.mjs';
 
 const mapping=JSON.parse(readFileSync(new URL('../../specs/bootcamp/p0-runtime-mapping.json',import.meta.url)));
 export const DEFAULT_MAPPING_HASH=p0Hash('RUNTIME-MAPPING',mapping);
@@ -42,12 +44,15 @@ const tables=['clock','applications','requests','evidence','evidence_heads','ret
 const newId=prefix=>prefix+'-'+randomUUID();
 const decode=r=>r?JSON.parse(r.record):null;
 const inactiveReasons=['CORRECTED','DELETED','INACCESSIBLE'];
+const requestGuardHash=(g,version)=>version==='clear-bootcamp-bound-request.2'?p0Hash('BOUND-LEASE',{
+  runtimeMappingHash:g.runtimeMappingHash,trustHash:g.trustHash,leaseId:g.leaseId,authExpiresAt:g.authExpiresAt,
+  rawExpiresAt:g.rawExpiresAt,queryExpiresAt:g.queryExpiresAt,rawAvailable:g.rawAvailable}):guardHash(g);
 
 // No direct candidate acceptance method and no real-data mode. The caller owns
 // authentication and in-process producer/source authority; HTTP never supplies it.
 export function createBootcampStore({directory,authentication,instanceId,demoStartedAt,courseOperatorRef='course-operator-demo',
   mode='DISABLED',runtimeMappingHash=DEFAULT_MAPPING_HASH,producers={},resolveSource=()=>null,
-  now=()=>Math.floor(Date.now()/1000),fault=()=>{}}){
+  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={}}){
   id(instanceId);id(courseOperatorRef);epoch(demoStartedAt);hash(runtimeMappingHash);
   check(['DISABLED','SYNTHETIC_FIXTURE'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
   check(typeof authentication?.authorizeWorkflow==='function','BC_AUTHENTICATION');
@@ -55,10 +60,21 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   for(const [key,p] of Object.entries(producers)){
     criterion(key);check(p?.execution==='SYNTHETIC_FIXTURE'&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
     // Pin methods: mutating a registration object cannot substitute a producer.
-    registry.set(key,{verify:p.verify.bind(p),recheck:p.recheck.bind(p)});
+    check(!p.bridgeVersion||p.bridgeVersion==='clear-bootcamp-producer-bridge.2'&&typeof p.reference==='function','BC_BRIDGE_VERSION');
+    registry.set(key,{verify:p.verify.bind(p),recheck:p.recheck.bind(p),bridgeVersion:p.bridgeVersion??null,reference:p.reference?.bind(p),close:p.close?.bind(p)});
   }
   const file=openPrivateDb(directory,'bootcamp.sqlite',{version:BOOTCAMP_STORE_VERSION,instanceId,demoStartedAt,courseOperatorRef,mode,
-    policyHash:compiled.policyHash,runtimeMappingHash},schema,tables),{db,transaction}=file;
+    policyHash:compiled.policyHash,runtimeMappingHash},schema,tables),{db,transaction:baseTransaction}=file;
+  try{migrateR2({db,transaction:baseTransaction,fault});}catch(error){file.close();throw error;}
+  const transaction=fn=>baseTransaction(()=>{db.prepare('UPDATE r2_meta SET writer=1 WHERE id=1').run();
+    try{return fn();}finally{db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();}});
+  const ledger=r2Ledger(db,measurement);
+  const normalizeOperators=bindings=>{check(Array.isArray(bindings),'BC_OPERATOR_BINDING');return bindings.map(b=>{
+    exactKeys(b,['wallet','courseOperatorRef'],'BC_OPERATOR_BINDING');id(b.courseOperatorRef);
+    check(typeof b.wallet==='string'&&/^0x[0-9a-fA-F]{40}$/.test(b.wallet),'BC_OPERATOR_BINDING');return {...b,wallet:b.wallet.toLowerCase()};});};
+  const operators=normalizeOperators(operatorBindings);
+  check(resolveOperatorBindings===null||typeof resolveOperatorBindings==='function','BC_OPERATOR_BINDING');
+  const currentOperators=()=>resolveOperatorBindings?normalizeOperators(resolveOperatorBindings()):operators;
   const run=(sql,...args)=>db.prepare(sql).run(...args),get=(sql,...args)=>db.prepare(sql).get(...args),all=(sql,...args)=>db.prepare(sql).all(...args);
   const actor=(context,write)=>{
     const a=authentication.authorizeWorkflow(context,write);
@@ -70,12 +86,13 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   const sessionHash=(context,wallet)=>p0Hash('AUTH-CONTEXT',{token:context.token,wallet,chainId:context.chainId});
   const heads=a=>all('SELECT * FROM evidence_heads WHERE application_id=? ORDER BY criterion_id',a.id)
     .map(h=>({...h,valid:!!h.valid,evidence:decode(get('SELECT record FROM evidence WHERE id=?',h.evidence_id)),guard:JSON.parse(h.guard)}));
-  const event=(a,reason,target,time)=>run('INSERT INTO events VALUES(?,?,?)',newId('event'),a.id,canonical({reason,target,recordedAt:time}));
+  const event=(a,reason,target,time)=>{run('INSERT INTO events VALUES(?,?,?)',newId('event'),a.id,canonical({reason,target,recordedAt:time}));ledger.next();};
   function decide(a,time){
     const prior=a.decision_id&&decode(get('SELECT record FROM decisions WHERE id=?',a.decision_id));
     const d=decisionRecord(a,heads(a),{decisionId:newId('decision'),decisionRevision:(prior?.decisionRevision??0)+1,
       previousDecisionId:prior?.decisionId??null,evaluatedAt:time});
     run('INSERT INTO decisions VALUES(?,?,?,?)',d.decisionId,a.id,d.decisionRevision,canonical(d));
+    ledger.decision(d);
     run('UPDATE applications SET decision_id=? WHERE id=?',d.decisionId,a.id);return d;
   }
   function source(a,c,time){
@@ -107,7 +124,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     }
     for(const row of all("SELECT * FROM requests WHERE application_id=? AND status='PENDING'",a.id)){
       const r=decode(row),g=source(a,r.criterionId,time);
-      if(changed||r.expectedRevision!==a.revision||clockReversed||a.status!=='ACTIVE'||time<r.issuedAt||time>=r.expiresAt||!g||guardHash(g)!==r.sourceGuardHash
+      if(changed||r.expectedRevision!==a.revision||clockReversed||a.status!=='ACTIVE'||time<r.issuedAt||time>=r.expiresAt||!g||requestGuardHash(g,r.version)!==r.sourceGuardHash
         ||currentSessionHash!==null&&r.authContextHash!==currentSessionHash){
         run("UPDATE requests SET status='REVOKED' WHERE id=?",r.requestId);event(a,'REQUEST_REVOKED',r.requestId,time);changed=true;
       }
@@ -126,7 +143,11 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     return outcome(transaction(()=>{
       const wallet=actor(context,write);let a=owned(wallet,applicationId);const {time,reversed}=tick();a=refresh(a,time,reversed,sessionHash(context,wallet));
       db.exec('SAVEPOINT command');
-      try{check(!reversed,'BC_CLOCK_REVERSED');const value=fn(a,wallet,time);db.exec('RELEASE command');return {value};}
+      try{check(!reversed,'BC_CLOCK_REVERSED');const value=fn(a,wallet,time),sequence=ledger.sequence(),revision=app(applicationId).revision;
+        const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed,sessionHash(context,wallet)),end=tick();
+        check(!final.reversed&&!end.reversed&&end.time===time&&latest.revision===revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
+        check(actor(context,write)===wallet,'BC_COMMIT_AUTHORITY');
+        db.exec('RELEASE command');return {value};}
       catch(error){
         db.exec('ROLLBACK TO command; RELEASE command');
         // A producer's final synchronous recheck may reveal a revocation after
@@ -143,10 +164,17 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     id(key);const bodyHash=p0Hash('COMMAND-BODY',body),prior=get('SELECT * FROM commands WHERE wallet=? AND route=? AND key=?',wallet,route,key);
     check(!prior||prior.body_hash===bodyHash,'BC_IDEMPOTENCY_CONFLICT');return prior?decode(prior):null;
   }
-  function command(a,wallet,route,key,body,target,time){
-    const r={version:BOOTCAMP_STORE_VERSION,operationId:newId('operation'),applicationId:a.id,route,key,
+  function command(a,wallet,route,key,body,target,time,measurementInfo={}){
+    const r={version:BOOTCAMP_STORE_VERSION,operationId:measurementInfo.operationId??newId('operation'),applicationId:a.id,route,key,
       bodyHash:p0Hash('COMMAND-BODY',body),applicationRevision:app(a.id).revision,target,committedAt:time};
-    run('INSERT INTO commands VALUES(?,?,?,?,?,?,?)',r.operationId,wallet,route,key,r.bodyHash,a.id,canonical(r));return r;
+    run('INSERT INTO commands VALUES(?,?,?,?,?,?,?)',r.operationId,wallet,route,key,r.bodyHash,a.id,canonical(r));ledger.next();
+    const decision=decode(get('SELECT record FROM decisions WHERE id=?',target.decisionId??app(a.id).decision_id));
+    const emit=eventType=>ledger.emit({applicationId:a.id,decision,operationId:r.operationId,eventType,start:measurementInfo.start});
+    if(route==='create')emit('CASE_STARTED');
+    if(/^collect(?:2)?:/.test(route)){emit('CONDITION_VERIFIED');emit('WAIT_INTERVAL');emit('AUTO_OPERATION_COMPLETED');
+      if(decision.conditionsStatus==='NEEDS_SUPPLEMENT')emit('SUPPLEMENT_REQUESTED');}
+    if(measurementInfo.extraEvent)emit(measurementInfo.extraEvent);
+    return r;
   }
   const ready=a=>check(a.status==='ACTIVE'&&mode==='SYNTHETIC_FIXTURE','BC_ACCEPTANCE_DISABLED');
   const cas=(a,expected)=>{revision(expected);check(a.revision===expected,'BC_REVISION_CONFLICT');};
@@ -159,96 +187,140 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     if(r.target.requestId)current=current&&get('SELECT status FROM requests WHERE id=?',r.target.requestId)?.status==='PENDING';
     return freeze({record:r,current:!!current,gates:P0_GATES});
   };
+  const projection2=r=>{const p=projection(r);return freeze({version:'clear-bootcamp-operation-receipt.2',record:{operationId:r.operationId,
+    applicationId:r.applicationId,applicationRevision:r.applicationRevision,target:r.target,committedAt:r.committedAt},current:p.current,gates:P0_GATES});};
   const view=a=>freeze({version:BOOTCAMP_STORE_VERSION,applicationId:a.id,participantId:a.participant_id,recipientRef:a.recipient_ref,
     policyHash:a.policy_hash,runtimeMappingHash:a.mapping_hash,revision:a.revision,status:a.status,mode,realAcceptanceReady:false,
     decision:{record:decode(get('SELECT record FROM decisions WHERE id=?',a.decision_id)),current:a.status==='ACTIVE'},
     evidence:heads(a).map(h=>({record:h.evidence,current:h.valid&&a.status==='ACTIVE',invalidationReason:h.reason})),gates:P0_GATES});
 
-  return {
-    origin:authentication.origin,close:file.close,
+  const service={
+    origin:authentication.origin,close(){for(const p of registry.values())p.close?.();file.close();},
     policy(context){actor(context,false);return freeze({...compiled,mode,realAcceptanceReady:false,gates:P0_GATES});},
     createApplication(context,body,key){
       exactKeys(body,[],'BC_APPLICATION_BODY');
       return outcome(transaction(()=>{
         const wallet=actor(context,true),prior=replay(wallet,'create',key,body),{time,reversed}=tick();
-        if(prior){refresh(app(prior.applicationId),time,reversed);return reversed?{error:new RuleError('BC_CLOCK_REVERSED')}:{value:projection(prior)};}
+        if(prior){
+          refresh(app(prior.applicationId),time,reversed);
+          try{const value=projection(prior),final=tick(),sequence=ledger.sequence();refresh(app(prior.applicationId),final.time,final.reversed);
+            const end=tick();check(!reversed&&!final.reversed&&!end.reversed,'BC_CLOCK_REVERSED');
+            check(end.time===time&&sequence===ledger.sequence(),'BC_VIEW_STALE');check(actor(context,true)===wallet,'BC_COMMIT_AUTHORITY');return {value};
+          }catch(error){const c=tick();refresh(app(prior.applicationId),c.time,c.reversed);return {error};}
+        }
         check(!reversed&&time>=demoStartedAt,'BC_CLOCK_REVERSED');
         const applicationId=newId('application'),participantId='participant-'+p0Hash('PARTICIPANT',{instanceId,wallet}).slice(2,42),recipientRef='recipient-'+p0Hash('RECIPIENT',{instanceId,wallet}).slice(2,42);
         run("INSERT INTO applications VALUES(?,?,?,?,?,?,?,1,NULL,'ACTIVE',?,NULL)",applicationId,participantId,wallet,recipientRef,courseOperatorRef,compiled.policyHash,runtimeMappingHash,time);
-        const a=app(applicationId),d=decide(a,time);return {value:projection(command(a,wallet,'create',key,body,{decisionId:d.decisionId},time))};
+        const a=app(applicationId),d=decide(a,time),value=projection(command(a,wallet,'create',key,body,{decisionId:d.decisionId},time));
+        check(actor(context,true)===wallet,'BC_COMMIT_AUTHORITY');return {value};
       }));
     },
     getApplication(context,applicationId){id(applicationId);return access(context,applicationId,false,a=>view(a));},
-    issueRequest(context,applicationId,body,key){
+    issueRequest(context,applicationId,body,key,{bridge=false}={}){
       exactKeys(body,['criterionId','expectedRevision'],'BC_REQUEST_BODY');criterion(body.criterionId);
       return access(context,applicationId,true,(a,wallet,time)=>{
-        const route='request:'+applicationId,prior=replay(wallet,route,key,body);if(prior)return projection(prior);
+        const route=(bridge?'request2:':'request:')+applicationId,prior=replay(wallet,route,key,body);if(prior)return projection(prior);
         ready(a);cas(a,body.expectedRevision);window(a,time);const g=source(a,body.criterionId,time);check(g,'BC_SOURCE_UNKNOWN');
+        const producer=registry.get(body.criterionId);check(bridge?!!producer?.bridgeVersion:!producer?.bridgeVersion,'BC_REQUEST_VERSION');
         check(!get('SELECT 1 FROM retired_guards WHERE application_id=? AND criterion_id=? AND guard_hash=?',a.id,body.criterionId,guardHash(g)),'BC_SOURCE_RETIRED');
         run("UPDATE requests SET status='REVOKED' WHERE application_id=? AND status='PENDING'",a.id);
         const h=heads(a).find(h=>h.criterion_id===body.criterionId&&h.valid);if(h)retire(a,h,'REQUEST_REPLACED',time);
         run('UPDATE applications SET revision=revision+1 WHERE id=?',a.id);a=app(a.id);
-        const r={version:'clear-bootcamp-request.1',requestId:newId('request'),participantId:a.participant_id,participantWallet:wallet,
+        const version=bridge?'clear-bootcamp-bound-request.2':'clear-bootcamp-request.1';
+        const r={version,requestId:newId('request'),participantId:a.participant_id,participantWallet:wallet,
           applicationId:a.id,criterionId:body.criterionId,policyHash:a.policy_hash,runtimeMappingHash:a.mapping_hash,
           expectedRevision:a.revision,authContextHash:sessionHash(context,wallet),nonceHash:p0Hash('NONCE',randomBytes(32).toString('hex')),issuedAt:time,
           expiresAt:Math.min(time+900,guardExpiry(g)),receiptWindowUntilExclusive:demoStartedAt+(a.initial_received_at===null?1800:3600),
-          sourceGuardHash:guardHash(g),dataMode:'SYNTHETIC_FIXTURE'};
+          sourceGuardHash:requestGuardHash(g,version),dataMode:'SYNTHETIC_FIXTURE',...(bridge?{producerVersion:producer.bridgeVersion,producerTrustHash:g.trustHash,
+            plannedEvidenceId:newId('evidence'),plannedEvidenceRevision:(get('SELECT MAX(revision) n FROM evidence WHERE application_id=? AND criterion_id=?',a.id,body.criterionId).n??0)+1}:{})};
         r.requestHash=p0Hash('REQUEST',r);run("INSERT INTO requests VALUES(?,?,?,?,?,?,'PENDING')",r.requestId,a.id,r.criterionId,r.requestHash,r.nonceHash,canonical(r));
-        const d=decide(a,time);return projection(command(a,wallet,route,key,body,{requestId:r.requestId,decisionId:d.decisionId},time));
+        const d=decide(a,time);return projection(command(a,wallet,route,key,body,{requestId:r.requestId,decisionId:d.decisionId},time,{extraEvent:h?'REVERIFICATION_REQUESTED':null}));
       });
     },
-    getRequest(context,applicationId,requestId){
-      id(requestId);return access(context,applicationId,false,()=>{const r=get('SELECT * FROM requests WHERE id=? AND application_id=?',requestId,applicationId);check(r,'BC_NOT_FOUND');return freeze({record:decode(r),status:r.status,gates:P0_GATES});});
+    issueBridgeRequest(context,applicationId,body,key){const result=service.issueRequest(context,applicationId,body,key,{bridge:true});return projection2(result.record);},
+    getRequest(context,applicationId,requestId,{bridge=false}={}){
+      id(requestId);return access(context,applicationId,false,()=>{const r=get('SELECT * FROM requests WHERE id=? AND application_id=?',requestId,applicationId);check(r,'BC_NOT_FOUND');
+        check(decode(r).version===(bridge?'clear-bootcamp-bound-request.2':'clear-bootcamp-request.1'),'BC_REQUEST_VERSION');return freeze({record:decode(r),status:r.status,gates:P0_GATES});});
     },
-    async collect(context,applicationId,body,key,{signal,timeoutMs=5000}={}){
+    async collect(context,applicationId,body,key,{signal,timeoutMs=5000,bridge=false}={}){
       exactKeys(body,['requestId','expectedRevision'],'BC_COLLECT_BODY');id(body.requestId);revision(body.expectedRevision);
       check(Number.isSafeInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=30000,'BC_TIMEOUT');
-      const route='collect:'+applicationId;
+      const route=(bridge?'collect2:':'collect:')+applicationId;
       const started=access(context,applicationId,true,(a,wallet,time)=>{
         const prior=replay(wallet,route,key,body);if(prior)return {prior:projection(prior)};
         ready(a);cas(a,body.expectedRevision);window(a,time);
         const row=get('SELECT * FROM requests WHERE id=? AND application_id=?',body.requestId,a.id);check(row?.status==='PENDING','BC_REQUEST_NOT_PENDING');
         const r=decode(row);check(r.expectedRevision===a.revision&&time<r.expiresAt,'BC_REQUEST_STALE');
-        const p=registry.get(r.criterionId);check(p,'BC_PRODUCER_UNAVAILABLE');return {request:freeze(r),producer:p,wallet};
+        check(r.version===(bridge?'clear-bootcamp-bound-request.2':'clear-bootcamp-request.1'),'BC_REQUEST_VERSION');
+        const p=registry.get(r.criterionId);check(p,'BC_PRODUCER_UNAVAILABLE');
+        const operationId='operation-'+p0Hash('COLLECTION-OPERATION',{applicationId,requestHash:r.requestHash}).slice(2,50),start=ledger.stamp();
+        const decision=decode(get('SELECT record FROM decisions WHERE id=?',a.decision_id));
+        ledger.attempt(a.id,operationId,{phase:'STARTED',requestHash:r.requestHash,bodyHash:p0Hash('COMMAND-BODY',body),clockEpoch:start.clockEpoch,startedUtcMs:start.utc});
+        return {request:freeze(r),producer:p,wallet,operationId,start,decision};
       });
       if(started.prior)return started.prior;
       const controller=new AbortController(),abort=()=>controller.abort();signal?.addEventListener('abort',abort,{once:true});
       if(signal?.aborted)abort();let timer,candidate,failure;
+      // Read-only lease authority: no recursive source resolution/transaction.
+      // A consumed request retains raw access only while its exact accepted
+      // evidence is the valid head. A new decision never revives a retired head.
+      const isAuthorized=()=>{try{
+        const r=started.request,a=owned(started.wallet,applicationId),row=get('SELECT status FROM requests WHERE id=?',r.requestId);
+        if(a.status!=='ACTIVE'||a.policy_hash!==r.policyHash||a.mapping_hash!==r.runtimeMappingHash
+          ||sessionHash(context,started.wallet)!==r.authContextHash||actor(context,true)!==started.wallet)return false;
+        if(row?.status==='PENDING')return a.revision===r.expectedRevision&&epoch(now())<r.expiresAt;
+        return row?.status==='CONSUMED'&&!!get('SELECT 1 FROM evidence e JOIN evidence_heads h ON h.evidence_id=e.id WHERE e.request_hash=? AND h.valid=1',r.requestHash);
+      }catch{return false;}};
       try{
-        candidate=await Promise.race([Promise.resolve().then(()=>{check(!controller.signal.aborted,'BC_CANCELLED');return started.producer.verify(started.request,{signal:controller.signal});}),
+        candidate=await Promise.race([Promise.resolve().then(()=>{
+          check(!controller.signal.aborted,'BC_CANCELLED');
+          access(context,applicationId,true,a=>{cas(a,started.request.expectedRevision);check(isAuthorized(),'BC_COMMIT_AUTHORITY');});
+          return started.producer.verify(started.request,{signal:controller.signal,isAuthorized});}),
           new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('BC_PRODUCER_TIMEOUT'));},timeoutMs);})]);
       }catch(error){failure=error;}finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
       reconcile(applicationId);
-      return access(context,applicationId,true,(a,wallet,time)=>{
+      try{return access(context,applicationId,true,(a,wallet,time)=>{
         const prior=replay(wallet,route,key,body);if(prior)return projection(prior);
         check(wallet===started.wallet,'FORBIDDEN');ready(a);cas(a,body.expectedRevision);window(a,time);
         check(!failure,'BC_PRODUCER_FAILED');check(!controller.signal.aborted&&!signal?.aborted,'BC_CANCELLED');
         const row=get('SELECT * FROM requests WHERE id=? AND application_id=?',body.requestId,a.id);check(row?.status==='PENDING','BC_REQUEST_NOT_PENDING');
-        const r=decode(row),g=source(a,r.criterionId,time);check(g&&time<r.expiresAt&&guardHash(g)===r.sourceGuardHash,'BC_REQUEST_STALE');
+        const r=decode(row),g=source(a,r.criterionId,time);check(g&&time<r.expiresAt&&requestGuardHash(g,r.version)===r.sourceGuardHash,'BC_REQUEST_STALE');
         check(started.producer.recheck(candidate,started.request)===true,'BC_PRODUCER_RECHECK');
-        const safe=structuredClone(candidate),condition=validateCandidate(safe,r,g,time);
+        const safe=snapshotCandidate(candidate),condition=validateCandidate(safe,r,g,time);
         check(!get('SELECT 1 FROM evidence WHERE bundle_hash=?',safe.proofBundleHash),'BC_PROOF_REPLAY');
         const priorEvidence=get('SELECT id,revision FROM evidence WHERE application_id=? AND criterion_id=? ORDER BY revision DESC LIMIT 1',a.id,r.criterionId);
-        const e=evidenceRecord(safe,r,{evidenceId:newId('evidence'),evidenceRevision:(priorEvidence?.revision??0)+1,previousEvidenceId:priorEvidence?.id??null,condition});
+        const nextRevision=(priorEvidence?.revision??0)+1;check(!bridge||r.plannedEvidenceRevision===nextRevision,'BC_REVISION_CONFLICT');
+        const e=evidenceRecord(safe,r,{evidenceId:bridge?r.plannedEvidenceId:newId('evidence'),evidenceRevision:nextRevision,previousEvidenceId:priorEvidence?.id??null,condition});
+        const reference=started.producer.bridgeVersion?started.producer.reference(candidate,started.request):null;
+        if(reference)check(reference.ledgerRequestHash===r.requestHash&&reference.ledgerNonceHash===r.nonceHash,'BC_BRIDGE_REQUEST');
         // Recheck immediately before the first write; callbacks must be synchronous.
         check(actor(context,true)===wallet&&started.producer.recheck(candidate,started.request)===true,'BC_COMMIT_AUTHORITY');
         const writeTime=epoch(now()),writeGuard=source(a,r.criterionId,writeTime);
-        check(writeTime===time&&writeGuard&&guardHash(writeGuard)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
+        check(writeTime===time&&writeGuard&&requestGuardHash(writeGuard,r.version)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
         run("UPDATE requests SET status='CONSUMED' WHERE id=? AND status='PENDING'",r.requestId);fault('after-nonce');
         run('INSERT INTO evidence VALUES(?,?,?,?,?,?,?,?)',e.evidenceId,a.id,r.criterionId,e.evidenceRevision,r.requestHash,r.nonceHash,safe.proofBundleHash,canonical(e));fault('after-evidence');
+        if(reference)ledger.bridge(e.evidenceId,reference);
         run('INSERT INTO evidence_heads VALUES(?,?,?,?,?,1,NULL) ON CONFLICT(application_id,criterion_id) DO UPDATE SET evidence_id=excluded.evidence_id,guard=excluded.guard,valid_until=excluded.valid_until,valid=1,reason=NULL',a.id,r.criterionId,e.evidenceId,canonical(g),safe.validUntilExclusive);
         run('UPDATE applications SET revision=revision+1,initial_received_at=COALESCE(initial_received_at,?) WHERE id=?',time,a.id);a=app(a.id);
         const d=decide(a,time);fault('after-decision');
-        const result=command(a,wallet,route,key,body,{evidenceId:e.evidenceId,decisionId:d.decisionId},time);fault('after-command');
+        const result=command(a,wallet,route,key,body,{evidenceId:e.evidenceId,decisionId:d.decisionId},time,started);fault('after-command');
         const final=tick();check(!final.reversed,'BC_CLOCK_REVERSED');
         check(started.producer.recheck(candidate,started.request)===true&&actor(context,true)===wallet,'BC_COMMIT_AUTHORITY');
-        const currentGuard=source(a,r.criterionId,final.time);check(currentGuard&&guardHash(currentGuard)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
+        const currentGuard=source(a,r.criterionId,final.time);check(currentGuard&&requestGuardHash(currentGuard,r.version)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
         validateCandidate(safe,r,currentGuard,final.time);check(final.time<r.receiptWindowUntilExclusive,'BC_RECEIPT_WINDOW');
         // The decision also depends on other criteria's current heads. A change
         // to any of them must reject this acceptance, not commit a mixed result.
         check(refresh(a,final.time).revision===a.revision,'BC_COMMIT_CONTEXT');
         return projection(result);
-      });
+      });}catch(error){
+        transaction(()=>{const end=ledger.stamp();ledger.attempt(applicationId,started.operationId,{phase:'FAILED',clockEpoch:end.clockEpoch,endedUtcMs:end.utc});
+          ledger.emit({applicationId,decision:started.decision,operationId:started.operationId,eventType:'OPERATION_FAILED',start:started.start,end});});
+        throw error;
+      }
+    },
+    async collectBridge(context,applicationId,body,key,options={}){
+      const result=await service.collect(context,applicationId,body,key,{...options,bridge:true});
+      reconcile(applicationId);return service.getR2Operation(context,applicationId,result.record.operationId);
     },
     invalidate(context,applicationId,body,key){
       exactKeys(body,['criterionId','reason','expectedRevision'],'BC_INVALIDATION_BODY');criterion(body.criterionId);check(inactiveReasons.includes(body.reason),'BC_INVALIDATION_REASON');
@@ -272,7 +344,8 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       });
     },
     getOperation(context,applicationId,operationId){
-      id(operationId);return access(context,applicationId,false,()=>{const r=get('SELECT record FROM commands WHERE id=? AND application_id=?',operationId,applicationId);check(r,'BC_NOT_FOUND');return projection(decode(r));});
+      id(operationId);return access(context,applicationId,false,()=>{const r=get('SELECT record FROM commands WHERE id=? AND application_id=?',operationId,applicationId);check(r,'BC_NOT_FOUND');
+        const record=decode(r);check(!/^(r2-|request2:|collect2:)/.test(record.route),'BC_REQUEST_VERSION');return projection(record);});
     },
     getDecision(context,applicationId,decisionId){
       id(decisionId);return access(context,applicationId,false,a=>{const row=get('SELECT record FROM decisions WHERE id=? AND application_id=?',decisionId,applicationId);check(row,'BC_NOT_FOUND');return freeze({record:decode(row),current:a.status==='ACTIVE'&&a.decision_id===decisionId,gates:P0_GATES});});
@@ -285,4 +358,5 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       });
     },
   };
+  return Object.assign(service,createOperations({db,transaction,authentication,operatorBindings:currentOperators,app,refresh,tick,sessionHash,ledger,heads,replay,command,projectOperation:projection2}));
 }
