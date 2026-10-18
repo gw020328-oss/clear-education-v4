@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-17",
+  "kind": "OFFLINE_MOCK_SYNTHETIC_VECTOR",
+  "fixedContractCommit": "31879659e11d9cbfa0aa88e48d825047080f4e39",
+  "fixedContractMerge": "2be6636",
+  "newAcquisitionTests": 44,
+  "existingMoodleTests": 31,
+  "sharedContractTests": 26,
+  "total": 101,
+  "passed": 101,
+  "externalNetworkTripwire": true,
+  "additionalActualMoodleApiTests": 0,
+  "newCredentialsOrResourcesCreated": false,
+  "factsV1Modified": false,
+  "commonFilesDirectlyModified": false,
+  "workspacePreservation": "PASS",
+  "productAcceptance": false,
+  "paymentAllowed": false,
+  "independentClaim": "NO_GO"
+}

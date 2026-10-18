@@ -1,0 +1,103 @@
+{
+  "report": {
+    "version": "clear-moodle-bootcamp-fixture-report.1",
+    "dataScope": "ISOLATED_SYNTHETIC_ACCOUNT",
+    "environmentRef": "bc-p2-20261017-run3",
+    "runRef": "run3",
+    "project": "clear-moodle-bootcamp-p2-20261017",
+    "loopbackPort": 18767,
+    "moodleCommit": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+    "sourceVersion": "moodle-4.5.15-215f4438",
+    "observedApiVersion": "2024100715",
+    "observedRelease": "4.5.15 (Build: 20261005)",
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "courseLogicalId": "clear-python-bootcamp-demo",
+    "actualCourseId": 6,
+    "targets": {
+      "python-intro-activity": {
+        "cmId": 13,
+        "instanceId": 3,
+        "module": "page"
+      },
+      "python-practice-task": {
+        "cmId": 14,
+        "instanceId": 3
+      },
+      "python-reflection": {
+        "cmId": 15,
+        "forumId": 9
+      }
+    },
+    "participants": [
+      {
+        "participantId": "participant-bc-one",
+        "applicationId": "application-bc-one",
+        "moodleUserId": 9,
+        "accountBindingRef": "bc-one-account-map",
+        "enrolled": true,
+        "assurance": "OWNER_CREATED_SYNTHETIC_ACCOUNT_NOT_REAL_IDENTITY"
+      },
+      {
+        "participantId": "participant-bc-two",
+        "applicationId": "application-bc-two",
+        "moodleUserId": 10,
+        "accountBindingRef": "bc-two-account-map",
+        "enrolled": true,
+        "assurance": "OWNER_CREATED_SYNTHETIC_ACCOUNT_NOT_REAL_IDENTITY"
+      },
+      {
+        "participantId": "participant-bc-outsider",
+        "applicationId": "application-bc-outsider",
+        "moodleUserId": 11,
+        "accountBindingRef": "bc-outsider-account-map",
+        "enrolled": false,
+        "assurance": "OWNER_CREATED_SYNTHETIC_ACCOUNT_NOT_REAL_IDENTITY"
+      }
+    ],
+    "completionSetupReceipt": {
+      "assurance": "OWNER_SETUP_DB_RECEIPT_NOT_REST_API",
+      "record": {
+        "id": "13",
+        "course": "6",
+        "module": "16",
+        "instance": "3",
+        "completion": "2",
+        "completionview": "1",
+        "completiongradeitemnumber": null,
+        "completionexpected": "0"
+      },
+      "setupObservedAt": 1792207270
+    },
+    "completionSetupReceiptHash": "0x1de773ed73928b3d8ac487551da35ef4ecbdaac9e2def3b0669a3780dc04bf36",
+    "observedCompletionConfiguration": {
+      "tracking": 2,
+      "isAutomatic": true,
+      "ruleNames": [
+        "completionview"
+      ],
+      "assurance": "DIRECT_AUTHENTICATED_REST_FIELDS"
+    },
+    "readFunctions": [
+      "core_webservice_get_site_info",
+      "core_course_get_contents",
+      "core_completion_get_activities_completion_status",
+      "mod_assign_get_assignments",
+      "mod_assign_get_submission_status",
+      "mod_forum_get_forums_by_courses",
+      "mod_forum_get_forum_discussions",
+      "mod_forum_get_discussion_post"
+    ],
+    "writerFunctions": [
+      "mod_page_view_page",
+      "mod_assign_save_submission",
+      "mod_assign_submit_for_grading",
+      "mod_forum_add_discussion",
+      "mod_forum_update_discussion_post",
+      "mod_forum_delete_post"
+    ],
+    "authority": "OWNER_FIXTURE_REPORT_FOR_COMMON_RUNTIME_PINNING",
+    "globalP0RuntimeMappingModified": false,
+    "productReady": false
+  },
+  "fixtureReportHash": "0x703e993fb5c231e09db19eee25397d257d9920a42f5acefbe5a69339c33f8986"
+}
