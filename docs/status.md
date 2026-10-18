@@ -1,5 +1,16 @@
 # 개발 현황
 
+## 2026-10-18 공개 현황
+
+원격 확인 **2026-10-18 12:11 KST**. main은 [`72fe051`](https://github.com/gw020328-oss/clear-education-v4/commit/72fe051c1aad6b99def4d864cd2e3841308e857c), develop은 [`9c542c3`](https://github.com/gw020328-oss/clear-education-v4/commit/9c542c38892d0a5d5e71fcbe4f87f1017d8fe843)이며 어제 이후 새 기능 병합은 없다. main의 공개 코드·의존성·기존 설치/실행 방법은 그대로다.
+
+새로 열린 [#78 부트캠프 계획](https://github.com/gw020328-oss/clear-education-v4/pull/78), [#79 HackerRank 오프라인 증거](https://github.com/gw020328-oss/clear-education-v4/pull/79), [#80 합성 증거 ledger](https://github.com/gw020328-oss/clear-education-v4/pull/80), [#81 지급 권한·풀 재원 경계 리뷰](https://github.com/gw020328-oss/clear-education-v4/pull/81)는 **develop/main 미병합**이다. 계획·합성 producer·설계 리뷰를 현재 main에서 실행 가능한 기능이나 최종 정책·실제 지급으로 안내하지 않는다. #79는 기본 UNCONFIGURED_BLOCKED·새 실제 공식 proof 0, #80은 기본 DISABLED/합성 인수·실제 수락 불가이며, #81은 새 지급 키/서명/거래를 구현한 PR이 아니다.
+
+확인한 최신 head는 #78 `733fe69`, #79 `0da3abe`, #80 `66893ea`, #81 `c9c0ee0`이며 각 PR/push의 공개 이력·합성 시험·Mac 복구 CI가 성공했다. CI 성공은 병합·운영 기능·실제 자격/지급 검증이 아니다. 일부 PR의 base diff에는 미병합 선행 기능 이력이 포함되므로 문서만 바꾼 PR로 취급하지 않는다.
+
+[Moodle #71](https://github.com/gw020328-oss/clear-education-v4/pull/71)의 격리 fixture와 [AI #72](https://github.com/gw020328-oss/clear-education-v4/pull/72)의 Python 회고 세 항목 MOCK 검토도 미병합이다. 실제 기관/본인·전체 AND·지급이나 실제 Python 회고 모델 품질 성공으로 확대하지 않는다. 아래 2026-10-17의 main 재현 경로와 develop C1~C3 상태는 그대로 유지하며, 이번 문서 작업은 로그인·실제 proof·새 유료 모델 호출을 수행하지 않았다.
+
+
 ## 2026-10-17 공개 현황
 
 확인 시각 **2026-10-17 11:08 KST**. main은 [`58261aa`](https://github.com/gw020328-oss/clear-education-v4/commit/58261aa2465bfc4b34d181dde2757add6eec7283)이며 제공 코드·의존성·기존 시작 명령은 그대로다. main에서 재현하는 경로는 기존 ProofAdapter 합성 테스트 36개와 문서 CI다. 아래 새 기능 코드는 main에 포함되지 않는다.
