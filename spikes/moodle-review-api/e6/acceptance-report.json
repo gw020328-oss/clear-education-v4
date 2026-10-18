@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-18",
+  "environmentRef": "e6-20261018-run1",
+  "runRef": "run1",
+  "kind": "ACTUAL_LOCAL_SYNTHETIC_SOURCE_AND_LEASE_GUARDS",
+  "cases": [
+    {
+      "name": "designated_automatic_activity_is_current_complete",
+      "result": "PASS",
+      "restReadCalls": 5,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "own_assignment_current_submitted_preserves_missing_submitted_at",
+      "result": "PASS",
+      "restReadCalls": 7,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "explicit_selected_post_raw_getter_rereads_without_extending_receipt",
+      "result": "PASS",
+      "restReadCalls": 22,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "manual_completion_is_not_met",
+      "result": "PASS",
+      "restReadCalls": 5,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "local_authority_revocation_invalidates_existing_raw_handle",
+      "result": "PASS",
+      "restReadCalls": 11,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "lease_shrink_real_timer_drops_raw_without_extension",
+      "result": "PASS",
+      "restReadCalls": 11,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "real_source_edit_disposes_old_handle_new_query_recollects",
+      "result": "PASS",
+      "restReadCalls": 44,
+      "restWriteCalls": 1
+    },
+    {
+      "name": "source_hidden_disposes_handle_no_success_fallback",
+      "result": "PASS",
+      "restReadCalls": 13,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "actual_reader_service_revocation_refuses_existing_token",
+      "result": "PASS",
+      "restReadCalls": 1,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "source_access_unavailable_disposes_raw_handle",
+      "result": "PASS",
+      "restReadCalls": 11,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "delete_disposable_selected_post_preserves_primary_target",
+      "result": "PASS",
+      "restReadCalls": 27,
+      "restWriteCalls": 2
+    },
+    {
+      "name": "cancelled_handle_never_restores",
+      "result": "PASS",
+      "restReadCalls": 11,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "metadata_serialization_has_no_raw_or_rehydratable_getter",
+      "result": "PASS",
+      "restReadCalls": 11,
+      "restWriteCalls": 0
+    },
+    {
+      "name": "final_designated_targets_alive_and_tokens_zero",
+      "result": "PASS",
+      "restReadCalls": 23,
+      "restWriteCalls": 0
+    }
+  ],
+  "complete": true,
+  "failedStage": null,
+  "metrics": {
+    "restReadCalls": 202,
+    "restWriteCalls": 3
+  },
+  "sourceRawOrTokenPublished": false,
+  "designatedTargetsIntentionallyDeleted": false,
+  "containerStopPerformed": false,
+  "aiModelCalls": 0,
+  "personalSourceCalls": 0,
+  "productAcceptance": false
+}

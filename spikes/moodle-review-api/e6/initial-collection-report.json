@@ -1,0 +1,121 @@
+{
+  "version": "clear-moodle-e6-collection-report.1",
+  "date": "2026-10-18",
+  "collectedAtMs": 1792334361274,
+  "execution": "ACTUAL_LOCAL_SYNTHETIC_SOURCE",
+  "records": [
+    {
+      "criterion": "activity-complete",
+      "requestHash": "0xa325acf03d30aef90afd6e024ae19750e32353bb647c8d40bd140fd65bcb2db6",
+      "sourceHash": "0x32c64e0f96a145af801a152034d21f330014586c38117b3be6a9924502075b1b",
+      "sourceReceiptHash": "0xb03f70450334ae7bd5f101ef444a566e3717c54d9781dc2a0546cdf1e8389023",
+      "facts": {
+        "capability": "MOODLE_ACTIVITY_COMPLETION.1",
+        "targetLogicalId": "python-intro-activity",
+        "completionState": "COMPLETED",
+        "completionMode": "AUTOMATIC",
+        "completionRuleHash": "0x8110de2f3628b52722ad4ec356d7ca464f859d6321dd013b154edf9280d1a20d",
+        "ruleAssurance": "OBSERVED_API_AUTOMATIC_RULE",
+        "setupConfigurationReceiptHash": "0x1d4bede4680307fc8dad2b21022fb2b1b9826b8ac3e2857454a9e1ea22536e61",
+        "sourceCompletedAt": null,
+        "sourceStateModifiedAt": 1792334255,
+        "sourceTimeSemantics": "API_TIMECOMPLETED_IS_RECORD_LAST_MODIFIED_NOT_FIRST_COMPLETION"
+      },
+      "sourceObserved": {
+        "startedAtMs": 1792334358702,
+        "finishedAtMs": 1792334358833
+      },
+      "rawLeaseExpiresAtMs": 1792334403412,
+      "textMetadata": null
+    },
+    {
+      "criterion": "assignment-submitted",
+      "requestHash": "0x03644dc37ec8090990a81e2dde506ff5da654071ab323c09b6d2a323716a4049",
+      "sourceHash": "0x61c6d565eded185c17ad9cca5991f58abebca3973539d5e8e7b404771621da89",
+      "sourceReceiptHash": "0xd79c986c3412eaabc458fae6c0f8bdb070085498e65abdf2ff09bdda5a256ea9",
+      "facts": {
+        "capability": "MOODLE_ASSIGNMENT_SUBMISSION.1",
+        "targetLogicalId": "python-practice-task",
+        "submissionState": "SUBMITTED",
+        "sourceSubmittedAt": null,
+        "sourceCreatedAt": 1792334255,
+        "sourceModifiedAt": 1792334256,
+        "submissionId": 1,
+        "attemptNumber": 0,
+        "gradingRequired": false,
+        "sourceTimeSemantics": "MODIFIED_IS_NOT_DEDICATED_SUBMITTED_AT"
+      },
+      "sourceObserved": {
+        "startedAtMs": 1792334359552,
+        "finishedAtMs": 1792334359654
+      },
+      "rawLeaseExpiresAtMs": 1792334404423,
+      "textMetadata": null
+    },
+    {
+      "criterion": "reflection-topics",
+      "requestHash": "0x1c437590f613d32ce301f674d2de324ae8286ae730635cb9d16bd7ab9653bcc1",
+      "sourceHash": "0xd7f2d2f83ee5b2a58143055bc6daace7e7b47f83052d552aa015674b78e5e82c",
+      "sourceReceiptHash": "0x4043644e6f1e84ab911c6cc75a218e8771e4b939458e21aaae33aced5ed3a5c1",
+      "facts": {
+        "capability": "REFLECTION_REQUIRED_TOPICS.1",
+        "targetLogicalId": "python-reflection",
+        "sourceRecordId": 1,
+        "originalBodyHash": "0x594dc7706a934927bc1e30a2d309d792a1bee05ab18d5ede49ae51a5f563f55d",
+        "originalTitleHash": "0x928fecd8da4aa313de492c94b5db7f96accccbbd26e672444f57e3c5fda15c64",
+        "authorAccountId": 3,
+        "courseId": 2,
+        "forumId": 3,
+        "createdAt": 1792334257,
+        "modifiedAt": 1792334257,
+        "visibility": "AUTHENTICATED_PARTICIPANT_ONLY",
+        "topics": [
+          {
+            "topicId": "work-performed",
+            "state": "UNCERTAIN",
+            "reason": "TEXT_REVIEW_NOT_RUN"
+          },
+          {
+            "topicId": "problem-solving-process",
+            "state": "UNCERTAIN",
+            "reason": "TEXT_REVIEW_NOT_RUN"
+          },
+          {
+            "topicId": "learning-takeaway",
+            "state": "UNCERTAIN",
+            "reason": "TEXT_REVIEW_NOT_RUN"
+          }
+        ]
+      },
+      "sourceObserved": {
+        "startedAtMs": 1792334360530,
+        "finishedAtMs": 1792334360698
+      },
+      "rawLeaseExpiresAtMs": 1792334405382,
+      "textMetadata": {
+        "messageFormat": 1,
+        "rawUtf16Units": 135,
+        "rawUtf8Bytes": 271,
+        "rawBodySha256": "0x6ae2a2342dce79d56464031c730e6bfa5966bdf3eeb8751c74334de4a5b71135",
+        "normalizerVersion": "clear-review-html-subset.1",
+        "normalizedContentHash": "0x50b79d5209386eedf5c9a75c0768bc9bee24848aec25543019b3001f9c203f33",
+        "spanBasis": "ORIGINAL_BODY_HTML_UTF16",
+        "normalizedToOriginalOffsetMapSupported": false,
+        "actualQuotesOrBodyPublished": false
+      }
+    }
+  ],
+  "metrics": {
+    "restReadCalls": 46,
+    "restWriteCalls": 0
+  },
+  "credentialAudit": {
+    "activeTokens": 0
+  },
+  "collectorLeasesDisposed": true,
+  "targetsDeleted": false,
+  "containerStopPerformed": false,
+  "productRuntimeReady": false,
+  "aiModelCalls": 0,
+  "personalSources": 0
+}
