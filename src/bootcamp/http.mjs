@@ -22,8 +22,8 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false}={}
         chainId:typeof chain==='string'&&/^[1-9][0-9]{0,15}$/.test(chain)?Number(chain):null,csrf:req.headers['x-csrf-token']??null};
       // Reject unauthorized uploads before reading their bytes. All bodies here
       // are bounded commands; there is no proof/text/verified receipt endpoint.
-      const v2=req.url.startsWith('/bootcamp/v2/');
-      if(v2)store.authorizeOperations(context,req.method==='POST');else store.policy(context);
+      const v2=req.url.startsWith('/bootcamp/v2/'),v3=req.url.startsWith('/bootcamp/v3/');
+      if(v2||v3)store.authorizeOperations(context,req.method==='POST');else store.policy(context);
       let body;
       if(req.method==='POST'){
         check(req.headers['content-type']==='application/json','BC_HTTP_CONTENT_TYPE');const chunks=[];let size=0;
@@ -31,7 +31,20 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false}={}
         try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));}catch{throw new RuleError('BC_HTTP_JSON');}
       }
       const path=req.url,key=req.headers['idempotency-key'];let result;
-      if(v2){
+      if(v3){
+        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
+        check(m,'BC_NOT_FOUND');const [,a,resource,target]=m;
+        if(req.method==='GET'){
+          if(!target&&resource==='procedure')result=store.getProcedure(context,a);
+          else if(target&&resource==='procedure-operations')result=store.getProcedureOperation(context,a,target);
+          else check(false,'BC_NOT_FOUND');
+        }else if(!target){
+          const methods={'review-publications':'publishReview','review-consents':'recordReviewConsent','review-objections':'submitReviewObjection',
+            'objection-assessments':'assessReviewObjection','review-revalidations':'recordReviewRevalidation','unsigned-preparations':'prepareReviewAuthorization','termination-intents':'requestReviewTermination'};
+          check(methods[resource],'BC_NOT_FOUND');result=store[methods[resource]](context,a,body,key);
+        }else check(false,'BC_NOT_FOUND');
+      }
+      else if(v2){
         if(path==='/bootcamp/v2/operations'||path.startsWith('/bootcamp/v2/operations?')){
           check(req.method==='GET','BC_HTTP_METHOD');const u=new URL(path,expected);
           check([...u.searchParams.keys()].every(k=>['limit','after','sequence'].includes(k))

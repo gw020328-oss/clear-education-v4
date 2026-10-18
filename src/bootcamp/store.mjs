@@ -7,6 +7,7 @@ import {P0_GATES,p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {compiled,criterion,id,epoch,revision,hash,validateGuard,guardExpiry,guardHash,snapshotCandidate,validateCandidate,evidenceRecord,decisionRecord} from './model.mjs';
 import {migrateR2,r2Ledger} from './r2-ledger.mjs';
 import {createOperations} from './operations.mjs';
+import {migrateProcedure} from './procedure-ledger.mjs';
 
 const mapping=JSON.parse(readFileSync(new URL('../../specs/bootcamp/p0-runtime-mapping.json',import.meta.url)));
 export const DEFAULT_MAPPING_HASH=p0Hash('RUNTIME-MAPPING',mapping);
@@ -52,10 +53,11 @@ const requestGuardHash=(g,version)=>version==='clear-bootcamp-bound-request.2'?p
 // authentication and in-process producer/source authority; HTTP never supplies it.
 export function createBootcampStore({directory,authentication,instanceId,demoStartedAt,courseOperatorRef='course-operator-demo',
   mode='DISABLED',runtimeMappingHash=DEFAULT_MAPPING_HASH,producers={},resolveSource=()=>null,
-  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={}}){
+  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null}){
   id(instanceId);id(courseOperatorRef);epoch(demoStartedAt);hash(runtimeMappingHash);
   check(['DISABLED','SYNTHETIC_FIXTURE'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
   check(typeof authentication?.authorizeWorkflow==='function','BC_AUTHENTICATION');
+  check(procedurePorts===null||procedurePorts?.execution==='SYNTHETIC_PORT_FIXTURE'&&mode==='SYNTHETIC_FIXTURE','BC_E3_PORT_CONFIGURATION');
   const registry=new Map();
   for(const [key,p] of Object.entries(producers)){
     criterion(key);check(p?.execution==='SYNTHETIC_FIXTURE'&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
@@ -65,9 +67,10 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   }
   const file=openPrivateDb(directory,'bootcamp.sqlite',{version:BOOTCAMP_STORE_VERSION,instanceId,demoStartedAt,courseOperatorRef,mode,
     policyHash:compiled.policyHash,runtimeMappingHash},schema,tables),{db,transaction:baseTransaction}=file;
-  try{migrateR2({db,transaction:baseTransaction,fault});}catch(error){file.close();throw error;}
+  try{migrateR2({db,transaction:baseTransaction,fault});migrateProcedure({db,transaction:baseTransaction,fault});}catch(error){file.close();throw error;}
   const transaction=fn=>baseTransaction(()=>{db.prepare('UPDATE r2_meta SET writer=1 WHERE id=1').run();
-    try{return fn();}finally{db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();}});
+    db.prepare('UPDATE e3_meta SET writer=1 WHERE id=1').run();
+    try{return fn();}finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();}});
   const ledger=r2Ledger(db,measurement);
   const normalizeOperators=bindings=>{check(Array.isArray(bindings),'BC_OPERATOR_BINDING');return bindings.map(b=>{
     exactKeys(b,['wallet','courseOperatorRef'],'BC_OPERATOR_BINDING');id(b.courseOperatorRef);
@@ -345,7 +348,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     },
     getOperation(context,applicationId,operationId){
       id(operationId);return access(context,applicationId,false,()=>{const r=get('SELECT record FROM commands WHERE id=? AND application_id=?',operationId,applicationId);check(r,'BC_NOT_FOUND');
-        const record=decode(r);check(!/^(r2-|request2:|collect2:)/.test(record.route),'BC_REQUEST_VERSION');return projection(record);});
+        const record=decode(r);check(!/^(r2-|e3-|request2:|collect2:)/.test(record.route),'BC_REQUEST_VERSION');return projection(record);});
     },
     getDecision(context,applicationId,decisionId){
       id(decisionId);return access(context,applicationId,false,a=>{const row=get('SELECT record FROM decisions WHERE id=? AND application_id=?',decisionId,applicationId);check(row,'BC_NOT_FOUND');return freeze({record:decode(row),current:a.status==='ACTIVE'&&a.decision_id===decisionId,gates:P0_GATES});});
@@ -358,5 +361,6 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       });
     },
   };
-  return Object.assign(service,createOperations({db,transaction,authentication,operatorBindings:currentOperators,app,refresh,tick,sessionHash,ledger,heads,replay,command,projectOperation:projection2}));
+  return Object.assign(service,createOperations({db,transaction,authentication,operatorBindings:currentOperators,app,refresh,tick,sessionHash,ledger,heads,replay,command,
+    projectOperation:projection2,source,mode,procedurePorts,fault}));
 }

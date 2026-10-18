@@ -3,8 +3,10 @@ import {exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 import {P0_GATES,p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {PROJECTION_VERSION} from './r2-ledger.mjs';
 import {id,revision,hash} from './model.mjs';
+import {createProcedure} from './procedure.mjs';
 
-export function createOperations({db,transaction,authentication,operatorBindings,app,refresh,tick,sessionHash,ledger,heads,replay,command,projectOperation}){
+export function createOperations({db,transaction,authentication,operatorBindings,app,refresh,tick,sessionHash,ledger,heads,replay,command,projectOperation,
+ source,mode,procedurePorts=null,fault=()=>{}}){
   const decision=a=>JSON.parse(db.prepare('SELECT record FROM decisions WHERE id=?').get(a.decision_id).record);
   function authenticate(context,write){
     const s=authentication.authorizeWorkflow(context,write);check(['participant','operator'].includes(s?.role),'FORBIDDEN');
@@ -19,13 +21,13 @@ export function createOperations({db,transaction,authentication,operatorBindings
     for(const a of applications)scope(s,a,bindings);
     if(s.role==='operator')check(bindings.some(b=>b.wallet===s.wallet),'FORBIDDEN');
   }
-  function access(context,applicationId,write,fn){
+  function access(context,applicationId,write,fn,finalCheck=()=>{}){
     id(applicationId);const result=transaction(()=>{
       const s=authenticate(context,write);let a=app(applicationId);scope(s,a);const clock=tick();
       a=refresh(a,clock.time,clock.reversed,s.role==='participant'?sessionHash(context,s.wallet):null);
       db.exec('SAVEPOINT r2_command');
       try{check(!clock.reversed,'BC_CLOCK_REVERSED');const value=fn(a,s,clock.time),sequence=ledger.sequence();
-        const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed),end=tick();
+        const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed);finalCheck(latest,s,final.time);const end=tick();
         check(!final.reversed&&!end.reversed&&end.time===clock.time&&latest.revision===a.revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
         finalAuthority(context,write,s,[latest]);
         db.exec('RELEASE r2_command');return {value};}
@@ -76,7 +78,7 @@ export function createOperations({db,transaction,authentication,operatorBindings
       return projectOperation(result);
     });
   }
-  return {
+  const operations={
     authorizeOperations(context,write=false){const s=authenticate(context,write);finalAuthority(context,write,s,[]);},
     getOperationsProjection(context,applicationId){return access(context,applicationId,false,dto);},
     listOperations(context,{limit=20,after=null,expectedLedgerSequence=null}={}){
@@ -100,10 +102,12 @@ export function createOperations({db,transaction,authentication,operatorBindings
     },
     getMetricEvents(context,applicationId){return access(context,applicationId,false,a=>freeze({version:'clear-bootcamp-metric-events.2',ledgerSequence:ledger.sequence(),events:ledger.events(a.id),gates:P0_GATES}));},
     getR2Operation(context,applicationId,operationId){id(operationId);return access(context,applicationId,false,a=>{
-      const row=db.prepare('SELECT record FROM commands WHERE id=? AND application_id=?').get(operationId,a.id);check(row,'BC_NOT_FOUND');return projectOperation(JSON.parse(row.record));
+      const row=db.prepare('SELECT record FROM commands WHERE id=? AND application_id=?').get(operationId,a.id);check(row,'BC_NOT_FOUND');const record=JSON.parse(row.record);
+      check(!record.route.startsWith('e3-'),'BC_REQUEST_VERSION');return projectOperation(record);
     });},
     getAction(context,applicationId,actionId){id(actionId);return access(context,applicationId,false,a=>{const r=ledger.actions(a.id).find(r=>r.id===actionId);check(r,'BC_NOT_FOUND');return freeze(actionView(a,r));});},
     requestConsent(context,applicationId,body,key){return action(context,applicationId,body,key,'CONSENT_INTENT');},
     fileObjection(context,applicationId,body,key){return action(context,applicationId,body,key,'OBJECTION');},
   };
+  return Object.assign(operations,createProcedure({db,transaction,ledger,access,heads,source,replay,command,operatorBindings,mode,ports:procedurePorts,fault}));
 }

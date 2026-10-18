@@ -82,6 +82,8 @@ test('failed attempt preserves one logical failure, successful retry records suc
 });
 test('metric ID conflicts and new IDs for same logical event reject; person/wait union is distinct and epoch mixing rejects',async t=>{
  const f=await storeFixture(t),a=f.create(),v=f.view(a),db=new DatabaseSync(join(f.directory,'bootcamp.sqlite'));t.after(()=>db.close());
+ db.prepare('UPDATE e3_meta SET writer=1 WHERE id=1').run();
+ try{
  const l=r2Ledger(db),base={version:'clear-bootcamp-metric-event.2',eventId:'metric-fixture',scenarioRunId:'run-fixture',applicationRef:a,
   decisionRevision:v.decision.record.decisionRevision,decisionHash:v.decision.record.decisionHash,operationId:'operation-fixture',eventType:'HUMAN_WORK_INTERVAL',
   startedAtMs:10,endedAtMs:30,actorRef:'actor-fixture',provenance:'SYNTHETIC_EXAMPLE'};
@@ -93,6 +95,7 @@ test('metric ID conflicts and new IDs for same logical event reject; person/wait
  const wait={...base,eventId:'metric-wait',operationId:'operation-wait',eventType:'WAIT_INTERVAL',startedAtMs:15,endedAtMs:50};
  const m=summarizeMetrics([base,other,wait]);assert.equal(m.humanWorkMs,30);assert.equal(m.waitingWallMs,35);assert.equal(m.overallElapsedMs,null);assert.equal(m.humanWorkReductionPercent,null);
  assert.throws(()=>summarizeMetrics([base,{...other,scenarioRunId:'different-epoch'}]),/BC_METRIC_EPOCH_MIX/);
+ }finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();}
 });
 
 // Execute the frozen v1 implementation against a fresh synthetic directory.
@@ -114,6 +117,6 @@ for(const stage of ['r2-after-schema','r2-after-backfill'])test(`frozen v1 migra
  const old=makeV1(config);assert.deepEqual(old.getApplication(f.aliceContext,a),before);old.close();
  const current=createBootcampStore(config);assert.deepEqual(current.getApplication(f.aliceContext,a),before);assert.equal(current.getOperationsProjection(f.aliceContext,a).fundingSnapshotId,null);current.close();
  const oldReader=makeV1(config);assert.deepEqual(oldReader.getApplication(f.aliceContext,a),before);
- assert.throws(()=>oldReader.createApplication(f.aliceContext,{},'old-writer-after-r2'),/BC_R2_WRITER_REQUIRED/);oldReader.close();
+ assert.throws(()=>oldReader.createApplication(f.aliceContext,{},'old-writer-after-r2'),/BC_(R2|E3)_WRITER_REQUIRED/);oldReader.close();
  const reopened=createBootcampStore(config);assert.deepEqual(reopened.getApplication(f.aliceContext,a),before);reopened.close();
 });
