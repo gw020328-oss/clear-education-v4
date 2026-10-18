@@ -1,0 +1,740 @@
+{
+  "version": "clear-bootcamp-e3-synthetic-intake-example.1",
+  "execution": "SYNTHETIC_PORT_FIXTURE",
+  "actualSourceAcceptances": 0,
+  "actualAllocations": 0,
+  "authorizationSignatures": 0,
+  "paymentTransactions": 0,
+  "fictionalClock": true,
+  "bootstrap": {
+    "version": "clear-bootcamp-e4-registration-intake.1",
+    "record": {
+      "allocationConfirmed": false,
+      "decisionAcceptanceSequence": 31,
+      "id": "registration-9e882df4-f11c-47a2-b97d-1485691accc6",
+      "opaqueTarget": {
+        "allocationId": "0x45a6b14ec1bd109968445160eb16d0c40941655989e85a0054c91e8033c373e6",
+        "applicationId": "0xf754784cdd6ce1b8506b4566664bf8db193c05f391056f6b545b1308bee0d147",
+        "decisionId": "0x5f7b7a8953821f1c9e9f535b00ca74fbad95715520c55c1ecd22e7397765d497"
+      },
+      "paymentAuthority": false,
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "procedureStarted": false,
+      "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "recordedAt": 1580558400,
+      "registration": {
+        "allocationId": "allocation-1",
+        "amountAtoms": "100000000",
+        "applicationId": "application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+        "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+        "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+        "decisionRevision": 9,
+        "domain": {
+          "chainId": "431709",
+          "name": "ClearBootcampTestPayment",
+          "salt": "0xb4efad221463fb4ad26837abe6e4a08b3d88e48c59ca6d4d8d20208ba0773e83",
+          "verifyingContract": "0x2222222222222222222222222222222222222222",
+          "version": "3"
+        },
+        "execution": "SYNTHETIC_PORT_FIXTURE",
+        "obligationId": "obligation-application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+        "recipient": "0xacbdd8510c8eb2f43f1edda5f0d6f7b6e0a741d8",
+        "registrationId": "registration-host-fixture",
+        "token": "0x3333333333333333333333333333333333333333",
+        "tokenDecimals": "6",
+        "version": "clear-bootcamp-procedure-registration-port.1"
+      },
+      "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+      "sourceCurrentCommitment": "0xe7f34661709ba3990c1d11f10e939542774902d6affeab1477b59d45a4e0c26f",
+      "sourceValidUntilExclusive": 1580558700,
+      "sourceWindow": {
+        "authLeaseExpiresAt": "1580562400",
+        "moodleObservedAt": [
+          "1580558400",
+          "1580558400",
+          "1580558400"
+        ],
+        "queryLeaseExpiresAt": "1580562400",
+        "rawAcquiredAt": "1580558400",
+        "rawLeaseExpiresAt": "1580560200",
+        "reclaimIssuedAt": [
+          "1580558400",
+          "1580558400"
+        ],
+        "verifiedValidUntilExclusive": "1580558701"
+      },
+      "version": "clear-bootcamp-e4-registration-target.1"
+    },
+    "currentSnapshotHash": "0xc15b74250c017dad7a093a6fc22fc44750a32128e68a42dd0a3c4c9853ceb2c8",
+    "applicationRevision": 9,
+    "ledgerSequence": 38,
+    "procedureStarted": false,
+    "allocationConfirmed": false,
+    "paymentAuthority": false
+  },
+  "consentScope": {
+    "allocationId": "0x45a6b14ec1bd109968445160eb16d0c40941655989e85a0054c91e8033c373e6",
+    "allocationVersion": "1",
+    "amountAtoms": "100000000",
+    "applicationId": "0xf754784cdd6ce1b8506b4566664bf8db193c05f391056f6b545b1308bee0d147",
+    "confirmAt": 1580558520,
+    "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+    "decisionId": "0x5f7b7a8953821f1c9e9f535b00ca74fbad95715520c55c1ecd22e7397765d497",
+    "decisionPublishedAt": 1580558400,
+    "decisionRevision": "9",
+    "firstReviewStartedAt": 1580558400,
+    "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "procedureId": "0x7f8293dfa253aeb2bb1a5fb6a773e9a9d64053fb494f97cde9795993aef49532",
+    "recipient": "0xacbdd8510c8eb2f43f1edda5f0d6f7b6e0a741d8",
+    "reviewCapAt": 1580559000,
+    "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+    "token": "0x3333333333333333333333333333333333333333",
+    "version": "clear-bootcamp-app-consent-scope.1"
+  },
+  "student": {
+    "version": "clear-bootcamp-review-procedure.1",
+    "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+    "role": "PARTICIPANT",
+    "applicationId": "application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+    "applicationRevision": 9,
+    "ledgerSequence": 52,
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+    "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+    "decisionRevision": 9,
+    "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+    "evidence": {
+      "conditionsStatus": "MET",
+      "current": true,
+      "validUntilExclusive": 1580558700,
+      "criteria": [
+        {
+          "criterionId": "activity-complete",
+          "state": "MET",
+          "evidenceId": "evidence-3f522639-38e0-4ff0-83ff-08ebe5ca9d8e",
+          "current": true,
+          "originalEvidenceAccessible": true
+        },
+        {
+          "criterionId": "assignment-submitted",
+          "state": "MET",
+          "evidenceId": "evidence-703313ed-17ed-436c-bccd-6dac934776fd",
+          "current": true,
+          "originalEvidenceAccessible": true
+        },
+        {
+          "criterionId": "reflection-topics",
+          "state": "MET",
+          "evidenceId": "evidence-dc0f07ba-7e1c-4739-954a-51661f21de14",
+          "current": true,
+          "originalEvidenceAccessible": true
+        },
+        {
+          "criterionId": "python-basic-certificate",
+          "state": "MET",
+          "evidenceId": "evidence-a57b1eaa-5dd0-4d09-a6f5-be63f4167e1d",
+          "current": true,
+          "originalEvidenceAccessible": true
+        }
+      ]
+    },
+    "procedure": {
+      "id": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+      "status": "EARLY_CONSENT_PREFLIGHT_CANDIDATE",
+      "firstStartedAt": 1580558400,
+      "reviewCapAt": 1580559000,
+      "publishedDecisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+      "publishedAt": 1580558400,
+      "confirmAt": 1580558520,
+      "deadlineRouteAvailable": true,
+      "revalidationCount": 0,
+      "revalidationLimit": 1,
+      "terminationReason": null,
+      "invalidationReason": null,
+      "reservationReleased": false,
+      "epochInvalidated": false
+    },
+    "consent": {
+      "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89",
+      "bothCurrent": true,
+      "records": [
+        {
+          "actorCommitment": "0x35f722d63dc21458e24d97893a7b31b3f5ae44c451d01ba9d83eeb51374b55e8",
+          "actorRole": "PARTICIPANT",
+          "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+          "id": "consent-40d2eb16-4e70-4072-a73f-22b9fa5440e8",
+          "procedureId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+          "recordedAt": 1580558400,
+          "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89",
+          "value": "AGREE",
+          "version": "clear-bootcamp-review-consent.1"
+        },
+        {
+          "actorCommitment": "0xe2750f48ac7b07d04a5016493ed8b7d6dfbeb9d41306cb6b4b927b5bc546d9d1",
+          "actorRole": "COURSE_OPERATOR",
+          "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+          "id": "consent-851b3628-d1f7-4a27-92b6-debbd0b95027",
+          "procedureId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+          "recordedAt": 1580558400,
+          "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89",
+          "value": "AGREE",
+          "version": "clear-bootcamp-review-consent.1"
+        }
+      ],
+      "requiredRoles": [
+        "PARTICIPANT",
+        "COURSE_OPERATOR"
+      ],
+      "onchainWalletSignaturesVerified": false
+    },
+    "objection": {
+      "blocked": false,
+      "records": [],
+      "assessmentAuthority": "SYNTHETIC_PORT_FIXTURE",
+      "deadlineExtended": false
+    },
+    "funding": {
+      "implementation": "SYNTHETIC_PORT_FIXTURE",
+      "snapshotId": "funding-allocation-1",
+      "status": "FULLY_ALLOCATED",
+      "allocationId": "allocation-1",
+      "targetDecisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+      "matchesCurrentDecision": true,
+      "queue": null,
+      "amountAtoms": "100000000",
+      "reservedAtoms": "100000000"
+    },
+    "chain": {
+      "implementation": "SYNTHETIC_PORT_FIXTURE",
+      "status": "UNACCEPTED",
+      "acceptedRight": null,
+      "transactionState": null,
+      "transactionHash": null,
+      "blockRef": null
+    },
+    "execution": {
+      "status": "UNSIGNED_PREFLIGHT_CANDIDATE",
+      "signerActivated": false,
+      "outboxImplemented": false,
+      "paymentAuthority": false,
+      "productionEnabled": false
+    },
+    "asOf": 1580558400,
+    "metrics": {
+      "scenarioRunId": "run-b9e0eb82-26b4-4d91-8ead-6954012ad2f2",
+      "provenance": "MEASURED_ISOLATED_TEST",
+      "coverage": "RECORDED_SERVER_INTERVALS_ONLY",
+      "eventCount": 18,
+      "conditionVerificationWallMs": 17,
+      "overallElapsedMs": null,
+      "humanWorkMs": null,
+      "waitingWallMs": 11,
+      "automatedOperationCount": 9,
+      "manualInterventionCount": null,
+      "supplementCount": 0,
+      "reverificationCount": 0,
+      "failureCount": 0,
+      "humanWorkCoverageComplete": false,
+      "baselineComparable": false,
+      "baselineHumanWorkMs": null,
+      "humanWorkReductionPercent": null,
+      "caseCompletionMeasured": false,
+      "gates": {
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "productionEnabled": false
+      }
+    },
+    "gates": {
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "productionEnabled": false
+    }
+  },
+  "operator": {
+    "version": "clear-bootcamp-review-procedure.1",
+    "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+    "role": "COURSE_OPERATOR",
+    "applicationId": "application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+    "applicationRevision": 9,
+    "ledgerSequence": 52,
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+    "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+    "decisionRevision": 9,
+    "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+    "evidence": {
+      "conditionsStatus": "MET",
+      "current": true,
+      "validUntilExclusive": 1580558700,
+      "criteria": [
+        {
+          "criterionId": "activity-complete",
+          "state": "MET",
+          "evidenceId": "evidence-3f522639-38e0-4ff0-83ff-08ebe5ca9d8e",
+          "current": true,
+          "originalEvidenceAccessible": false
+        },
+        {
+          "criterionId": "assignment-submitted",
+          "state": "MET",
+          "evidenceId": "evidence-703313ed-17ed-436c-bccd-6dac934776fd",
+          "current": true,
+          "originalEvidenceAccessible": false
+        },
+        {
+          "criterionId": "reflection-topics",
+          "state": "MET",
+          "evidenceId": "evidence-dc0f07ba-7e1c-4739-954a-51661f21de14",
+          "current": true,
+          "originalEvidenceAccessible": false
+        },
+        {
+          "criterionId": "python-basic-certificate",
+          "state": "MET",
+          "evidenceId": "evidence-a57b1eaa-5dd0-4d09-a6f5-be63f4167e1d",
+          "current": true,
+          "originalEvidenceAccessible": false
+        }
+      ]
+    },
+    "procedure": {
+      "id": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+      "status": "EARLY_CONSENT_PREFLIGHT_CANDIDATE",
+      "firstStartedAt": 1580558400,
+      "reviewCapAt": 1580559000,
+      "publishedDecisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+      "publishedAt": 1580558400,
+      "confirmAt": 1580558520,
+      "deadlineRouteAvailable": true,
+      "revalidationCount": 0,
+      "revalidationLimit": 1,
+      "terminationReason": null,
+      "invalidationReason": null,
+      "reservationReleased": false,
+      "epochInvalidated": false
+    },
+    "consent": {
+      "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89",
+      "bothCurrent": true,
+      "records": [
+        {
+          "actorCommitment": "0x35f722d63dc21458e24d97893a7b31b3f5ae44c451d01ba9d83eeb51374b55e8",
+          "actorRole": "PARTICIPANT",
+          "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+          "id": "consent-40d2eb16-4e70-4072-a73f-22b9fa5440e8",
+          "procedureId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+          "recordedAt": 1580558400,
+          "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89",
+          "value": "AGREE",
+          "version": "clear-bootcamp-review-consent.1"
+        },
+        {
+          "actorCommitment": "0xe2750f48ac7b07d04a5016493ed8b7d6dfbeb9d41306cb6b4b927b5bc546d9d1",
+          "actorRole": "COURSE_OPERATOR",
+          "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+          "id": "consent-851b3628-d1f7-4a27-92b6-debbd0b95027",
+          "procedureId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+          "recordedAt": 1580558400,
+          "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89",
+          "value": "AGREE",
+          "version": "clear-bootcamp-review-consent.1"
+        }
+      ],
+      "requiredRoles": [
+        "PARTICIPANT",
+        "COURSE_OPERATOR"
+      ],
+      "onchainWalletSignaturesVerified": false
+    },
+    "objection": {
+      "blocked": false,
+      "records": [],
+      "assessmentAuthority": "SYNTHETIC_PORT_FIXTURE",
+      "deadlineExtended": false
+    },
+    "funding": {
+      "implementation": "SYNTHETIC_PORT_FIXTURE",
+      "snapshotId": "funding-allocation-1",
+      "status": "FULLY_ALLOCATED",
+      "allocationId": "allocation-1",
+      "targetDecisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+      "matchesCurrentDecision": true,
+      "queue": null,
+      "amountAtoms": "100000000",
+      "reservedAtoms": "100000000"
+    },
+    "chain": {
+      "implementation": "SYNTHETIC_PORT_FIXTURE",
+      "status": "UNACCEPTED",
+      "acceptedRight": null,
+      "transactionState": null,
+      "transactionHash": null,
+      "blockRef": null
+    },
+    "execution": {
+      "status": "UNSIGNED_PREFLIGHT_CANDIDATE",
+      "signerActivated": false,
+      "outboxImplemented": false,
+      "paymentAuthority": false,
+      "productionEnabled": false
+    },
+    "asOf": 1580558400,
+    "metrics": {
+      "scenarioRunId": "run-b9e0eb82-26b4-4d91-8ead-6954012ad2f2",
+      "provenance": "MEASURED_ISOLATED_TEST",
+      "coverage": "RECORDED_SERVER_INTERVALS_ONLY",
+      "eventCount": 18,
+      "conditionVerificationWallMs": 17,
+      "overallElapsedMs": null,
+      "humanWorkMs": null,
+      "waitingWallMs": 11,
+      "automatedOperationCount": 9,
+      "manualInterventionCount": null,
+      "supplementCount": 0,
+      "reverificationCount": 0,
+      "failureCount": 0,
+      "humanWorkCoverageComplete": false,
+      "baselineComparable": false,
+      "baselineHumanWorkMs": null,
+      "humanWorkReductionPercent": null,
+      "caseCompletionMeasured": false,
+      "gates": {
+        "productEligible": false,
+        "paymentAllowed": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO",
+        "productionEnabled": false
+      }
+    },
+    "gates": {
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "productionEnabled": false
+    }
+  },
+  "target": {
+    "version": "clear-bootcamp-e4-target-intake.1",
+    "status": "UNSIGNED_PREFLIGHT_ONLY",
+    "ledgerSequence": 52,
+    "applicationRevision": 9,
+    "preparationId": "preparation-fa9c506e-9afc-4793-b5c3-aeba67902f28",
+    "currentSnapshotHash": "0x3b47f3a9402da6e2d6d5c2363799e433aa3aabc194e753287b346110206ec076",
+    "payload": {
+      "domain": {
+        "chainId": "431709",
+        "name": "ClearBootcampTestPayment",
+        "salt": "0xb4efad221463fb4ad26837abe6e4a08b3d88e48c59ca6d4d8d20208ba0773e83",
+        "verifyingContract": "0x2222222222222222222222222222222222222222",
+        "version": "3"
+      },
+      "logicalTarget": {
+        "allocationId": "allocation-1",
+        "applicationId": "application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+        "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+        "procedureId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68"
+      },
+      "message": {
+        "allocationId": "0x45a6b14ec1bd109968445160eb16d0c40941655989e85a0054c91e8033c373e6",
+        "amountAtoms": "100000000",
+        "applicationId": "0xf754784cdd6ce1b8506b4566664bf8db193c05f391056f6b545b1308bee0d147",
+        "authorizationEpoch": "1",
+        "consentSetHash": "0x900d9edfa651e6c8f1ebd3c409a0ee213fc50db689d47c4dd3ec4839a46a26d0",
+        "deadlinePolicyHash": "0x8754bcfcd2b0f9ba0801950aae9eab1510f664ffa452eaa7f7adfdd75febf688",
+        "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+        "decisionId": "0x5f7b7a8953821f1c9e9f535b00ca74fbad95715520c55c1ecd22e7397765d497",
+        "decisionPublishedAt": "1580558400",
+        "decisionRevision": "9",
+        "eligibilityRoute": "1",
+        "expiresAt": "1580558700",
+        "firstReviewStartedAt": "1580558400",
+        "issuedAt": "1580558400",
+        "nonce": "0xecb1062db3061a23cc0e13d4d52184c65678eb2acb4dc3764cff8275e719ace0",
+        "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+        "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+        "procedureId": "0x7f8293dfa253aeb2bb1a5fb6a773e9a9d64053fb494f97cde9795993aef49532",
+        "recipient": "0xacbdd8510c8eb2f43f1edda5f0d6f7b6e0a741d8",
+        "revalidationCount": "0",
+        "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+        "signerKeyId": "0x0919a3612685c4e40d99026f2d70f6a93106b183685d5131161fe781e7eae4bf",
+        "sourceValidUntilExclusive": "1580558700",
+        "token": "0x3333333333333333333333333333333333333333"
+      }
+    },
+    "snapshot": {
+      "deadlineRecord": {
+        "allocationId": "0x45a6b14ec1bd109968445160eb16d0c40941655989e85a0054c91e8033c373e6",
+        "applicationId": "0xf754784cdd6ce1b8506b4566664bf8db193c05f391056f6b545b1308bee0d147",
+        "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+        "decisionId": "0x5f7b7a8953821f1c9e9f535b00ca74fbad95715520c55c1ecd22e7397765d497",
+        "decisionPublishedAt": "1580558400",
+        "decisionRevision": "9",
+        "eligibilityRoute": "1",
+        "expiresAt": "1580558700",
+        "firstReviewStartedAt": "1580558400",
+        "issuedAt": "1580558400",
+        "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+        "procedureId": "0x7f8293dfa253aeb2bb1a5fb6a773e9a9d64053fb494f97cde9795993aef49532",
+        "revalidationCount": "0",
+        "sourceValidUntilExclusive": "1580558700",
+        "version": "clear-bootcamp-test-first-accept-window.3"
+      },
+      "domain": {
+        "chainId": "431709",
+        "name": "ClearBootcampTestPayment",
+        "salt": "0xb4efad221463fb4ad26837abe6e4a08b3d88e48c59ca6d4d8d20208ba0773e83",
+        "verifyingContract": "0x2222222222222222222222222222222222222222",
+        "version": "3"
+      },
+      "logicalTarget": {
+        "allocationId": "allocation-1",
+        "applicationId": "application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+        "decisionId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+        "procedureId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68"
+      },
+      "message": {
+        "allocationId": "0x45a6b14ec1bd109968445160eb16d0c40941655989e85a0054c91e8033c373e6",
+        "amountAtoms": "100000000",
+        "applicationId": "0xf754784cdd6ce1b8506b4566664bf8db193c05f391056f6b545b1308bee0d147",
+        "authorizationEpoch": "1",
+        "consentSetHash": "0x900d9edfa651e6c8f1ebd3c409a0ee213fc50db689d47c4dd3ec4839a46a26d0",
+        "deadlinePolicyHash": "0x8754bcfcd2b0f9ba0801950aae9eab1510f664ffa452eaa7f7adfdd75febf688",
+        "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+        "decisionId": "0x5f7b7a8953821f1c9e9f535b00ca74fbad95715520c55c1ecd22e7397765d497",
+        "decisionPublishedAt": "1580558400",
+        "decisionRevision": "9",
+        "eligibilityRoute": "1",
+        "expiresAt": "1580558700",
+        "firstReviewStartedAt": "1580558400",
+        "issuedAt": "1580558400",
+        "nonce": "0xecb1062db3061a23cc0e13d4d52184c65678eb2acb4dc3764cff8275e719ace0",
+        "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+        "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+        "procedureId": "0x7f8293dfa253aeb2bb1a5fb6a773e9a9d64053fb494f97cde9795993aef49532",
+        "recipient": "0xacbdd8510c8eb2f43f1edda5f0d6f7b6e0a741d8",
+        "revalidationCount": "0",
+        "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+        "signerKeyId": "0x0919a3612685c4e40d99026f2d70f6a93106b183685d5131161fe781e7eae4bf",
+        "sourceValidUntilExclusive": "1580558700",
+        "token": "0x3333333333333333333333333333333333333333"
+      },
+      "profilePin": {
+        "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+        "profileId": "clear-hackathon-test-operations.1",
+        "sourceCommit": "67b6a0731f97df98fda7820ab24ed85a57796a83"
+      },
+      "provenance": "SYNTHETIC_EXAMPLE",
+      "registrations": [
+        {
+          "kind": "APPLICATION",
+          "logicalId": "application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+          "opaqueId": "0xf754784cdd6ce1b8506b4566664bf8db193c05f391056f6b545b1308bee0d147"
+        },
+        {
+          "kind": "DECISION",
+          "logicalId": "decision-b4a58ee5-bb02-44c1-ad35-aaccf153d6e5",
+          "opaqueId": "0x5f7b7a8953821f1c9e9f535b00ca74fbad95715520c55c1ecd22e7397765d497"
+        },
+        {
+          "kind": "ALLOCATION",
+          "logicalId": "allocation-1",
+          "opaqueId": "0x45a6b14ec1bd109968445160eb16d0c40941655989e85a0054c91e8033c373e6"
+        },
+        {
+          "kind": "PROCEDURE",
+          "logicalId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+          "opaqueId": "0x7f8293dfa253aeb2bb1a5fb6a773e9a9d64053fb494f97cde9795993aef49532"
+        }
+      ],
+      "tokenDecimals": "6",
+      "version": "clear-bootcamp-test-unsigned-snapshot.1"
+    },
+    "currentServerState": {
+      "status": "RESERVED",
+      "applicationId": "0xf754784cdd6ce1b8506b4566664bf8db193c05f391056f6b545b1308bee0d147",
+      "procedureId": "0x7f8293dfa253aeb2bb1a5fb6a773e9a9d64053fb494f97cde9795993aef49532",
+      "firstReviewStartedAt": "1580558400",
+      "decisionPublishedAt": "1580558400",
+      "decisionId": "0x5f7b7a8953821f1c9e9f535b00ca74fbad95715520c55c1ecd22e7397765d497",
+      "decisionRevision": "9",
+      "decisionHash": "0xc37bbd0f496f2c43d59dac8efb61389ef40bbe617d1d29c6996bf220ac822a1c",
+      "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+      "allocationId": "0x45a6b14ec1bd109968445160eb16d0c40941655989e85a0054c91e8033c373e6",
+      "recipient": "0xacbdd8510c8eb2f43f1edda5f0d6f7b6e0a741d8",
+      "token": "0x3333333333333333333333333333333333333333",
+      "amountAtoms": "100000000",
+      "authorizationEpoch": "1",
+      "signerKeyId": "0x0919a3612685c4e40d99026f2d70f6a93106b183685d5131161fe781e7eae4bf",
+      "revalidationCount": "0",
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "consentSetHash": "0x900d9edfa651e6c8f1ebd3c409a0ee213fc50db689d47c4dd3ec4839a46a26d0",
+      "deadlinePolicyHash": "0x8754bcfcd2b0f9ba0801950aae9eab1510f664ffa452eaa7f7adfdd75febf688",
+      "nonce": "0xecb1062db3061a23cc0e13d4d52184c65678eb2acb4dc3764cff8275e719ace0",
+      "domain": {
+        "name": "ClearBootcampTestPayment",
+        "version": "3",
+        "chainId": "431709",
+        "verifyingContract": "0x2222222222222222222222222222222222222222",
+        "salt": "0xb4efad221463fb4ad26837abe6e4a08b3d88e48c59ca6d4d8d20208ba0773e83"
+      },
+      "signerActive": true,
+      "nonceAvailable": true,
+      "reservedBalanceAtoms": "100000000",
+      "currentDecision": true,
+      "bothPartiesConsent": true,
+      "unresolvedValidObjection": false,
+      "unassessedSubstantiveObjection": false,
+      "sourceWindow": {
+        "moodleObservedAt": [
+          "1580558400",
+          "1580558400",
+          "1580558400"
+        ],
+        "reclaimIssuedAt": [
+          "1580558400",
+          "1580558400"
+        ],
+        "authLeaseExpiresAt": "1580562400",
+        "rawLeaseExpiresAt": "1580560200",
+        "queryLeaseExpiresAt": "1580562400",
+        "rawAcquiredAt": "1580558400",
+        "verifiedValidUntilExclusive": "1580558701"
+      },
+      "currentDecisionStatus": "MET",
+      "fullAllocation": true,
+      "newValidError": false
+    },
+    "consentSet": {
+      "consents": [
+        {
+          "actorCommitment": "0xe2750f48ac7b07d04a5016493ed8b7d6dfbeb9d41306cb6b4b927b5bc546d9d1",
+          "actorRole": "COURSE_OPERATOR",
+          "id": "consent-851b3628-d1f7-4a27-92b6-debbd0b95027",
+          "recordedAt": 1580558400,
+          "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89"
+        },
+        {
+          "actorCommitment": "0x35f722d63dc21458e24d97893a7b31b3f5ae44c451d01ba9d83eeb51374b55e8",
+          "actorRole": "PARTICIPANT",
+          "id": "consent-40d2eb16-4e70-4072-a73f-22b9fa5440e8",
+          "recordedAt": 1580558400,
+          "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89"
+        }
+      ],
+      "objectionVariant": "NO_OBJECTIONS",
+      "objections": [],
+      "scopeHash": "0x611bb9dfcbf3e64a4fe50dd52422c8844198377d69db36cea2daab40e3a71a89",
+      "variant": "MUTUAL_CURRENT_APP_CONSENT",
+      "version": "clear-bootcamp-app-consent-set.1"
+    },
+    "sourceCurrentCommitment": "0xe7f34661709ba3990c1d11f10e939542774902d6affeab1477b59d45a4e0c26f",
+    "serverSnapshotHashes": {
+      "funding": "0xdce82c1eb90fc5947a8aad6938812aac01a31df9014924e23ac740f2be603fc6",
+      "authorizationPort": "0xa03c8c04f491928aaf031025e36174e260f75cf9dabf58b57156e1d9e0d8b8a4",
+      "chain": "0x0e961a9f46baa6f9c905a6340020ac7a8b3685e408ca5f1305026619443b56a3"
+    },
+    "inspection": {
+      "status": "UNSIGNED_PREFLIGHT_ONLY",
+      "version": "clear-bootcamp-test-payment-authorization.3",
+      "hashes": {
+        "version": "clear-bootcamp-test-payment-authorization.3",
+        "primaryType": "BootcampTestPaymentAuthorizationV3",
+        "domainSeparator": "0x173a8ed424292e856aa2144e9507346f1843dcd5af5bafd5a916977df4dd558c",
+        "structHash": "0x71cdd549330d70e8b0409029dd1f29a04622b605485c86490120d1f2aff6314e",
+        "digest": "0xffe3864ea8ffca6b623b3f67c043a48d9864262c3fca681f2b0e68562afe851b",
+        "validationScope": "UNSIGNED_STRUCTURE_AND_HASH_ONLY",
+        "signatureVerified": false,
+        "sourceVerified": false,
+        "gates": {
+          "usableForIssuance": false,
+          "paymentAllowed": false,
+          "productionEnabled": false,
+          "grant": "HOLD",
+          "outbox": "HOLD",
+          "independentClaim": "NO_GO"
+        }
+      },
+      "snapshotHash": "0x797dc308bc7e24dc0546f2482b3039708abb1c9b9a9bb92394d9aac1a6e09509",
+      "stateSnapshotHash": "0x41c2169db94fb38079cfb3b4229e04c330235e3477b2fcef251ac4ab2825811e",
+      "firstAcceptBoundsConsistent": true,
+      "sourceSignatureVerified": false,
+      "consentAuthenticityVerified": false,
+      "onchainStateVerified": false,
+      "profilePinMatchesE0": true,
+      "nonceConsumed": false,
+      "blockers": [
+        "E1_E3_CROSS_ACCEPTANCE_REQUIRED",
+        "E4_AUTHORITY_AND_FUNDING_RUNTIME_NOT_IMPLEMENTED"
+      ],
+      "gates": {
+        "usableForIssuance": false,
+        "paymentAllowed": false,
+        "productionEnabled": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO"
+      }
+    },
+    "paymentAuthority": false,
+    "gates": {
+      "productEligible": false,
+      "paymentAllowed": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO",
+      "productionEnabled": false
+    }
+  },
+  "termination": {
+    "version": "clear-bootcamp-e4-termination-intake.1",
+    "intent": {
+      "allocatedDecisionHash": "0xda25ee17065ce514ee3226712fb1e437f067b4c62033da8612b6fe7aff481a29",
+      "allocatedDecisionId": "decision-fb2d0465-1f6d-44c9-bbb3-237577e227cd",
+      "allocationId": "allocation-1",
+      "allocationVersion": "2",
+      "applicationId": "application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+      "authority": "E4_CONTRACT_CHECK_REQUIRED",
+      "authorizationEpoch": "2",
+      "chainSnapshotHash": "0x0e961a9f46baa6f9c905a6340020ac7a8b3685e408ca5f1305026619443b56a3",
+      "contractExecuted": false,
+      "currentDecisionHash": "0xda25ee17065ce514ee3226712fb1e437f067b4c62033da8612b6fe7aff481a29",
+      "currentDecisionId": "decision-fb2d0465-1f6d-44c9-bbb3-237577e227cd",
+      "epochInvalidated": false,
+      "firstStartedAt": 1580558400,
+      "fundingSnapshotHash": "0x237ba533b512e238e58e624484331dc63ccfe9746022d57303e5ce21daa8cbb6",
+      "id": "termination-6192668a-a1ea-4d89-9610-10d00b494396",
+      "obligationId": "obligation-application-028a1353-0c1e-4fa6-9b22-7cc205765aca",
+      "procedureId": "procedure-273d4784-f457-47ec-a4da-ef58b119ad68",
+      "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "reason": "REVIEW_CAP_UNRESOLVED",
+      "recordedAt": 1580559000,
+      "requiredAtomicEffects": [
+        "CHECK_UNACCEPTED_AND_AUTHORIZED_CONDITION",
+        "INVALIDATE_OLD_AUTHORIZATION_EPOCH",
+        "RELEASE_RESERVATION_AND_TRANSITION_OBLIGATION"
+      ],
+      "reservationReleased": false,
+      "reviewCapAt": 1580559000,
+      "sourceHeadCommitment": "0xe7bf2eee80d325c2ec4f0946664ff546c2ae1157ea0a2611110002416a5f9268",
+      "version": "clear-bootcamp-unaccepted-termination-intent.1"
+    },
+    "ledgerSequence": 100,
+    "applicationRevision": 18,
+    "contractMustRecheck": true,
+    "reservationReleased": false,
+    "epochInvalidated": false,
+    "paymentAuthority": false
+  }
+}
