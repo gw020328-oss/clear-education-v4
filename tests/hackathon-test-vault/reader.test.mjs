@@ -8,8 +8,8 @@ async function readerFor(f,read=(method,args)=>f.provider.send(method,args),patc
  const pin={version:'clear-hackathon-test-preparation-runtime.1',chainId:'31339',genesisHash:(await f.provider.send('eth_getBlockByNumber',['0x0',false])).hash,instanceId:f.config.instanceId,vaultAddress,vaultCodeHash:keccak256(await f.provider.send('eth_getCode',[vaultAddress,'latest'])),tokenAddress,tokenCodeHash:keccak256(await f.provider.send('eth_getCode',[tokenAddress,'latest'])),operationsPolicyHash:await f.vault.PROFILE(),policyHash:f.config.policyHash,runtimeMappingHash:f.config.runtimeMappingHash,roles:Object.fromEntries(Object.entries(f.roles).map(([k,v])=>[k,v.toLowerCase()])),sourceMode:'SYNTHETIC_FIXTURE',environment:'MEMORY_COMPONENT_HARNESS_ONLY',...patch};
  return createPreparationReader({read,abi:f.artifacts.HackathonTestVaultPreparation.abi,pin});
 }
-async function replacement(f,appId){
- const app=appId??await f.ready(),old=await f.state(app),operation=f.op(),next=f.target('replacement',{revision:2n});
+async function replacement(f,appId,targetPatch={}){
+ const app=appId??await f.ready(),old=await f.state(app),operation=f.op(),next=f.target('replacement',{revision:2n,...targetPatch});
  const calldata=f.vault.interface.encodeFunctionData('replaceTarget',[operation,app,next,1,old.version]);
  const commandDigest=keccak256(AbiCoder.defaultAbiCoder().encode(['address','bytes'],[f.roles.registrar,calldata]));
  const previous={decisionId:old.target.decisionId,revision:old.target.revision.toString(),decisionHash:old.target.decisionHash,acceptanceSequence:old.target.acceptanceSequence.toString(),epoch:old.epoch.toString(),appVersion:old.version.toString(),sourceReceiptHash:old.target.sourceReceiptHash};
@@ -75,4 +75,12 @@ test('reader verifies frozen .3 domain separator and type hash as well as code a
   const reader=await readerFor(f,async(method,args)=>method==='eth_call'&&args[0].data===selector?id('wrong-domain-or-type'):f.provider.send(method,args));
   await assert.rejects(()=>reader.snapshot(app),/E4_DOMAIN|E4_TYPE_HASH/);
  }
+});
+
+test('same logical decision ID with a higher revision remains a new exact target without another reservation',async t=>{
+ const f=await setup(t),app=await f.ready(),oldPayload=await f.prepare(app),before=await f.state(app);
+ const r=await replacement(f,app,{decisionId:before.target.decisionId}),reader=await readerFor(f),dto=await reader.replacement(r.tx.hash,r.expected);
+ assert.equal(dto.current.decisionId,dto.previous.decisionId);assert.equal(dto.current.revision,'2');assert.notEqual(dto.current.decisionHash,dto.previous.decisionHash);
+ assert.equal(dto.allocationId,before.allocationId);assert.equal((await f.invariant()).R,AMOUNT);assert.equal((await f.invariant()).O,AMOUNT);
+ await f.review(app);await f.consent(app);await f.prepare(app);await assert.rejects(()=>f.vault.checkPrepared(oldPayload.message),/DECISION_TARGET/);
 });

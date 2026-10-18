@@ -31,19 +31,19 @@ B는 계약이 exact token transfer로 확인한 credited balance다. R은 전�
 
 ## 검증과 코드 리뷰
 
-최신 관련 로컬 실행의 **49 distinct PASS / 0 FAIL**:
+최신 관련 로컬 실행의 **50 distinct PASS / 0 FAIL**:
 
 | 분모 | 결과 | 실행 범위 |
 | --- | --- | --- |
 | contract/component38 | PASS | fresh memory EVM: TEST deposit/approve·등록·전액예약·관측·정정·준비·키/역할·종료; unsigned field24/domain5 변조 포함 |
-| reader10 | PASS | runtime/code/genesis/.3 domain/type pins, stable allocation 교체 receipt, publication vs latest CAS, 응답 유실 재조회·reorg·잘못된 tx/log 거부 |
+| reader11 | PASS | runtime/code/genesis/.3 domain/type pins, stable allocation 교체 receipt, publication vs latest CAS, 응답 유실 재조회·reorg·잘못된 tx/log 거부 |
 | ABI/source artifact1 | PASS | 실제 compile artifact와 저장한 ABI/source hashes 일치, 지급 함수 없음 |
 
-처음 component33, 이벤트/reader 추가 후40, 보강 후46개가 통과했고 이후 reader/domain·publication 및 artifact를 별도 검증했다. 중복 실행을 새 테스트 수에 더하지 않는다. 최초 compiler 시도에서 Solidity 변수 선언 구문 오류1건을 고쳤으며 체인 시험 실패로 세지 않는다. native µWS/bigint 미지원 경고는 기존 Node24의 JS fallback으로 통과했고 설치 graph를 바꾸지 않았다.
+처음 component33, 이벤트/reader 추가 후40, 보강 후46개가 통과했고 이후 reader/domain·publication 및 artifact를 별도 검증했다. 최종 공통 CI 진입점을 한 번 실행해50개 전부 PASS를 확인했다. 중복 실행을 새 테스트 수에 더하지 않는다. 최초 compiler 시도에서 Solidity 변수 선언 구문 오류1건을 고쳤으며 체인 시험 실패로 세지 않는다. native µWS/bigint 미지원 경고는 기존 Node24의 JS fallback으로 통과했고 설치 graph를 바꾸지 않았다.
 
-직접 리뷰에서 별도 key-role 충돌/폐기 주소 재사용을 차단했고, 미평가 이의가 target 교체로 사라지는 경로를 막았다. 관측 변경 시 chain consent commitment도 무효화하되 같은 판정의 유효 앱 receipt는 E3 재검사 뒤 재결합할 수 있도록 포트를 분리했다. reader는 primary event뿐 아니라 OperationApplied의 tx/block/index도 검사하고, runtime code 외에 .3 domain/type도 대조한다. publication anchor를 latest CAS로 착각하지 않는 반례를 추가했다. 독립 보안 감사 또는 아직 없는 지급 계약의 최종 검토가 아니다.
+직접 리뷰에서 별도 key-role 충돌/폐기 주소 재사용을 차단했고, 미평가 이의가 target 교체로 사라지는 경로를 막았다. 관측 변경 시 chain consent commitment도 무효화하되 같은 판정의 유효 앱 receipt는 E3 재검사 뒤 재결합할 수 있도록 포트를 분리했다. reader는 primary event뿐 아니라 OperationApplied의 tx/block/index도 검사하고, runtime code 외에 .3 domain/type도 대조한다. publication anchor를 latest CAS로 착각하지 않는 반례를 추가했다. 공통 P0 v1이 같은 decisionId의 새 revision을 허용하므로 ID 변경 강제를 제거했고, 새 revision/hash·epoch와 stable allocation을 함께 검사하는 회귀를 추가했다. 독립 보안 감사 또는 아직 없는 지급 계약의 최종 검토가 아니다.
 
-기존 guarded product-workflow CI glob에 전용 `hackathon-test-vault-preparation.test.mjs` 진입점을 추가했다. E0/E2를 이 wrapper에서 중복 import하지 않는다. 정확한 PR HEAD의 원격 CI 결과는 PR 본문을 따른다. CI는 이49개를 반복 실행할 뿐 원천/서명/지급 분모를 늘리지 않는다.
+기존 guarded product-workflow CI glob에 전용 `hackathon-test-vault-preparation.test.mjs` 진입점을 추가했다. E0/E2를 이 wrapper에서 중복 import하지 않는다. 정확한 PR HEAD의 원격 CI 결과는 PR 본문을 따른다. CI는 이50개를 반복 실행할 뿐 원천/서명/지급 분모를 늘리지 않는다.
 
 ```sh
 ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/product-workflow/hackathon-test-vault-preparation.test.mjs

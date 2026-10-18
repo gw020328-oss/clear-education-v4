@@ -14,7 +14,7 @@
 | allocate | appId, allocationId, expectedVersion | 현재 유효 MET의 가장 작은 server sequence, B−R≥100, 전액만 R+=100. allocationId 전역 재사용 거부 |
 | startReview | appId, procedureId, publishedAt, expectedVersion | 전액 예약 후 공개, 첫 시작=최초 공개 시각 고정. 정정은 같은 procedure·원래600 상한, 새 공개 시각 |
 | observeCurrent | currentMet, valid/unassessed objection, newValidError, narrowed source cutoff, observedAt, receiptHash, expectedVersion | epoch 증가+옛 준비물 삭제. R/O는 그대로. 새 유효 오류는 revalidation 이후 terminal latch |
-| replaceTarget | 새 decision/sequence/source receipt, mode ROUTINE_REFRESH 또는 REVALIDATION, expectedVersion | 새 revision/ID/hash·sequence. 같은100/R/O/allocation/firstStart 유지, epoch 증가, 옛 동의/준비물 삭제. 검증된 오류는 REVALIDATION 필요, 최대1 |
+| replaceTarget | 새 decision/sequence/source receipt, mode ROUTINE_REFRESH 또는 REVALIDATION, expectedVersion | 새 revision/hash·sequence; decisionId는 유지 가능. 같은100/R/O/allocation/firstStart 유지, epoch 증가, 옛 동의/준비물 삭제. 검증된 오류는 REVALIDATION 필요, 최대1 |
 | bindConsents | exact current target/version에 대한 consentSetHash, mutualConsent | E3 인증 두 역할 사실의 opaque commitment. epoch 증가+옛 준비물 삭제. hash 자체가 온체인 양측 서명 검증은 아님 |
 | prepareUnsigned | E2 .3의 정확24필드, expectedVersion | 등록 target/procedure/source/예약/동의/key/epoch 및 모든 기한 비교, 전체 digest 저장. 서명·accept·송금 없음 |
 | terminationIntent→terminate | appId, reason enum, evidenceReceiptHash, expectedVersion | 별도 terminator. 계약 시간/기존 오류 latch로 조건 확인 → epoch무효화+R해제+O감소+terminal tombstone 원자 적용 |
@@ -74,3 +74,9 @@ publication 때 저장한 epoch/version은 그 시점의 anchor다. 같은 decis
 E4 reader의 expected.previous는 **교체 명령을 준비한 직전 latest confirmed chain state/CAS**다. 옛 publication baseline을 이 자리에 넣지 않는다. API는 publication의 old decision ID/revision/hash 및 stable allocation 일치를 확인하고, previous epoch/version이 baseline 이상임을 확인한다. 이후 event의 current와 trusted chain snapshot을 exact target·epoch/version·checkpoint로 대조한다. 더 최신 동작으로 checkpoint가 전진했으면 새 조회/명시 인계를 수행하고 과거 이벤트를 현재 지급 허가로 사용하지 않는다.
 
 교체 명령의 expectedVersion과 이벤트 previous.appVersion은 반드시 같다. 이것은 publication baseline equality 요구와 다르다. E5는 별도 last-confirmed checkpoint+app CAS를 유지한다. reader.replacement는 canonical **과거 교체 영수증**이고 snapshot은 지정된 최신 block 관측이므로 두 응답의 시점도 구분한다. 먼저 교체→새 판정 공개/startReview→consent/unsigned 준비 순서에서 새 버전이 생기는 것을 정상으로 처리한다.
+
+P0 v1의 decisionId는 revision 간 동일할 수 있다. 교체는 더 큰 revision 및 새 canonical decisionHash로 구분하고, opaque decisionId 변경을 강제하지 않는다. old/new exact tuple과 epoch/version/CAS를 모두 비교하므로 같은 ID가 과거 승인 재사용을 허용하지 않는다.
+
+## 초기 ID 발급과 등록 순서 — E3 exact 인수 대기
+
+등록·배정에는 publication 전 application/decision/allocation bytes32가 필요하다. E4는 opaque mapping을 직접 발급하거나 E3 registry를 복제하지 않는다. E3가 인증된 내부 current/MET/source/CAS registration target 및 durable opaque ID 발급·조회 포트를 제공하면 그 exact head/DTO를 인수한다. 내부 ID 발급→등록→전액 배정→publication→startReview 순서이며, ID 발급·등록·배정만으로 publication window나 firstStart를 시작하지 않는다. 현재 준비 fixture의 합성 ID는 E3 registry 구현 또는 통합 완료의 근거가 아니다.

@@ -142,7 +142,7 @@ contract HackathonTestVaultPreparation {
     function replaceTarget(bytes32 op,bytes32 appId,Target calldata t,Change mode,uint64 expectedVersion) external only(roles.registrar) unlocked active once(op) {
         Application storage a=_mutable(appId,expectedVersion); require(!a.terminalError,"TERMINAL_ERROR");require(!a.unassessedObjection,"OBJECTION_UNASSESSED");ReplacementTarget memory previous=_replacementTarget(a);
         require(a.firstStartedAt==0 || block.timestamp<uint256(a.firstStartedAt)+600,"REVIEW_CAP");
-        require(t.revision>a.target.revision && t.decisionId!=a.target.decisionId && t.decisionHash!=a.target.decisionHash,"NEW_DECISION");
+        require(t.revision>a.target.revision && t.decisionHash!=a.target.decisionHash,"NEW_DECISION");
         if(a.newValidError || a.validObjection) require(mode==Change.REVALIDATION,"REVALIDATION_REQUIRED");
         if(mode==Change.REVALIDATION) { require(a.revalidationCount==0,"REVALIDATION_LIMIT"); ++a.revalidationCount; }
         _newTarget(t); a.target=t; a.targetRecordedAt=_now();a.observedAt=_now();a.observationReceiptHash=t.sourceReceiptHash;

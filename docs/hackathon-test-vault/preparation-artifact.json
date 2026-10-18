@@ -1731,9 +1731,9 @@
       "type": "function"
     }
   ],
-  "creationBytes": 22828,
-  "runtimeTemplateBytes": 20087,
-  "runtimeTemplateHash": "0x573dabfe1ecf6bb0f9fa341676691b54200073d60bf574bda10b7c877955a446",
+  "creationBytes": 22811,
+  "runtimeTemplateBytes": 20070,
+  "runtimeTemplateHash": "0x6ee6ec7306b97ca1940050565cad59d4f29031d755879a41ffba274784cb99aa",
   "runtimeTemplateIsDeployedCodePin": false,
   "fixedToken": {
     "contract": "ClearTestToken",
@@ -1743,7 +1743,7 @@
   },
   "sourceSha256": {
     "contracts/ClearTestToken.sol": "f6b904626da44e856c5854235fe6ac64af0057a1550f1a5337d56bfe7790356a",
-    "src/hackathon-test-vault/HackathonTestVaultPreparation.sol": "545d8ad0028d72a13372ce66e07f9d530a57a723a3d6e66145e28a2550190297",
+    "src/hackathon-test-vault/HackathonTestVaultPreparation.sol": "d8c7467d433e7a428bbd75fe79707b963b4e8208842b89a32ff9a8bae9b60029",
     "src/hackathon-test-vault/StrictECDSA.sol": "d2873eb2ac6205adc268f5eddf4ba89fbd3e046a83785d44f8715616a74fd69a",
     "src/hackathon-test-vault/reader.mjs": "9dd7a3d97a7ed20e85c0cccd26bd62a9abc30a91b0c77454bddb2f3f169c3d50"
   },
