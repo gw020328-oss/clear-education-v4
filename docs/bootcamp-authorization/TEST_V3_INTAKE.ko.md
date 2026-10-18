@@ -8,7 +8,7 @@
 - profile version `clear-hackathon-test-operations.1`, 사용자 decision revision1, 저장소 plan revision4. profile JSON의 profileId는 버전 없는 `clear-hackathon-test-operations`이며 E2 profilePin.profileId는 버전 식별자를 사용한다.
 - profile hash `0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98`. E0의 `p0Hash('HACKATHON-TEST-OPERATIONS', profile)`와 대조한다. E2는 임의 sourceCommit/hash를 자기 선언하여 통과시키지 않는다. 이것은 내용 pin 확인이며 Git 서명 검증이나 배포 상태 검증이 아니다.
 - 기존 미커밋 v2 초안을 `ebda28d`에 보존했다. [v2 설명](README.ko.md)의 finite claimUntil/75초 예제와 G2~G6 OPEN은 당시 제안이다. 새 TEST 정책으로 G2~G6의 운영 선택은 확정됐으며 실제 구현·주소·역할·인수는 남는다.
-- P0 frozen `03fa643`, R2, R3 `733fe69`, 기존 v1 wire/ABI·P1 PR79·P4 PR81은 보존한다. E0 파일은 merge로만 들어왔으며 직접 수정하지 않았다. 제품 consumer, HTTP/DB, contracts, web, root 의존성/CI는 수정하지 않았다.
+- P0 frozen `03fa643`, R2, R3 `733fe69`, 기존 v1 wire/ABI·P1 PR79·P4 PR81은 보존한다. E0 파일은 merge로만 들어왔으며 직접 수정하지 않았다. 제품 consumer, HTTP/DB, contracts, web, root 의존성과 workflow는 수정하지 않았다. 기존 guarded product-workflow glob에 v3 전용 진입점만 추가했다.
 
 ## 명시적인 새 버전
 
@@ -46,14 +46,14 @@ uint256/64/8은 canonical decimal string, 계산은 BigInt다. 0은 revalidation
 - 기존 v2 전용43 + P0 20 + R2 9 =72 PASS 기록을 확인했다. 기존 ABI/type/예제를 수정하지 않았다.
 - v3 구조/변조/경계/예제 **119 PASS**. E0 운영 reference **12 PASS**는 별도이며, E0가 말한41은 P0/R2 29개를 합한 분모다. 정책 reference를 실제 source/signature 인수로 세지 않는다.
 - v3 hash helper **1 PASS**: 기본값+domain5/message24의 모든29 mutation =30 vector, JS EIP712/독립 literal ABI+keccak/Solidity3방향 일치. helper는 pure 함수3개뿐이다. 새 memory EVM helper 배포1건·pure eth_call90회, 승인 서명0·지급거래0·외부RPC0. 기존 v2의 배포1건/72calls는 과거 별도 실행이다.
-- 따라서 이번 v3+E0 최신 결과는 **132 PASS**(119+1+12). 보존된72와 중복 없이 함께 보면204개이며 같은 실행에서204개가 모두 재실행됐다는 뜻은 아니다. 새 suite는 공통 CI에 등록하지 않았고 로컬 명시 실행 결과다.
+- 따라서 이번 v3+E0 최신 결과는 **132 PASS**(119+1+12). 보존된72와 중복 없이 함께 보면204개이며 같은 실행에서204개가 모두 재실행됐다는 뜻은 아니다. 이 숫자는 로컬 명시 실행 결과다. 이후 통합 교차 인수 요청에 따라 `tests/product-workflow/hackathon-authorization-v3.test.mjs`가 v3 구조119+helper1만 import하도록 추가했다. 기존 guarded glob이 실행하며 E0/P0/R2를 wrapper에서 다시 import하지 않는다. 실제 공유 CI 결과는 PR의 새 exact HEAD를 따른다.
 - 첫 v3 실행은111 PASS/2 FAIL였다. 실패는 동결된 deadlineRecord fixture를 직접 변조하려던 두 테스트의 TypeError였다. fixture를 복제해 실제 검증기 거부를 시험하도록 고쳤다. helper 비교는 첫 실행부터 통과했고 hash ABI가 바뀌지 않아 반복 배포하지 않았다.
 - 직접 리뷰에서 `consentSetHash`·deadline·nonce·현재 domain 대조, 임의 profile pin 거부, newValidError/현재MET/전액배정 검사, accepted 상태의 다른 신청 혼동 거부와 key/epoch 무관 경로를 보강했다. 실제 E4의 race/reorg/서명키 수명 보안 감사를 수행한 것은 아니다.
 
 재현 명령:
 
 ```sh
-./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-authorization/test-*-v3.test.mjs tests/product-workflow/hackathon-test-operations-contract.test.mjs
+./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/product-workflow/hackathon-authorization-v3.test.mjs tests/product-workflow/hackathon-test-operations-contract.test.mjs
 ./tools/node tests/bootcamp-authorization/test-export-example-v3.mjs
 ```
 

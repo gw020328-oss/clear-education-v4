@@ -66,7 +66,7 @@
     "pendingManifestsNotClaimable": true
   },
   "commonConsumerImports": 0,
-  "commonCiWiringAdded": false,
+  "commonCiWiringAdded": true,
   "gates": {
     "usableForIssuance": false,
     "paymentAllowed": false,
@@ -81,7 +81,8 @@
     "tests/bootcamp-authorization/test-export-example-v3.mjs": "1bec6ad6d4e00b0162b1a3d31656aceac4c177f4205d423ac92b8c9494e3644e",
     "tests/bootcamp-authorization/test-fixture-v3.mjs": "96b9f1fb7c6d525bf633cd3d9cbd1a0eb8911e63760c49e1708c05199bef2206",
     "tests/bootcamp-authorization/test-hash-probe-v3.test.mjs": "d3d6ae3113f2136003e1371e9b0a62352fcadeb1582675817cee0c46d9dd2ca3",
-    "tests/bootcamp-authorization/test-manual-hash-v3.mjs": "381c5d94ed8c4c7aa44a8c7c28dce7dfdca194e46fc9102d3354508ea1d462e4"
+    "tests/bootcamp-authorization/test-manual-hash-v3.mjs": "381c5d94ed8c4c7aa44a8c7c28dce7dfdca194e46fc9102d3354508ea1d462e4",
+    "tests/product-workflow/hackathon-authorization-v3.test.mjs": "b90866ea10d4c54c2fa7d14c03e3d97cca4dbf687ef132149d5aff1963fb168d"
   },
   "localLogSha256": {
     "tests-first.log": "5deb9cfb250c841506858c192240d793c1573a4665709ba5978e1561698ea8e4",
@@ -90,5 +91,10 @@
     "v3-unit-final.log": "38fe9b3887426b94e8c87f4f1870104bcab81900d6dba3c465887d66b28f7819",
     "preservation-final.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0"
   },
-  "sharedCi": "Check exact PR head; these local E2 test results are not represented by shared CI."
+  "sharedCi": "Existing guarded product-workflow glob includes v3 119 structural + 1 pure helper. No duplicate E0/P0/R2 imports. Check exact new PR head for remote execution; local evidence remains separately counted.",
+  "commonCiEntryPoint": "tests/product-workflow/hackathon-authorization-v3.test.mjs",
+  "commonCiImportsOnly": [
+    "tests/bootcamp-authorization/test-encoding-v3.test.mjs",
+    "tests/bootcamp-authorization/test-hash-probe-v3.test.mjs"
+  ]
 }
