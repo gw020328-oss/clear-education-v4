@@ -1,0 +1,374 @@
+{
+  "version": "clear-bootcamp-authority-review-design.1",
+  "scope": "UNSIGNED_DESIGN_ONLY_NOT_AUTHORIZATION_OR_CHAIN_EXECUTION",
+  "usableForClaim": false,
+  "paymentAllowed": false,
+  "productionEnabled": false,
+  "newSignatureCount": 0,
+  "fundingCases": [
+    {
+      "id": "normal-prefunded",
+      "input": {
+        "confirmedBalanceAtoms": "200000000",
+        "obligations": [
+          {
+            "obligationId": "obligation-a",
+            "applicationRef": "application-a",
+            "recipientRef": "recipient-a",
+            "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "amountAtoms": "100000000"
+          },
+          {
+            "obligationId": "obligation-b",
+            "applicationRef": "application-b",
+            "recipientRef": "recipient-b",
+            "decisionHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "amountAtoms": "100000000"
+          }
+        ],
+        "allocations": []
+      },
+      "expected": {
+        "confirmedBalanceAtoms": "200000000",
+        "reservedAtoms": "0",
+        "availableAtoms": "200000000",
+        "confirmedObligationAtoms": "200000000",
+        "unallocatedObligationAtoms": "200000000",
+        "shortfallAtoms": "0"
+      }
+    },
+    {
+      "id": "normal-a-reserved",
+      "input": {
+        "confirmedBalanceAtoms": "200000000",
+        "obligations": [
+          {
+            "obligationId": "obligation-a",
+            "applicationRef": "application-a",
+            "recipientRef": "recipient-a",
+            "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "amountAtoms": "100000000"
+          },
+          {
+            "obligationId": "obligation-b",
+            "applicationRef": "application-b",
+            "recipientRef": "recipient-b",
+            "decisionHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "amountAtoms": "100000000"
+          }
+        ],
+        "allocations": [
+          {
+            "allocationId": "allocation-a",
+            "obligationId": "obligation-a",
+            "applicationRef": "application-a",
+            "recipientRef": "recipient-a",
+            "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "amountAtoms": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "confirmedBalanceAtoms": "200000000",
+        "reservedAtoms": "100000000",
+        "availableAtoms": "100000000",
+        "confirmedObligationAtoms": "200000000",
+        "unallocatedObligationAtoms": "100000000",
+        "shortfallAtoms": "0"
+      }
+    },
+    {
+      "id": "separate-shortfall-start",
+      "input": {
+        "confirmedBalanceAtoms": "120000000",
+        "obligations": [
+          {
+            "obligationId": "obligation-a",
+            "applicationRef": "application-a",
+            "recipientRef": "recipient-a",
+            "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "amountAtoms": "100000000"
+          },
+          {
+            "obligationId": "obligation-b",
+            "applicationRef": "application-b",
+            "recipientRef": "recipient-b",
+            "decisionHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "amountAtoms": "100000000"
+          }
+        ],
+        "allocations": [
+          {
+            "allocationId": "allocation-a",
+            "obligationId": "obligation-a",
+            "applicationRef": "application-a",
+            "recipientRef": "recipient-a",
+            "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "amountAtoms": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "confirmedBalanceAtoms": "120000000",
+        "reservedAtoms": "100000000",
+        "availableAtoms": "20000000",
+        "confirmedObligationAtoms": "200000000",
+        "unallocatedObligationAtoms": "100000000",
+        "shortfallAtoms": "80000000"
+      }
+    },
+    {
+      "id": "shortfall-a-paid",
+      "input": {
+        "confirmedBalanceAtoms": "20000000",
+        "obligations": [
+          {
+            "obligationId": "obligation-b",
+            "applicationRef": "application-b",
+            "recipientRef": "recipient-b",
+            "decisionHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "amountAtoms": "100000000"
+          }
+        ],
+        "allocations": []
+      },
+      "expected": {
+        "confirmedBalanceAtoms": "20000000",
+        "reservedAtoms": "0",
+        "availableAtoms": "20000000",
+        "confirmedObligationAtoms": "100000000",
+        "unallocatedObligationAtoms": "100000000",
+        "shortfallAtoms": "80000000"
+      }
+    },
+    {
+      "id": "confirmed-topup-80",
+      "input": {
+        "confirmedBalanceAtoms": "100000000",
+        "obligations": [
+          {
+            "obligationId": "obligation-b",
+            "applicationRef": "application-b",
+            "recipientRef": "recipient-b",
+            "decisionHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "amountAtoms": "100000000"
+          }
+        ],
+        "allocations": []
+      },
+      "expected": {
+        "confirmedBalanceAtoms": "100000000",
+        "reservedAtoms": "0",
+        "availableAtoms": "100000000",
+        "confirmedObligationAtoms": "100000000",
+        "unallocatedObligationAtoms": "100000000",
+        "shortfallAtoms": "0"
+      }
+    },
+    {
+      "id": "b-reserved-after-rechecks",
+      "input": {
+        "confirmedBalanceAtoms": "100000000",
+        "obligations": [
+          {
+            "obligationId": "obligation-b",
+            "applicationRef": "application-b",
+            "recipientRef": "recipient-b",
+            "decisionHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "amountAtoms": "100000000"
+          }
+        ],
+        "allocations": [
+          {
+            "allocationId": "allocation-b",
+            "obligationId": "obligation-b",
+            "applicationRef": "application-b",
+            "recipientRef": "recipient-b",
+            "decisionHash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "amountAtoms": "100000000"
+          }
+        ]
+      },
+      "expected": {
+        "confirmedBalanceAtoms": "100000000",
+        "reservedAtoms": "100000000",
+        "availableAtoms": "0",
+        "confirmedObligationAtoms": "100000000",
+        "unallocatedObligationAtoms": "0",
+        "shortfallAtoms": "0"
+      }
+    },
+    {
+      "id": "both-paid",
+      "input": {
+        "confirmedBalanceAtoms": "0",
+        "obligations": [],
+        "allocations": []
+      },
+      "expected": {
+        "confirmedBalanceAtoms": "0",
+        "reservedAtoms": "0",
+        "availableAtoms": "0",
+        "confirmedObligationAtoms": "0",
+        "unallocatedObligationAtoms": "0",
+        "shortfallAtoms": "0"
+      }
+    }
+  ],
+  "fundingTransitions": [
+    {
+      "from": "normal-prefunded",
+      "to": "normal-a-reserved",
+      "event": "EXPLICIT_ALLOCATION",
+      "deltaB": "0",
+      "deltaR": "100000000",
+      "deltaO": "0"
+    },
+    {
+      "from": "separate-shortfall-start",
+      "to": "shortfall-a-paid",
+      "event": "CONFIRMED_A_PAYMENT",
+      "deltaB": "-100000000",
+      "deltaR": "-100000000",
+      "deltaO": "-100000000"
+    },
+    {
+      "from": "shortfall-a-paid",
+      "to": "confirmed-topup-80",
+      "event": "CONFIRMED_DEPOSIT",
+      "deltaB": "80000000",
+      "deltaR": "0",
+      "deltaO": "0"
+    },
+    {
+      "from": "confirmed-topup-80",
+      "to": "b-reserved-after-rechecks",
+      "event": "EXPLICIT_ALLOCATION_AFTER_CURRENT_CHECKS",
+      "deltaB": "0",
+      "deltaR": "100000000",
+      "deltaO": "0"
+    },
+    {
+      "from": "b-reserved-after-rechecks",
+      "to": "both-paid",
+      "event": "CONFIRMED_B_PAYMENT",
+      "deltaB": "-100000000",
+      "deltaR": "-100000000",
+      "deltaO": "-100000000"
+    }
+  ],
+  "orderingCases": [
+    {
+      "id": "db-stale-only",
+      "sequence": [
+        "SIGNATURE_ESCAPES",
+        "DB_STALE",
+        "OLD_ACCEPT_MINED"
+      ],
+      "expected": "MAY_ACCEPT_UNCHANGED_CHAIN_GUARDS",
+      "newBridgeTested": false
+    },
+    {
+      "id": "app-revoke-first",
+      "sequence": [
+        "SIGNATURE_ESCAPES",
+        "APP_EPOCH_BUMP_MINED",
+        "OLD_ACCEPT_MINED"
+      ],
+      "expected": "REJECT_EPOCH_KEEP_RESERVATION",
+      "newBridgeTested": false
+    },
+    {
+      "id": "accept-first",
+      "sequence": [
+        "ACCEPT_MINED",
+        "APP_EPOCH_BUMP_ATTEMPT",
+        "CLAIM_MINED"
+      ],
+      "expected": "KEEP_ACCEPTED_FIXED_RIGHT",
+      "newBridgeTested": false
+    },
+    {
+      "id": "key-revoke-first",
+      "sequence": [
+        "KEY_REVOKE_MINED",
+        "FIRST_ACCEPT_ATTEMPT"
+      ],
+      "expected": "REJECT_REVOKED_KEY",
+      "newBridgeTested": false
+    },
+    {
+      "id": "key-revoke-after",
+      "sequence": [
+        "ACCEPT_MINED",
+        "KEY_REVOKE_MINED",
+        "CLAIM_MINED"
+      ],
+      "expected": "KEEP_ACCEPTED_FIXED_RIGHT",
+      "newBridgeTested": false
+    },
+    {
+      "id": "first-accept-expired",
+      "sequence": [
+        "AUTHORIZATION_EXPIRES",
+        "FIRST_ACCEPT_ATTEMPT"
+      ],
+      "expected": "REJECT_EXCLUSIVE_EXPIRY",
+      "newBridgeTested": false
+    },
+    {
+      "id": "accepted-then-approval-expires",
+      "sequence": [
+        "ACCEPT_MINED",
+        "AUTHORIZATION_EXPIRES",
+        "CLAIM_ATTEMPT"
+      ],
+      "expected": "APPLY_SEPARATE_RIGHT_EXECUTION_POLICY_OPEN",
+      "newBridgeTested": false
+    },
+    {
+      "id": "accept-response-lost",
+      "sequence": [
+        "ACCEPT_MINED",
+        "RESPONSE_LOST",
+        "SAME_DIGEST_RETRY"
+      ],
+      "expected": "RECONCILE_SAME_RIGHT_NO_SECOND_ALLOCATION",
+      "newBridgeTested": false
+    },
+    {
+      "id": "new-key-second-right",
+      "sequence": [
+        "ACCEPT_MINED",
+        "NEW_KEY_NEW_NONCE_SAME_APP"
+      ],
+      "expected": "REJECT_APP_RIGHT_CONFLICT",
+      "newBridgeTested": false
+    },
+    {
+      "id": "claim-reorg",
+      "sequence": [
+        "CLAIM_OBSERVED",
+        "CLAIM_REMOVED_BY_REORG",
+        "RECONCILE_CANONICAL_STATE"
+      ],
+      "expected": "REOPEN_SAME_CANONICAL_RIGHT_NOT_NEW_OBLIGATION",
+      "newBridgeTested": false
+    }
+  ],
+  "openDecisions": [
+    "G1_CANONICAL_ACCEPT_VS_CHALLENGE_FINALIZE",
+    "G2_DEADLINES_RELEASE_UNRESOLVED_OWNERSHIP",
+    "G3_ROLES_KEY_REGISTRY_INCIDENT_POLICY",
+    "G4_OBLIGATION_APP_HOLD_ALLOCATION_ORDER",
+    "G5_CHAIN_CONFIRMATION_GAS_POLICY",
+    "G6_ACTUAL_SOURCE_TRUST_AND_P3_ACCEPTANCE"
+  ],
+  "gates": {
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO",
+    "paymentAllowed": false,
+    "productionEnabled": false
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "version": "clear-hackathon-test-intake.1",
+  "date": "2026-10-18",
+  "repositoryPlanRevision": 4,
+  "profileVersion": "clear-hackathon-test-operations.1",
+  "decisionRevision": 1,
+  "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
+  "baseRepositoryHead": "733fe693f4fd2e16977b0c52ef88e35ee9687f2c",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "sourceFilesUnmodified": true,
+  "stages": [
+    {
+      "stage": "E0",
+      "scope": "COMMON_POLICY_CONTRACT_AND_CROSS_INTAKE",
+      "status": "ACCEPTED_POLICY_REFERENCE_ONLY",
+      "requestedSetting": "gpt-6.1-sol/high",
+      "acceptedHead": "67b6a0731f97df98fda7820ab24ed85a57796a83",
+      "dependsOn": [],
+      "tests": {
+        "newOperationsReference": 12,
+        "oldP0Reference": 20,
+        "oldR2Reference": 9,
+        "totalPass": 41,
+        "totalFail": 0,
+        "preservedFrozenSpecFiles": 9,
+        "sourceFilesUnmodified": true,
+        "preservation": "191_SOURCE_REFERENCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
+        "runtimeAuthorityTested": false,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "publicHistory": "278_COMMITS_1551_BLOBS_FINDINGS_0"
+      },
+      "referenceClarification": "CONFIRMATION_AT_CAP_CANNOT_BE_A_USABLE_DEADLINE_ROUTE; FIRST_ACCEPT_WAS_ALREADY_EXCLUSIVE"
+    },
+    {
+      "stage": "E1",
+      "scope": "PRIVACY_AUTH_CURRENT_CAS_CONSUMERS",
+      "status": "ACCEPTED_FOR_NEXT_TEST_STAGE_NOT_REAL_SOURCE_OR_PAYMENT",
+      "requestedSetting": "gpt-6-astra/high",
+      "acceptedHead": "6b4b0cf2d847937aebc6da69f9e7df62e926fa50",
+      "dependsOn": [],
+      "tests": {
+        "dedicatedPass": 111,
+        "relatedWorkflowAndApplicationReported": 411,
+        "producerReported": 241,
+        "e0ReferenceReported": 41,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "actualSourceAcceptances": 0,
+        "newPaymentTransactions": 0,
+        "review": "GUARDED_RAW_ACCESS_AND_FINAL_AUTH_SCOPE_CURRENT_RECHECKS_MATCH_FIXED_SOURCE_AND_REGRESSIONS"
+      },
+      "implementationHead": "bd174f2529a8ee9d10cbdd78694996e1719a9711",
+      "pullRequest": 84
+    },
+    {
+      "stage": "E2",
+      "scope": "UNSIGNED_TYPE_DOMAIN_INTEGER_DEADLINE",
+      "status": "ACCEPTED_ENCODING_FOR_E3_E4_TEST_INTEGRATION_NOT_ISSUANCE",
+      "requestedSetting": "gpt-6-astra/high",
+      "acceptedHead": "d9407b06b8a13122a489193119c1899929f83fe4",
+      "dependsOn": [],
+      "tests": {
+        "v3UnitAndExample": 119,
+        "pureHashProbe": 1,
+        "e0Reference": 12,
+        "totalRelevantAcrossRuns": 132,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "ciV3WrapperVerified": true,
+        "sourceAuthentication": false,
+        "signatures": 0,
+        "paymentTransactions": 0
+      },
+      "candidateHead": "5c7049e",
+      "pullRequest": 85
+    },
+    {
+      "stage": "E3",
+      "scope": "120_1_600_PROCEDURE_AND_TWO_VIEW_DTO",
+      "status": "NOT_STARTED",
+      "requestedSetting": "gpt-6.1-sol/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E1",
+        "E2"
+      ],
+      "tests": null
+    },
+    {
+      "stage": "E4",
+      "scope": "TEST_CONTRACT_FUNDING_ROLES_SIGNER_TERMINATION",
+      "status": "NOT_STARTED",
+      "requestedSetting": "gpt-6-astra/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "tests": null
+    },
+    {
+      "stage": "E5",
+      "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
+      "status": "NOT_STARTED",
+      "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E4"
+      ],
+      "tests": null
+    },
+    {
+      "stage": "E6",
+      "scope": "REAL_SOURCE_TWO_VIEW_LOCAL_E2E",
+      "status": "SOURCE_AND_AI_PREPARATION_ACTIVE_MAIN_E2E_NOT_ACCEPTED",
+      "requestedSetting": "dedicated Moodle/AI gpt-6.1-sol/medium; common API gpt-6.1-sol/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E5"
+      ],
+      "tests": null,
+      "preparation": {
+        "moodle": "ACTIVE_NEW_OWNED_LOCAL_FIXTURE",
+        "ai": {
+          "pr": 86,
+          "candidateHead": "d7a6f30",
+          "status": "OFFLINE_BORROWED_LEASE_PREPARATION_REPORTED_PENDING_CROSS_INTAKE",
+          "focusedReported": 8,
+          "regressionReported": 411,
+          "paidCalls": 0,
+          "actualModelQuality": "N/A"
+        }
+      }
+    },
+    {
+      "stage": "E7",
+      "scope": "SEPOLIA_CUSTOMER_MAPPING_SECOND_POLICY_OPTIONAL_VISION",
+      "status": "NOT_STARTED",
+      "requestedSetting": "SELECT_BY_WORK_UNIT",
+      "acceptedHead": null,
+      "dependsOn": [
+        "LOCAL_E6_ACCEPTANCE"
+      ],
+      "tests": null
+    }
+  ],
+  "ownerRecovery": {
+    "api": {
+      "path": "clear-bootcamp-api-store",
+      "initialHead": "be0b699",
+      "uncommittedChangesPreserved": true
+    },
+    "reclaim": {
+      "path": "clear-hackerrank-bootcamp",
+      "initialHead": "cf0ae1e",
+      "uncommittedChangesPreserved": true
+    }
+  },
+  "scope": {
+    "newSessionsOrSubagents": 0,
+    "activeTurnsInterrupted": false,
+    "directProductApiProducerFundingOrWebEdits": false,
+    "originalSourceBodiesCopied": false,
+    "mainOrDevelopMerge": false,
+    "productionDeployment": false
+  },
+  "activation": {
+    "testImplementationAuthorized": true,
+    "testRuntimeAccepted": false,
+    "testSignerActivated": false,
+    "productionEnabled": false,
+    "existingV1GatesChanged": false
+  },
+  "usageFailureHandling": "OLD_USAGE_FAILURE_IS_NOT_CODE_FAILURE; RECORD_FRESH_FAILURE_WITHOUT_BLIND_REPEAT",
+  "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "actualDispatch": {
+    "inputCommit": "67b6a0731f97df98fda7820ab24ed85a57796a83",
+    "apiE1": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "E1 privacy/auth/current/CAS intake"
+    },
+    "reclaimE2": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "outOfScopeHistoricalReplyCountedAsCompletion": false,
+      "sourceScope": "E2 unsigned v3 profile migration"
+    },
+    "moodleE6Preparation": {
+      "requestedModel": "gpt-6.1-sol",
+      "thinking": "medium",
+      "accepted": true,
+      "started": true
+    },
+    "aiE6Preparation": {
+      "requestedModel": "gpt-6.1-sol",
+      "thinking": "medium",
+      "accepted": true,
+      "started": true,
+      "paidCallsAuthorizedInPreparation": 0
+    },
+    "newSessionsOrSubagents": 0,
+    "activeTurnsInterrupted": false,
+    "additionalHeadquartersMessageSent": false
+  },
+  "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
+  "crossAcceptance": {
+    "fixedInputs": [
+      "ae88b76744dbbe12c4dc50eac3a0eb61d3b01f01",
+      "6b4b0cf2d847937aebc6da69f9e7df62e926fa50",
+      "d9407b06b8a13122a489193119c1899929f83fe4"
+    ],
+    "mergedCommit": "7a7153fb7e38e7fa647a0bbbdc5a45fc34d6235e",
+    "tests": 272,
+    "fail": 0,
+    "scope": "OFFLINE_MODULE_COMPATIBILITY_NOT_RUNTIME_TRANSLATOR_OR_PAYMENT",
+    "externalRpc": 0,
+    "actualSource": 0,
+    "paymentTransactions": 0
+  }
+}
