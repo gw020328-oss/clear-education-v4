@@ -1,0 +1,198 @@
+{
+  "version": "clear-hackathon-test-consumer-pins.1",
+  "status": "E1_E2_ACCEPTED_FOR_STAGED_TEST_IMPLEMENTATION_NOT_RUNTIME_ACTIVATION",
+  "acceptedOn": "2026-10-18",
+  "operationsProfile": {
+    "version": "clear-hackathon-test-operations.1",
+    "profileId": "clear-hackathon-test-operations",
+    "contentHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+    "commit": "67b6a0731f97df98fda7820ab24ed85a57796a83"
+  },
+  "e1": {
+    "commit": "6b4b0cf2d847937aebc6da69f9e7df62e926fa50",
+    "implementationCommit": "bd174f2529a8ee9d10cbdd78694996e1719a9711",
+    "pullRequest": 84,
+    "dedicatedTests": 111,
+    "remoteCi": "6_OF_6_SUCCESS",
+    "actualSourceAcceptances": 0
+  },
+  "e2": {
+    "commit": "d9407b06b8a13122a489193119c1899929f83fe4",
+    "implementationCommit": "5c7049e5ff755a1ec0c9a8a589e97fdaf5a15049",
+    "pullRequest": 85,
+    "encodingVersion": "clear-bootcamp-test-payment-authorization.3",
+    "encodingRevision": 1,
+    "remoteCi": "6_OF_6_SUCCESS",
+    "sourceAuthentication": false,
+    "signatures": 0,
+    "payments": 0
+  },
+  "typedEncoding": {
+    "domainName": "ClearBootcampTestPayment",
+    "domainVersion": "3",
+    "primaryType": "BootcampTestPaymentAuthorizationV3",
+    "domainFields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "name": "verifyingContract",
+        "type": "address"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32"
+      }
+    ],
+    "messageFields": [
+      {
+        "name": "applicationId",
+        "type": "bytes32"
+      },
+      {
+        "name": "policyHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "runtimeMappingHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "decisionId",
+        "type": "bytes32"
+      },
+      {
+        "name": "decisionRevision",
+        "type": "uint64"
+      },
+      {
+        "name": "decisionHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "name": "amountAtoms",
+        "type": "uint256"
+      },
+      {
+        "name": "allocationId",
+        "type": "bytes32"
+      },
+      {
+        "name": "consentSetHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "deadlinePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "eligibilityRoute",
+        "type": "uint8"
+      },
+      {
+        "name": "nonce",
+        "type": "bytes32"
+      },
+      {
+        "name": "issuedAt",
+        "type": "uint64"
+      },
+      {
+        "name": "expiresAt",
+        "type": "uint64"
+      },
+      {
+        "name": "signerKeyId",
+        "type": "bytes32"
+      },
+      {
+        "name": "authorizationEpoch",
+        "type": "uint64"
+      },
+      {
+        "name": "operationsPolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "procedureId",
+        "type": "bytes32"
+      },
+      {
+        "name": "firstReviewStartedAt",
+        "type": "uint64"
+      },
+      {
+        "name": "decisionPublishedAt",
+        "type": "uint64"
+      },
+      {
+        "name": "sourceValidUntilExclusive",
+        "type": "uint64"
+      },
+      {
+        "name": "revalidationCount",
+        "type": "uint8"
+      }
+    ],
+    "typeString": "BootcampTestPaymentAuthorizationV3(bytes32 applicationId,bytes32 policyHash,bytes32 runtimeMappingHash,bytes32 decisionId,uint64 decisionRevision,bytes32 decisionHash,address recipient,address token,uint256 amountAtoms,bytes32 allocationId,bytes32 consentSetHash,bytes32 deadlinePolicyHash,uint8 eligibilityRoute,bytes32 nonce,uint64 issuedAt,uint64 expiresAt,bytes32 signerKeyId,uint64 authorizationEpoch,bytes32 operationsPolicyHash,bytes32 procedureId,uint64 firstReviewStartedAt,uint64 decisionPublishedAt,uint64 sourceValidUntilExclusive,uint8 revalidationCount)",
+    "typeHash": "0x0420a07c2295bca1fc66f0033f2afa0c6e430c7d7cccb48fa23a98c84d97fa8f",
+    "deadlineRecordVersion": "clear-bootcamp-test-first-accept-window.3",
+    "routes": {
+      "1": "CURRENT_MUTUAL_APP_CONSENT",
+      "2": "CURRENT_DECISION_FULL_120_SECONDS"
+    },
+    "acceptedClaimExpiry": null
+  },
+  "artifactSha256": {
+    "docs/bootcamp-authorization/test-encoding-proposal-v3.json": "7f8729b6774d87de7037928b7624869b9b202dc70e2c19656da3a699b8ed6d96",
+    "src/bootcamp-authorization/test-schema-v3.mjs": "8ae27780c07c4ded615a25e4575843538a7b3c20946f6a73b45bfb6a2aef768f",
+    "src/bootcamp-authorization/test-encoding-v3.mjs": "eb535f3f30e0bee8c1f3e7dff16c202baa72108ae1417f8b0e077870312d3c5a",
+    "src/bootcamp-authorization/TestUnsignedHashProbeV3.sol": "71fb10f8eb38b8f7d3a69164e94c830ce5cc2e1ec432184b337e4f0b472afcbf"
+  },
+  "crossAcceptance": {
+    "environment": "NEW_DETACHED_OFFLINE_SYNTHETIC_CHECKOUT",
+    "baseCommit": "ae88b76744dbbe12c4dc50eac3a0eb61d3b01f01",
+    "mergedCommit": "7a7153fb7e38e7fa647a0bbbdc5a45fc34d6235e",
+    "tests": 272,
+    "fail": 0,
+    "actualSourceRequests": 0,
+    "externalRpc": 0,
+    "hashHelperEvmOnly": true,
+    "paymentTransactions": 0
+  },
+  "requiredConsumerAdapters": [
+    "E1_CURRENT_EVIDENCE_AND_EXCLUSIVE_LEASE_TO_E2_SOURCE_WINDOW",
+    "E3_DURABLE_FIRST_START_PUBLICATION_COUNT_AND_AUTHENTICATED_CONSENT_TO_E2_CURRENT_STATE",
+    "E4_REGISTERED_ALLOCATION_RIGHT_KEY_EPOCH_DOMAIN_TO_E2_CURRENT_STATE",
+    "DURABLE_ONE_TO_ONE_OPAQUE_ID_REGISTRY",
+    "CONSENT_SET_HASH_CANONICAL_RECIPE_WITHOUT_CIRCULAR_AUTHORIZATION_HASH",
+    "PREPARED_COMMAND_NONCE_AND_FINAL_CAS_NOT_BROWSER_SNAPSHOT"
+  ],
+  "boundaries": {
+    "sourceInputsMustComeFromAuthenticatedInternalProviders": true,
+    "preflightResultIsPaymentAuthority": false,
+    "existingV1GatesChanged": false,
+    "e3ImplementationMayProceed": true,
+    "e4BoundaryDesignMayProceed": true,
+    "payoutSignerMayActivateBeforeE3BoundaryAcceptance": false,
+    "productionEnabled": false,
+    "autoMerge": false
+  }
+}

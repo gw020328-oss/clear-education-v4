@@ -85,3 +85,19 @@ E1/E2는 본부가 이번 새 승인으로 기존 세션에 직접 재개 지시
 필수 인수는 양측 동의/120초 지급,1회/600초·옛 동의 거부, meaningful unassessed 이의 차단, 종료와 accept 양순서·epoch/예약/의무 원자성,150+50·다른 예약 보존·중복 의무 거부, 금액/수령인/chain/decision/nonce 변조, 원문/권한 철회, backend 중단 직접 claim, 응답유실/reorg, 두 화면/version·tx확정과 실제 처리/사람개입/가스 계측이다. 미측정 baseline/개선율은 N/A. P0를 고객 실제 환급 사례로 소개하지 않는다.
 
 E0 로컬 검증: 새 운영 reference12 + 기존 P0 reference20 + R2 reference9 = **41/41 PASS**. 120초/600초 경계, 새 판정의 옛 동의/짧아진 기한 거부, 미평가 이의·source 만료·1회 후 오류, MET sequence·150+50 산식과 기존9개 frozen spec 지문을 검사했다. 원본/legacy191개·고정 dependency graph와 diff도 통과했다. 이는 논리 reference이며 실제 서명/contract/원문/DB·지급 인수 결과가 아니다. E1/E2 새 코드 시험을 이 수에 합산하지 않는다.
+
+E0 고정 `67b6a0731f97df98fda7820ab24ed85a57796a83`/profileHash `0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98`의 exact-head CI6/6을 확인했다. E1 PR84/head `6b4b0cf2d847937aebc6da69f9e7df62e926fa50`은 전용111·CI6/6과 원문/최종권한 회귀를 교차 확인해 다음 TEST 단계의 기반으로 인수했다(실제 source 수락0·지급 미활성). E2는 새 v3와 공통 CI 진입점의 고정 head 인수 중이다. 네 기존 세션에 E0 exact commit을 명시해 전달하고 E1/E2 Astra High, Moodle/AI E6 준비 Sol Medium 시작을 확인했다. E2의 과거 작업 응답은 이번 완료로 세지 않고 현재 소유 초안으로 바로잡았다. source/AI 준비는 전체 E6 완료가 아니다.
+
+E0 reference 표시 보강: 새 판정의 published+120이 첫 시작+600과 **정확히 같아도**, 최초 accept가 cap보다 엄격히 앞서야 하므로 기한 경로에는 유효한 수락 시점이 없다. 새 양측 동의의 조기 경로만 cap 이전에 가능하다. profile/기존 v1 의미는 바뀌지 않았고 해당 경계를 추가한 새 reference12/12가 통과했다.
+
+## E1/E2 교차 인수·공통 encoding 고정
+
+E1 PR84/head6b4b0cf와 E2 PR85/head `d9407b06b8a13122a489193119c1899929f83fe4`의 exact-head CI를 각각6/6 확인했다. 별도 detached checkout에서 E0 인수기록 ae88b76과 두 구현을 normal merge하여 **272/272 PASS**(E1 전용111 + v3 구조/예제119 + purehash1 + E0/P0/R2 reference41)를 확인했다. temporary integration head `7a7153fb7e38e7fa647a0bbbdc5a45fc34d6235e`, 외부RPC/실제source/지급0이다. ephemeral pure hash helper는 실행됐으며 새 지급 contract 인수가 아니다. 임시 checkout은 검증 후 정리한다.
+
+[공통 소비자 pins v1](../../specs/bootcamp/hackathon-test-consumer-pins-v1.json)은 E2의 `clear-bootcamp-test-payment-authorization.3`, `BootcampTestPaymentAuthorizationV3`, domain `ClearBootcampTestPayment/3`·salt(instance), 순서 있는24필드·typeHash와 source artifact SHA를 E3/E4의 고정 입력으로 인수한다. 기존 v2의 유한 claimUntil/75초 예제는 그대로 보존하고 새 경로에 재사용하지 않는다. 이 고정은 unsigned encoding의 소비자 합의이며 실제 signer/chain 권한이나 source 검증이 아니다. 기존 proposal artifact의 당시 상태 표기는 고쳐 쓰지 않고 이 별도 pin이 인수 사실을 나타낸다.
+
+E3는 v1 ID→durable opaque registry, 실제 current evidence의 earliest exclusive bound→E2 sourceWindow, 최초 start/publication/count·새 동의·의미 있는 이의→trusted current state, E4의 exact confirmed allocation/key/epoch/domain을 명시 adapter로 연결한다. server snapshot을 browser body/receipt hash로 대체하지 않는다. 불변 decisionHash는 그대로 운반하고 wrapper.current를 별도 검사한다. nonce/source/권한/current/CAS의 재검사와 저장은 E1 단일 ledger 관례를 보존한다.
+
+consentSetHash의 canonical recipe는 E3가 두 역할의 실제 인증 receipt·exact decision/recipient/token/amount/allocation·profile/기본 review window를 묶어 고정한다. 나중에 결정되는 authorization nonce/issuedAt/expiresAt를 동의 본문에 미리 요구하거나, consentSetHash와 final deadlinePolicyHash를 서로 포함시키는 순환 hash를 만들지 않는다. route2의 빈/부분 동의도 명시 tagged set과 이의 snapshot으로 구별한다. E4는 signed hash만 보지 않고 등록된 app/target/firstStart/cap/source cutoff·역할·reserved amount와 비교해야 한다.
+
+E3의 funding/chain provider는 기본 NOT_IMPLEMENTED/blocked이며 trusted port의 fixture를 실제 배정으로 표시하지 않는다. E4 경계 설계·type/role test 준비는 E1/E2 후 병행할 수 있고, payout signer/등록·송신 활성화는 E3 경계 인수 뒤에 한다. 수락 전 current/기한 차단과 수락 후 고정 claim 권리를 두 화면/worker에서도 분리한다. accepted claim에는 원문 lease·현재 source/key/epoch/새 동의를 다시 요구하지 않는다. 실제 자금/서명/종료·복구는 E4/E5 인수 결과를 따로 기록한다.
