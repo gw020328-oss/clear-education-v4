@@ -1,5 +1,7 @@
 # Python 부트캠프 MVP 추가 계약·실행 계획 revision 2
 
+2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.
+
 추가 확정: [계획 revision3·권리 확정 기준](PYTHON_BOOTCAMP_R3.ko.md). 사용자가 canonical 체인 기록 순서에 따라 먼저 accept된 고정 권리를 보존하는 B안을 선택했다. G1만 해결하며 기존 기한/회수·배정 등 관문과 지급 차단은 유지한다.
 
 2026-10-17 사용자 추가 승인에 따른 정본이다. P0 `03fa64324ef9cc2ce4fb442a612329a7b1285677`/PR78의 네 조건 AND·100 TEST(100000000 atoms, decimals6)와 기존 P1/P2를 유지한다. [P0 정책·기록](PYTHON_BOOTCAMP_P0.ko.md)은 그대로 기초 계약이다. 이 문서와 [추가 계약 JSON](../../specs/bootcamp/p0-addendum-r2.json)은 `clear-bootcamp-mvp-addendum.2`/계획 revision2다. 아래 기능은 **실제 MVP 개발 백로그**이며 문서/합성 산식 예제로 구현 완료를 주장하지 않는다. P3/P4/P5를 계획에서 제외하던 종전 범위 문구는 이번 단계별 개발 승인으로 갱신한다. 상용 실자금·배포·자동 병합은 승인 범위 밖이다.
