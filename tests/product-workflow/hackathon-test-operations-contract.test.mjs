@@ -38,6 +38,9 @@ test('late correction cannot use a shortened deadline but may obtain fresh mutua
  const current={decisionId:'decision-late',revision:2,hash:'0x'+'3'.repeat(64)};
  const v={...f(),now:1590,history:[...f().history,{...current,firstStartedAt:1000,publishedAt:1550}],reverificationCount:1};
  assert.equal(review(v).path,'FULL_120_DEADLINE_ROUTE_UNAVAILABLE');assert.equal(review({...v,consents:consents(current)}).path,'EARLY_CONSENT_CANDIDATE');
+ const exact={...v,history:[v.history[0],{...v.history[1],publishedAt:1480}],now:1599};
+ assert.equal(review(exact).confirmAt,1600);assert.equal(review(exact).path,'FULL_120_DEADLINE_ROUTE_UNAVAILABLE');
+ assert.equal(accept({...exact,now:1600,authorizationExpiresAt:1700,sourceValidUntilExclusive:1700}).eligible,false);
 });
 test('material unassessed or unresolved objection blocks both consent and deadline routes',()=>{
  for(const k of ['materialUnassessedObjection','validUnresolvedObjection'])for(const c of [[],consents(target)])assert.equal(review({...f(),[k]:true,consents:c}).path,'OBJECTION_BLOCKED');

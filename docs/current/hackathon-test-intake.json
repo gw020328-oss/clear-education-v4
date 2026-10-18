@@ -13,9 +13,9 @@
     {
       "stage": "E0",
       "scope": "COMMON_POLICY_CONTRACT_AND_CROSS_INTAKE",
-      "status": "POLICY_AND_REFERENCE_FIXED_PENDING_EXACT_COMMIT_CI",
+      "status": "ACCEPTED_POLICY_REFERENCE_ONLY",
       "requestedSetting": "gpt-6.1-sol/high",
-      "acceptedHead": null,
+      "acceptedHead": "67b6a0731f97df98fda7820ab24ed85a57796a83",
       "dependsOn": [],
       "tests": {
         "newOperationsReference": 12,
@@ -26,26 +26,49 @@
         "preservedFrozenSpecFiles": 9,
         "sourceFilesUnmodified": true,
         "preservation": "191_SOURCE_REFERENCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
-        "runtimeAuthorityTested": false
-      }
+        "runtimeAuthorityTested": false,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "publicHistory": "278_COMMITS_1551_BLOBS_FINDINGS_0"
+      },
+      "referenceClarification": "CONFIRMATION_AT_CAP_CANNOT_BE_A_USABLE_DEADLINE_ROUTE; FIRST_ACCEPT_WAS_ALREADY_EXCLUSIVE"
     },
     {
       "stage": "E1",
       "scope": "PRIVACY_AUTH_CURRENT_CAS_CONSUMERS",
-      "status": "OWNER_RECOVERY_IN_PROGRESS",
+      "status": "ACCEPTED_FOR_NEXT_TEST_STAGE_NOT_REAL_SOURCE_OR_PAYMENT",
       "requestedSetting": "gpt-6-astra/high",
-      "acceptedHead": null,
+      "acceptedHead": "6b4b0cf2d847937aebc6da69f9e7df62e926fa50",
       "dependsOn": [],
-      "tests": null
+      "tests": {
+        "dedicatedPass": 111,
+        "relatedWorkflowAndApplicationReported": 411,
+        "producerReported": 241,
+        "e0ReferenceReported": 41,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "actualSourceAcceptances": 0,
+        "newPaymentTransactions": 0,
+        "review": "GUARDED_RAW_ACCESS_AND_FINAL_AUTH_SCOPE_CURRENT_RECHECKS_MATCH_FIXED_SOURCE_AND_REGRESSIONS"
+      },
+      "implementationHead": "bd174f2529a8ee9d10cbdd78694996e1719a9711",
+      "pullRequest": 84
     },
     {
       "stage": "E2",
       "scope": "UNSIGNED_TYPE_DOMAIN_INTEGER_DEADLINE",
-      "status": "OWNER_RECOVERY_IN_PROGRESS",
+      "status": "V3_CANDIDATE_UNDER_CROSS_INTAKE_AND_CI_WIRING",
       "requestedSetting": "gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [],
-      "tests": null
+      "tests": {
+        "v3UnitAndExampleReported": 119,
+        "pureHashProbeReported": 1,
+        "e0ReferenceReported": 12,
+        "sourceAuthentication": false,
+        "signatures": 0,
+        "paymentTransactions": 0,
+        "remoteCi": "PENDING_FINAL_WIRED_HEAD"
+      },
+      "candidateHead": "5c7049e"
     },
     {
       "stage": "E3",
@@ -86,7 +109,7 @@
     {
       "stage": "E6",
       "scope": "REAL_SOURCE_TWO_VIEW_LOCAL_E2E",
-      "status": "NOT_STARTED",
+      "status": "SOURCE_AND_AI_PREPARATION_ACTIVE_MAIN_E2E_NOT_ACCEPTED",
       "requestedSetting": "dedicated Moodle/AI gpt-6.1-sol/medium; common API gpt-6.1-sol/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -134,5 +157,39 @@
     "existingV1GatesChanged": false
   },
   "usageFailureHandling": "OLD_USAGE_FAILURE_IS_NOT_CODE_FAILURE; RECORD_FRESH_FAILURE_WITHOUT_BLIND_REPEAT",
-  "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98"
+  "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "actualDispatch": {
+    "inputCommit": "67b6a0731f97df98fda7820ab24ed85a57796a83",
+    "apiE1": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "E1 privacy/auth/current/CAS intake"
+    },
+    "reclaimE2": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "outOfScopeHistoricalReplyCountedAsCompletion": false,
+      "sourceScope": "E2 unsigned v3 profile migration"
+    },
+    "moodleE6Preparation": {
+      "requestedModel": "gpt-6.1-sol",
+      "thinking": "medium",
+      "accepted": true,
+      "started": true
+    },
+    "aiE6Preparation": {
+      "requestedModel": "gpt-6.1-sol",
+      "thinking": "medium",
+      "accepted": true,
+      "started": true,
+      "paidCallsAuthorizedInPreparation": 0
+    },
+    "newSessionsOrSubagents": 0,
+    "activeTurnsInterrupted": false,
+    "additionalHeadquartersMessageSent": false
+  }
 }

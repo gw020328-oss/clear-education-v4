@@ -85,3 +85,7 @@ E1/E2는 본부가 이번 새 승인으로 기존 세션에 직접 재개 지시
 필수 인수는 양측 동의/120초 지급,1회/600초·옛 동의 거부, meaningful unassessed 이의 차단, 종료와 accept 양순서·epoch/예약/의무 원자성,150+50·다른 예약 보존·중복 의무 거부, 금액/수령인/chain/decision/nonce 변조, 원문/권한 철회, backend 중단 직접 claim, 응답유실/reorg, 두 화면/version·tx확정과 실제 처리/사람개입/가스 계측이다. 미측정 baseline/개선율은 N/A. P0를 고객 실제 환급 사례로 소개하지 않는다.
 
 E0 로컬 검증: 새 운영 reference12 + 기존 P0 reference20 + R2 reference9 = **41/41 PASS**. 120초/600초 경계, 새 판정의 옛 동의/짧아진 기한 거부, 미평가 이의·source 만료·1회 후 오류, MET sequence·150+50 산식과 기존9개 frozen spec 지문을 검사했다. 원본/legacy191개·고정 dependency graph와 diff도 통과했다. 이는 논리 reference이며 실제 서명/contract/원문/DB·지급 인수 결과가 아니다. E1/E2 새 코드 시험을 이 수에 합산하지 않는다.
+
+E0 고정 `67b6a0731f97df98fda7820ab24ed85a57796a83`/profileHash `0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98`의 exact-head CI6/6을 확인했다. E1 PR84/head `6b4b0cf2d847937aebc6da69f9e7df62e926fa50`은 전용111·CI6/6과 원문/최종권한 회귀를 교차 확인해 다음 TEST 단계의 기반으로 인수했다(실제 source 수락0·지급 미활성). E2는 새 v3와 공통 CI 진입점의 고정 head 인수 중이다. 네 기존 세션에 E0 exact commit을 명시해 전달하고 E1/E2 Astra High, Moodle/AI E6 준비 Sol Medium 시작을 확인했다. E2의 과거 작업 응답은 이번 완료로 세지 않고 현재 소유 초안으로 바로잡았다. source/AI 준비는 전체 E6 완료가 아니다.
+
+E0 reference 표시 보강: 새 판정의 published+120이 첫 시작+600과 **정확히 같아도**, 최초 accept가 cap보다 엄격히 앞서야 하므로 기한 경로에는 유효한 수락 시점이 없다. 새 양측 동의의 조기 경로만 cap 이전에 가능하다. profile/기존 v1 의미는 바뀌지 않았고 해당 경계를 추가한 새 reference12/12가 통과했다.
