@@ -34,8 +34,8 @@ export function referenceReviewVector(v){
  else if(v.materialUnassessedObjection||v.validUnresolvedObjection)path='OBJECTION_BLOCKED';
  else if(v.newValidError)path='REVERIFICATION_REQUIRED';
  else if(mutual)path='EARLY_CONSENT_CANDIDATE';
- else if(confirmAt<=capAt&&v.now>=confirmAt)path='DEADLINE_CANDIDATE';
- else if(confirmAt>capAt)path='FULL_120_DEADLINE_ROUTE_UNAVAILABLE';
+ else if(confirmAt<capAt&&v.now>=confirmAt)path='DEADLINE_CANDIDATE';
+ else if(confirmAt>=capAt)path='FULL_120_DEADLINE_ROUTE_UNAVAILABLE';
  return {kind:'REFERENCE_ONLY',path,capAt,confirmAt,mutualCurrentConsent:mutual};
 }
 export function referenceFirstAcceptVector(v){
