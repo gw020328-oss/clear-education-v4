@@ -51,7 +51,9 @@ export function createE6LeasedReflectionSession(resolveCurrent,{nowMs=()=>Date.n
     catch(e){invalidate(job,codes.includes(e.message)?e.message:'E6_CONTEXT_CHANGED');return false;}
   }
   function view(job){
-    const current=checkCurrent(job),observation=job.receipt?job.core.consume(job.receipt):null;
+    let current=checkCurrent(job),observation=job.receipt?job.core.consume(job.receipt):null;
+    if(observation&&!observation.current){invalidate(job,'E6_CONTEXT_CHANGED');current=false;}
+    if(current&&!checkCurrent(job)){current=false;observation=job.receipt?job.core.consume(job.receipt):null;}
     const data={version:'clear-e6-reflection-lease-view.1',operationsProfileHash:E6_OPERATIONS_HASH,
       contextHash:reflectionContextHash(job.context),decisionRef:job.decisionRef,messageFormat:job.messageFormat,
       locationBasis:'ORIGINAL_REFLECTION_BODY_UTF16',normalizationApplied:false,leaseUntilMs:job.capMs,

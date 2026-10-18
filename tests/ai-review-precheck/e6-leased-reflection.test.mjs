@@ -24,6 +24,10 @@ test('E0 wrapper consumes a borrowed body once and releases without disposing sh
  assert.equal(x.s.consume(r).current,true);assert.equal(x.reads,1);assert.equal(JSON.stringify(r).includes(x.f.text),false);
  assert.equal(r.observation.context.version,'clear-bootcamp-observation-context.1');assert.equal(r.observation.usableForAcceptance,false);
  x.s.dispose();assert.equal(x.s.consume(r).current,false);assert.equal(x.releases,1);
+ const y=fixture();let armed=false,reads=0;
+ const raced=createE6LeasedReflectionSession(()=>{if(armed&&++reads===3)y.state.rawAvailable=false;return y.state;},{nowMs:()=>y.f.clock.value});
+ const prior=await raced.review(y.input(),reflectionMock(y.f));armed=true;const revoked=raced.consume(prior);
+ assert.equal(revoked.current,false);assert.equal(revoked.observation.current,false);
 });
 test('HTML body uses original raw UTF-16 offsets; no strip, entity decode, normalized fingerprint or new title region',async()=>{
  const plain=bootcampFixture(),body='<p>'+plain.text.split('\n').join('</p><p>')+'</p>',x=fixture({text:body,messageFormat:1});
