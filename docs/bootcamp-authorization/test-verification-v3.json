@@ -1,0 +1,94 @@
+{
+  "version": "clear-bootcamp-e2-unsigned-verification.1",
+  "date": "2026-10-18",
+  "scope": "UNSIGNED_HASH_AND_PREFLIGHT_ONLY",
+  "e0Commit": "67b6a0731f97df98fda7820ab24ed85a57796a83",
+  "v2PreservationCommit": "ebda28d",
+  "e0MergeCommit": "de24bb2",
+  "modelRequest": "GPT-6 Astra / High",
+  "actualModelVerified": false,
+  "runtime": {
+    "node": "24.21.0",
+    "ethers": "6.17.0",
+    "solc": "0.8.30",
+    "ganache": "7.9.2"
+  },
+  "latestResults": {
+    "v3UnitAndExample": 119,
+    "v3PureHashProbe": 1,
+    "e0PolicyReference": 12,
+    "totalDistinctCurrent": 132,
+    "fail": 0,
+    "note": "Across latest relevant runs; helper ABI unchanged after first passing run. E0 41 elsewhere includes P0+R2 29, which are in prior72 here."
+  },
+  "priorResults": {
+    "v2Dedicated": 43,
+    "p0Reference": 20,
+    "r2Reference": 9,
+    "total": 72,
+    "rerunWithoutChange": false
+  },
+  "firstV3Attempt": {
+    "pass": 111,
+    "fail": 2,
+    "reason": "Mutation tests attempted to write frozen fixture record; cloned fixture now reaches rejection assertion."
+  },
+  "currentHelperExecution": {
+    "temporaryInMemoryEvm": true,
+    "pureProbeDeployments": 1,
+    "pureCalls": 90,
+    "vectors": 30,
+    "authorizationSignatures": 0,
+    "paymentTransactions": 0,
+    "externalRpc": 0,
+    "persistentEvmTested": false
+  },
+  "notExecuted": [
+    "REAL_SOURCE_ACCEPTANCE",
+    "APP_CONSENT_AUTHENTICATION",
+    "SIGNER_KEY_LIFECYCLE",
+    "VAULT_ACCEPT_CLAIM",
+    "ATOMIC_TERMINATION_RELEASE",
+    "FUNDED_150_PLUS_50_RUNTIME",
+    "CANONICAL_RACE_REORG",
+    "BACKEND_STOP_DIRECT_CLAIM"
+  ],
+  "preservation": {
+    "result": "PASS",
+    "mode": "PORTABLE_CONTENT",
+    "originalFingerprintsPreserved": true,
+    "publishedReferences": 4,
+    "schemaVersion": 4,
+    "sourceReferenceFiles": 191,
+    "profiles": 3,
+    "runtime": "24.21.0",
+    "dependencyGraphPreserved": true,
+    "pendingManifestsNotClaimable": true
+  },
+  "commonConsumerImports": 0,
+  "commonCiWiringAdded": false,
+  "gates": {
+    "usableForIssuance": false,
+    "paymentAllowed": false,
+    "productionEnabled": false
+  },
+  "sourceFileSha256": {
+    "src/bootcamp-authorization/TestUnsignedHashProbeV3.sol": "71fb10f8eb38b8f7d3a69164e94c830ce5cc2e1ec432184b337e4f0b472afcbf",
+    "src/bootcamp-authorization/test-encoding-v3.mjs": "eb535f3f30e0bee8c1f3e7dff16c202baa72108ae1417f8b0e077870312d3c5a",
+    "src/bootcamp-authorization/test-schema-v3.mjs": "8ae27780c07c4ded615a25e4575843538a7b3c20946f6a73b45bfb6a2aef768f",
+    "tests/bootcamp-authorization/test-build-probe-v3.mjs": "bbfd05840f19c2df8af2af2cbf56a492ee6d384533bb4d05e5ba9a9eb11e50f7",
+    "tests/bootcamp-authorization/test-encoding-v3.test.mjs": "b96cc9627ffa586425be65afdf1cff5cf438f3b8014b72bc3e4f14b86011de19",
+    "tests/bootcamp-authorization/test-export-example-v3.mjs": "1bec6ad6d4e00b0162b1a3d31656aceac4c177f4205d423ac92b8c9494e3644e",
+    "tests/bootcamp-authorization/test-fixture-v3.mjs": "96b9f1fb7c6d525bf633cd3d9cbd1a0eb8911e63760c49e1708c05199bef2206",
+    "tests/bootcamp-authorization/test-hash-probe-v3.test.mjs": "d3d6ae3113f2136003e1371e9b0a62352fcadeb1582675817cee0c46d9dd2ca3",
+    "tests/bootcamp-authorization/test-manual-hash-v3.mjs": "381c5d94ed8c4c7aa44a8c7c28dce7dfdca194e46fc9102d3354508ea1d462e4"
+  },
+  "localLogSha256": {
+    "tests-first.log": "5deb9cfb250c841506858c192240d793c1573a4665709ba5978e1561698ea8e4",
+    "v3-first.log": "b1200f35f52e53d474396af0154c7b4002164628d3f3f0aa63cdafddec3529c8",
+    "v3-policy-final.log": "302bf2cdd14bc5e12af0f716c176d93ef269ae133c8a978105239551224514f3",
+    "v3-unit-final.log": "38fe9b3887426b94e8c87f4f1870104bcab81900d6dba3c465887d66b28f7819",
+    "preservation-final.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0"
+  },
+  "sharedCi": "Check exact PR head; these local E2 test results are not represented by shared CI."
+}

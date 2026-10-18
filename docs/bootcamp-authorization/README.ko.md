@@ -23,3 +23,7 @@
 ```
 
 구 v2 helper에는 pure 함수3개만 있고 accept/claim/role/key/funding 상태는 없다. 이 EVM 시험은 새 금고 지급 시험이 아니다. 이 디렉터리의 후속 결과 문서가 새 TEST 정책 인수와 실제 미결을 별도로 기록한다.
+
+## 확정 TEST 정책 후속
+
+E0 `67b6a073`을 인수한 새 [TEST v3 인코딩·검증 및 E1/E3/E4 인계](TEST_V3_INTAKE.ko.md)를 따른다. 구 v2 ABI와 예제는 보존하고 새 domain/type/window를 별도로 정의했다. 새 정책의 G2~G6 선택을 과거 OPEN 표시로 되돌리지 않는다. unsigned 구조·해시 결과와 실제 서명/지급 활성화는 구분한다.
