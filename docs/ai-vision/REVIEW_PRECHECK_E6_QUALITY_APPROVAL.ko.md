@@ -1,5 +1,7 @@
 # E6 Python 회고 실제 품질 평가 승인용 계획 — 2026-10-19
 
+후속: [기본 차단 전용 실행기](REVIEW_PRECHECK_E6_RUNNER.ko.md)를 별도 준비했다. 기존 plan/corpus/gold/request 지문은 보존하며 새 승인·비용 근거가 없으므로 실제 실행/키 조회는 계속0이다. 과거 일반 후기 텍스트4/이미지4 승인 답변을 이 Python 텍스트8건에 전용하지 않는다.
+
 **NOT_APPROVED / ACTUAL_BLOCKED / MODEL_QUALITY=N/A.** 이번 작업은 개인정보 없는 고정 corpus/gold·요청·비용 계획과 오프라인 시험만 준비했다. 키 읽기·모델 목록 API·countTokens·유료 generation은 모두0이다. 기존 일반 후기8건의 실제 평가/원장을 재사용하지 않았고 실제 Moodle 원문/계정/지갑/증명/토큰을 복사하지 않았다. 실제 평가는 새 사용자 승인 이후 별도 실행 단위다.
 
 검토할 정본은 본 문서와 `tests/ai-review-precheck/e6-python-approval-plan.json`이다. 입력은 `e6-python-corpus.json`, 정답은 `e6-python-gold.json`, 생성기는 `prepare-e6-quality-approval.mjs`/`e6-quality-plan.mjs`다. 모두 기존 E6 branch의 담당 경로에 있다. 원래 PR72/f98e104와 PR86/d7a6f30의 lease/current/false gates를 바꾸지 않았다. 요청/권장은 Sol/Medium이며 현재 턴의 모델을 별도 전환/조회하지 않았다.
