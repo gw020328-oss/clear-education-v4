@@ -76,7 +76,7 @@
     {
       "stage": "E3",
       "scope": "120_1_600_PROCEDURE_AND_TWO_VIEW_DTO",
-      "status": "NOT_STARTED",
+      "status": "IMPLEMENTATION_ACTIVE_TRUSTED_FUNDING_PORT_DEFAULT_BLOCKED",
       "requestedSetting": "gpt-6.1-sol/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -88,7 +88,7 @@
     {
       "stage": "E4",
       "scope": "TEST_CONTRACT_FUNDING_ROLES_SIGNER_TERMINATION",
-      "status": "NOT_STARTED",
+      "status": "BOUNDARY_NON_PAYOUT_COMPONENT_PREPARATION_ACTIVE_E3_INTAKE_PENDING",
       "requestedSetting": "gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -112,7 +112,7 @@
     {
       "stage": "E6",
       "scope": "REAL_SOURCE_TWO_VIEW_LOCAL_E2E",
-      "status": "SOURCE_AND_AI_PREPARATION_ACTIVE_MAIN_E2E_NOT_ACCEPTED",
+      "status": "SOURCE_AND_AI_PREPARATION_ACCEPTED_MAIN_E2E_NOT_ACCEPTED",
       "requestedSetting": "dedicated Moodle/AI gpt-6.1-sol/medium; common API gpt-6.1-sol/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -120,15 +120,35 @@
       ],
       "tests": null,
       "preparation": {
-        "moodle": "ACTIVE_NEW_OWNED_LOCAL_FIXTURE",
+        "moodle": {
+          "pr": 87,
+          "acceptedHead": "22640db091d5d3ac5d8a3535280b393d6f618d65",
+          "status": "LOCAL_SYNTHETIC_SOURCE_PREPARATION_ACCEPTED_NOT_COMMON_CONSUMER_INTEGRATION",
+          "sourceAndLeaseCases": 14,
+          "offlineCases": 250,
+          "remoteCi": "6_OF_6_SUCCESS_DEDICATED_SOURCE_TESTS_SEPARATE",
+          "environmentRef": "e6-20261018-run1",
+          "loopbackPort": 18768,
+          "mappingReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "designatedTargetsPreservedAtReportedCheckpoint": true,
+          "tokensRemainingAtReportedCheckpoint": 0,
+          "rawHandlesDisposedAtReportedCheckpoint": true,
+          "defaultPreparationQuerySeconds": 45,
+          "perCallCredentialSeconds": 60,
+          "credentialTtlExtendsUserLease": false,
+          "actualCommonApiAcceptance": false
+        },
         "ai": {
           "pr": 86,
-          "candidateHead": "d7a6f30",
-          "status": "OFFLINE_BORROWED_LEASE_PREPARATION_REPORTED_PENDING_CROSS_INTAKE",
+          "acceptedHead": "d7a6f302378818430212aabeec2a9ddb8c55156d",
+          "status": "OFFLINE_BORROWED_LEASE_PREPARATION_ACCEPTED_NOT_COMMON_CONSUMER_INTEGRATION",
           "focusedReported": 8,
           "regressionReported": 411,
           "paidCalls": 0,
-          "actualModelQuality": "N/A"
+          "actualModelQuality": "N/A",
+          "remoteCi": "6_OF_6_SUCCESS_DEDICATED_FOCUSED_TESTS_SEPARATE",
+          "actualCommonApiAcceptance": false,
+          "nextUnit": "CONCRETE_SYNTHETIC_CORPUS_AND_APPROVAL_PLAN_PREPARATION_NO_KEY_OR_MODEL_CALLS"
         }
       }
     },
@@ -202,6 +222,23 @@
       "accepted": true,
       "started": true,
       "paidCallsAuthorizedInPreparation": 0
+    },
+    "apiE3": {
+      "inputCommit": "67c7bc8450484fb4d5545c6e36a672e497467174",
+      "requestedModel": "gpt-6.1-sol",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "DURABLE_PROCEDURE_CONSENT_OBJECTION_AND_V3_ADAPTER_NO_PAYOUT"
+    },
+    "reclaimE4Boundary": {
+      "inputCommit": "67c7bc8450484fb4d5545c6e36a672e497467174",
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "ROLE_FUNDING_RESERVATION_TERMINATION_NON_PAYOUT_COMPONENTS",
+      "payoutSignerMayActivateBeforeE3BoundaryAcceptance": false
     },
     "newSessionsOrSubagents": 0,
     "activeTurnsInterrupted": false,

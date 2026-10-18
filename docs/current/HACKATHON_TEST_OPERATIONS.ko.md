@@ -80,13 +80,13 @@ E1/E2는 본부가 이번 새 승인으로 기존 세션에 직접 재개 지시
 
 ## 완료 증거와 현재 상태
 
-현재 E0는 정책/계약을 고정하는 단계이고 E1/E2 복구 인수는 진행 중이다. 미커밋 초안·당시81개 보고·과거 unsigned hash 초안을 최종 인수 완료로 세지 않는다. E3~E7의 이후 실제 dispatch·환경/실패/시험/정확 HEAD는 [실행 인수표](hackathon-test-intake.json)와 PR exact-head 결과로 갱신한다. 정책 확정·UNIT/REFERENCE·SYNTHETIC_INTEGRATION·REAL_SOURCE·LOCAL_CHAIN·TESTNET_E2E 분모를 분리한다.
+E0 정책과 E1/E2 기반은 아래 고정 head로 인수했고 E3 구현·E4 비지급 경계 준비를 실제 시작했다. E6 source/AI 사전준비도 아래 범위로 인수했으며 전체 E6 수락은 아니다. 미커밋 초안·당시81개 보고·과거 unsigned hash 초안을 최종 인수 완료로 세지 않는다. 이후 dispatch·환경/실패/시험/정확 HEAD는 [실행 인수표](hackathon-test-intake.json)와 PR exact-head 결과로 갱신한다. 정책 확정·UNIT/REFERENCE·SYNTHETIC_INTEGRATION·REAL_SOURCE·LOCAL_CHAIN·TESTNET_E2E 분모를 분리한다.
 
 필수 인수는 양측 동의/120초 지급,1회/600초·옛 동의 거부, meaningful unassessed 이의 차단, 종료와 accept 양순서·epoch/예약/의무 원자성,150+50·다른 예약 보존·중복 의무 거부, 금액/수령인/chain/decision/nonce 변조, 원문/권한 철회, backend 중단 직접 claim, 응답유실/reorg, 두 화면/version·tx확정과 실제 처리/사람개입/가스 계측이다. 미측정 baseline/개선율은 N/A. P0를 고객 실제 환급 사례로 소개하지 않는다.
 
 E0 로컬 검증: 새 운영 reference12 + 기존 P0 reference20 + R2 reference9 = **41/41 PASS**. 120초/600초 경계, 새 판정의 옛 동의/짧아진 기한 거부, 미평가 이의·source 만료·1회 후 오류, MET sequence·150+50 산식과 기존9개 frozen spec 지문을 검사했다. 원본/legacy191개·고정 dependency graph와 diff도 통과했다. 이는 논리 reference이며 실제 서명/contract/원문/DB·지급 인수 결과가 아니다. E1/E2 새 코드 시험을 이 수에 합산하지 않는다.
 
-E0 고정 `67b6a0731f97df98fda7820ab24ed85a57796a83`/profileHash `0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98`의 exact-head CI6/6을 확인했다. E1 PR84/head `6b4b0cf2d847937aebc6da69f9e7df62e926fa50`은 전용111·CI6/6과 원문/최종권한 회귀를 교차 확인해 다음 TEST 단계의 기반으로 인수했다(실제 source 수락0·지급 미활성). E2는 새 v3와 공통 CI 진입점의 고정 head 인수 중이다. 네 기존 세션에 E0 exact commit을 명시해 전달하고 E1/E2 Astra High, Moodle/AI E6 준비 Sol Medium 시작을 확인했다. E2의 과거 작업 응답은 이번 완료로 세지 않고 현재 소유 초안으로 바로잡았다. source/AI 준비는 전체 E6 완료가 아니다.
+E0 고정 `67b6a0731f97df98fda7820ab24ed85a57796a83`/profileHash `0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98`의 exact-head CI6/6을 확인했다. E1 PR84/head `6b4b0cf2d847937aebc6da69f9e7df62e926fa50`은 전용111·CI6/6과 원문/최종권한 회귀를 교차 확인해 다음 TEST 단계의 기반으로 인수했다(실제 source 수락0·지급 미활성). E2의 새 v3와 공통 CI 진입점도 아래 exact head로 인수했다. 네 기존 세션에 E0 exact commit을 명시해 전달하고 E1/E2 Astra High, Moodle/AI E6 준비 Sol Medium 시작을 확인했다. E2의 과거 작업 응답은 이번 완료로 세지 않고 현재 소유 초안으로 바로잡았다. source/AI 준비는 전체 E6 완료가 아니다.
 
 E0 reference 표시 보강: 새 판정의 published+120이 첫 시작+600과 **정확히 같아도**, 최초 accept가 cap보다 엄격히 앞서야 하므로 기한 경로에는 유효한 수락 시점이 없다. 새 양측 동의의 조기 경로만 cap 이전에 가능하다. profile/기존 v1 의미는 바뀌지 않았고 해당 경계를 추가한 새 reference12/12가 통과했다.
 
@@ -101,3 +101,15 @@ E3는 v1 ID→durable opaque registry, 실제 current evidence의 earliest exclu
 consentSetHash의 canonical recipe는 E3가 두 역할의 실제 인증 receipt·exact decision/recipient/token/amount/allocation·profile/기본 review window를 묶어 고정한다. 나중에 결정되는 authorization nonce/issuedAt/expiresAt를 동의 본문에 미리 요구하거나, consentSetHash와 final deadlinePolicyHash를 서로 포함시키는 순환 hash를 만들지 않는다. route2의 빈/부분 동의도 명시 tagged set과 이의 snapshot으로 구별한다. E4는 signed hash만 보지 않고 등록된 app/target/firstStart/cap/source cutoff·역할·reserved amount와 비교해야 한다.
 
 E3의 funding/chain provider는 기본 NOT_IMPLEMENTED/blocked이며 trusted port의 fixture를 실제 배정으로 표시하지 않는다. E4 경계 설계·type/role test 준비는 E1/E2 후 병행할 수 있고, payout signer/등록·송신 활성화는 E3 경계 인수 뒤에 한다. 수락 전 current/기한 차단과 수락 후 고정 claim 권리를 두 화면/worker에서도 분리한다. accepted claim에는 원문 lease·현재 source/key/epoch/새 동의를 다시 요구하지 않는다. 실제 자금/서명/종료·복구는 E4/E5 인수 결과를 따로 기록한다.
+
+## E3/E4 시작·E6 사전준비 인수
+
+공통 pin commit `67c7bc8450484fb4d5545c6e36a672e497467174`은 exact-head CI6/6을 확인했고 E3 Sol/High와 E4 Astra/High에 전달했다. E3는 같은 ledger의 절차/동의/이의·v3 adapter를 구현 중이다. E4는 지급 함수가 없는 역할·재원·예약·종료 component 준비이며 E3 경계 인수 전 payout signer는 계속 비활성이다. 새 세션/서브에이전트·진행 턴 중단·main/develop merge는 없다.
+
+Moodle PR87/head `22640db091d5d3ac5d8a3535280b393d6f618d65`는 전용 source/lease14·offline250 보고와 문서/metadata/CI6/6을 확인해 **새 소유 격리 원천의 사전준비**로 인수했다. 새 loopback18768/environment `e6-20261018-run1`/mappingRevision1은 기존 lab과 다르다. 보고 checkpoint에서 지정 활동·과제·회고를 보존하고 소유 container stop/start 후 재수집을 확인했으며 활성 token0·collector handle 폐기다. 이 관측을 영구 ready나 공통 API/전체4조건 수락으로 전용하지 않는다.
+
+source의 비동기 `getRaw`는 매번 실제 probe하고 기존 receipt·관측시각·expiry를 연장하지 않는다. 기존 E1 offline-only 동기 getter에 그대로 끼우지 않는다. 후속 E6에서 API 소유자가 auth/scope/current/CAS·비동기 원문 접근을 명시 연결한다. source의 매 호출60초 credential은 사용자 auth/raw/query lease와 별개이며, 사전준비 기본 query45초는 승인된120초 확인창을 대체하지 않는다. 실제 route에는 source300초와 사용자 최소 lease 안에서 충분한 새 query를 준비하고 옛 decision/source 시각 갱신으로 수명을 늘리지 않는다.
+
+AI PR86/head `d7a6f302378818430212aabeec2a9ddb8c55156d`는 집중8·회귀411 보고와 문서/CI6/6을 확인해 **borrowed lease 오프라인 사전준비**로 인수했다. `release`는 borrowed 참조만 놓고 shared owner의 dispose와 구분한다. HTML 원문 UTF-16 위치와 normalized 위치, producer domain hash와 raw UTF-8 SHA256을 구분한다. lease 축소/철회·새 source/decision·늦은 응답은 무효화하며 재검증 횟수나600초가 그 무효화를 막지 않는다. 실제 공통 연결·실제 모델 품질은 N/A, 새 키 조회·유료 호출0이다.
+
+두 전용 검사는 기본 원격 CI 자동 대상과 분리해 표시한다. 다음 AI 단위는 개인정보 없는 고정8사례 corpus/gold·prompt/profile/hash·현재 공식 모델/가격·요청/토큰/US$0.05 상한 제안의 승인용 준비다. 실제 generation/countTokens·키 읽기는 승인 전 실행하지 않는다. 전체 E6는 E3~E5 및 실제 source/trust·안전한 collection과 별도 인수한다.
