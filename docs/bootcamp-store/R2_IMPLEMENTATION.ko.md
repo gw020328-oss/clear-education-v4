@@ -13,6 +13,7 @@
 | AI PR72 | `f98e1040c01034b59fba7f1d5fe1c230965d628a`, original-body reflection session |
 | R2 PR78 | `69d6dc80caaf2bde963385e176068e3a0293e6b3`, 별도 v2 projection/metric |
 | R3 PR78 | `733fe693f4fd2e16977b0c52ef88e35ee9687f2c`, G1 canonical accept/cancel 순서 |
+| E0 TEST 운영 PR78 | `67b6a0731f97df98fda7820ab24ed85a57796a83`, `clear-hackathon-test-operations.1` decision rev1 / repo planrev4 |
 
 위 입력은 선별 복사 없이 normal merge했다. 자체 변경은 `src/bootcamp/`, `tests/bootcamp-store/`, workflow test 진입점, `docs/bootcamp-store/`와 기존 CI의 pinned P1 dependency 설치 한 줄이다. producer/web/frozen specs/docs/current/자금 코드는 수정하지 않는다. develop 대상 Draft에 선행 #74/#78/#79/#71/#72/#80 이력이 포함된다. Draft 생성은 선행 PR 병합이나 독립 인수 완료가 아니다.
 
@@ -76,11 +77,11 @@ v2 metric wire는 R2 exact fields만 쓴다. ID/본문 충돌과 새 ID의 같�
 
 ## E3 인계와 미수락
 
-사용자가 확정한 `clear-hackathon-test-operations.1` 문서를 읽었다. 새 120초·새 근거 재검증 1회·최초 절차부터 600초(리셋 불가), 전액 배정 뒤 절차 시작, 새 판정의 새 동의/온전한 120초, 내용 있는 미평가 이의 차단은 **E0 저장소 정본의 고정 commit 인수 뒤 별도 E3 작업**으로 연결한다. 지금의 P0/R2/R3를 조용히 수정하거나 임의 deadline·funding 상태를 만들어 넣지 않았다.
+사용자가 확정한 `clear-hackathon-test-operations.1` 문서와 [E0 정본](../current/HACKATHON_TEST_OPERATIONS.ko.md), profile/reference/intake를 읽고 위 고정 commit을 normal merge했다. profileHash는 `0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98`다. 새 120초·새 근거 재검증 1회·최초 절차부터 600초(리셋 불가), 전액 배정 뒤 절차 시작, 새 판정의 새 동의/온전한 120초, 내용 있는 미평가 이의 차단은 **E1/E2 교차 인수 후 별도 E3 작업**으로 연결한다. 지금의 P0/R2/R3를 조용히 수정하거나 임의 deadline·funding 상태를 만들어 넣지 않았다. E0 reference를 제품 verifier/authorization의 trusted flag로 import하지 않는다.
 
 E3에는 현재 판정 pin과 동의·이의 history, 원천 무효화 event, CAS/ledger sequence, 역할별 projection을 인계한다. 별도 절차 schema/version과 최초 시작 시각·재검증 횟수를 영속화해야 한다. 새 유효 오류·원문 만료는 상한 뒤에도 계속 차단해야 한다. 확인 절차와 재원 대기는 별도 상태다.
 
-미수락 종료의 epoch 무효화·예약 해제는 E4 contract의 원자 작업이다. DB만으로 자금 해제나 승인 취소를 완료 처리하지 않는다. R3 G1의 canonical 순서, accept 선행 시 고정 수령인/금액 권리 보존, claim 때 새 서버/현재 signer 재요구 금지를 유지한다. G2–G6 구체 구현·승인 인코딩·signer/worker/relayer/실제 E2E는 이 Draft에 없다. 이번 새 승인으로 선택된 TEST 개발을 영구 HOLD로 해석하지 않되, 현재 미구현 경로를 활성화하지 않는다.
+미수락 종료의 epoch 무효화·예약 해제는 E4 contract의 원자 작업이다. DB만으로 자금 해제나 승인 취소를 완료 처리하지 않는다. R3 G1의 canonical 순서, accept 선행 시 고정 수령인/금액 권리 보존, claim 때 새 서버/현재 signer 재요구 금지를 유지한다. G2–G6의 TEST 정책은 E0에서 확정됐으며 구체 구현·승인 인코딩·signer/worker/relayer/실제 E2E 인수는 이 Draft에 없다. 이번 새 승인으로 선택된 TEST 개발을 영구 HOLD로 해석하지 않되, 현재 미구현 경로를 활성화하지 않는다.
 
 기존 금고·DB·체인·키를 열거나 초기화하지 않았다. 실제 원천/개인 자료·유료 호출·배포·자동 병합은 없다. 기존 상용 400% 자동 자격/지급 금지·500% 제외·멘토 미결 정책은 그대로다. 현 런타임 gates는 false/HOLD/NO_GO이며 실제 검증 완료를 주장하지 않는다. Mac은 재현된 fixture 수명 경쟁 수정과 과거 CI의 정확한 IPC 순서 미관측을 구분한다.
 
