@@ -83,3 +83,6 @@ C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https:
 
 
 최신 PR67 검토: [Mac 원인·영속 무효화 rollback 수정·검증 근거](PR67_FINAL_REVIEW.ko.md)를 따른다. 쿠키 변조는 실제 서버403까지 가로채기를 유지한다. C3 정책 무효화는 거부된 transaction 뒤에도 남아 과거 결과가 되살아나지 않는다. 관련363/363·Mac62/62 로컬 통과이며 최종 head CI/대화 및 실제 develop merge SHA는 [PR67 완료 기록](https://github.com/gw020328-oss/clear-education-v4/pull/67)을 확인한다. 위 Draft/미승인·원인 미확정 문구는 이전 시점 기록이다. DTO/version과 합성 전용 제약은 유지된다.
+
+
+2026-10-16 후속 계약 제안: [Moodle 후기→C2 제출・AI 관찰](MOODLE_REVIEW_C2_CONTRACT.ko.md)을 참조한다. 미병합 PR71 LOCAL facts와 PR72 FIXTURE proposal을 그대로 import하지 않는다. sourceBundle/inputHash/기존 DTO는 유지하며 별도 receipt hash·registry/본문 결합·두DB 수락 경쟁/권한·수명은 후속 구현 관문이다. 현재 endpoint·합성-only 업로드·운영 수락 capability는 바꾸지 않았다.
