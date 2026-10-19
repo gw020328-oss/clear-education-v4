@@ -1,0 +1,38 @@
+{
+  "version": "clear-hackathon-test-inputs.1",
+  "date": "2026-10-18",
+  "sourceFilesUnmodified": true,
+  "sourceBodyRepublished": false,
+  "files": [
+    {
+      "priority": 1,
+      "workspaceRelativePath": "output/planning/CLEAR_해커톤_TEST정책_확정_2026-10-18.md",
+      "sha256": "cf52ca22e8ff4d968175a15003b248732d17525f140842fc770c2528760e0b83",
+      "scope": "DECISION_REVISION_1"
+    },
+    {
+      "priority": 2,
+      "workspaceRelativePath": "output/planning/CLEAR_팀원공유_통합개발계획서_2026-10-18.md",
+      "sha256": "7723476d6fc400d1c64a2fa9994685af5813ee0def422ba7732ccb2bfe41aaee",
+      "scope": "SHARED_PLAN_REVISION_2"
+    },
+    {
+      "priority": 3,
+      "workspaceRelativePath": "output/planning/CLEAR_본부전달_개발계획비교_2026-10-18.md",
+      "sha256": "99f0a9ba66b82b029294a86fec3f828ae0e4071bab8db7aed5aa758fdeaa3ee3",
+      "scope": "SECTION_11_SUPERSEDES_HISTORICAL_RECOMMENDATIONS"
+    }
+  ],
+  "baseFrozenCommit": "733fe693f4fd2e16977b0c52ef88e35ee9687f2c",
+  "baseFrozenFiles": {
+    "p0-policy.json": "53df7e4aff20639b73353e7e5fd5d3032c1f847f96fbae749c654df76a932dcd",
+    "p0-contract.mjs": "c3a5a28d81704221e0dd407e9b1afd45697175d68fe5f2cbf7af62d3db0f584c",
+    "p0-example.mjs": "602f3cc24e0e0207f14964aed76d081c07693d6eb77a69204c07a2c0e1eb1f02",
+    "p0-runtime-mapping.json": "05a753930a6cd843b056e8fbb5b693a1bf47fc16eaea46e0ac46d988fc7823f5",
+    "reflection-example.json": "426eecf5b6c6b6967c319239ecc2a79cf07c1f2b124dd15b147b1feb63debace",
+    "p0-addendum-r2.json": "8b78615cdbe76cbb7d2198b2cabb600c9ddc29a0a6061479d5b68dc4b1d672fa",
+    "r2-reference.mjs": "c20b75bb824c11d81b6b8c24d4dc997ec7596716c33ab7ad00b2f3c02f3447be",
+    "r2-example.json": "b5d25dba0591ead88a854603e34f92c77b0a8b4b58727f2cd3be718c6dc6a7fd",
+    "p4-right-finality-decision.json": "5a3428bc8d729e81fb2fe45580cfd91559fb453d9a3ba6576ae275d56a913a0e"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "version": "clear-hackathon-test-vault-preparation-verification.1",
+  "date": "2026-10-19",
+  "stage": "E4_NON_PAYOUT_COMPONENTS",
+  "branch": "codex/hackathon-test-vault-boundaries",
+  "inputPinsCommit": "67c7bc8450484fb4d5545c6e36a672e497467174",
+  "inputMergeCommit": "beb8617",
+  "preservedE2Head": "d9407b06b8a13122a489193119c1899929f83fe4",
+  "modelRequest": "GPT-6 Astra / High",
+  "actualModelIndependentlyVerified": false,
+  "latestDistinctResults": {
+    "componentCases": 38,
+    "readerCases": 11,
+    "artifactCases": 1,
+    "total": 50,
+    "fail": 0,
+    "note": "Final guarded CI entry point executed all50 distinct cases in one run; historical overlapping runs are not added."
+  },
+  "environment": {
+    "node": "24.21.0",
+    "solc": "0.8.30",
+    "ethers": "6.17.0",
+    "ganache": "7.9.2",
+    "memoryOnly": true,
+    "persistentChain": false,
+    "roleTransactionAccountsPerFixture": 8,
+    "privateKeyExport": false,
+    "operationalSigner": false,
+    "externalRpc": 0
+  },
+  "executed": [
+    "TEST_APPROVE_AND_DEPOSIT",
+    "REGISTRATION_FULL_RESERVATION_150_PLUS_50",
+    "UNSIGNED_V3_PREPARATION_AND_HASH",
+    "STABLE_ALLOCATION_TARGET_REPLACEMENT",
+    "CONDITIONED_TERMINATION_ATOMICITY",
+    "READ_ONLY_CANONICAL_REPLACEMENT_AND_REORG",
+    "MALFORMED_ECDSA_PRIMITIVE_NEGATIVES",
+    "SAME_DECISION_ID_HIGHER_REVISION_STABLE_ALLOCATION"
+  ],
+  "notExecuted": {
+    "authorizationSignatures": 0,
+    "accepts": 0,
+    "claims": 0,
+    "recipientPayments": 0,
+    "realSources": 0,
+    "models": 0,
+    "acceptedRightRaceTests": 0,
+    "historicalP4FortyPayoutCases": 0,
+    "backendStopPersistentChainDirectClaim": 0
+  },
+  "preservation": {
+    "result": "PASS",
+    "mode": "PORTABLE_CONTENT",
+    "originalFingerprintsPreserved": true,
+    "publishedReferences": 4,
+    "schemaVersion": 4,
+    "sourceReferenceFiles": 191,
+    "profiles": 3,
+    "runtime": "24.21.0",
+    "dependencyGraphPreserved": true,
+    "pendingManifestsNotClaimable": true
+  },
+  "commonCiEntryPoint": "tests/product-workflow/hackathon-test-vault-preparation.test.mjs",
+  "commonWorkflowChanged": false,
+  "publicScan": "Recorded after commit in exact-head PR body",
+  "remoteCi": "Exact-head PR/push results recorded in PR body; no preemptive PASS",
+  "sourceSha256": {
+    "src/hackathon-test-vault/HackathonTestVaultPreparation.sol": "d8c7467d433e7a428bbd75fe79707b963b4e8208842b89a32ff9a8bae9b60029",
+    "src/hackathon-test-vault/StrictECDSA.sol": "d2873eb2ac6205adc268f5eddf4ba89fbd3e046a83785d44f8715616a74fd69a",
+    "src/hackathon-test-vault/reader.mjs": "9dd7a3d97a7ed20e85c0cccd26bd62a9abc30a91b0c77454bddb2f3f169c3d50",
+    "tests/hackathon-test-vault/PrimitiveProbe.sol": "8c61579c72c46b13360b025e33ef9a20f9239ced3f7f8dbd18cb1360cd006668",
+    "tests/hackathon-test-vault/artifact.mjs": "71b96633adf6f69e87c0878c8864098b55b1fb04a159e682abfebbca6e042363",
+    "tests/hackathon-test-vault/artifact.test.mjs": "c63cc183d0090f78373479cca6e96250fd59e76a49d3e40871e968bc3473d91f",
+    "tests/hackathon-test-vault/build.mjs": "6d181ab2b7747b9d0ddc4a91637c4c0f54eb8d8f1c5843263c28f548f04bbda9",
+    "tests/hackathon-test-vault/components.test.mjs": "005c55771526a2bc27fdf20903cbc6f55a32f5b6bbf8725d44d6d459c2086ad7",
+    "tests/hackathon-test-vault/fixture.mjs": "06d6fe190fe5ddafcb174c78f7bbd6b7cded09431ce763c0c672b5d20aab142a",
+    "tests/hackathon-test-vault/reader.test.mjs": "6dc0e9041096d4b43efe09c9d1822ea7884ec8d59ba6248864ecee063bfc8a35",
+    "tests/product-workflow/hackathon-test-vault-preparation.test.mjs": "fc9128e140311042d6b2f2beae3a40dac4944bcabdb56f5b1910de4a735dd60f"
+  },
+  "localLogSha256": {
+    "components-first.log": "656f6857a61512926f48ee12358230b54d764e9cb5d3d13414e7afe73f4331b1",
+    "components-reader.log": "3c01e07392a63ae7cfdbc2ce9737c878df198e73c117b69e881f55bea29fd99a",
+    "final-components.log": "14c66438b15de28f0dc086a889967cb08b25b3207d6bfa464ba22a33dcdf1c9b",
+    "artifact-final.log": "08a90772ec338060c0d4127034aa25f159ec8503de674a5552395f5eb84f8f4b",
+    "publication-anchor.log": "bb00c849addd81a1e95862a24daa9a6c110c10bbaba4095f8142e7060aec1735",
+    "reader-artifact-final.log": "b6892a932037642e9637a8104ac7b64007ecfb07c8a8743a9f341f4f9b4af3bf",
+    "preservation-final.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0",
+    "final-all-50.log": "0c7c2a83de921e979aa98c5c9ec4e218558ed1793815061245778c006d9ce15f"
+  }
+}

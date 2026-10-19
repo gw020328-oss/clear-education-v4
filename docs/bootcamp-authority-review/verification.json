@@ -1,0 +1,89 @@
+{
+  "version": "clear-bootcamp-authority-design-review.1",
+  "date": "2026-10-17",
+  "scope": "DESIGN_AND_EXISTING_SOURCE_ABI_REVIEW_ONLY",
+  "requestedSetting": "GPT-6 Astra / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "preservedP1Head": "0da3abe89e2361ac75c19a331e7910afa7ecc70a",
+  "baseFrozenP0": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
+  "mergedR2Head": "69d6dc80caaf2bde963385e176068e3a0293e6b3",
+  "r2FirstAddendum": "119f394eabc9f4bc3fda6e2ed5861cfd9d276095",
+  "historyMergeCommit": "318f296ca424c7bbe4cf1321b9ceea555c8936c0",
+  "ownedPaths": [
+    "docs/bootcamp-authority-review/"
+  ],
+  "localValidation": {
+    "existingContractsCompiled": 2,
+    "solcVersion": "0.8.30",
+    "reviewArtifactChecks": 14,
+    "p0ReferenceChecks": 20,
+    "r2ReferenceChecks": 9,
+    "totalPass": 43,
+    "totalFail": 0,
+    "newBridgeBehavioralTests": 0,
+    "existingRelayerSubsetRerun": false,
+    "orderingVectors": "PROPOSED_EXPECTATIONS_NOT_EVM_VERIFICATION",
+    "networkGuard": true,
+    "workspacePreservation": "PASS_PORTABLE_CONTENT_191_SOURCE_REFERENCE_FILES"
+  },
+  "localExecution": {
+    "newAuthorizationKeysCreatedOrRead": 0,
+    "newAuthorizationSignatures": 0,
+    "evmTransactions": 0,
+    "externalRpc": 0,
+    "officialHostedProofs": 0,
+    "personalProofs": 0,
+    "paidCalls": 0,
+    "newTrustActivated": false
+  },
+  "implementation": {
+    "authorizationEncodingFrozen": false,
+    "signerLifecycleImplemented": false,
+    "poolContractImplemented": false,
+    "fundingDbImplemented": false,
+    "relayerImplemented": false,
+    "publicChainDeployment": false,
+    "commonFilesDirectlyModified": false,
+    "p1AdapterFilesChanged": false
+  },
+  "findings": [
+    "A01_V4_ABI_CANNOT_BIND_R2_TARGET",
+    "A02_OFFCHAIN_STALE_DOES_NOT_REVOKE_ESCAPED_SIGNATURE",
+    "A03_ACCEPT_REVOKE_MINING_ORDER_REQUIRES_RIGHTS_POLICY",
+    "A04_EXISTING_EXPIRED_RECLAIM_IS_NOT_APPROVED_R2_POLICY",
+    "F01_FUNDINGLAB_IS_FIXTURE_PER_APPLICATION_NOT_POOL_ORACLE",
+    "F02_UNIQUE_APPLICATION_OBLIGATION_AND_LOCKED_TARGET",
+    "F03_SAME_CHECKPOINT_AND_CONFIRMATION_POLICY",
+    "A05_SIGNER_BLAST_RADIUS_REQUIRES_INDEPENDENT_REGISTERED_TARGET"
+  ],
+  "recommendedOption": "B_PER_APPLICATION_EPOCH_IMMUTABLE_KEY_ID_AND_ACCEPTED_FIXED_RIGHT",
+  "recommendationApprovedForImplementation": false,
+  "remainingDecisionGates": [
+    "G1_ACCEPT_ORDER_OR_CHALLENGE",
+    "G2_DEADLINE_RELEASE_UNRESOLVED_OWNERSHIP",
+    "G3_ROLES_KEY_LIFECYCLE",
+    "G4_OBLIGATION_APP_HOLD_ALLOCATION_ORDER",
+    "G5_CHAIN_FINALITY_GAS",
+    "G6_ACTUAL_SOURCE_AND_P3_ACCEPTANCE"
+  ],
+  "nextSuggestedUnit": "P4-01A_UNSIGNED_ENCODING_AND_STRICT_VALIDATION_ASTRA_HIGH",
+  "requiredNewBridgeAdversarialCases": 40,
+  "priorEvidence": {
+    "p1SyntheticTests": 102,
+    "p1CiChecks": 6,
+    "p1OfficialHostedProofs": 0,
+    "p1Default": "UNCONFIGURED_BLOCKED",
+    "r2ExistingV4RelayerSubset": "SOURCE_AND_PRIOR_PASS_RECORD_INSPECTED_NOT_RERUN"
+  },
+  "ciScope": "Existing shared CI only; new review artifact checks are local explicit checks. Existing CI may execute existing synthetic key/EVM fixtures, not a new bridge. Exact head/results recorded in Draft PR.",
+  "gates": {
+    "paymentAllowed": false,
+    "productionEnabled": false,
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO",
+    "c2PersonalDataRestrictionMaintained": true
+  },
+  "mergeAuthorized": false,
+  "deployed": false
+}
