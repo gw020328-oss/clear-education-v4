@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 19,
+  "repositoryPlanRevision": 20,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -762,6 +762,21 @@
       "rootReadSourceDiffAndControlledCases": true,
       "originalCauseResolved": false,
       "localExit137Resolved": false
+    },
+    "reclaimE5BComponent": {
+      "head": "b70c87cafe83befa82e23903125f2a7a18d5c8a6",
+      "implementationHead": "9607f4762842c520bbb6b08d9359483adcc0a7b4",
+      "pr": 100,
+      "localBPass": 20,
+      "actualApiConnected": false,
+      "firstNormalPriority": true,
+      "remoteFailure": {
+        "cause": "FIXED_HACKERRANK_PREFIX_DEPENDENCY_INSTALL_MISSING_FROM_NEW_CI",
+        "bTestsBothRemoteRuns": "20_OF_20_REPORTED_PASS",
+        "workflowOnlyFixInProgress": true,
+        "blindRerun": false
+      },
+      "componentAccepted": false
     }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
@@ -824,5 +839,51 @@
     "actualE6AdapterAccepted": false
   },
   "e5DevelopmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json",
-  "e5ServiceIntake": "specs/bootcamp/hackathon-test-e5-service-intake-v1.json"
+  "e5ServiceIntake": "specs/bootcamp/hackathon-test-e5-service-intake-v1.json",
+  "executionPriority": {
+    "date": "2026-10-19",
+    "source": {
+      "thread": "01a11411-3254-7c70-a566-c2743d88d4f7",
+      "directHumanMessage": "01a15358-c534-71c1-af90-fd9082906eda",
+      "verifiedByReadThread": true
+    },
+    "mode": "ONE_NORMAL_APPLICATION_TO_EXACT_100_TEST_RECEIPT_FIRST",
+    "policyAndR3Changed": false,
+    "runtime": "NEW_ISOLATED_TEST_CHAIN_SINGLE_NORMAL_WORKER",
+    "route": "TWO_CURRENT_SAME_DECISION_CONSENTS_EARLY_ACCEPT",
+    "mandatoryChecksPreserved": true,
+    "existingRecoveryCodePreserved": true,
+    "deferUntilFirstNormal": [
+      "NEW_TAKEOVER_ADOPTION",
+      "REORG_EXPANSION",
+      "SERVER_STOP_DIRECT_CLAIM_EXPANSION",
+      "SHORTFALL_QUEUE_REFILL",
+      "NEW_DEADLINE_SCENARIOS",
+      "COMPLEX_CONCURRENCY_EXPANSION",
+      "ADDITIONAL_MODEL_EVALUATION",
+      "ADDITIONAL_MAC_WINDOWS_INVESTIGATION"
+    ],
+    "singleAssemblyCommand": null,
+    "singleAssemblyCommandStatus": "API_OWNER_IMPLEMENTING_NOT_YET_EXECUTABLE",
+    "stageIntakeTable": "docs/current/HACKATHON_TEST_OPERATIONS.ko.md#2026-10-19--첫-정상-1건-우선-addendum",
+    "firstExecution": {
+      "applicationId": null,
+      "sourceMoodle": "LOCAL_SYNTHETIC_MOODLE_HTTP_PREPARED_COMMON_CONSUMER_NOT_CONNECTED",
+      "sourceHackerRank": "HUMAN_ACCOUNT_AVAILABLE_FRESH_REQUEST_BOUND_PROOF_PAIR_AND_REAL_TRUST_NOT_READY",
+      "sourceAi": "PAST_PUBLIC_SYNTHETIC_EVALUATION_IS_NOT_FRESH_MOODLE_EVIDENCE",
+      "remainingApprovedPaidCalls": 0,
+      "sameDecisionConsents": false,
+      "allocationAtoms": null,
+      "acceptTransactionHash": null,
+      "claimTransactionHash": null,
+      "canonicalReceiptVerified": false,
+      "receivedAtoms": null,
+      "duplicateRefusalVerified": false,
+      "twoViewsResultHandedOff": false,
+      "status": "NOT_EXECUTED"
+    },
+    "webSourceOwnerPreserved": true,
+    "newSessionsOrSubagents": 0,
+    "automaticMergeOrDeploy": false
+  }
 }

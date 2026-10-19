@@ -213,3 +213,27 @@ Draft PR97/head `cafbf3bd087104a34b3c3000885fdcd4674c4e21`·planHash `0x640a7876
 Draft PR95의 최종 `0e6d4225e5b645e57e3988dc426937b08069ead8`(구현bbadeff4)은 local42/42·exact-head CI8/8, 두전용실행의각각새42+기존E4 164 PASS, fail/cancel/skip0으로확인했다. root가공개source23개지문일치와깨끗한작업본,최종diff·고정진단·새블록거부·receipt색인조회처리를읽었고reviewthreads0/추가페이지없음을확인했다. [서비스인수v1](../../specs/bootcamp/hackathon-test-e5-service-intake-v1.json)은다음격리TEST연결용component만인수한다. 전체API/자동지급/E6 source/public-finalized/production인수는아니다. 기존3e11원격실패와미보존원인한계는남긴다.
 
 [E5 bridge 초안](HACKATHON_TEST_E5_BRIDGE_PROTOCOL_DRAFT.ko.md)은전역runtimelease/fence와intent별lease,제한issuer·canonical witness,불변거래인수·기존요청조회,별도claim job을구분한다. E4의Astra/High읽기전용검토에서정책충돌은발견하지않았으며포트의접근범위/재사용/기한을구체화해야한다. API소유자는97f후손에서전역권한기반을오프라인구현중이다. 실제B연결은그포트와새source핀/관련시험을인수한뒤수행하며원래승인정책의재질문은필요없다.
+
+
+### 2026-10-19 — 첫 정상 1건 우선 addendum
+
+사용자가 본부에서 직접 “기존 세션들에 새 기능 추가는 보류하고, 한 신청의 정상 흐름을 실제 TEST 지급까지 먼저 연결”하도록 지시했다. 본부의 해당 사용자 메시지 `01a15358-c534-71c1-af90-fd9082906eda`를 읽어 확인했다. 이 우선순위는 앞선 복구·예외 확대 완료 순서보다 우선하며, P0 TEST 정책과 R3의 내용은 변경하지 않는다.
+
+첫 완료는 **한 application/participant/wallet/policy/decision**에 Moodle 활동·본인 과제·회고와 HackerRank 조건을 연결하고, 현재 판정→그 판정의100 TEST 전액 배정→공개 및 양측 동일결과 동의→제한 승인→accept→claim→canonical receipt·정확100 TEST 수령·중복 거부를 한 실행에서 확인하는 것이다. 정상 단일 worker·새 격리 TEST chain과 양측동의 조기경로를 사용한다. 조건 확인 전의 예산 확보와 최종 decision의 배정을 구분한다.
+
+기존 참가자/계정/지갑 결합, 신뢰한 출처·서명·recipe·동일 레코드, 정책·자료·판정 version/current/lease/배타 만료, 역할·원문 권한, nonce·수령인·금액·체인·계약·재원·예약·단회 지급·원자성 검증을 유지한다. UNKNOWN을 MET로 바꾸지 않는다. 이미 구현한 복구·검증 코드는 보존하되 새 takeover/adoption/reorg/server-stop 직접 claim·부족 queue/재충전·무이의 시간 시나리오·복잡한 동시성 확장은 첫 정상 뒤로 미룬다. 추가 모델 평가와 Mac/Windows 조사 확대도 보류한다.
+
+PR100의 명시 B 포트와 현 API 구현을 재사용하며 불필요한 새 연결 계약을 만들지 않는다. 실제 source 변경 때문에 고정 지문 검사가 달라질 때만 정확한 호환 입력을 검토한다. 새 채팅/에이전트·자동 병합·상용 배포는 없고 web/는 팀원 소유다.
+
+| 첫 실행 단계 | 현재 연결 근거 | 아직 필요한 정확한 입력/결과 |
+| --- | --- | --- |
+| 신청·계정·지갑·정책 | E1 인증/current 보호, 고정 P0 TEST 정책 | 한 실행의 실제 participant/wallet/application/decision 결합 |
+| Moodle 활동·본인 과제·회고 | 로컬 Moodle HTTP 수집 준비22640db, 소유 TEST 환경18768의 합성 교육자료 | 새 source/raw/query lease를 실제 공통 consumer에 인수; 실제 고객자료와 구분 |
+| HackerRank Python(Basic) | 본인 인증 계정 보유 답변, 오프라인 검증기/서명 검사 | 신뢰할 실제 signer/recipe와 안전한 collector, 서버의 새 요청·참가자 승인에 결합한 실제 proof pair; 현재0건 |
+| 회고 AI | 공개 합성8건 실제 평가7PASS/1보완, 원천 권한 아님 | 이번 Moodle 회고와 결합한 fresh 검토 결과; 기존 호출 승인 잔여0이므로 필요하면 최소 새 호출을 먼저 준비 |
+| 재원·전액 배정·현재 판정·양측 동의 | E3 절차와 PR100 reader/controller 포트, API 연결 구현 중 | 첫 실행의 같은 판정/100 TEST 전액 배정·동의 current 인수 |
+| 제한 승인·accept·claim | PR100 제품9607f47와 새 격리 Geth 실행 기반 | 실제 API 정상 절차 및 새 unsigned/정확 nonce·역할의 단일 실행 |
+| canonical 결과·정확 수령·중복 거부 | 등록된 reader의 receipt·Transfer 검증 | 첫 실행의 tx hash/receipt/수령 전후 잔액100 TEST/중복 거부 |
+| 두 화면 결과 인계 | 기존 E3 participant/operator DTO | 위 동일 실행의 API 결과·단계 상태를 web/ 소유자에게 인계 |
+
+**단일 조립·실행 명령:** API 소유자가 실제 entry point와 필요한 로컬 입력을 마무리 중이며 아직 실행 가능한 명령이 확정되지 않았다. 명령·입력 준비·단계별 tx 결과를 이 인수표와 실행 기록에 함께 고정한다. 준비/합성 검사를 실제 성공으로 표시하지 않는다. 실제 로그인이나 새 유료 호출이 필요하면 준비된 최소 행동·기존 예산 여부를 제시한 뒤 진행하며, 모의 응답으로 대체하지 않는다.
