@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
-  "date": "2026-10-18",
-  "repositoryPlanRevision": 4,
+  "date": "2026-10-19",
+  "repositoryPlanRevision": 9,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -76,43 +76,185 @@
     {
       "stage": "E3",
       "scope": "120_1_600_PROCEDURE_AND_TWO_VIEW_DTO",
-      "status": "NOT_STARTED",
+      "status": "ACCEPTED_FOR_STAGE_SCOPED_E4_TEST_HARNESS_NOT_REAL_SOURCE_OR_FULL_RUNTIME",
       "requestedSetting": "gpt-6.1-sol/high",
-      "acceptedHead": null,
+      "acceptedHead": "c3b71c710f558529680e255222857f0e81fe1dcb",
       "dependsOn": [
         "E1",
         "E2"
       ],
-      "tests": null
+      "tests": {
+        "e3Dedicated": 47,
+        "relatedReported": 592,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "actualSourceAcceptances": 0,
+        "payoutAuthorizationSignatures": 0,
+        "recipientPayments": 0,
+        "e3ArtifactSha256Preserved": true
+      },
+      "candidateHead": "c3b71c710f558529680e255222857f0e81fe1dcb",
+      "pullRequest": 89,
+      "implementationHead": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+      "historicalRequiredCheckFailure": {
+        "run": "39142228451",
+        "job": "117718818737",
+        "test": "SIGKILL legacy-missing",
+        "result": "TEST_TIMEOUT_60000_MS",
+        "failed": 0,
+        "cancelled": 1,
+        "prCompanionMac": "62_OF_62_PASS_NOT_SUBSTITUTE_FOR_FAILED_PUSH",
+        "cause": "HISTORICAL_STALL_UNPROVEN_HARNESS_GAPS_FIXED",
+        "blindRerunPerformed": false,
+        "resolution": "REVIEWED_MAC_HISTORY_MERGED_NEW_EXACT_HEAD_CI_6_OF_6_SUCCESS"
+      },
+      "unresolvedReviewThreads": 0
     },
     {
       "stage": "E4",
       "scope": "TEST_CONTRACT_FUNDING_ROLES_SIGNER_TERMINATION",
-      "status": "NOT_STARTED",
+      "status": "ACCEPTED_MEMORY_BOUNDARY_FOR_E5_DEVELOPMENT_NOT_PERSISTENT_RUNTIME",
       "requestedSetting": "gpt-6-astra/high",
-      "acceptedHead": null,
+      "acceptedHead": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
       "dependsOn": [
         "E1",
         "E2",
         "E3"
       ],
-      "tests": null
+      "tests": {
+        "distinctPreparationCases": 50,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "payoutAuthorizationSignatures": 0,
+        "accepts": 0,
+        "claims": 0,
+        "recipientPayments": 0,
+        "scope": "HISTORICAL_NON_PAYOUT_PREPARATION_CHECKPOINT"
+      },
+      "preparationAcceptedHead": "d287b3789a678a1e6984b583e4c85859e9e97a22",
+      "pullRequest": 88,
+      "executionPreparation": {
+        "head": "9dd69ca47e41d2b419b961ede30eafd00c3585e7",
+        "pullRequest": 93,
+        "mergedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
+        "distinctCompileAndBlockedCases": 66,
+        "executedContractDeployments": 0,
+        "authorizationSignatures": 0,
+        "accepts": 0,
+        "claims": 0,
+        "acceptedForFullRuntime": false,
+        "historyMergedHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
+        "remoteCi": "6_OF_6_SUCCESS"
+      },
+      "memoryExecution": {
+        "status": "ACCEPTED_SCOPED_MEMORY_STAGE",
+        "firstSuite": {
+          "tests": 36,
+          "pass": 32,
+          "fail": 4,
+          "cancelled": 0,
+          "skipped": 0,
+          "durationMs": 91164.207459,
+          "metrics": {
+            "instances": 37,
+            "executionDeployments": 37,
+            "tokenDeployments": 37,
+            "keyProviderCalls": 33,
+            "signaturesGenerated": 32,
+            "signaturesReturned": 22,
+            "signaturesDiscarded": 10,
+            "accepts": 6,
+            "claims": 3,
+            "actualSources": 0,
+            "externalRpc": 0,
+            "persistentChains": 0
+          },
+          "countsAreThisRunOnly": true,
+          "logSha256": "49ca6ca454c5179c07b82cf2e2a6254600d6f9085805c093263a9628a74c2493",
+          "diagnosis": [
+            "TWO_EXPECTED_SHORTFALL_REASONS_HIDDEN_BY_ESTIMATE_GAS_ERROR",
+            "MINED_FAILED_TRANSACTION_CORRECTLY_INVALIDATES_OLD_STAGE_CHAIN_CAS",
+            "ETHERS_RESULT_PROXY_EQUALITY_REQUIRES_PLAIN_VALUE_COMPARISON"
+          ]
+        },
+        "rootReviewAdditionalIssue": "METRICS_OUTPUT_PARENT_NOT_CREATED_IN_CLEAN_CHECKOUT",
+        "outOfScopeHistoricalResponseAccepted": false,
+        "acceptedForE5": true,
+        "existingPrivateKeysRead": 0,
+        "acceptedHead": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
+        "distinctStageTests": 48,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "pushAndPrStageActuallyExecuted": true,
+        "finalMetrics": {
+          "instances": 48,
+          "executionDeployments": 48,
+          "tokenDeployments": 48,
+          "keyProviderCalls": 43,
+          "signaturesGenerated": 42,
+          "signaturesReturned": 31,
+          "signaturesDiscarded": 11,
+          "accepts": 13,
+          "claims": 10,
+          "actualSources": 0,
+          "externalRpc": 0,
+          "persistentChains": 0,
+          "controlledProbes": {
+            "deployments": 3,
+            "codeInjections": 3,
+            "injectedClaims": 1,
+            "contractLevelAccepts": 1,
+            "contractLevelClaims": 1
+          }
+        },
+        "metricsMeaning": {
+          "keyProviderCalls": "Fresh ephemeral TEST signing provider accesses, not existing-key reads.",
+          "accepts": "13 authenticated stage wrapper accept confirmations. One additional explicit contract-level successful accept is in controlledProbes.contractLevelAccepts.",
+          "claims": "10 mined fixed-token stage claim receipts, including one intentionally rejected post-commit readback acknowledgment. One additional normal fixed-token contract-level concurrent claim is in controlledProbes.contractLevelClaims. One injected-code probe settlement is separate and snapshot-reverted.",
+          "signaturesGenerated": "42 total includes 11 subsequently discarded; 31 returned. E1/auth login signatures are outside this payout counter.",
+          "runtimeInstances": "Fresh disposable memory instances only; failed initialization before deployment is not counted.",
+          "reruns": "Counts from final full suite only. Prior/focused/remote runs are separate, not cumulative."
+        },
+        "priorRemoteFailure": {
+          "head": "a53cbaa69c625306754ed3609d2fda61cd737e2a",
+          "remoteCi": "4_OF_6_TWO_PUBLIC_SYNTHETIC_FAILURES",
+          "stagePass": 46,
+          "stageFail": 1,
+          "stageTests": 47,
+          "test": "TWO_CONCURRENT_ANY_CALLERS_WRAPPER_FULFILLED_COUNT_ZERO",
+          "actualInternalRejectionStringRecorded": false,
+          "blindRerun": false,
+          "fix": "CONTRACT_RECEIPTS_SEPARATE_FROM_READBACK_AND_DETERMINISTIC_MOVING_CHECKPOINT_COUNTEREXAMPLE"
+        }
+      }
     },
     {
       "stage": "E5",
       "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
-      "status": "NOT_STARTED",
+      "status": "AUTHORIZED_SCOPED_DEVELOPMENT_PREPARING_OWNER_DISPATCH",
       "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
         "E4"
       ],
-      "tests": null
+      "tests": null,
+      "preparation": {
+        "status": "READ_ONLY_PLAN_COMPLETE_E4_FINAL_PORTS_PENDING",
+        "record": "docs/current/HACKATHON_TEST_E5_BOUNDARY_PREPARATION.ko.md",
+        "sourceEdits": false,
+        "executionStarted": false,
+        "requires": [
+          "EXECUTION_READER_AND_RUNTIME_PIN",
+          "SIGNER_AND_DURABLE_ENVELOPE_CAPABILITY",
+          "AUTHENTICATED_CANONICAL_REORG_REBASE_PROTOCOL",
+          "INDEPENDENT_PERSISTENT_CHAIN_LIFECYCLE"
+        ],
+        "sensitiveReviewRequestedSetting": "gpt-6-astra/high",
+        "sensitiveReadOnlyReviewComplete": true
+      },
+      "developmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json"
     },
     {
       "stage": "E6",
       "scope": "REAL_SOURCE_TWO_VIEW_LOCAL_E2E",
-      "status": "SOURCE_AND_AI_PREPARATION_ACTIVE_MAIN_E2E_NOT_ACCEPTED",
+      "status": "SOURCE_AND_AI_PREPARATION_ACCEPTED_MAIN_E2E_NOT_ACCEPTED",
       "requestedSetting": "dedicated Moodle/AI gpt-6.1-sol/medium; common API gpt-6.1-sol/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -120,15 +262,46 @@
       ],
       "tests": null,
       "preparation": {
-        "moodle": "ACTIVE_NEW_OWNED_LOCAL_FIXTURE",
+        "moodle": {
+          "pr": 87,
+          "acceptedHead": "22640db091d5d3ac5d8a3535280b393d6f618d65",
+          "status": "LOCAL_SYNTHETIC_SOURCE_PREPARATION_ACCEPTED_NOT_COMMON_CONSUMER_INTEGRATION",
+          "sourceAndLeaseCases": 14,
+          "offlineCases": 250,
+          "remoteCi": "6_OF_6_SUCCESS_DEDICATED_SOURCE_TESTS_SEPARATE",
+          "environmentRef": "e6-20261018-run1",
+          "loopbackPort": 18768,
+          "mappingReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "designatedTargetsPreservedAtReportedCheckpoint": true,
+          "tokensRemainingAtReportedCheckpoint": 0,
+          "rawHandlesDisposedAtReportedCheckpoint": true,
+          "defaultPreparationQuerySeconds": 45,
+          "perCallCredentialSeconds": 60,
+          "credentialTtlExtendsUserLease": false,
+          "actualCommonApiAcceptance": false
+        },
         "ai": {
           "pr": 86,
-          "candidateHead": "d7a6f30",
-          "status": "OFFLINE_BORROWED_LEASE_PREPARATION_REPORTED_PENDING_CROSS_INTAKE",
+          "acceptedHead": "e9ea4547d795ee833a8175c02c0cc23b21a7d823",
+          "status": "OFFLINE_BORROWED_LEASE_PREPARATION_ACCEPTED_NOT_COMMON_CONSUMER_INTEGRATION",
           "focusedReported": 8,
-          "regressionReported": 411,
+          "regressionReported": 437,
           "paidCalls": 0,
-          "actualModelQuality": "N/A"
+          "actualModelQuality": "N/A",
+          "remoteCi": "6_OF_6_SUCCESS_DEDICATED_FOCUSED_TESTS_SEPARATE",
+          "actualCommonApiAcceptance": false,
+          "nextUnit": "NEW_PYTHON_MODEL_APPROVAL_AND_VERIFIED_COST_BOUNDS_PENDING_ACTUAL_BLOCKED",
+          "leasePreparationBaseHead": "d7a6f302378818430212aabeec2a9ddb8c55156d",
+          "approvalPlanHead": "fccd49d1d4e695ce49e32e023de1dd1628c68627",
+          "planCases": 7,
+          "runnerCases": 19
+        },
+        "hackerrank": {
+          "availability": "HUMAN_REPORTED_EXISTING_OWN_PYTHON_BASIC_CERTIFICATE_ACCOUNT",
+          "connectAfterSafeCollectorPreparation": true,
+          "accountIdentifierCollected": false,
+          "actualProofPairsCollected": 0,
+          "sourceTrustActivated": false
         }
       }
     },
@@ -169,7 +342,9 @@
     "testRuntimeAccepted": false,
     "testSignerActivated": false,
     "productionEnabled": false,
-    "existingV1GatesChanged": false
+    "existingV1GatesChanged": false,
+    "stageScopedMemoryEvmPayoutHarnessAllowed": true,
+    "persistentSignerActivated": false
   },
   "usageFailureHandling": "OLD_USAGE_FAILURE_IS_NOT_CODE_FAILURE; RECORD_FRESH_FAILURE_WITHOUT_BLIND_REPEAT",
   "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
@@ -203,9 +378,63 @@
       "started": true,
       "paidCallsAuthorizedInPreparation": 0
     },
+    "apiE3": {
+      "inputCommit": "67c7bc8450484fb4d5545c6e36a672e497467174",
+      "requestedModel": "gpt-6.1-sol",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "DURABLE_PROCEDURE_CONSENT_OBJECTION_AND_V3_ADAPTER_NO_PAYOUT"
+    },
+    "reclaimE4Boundary": {
+      "inputCommit": "67c7bc8450484fb4d5545c6e36a672e497467174",
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "ROLE_FUNDING_RESERVATION_TERMINATION_NON_PAYOUT_COMPONENTS",
+      "payoutSignerMayActivateBeforeE3BoundaryAcceptance": false
+    },
     "newSessionsOrSubagents": 0,
     "activeTurnsInterrupted": false,
-    "additionalHeadquartersMessageSent": false
+    "additionalHeadquartersMessageSent": false,
+    "apiMacDiagnosis": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "READ_ONLY_E3_REQUIRED_MAC_CHECK_CAUSE_AND_MINIMAL_FIX_PLAN",
+      "sourceEdits": false,
+      "rerun": false,
+      "completed": true
+    },
+    "apiMacLifecycleFix": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "pullRequest": 90,
+      "reviewedHead": "41354e0283709f74dd64a9dc6435703c804853c6",
+      "remoteCi": "6_OF_6_SUCCESS",
+      "fullMacCases": 105,
+      "includedNativeTrials": 9,
+      "includedInjectedCases": 39,
+      "historicalStallRootCause": "UNPROVEN",
+      "oldWorkflowRerun": false,
+      "timeoutBudgetUnitChange": "LEGACY_FIVE_TRIALS_COMBINED_60S_TO_EACH_TRIAL_60S_LAUNCHER_20S_UNCHANGED",
+      "productSourceChanged": false,
+      "commonHistoryMerged": true,
+      "e3HistoryMergeRequested": true
+    },
+    "reclaimE4Positive": {
+      "inputCommit": "085878860d604095b0a6152329f8d82a445574b7",
+      "acceptedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
+      "executionPreparationHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "NEW_ISOLATED_MEMORY_EVM_EPHEMERAL_TEST_SIGNER_ACCEPT_CLAIM_AND_ADVERSARIAL_TESTS",
+      "persistentRuntimeAllowedByThisUnit": false
+    }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
   "crossAcceptance": {
@@ -221,5 +450,50 @@
     "externalRpc": 0,
     "actualSource": 0,
     "paymentTransactions": 0
-  }
+  },
+  "boundaryIntake": "specs/bootcamp/hackathon-test-boundary-intake-v1.json",
+  "newCrossVerification": {
+    "fixedInputs": [
+      "040e31107d97c98a9a5fe588153aa828039f9519",
+      "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+      "d287b3789a678a1e6984b583e4c85859e9e97a22",
+      "22640db091d5d3ac5d8a3535280b393d6f618d65",
+      "e9ea4547d795ee833a8175c02c0cc23b21a7d823"
+    ],
+    "prePublicationComposition": "02d2f41c1d01c2f124f92debd8da2c13333b9b7b",
+    "prePublicationPass": 430,
+    "prePublicationFail": 0,
+    "finalComposition": "6c29a606eb7023ed3f8b1c70bd5dc08849c408d1",
+    "finalE3FocusedPass": 47,
+    "finalE3FocusedFail": 0,
+    "change": "INTERNAL_SNAPSHOT_HASH_LABEL_RENAMED_AUTHORIZATIONPORT_AND_EXAMPLE_REGENERATED",
+    "preservation": "191_SOURCE_FILES_PASS",
+    "dependencyGraph": "PASS",
+    "temporaryCheckSetupCorrection": "ROOT_NODE_MODULES_SYMLINK_REPLACED_WITH_IGNORED_DIRECTORY_AND_PACKAGE_LINKS",
+    "actualChainAdapterAccepted": false,
+    "externalRpc": 0,
+    "actualSourceAcceptances": 0,
+    "recipientPayments": 0
+  },
+  "e4CrossVerification": {
+    "composition": "aeb53ee8ffb0b04618fdb854938f61db7234e9ae",
+    "inputs": [
+      "d4de1d5700e81f48d767e938d614ab3aaf751255",
+      "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
+      "22640db091d5d3ac5d8a3535280b393d6f618d65",
+      "e9ea4547d795ee833a8175c02c0cc23b21a7d823"
+    ],
+    "e3Dedicated": 47,
+    "e4MemoryStage": 48,
+    "pass": 95,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 125444.728541,
+    "logSha256": "79e3f5000480bced9acc3cd4ac45e14cceadd8f344d9c7e4281365a6f6cbb0dc",
+    "preservation": "191_SOURCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
+    "publicHistory": "356_COMMITS_1885_BLOBS_FINDINGS_0",
+    "actualE6AdapterAccepted": false
+  },
+  "e5DevelopmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json"
 }
