@@ -1,0 +1,94 @@
+{
+  "version": "clear-e6-rest-wire-evidence.3",
+  "checkedOn": "2026-10-19",
+  "rest": "https://ai.google.dev/api/generate-content",
+  "protoJson": "https://protobuf.dev/programming-guides/json/",
+  "usageArithmeticEvidence": "e6-usage-definition-evidence-v2.json",
+  "fixtureKind": "SYNTHETIC_VALUES_DOCUMENTED_REST_SPELLINGS_NOT_PROVIDER_CAPTURE",
+  "matrix": [
+    {
+      "section": "ServiceTier",
+      "fields": "usageMetadata.serviceTier",
+      "wire": "standard / unspecified / flex / priority",
+      "policy": "standard/default/absent/null eligible; flex/priority/unknown stop next dispatch, retain valid text score"
+    },
+    {
+      "section": "ModalityTokenCount",
+      "fields": "usage scalar and detail counts",
+      "wire": "integer; TEXT",
+      "policy": "required safe nonnegative JSON numbers; details optional; nonempty details must reconcile; no nontext"
+    },
+    {
+      "section": "UsageMetadata",
+      "fields": "thoughtsTokenCount / totalTokenCount",
+      "wire": "optional thoughts; total includes prompt/tool/thought/candidates",
+      "policy": "preserve missing thoughts null, derive combined bound; missing/invalid total stops next"
+    },
+    {
+      "section": "UsageMetadata",
+      "fields": "cache/tool counts and details",
+      "wire": "optional numeric / arrays",
+      "policy": "absent/null/zero and TEXT-zero detail allowed; positive/invalid stops next; omitted is not reported zero"
+    },
+    {
+      "section": "Candidate",
+      "fields": "finishReason / continuationToken",
+      "wire": "STOP; other reasons incl CONTINUATION",
+      "policy": "score only complete STOP; never continue; nonempty continuation stops next"
+    },
+    {
+      "section": "Content",
+      "fields": "role / parts",
+      "wire": "optional role model / ordered Part array",
+      "policy": "absent/null/model accepted; user/invalid role and nontext data cannot score"
+    },
+    {
+      "section": "Part",
+      "fields": "text / thought / thoughtSignature / partMetadata",
+      "wire": "text string; optional boolean, bytes string, Struct",
+      "policy": "text-only answer; thought true excluded; signature/Struct ignored, never persisted/replayed; media/tool unions rejected"
+    },
+    {
+      "section": "Candidate",
+      "fields": "citationMetadata",
+      "wire": "recitation metadata; object/citationSources array",
+      "policy": "nonbilling annotation ignored, never treated as search execution or original-source evidence"
+    },
+    {
+      "section": "GroundingMetadata",
+      "fields": "groundingMetadata / groundingAttributions / urlContextMetadata",
+      "wire": "optional objects/arrays",
+      "policy": "absent/null/known empty arrays, empty searchEntryPoint/retrievalMetadata and empty maps token allowed; populated/unknown tool indicators stop next"
+    },
+    {
+      "section": "SafetyRating",
+      "fields": "promptFeedback / safetyRatings",
+      "wire": "optional blocked boolean; BLOCK_REASON_UNSPECIFIED default",
+      "policy": "blocked or malformed flags cannot score; default/no block and empty arrays accepted"
+    },
+    {
+      "section": "GenerateContentResponse",
+      "fields": "responseId / modelStatus / modelVersion",
+      "wire": "optional identifier/status; reported modelVersion",
+      "policy": "id/status informational and discarded; exact model required; unknown root fields stop next only"
+    },
+    {
+      "section": "Candidate",
+      "fields": "index / tokenCount / avgLogprobs / logprobsResult / finishMessage",
+      "wire": "optional diagnostic metadata",
+      "policy": "index absent/null/0; other diagnostics discarded without interpreting cost; never retained"
+    },
+    {
+      "section": "ProtoJSON",
+      "fields": "optional scalar/message/repeated nulls and empty arrays",
+      "wire": "null means unset; empty repeated fields may be omitted",
+      "policy": "accept reviewed optional forms; never invent required token counts; narrower numeric/enum diagnostic policy is not a full ProtoJSON parser"
+    },
+    {
+      "section": "Part",
+      "fields": "speechMetadata / mediaProcessing / mediaResolution / audioTranscription / videoMetadata",
+      "wire": "speech applies to text; mediaProcessing ignored for nonvideo; optional media annotation objects",
+      "policy": "discard speech and nonvideo processing annotations; empty media objects allowed; populated media indicators stop next, valid text score retained"
+    }
+  ]
+}
