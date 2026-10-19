@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 10,
+  "repositoryPlanRevision": 11,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -313,7 +313,25 @@
           "leasePreparationBaseHead": "d7a6f302378818430212aabeec2a9ddb8c55156d",
           "approvalPlanHead": "fccd49d1d4e695ce49e32e023de1dd1628c68627",
           "planCases": 7,
-          "runnerCases": 19
+          "runnerCases": 19,
+          "freeEvaluationPreparation": {
+            "pr": 94,
+            "reviewedHead": "74db9d1b4cf92aefda2d1b0d3a7588b7fe149e0c",
+            "planHash": "0x9afeecb7fbdf1d7d7df2cf53dc3061fd49996c7277f3ad301dc5286f9e185881",
+            "status": "CODE_REVIEWED_NEW_HUMAN_APPROVAL_AND_FREE_PROJECT_LOCAL_SETUP_PENDING",
+            "newOfflineCases": 23,
+            "relatedLocalCases": 460,
+            "remoteCi": "6_OF_6_SUCCESS_DEDICATED_23_CASES_LOCAL_SEPARATE",
+            "actualGenerationCalls": 0,
+            "actualCountCalls": 0,
+            "actualKeyReads": 0,
+            "actualModelQuality": "N/A_NOT_RUN",
+            "sourceScope": "EIGHT_FIXED_PUBLIC_SYNTHETIC_TEXTS_ONLY",
+            "existingPaidApprovalReused": false,
+            "approvalQuestionPresented": true,
+            "privateCredentialExistenceChecked": false,
+            "actualCommonApiAcceptance": false
+          }
         },
         "hackerrank": {
           "availability": "HUMAN_REPORTED_EXISTING_OWN_PYTHON_BASIC_CERTIFICATE_ACCOUNT",

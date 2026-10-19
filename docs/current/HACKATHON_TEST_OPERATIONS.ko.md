@@ -167,3 +167,9 @@ API 소유 `d534f4bc3fbf56845239853cc947a496a97847a2`는 새44+기존E1/E3 158=2
 E3 지문8개 중 store.mjs 연결부1개만 변경됐다. [memory 호환 입력v2](../../specs/bootcamp/hackathon-test-memory-source-intake-v2.json)는 이 후보의 source SHA를 memory-only 호환시험용으로 고정한다. 과거 boundary-v1 자체 SHA/scope와 E2/준비 입력은 보존한다. E4 소비자가 새 파일hash를 명시적으로 인수하고 정상 이력 통합·memory48 및새metadata/기존회귀·exactCI를 완료한 뒤에만 통합 결과를 수락한다. 후보는 현재 local commit이며 아직 source PR/CI 공개 인수가 아니다.
 
 E5-B에는 실제 E3 현재 승인·서명/dispatch handshake, worker takeover 뒤원래SEALED자료를재서명없이연결할명시적binding, ACCEPT 후자동고정claim과별도claim상태/영수증복구가필요하다. claim에는onchain opId가없으므로일반operation mapping으로완료를판정하지않는다. accepted claim에새source/지급승인을요구하지않으며, 정상자동지급과intentional backend-stop 후직접claim을별도로검증한다.
+
+### E6 새 무료 평가 준비 검토
+
+기존 유료 평가 계획과 소진 승인을 보존한 채 새 Free 전용 준비를 별도로 검토했다. Draft PR94의 head `74db9d1b4cf92aefda2d1b0d3a7588b7fe149e0c`, planHash `0x9afeecb7fbdf1d7d7df2cf53dc3061fd49996c7277f3ad301dc5286f9e185881`은 기존 공개 합성 Python 텍스트/gold8건만 대상으로 한다. 신규 오프라인23/23·관련460/460·CI6/6이며 실제 generation/count/키 조회는0, 실제 모델 품질은N/A다. root는 새 plan/runner/credential helper와 승인 문서를 읽었다. 기본은 실행 차단이고 무료 전용 로컬 slot 외의 환경변수/기존 paid 키로 전환하지 않는다.
+
+실행에는 별도의 새 사용자 승인, 같은 키 프로젝트의 Free 등급·결제 미연결·키 소속과 현재 rate limit 확인, 전용 로컬 키 준비가 필요하다. 이 조건은 인간의 UI 확인이며 코드가 Google billing을 독립 인증한 것이 아니다. 준비 문서를 열고 생성최대8/count0·재시도/continuation/다른 모델/paid fallback0 범위의 승인을 질문했다. 응답 전 private 경로의 존재/키를 조회하거나 승인 파일을 채우지 않는다. 실제 Moodle/HackerRank 사용자 원문은 이8건에 포함되지 않는다. 무료 데이터의 제품 개선 사용 조건과 조건부 요금0은 [공식 가격표](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite)·[billing 문서](https://ai.google.dev/gemini-api/docs/billing)를 따른다. 이 대기와 별개로 E5 연결 구현은 계속한다.
