@@ -19,6 +19,7 @@ test('fresh checkout packages official pinned runtime and license; bad download 
  const unpacked=join(parent,'unpacked');await exec('/usr/bin/ditto',['-x','-k',zip,unpacked]);
  const dest=join(unpacked,'CLEAR-Mac-Storage-Preview'),manifest=JSON.parse(await fs.readFile(join(dest,'MANIFEST.json'),'utf8'));
  assert.equal(manifest.node,'24.21.0');assert.equal(manifest.platform,'darwin-arm64');assert.match(await fs.readFile(join(dest,'runtime/NODE-LICENSE.txt'),'utf8'),/Node.js/);
+ assert.equal(typeof manifest.files['src/recovery-diagnostics.mjs'],'string');
  const {createHash}=await import('node:crypto');
  for(const [path,hash] of Object.entries(manifest.files))assert.equal(createHash('sha256').update(await fs.readFile(join(dest,path))).digest('hex'),hash);
  const testRoot=join(parent,'app');await fs.mkdir(testRoot,{mode:0o700});

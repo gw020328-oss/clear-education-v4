@@ -159,3 +159,57 @@ E4 PR93 `17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b`은 로컬/PR/push 새48개 �
 root는 새 E4와 현재 공통/Moodle/AI 준비를 별도 임시 작업본에서 정상 이력 병합했다. 조합 `aeb53ee8ffb0b04618fdb854938f61db7234e9ae`의 E3전용47+E4메모리48=95/95, 취소/skip0, 원본191·graph·diff PASS, 공개이력356commits/1885blobs/findings0이다. 기존430·새95·개별 회귀66은 다른 실행 범위이며 합산하지 않는다. 실제 source·public RPC·persistent chain은0이고 실제 E6 adapter 인수는 아니다. 임시 SDK 링크는 검사 후 제거했으며 tracked tree는 clean이다.
 
 [별도 E5 개발 인수](../../specs/bootcamp/hackathon-test-e5-development-intake-v1.json)는 새 소유 격리 persistent local EVM·API outbox/worker·실행 reader·private durable envelope·backend-stop 직접 claim의 TEST 개발/검증만 허용한다. 기존 memory boundary-v1 scope/SHA와 default signer 차단은 보존하고 변경된 source에는 새 검토된 버전 입력을 사용한다. 실제 인터넷 원천·기존 사용자 키/환경·유료 모델·공개체인·production·main/develop 병합은 이 단위에 없다. E5 구현·지속 runtime의 최종 인수는 아직 false다.
+
+### E5-A API 메타데이터 로컬 검토와 memory 호환 입력v2
+
+API 소유 `d534f4bc3fbf56845239853cc947a496a97847a2`는 새44+기존E1/E3 158=202/202, 강제종료5지점·독립process lease1승/1거부·migration rollback2지점을 통과했다. root는 store 연결부와 새 원장/port/operation/worker/readback을 읽었다. 기본 UNCONFIGURED, 구성 후 METADATA_ONLY이고 모든 executionAuthorized/dispatchAuthorized는 false다. HTTP 실행경로·sign/broadcast/rebase는 아직 없다. source expiry 무효화는 command rollback과 분리하고, worker heartbeat는 업무sequence와진행중cap의원래만료를연장하지않는다.
+
+E3 지문8개 중 store.mjs 연결부1개만 변경됐다. [memory 호환 입력v2](../../specs/bootcamp/hackathon-test-memory-source-intake-v2.json)는 이 후보의 source SHA를 memory-only 호환시험용으로 고정한다. 과거 boundary-v1 자체 SHA/scope와 E2/준비 입력은 보존한다. E4 소비자가 새 파일hash를 명시적으로 인수하고 정상 이력 통합·memory48 및새metadata/기존회귀·exactCI를 완료한 뒤에만 통합 결과를 수락한다. 후보는 현재 local commit이며 아직 source PR/CI 공개 인수가 아니다.
+
+E5-B에는 실제 E3 현재 승인·서명/dispatch handshake, worker takeover 뒤원래SEALED자료를재서명없이연결할명시적binding, ACCEPT 후자동고정claim과별도claim상태/영수증복구가필요하다. claim에는onchain opId가없으므로일반operation mapping으로완료를판정하지않는다. accepted claim에새source/지급승인을요구하지않으며, 정상자동지급과intentional backend-stop 후직접claim을별도로검증한다.
+
+### E6 새 무료 평가 준비 검토
+
+기존 유료 평가 계획과 소진 승인을 보존한 채 새 Free 전용 준비를 별도로 검토했다. Draft PR94의 head `74db9d1b4cf92aefda2d1b0d3a7588b7fe149e0c`, planHash `0x9afeecb7fbdf1d7d7df2cf53dc3061fd49996c7277f3ad301dc5286f9e185881`은 기존 공개 합성 Python 텍스트/gold8건만 대상으로 한다. 신규 오프라인23/23·관련460/460·CI6/6이며 실제 generation/count/키 조회는0, 실제 모델 품질은N/A다. root는 새 plan/runner/credential helper와 승인 문서를 읽었다. 기본은 실행 차단이고 무료 전용 로컬 slot 외의 환경변수/기존 paid 키로 전환하지 않는다.
+
+실행에는 별도의 새 사용자 승인, 같은 키 프로젝트의 Free 등급·결제 미연결·키 소속과 현재 rate limit 확인, 전용 로컬 키 준비가 필요하다. 이 조건은 인간의 UI 확인이며 코드가 Google billing을 독립 인증한 것이 아니다. 준비 문서를 열고 생성최대8/count0·재시도/continuation/다른 모델/paid fallback0 범위의 승인을 질문했다. 응답 전 private 경로의 존재/키를 조회하거나 승인 파일을 채우지 않는다. 실제 Moodle/HackerRank 사용자 원문은 이8건에 포함되지 않는다. 무료 데이터의 제품 개선 사용 조건과 조건부 요금0은 [공식 가격표](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite)·[billing 문서](https://ai.google.dev/gemini-api/docs/billing)를 따른다. 이 대기와 별개로 E5 연결 구현은 계속한다.
+
+사용자는 무료 실행 질문에 기존 결제된 유료 API 키를 사용할 수 있는지 물었다. 기존 유료 키 사용 방향으로 준비안을 전환하며 새 무료 프로젝트/키 준비를 요구하지 않는다. Free PR94와 기존 paid 계획·소진 원장은 보존한다. 새 유료8건의 정확 요청·추정 비용·중단 조건과 기존 키 접근 경로를 구체화한 뒤 새 실행 범위를 확인하며, US$0.05를 검증된 확정 과금 상한으로 표시하지 않는다. 이 답변만으로 실제8건 실행·키 조회가 완료/승인된 것으로 기록하지 않고 현재 calls/key reads0을 유지한다.
+
+유료 준비 PR96/head `9aa155ce5c23a9bc4e8c81a191b57491362f0a05`·planHash `0xf1d965041da451b13252e3e7b9b3d1255e12a8d7e10170361bbe3eea7ba879d9`를 root가 검토했고 신규18/관련478·exact-head CI6/6을 확인했다. 사용자는 생성최대8/count0·재시도/대체0, 추정 US$0.02768 및 US$0.05 확정 상한 부재/진행중 호출의 초과 가능성을 포함한 질문에 **“이 조건으로 8건 실행 승인”**이라고 직접 답했다. 기존 GEMINI_API_KEY 경로만 읽는 단회 실제 실행을 기존 AI 세션에 Sol/Medium으로 전달했다. key missing/오류/usage 불명/관측 가정 초과 시 중단하고 자동 이어실행하지 않는다. 현재 실행 결과는 대기 중이며, 준비 시점의 calls0을 실제 결과로 전용하지 않는다. 실제 사용자 원천/지급 권한 승인이 아니다.
+
+### E5-B current adapter 부분 검토와 memory 입력v3
+
+API 로컬 `97f6413da80f8c9075baf344b5e2bf3f8c221360`은 새36+metadata44+기존158=238개를 통과했다. root는 새 current/E4-port/handshake 전체와 store/operations 연결부를 읽었다. E3 DB의 source·동의·이의·24필드와 실제 reader 관측을 대조하며 private ticket과 동기 현재성 검사를 사용한다. 기본 미구성, dispatch 차단이며 시험은 hash-only service 대역이다. 실제 새 unsigned 준비 생성·전체 등록/배정/공개 orchestration·E4 제한 issuer/ancestry·fence 범위·SEALED 인수/기존ref 조회·receipt 수락·별도 자동 claim은 아직 미완료다. 이 부분을 전체 E5-B 인수나 실제 chain 연결로 세지 않는다.
+
+새 memory 호환 입력v3는 현재 store와 execution8개 source를 해당 head에서 고정했다. 이전 v1/v2와 E2 입력·계약·memory-only 정책은 유지하며 새 입력은 명시된 consumer 변경/정상 소유 이력 병합/관련 검사 전까지 결합 CI 대기다. v2는 metadata-only 후보의 검토 기록으로 보존하고 소비 성공으로 소급하지 않는다.
+
+### 유료 평가 첫 호출 중단과 계측 원인
+
+승인된9aa 실행은 실제 전송1/예약1/count0, 첫 HTTP 성공 뒤 `E6_PAID8_USAGE_UNKNOWN`으로 중단했다. prompt314/candidate135/total449가 명시됐고 thoughts 세부 항목은 없었다. 나머지7건은NOT_RUN, 채점사례0/모델품질N/A·실제invoice N/A다. 알려진완료비용 필드의0을 무료나 실제요금0으로 해석하지 않는다. 원문 미저장 정책 때문에 첫 응답을 사후 채점 성공으로 바꿀 수도 없다. 기존 원장·승인·실패 결과는 보존하고 자동 재전송하지 않는다.
+
+root는 [공식 UsageMetadata 합계](https://ai.google.dev/api/generate-content#UsageMetadata)와 [공식 SDK UsageMetadata](https://github.com/googleapis/python-genai/blob/main/google/genai/types.py)를 확인했다. no-tools 고정 요청에서 total-prompt를 결합 출력량으로 유도하는 호환 처리를 오프라인으로 검토한다. 관측 thoughts 부재를 그대로 남기고 파생값·실측필드·과금 추정을 구분하며, total 누락/불일치·뜻밖의 도구/캐시·overflow는 계속 차단해야 한다. 이 검토가 기존9aa 실행의 소급 성공이나 새 호출 승인은 아니다.
+
+### E5-A 새 필수 CI 실패 — 원인 진단 중
+
+Draft PR95/head `3e11a8eb8f1925aad0d2a93f405f80e4b4ba6835`는 기존필수6/6이 성공했으나 새 E5 PR workflow [39202079577/job117899079948](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39202079577/job/117899079948)의 실제33개 중32PASS/1FAIL이다. 두 service process nonce 경합의 성공개수가 기대1 대신0이었다. 자식 stdout/stderr가 폐기되고 catch가 고정 exit87만 남겨 최초 거부 원인은 미확정이다. push 동반 실행이나 과거 local 성공으로 이 실패를 대체하지 않는다. E5-A 전체 인수와 후속 실제 API dispatch는 false다.
+
+Astra/High로 자식의 비밀없는 phase/code/exit 진단과 제어된 경합 재현을 요청했다. 같은 canonical checkpoint를 매번 새 관측 sequence로 append하면, nonce에서 지는 다른 process의 관측이 승자 after-sign CAS도 중단시킬 수 있다는 구체 interleaving 가설을 소스에서 찾았다. 이것은 최초 CI 원인으로 확정된 사실이 아니다. 동일 checkpoint의 멱등 처리와 실제 다른 checkpoint의 CAS 거부를 구분해 근거를 확보한 뒤 필요한 부분만 수정한다. nonce/fence/lease/chain guard 완화나 기댓값0, 원래 workflow 무근거 재실행으로 넘기지 않는다.
+
+### 새 제어 경합 재현과 서비스 회귀
+
+E4 소유자는 실제 Geth/두 프로세스의 순서를 고정해 수정 전 A의 서명1회 후 checkpoint CAS 거부, B의 키 접근0/noncebusy 거부를 재현했다. 해당 재현의 lease 잔여120초로 만료/timeout과 구분했다. 동일runtime/hash/number/time/finality의 관측만 멱등 처리한 뒤 같은블록1승과 새블록CAS거부가 통과했다. 최초CI의 미보존 child 원인을 소급확정하지 않는다. 전체 회귀에서 별도 환경 생성의 두 오류도 발견됐고, Geth의 transaction indexing is in progress 로그에 따라 이미 전송된 같은txHash의 bounded receipt 조회를 보강 중이다. 새 서명·전송이 아니며 최종 전체검사/CI는 아직 대기다.
+
+### usage v2 새 승인·두 번째 실제 중단
+
+Draft PR97/head `cafbf3bd087104a34b3c3000885fdcd4674c4e21`·planHash `0x640a78767508987d92abab8defe0c102bcdaf05644ecec3ea715d614c3d604b6`는 신규25/사전검토175·AI/document291 및 CI6/6이다. root는 순수usage helper·공식근거·runner delta·CLI를 읽었다. 담당채팅에서 exact head/plan의 **추가8건** 질문에 사용자가 추정 비용/초과 가능성을 수락해 직접 승인한 기록을 읽어 확인했고, 중복 승인을 요구하지 않았다.
+
+그러나 이 실행도 첫fetch/HTTP2xx1회 뒤 `E6_UV2_SERVICE_TIER`로 중단했다. v1/v2 총 실제fetch2, count0, 품질채점0이며 각 실행의나머지7건은NOT_RUN이다. 코드가uppercase STANDARD만허용한 반면 [공식 REST ServiceTier](https://ai.google.dev/api/generate-content#ServiceTier)는 소문자standard/unspecified/flex/priority를 정의한다. 이 wire 호환성검토누락을 인정하며, 미보존된실제tier값을소급추정하지 않는다. 추가유료호출은0으로멈춘다.
+
+다음 단위는 특정enum만바꿔곧바로다시8건을요청하는것이아니다. 정확REST의enum/optionalmetadata와모든guard를공식문서fixture로대조하고, 이미받은유효응답의메모리내품질평가와usage에따른후속dispatch중단을분리할수있는지오프라인으로검토한다. 비용N/A/부분품질과전체완료를구분하고과거raw가없는두응답을소급채점하지않는다. 새실행질문은root의이검토후에한곳에서조정하며, 기존승인/원장을재사용하거나자동재개하지않는다.
+
+### E5-A 서비스 최종 인수와 B 준비
+
+Draft PR95의 최종 `0e6d4225e5b645e57e3988dc426937b08069ead8`(구현bbadeff4)은 local42/42·exact-head CI8/8, 두전용실행의각각새42+기존E4 164 PASS, fail/cancel/skip0으로확인했다. root가공개source23개지문일치와깨끗한작업본,최종diff·고정진단·새블록거부·receipt색인조회처리를읽었고reviewthreads0/추가페이지없음을확인했다. [서비스인수v1](../../specs/bootcamp/hackathon-test-e5-service-intake-v1.json)은다음격리TEST연결용component만인수한다. 전체API/자동지급/E6 source/public-finalized/production인수는아니다. 기존3e11원격실패와미보존원인한계는남긴다.
+
+[E5 bridge 초안](HACKATHON_TEST_E5_BRIDGE_PROTOCOL_DRAFT.ko.md)은전역runtimelease/fence와intent별lease,제한issuer·canonical witness,불변거래인수·기존요청조회,별도claim job을구분한다. E4의Astra/High읽기전용검토에서정책충돌은발견하지않았으며포트의접근범위/재사용/기한을구체화해야한다. API소유자는97f후손에서전역권한기반을오프라인구현중이다. 실제B연결은그포트와새source핀/관련시험을인수한뒤수행하며원래승인정책의재질문은필요없다.
