@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 13,
+  "repositoryPlanRevision": 14,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -228,7 +228,7 @@
     {
       "stage": "E5",
       "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
-      "status": "API_METADATA_REVIEWED_SERVICE_IMPLEMENTATION_IN_PROGRESS",
+      "status": "API_CURRENT_HANDSHAKE_REVIEWED_FULL_EXECUTION_CONNECTION_PENDING",
       "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -268,6 +268,23 @@
           "SEALED_ENVELOPE_RECOVERY_ACROSS_WORKER_TAKEOVER",
           "AUTOMATIC_ACCEPT_THEN_FIXED_SETTLEMENT_AND_BACKEND_STOP_DIRECT_CLAIM"
         ]
+      },
+      "apiCurrentAdapter": {
+        "localHead": "97f6413da80f8c9075baf344b5e2bf3f8c221360",
+        "publiclyPushed": false,
+        "newCurrentTests": 36,
+        "existingMetadataTests": 44,
+        "existingE1E3Tests": 158,
+        "pass": 238,
+        "fail": 0,
+        "newActualBForcedProcessExit": false,
+        "actualE4Execution": false,
+        "executionAuthorized": false,
+        "dispatchAuthorized": false,
+        "newCompatibleMemoryInput": "specs/bootcamp/hackathon-test-memory-source-intake-v3.json",
+        "combinedCi": "PENDING",
+        "sourceReview": "THREE_NEW_MODULES_STORE_AND_OPERATIONS_CONNECTION_READ",
+        "fullE5BAccepted": false
       }
     },
     {
@@ -334,14 +351,14 @@
             "approvalGranted": false
           },
           "paidEvaluationPreparation": {
-            "status": "DIRECT_HUMAN_APPROVED_SCOPED_ACTUAL_RUN_DISPATCHED_RESULTS_PENDING",
+            "status": "FIRST_HTTP_SUCCESS_STOPPED_FOR_INCOMPLETE_USAGE_NO_AUTOMATIC_RESUME",
             "humanPreference": "USE_EXISTING_PAID_API_KEY",
             "newFreeProjectRequired": false,
             "existingPaidPlanAndSpentApprovalsPreserved": true,
             "actualNewRunApproved": true,
-            "actualGenerationCalls": null,
-            "actualCountCalls": null,
-            "actualKeyReads": null,
+            "actualGenerationCalls": 1,
+            "actualCountCalls": 0,
+            "actualKeyReads": "SELECTED_EXISTING_SOURCE_READ_ACTUAL_COUNT_PENDING_OWNER_REPORT",
             "hardUsd005CapVerified": false,
             "requestedModel": "gpt-6.1-sol",
             "thinking": "high",
@@ -359,7 +376,20 @@
             "costBasis": "ASSUMED_3000_INPUT_1024_COMBINED_OUTPUT_PER_CASE_NOT_VERIFIED_CASH_CAP",
             "humanAcceptedPossibleInFlightUsd005Excess": true,
             "executionRequestedModel": "gpt-6.1-sol",
-            "executionThinking": "medium"
+            "executionThinking": "medium",
+            "reservedCalls": 1,
+            "httpSuccessResponses": 1,
+            "qualityAssessedCases": 0,
+            "notRunCases": 7,
+            "stopCode": "E6_PAID8_USAGE_UNKNOWN",
+            "observedTokens": {
+              "prompt": 314,
+              "candidate": 135,
+              "thoughts": null,
+              "total": 449
+            },
+            "invoiceVerified": false,
+            "originalJournalPreserved": true
           }
         },
         "hackerrank": {

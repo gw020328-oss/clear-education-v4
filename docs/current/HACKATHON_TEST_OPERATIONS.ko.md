@@ -177,3 +177,15 @@ E5-B에는 실제 E3 현재 승인·서명/dispatch handshake, worker takeover �
 사용자는 무료 실행 질문에 기존 결제된 유료 API 키를 사용할 수 있는지 물었다. 기존 유료 키 사용 방향으로 준비안을 전환하며 새 무료 프로젝트/키 준비를 요구하지 않는다. Free PR94와 기존 paid 계획·소진 원장은 보존한다. 새 유료8건의 정확 요청·추정 비용·중단 조건과 기존 키 접근 경로를 구체화한 뒤 새 실행 범위를 확인하며, US$0.05를 검증된 확정 과금 상한으로 표시하지 않는다. 이 답변만으로 실제8건 실행·키 조회가 완료/승인된 것으로 기록하지 않고 현재 calls/key reads0을 유지한다.
 
 유료 준비 PR96/head `9aa155ce5c23a9bc4e8c81a191b57491362f0a05`·planHash `0xf1d965041da451b13252e3e7b9b3d1255e12a8d7e10170361bbe3eea7ba879d9`를 root가 검토했고 신규18/관련478·exact-head CI6/6을 확인했다. 사용자는 생성최대8/count0·재시도/대체0, 추정 US$0.02768 및 US$0.05 확정 상한 부재/진행중 호출의 초과 가능성을 포함한 질문에 **“이 조건으로 8건 실행 승인”**이라고 직접 답했다. 기존 GEMINI_API_KEY 경로만 읽는 단회 실제 실행을 기존 AI 세션에 Sol/Medium으로 전달했다. key missing/오류/usage 불명/관측 가정 초과 시 중단하고 자동 이어실행하지 않는다. 현재 실행 결과는 대기 중이며, 준비 시점의 calls0을 실제 결과로 전용하지 않는다. 실제 사용자 원천/지급 권한 승인이 아니다.
+
+### E5-B current adapter 부분 검토와 memory 입력v3
+
+API 로컬 `97f6413da80f8c9075baf344b5e2bf3f8c221360`은 새36+metadata44+기존158=238개를 통과했다. root는 새 current/E4-port/handshake 전체와 store/operations 연결부를 읽었다. E3 DB의 source·동의·이의·24필드와 실제 reader 관측을 대조하며 private ticket과 동기 현재성 검사를 사용한다. 기본 미구성, dispatch 차단이며 시험은 hash-only service 대역이다. 실제 새 unsigned 준비 생성·전체 등록/배정/공개 orchestration·E4 제한 issuer/ancestry·fence 범위·SEALED 인수/기존ref 조회·receipt 수락·별도 자동 claim은 아직 미완료다. 이 부분을 전체 E5-B 인수나 실제 chain 연결로 세지 않는다.
+
+새 memory 호환 입력v3는 현재 store와 execution8개 source를 해당 head에서 고정했다. 이전 v1/v2와 E2 입력·계약·memory-only 정책은 유지하며 새 입력은 명시된 consumer 변경/정상 소유 이력 병합/관련 검사 전까지 결합 CI 대기다. v2는 metadata-only 후보의 검토 기록으로 보존하고 소비 성공으로 소급하지 않는다.
+
+### 유료 평가 첫 호출 중단과 계측 원인
+
+승인된9aa 실행은 실제 전송1/예약1/count0, 첫 HTTP 성공 뒤 `E6_PAID8_USAGE_UNKNOWN`으로 중단했다. prompt314/candidate135/total449가 명시됐고 thoughts 세부 항목은 없었다. 나머지7건은NOT_RUN, 채점사례0/모델품질N/A·실제invoice N/A다. 알려진완료비용 필드의0을 무료나 실제요금0으로 해석하지 않는다. 원문 미저장 정책 때문에 첫 응답을 사후 채점 성공으로 바꿀 수도 없다. 기존 원장·승인·실패 결과는 보존하고 자동 재전송하지 않는다.
+
+root는 [공식 UsageMetadata 합계](https://ai.google.dev/api/generate-content#UsageMetadata)와 [공식 SDK UsageMetadata](https://github.com/googleapis/python-genai/blob/main/google/genai/types.py)를 확인했다. no-tools 고정 요청에서 total-prompt를 결합 출력량으로 유도하는 호환 처리를 오프라인으로 검토한다. 관측 thoughts 부재를 그대로 남기고 파생값·실측필드·과금 추정을 구분하며, total 누락/불일치·뜻밖의 도구/캐시·overflow는 계속 차단해야 한다. 이 검토가 기존9aa 실행의 소급 성공이나 새 호출 승인은 아니다.
