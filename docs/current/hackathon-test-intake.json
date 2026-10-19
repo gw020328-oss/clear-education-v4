@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 17,
+  "repositoryPlanRevision": 18,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -228,7 +228,7 @@
     {
       "stage": "E5",
       "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
-      "status": "SERVICE_COMPONENT_ACCEPTED_GLOBAL_API_FENCE_AND_ACTUAL_BRIDGE_PENDING",
+      "status": "SERVICE_COMPONENT_ACCEPTED_API_GLOBAL_CANDIDATE_REVIEWED_ACTUAL_BRIDGE_PENDING",
       "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -331,11 +331,18 @@
         "fullRuntimeAccepted": false
       },
       "globalLeasePreparation": {
-        "status": "API_IMPLEMENTATION_IN_PROGRESS_OFFLINE_ONLY",
+        "status": "LOCAL_IMPLEMENTATION_REVIEWED_EXPLICIT_V4_CONSUMER_AND_E4_PORTS_PENDING",
         "baseHead": "97f6413da80f8c9075baf344b5e2bf3f8c221360",
         "requestedSetting": "gpt-6-astra/high",
         "protocolDraft": "docs/current/HACKATHON_TEST_E5_BRIDGE_PROTOCOL_DRAFT.ko.md",
-        "e4ReadOnlyReview": "NO_POLICY_CONFLICT_RESTRICTED_ISSUER_WITNESS_ADOPTION_LOOKUP_DETAILS_PENDING"
+        "e4ReadOnlyReview": "NO_POLICY_CONFLICT_RESTRICTED_ISSUER_WITNESS_ADOPTION_LOOKUP_DETAILS_PENDING",
+        "candidateHead": "4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0",
+        "ownerReportedPass": 275,
+        "rootSourceReviewComplete": true,
+        "newCompatibleMemoryInput": "specs/bootcamp/hackathon-test-memory-source-intake-v4.json",
+        "publiclyPushed": false,
+        "actualE4WitnessConnected": false,
+        "actualDispatch": false
       }
     },
     {
@@ -475,7 +482,21 @@
             "nextScope": "COMPREHENSIVE_OFFLINE_WIRE_GUARD_REVIEW_AND_CURRENT_RESPONSE_QUALITY_METRIC_SEPARATION_ROOT_REVIEW_BEFORE_NEW_APPROVAL_QUESTION"
           },
           "totalActualFetchAcrossNewPaidRuns": 2,
-          "totalAssessedCasesAcrossNewPaidRuns": 0
+          "totalAssessedCasesAcrossNewPaidRuns": 0,
+          "wireV3": {
+            "pr": 98,
+            "reviewedExecutionHead": "636817f679e009a6ad3194b7c549606cd24d112f",
+            "planHash": "0x29be00a2f5c79a757b41bf0e7f41c278c5ed403b9f4fb5aea4e50c1cf8d12bfb",
+            "localTargetedPass": 28,
+            "scope": "OFFICIAL_WIRE_DEFAULTS_AND_PARTIAL_SCORING_WITH_EXPLICIT_CASE_TOPIC_DENOMINATORS",
+            "freshAdditionalMax8DirectHumanApproved": true,
+            "approvalEvidence": "request_user_input_async/call_02475adfc6334e038d04b26b796c24b4/0",
+            "executionResult": "PENDING_OWNER_SINGLE_RUN",
+            "priorActualCalls": 2,
+            "priorScoredCases": 0,
+            "countRetryFallbackCallsAuthorized": 0,
+            "macFailureResolutionClaimed": false
+          }
         },
         "hackerrank": {
           "availability": "HUMAN_REPORTED_EXISTING_OWN_PYTHON_BASIC_CERTIFICATE_ACCOUNT",
@@ -648,7 +669,29 @@
       "requestedModel": "gpt-6-astra",
       "thinking": "high",
       "started": true,
-      "scope": "OFFLINE_GLOBAL_RUNTIME_LEASE_AND_FENCE_ALIGNMENT_NOT_ACTUAL_DISPATCH"
+      "scope": "OFFLINE_GLOBAL_RUNTIME_LEASE_AND_FENCE_ALIGNMENT_NOT_ACTUAL_DISPATCH",
+      "localImplementationComplete": true,
+      "reviewedCandidateHead": "4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0",
+      "actualDispatch": false
+    },
+    "apiMacStaleRecoveryEperm": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "failedHead": "636817f679e009a6ad3194b7c549606cd24d112f",
+      "originalRun": "39219934005",
+      "originalAttempt": 1,
+      "originalJob": "117952603977",
+      "pass": 104,
+      "fail": 1,
+      "code": "STALE_RECOVERY:EPERM",
+      "exactSyscallAndRootCause": "UNCONFIRMED",
+      "improperBlindRerunPerformedByAiOwner": true,
+      "rerunAttempt": 2,
+      "rerunJob": "117954326684",
+      "rerunSuccessAcceptedAsResolution": false,
+      "diagnosticChangesInProgress": true,
+      "localFullRunExit137": "SEPARATE_UNEXPLAINED_INTERRUPTION_PRESERVED",
+      "additionalBlindRerunPermitted": false
     }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
