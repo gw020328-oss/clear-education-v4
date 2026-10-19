@@ -10,6 +10,8 @@
 - API 담당의 연결 검토 코멘트에 따라 prepareUnsigned도 accept와 같은 실제 message nonce로 관측하도록 보강했다. private query/관측 nonce 일치와 이미 consumed인 nonce의 prepare 거부를 실제 TEST chain으로 검사한다. A 파일은 보존한다.
 - backend-stop 직접 claim에는 E4 envelope가 없으므로 `{applicationId,txHash}`만 받는 제한된 receipt 인수 포트를 추가했다. tx에서 기대 sender/nonce/calldata를 파생하고 실제 Transfer/RightSettled 및 accepted allocation/digest/nonce 관계를 검증한다. caller-supplied row/from은 받지 않으며 불확실은 UNKNOWN이다. API 전체 backend-stop 연결을 완료했다고 주장하지 않는다.
 
+직접 claim 신규 시험 최초 결과는 19/20이다. 원인은 accept가 임시 prepared digest/nonce를 지우는데 초기 receipt 포트가 그 임시 값과 영구 권리를 비교한 것이다. 계약을 변경하지 않고 실제 영구 acceptedRight digest/nonce, used nonce, application allocation/recipient와 cleared prepared 상태를 검사하도록 수정했다. 실패 로그를 최종 통과 로그와 별도 보존한다.
+
 ## 경계 검토
 
 첫 capability는 async authorize에서 실제 chain을 읽은 후 발급한다. API의 동기 transaction 안에서 worker를 호출하는 재귀가 필요하지 않다. 각 issuer는 active callback의 private identity ticket을 한 번 소비한 뒤 미리 결합한 해당 payload만 서명한다. issuer 자체는 DB/RPC를 호출하지 않는다. Promise callback과 worker 재진입은 거부한다. 동기 callback 안의 API 실제 인증/원천/CAS 검사는 API 소유자에게 남는다.

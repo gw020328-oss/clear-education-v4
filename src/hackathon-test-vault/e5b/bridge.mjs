@@ -26,7 +26,7 @@ export function openOwnedApiBridge({environmentId,clock,cut}){
    const at=await service.reader.observe({applicationId:query.applicationId,blockHash:tx.blockHash});
    const result=await service.reader.receipt({txHash:query.txHash,sender:tx.from.toLowerCase(),to:manifest.vaultAddress,nonce:BigInt(tx.nonce).toString(),dataHash:keccak256(tx.input),applicationId:query.applicationId,authorizationNonce:at.business.right.nonce,method:'claim'});
    ensure(result.status==='INCLUDED','E5B_CLAIM_NOT_INCLUDED');const {application:a,right:r,nonceUsed}=result.observation.business;
-   ensure(a.state==='6'&&a.recipient.toLowerCase()===r.recipient.toLowerCase()&&r.token.toLowerCase()===manifest.tokenAddress&&r.amountAtoms==='100000000'&&a.allocationId===r.allocationId&&r.allocationId!==ZERO&&a.preparedDigest===r.authorizationDigest&&r.authorizationDigest!==ZERO&&a.preparedNonce===r.nonce&&r.nonce!==ZERO&&nonceUsed,'E5B_CLAIM_ACCEPTED_RELATION');
+   ensure(a.state==='6'&&a.recipient.toLowerCase()===r.recipient.toLowerCase()&&r.token.toLowerCase()===manifest.tokenAddress&&r.amountAtoms==='100000000'&&a.allocationId===r.allocationId&&r.allocationId!==ZERO&&r.authorizationDigest!==ZERO&&r.nonce!==ZERO&&nonceUsed&&a.preparedDigest===ZERO&&a.preparedNonce===ZERO,'E5B_CLAIM_ACCEPTED_RELATION');
    return freeze({version:'clear-e5b-direct-claim-receipt.1',runtimeHash:service.runtimeHash,...query,status:'INCLUDED',checkpoint:result.checkpoint,observation:result.observation,allocationId:r.allocationId,authorizationDigest:r.authorizationDigest,recipient:r.recipient,token:r.token,amountAtoms:r.amountAtoms,finalized:false});
   }catch{return unknown();}
  });

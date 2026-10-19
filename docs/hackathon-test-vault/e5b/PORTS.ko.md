@@ -40,7 +40,7 @@ API callback은 실제 서비스 인증, intent/global lease 및 slot CAS, sourc
 
 ## Envelope 없는 직접 claim receipt 인수
 
-등록된 `reader.claimReceipt({applicationId,txHash})`는 backend 중단 중 anycaller가 직접 claim한 경우의 읽기 포트다. 입력은 두 식별자뿐이며 from/nonce/calldata/row/verified/operationId를 받지 않는다. 실제 tx에서 sender/account nonce/calldata hash를 파생하고 정확한 고정 vault의 `claim(applicationId)` calldata인지 검사한다. 등록 reader가 canonical block의 transaction·receipt·log membership, 체인/runtime/code pin, RightSettled와 고정 recipient의 100 TEST Transfer, 실제 state/readback을 검증한다. accepted allocation 및 authorization digest/nonce를 저장된 application의 prepared 사실과 연결하고 used nonce도 확인한다.
+등록된 `reader.claimReceipt({applicationId,txHash})`는 backend 중단 중 anycaller가 직접 claim한 경우의 읽기 포트다. 입력은 두 식별자뿐이며 from/nonce/calldata/row/verified/operationId를 받지 않는다. 실제 tx에서 sender/account nonce/calldata hash를 파생하고 정확한 고정 vault의 `claim(applicationId)` calldata인지 검사한다. 등록 reader가 canonical block의 transaction·receipt·log membership, 체인/runtime/code pin, RightSettled와 고정 recipient의 100 TEST Transfer, 실제 state/readback을 검증한다. accepted allocation/recipient를 application과 연결하고, 영구 acceptedRight의 authorization digest/nonce 및 used nonce를 확인한다. accept가 임시 prepared 필드를 지우므로 그것을 영구 digest와 비교하지 않으며 cleared 상태를 확인한다. 반환된 영구 digest는 API의 원래 accepted 기록과 대조할 값이다.
 
 성공은 `clear-e5b-direct-claim-receipt.1`의 INCLUDED, 실제 checkpoint/observation, allocationId/authorizationDigest/recipient/token/amountAtoms와 `finalized:false`다. 조회 부재·잘못된 거래/app·실패 receipt·불완전 증거는 UNKNOWN/automaticPromotion:false로 남는다. 해당 거래에 가짜 envelope/ref/operation을 만들거나 state SETTLED만 보고 지급 완료로 승격하지 않는다. 새 원천/현재 key/epoch/pause를 claim 자격으로 요구하지 않는다. API는 constructor에 캡처한 이 포트의 결과만 private intake로 받아야 하며 browser JSON을 인증된 receipt로 받으면 안 된다. API 저장/재시작 통합 자체는 아직 미구현이다.
 
