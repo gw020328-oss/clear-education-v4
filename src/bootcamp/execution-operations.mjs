@@ -7,14 +7,17 @@ import {executionLedger,EXECUTION_VERSION} from './execution-ledger.mjs';
 import {createExecutionPorts,address,u64,sync} from './execution-ports.mjs';
 import {compareExecutionObservations,executionReadback} from './execution-readback.mjs';
 import {hashTestUnsignedPayload} from '../bootcamp-authorization/test-encoding-v3.mjs';
+import {createExecutionCurrent} from './execution-current.mjs';
+import {createExecutionHandshake} from './execution-handshake.mjs';
 
 const freshId=prefix=>prefix+'-'+randomUUID();
 const kinds=['REGISTER','ALLOCATE','START_REVIEW','OBSERVE','BIND_CONSENTS','PREPARE','ACCEPT','TERMINATE'];
 const bodyKeys=['expectedRevision','expectedLedgerSequence','targetDecisionId','targetDecisionRevision','targetDecisionHash',
  'kind','operationId','caller','expectedChainVersion','payloadHash','preparationId','authorizationDigest'];
 export function createExecutionOperations({db,transaction,authentication,operatorBindings,app,refresh,tick,sessionHash,ledger,heads,source,
- services=null,fault=()=>{}}){
+ services=null,e4CurrentPorts={configured:false},fault=()=>{}}){
  const l=executionLedger(db),ports=createExecutionPorts(services),get=(sql,...args)=>db.prepare(sql).get(...args);
+ const current=createExecutionCurrent({db,heads,source,operatorBindings});
  const decode=row=>row?JSON.parse(row.record):null;
  const decision=a=>decode(get('SELECT record FROM decisions WHERE id=?',a.decision_id));
  const configured=()=>check(ports.configured,'BC_E5_UNCONFIGURED');
@@ -46,7 +49,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
    const i=l.intent(intentId);if(i)refresh(app(i.applicationId),c.time,c.reversed);db.exec('SAVEPOINT e5_service');
    try{const value=sync(fn(c.time,authority)),end=tick();check(!end.reversed&&end.time===c.time,'BC_E5_CLOCK_CHANGED');
-    const final=ports.authorize(context,request,end.time);check(final.serviceId===authority.serviceId,'BC_E5_SERVICE_AUTHORITY');
+    const final=ports.authorize(context,request,end.time);check(final.serviceId===authority.serviceId&&final.expiresAt>=authority.expiresAt,'BC_E5_SERVICE_AUTHORITY');
     db.exec('RELEASE e5_service');return {value};
    }catch(error){db.exec('ROLLBACK TO e5_service; RELEASE e5_service');if(i){const end=tick();refresh(app(i.applicationId),end.time,end.reversed);}return {error};}
   });if(result.error)throw result.error;return result.value;
@@ -98,7 +101,15 @@ export function createExecutionOperations({db,transaction,authentication,operato
    .run(reason,canonical(record),r.id,r.revision);event(i,'RUNTIME_SUSPENDED',{generation:r.generation,reason},time);return {status:'BLOCKED',reason};
  }
  const api={
-  status(){return freeze({version:EXECUTION_VERSION,status:ports.status,signingImplemented:false,broadcastImplemented:false,rebaseImplemented:false,paymentAuthority:false});},
+  connectCurrentController(context){
+   configured();check(e4CurrentPorts.configured,'BC_E5_E4_UNCONFIGURED');
+   // Never routed through HTTP. Validate the service credential before returning
+   // separated controller/worker facades; every later call revalidates it too.
+   ports.authorize(context,{action:'CONNECT_E4_CURRENT',intentId:null,runtimeId:ports.runtimeId},tick().time);
+   return createExecutionHandshake({ports:e4CurrentPorts,current,service,live,basis,sameBasis,intent,runtime,l,event,business,db,fault},context);
+  },
+  status(){return freeze({version:EXECUTION_VERSION,status:ports.status,signingImplemented:false,broadcastImplemented:false,rebaseImplemented:false,paymentAuthority:false,
+   currentConnection:{status:e4CurrentPorts.status??'UNCONFIGURED',ownerSealPortConfigured:!!e4CurrentPorts.sealPortConfigured,dispatchAuthorized:false}});},
   enqueue(context,applicationId,body,key){
    exactKeys(body,bodyKeys,'BC_E5_COMMAND_BODY');id(key);revision(body.expectedRevision);revision(body.targetDecisionRevision);id(body.targetDecisionId);
    hash(body.targetDecisionHash);hash(body.operationId);address(body.caller);u64(body.expectedChainVersion);hash(body.payloadHash);
