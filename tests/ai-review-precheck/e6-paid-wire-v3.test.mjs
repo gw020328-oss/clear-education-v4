@@ -23,7 +23,7 @@ test('fake8/count0 with actual REST spelling, durable reserve first, pacing, com
   assert.equal(s.snapshots.at(-1).status,'DISPATCH_RESERVED');assert.equal(s.snapshots.at(-1).generationCalls,s.calls.length+1);return request(...args);};
  const r=await runE6PaidWireV3(s.cfg);assert.equal(r.status,'FINISHED');assert.equal(r.generationCalls,8);assert.equal(r.countCalls,0);
  assert.equal(r.aggregate.scorableCases,8);assert.equal(r.aggregate.scoredTopics,24);assert.equal(r.aggregate.correctTopicStates,24);
- assert.equal(r.aggregate.topicAccuracy,1);assert.equal(r.aggregate.assessedNormalControls,5);assert.equal(r.aggregate.falseHolds,0);
+ assert.equal(r.aggregate.topicAccuracy,1);assert.equal(r.aggregate.assessedNormalControls,5);assert.equal(r.aggregate.falseHoldTopics,0);assert.equal(r.aggregate.falseHoldCases,0);assert.equal(r.aggregate.assessedNormalControlTopics,15);
  assert.equal(r.aggregate.expectedPresentTopicsAssessed,21);assert.equal(r.aggregate.groundedPresentTopics,21);assert.equal(r.aggregate.notRun,0);
  assert.equal(r.cost.knownCompletedUsageEstimateNanoUsd,'3453600');assert.equal(r.cost.unknownUsageReservedCalls,0);
  for(let i=1;i<8;i++)assert.ok(s.calls[i]-s.calls[i-1]>=60000);
@@ -73,7 +73,7 @@ test('durable checkpoint failure stops without retry and leaves run spent',async
 test('429/transport/missing key are one reservation with unknown cost and no fabricated quality',async()=>{
  for(const code of ['GEMINI_RATE_LIMIT','GEMINI_KEY_MISSING','private provider error']){
   const s=fixtureV3();let calls=0;s.transport.request=async()=>{calls++;throw Error(code);};const r=await runE6PaidWireV3(s.cfg);
-  assert.equal(calls,1);assert.equal(r.generationCalls,1);assert.equal(r.aggregate.scorableCases,0);assert.equal(r.aggregate.falseHolds,null);
+  assert.equal(calls,1);assert.equal(r.generationCalls,1);assert.equal(r.aggregate.scorableCases,0);assert.equal(r.aggregate.falseHoldTopics,null);assert.equal(r.aggregate.falseHoldCases,null);assert.equal(r.aggregate.assessedNormalControls,0);assert.equal(r.aggregate.assessedNormalControlTopics,0);
   assert.equal(r.cost.unknownUsageReservedCalls,1);assert.equal(r.cost.measurement,'N/A_PENDING_OR_UNKNOWN_USAGE');assert.equal(JSON.stringify(r).includes('private provider error'),false);
  }
 });
@@ -140,4 +140,17 @@ test('later unknown usage retains prior known subset and both partial scores wit
  assert.equal(r.aggregate.scorableCases,2);assert.equal(r.aggregate.scoredTopics,6);assert.equal(r.aggregate.notRun,6);
  assert.equal(r.cost.knownCompletedUsageEstimateNanoUsd,'431700');assert.equal(r.cost.unknownUsageReservedCalls,1);
  assert.equal(r.cost.measurement,'N/A_PENDING_OR_UNKNOWN_USAGE');assert.equal(r.cost.invoiceVerified,false);
+});
+
+test('two false-held topics in one normal case have distinct topic/case counts and denominators',async()=>{
+ const s=fixtureV3();assert.equal(s.cfg.bundle.gold.cases[0].normalControl,true);
+ s.transport.request=async()=>{const r=s.response(),raw=JSON.parse(r.candidates[0].content.parts[0].text);
+  for(const t of raw.topics.slice(0,2)){t.state='MISSING';t.evidence=null;}
+  r.candidates[0].content.parts[0].text=JSON.stringify(raw);delete r.usageMetadata.totalTokenCount;return r;};
+ const r=await runE6PaidWireV3(s.cfg),a=r.attempts[0].quality.assessment;
+ assert.equal(r.status,'PARTIAL_STOPPED');assert.equal(r.generationCalls,1);assert.equal(r.countCalls,0);
+ assert.equal(r.attempts[0].quality.status,'NEEDS_IMPROVEMENT');assert.equal(a.falseHoldTopics,2);assert.equal(a.falseHoldCases,1);
+ assert.equal(a.scoredTopics,3);assert.equal(r.aggregate.falseHoldTopics,2);assert.equal(r.aggregate.falseHoldCases,1);
+ assert.equal(r.aggregate.assessedNormalControlTopics,3);assert.equal(r.aggregate.assessedNormalControls,1);
+ assert.equal(r.aggregate.notRun,7);assert.equal(Object.hasOwn(a,'falseHolds'),false);assert.equal(Object.hasOwn(r.aggregate,'falseHolds'),false);
 });

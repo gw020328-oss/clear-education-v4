@@ -59,7 +59,9 @@ function aggregate(report){
   needsImprovement:scored.filter(a=>a.status==='NEEDS_IMPROVEMENT').length,notRun:report.attempts.filter(a=>a.status==='NOT_RUN').length,
   scoredTopics:topics,correctTopicStates:correct,topicAccuracy:topics?correct/topics:null,
   expectedPresentTopicsAssessed:sum('expectedPresentTopics'),groundedPresentTopics:sum('groundedPresentTopics'),
-  assessedNormalControls:normal.length,falseHolds:normal.length?sum('falseHolds'):null};
+  assessedNormalControls:normal.length,assessedNormalControlTopics:normal.reduce((n,a)=>n+a.assessment.scoredTopics,0),
+  falseHoldTopics:normal.length?normal.reduce((n,a)=>n+a.assessment.falseHoldTopics,0):null,
+  falseHoldCases:normal.length?normal.reduce((n,a)=>n+a.assessment.falseHoldCases,0):null};
 }
 const waitDefault=ms=>new Promise(r=>setTimeout(r,ms));
 export async function runE6PaidWireV3({bundle,approval,codeState,day,execution='MOCK',store,transportFactory,

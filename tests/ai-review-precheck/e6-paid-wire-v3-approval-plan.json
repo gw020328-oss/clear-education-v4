@@ -80,8 +80,8 @@
     "providerHardCashCapVerified": false
   },
   "usagePolicyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
-  "usageImplementationSha256": "e7bbfd0f5a4a59ca9271112b131a85482e7d08f5781586a832926868aaac3c21",
+  "usageImplementationSha256": "6379b313bb8daa58d82965f0614390d6fcb64cf39a61224a86f11aade940b72e",
   "providerBodiesSameAsPrevious": true,
   "parentV2PlanHash": "0x640a78767508987d92abab8defe0c102bcdaf05644ecec3ea715d614c3d604b6",
-  "planHash": "0xc03f5642063052ebd37530a6378087c51ef92d39d25d8ccf847ce7e9b9f8031b"
+  "planHash": "0x29be00a2f5c79a757b41bf0e7f41c278c5ed403b9f4fb5aea4e50c1cf8d12bfb"
 }

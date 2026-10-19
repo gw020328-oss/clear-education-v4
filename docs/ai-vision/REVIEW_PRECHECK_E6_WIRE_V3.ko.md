@@ -29,7 +29,7 @@
 
 **사용량/서비스 등급 검사가 실패해도 유효한 이미 받은 텍스트의 부분 채점은 남기고 다음 dispatch를 중단한다.** 응답을 다시 요청하거나 원시 응답을 디스크에 저장하는 기능이 아니다. 반대로 본문 JSON/완료 검사가 실패해도 사용량을 안전하게 해석할 수 있으면 조건부 비용 부분액은 보존하고 후속 중단한다. timeout/HTTP 실패처럼 본문을 얻지 못한 경우는 채점0·비용 N/A다.
 
-`PARTIAL_STOPPED`는 전체8건 완료가 아니다. plannedCases/scorableCases/scoredTopics·정답 상태 수/분모·grounding검사 분모·평가된 정상 대조군·NOT_RUN을 명시한다. 품질 평가가0건이면 정확도와 false hold는 null이며, 비용은 `knownCompletedUsageEstimateNanoUsd`(알려진 부분)와 `unknownUsageReservedCalls`를 구분한다. 실패한 사례의 비용을0으로 만들지 않는다. 합성 gold 재생 PASS/부분 정확도1도 모델 품질 실측이나 자격/지급 권한이 아니다.
+`PARTIAL_STOPPED`는 전체8건 완료가 아니다. plannedCases/scorableCases/scoredTopics·정답 상태 수/분모·grounding검사 분모·평가된 정상 대조군·NOT_RUN을 명시한다. falseHoldTopics는 보류된 정상 topic 수이고 분모는 assessedNormalControlTopics(평가된 정상 사례의 scoredTopics 합계)다. falseHoldCases는 보류 topic이 하나 이상인 정상 사례 수이고 분모는 assessedNormalControls다. 정상1건의3topic 중2topic이 보류되면 topics2/분모3, cases1/분모1로 구분한다. 정상 대조군 평가0건이면 두 false hold 집계는 null, 두 분모는0이며 정확도도 채점 topic이0이면 null이다. 비용은 `knownCompletedUsageEstimateNanoUsd`(알려진 부분)와 `unknownUsageReservedCalls`를 구분한다. 실패한 사례의 비용을0으로 만들지 않는다. 합성 gold 재생 PASS/부분 정확도1도 모델 품질 실측이나 자격/지급 권한이 아니다.
 
 ## 고정된 요청·비용·실행 경계
 
@@ -41,8 +41,8 @@
 
 새 승인 경로 `private/e6-python-paid-wire-v3/approval.json`, 새 단회 원장 경로 `artifacts/e6-python-paid-wire-v3-run/`은 아직 사용하지 않았다. 배타 wx lock·fsync·사전 영속 예약·원자 checkpoint·lease 소유권·강제종료 표식 보존을 유지한다. 가짜 reader/임시 원장 시험 외에는 키 source를 읽지 않았다.
 
-planHash는 `0xc03f5642063052ebd37530a6378087c51ef92d39d25d8ccf847ce7e9b9f8031b`, usagePolicyHash는 `0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902`이며 커밋된 `e6-paid-wire-v3-approval-plan.json`과 일치한다. 최종40자리 HEAD와 함께 Draft PR 완료 보고에 제시한다. root 검토 대기 상태이며 이 문서에 새 유료 실행 승인 질문을 넣지 않는다.
+planHash는 `0x29be00a2f5c79a757b41bf0e7f41c278c5ed403b9f4fb5aea4e50c1cf8d12bfb`, usagePolicyHash는 `0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902`이며 커밋된 `e6-paid-wire-v3-approval-plan.json`과 일치한다. 최종40자리 HEAD와 함께 Draft PR 완료 보고에 제시한다. root 검토 대기 상태이며 이 문서에 새 유료 실행 승인 질문을 넣지 않는다.
 
 ## 오프라인 검증
 
-공식 표기의 합성 응답8/count0·60초 간격·안전한 빈/기본 metadata·인용과 원문 evidence 분리, priority/flex/불명/잘못된 total/nontext/tools의 후속 중단과 부분 채점 보존, 불완전 JSON의 알려진 비용 보존, 현재 응답의 비용 초과 뒤 중단, 승인/head/day/지문 변조·checkpoint/timeout/늦은 응답·원장 배타/단회/강제종료를 네트워크 차단 상태에서 검사했다. 기존 두 실제 실패 파일은 수정하지 않았다. 담당 tests/ai-review-precheck는 root CI 밖이므로 로컬 합성 검증과 원격 CI를 구분한다. 신규27개를 포함한 관련 로컬321/321과 원본·legacy191개 지문 검사가 통과했다. 실제 모델 품질은 여전히 N/A다. 최종 HEAD의 공개 이력 검사·원격 CI는 PR 완료 보고를 따른다.
+공식 표기의 합성 응답8/count0·60초 간격·안전한 빈/기본 metadata·인용과 원문 evidence 분리, priority/flex/불명/잘못된 total/nontext/tools의 후속 중단과 부분 채점 보존, 불완전 JSON의 알려진 비용 보존, 현재 응답의 비용 초과 뒤 중단, 승인/head/day/지문 변조·checkpoint/timeout/늦은 응답·원장 배타/단회/강제종료를 네트워크 차단 상태에서 검사했다. 기존 두 실제 실패 파일은 수정하지 않았다. 담당 tests/ai-review-precheck는 root CI 밖이므로 로컬 합성 검증과 원격 CI를 구분한다. 이전 준비 HEAD의 신규27개 포함 관련 로컬321/321과 원본·legacy191개 지문 검사는 보존한다. 이후 보고 단위 수정에서는 정상1건의2topic 보류 반례를 추가하고 관련 v3 검사28/28을 통과했다. legacy scorer·wire 정책·호출 판단은 변경하지 않았다. 실제 모델 품질은 여전히 N/A다. 최종 HEAD의 공개 이력 검사·원격 CI는 PR 완료 보고를 따른다.

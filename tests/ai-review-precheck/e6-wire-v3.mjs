@@ -102,8 +102,9 @@ export async function assessReceivedResponseV3({response,corpusCase,goldCase,sou
       &&(t.state==='PRESENT'?knownKeys(t.evidence,['quote','sourceId'])&&Object.keys(t.evidence).length===2
         &&typeof t.evidence.quote==='string'&&typeof t.evidence.sourceId==='string':t.evidence===null)),'SCHEMA');
    const a=await assessE6QualityResponse(corpusCase,raw,goldCase,sourceId);
+   const falseHoldTopics=a.errors.filter(e=>e.startsWith('FALSE_HOLD:')).length;
    quality={status:a.status,code:null,responseSha256:sha(text),assessment:{errors:a.errors.length,
-    falseHolds:a.errors.filter(e=>e.startsWith('FALSE_HOLD:')).length,normalControl:goldCase.normalControl,scoredTopics:3,
+    falseHoldTopics,falseHoldCases:falseHoldTopics>0?1:0,normalControl:goldCase.normalControl,scoredTopics:3,
     correctTopicStates:goldCase.topics.filter(t=>a.result.topics.find(x=>x.topicId===t.topicId)?.state===t.state).length,
     expectedPresentTopics:goldCase.topics.filter(t=>t.state==='PRESENT').length,
     groundedPresentTopics:goldCase.topics.filter(t=>t.state==='PRESENT'&&a.result.topics.find(x=>x.topicId===t.topicId)?.state==='PRESENT'
