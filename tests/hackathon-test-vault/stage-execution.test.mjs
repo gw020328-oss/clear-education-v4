@@ -133,6 +133,8 @@ test('terminate-first invalidates old signature and atomically removes only unac
 });
 test('accepted-first protects stored right from terminate/correction; any caller claims after source key pause expiry changes',async t=>{
  const f=await setup(t),app=f.firstApp,h=await f.ready(),s=await f.sign(h);await f.accept(h,s);const right=await f.vault.acceptedRight(appid(f));
+ const target=f.chainState(app).target;
+ await assert.rejects(()=>f.vault.replaceTarget.staticCall(f.op(),appid(f),{decisionId:target.decisionId,revision:target.revision+1n,decisionHash:id('after-accept-correction'),sourceValidUntilExclusive:START+2000,acceptanceSequence:target.acceptanceSequence+1n,sourceReceiptHash:id('after-accept-receipt')},0,f.chainState(app).version),/UNACCEPTED_STATE/);
  await sent(f.vault.connect(f.accounts[1]).revokeKey(f.op(),f.keyId));await sent(f.vault.connect(f.accounts[1]).setPause(f.op(),true));f.evidence.change(app,'activity-complete',{rawAvailable:false});await f.time(START+1200);
  await assert.rejects(()=>f.vault.connect(f.accounts[4]).terminate.staticCall(f.op(),appid(f),1,id('receipt'),f.chainState(app).version),/UNACCEPTED_STATE/);
  await assert.rejects(()=>f.vault.observeCurrent.staticCall(f.op(),appid(f),{currentMet:false,validObjection:false,unassessedObjection:false,newValidError:false,sourceValidUntilExclusive:START+300,observedAt:START+1200,receiptHash:id('changed')},f.chainState(app).version),/UNACCEPTED_STATE/);
