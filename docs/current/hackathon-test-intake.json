@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 6,
+  "repositoryPlanRevision": 9,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -112,9 +112,9 @@
     {
       "stage": "E4",
       "scope": "TEST_CONTRACT_FUNDING_ROLES_SIGNER_TERMINATION",
-      "status": "NON_PAYOUT_PREPARATION_ACCEPTED_MEMORY_EVM_POSITIVE_UNIT_ALLOWED",
+      "status": "ACCEPTED_MEMORY_BOUNDARY_FOR_E5_DEVELOPMENT_NOT_PERSISTENT_RUNTIME",
       "requestedSetting": "gpt-6-astra/high",
-      "acceptedHead": null,
+      "acceptedHead": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
       "dependsOn": [
         "E1",
         "E2",
@@ -126,7 +126,8 @@
         "payoutAuthorizationSignatures": 0,
         "accepts": 0,
         "claims": 0,
-        "recipientPayments": 0
+        "recipientPayments": 0,
+        "scope": "HISTORICAL_NON_PAYOUT_PREPARATION_CHECKPOINT"
       },
       "preparationAcceptedHead": "d287b3789a678a1e6984b583e4c85859e9e97a22",
       "pullRequest": 88,
@@ -134,25 +135,121 @@
         "head": "9dd69ca47e41d2b419b961ede30eafd00c3585e7",
         "pullRequest": 93,
         "mergedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
-        "nextCandidateHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
         "distinctCompileAndBlockedCases": 66,
         "executedContractDeployments": 0,
         "authorizationSignatures": 0,
         "accepts": 0,
         "claims": 0,
-        "acceptedForFullRuntime": false
+        "acceptedForFullRuntime": false,
+        "historyMergedHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
+        "remoteCi": "6_OF_6_SUCCESS"
+      },
+      "memoryExecution": {
+        "status": "ACCEPTED_SCOPED_MEMORY_STAGE",
+        "firstSuite": {
+          "tests": 36,
+          "pass": 32,
+          "fail": 4,
+          "cancelled": 0,
+          "skipped": 0,
+          "durationMs": 91164.207459,
+          "metrics": {
+            "instances": 37,
+            "executionDeployments": 37,
+            "tokenDeployments": 37,
+            "keyProviderCalls": 33,
+            "signaturesGenerated": 32,
+            "signaturesReturned": 22,
+            "signaturesDiscarded": 10,
+            "accepts": 6,
+            "claims": 3,
+            "actualSources": 0,
+            "externalRpc": 0,
+            "persistentChains": 0
+          },
+          "countsAreThisRunOnly": true,
+          "logSha256": "49ca6ca454c5179c07b82cf2e2a6254600d6f9085805c093263a9628a74c2493",
+          "diagnosis": [
+            "TWO_EXPECTED_SHORTFALL_REASONS_HIDDEN_BY_ESTIMATE_GAS_ERROR",
+            "MINED_FAILED_TRANSACTION_CORRECTLY_INVALIDATES_OLD_STAGE_CHAIN_CAS",
+            "ETHERS_RESULT_PROXY_EQUALITY_REQUIRES_PLAIN_VALUE_COMPARISON"
+          ]
+        },
+        "rootReviewAdditionalIssue": "METRICS_OUTPUT_PARENT_NOT_CREATED_IN_CLEAN_CHECKOUT",
+        "outOfScopeHistoricalResponseAccepted": false,
+        "acceptedForE5": true,
+        "existingPrivateKeysRead": 0,
+        "acceptedHead": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
+        "distinctStageTests": 48,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "pushAndPrStageActuallyExecuted": true,
+        "finalMetrics": {
+          "instances": 48,
+          "executionDeployments": 48,
+          "tokenDeployments": 48,
+          "keyProviderCalls": 43,
+          "signaturesGenerated": 42,
+          "signaturesReturned": 31,
+          "signaturesDiscarded": 11,
+          "accepts": 13,
+          "claims": 10,
+          "actualSources": 0,
+          "externalRpc": 0,
+          "persistentChains": 0,
+          "controlledProbes": {
+            "deployments": 3,
+            "codeInjections": 3,
+            "injectedClaims": 1,
+            "contractLevelAccepts": 1,
+            "contractLevelClaims": 1
+          }
+        },
+        "metricsMeaning": {
+          "keyProviderCalls": "Fresh ephemeral TEST signing provider accesses, not existing-key reads.",
+          "accepts": "13 authenticated stage wrapper accept confirmations. One additional explicit contract-level successful accept is in controlledProbes.contractLevelAccepts.",
+          "claims": "10 mined fixed-token stage claim receipts, including one intentionally rejected post-commit readback acknowledgment. One additional normal fixed-token contract-level concurrent claim is in controlledProbes.contractLevelClaims. One injected-code probe settlement is separate and snapshot-reverted.",
+          "signaturesGenerated": "42 total includes 11 subsequently discarded; 31 returned. E1/auth login signatures are outside this payout counter.",
+          "runtimeInstances": "Fresh disposable memory instances only; failed initialization before deployment is not counted.",
+          "reruns": "Counts from final full suite only. Prior/focused/remote runs are separate, not cumulative."
+        },
+        "priorRemoteFailure": {
+          "head": "a53cbaa69c625306754ed3609d2fda61cd737e2a",
+          "remoteCi": "4_OF_6_TWO_PUBLIC_SYNTHETIC_FAILURES",
+          "stagePass": 46,
+          "stageFail": 1,
+          "stageTests": 47,
+          "test": "TWO_CONCURRENT_ANY_CALLERS_WRAPPER_FULFILLED_COUNT_ZERO",
+          "actualInternalRejectionStringRecorded": false,
+          "blindRerun": false,
+          "fix": "CONTRACT_RECEIPTS_SEPARATE_FROM_READBACK_AND_DETERMINISTIC_MOVING_CHECKPOINT_COUNTEREXAMPLE"
+        }
       }
     },
     {
       "stage": "E5",
       "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
-      "status": "NOT_STARTED",
+      "status": "AUTHORIZED_SCOPED_DEVELOPMENT_PREPARING_OWNER_DISPATCH",
       "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
         "E4"
       ],
-      "tests": null
+      "tests": null,
+      "preparation": {
+        "status": "READ_ONLY_PLAN_COMPLETE_E4_FINAL_PORTS_PENDING",
+        "record": "docs/current/HACKATHON_TEST_E5_BOUNDARY_PREPARATION.ko.md",
+        "sourceEdits": false,
+        "executionStarted": false,
+        "requires": [
+          "EXECUTION_READER_AND_RUNTIME_PIN",
+          "SIGNER_AND_DURABLE_ENVELOPE_CAPABILITY",
+          "AUTHENTICATED_CANONICAL_REORG_REBASE_PROTOCOL",
+          "INDEPENDENT_PERSISTENT_CHAIN_LIFECYCLE"
+        ],
+        "sensitiveReviewRequestedSetting": "gpt-6-astra/high",
+        "sensitiveReadOnlyReviewComplete": true
+      },
+      "developmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json"
     },
     {
       "stage": "E6",
@@ -326,6 +423,17 @@
       "productSourceChanged": false,
       "commonHistoryMerged": true,
       "e3HistoryMergeRequested": true
+    },
+    "reclaimE4Positive": {
+      "inputCommit": "085878860d604095b0a6152329f8d82a445574b7",
+      "acceptedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
+      "executionPreparationHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "NEW_ISOLATED_MEMORY_EVM_EPHEMERAL_TEST_SIGNER_ACCEPT_CLAIM_AND_ADVERSARIAL_TESTS",
+      "persistentRuntimeAllowedByThisUnit": false
     }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
@@ -366,5 +474,26 @@
     "externalRpc": 0,
     "actualSourceAcceptances": 0,
     "recipientPayments": 0
-  }
+  },
+  "e4CrossVerification": {
+    "composition": "aeb53ee8ffb0b04618fdb854938f61db7234e9ae",
+    "inputs": [
+      "d4de1d5700e81f48d767e938d614ab3aaf751255",
+      "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
+      "22640db091d5d3ac5d8a3535280b393d6f618d65",
+      "e9ea4547d795ee833a8175c02c0cc23b21a7d823"
+    ],
+    "e3Dedicated": 47,
+    "e4MemoryStage": 48,
+    "pass": 95,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 125444.728541,
+    "logSha256": "79e3f5000480bced9acc3cd4ac45e14cceadd8f344d9c7e4281365a6f6cbb0dc",
+    "preservation": "191_SOURCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
+    "publicHistory": "356_COMMITS_1885_BLOBS_FINDINGS_0",
+    "actualE6AdapterAccepted": false
+  },
+  "e5DevelopmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json"
 }
