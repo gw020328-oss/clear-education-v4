@@ -1,0 +1,138 @@
+{
+  "version": "clear-hackathon-test-intake.1",
+  "date": "2026-10-18",
+  "repositoryPlanRevision": 4,
+  "profileVersion": "clear-hackathon-test-operations.1",
+  "decisionRevision": 1,
+  "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
+  "baseRepositoryHead": "733fe693f4fd2e16977b0c52ef88e35ee9687f2c",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "sourceFilesUnmodified": true,
+  "stages": [
+    {
+      "stage": "E0",
+      "scope": "COMMON_POLICY_CONTRACT_AND_CROSS_INTAKE",
+      "status": "POLICY_AND_REFERENCE_FIXED_PENDING_EXACT_COMMIT_CI",
+      "requestedSetting": "gpt-6.1-sol/high",
+      "acceptedHead": null,
+      "dependsOn": [],
+      "tests": {
+        "newOperationsReference": 12,
+        "oldP0Reference": 20,
+        "oldR2Reference": 9,
+        "totalPass": 41,
+        "totalFail": 0,
+        "preservedFrozenSpecFiles": 9,
+        "sourceFilesUnmodified": true,
+        "preservation": "191_SOURCE_REFERENCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
+        "runtimeAuthorityTested": false
+      }
+    },
+    {
+      "stage": "E1",
+      "scope": "PRIVACY_AUTH_CURRENT_CAS_CONSUMERS",
+      "status": "OWNER_RECOVERY_IN_PROGRESS",
+      "requestedSetting": "gpt-6-astra/high",
+      "acceptedHead": null,
+      "dependsOn": [],
+      "tests": null
+    },
+    {
+      "stage": "E2",
+      "scope": "UNSIGNED_TYPE_DOMAIN_INTEGER_DEADLINE",
+      "status": "OWNER_RECOVERY_IN_PROGRESS",
+      "requestedSetting": "gpt-6-astra/high",
+      "acceptedHead": null,
+      "dependsOn": [],
+      "tests": null
+    },
+    {
+      "stage": "E3",
+      "scope": "120_1_600_PROCEDURE_AND_TWO_VIEW_DTO",
+      "status": "NOT_STARTED",
+      "requestedSetting": "gpt-6.1-sol/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E1",
+        "E2"
+      ],
+      "tests": null
+    },
+    {
+      "stage": "E4",
+      "scope": "TEST_CONTRACT_FUNDING_ROLES_SIGNER_TERMINATION",
+      "status": "NOT_STARTED",
+      "requestedSetting": "gpt-6-astra/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "tests": null
+    },
+    {
+      "stage": "E5",
+      "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
+      "status": "NOT_STARTED",
+      "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E4"
+      ],
+      "tests": null
+    },
+    {
+      "stage": "E6",
+      "scope": "REAL_SOURCE_TWO_VIEW_LOCAL_E2E",
+      "status": "NOT_STARTED",
+      "requestedSetting": "dedicated Moodle/AI gpt-6.1-sol/medium; common API gpt-6.1-sol/high",
+      "acceptedHead": null,
+      "dependsOn": [
+        "E5"
+      ],
+      "tests": null
+    },
+    {
+      "stage": "E7",
+      "scope": "SEPOLIA_CUSTOMER_MAPPING_SECOND_POLICY_OPTIONAL_VISION",
+      "status": "NOT_STARTED",
+      "requestedSetting": "SELECT_BY_WORK_UNIT",
+      "acceptedHead": null,
+      "dependsOn": [
+        "LOCAL_E6_ACCEPTANCE"
+      ],
+      "tests": null
+    }
+  ],
+  "ownerRecovery": {
+    "api": {
+      "path": "clear-bootcamp-api-store",
+      "initialHead": "be0b699",
+      "uncommittedChangesPreserved": true
+    },
+    "reclaim": {
+      "path": "clear-hackerrank-bootcamp",
+      "initialHead": "cf0ae1e",
+      "uncommittedChangesPreserved": true
+    }
+  },
+  "scope": {
+    "newSessionsOrSubagents": 0,
+    "activeTurnsInterrupted": false,
+    "directProductApiProducerFundingOrWebEdits": false,
+    "originalSourceBodiesCopied": false,
+    "mainOrDevelopMerge": false,
+    "productionDeployment": false
+  },
+  "activation": {
+    "testImplementationAuthorized": true,
+    "testRuntimeAccepted": false,
+    "testSignerActivated": false,
+    "productionEnabled": false,
+    "existingV1GatesChanged": false
+  },
+  "usageFailureHandling": "OLD_USAGE_FAILURE_IS_NOT_CODE_FAILURE; RECORD_FRESH_FAILURE_WITHOUT_BLIND_REPEAT",
+  "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98"
+}
