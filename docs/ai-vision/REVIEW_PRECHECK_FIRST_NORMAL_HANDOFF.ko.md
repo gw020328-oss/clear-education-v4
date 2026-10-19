@@ -1,6 +1,6 @@
 # 첫 정상 100 TEST 경로의 회고 consumer 최소 인계
 
-2026-10-19 우선순위 변경을 적용한다. 추가 모델 품질 평가·8건 확대·프롬프트 실험·Vision/RAG·복구 확장은 보류한다. 이번 범위는 **한 application의 현재 원문으로 3topic 회고를 읽고 같은 신청의 정상 consumer에 넘기는 접점**이다. AI가 전체 AND 판정·재원 배정·동의·서명·accept/claim을 대신하지 않는다. P0/R3·필수 guard를 바꾸지 않는다.
+2026-10-19 우선순위 변경을 적용한다. 추가 모델 품질 평가·8건 확대·프롬프트 실험·Vision/RAG·복구 확장은 보류한다. 이번 범위는 **한 application의 현재 원문으로 3topic 회고를 읽고 같은 신청의 정상 consumer에 넘기는 접점**이다. AI가 전체 AND 판정·재원 배정·동의·서명·accept/claim을 대신하지 않는다. P0/R3·필수 guard를 바꾸지 않는다. 최신 핵심 완료 기준은 실제 Moodle·HackerRank/Reclaim 자료→AI→같은 신청의 실제100TEST 수령이다. 아래 합성 명령은 접점 확인용이며 실제 자료 시연을 대체하지 않는다.
 
 ## 연결된 단계와 정확한 공백
 
@@ -66,4 +66,4 @@ API 소유자가 현재 작업을 검증 가능한 지점에 마친 뒤 참고�
 
 가장 먼저 필요한 것은 **정상 신청1개의 식별/현재 pin·lease를 가진 소유 입력과, 실제/합성 출처를 명시한 consumer 수신 접점**이다. 그 전에는 임의 participant의 fresh AI 성공이나 tx를 보고하지 않는다. AI 인계 이후의4조건 current decision→100TEST 전액배정→같은 decision 양측 동의→제한승인→accept→claim→canonical receipt/정확 수령·중복 거부는 API/실행 소유가 같은 application으로 이어 확인한다. 예산 선확보를 최종 decision 배정으로 부르지 않는다.
 
-이번에는 문서의 전용 인계만 추가한다. 새 플랫폼/registry/lease 구현·공통 API/DB/HTTP/schema/web·정책/R3·계약/지급·모델/gold/prompt는 변경하지 않는다. 다른 채팅 발신·새 에이전트/채팅·자동 merge·상용 배포·추가 모델평가·새 Mac/Windows 조사/재실행은 없다. 기존 Mac 최초 실패는 이 경로의 AI 성공이나 새 CI 성공으로 해결 처리하지 않는다.
+이번에는 문서의 전용 인계만 추가한다. 새 플랫폼/registry/lease 구현·공통 API/DB/HTTP/schema/web·정책/R3·계약/지급·모델/gold/prompt는 변경하지 않는다. 최신 직접 사용자 허용에 따라 기존 API·Moodle 담당 세션에 정상 신청/현재 원문 lease·실제 모델 수신 접점만 협업 요청했다. 원문/쿠키/키는 채팅이나 공개 파일로 요청하지 않았다. 새 에이전트/채팅·자동 merge·상용 배포·추가 모델평가·새 Mac/Windows 조사/재실행은 없다. 기존 Mac 최초 실패는 이 경로의 AI 성공이나 새 CI 성공으로 해결 처리하지 않는다.
