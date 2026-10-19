@@ -153,8 +153,11 @@ test('new lineage is rejected, and a post-read current withdrawal prevents SEND_
 
 test('process exits after actual broadcast: restart confirms original hash with zero new signing or sends',async t=>{
  const f=await setup(t),r=await f.ready(),req=await f.request(r.command),sealed=await f.service.seal(req);crash(f,{...req,...sealed},'dispatch','BROADCAST_RESPONSE');
- assert.equal(f.service.row(sealed.ref).state,'SEND_STARTED');const result=await f.included({...req,...sealed},await f.service.recover({...req,...sealed}));assert.equal(result.status,'INCLUDED');assert.equal(f.service.metrics.keyAccesses,0);assert.equal(f.service.metrics.broadcasts,0);
- assert.equal(f.service.db.prepare('SELECT count(*) AS n FROM receipt_observations WHERE ref=?').get(sealed.ref).n,1);
+ assert.equal(f.service.row(sealed.ref).state,'SEND_STARTED');
+ let missingOnce=true;const rpc=async(method,args)=>{if(method==='eth_getTransactionReceipt'&&missingOnce){missingOnce=false;return null;}return f.reader.rpc(method,args);};f.restart({reader:new ExecutionReader(f.m,{rpc})});
+ const request={...req,...sealed},first=await f.service.recover(request);assert.equal(first.status,'UNKNOWN');
+ const result=await f.included(request,first);assert.equal(result.status,'INCLUDED');assert.equal(f.service.metrics.keyAccesses,0);assert.equal(f.service.metrics.broadcasts,0);
+ const observations=f.service.db.prepare('SELECT record FROM receipt_observations WHERE ref=? ORDER BY sequence').all(sealed.ref).map(r=>JSON.parse(r.record).status);assert.deepEqual(observations,['UNKNOWN','INCLUDED']);
 });
 
 test('withdrawal or newer fence at RESERVED_BEFORE_SIGN rejects immediately before any key access',async t=>{

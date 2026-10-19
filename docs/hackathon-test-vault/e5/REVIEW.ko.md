@@ -15,6 +15,7 @@
 | 과거 prepare recovery가 .3 nonce 상태를 뒤로 내릴 수 있음 | PREPARE_RESERVED→PREPARED, PAYMENT_SIGNING_STARTED→ACCEPTED만 허용. 이미 수락된 nonce tombstone은 과거 조회로 하향하지 않음 |
 | 서명된 bytes가 durable해도 SEALED metadata 앞에서 죽을 수 있음 | 공개 역검증 metadata와 정확 private bytes를 fsync한 뒤 SEALED. subprocess exit 후 같은 bytes를 검증·인수하며 재서명0. bytes 없는 불확실성은 자동 복구/nonce 재사용 금지 |
 | broadcast 직후 영수증이 반드시 존재한다는 시험 가정 | 실제 미채굴 UNKNOWN을 확인했다. 서비스는 자동 재전송하지 않고, 성공 기대 fixture만 정확 txHash의 채굴을 기다린 후 recover한다. RPC/readback 오류를 timeout 증액으로 숨기지 않음 |
+| UNKNOWN 뒤 included helper가 재조회할 때 관측 건수를1로 고정한 시험 가정 | root 리뷰에서 발견했다. 첫 receipt 부재를 의도 주입하고 UNKNOWN→INCLUDED 두 append-only 관측을 정확 확인한다. 이 발견 시점에 원격 실패가 발생했다고 주장하지 않음 |
 | post-commit readback 실패를 tx 실패로 오인할 위험 | UNKNOWN과 canonical lookup 분리. receipt 관측을 append-only로 보존. 과거 receipt 포함과 최신 canonical checkpoint를 둘 다 확인 |
 | 새 fence의 recovery가 원래 envelope 전송 권한이 되는 위험 | 새 fence는 조회만 허용, dispatch는 원래 binding/fence만 허용. SEALED takeover/adoption은 E5-B 미완료 |
 | accepted claim을 현재 원천/키/pause 재검증으로 막을 위험 | claim 업무 hash는 고정 right와 상태만 결합. source 철회/key revoke/pause 뒤 이미 SEALED인 claim도 지급 서명 추가 없이 처리 |
