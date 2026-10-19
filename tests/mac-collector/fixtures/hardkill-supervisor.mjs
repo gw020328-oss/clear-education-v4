@@ -4,7 +4,7 @@ import {appendFileSync,readFileSync,existsSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {performance} from 'node:perf_hooks';
 import {chromePath,gatePrefix,usesProfile} from '../../../src/mac-collector/browser-recovery.mjs';
-const safeCodes=new Set(['CHILD_BINDING_FAILED','CHILD_BINDING_PARENT','CHILD_BINDING_COMMAND','CHILD_BINDING_TIME','PROCESS_QUERY_FAILED','SPAWN_FAILED','FIXTURE_NOT_KILLED','KILL_POINT_MISSING','PROCESS_IDENTITY_CHANGED','PROCESS_OWNER_CHANGED','BROWSER_IDENTITY_CHANGED','PROCESS_STILL_RUNNING','TRIAL_CANCELLED','RECOVERY_EXIT_FAILED','RECOVERY_SUMMARY_FAILED','LEGACY_ORPHAN_NOT_LIVE','LEGACY_ORPHAN_NOT_OWNED','ORPHAN_NOT_READY','DELETE_OBSERVER_MISSING','DELETE_WITH_LIVE_BROWSER','ROOT_REMOVE_RESULT_UNKNOWN','CLEANUP_FAILED_ROOT_PRESERVED']);
+const safeCodes=new Set(['CHILD_BINDING_FAILED','CHILD_BINDING_PARENT','CHILD_BINDING_COMMAND','CHILD_BINDING_TIME','PROCESS_QUERY_FAILED','SPAWN_FAILED','FIXTURE_NOT_KILLED','KILL_POINT_MISSING','PROCESS_IDENTITY_CHANGED','PROCESS_OWNER_CHANGED','BROWSER_IDENTITY_CHANGED','PROCESS_STILL_RUNNING','TRIAL_CANCELLED','RECOVERY_EXIT_FAILED','RECOVERY_SUMMARY_FAILED','LEGACY_ORPHAN_NOT_LIVE','LEGACY_ORPHAN_NOT_OWNED','ORPHAN_NOT_READY','DELETE_OBSERVER_MISSING','DELETE_WITH_LIVE_BROWSER','DELETE_WITH_OCCUPIED_BROWSER_GROUP','ROOT_REMOVE_RESULT_UNKNOWN','CLEANUP_FAILED_ROOT_PRESERVED']);
 export const safeCode=(error,fallback='UNEXPECTED_ERROR')=>safeCodes.has(error?.message)?error.message:fallback;
 export const fail=code=>{throw new Error(code);};
 export const check=(ok,code)=>{if(!ok)fail(code);};
@@ -109,7 +109,13 @@ export function ownedEntries(root){
 export const browserCommand=(p,path)=>usesProfile(p.command,path)&&(p.command.startsWith(chromePath+' ')||p.command.startsWith('/Applications/Google Chrome.app/Contents/Frameworks/')||p.command.startsWith(gatePrefix));
 export function assertAbsent(all,path,entries=[]){
  check(!all.some(p=>usesProfile(p.command,path)),'DELETE_WITH_LIVE_BROWSER');
- for(const e of entries.filter(e=>e.role==='CHROME'&&e.profile===path))check(!all.some(p=>generation(e.identity,p)),'DELETE_WITH_LIVE_BROWSER');
+ for(const e of entries.filter(e=>e.role==='CHROME'&&e.profile===path)){
+  check(!all.some(p=>generation(e.identity,p)),'DELETE_WITH_LIVE_BROWSER');
+  // The leader may be gone while a helper has lost its profile argument. An
+  // occupied recorded PGID is ambiguous, including reuse: refuse deletion, never
+  // infer ownership or permission to signal that occupant from the group number.
+  check(!all.some(p=>p.pgid===e.identity.pgid),'DELETE_WITH_OCCUPIED_BROWSER_GROUP');
+ }
 }
 export async function observedDelete({path,entries,snapshot,active,remove,emit}){
  active();const all=await bounded(Promise.resolve().then(snapshot),2000,'PROCESS_QUERY_FAILED');

@@ -100,3 +100,14 @@ test('late removal completion cannot overwrite a timed-out unknown result',async
  const actual=(async()=>{s.removing();await new Promise(r=>{finish=r;});s.removed();})();
  await assert.rejects(s.cleanup(()=>bounded(actual,10,'ROOT_REMOVE_RESULT_UNKNOWN')),/ROOT_REMOVE_RESULT_UNKNOWN/);finish();await assert.rejects(actual,/ROOT_REMOVE_RESULT_UNKNOWN/);assert.equal(s.cleanupState,'RESULT_UNKNOWN');assert.equal(s.preserved,false);
 });
+for(const [name,occupant] of [
+ ['leader gone and helper lost profile argument',proc({pid:301,command:'/Applications/Google Chrome.app/Contents/Frameworks/Synthetic Helper --type=renderer'})],
+ ['recorded PGID reused by an unrelated process',proc({pid:300,start:'NEW_GENERATION',command:'/bin/sleep 100'})],
+])test(`ambiguous occupied Chrome group preserves root: ${name}`,async()=>{
+ const s=trialScope({phase:'synthetic',trial:1}),entries=[{role:'CHROME',profile:path,identity:proc()}];let removes=0;
+ await assert.rejects(s.cleanup(()=>observedDelete({path,entries,snapshot:()=>[occupant],active:()=>{},remove:()=>{removes++;},emit:()=>{}})),/CLEANUP_FAILED_ROOT_PRESERVED/);
+ assert.equal(removes,0);assert.equal(s.cleanupState,'PRESERVED');assert.equal(s.preserved,true);
+ // Neither profile discovery nor owned-group validation grants a signal to this occupant.
+ assert.equal(occupant.command.includes('--user-data-dir='+path+'/profile'),false);
+ const r=recovery([occupant]);await assert.rejects(stopOwnedGroup(proc(),{profile:path,uid:501,entries},r.options),/IDENTITY_CHANGED/);assert.deepEqual(r.signals,[]);
+});
