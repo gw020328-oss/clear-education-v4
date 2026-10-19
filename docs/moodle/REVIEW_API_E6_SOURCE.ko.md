@@ -83,3 +83,7 @@ API 작업본의 `src/bootcamp/moodle-consumer.mjs`를 읽기만 했다(HEAD6b4b
 - source/기존 DTO·금지경로 보존 및 공개 이력 검사는 PR exact head에 기록한다. root CI는 변경하지 않았으므로 tests/moodle-review의 새27개/실제lab 검사는 원격 기본CI 자동 대상이 아니다. 추가 AI/model0,개인 source0,서명/chain/지급0이다.
 
 현재 소유 container를 **실행 상태로 유지**하며 재수집 연결을 기다린다. token은0,collector raw handle은 dispose,origin의 지정 대상/volume는 살아 있다. 이것이 제품 runtime.ready나 E6 전체 인수 완료를 의미하지 않는다. E1/E2/E3~E5·현재 source/실제 참가자/지갑·회고 관찰·서명/지급 인수와 별도다. E0 승인 TEST 경로는 해당 인수 후 별도 activation할 수 있으며 productionfalse·기존 C2개인자료/genericupload 제한은 유지한다. main/develop merge·배포·다른 세션 연락은 하지 않았다.
+
+## 2026-10-19 첫 정상 경로 우선
+
+새 기능/복구 확대를 보류하고 기존 source/getter로 fresh 정상 수집을 수행했다. [정상 경로 전용 인계](REVIEW_API_NORMAL_PATH_HANDOFF.ko.md)에 연결된 source 단계,실제 API consumer의 offline-only 공백,필요한 application/participant/wallet mapping·실행 명령을 기록했다. 과거 관측을 fresh로 재사용하거나 UNKNOWN을 MET로 변경하지 않았다.
