@@ -1,0 +1,25 @@
+{
+  "status": "BLOCKED_TEMPLATE_NOT_AUTHORIZATION",
+  "approval": {
+    "version": "clear-e6-paid-wire-v3-user-approval.3",
+    "scope": "E6_PAID_WIRE_V3_FRESH_EIGHT",
+    "approvedOn": null,
+    "codeHead": null,
+    "planHash": "0xc03f5642063052ebd37530a6378087c51ef92d39d25d8ccf847ce7e9b9f8031b",
+    "authorization": {
+      "kind": null,
+      "evidenceSha256": null
+    },
+    "maxGenerationCalls": 8,
+    "maxCountCalls": 0,
+    "automaticRetries": 0,
+    "continuations": 0,
+    "keySourceFallbacks": 0,
+    "modelFallbacks": 0,
+    "freeFallbacks": 0,
+    "keySourceId": "clear-e6-existing-server-gemini-env.1",
+    "costAcknowledgment": null,
+    "pricingReview": null,
+    "pins": null
+  }
+}
