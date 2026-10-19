@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-memory-stage-runtime-example.1",
-  "executionSourceHead": "41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a",
-  "sourceRun": "stage-suite-fenced-final.log",
+  "executionSourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
+  "sourceRun": "stage-suite-role-pinned-final.log",
   "status": "DISPOSABLE_INSTANCE_CLOSED_AFTER_TEST",
   "activeRuntime": false,
   "containsPrivateKeyOrSignatureOrSourceRaw": false,
@@ -11,31 +11,61 @@
     "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
     "e3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
     "chainId": "431709",
-    "genesisHash": "0x1745e984cd5002813c50dafdb305d55b5447da1a0963f86b75569469bc19cddc",
-    "vaultAddress": "0xb06a9c522a927ea1bd955b54f0d4d1553dd7d9da",
-    "vaultCodeHash": "0x17c54041668ca09c8c1c49b3de7dc2b30e108ecfe2aca5986627b9e8a6d3fb44",
-    "tokenAddress": "0x43ff4fdb210cf1c9de30a0634a70ff2b900d2919",
+    "genesisHash": "0x4f7f2c1e602a744a7890a801e3696c5a1a9c0b97b4ee2988cdb0e59e19a074fb",
+    "vaultAddress": "0x60d78458e372a7c9f391f10297931b50365dc29f",
+    "vaultCodeHash": "0xbec0df0ea886b9a8fc600bbd4343942cb7537967786d86d5d1139a3c76d43e51",
+    "tokenAddress": "0xfdde7c9a557119d96766be13e5a956978d9711af",
     "tokenCodeHash": "0x24e0b4b9b20ccf0949acdf19c53041e404f82c7d17dd7fe322d68ac2b7e9e952",
-    "instanceId": "0xbab192add720ba687cda6883baed44d6d5dd1885eed47b0c063bae8b5eacfe5c",
+    "instanceId": "0xb913e6fc77ae230953b017c07aa633fd006e9e3eed951798ccb7e3ecfc6c3b65",
     "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
     "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
     "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
-    "domainSeparator": "0xb068f5ba4a26c243e1da7730bb3bd9c546dab7f15d8f14d5bc2a8eec24327ddb",
+    "domainSeparator": "0xf102fdeb8799a2b3b2d5664b2f7277e2f25612a785c75cd136a6c211ec59f503",
     "typeHash": "0x0420a07c2295bca1fc66f0033f2afa0c6e430c7d7cccb48fa23a98c84d97fa8f",
     "roles": {
-      "registrar": "0x77d9540e8aacc352b6f54061bc294e9a0d0dded5",
-      "initialSigner": "0x7af8229723a1ae91bb80d8955bbe8882bb2aa7f6",
-      "keyAdmin": "0x4f0acf059c739ce073d644b4abcdbda9c3084ced",
-      "relayer": "0xea8fda7dbda54df495084735614fa2995439e93b",
-      "depositor": "0xeac72351e1f11264b72a813899583daf1bfbe46a",
-      "terminator": "0xf3ee80670a53940fe3af057f6a83b1ca6c4ba79f"
+      "registrar": "0x301230effb8d9199b5f3ac8f66a448a2aceb4f06",
+      "initialSigner": "0x9abea8ef48d0146dde5b956d9deb300a7583228e",
+      "keyAdmin": "0x2eb5e7a21e28a4ada2c08e0e521c1b64efea621c",
+      "relayer": "0x157f916723b3d6246f7129756d9b776c4603ef25",
+      "depositor": "0x5920c68279a57b73de7996f062af24b552a480f9",
+      "terminator": "0xe37a087be193661992078955c4580a64badb7f86"
     },
-    "signerKeyId": "0x7bad1fbc5bac770b7546aac90843c72d1855700492d7c9166467749a9ec74123",
-    "signerAddress": "0x7af8229723a1ae91bb80d8955bbe8882bb2aa7f6"
+    "signerKeyId": "0xda764656322a22cb8de0a03621e0c6a182baff6f1497d2590e18230a0b17bc4b",
+    "signerAddress": "0x9abea8ef48d0146dde5b956d9deb300a7583228e"
   },
-  "acceptTransaction": "0x35f69cc45a47def23540e82892de5c4dfa63b3fe76baebe0983c2117b7c5d605",
-  "claimTransaction": "0x5571cba33abbe87b22fa02c6bbfa562dfd95c5b369b46fe31a84278b53c6a888",
-  "authorizationDigest": "0x3061a43ccbd386b937bbecc4001eb2b7723250a2d0433af433413f869ac47cc9",
+  "domain": {
+    "name": "ClearBootcampTestPayment",
+    "version": "3",
+    "chainId": "431709",
+    "verifyingContract": "0x60d78458e372a7c9f391f10297931b50365dc29f",
+    "salt": "0xb913e6fc77ae230953b017c07aa633fd006e9e3eed951798ccb7e3ecfc6c3b65"
+  },
+  "deploymentTransactions": {
+    "vault": "0x3928b8880ef26c802f546231eec9fd1d7bc320c56bec48f9ddbbf8eed942758e",
+    "token": "0xe07dfa93359bfb42d9da76ea646fa11f43d75a8f85b68065d1bdbb4c28cb28cd"
+  },
+  "preparedChainCas": {
+    "number": "10",
+    "hash": "0x3a3f95015d2329bf785cde9c057194ac4270750f4167b4535facf650c0ae2907",
+    "time": 1580558400,
+    "version": "5"
+  },
+  "preparedE3Cas": {
+    "expectedRevision": 9,
+    "expectedLedgerSequence": 54,
+    "expectedSnapshotHash": "0x7744a6bf41a3d4b466f8f168361fa26392141048f87becd20a9de4c35f83205f"
+  },
+  "acceptTransaction": "0x23e482f363425e1ba19c645de26cb04e1d2e2ece094523c03dad3298d6ca458a",
+  "acceptBlock": {
+    "number": 11,
+    "hash": "0x87152bee3c94df74a83d980d2a9ef72232b865e07fcebc72f600e0eed670414d"
+  },
+  "claimTransaction": "0x3ec5e2dfaa9faddee293a3f76af53b8918b25d2abd335efa45dcf4497af0a0f1",
+  "claimBlock": {
+    "number": 12,
+    "hash": "0x300fb3a10b7d5fee6c88bf513732fd9b346ce135917fc6ed6495e788b7e50de8"
+  },
+  "authorizationDigest": "0x9fdb3eaa5d9c7167fb0b8603542b7a04e8814b0979c0ff9b808b75ae820b5182",
   "metrics": {
     "keyProviderCalls": 1,
     "signaturesGenerated": 1,

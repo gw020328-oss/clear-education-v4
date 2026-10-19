@@ -2,19 +2,19 @@
   "version": "clear-hackathon-memory-stage-verification.1",
   "date": "2026-10-19",
   "stage": "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS",
-  "sourceHead": "221aac70b8b2868971ffc77f25016724e3b92a2c",
-  "implementationHead": "41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a",
+  "sourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
+  "implementationHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
   "commonMergeHead": "4964a152a10597fac900b35002395c616a2b5122",
   "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
   "acceptedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
   "requestedModel": "GPT-6 Astra / High",
   "actualModelIndependentlyVerified": false,
   "executed": {
-    "distinctStageTests": 46,
-    "pass": 46,
+    "distinctStageTests": 47,
+    "pass": 47,
     "fail": 0,
-    "fullSuiteSourceHead": "41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a",
-    "finalTestOnlyDelta": "Additional accepted correction staticCall before pause: focused 1/1 PASS; not a new distinct case.",
+    "fullSuiteSourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
+    "finalTestOnlyDelta": null,
     "historicalCompileAndBlockedRegression": {
       "tests": 66,
       "pass": 66,
@@ -23,9 +23,9 @@
     "repeatedRunsAddedToTotal": false
   },
   "fullSuiteMetrics": {
-    "instances": 46,
-    "executionDeployments": 46,
-    "tokenDeployments": 46,
+    "instances": 47,
+    "executionDeployments": 47,
+    "tokenDeployments": 47,
     "keyProviderCalls": 42,
     "signaturesGenerated": 41,
     "signaturesReturned": 30,
@@ -127,6 +127,20 @@
       "fail": 0,
       "newDistinctTest": false,
       "sourceHead": "221aac70b8b2868971ffc77f25016724e3b92a2c"
+    },
+    {
+      "log": "stage-role-readback.log",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "reason": "Measure actual roles() at deployment and recheck every checkpoint; mismatched role response blocks key access."
+    },
+    {
+      "log": "stage-suite-role-pinned-final.log",
+      "tests": 47,
+      "pass": 47,
+      "fail": 0,
+      "sourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2"
     }
   ],
   "preservation": {
@@ -168,7 +182,8 @@
       "Exact intake/consumer manifest pins",
       "Synchronous authenticated E3 checks adjacent to key access/output after asynchronous chain reads",
       "Clean-checkout metrics parent creation and dedicated CI entry",
-      "Precise shortage, CAS, rollback and accepted-target guard assertions"
+      "Precise shortage, CAS, rollback and accepted-target guard assertions",
+      "Measured on-chain role pins with per-checkpoint readback and rejection test"
     ],
     "unresolvedInStageScope": []
   },
@@ -184,8 +199,8 @@
     "persistentBackendStop": true
   },
   "sourceSha256": {
-    "src/hackathon-test-vault/memory-stage-harness.mjs": "c0a4841676e9a189f28f01ec13669484cbfee467aa9da423037a7f8591a84a9b",
-    "tests/hackathon-test-vault/stage-execution.test.mjs": "5901544c80621c86a9e2d59c9f63ffa73bbd58860d96aab6100afb825c853d09",
+    "src/hackathon-test-vault/memory-stage-harness.mjs": "b053742d1d3f0e8e9a751ac9c440146e5763157a1d8773f6b587334f61252fb9",
+    "tests/hackathon-test-vault/stage-execution.test.mjs": "66b1500583b824fc65add5d3fcadacd522092de956ec6616a7ec411e96b433fb",
     "tests/hackathon-test-vault/StageClaimBoundaryProbe.sol": "0e712d6929121ce1bb46fac877d203d49b034607d40ea8b74cf0a4b0c02cc1be",
     "tests/hackathon-test-vault/stage-probe-build.mjs": "723ef3c0e44d8ca2e12765ac84d9496f123589c02ee3e68232105cc489ffaca2",
     "tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs": "94eed77eb6825f71f1045d5c8e29f8798b6cb3bbd1f656f74d484692ac31f298"
@@ -203,6 +218,8 @@
     "stage-accepted-correction.log": "db91d2bed21b87e015704aacfa05163ee7cee12998aa4240c078e04e86985cee",
     "stage-accepted-correction-fixed.log": "0776271b40b712d7d1131870e340a617d564666dbd439ccc5b6c51debd6861e3",
     "execution-regression-final.log": "44083bac143a32d579bdb8429f40d249dc1ff50cd27d07e5ebc552ed7d82eb6b",
-    "stage-preservation.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0"
+    "stage-preservation.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0",
+    "stage-role-readback.log": "f133e40bba3ff32f9b0e2e0a296d815c11b71cd1cd2b87bb9c0291a218b7bb21",
+    "stage-suite-role-pinned-final.log": "c091a10eae4666ab52cf24f97496ff0ac9a0aeabcb567e27583d7b0e6ee37e91"
   }
 }

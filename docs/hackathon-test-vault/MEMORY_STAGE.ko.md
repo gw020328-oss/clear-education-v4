@@ -35,7 +35,7 @@ E3 포트의 wire tag는 기존 E3 계약이 허용하는 `SYNTHETIC_PORT_FIXTUR
 
 고정 TEST 토큰은 전송 실패·callback을 제공하지 않는다. 세 통제 probe에서는 별도 악성 probe 배포를 정상 asset으로 생성하려 하면 TOKEN_CODE로 거부되는 것을 먼저 검사한다. 오직 새 메모리 VM에서 snapshot 뒤 code를 주입해 재진입 거부, transfer=false, 수취금액1 부족과 원자 rollback을 검사한다. signer는 code pin 변화로 거부한다. snapshot을 복원하고 고정 asset code를 재확인한 뒤 정상 claim을 수행한다. 이 주입 성공을 지원 토큰 범위나 정상 signer 경로의 성공으로 세지 않으며 probe 수치는 별도 기록한다.
 
-새 `tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs`가 이 전용 suite만 import한다. 기존 workflow의 network-guard/glob가 새 E4 검사를 실제 실행한다. 공통 workflow·기존 준비 wrapper·패키지 의존성·API/DB/spec/web/producer를 직접 변경하지 않았다. 새46개와 과거 준비50/compile66/E2 또는 CI 전체 분모를 합산해 새 E4 수치로 보고하지 않는다.
+새 `tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs`가 이 전용 suite만 import한다. 기존 workflow의 network-guard/glob가 새 E4 검사를 실제 실행한다. 공통 workflow·기존 준비 wrapper·패키지 의존성·API/DB/spec/web/producer를 직접 변경하지 않았다. 새47개와 과거 준비50/compile66/E2 또는 CI 전체 분모를 합산해 새 E4 수치로 보고하지 않는다.
 
 ## 직접 코드 리뷰
 
@@ -63,4 +63,4 @@ E3 포트의 wire tag는 기존 E3 계약이 허용하는 `SYNTHETIC_PORT_FIXTUR
 
 이번 PR은 stage-scoped 양성 실행과 반례의 근거다. 새 persistent chain/signer, real source trust, 제품/production, develop/main merge, 배포는 수행하지 않는다.
 
-최종 소스 기준: `221aac70b8b2868971ffc77f25016724e3b92a2c` (핵심 host 구현 `41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a`). 로컬 전체46 PASS/0 FAIL, 최종 accepted-correction 추가 assert의 focused1 PASS, 기존66 회귀 PASS. 같은 사례/재실행은 분모에 더하지 않는다. 최종 문서 커밋의 원격 CI와 전체46 실제 포함 여부는 PR93 본문의 exact-head 기록을 따른다.
+최종 소스 기준: `7aa28dca3e51822d3b504251d31504fbc3930af2`. 로컬 전체47 PASS/0 FAIL, 기존66 회귀 PASS. 같은 사례/재실행은 분모에 더하지 않는다. 실제 역할은 배포 후 `roles()`로 읽고 매 checkpoint에서 다시 대조한다. 역할 readback 불일치도 키 접근 전에 차단하는 반례를 통과했다. 실측 예에는 domain·배포 거래·준비 E3/chain CAS·수락/청구 block을 함께 보존했다. 최종 문서 커밋의 원격 CI와 전체47 실제 포함 여부는 PR93 본문의 exact-head 기록을 따른다.

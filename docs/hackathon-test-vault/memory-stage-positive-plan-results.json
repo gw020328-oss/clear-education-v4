@@ -1,6 +1,6 @@
 {
   "version": "clear-hackathon-memory-stage-positive-results.1",
-  "sourceHead": "221aac70b8b2868971ffc77f25016724e3b92a2c",
+  "sourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
   "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
   "historicalPlan": "execution-positive-plan.json",
   "historicalPlanUnchanged": true,
@@ -13,7 +13,8 @@
       "id": "fresh-runtime",
       "status": "PASS_MEMORY_STAGE",
       "tests": [
-        "actual E1 E2 E3 authenticated module flow reaches fresh memory .3 accept and fixed claim"
+        "actual E1 E2 E3 authenticated module flow reaches fresh memory .3 accept and fixed claim",
+        "measured role readback mismatch rejects signing before key access"
       ]
     },
     {
