@@ -35,7 +35,15 @@ E3 포트의 wire tag는 기존 E3 계약이 허용하는 `SYNTHETIC_PORT_FIXTUR
 
 고정 TEST 토큰은 전송 실패·callback을 제공하지 않는다. 세 통제 probe에서는 별도 악성 probe 배포를 정상 asset으로 생성하려 하면 TOKEN_CODE로 거부되는 것을 먼저 검사한다. 오직 새 메모리 VM에서 snapshot 뒤 code를 주입해 재진입 거부, transfer=false, 수취금액1 부족과 원자 rollback을 검사한다. signer는 code pin 변화로 거부한다. snapshot을 복원하고 고정 asset code를 재확인한 뒤 정상 claim을 수행한다. 이 주입 성공을 지원 토큰 범위나 정상 signer 경로의 성공으로 세지 않으며 probe 수치는 별도 기록한다.
 
-새 `tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs`가 이 전용 suite만 import한다. 기존 workflow의 network-guard/glob가 새 E4 검사를 실제 실행한다. 공통 workflow·기존 준비 wrapper·패키지 의존성·API/DB/spec/web/producer를 직접 변경하지 않았다. 새47개와 과거 준비50/compile66/E2 또는 CI 전체 분모를 합산해 새 E4 수치로 보고하지 않는다.
+새 `tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs`가 이 전용 suite만 import한다. 기존 workflow의 network-guard/glob가 새 E4 검사를 실제 실행한다. 공통 workflow·기존 준비 wrapper·패키지 의존성·API/DB/spec/web/producer를 직접 변경하지 않았다. 새48개와 과거 준비50/compile66/E2 또는 CI 전체 분모를 합산해 새 E4 수치로 보고하지 않는다.
+
+## 첫 원격 CI의 동시 청구 반례
+
+`a53cbaa`의 [push 실행](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39194782604)과 [PR 실행](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39194787255)은 새 E4 47개 중46 PASS/1 FAIL(해당 workflow 단계 전체590 중589 PASS/1 FAIL)이었다. 동시 청구 두 wrapper promise의 fulfilled 수가0인데 한 claim receipt는 metrics에 기록됐다. 최초 로그는 내부 rejection 이유를 출력하지 않았으므로 정확한 내부 오류 문자열을 실측했다고 주장하지 않는다.
+
+wrapper는 거래 영수증 확인 뒤 strict latest-checkpoint `sync()`까지 수행한다. 경쟁 거래가 그 조회 중 새 block을 만들면, 거래가 확정됐어도 후속 조회는 거부될 수 있다. 이를 거래 실패와 같은 것으로 세던 시험을 수정했다. 계약 동시성은 gas를 명시한 두 실제 거래의 status1/status0 영수증 및 recipient 증가100·회계0을 검사하고, 모두 종료한 뒤 한 번 조회한다. 이 정상 contract-level claim1은 stage wrapper count와 별도 기록한다.
+
+새 별도 검사에서 claim 확정 뒤 조회 중 block 진행을 결정적으로 주입했다. `STAGE_CHAIN_MOVED` 거부와 이미 SETTLED/수취100인 사실이 함께 성립하며, 두 번째 claim은 거부된다. CAS를 약화하지 않았다. E5는 거래 실패와 확정 뒤 readback 오류를 구분해 canonical receipt를 복구해야 하며, 조회 오류만으로 새 서명·변경된 재시도를 실행하면 안 된다. 이 메모리 반례는 E5 recovery 완료 근거가 아니다.
 
 ## 직접 코드 리뷰
 
@@ -63,4 +71,4 @@ E3 포트의 wire tag는 기존 E3 계약이 허용하는 `SYNTHETIC_PORT_FIXTUR
 
 이번 PR은 stage-scoped 양성 실행과 반례의 근거다. 새 persistent chain/signer, real source trust, 제품/production, develop/main merge, 배포는 수행하지 않는다.
 
-최종 소스 기준: `7aa28dca3e51822d3b504251d31504fbc3930af2`. 로컬 전체47 PASS/0 FAIL, 기존66 회귀 PASS. 같은 사례/재실행은 분모에 더하지 않는다. 실제 역할은 배포 후 `roles()`로 읽고 매 checkpoint에서 다시 대조한다. 역할 readback 불일치도 키 접근 전에 차단하는 반례를 통과했다. 실측 예에는 domain·배포 거래·준비 E3/chain CAS·수락/청구 block을 함께 보존했다. 최종 문서 커밋의 원격 CI와 전체47 실제 포함 여부는 PR93 본문의 exact-head 기록을 따른다.
+최종 소스 기준: `ff3057399571288095ba5021a2db42c3dbd647f6` (host 구현 `7aa28dca3e51822d3b504251d31504fbc3930af2`). 로컬 전체48 PASS/0 FAIL, 기존66 회귀 PASS. 같은 사례/재실행은 분모에 더하지 않는다. 실제 역할은 배포 후 `roles()`로 읽고 매 checkpoint에서 다시 대조한다. 실측 예에는 domain·배포 거래·준비 E3/chain CAS·수락/청구 block을 함께 보존했다. 최종 문서 커밋의 원격 CI와 전체48 실제 포함 여부는 PR93 본문의 exact-head 기록을 따른다.

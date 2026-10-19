@@ -1,6 +1,6 @@
 {
   "version": "clear-hackathon-memory-stage-positive-results.1",
-  "sourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
+  "sourceHead": "ff3057399571288095ba5021a2db42c3dbd647f6",
   "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
   "historicalPlan": "execution-positive-plan.json",
   "historicalPlanUnchanged": true,
@@ -190,7 +190,10 @@
       "id": "operation-recovery",
       "status": "NOT_RUN_E5",
       "tests": [],
-      "limit": "Only contract once/full-calldata rollback/idempotence and stored-right semantics tested; canonical receipt/readback/reorg recovery NOT_RUN."
+      "limit": "Only contract once/full-calldata rollback/idempotence and stored-right semantics tested; canonical receipt/readback/reorg recovery NOT_RUN. This memory-only settled/readback-error counterexample does not implement canonical receipt recovery.",
+      "partialTests": [
+        "settled claim with moving readback checkpoint rejects acknowledgment without a second payment"
+      ]
     },
     {
       "id": "e5-persistent-backend-stop",

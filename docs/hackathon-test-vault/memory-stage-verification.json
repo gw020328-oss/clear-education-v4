@@ -2,7 +2,7 @@
   "version": "clear-hackathon-memory-stage-verification.1",
   "date": "2026-10-19",
   "stage": "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS",
-  "sourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
+  "sourceHead": "ff3057399571288095ba5021a2db42c3dbd647f6",
   "implementationHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
   "commonMergeHead": "4964a152a10597fac900b35002395c616a2b5122",
   "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
@@ -10,10 +10,10 @@
   "requestedModel": "GPT-6 Astra / High",
   "actualModelIndependentlyVerified": false,
   "executed": {
-    "distinctStageTests": 47,
-    "pass": 47,
+    "distinctStageTests": 48,
+    "pass": 48,
     "fail": 0,
-    "fullSuiteSourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2",
+    "fullSuiteSourceHead": "ff3057399571288095ba5021a2db42c3dbd647f6",
     "finalTestOnlyDelta": null,
     "historicalCompileAndBlockedRegression": {
       "tests": 66,
@@ -23,14 +23,14 @@
     "repeatedRunsAddedToTotal": false
   },
   "fullSuiteMetrics": {
-    "instances": 47,
-    "executionDeployments": 47,
-    "tokenDeployments": 47,
-    "keyProviderCalls": 42,
-    "signaturesGenerated": 41,
-    "signaturesReturned": 30,
+    "instances": 48,
+    "executionDeployments": 48,
+    "tokenDeployments": 48,
+    "keyProviderCalls": 43,
+    "signaturesGenerated": 42,
+    "signaturesReturned": 31,
     "signaturesDiscarded": 11,
-    "accepts": 12,
+    "accepts": 13,
     "claims": 10,
     "actualSources": 0,
     "externalRpc": 0,
@@ -39,14 +39,15 @@
       "deployments": 3,
       "codeInjections": 3,
       "injectedClaims": 1,
-      "contractLevelAccepts": 1
+      "contractLevelAccepts": 1,
+      "contractLevelClaims": 1
     }
   },
   "metricsMeaning": {
     "keyProviderCalls": "Fresh ephemeral TEST signing provider accesses, not existing-key reads.",
-    "accepts": "12 authenticated stage wrapper successes. One additional explicit contract-level successful accept is in controlledProbes.contractLevelAccepts.",
-    "claims": "10 normal fixed-token stage wrapper settlements. One extra injected-code probe settlement is recorded separately and reverted by snapshot.",
-    "signaturesGenerated": "41 total includes 11 subsequently discarded; 30 returned. E1/auth login signatures are outside this payout counter.",
+    "accepts": "13 authenticated stage wrapper accept confirmations. One additional explicit contract-level successful accept is in controlledProbes.contractLevelAccepts.",
+    "claims": "10 mined fixed-token stage claim receipts, including one intentionally rejected post-commit readback acknowledgment. One additional normal fixed-token contract-level concurrent claim is in controlledProbes.contractLevelClaims. One injected-code probe settlement is separate and snapshot-reverted.",
+    "signaturesGenerated": "42 total includes 11 subsequently discarded; 31 returned. E1/auth login signatures are outside this payout counter.",
     "runtimeInstances": "Fresh disposable memory instances only; failed initialization before deployment is not counted.",
     "reruns": "Counts from final full suite only. Prior/focused/remote runs are separate, not cumulative."
   },
@@ -141,6 +142,34 @@
       "pass": 47,
       "fail": 0,
       "sourceHead": "7aa28dca3e51822d3b504251d31504fbc3930af2"
+    },
+    {
+      "sourceHead": "a53cbaa69c625306754ed3609d2fda61cd737e2a",
+      "remoteRuns": [
+        39194782604,
+        39194787255
+      ],
+      "stageTests": 47,
+      "stagePass": 46,
+      "stageFail": 1,
+      "workflowStepTotal": 590,
+      "workflowStepPass": 589,
+      "workflowStepFail": 1,
+      "case": "two concurrent any-callers produce exactly one fixed settlement",
+      "cause": "Both wrapper promises rejected although one claim receipt was recorded. Wrapper promise conflated successful transaction with subsequent strict readback. Logs did not preserve inner rejection reason. Deterministic moving-checkpoint test now reproduces settled claim plus STAGE_CHAIN_MOVED; concurrent contract semantics use actual successful/reverted receipts."
+    },
+    {
+      "log": "stage-concurrent-readback-fixed.log",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0
+    },
+    {
+      "log": "stage-suite-readback-final.log",
+      "tests": 48,
+      "pass": 48,
+      "fail": 0,
+      "sourceHead": "ff3057399571288095ba5021a2db42c3dbd647f6"
     }
   ],
   "preservation": {
@@ -183,7 +212,8 @@
       "Synchronous authenticated E3 checks adjacent to key access/output after asynchronous chain reads",
       "Clean-checkout metrics parent creation and dedicated CI entry",
       "Precise shortage, CAS, rollback and accepted-target guard assertions",
-      "Measured on-chain role pins with per-checkpoint readback and rejection test"
+      "Measured on-chain role pins with per-checkpoint readback and rejection test",
+      "Separate contract concurrent receipts from post-commit readback; deterministically retain STAGE_CHAIN_MOVED rejection after a settled claim"
     ],
     "unresolvedInStageScope": []
   },
@@ -200,7 +230,7 @@
   },
   "sourceSha256": {
     "src/hackathon-test-vault/memory-stage-harness.mjs": "b053742d1d3f0e8e9a751ac9c440146e5763157a1d8773f6b587334f61252fb9",
-    "tests/hackathon-test-vault/stage-execution.test.mjs": "66b1500583b824fc65add5d3fcadacd522092de956ec6616a7ec411e96b433fb",
+    "tests/hackathon-test-vault/stage-execution.test.mjs": "9afeac8cea8699458e99b639b344d2edbaf58df54dea93613e2f044201f543ef",
     "tests/hackathon-test-vault/StageClaimBoundaryProbe.sol": "0e712d6929121ce1bb46fac877d203d49b034607d40ea8b74cf0a4b0c02cc1be",
     "tests/hackathon-test-vault/stage-probe-build.mjs": "723ef3c0e44d8ca2e12765ac84d9496f123589c02ee3e68232105cc489ffaca2",
     "tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs": "94eed77eb6825f71f1045d5c8e29f8798b6cb3bbd1f656f74d484692ac31f298"
@@ -220,6 +250,10 @@
     "execution-regression-final.log": "44083bac143a32d579bdb8429f40d249dc1ff50cd27d07e5ebc552ed7d82eb6b",
     "stage-preservation.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0",
     "stage-role-readback.log": "f133e40bba3ff32f9b0e2e0a296d815c11b71cd1cd2b87bb9c0291a218b7bb21",
-    "stage-suite-role-pinned-final.log": "c091a10eae4666ab52cf24f97496ff0ac9a0aeabcb567e27583d7b0e6ee37e91"
+    "stage-suite-role-pinned-final.log": "c091a10eae4666ab52cf24f97496ff0ac9a0aeabcb567e27583d7b0e6ee37e91",
+    "stage-ci-push-first.log": "aa5ce077f4fe88c7ef7018a91ecedd14871622b6a923e9ceccb0c0fcdb99a475",
+    "stage-ci-pr-first.log": "ed0ab1901d30bd60c3bf3bf97e2f4a8936cea414ffeeaaad7f09dda6d39ffb63",
+    "stage-concurrent-readback-fixed.log": "b22761960b2814dea847666cde1a057e648e8dd3ffb9c09f77995c68c1f72531",
+    "stage-suite-readback-final.log": "ef3a25185c0dd168b025676eaf0e6c84b8468099cc724bab4a8b375a41699abb"
   }
 }
