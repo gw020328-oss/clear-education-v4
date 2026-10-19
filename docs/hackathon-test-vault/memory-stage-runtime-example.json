@@ -1,0 +1,77 @@
+{
+  "version": "clear-hackathon-memory-stage-runtime-example.1",
+  "executionSourceHead": "ff3057399571288095ba5021a2db42c3dbd647f6",
+  "sourceRun": "stage-suite-readback-final.log",
+  "status": "DISPOSABLE_INSTANCE_CLOSED_AFTER_TEST",
+  "activeRuntime": false,
+  "containsPrivateKeyOrSignatureOrSourceRaw": false,
+  "pin": {
+    "version": "clear-hackathon-memory-runtime.1",
+    "kind": "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS",
+    "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
+    "e3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
+    "chainId": "431709",
+    "genesisHash": "0xe2dd16399d17254ccb4002daf48c92c6522eeb28e02bf8f41d2c1be76b28de6d",
+    "vaultAddress": "0xc3a1b4140745fa7af4a801418403e30ad7734a49",
+    "vaultCodeHash": "0x9fbb783a6285a1d0aea4a95cc130d329c2ac3f64bce8039b8923ce0ea18236f7",
+    "tokenAddress": "0x729b1069861cb740f7d54f6af90cf3f71f9bc0cd",
+    "tokenCodeHash": "0x24e0b4b9b20ccf0949acdf19c53041e404f82c7d17dd7fe322d68ac2b7e9e952",
+    "instanceId": "0xd54e4f898d21526c408286925714c12a76e6968731ee811263e378e86cea1e97",
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+    "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+    "domainSeparator": "0xfbc252689213eb17831c2dc58d298567514c47bbf03ce62c3e8f3abf39425abc",
+    "typeHash": "0x0420a07c2295bca1fc66f0033f2afa0c6e430c7d7cccb48fa23a98c84d97fa8f",
+    "roles": {
+      "registrar": "0x2d2cc9c07a215e59dafc65abe3fb3d42bc713809",
+      "initialSigner": "0x190fbcc2b060714c4f9775d561fcf4d6c5c7ef44",
+      "keyAdmin": "0xed55e639b339c7db4b768d554d3d78ff3d7b9d57",
+      "relayer": "0x20f6582895726b82dc06137208b753ccb5b8982c",
+      "depositor": "0x5c161b88262a5e76e49180c8513807fe32bc8ad9",
+      "terminator": "0x2ad2e5d198b0cb8ac076c1e9868ae740c220fa5a"
+    },
+    "signerKeyId": "0x235fcf139879610b3a8e7ecda2ad59d4e5342e7b8447122314b3841f96233ee2",
+    "signerAddress": "0x190fbcc2b060714c4f9775d561fcf4d6c5c7ef44"
+  },
+  "domain": {
+    "name": "ClearBootcampTestPayment",
+    "version": "3",
+    "chainId": "431709",
+    "verifyingContract": "0xc3a1b4140745fa7af4a801418403e30ad7734a49",
+    "salt": "0xd54e4f898d21526c408286925714c12a76e6968731ee811263e378e86cea1e97"
+  },
+  "deploymentTransactions": {
+    "vault": "0x94aab3f7829f569286e8ea2d7770aa257132419fd7baf4d9957a3305ae4eae96",
+    "token": "0x4c9e8e08937220f97878c5bb1178bcfe4a28c7bef583a4564379d23a1d6e65f5"
+  },
+  "preparedChainCas": {
+    "number": "10",
+    "hash": "0x6de8edb9844df52cfa8ec05643cd823a8c7906b3dfae0c93617eef091adc54ab",
+    "time": 1580558400,
+    "version": "5"
+  },
+  "preparedE3Cas": {
+    "expectedRevision": 9,
+    "expectedLedgerSequence": 54,
+    "expectedSnapshotHash": "0x2862b181c369d3721651d352d282228d3b7833820342d8de8de56e06ec2a48ff"
+  },
+  "acceptTransaction": "0x16ee031274ed6add2303fd44420aba27477ca5a5f676165ed925d7cb889c4061",
+  "acceptBlock": {
+    "number": 11,
+    "hash": "0x3d7c757b790f15aa92bce35780f078835e45e4c023986e94a7242402276db39b"
+  },
+  "claimTransaction": "0x75db807acc2b410a7fdd7073d2ea6ddeebf54741f08e193bd24ce141f213c271",
+  "claimBlock": {
+    "number": 12,
+    "hash": "0x2cd723cf3c3118d1189213f8310eb68440c65f6f0bc9aef057222c57cfc36daf"
+  },
+  "authorizationDigest": "0x57bd856b5f4e35ffcd1910637b2ee4fc28baa095a2cbb3a04cc31815ad0dfb26",
+  "metrics": {
+    "keyProviderCalls": 1,
+    "signaturesGenerated": 1,
+    "signaturesReturned": 1,
+    "signaturesDiscarded": 0,
+    "accepts": 1,
+    "claims": 1
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-17",
+  "kind": "OFFLINE_MOCK_AND_PUBLIC_SYNTHETIC_VECTORS",
+  "fixedP0Commit": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
+  "p0MergeCommit": "d5f0d2b",
+  "newBootcampTests": 58,
+  "existingMoodleTests": 75,
+  "p0ContractTests": 20,
+  "bridgeSourceContractTests": 26,
+  "bridgeAdapterTests": 26,
+  "workflowContractTests": 6,
+  "total": 211,
+  "passed": 211,
+  "externalNetworkTripwire": true,
+  "publishedExportCorrelationRecords": 7,
+  "exportRawSourceRecalculated": false,
+  "workspaceSourceFilesPreserved": 191,
+  "optionalCombinedAiSmoke": "BLOCKED_MISSING_PR72_FIXTURE_NOT_IN_THIS_BRANCH",
+  "additionalLiveRunAfterCleanup": false,
+  "productRuntimeMappingIssued": false,
+  "productAcceptance": false,
+  "paymentAllowed": false
+}

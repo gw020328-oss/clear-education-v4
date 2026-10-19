@@ -1,0 +1,2217 @@
+{
+  "version": "clear-hackathon-test-vault-execution-compile-artifact.1",
+  "stage": "COMPILE_ONLY_E3_FINAL_INTAKE_PENDING",
+  "contract": "HackathonTestVaultExecution",
+  "compiler": {
+    "solc": "0.8.30",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "shanghai"
+  },
+  "intake": {
+    "e1": "6b4b0cf2d847937aebc6da69f9e7df62e926fa50",
+    "e2": "d9407b06b8a13122a489193119c1899929f83fe4",
+    "e3Source": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+    "e3FinalAcceptance": null,
+    "preparation": "d287b3789a678a1e6984b583e4c85859e9e97a22"
+  },
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "asset",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "instance",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "policy",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "mappingHash",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "registrar",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "initialSigner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "keyAdmin",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "relayer",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "depositor",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "terminator",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Roles",
+          "name": "r",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "applicationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum HackathonTestVaultExecution.State",
+          "name": "state",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "epoch",
+          "type": "uint64"
+        }
+      ],
+      "name": "AppChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "operationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Funded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "keyId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        }
+      ],
+      "name": "KeyRegistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "keyId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "KeyRevoked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "operationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "digest",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "actor",
+          "type": "address"
+        }
+      ],
+      "name": "OperationApplied",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "applicationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "allocationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "digest",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "nonce",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "acceptedAt",
+          "type": "uint64"
+        }
+      ],
+      "name": "RightAccepted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "applicationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "allocationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amountAtoms",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "settledAt",
+          "type": "uint64"
+        }
+      ],
+      "name": "RightSettled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "applicationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "operationId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "allocationId",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "revision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "acceptanceSequence",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "epoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "appVersion",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "sourceReceiptHash",
+              "type": "bytes32"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct HackathonTestVaultExecution.ReplacementTarget",
+          "name": "previous",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "revision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "acceptanceSequence",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "epoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "appVersion",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "sourceReceiptHash",
+              "type": "bytes32"
+            }
+          ],
+          "indexed": false,
+          "internalType": "struct HackathonTestVaultExecution.ReplacementTarget",
+          "name": "current",
+          "type": "tuple"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "firstStartedAt",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum HackathonTestVaultExecution.Change",
+          "name": "mode",
+          "type": "uint8"
+        }
+      ],
+      "name": "TargetReplaced",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "AMOUNT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_APPLICATIONS",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "P0_POLICY",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "PROFILE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RUNTIME_KIND",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "TYPE_HASH",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "applicationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "policyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "runtimeMappingHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionRevision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountAtoms",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "allocationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "consentSetHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "deadlinePolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "eligibilityRoute",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "issuedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiresAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "signerKeyId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "authorizationEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "operationsPolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "procedureId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "firstReviewStartedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionPublishedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceValidUntilExclusive",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint8",
+              "name": "revalidationCount",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Authorization",
+          "name": "m",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes",
+          "name": "signature",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "accept",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "acceptedRight",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountAtoms",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "allocationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "authorizationDigest",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "signerKeyId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "authorizationEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "acceptedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "settledAt",
+              "type": "uint64"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.AcceptedRight",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "accounting",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "B",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "R",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "O",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "A",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "U",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "S",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "surplus",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "allocationId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "allocate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "allocationIds",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "application",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "enum HackathonTestVaultExecution.State",
+              "name": "state",
+              "type": "uint8"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "decisionId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint64",
+                  "name": "revision",
+                  "type": "uint64"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "decisionHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint64",
+                  "name": "sourceValidUntilExclusive",
+                  "type": "uint64"
+                },
+                {
+                  "internalType": "uint64",
+                  "name": "acceptanceSequence",
+                  "type": "uint64"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "sourceReceiptHash",
+                  "type": "bytes32"
+                }
+              ],
+              "internalType": "struct HackathonTestVaultExecution.Target",
+              "name": "target",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint64",
+              "name": "version",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "epoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "allocationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "allocatedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "targetRecordedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "procedureId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "firstStartedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "publishedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint8",
+              "name": "revalidationCount",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bool",
+              "name": "currentMet",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "validObjection",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "unassessedObjection",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "newValidError",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "terminalError",
+              "type": "bool"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "consentSetHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bool",
+              "name": "mutualConsent",
+              "type": "bool"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "observationReceiptHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "observedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "preparedDigest",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "preparedNonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "deadlinePolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "enum HackathonTestVaultExecution.Termination",
+              "name": "terminationReason",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "terminationReceiptHash",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Application",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "applicationIds",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "",
+          "type": "bytes32[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "balance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "consentSetHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bool",
+          "name": "mutualConsent",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "bindConsents",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "applicationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "policyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "runtimeMappingHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionRevision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountAtoms",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "allocationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "consentSetHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "deadlinePolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "eligibilityRoute",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "issuedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiresAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "signerKeyId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "authorizationEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "operationsPolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "procedureId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "firstReviewStartedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionPublishedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceValidUntilExclusive",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint8",
+              "name": "revalidationCount",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Authorization",
+          "name": "m",
+          "type": "tuple"
+        }
+      ],
+      "name": "checkPrepared",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "digest",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bool",
+          "name": "canPay",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "domainSeparator",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "fund",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "applicationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "policyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "runtimeMappingHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionRevision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountAtoms",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "allocationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "consentSetHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "deadlinePolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "eligibilityRoute",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "issuedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiresAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "signerKeyId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "authorizationEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "operationsPolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "procedureId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "firstReviewStartedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionPublishedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceValidUntilExclusive",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint8",
+              "name": "revalidationCount",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Authorization",
+          "name": "m",
+          "type": "tuple"
+        }
+      ],
+      "name": "hashAuthorization",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "instanceId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "keyAddresses",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "keys",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "revoked",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastAcceptanceSequence",
+      "outputs": [
+        {
+          "internalType": "uint64",
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "newOperationsPaused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "nextAllocatable",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "next",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "obligations",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "currentMet",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "validObjection",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "unassessedObjection",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "newValidError",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceValidUntilExclusive",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "observedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "receiptHash",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Observation",
+          "name": "o",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "observeCurrent",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "operations",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "policyHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "applicationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "policyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "runtimeMappingHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionRevision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountAtoms",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "allocationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "consentSetHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "deadlinePolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint8",
+              "name": "eligibilityRoute",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "issuedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "expiresAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "signerKeyId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "authorizationEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "operationsPolicyHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "procedureId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "firstReviewStartedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "decisionPublishedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceValidUntilExclusive",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint8",
+              "name": "revalidationCount",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Authorization",
+          "name": "m",
+          "type": "tuple"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "prepareUnsigned",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "procedureIds",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "revision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceValidUntilExclusive",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "acceptanceSequence",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "sourceReceiptHash",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Target",
+          "name": "t",
+          "type": "tuple"
+        }
+      ],
+      "name": "registerCurrentMet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "keyId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        }
+      ],
+      "name": "registerKey",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "decisionId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "revision",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "decisionHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sourceValidUntilExclusive",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "acceptanceSequence",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "sourceReceiptHash",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct HackathonTestVaultExecution.Target",
+          "name": "t",
+          "type": "tuple"
+        },
+        {
+          "internalType": "enum HackathonTestVaultExecution.Change",
+          "name": "mode",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "replaceTarget",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "reserved",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "keyId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "revokeKey",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "roles",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "registrar",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "initialSigner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "keyAdmin",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "relayer",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "depositor",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "terminator",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "runtimeMappingHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bool",
+          "name": "paused",
+          "type": "bool"
+        }
+      ],
+      "name": "setPause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "procedureId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "publishedAt",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "startReview",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "op",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "appId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "enum HackathonTestVaultExecution.Termination",
+          "name": "reason",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "receiptHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "expectedVersion",
+          "type": "uint64"
+        }
+      ],
+      "name": "terminate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "token",
+      "outputs": [
+        {
+          "internalType": "contract ClearTestToken",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "usedNonces",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "creationBytes": 26870,
+  "constructorArgumentBytes": 320,
+  "initcodeBytes": 27190,
+  "runtimeTemplateBytes": 24080,
+  "limits": {
+    "runtimeBytes": 24576,
+    "initcodeBytes": 49152,
+    "unlimitedContractSize": false
+  },
+  "runtimeTemplateHash": "0xfa42c7c2b437909a81ae2ea4e51a69ca2983a33852253c6786cc3c56cb13e102",
+  "runtimeTemplateIsDeployedCodePin": false,
+  "immutableReferences": {
+    "431": [
+      {
+        "length": 32,
+        "start": 2093
+      },
+      {
+        "length": 32,
+        "start": 6442
+      },
+      {
+        "length": 32,
+        "start": 7174
+      },
+      {
+        "length": 32,
+        "start": 7915
+      },
+      {
+        "length": 32,
+        "start": 10154
+      },
+      {
+        "length": 32,
+        "start": 12331
+      },
+      {
+        "length": 32,
+        "start": 12512
+      },
+      {
+        "length": 32,
+        "start": 12663
+      },
+      {
+        "length": 32,
+        "start": 13026
+      },
+      {
+        "length": 32,
+        "start": 13232
+      },
+      {
+        "length": 32,
+        "start": 13402
+      },
+      {
+        "length": 32,
+        "start": 14166
+      },
+      {
+        "length": 32,
+        "start": 14313
+      },
+      {
+        "length": 32,
+        "start": 14455
+      },
+      {
+        "length": 32,
+        "start": 14661
+      },
+      {
+        "length": 32,
+        "start": 14815
+      },
+      {
+        "length": 32,
+        "start": 17283
+      },
+      {
+        "length": 32,
+        "start": 19445
+      }
+    ],
+    "433": [
+      {
+        "length": 32,
+        "start": 628
+      },
+      {
+        "length": 32,
+        "start": 15251
+      }
+    ],
+    "435": [
+      {
+        "length": 32,
+        "start": 686
+      },
+      {
+        "length": 32,
+        "start": 17037
+      }
+    ],
+    "437": [
+      {
+        "length": 32,
+        "start": 900
+      },
+      {
+        "length": 32,
+        "start": 17083
+      }
+    ]
+  },
+  "fixedToken": {
+    "contract": "ClearTestToken",
+    "amountAtoms": "100000000",
+    "decimals": 6,
+    "runtimeCodeHash": "0x24e0b4b9b20ccf0949acdf19c53041e404f82c7d17dd7fe322d68ac2b7e9e952"
+  },
+  "sourceSha256": {
+    "contracts/ClearTestToken.sol": "f6b904626da44e856c5854235fe6ac64af0057a1550f1a5337d56bfe7790356a",
+    "src/hackathon-test-vault/StrictECDSA.sol": "d2873eb2ac6205adc268f5eddf4ba89fbd3e046a83785d44f8715616a74fd69a",
+    "src/hackathon-test-vault/HackathonTestVaultExecution.sol": "3720e6cb41ecb7efcad34e3c1d932208c2396e7c93093cef4b3dee924c0e7f29",
+    "src/hackathon-test-vault/execution-signer.mjs": "0e2e1c7a6d80c63c3fb9ad2246b22be7e64e16088328bf872d6ed12f771185ab"
+  },
+  "compilationWarnings": [],
+  "implementedInSource": [
+    "REGISTER_RESERVE_REVIEW_PREPARE",
+    "EXACT_DIGEST_STRICT_ECDSA_FIRST_ACCEPT",
+    "ATOMIC_SINGLE_NONCE_ACCEPTED_RIGHT",
+    "ANYCALLER_FIXED_RECIPIENT_SINGLE_CLAIM",
+    "CONDITIONED_UNACCEPTED_TERMINATE"
+  ],
+  "operationalSignerImplemented": false,
+  "signerAdapterState": "HARD_BLOCKED_NO_KEY_PROVIDER_ACCESS",
+  "e5CanonicalCheckpointAdapterImplemented": false,
+  "executionContractDeployments": 0,
+  "authorizationSignatures": 0,
+  "validSignerPositiveControls": 0,
+  "accepts": 0,
+  "claims": 0,
+  "persistentChains": 0,
+  "externalRpc": 0,
+  "actualSources": 0,
+  "runtimePin": null,
+  "productionEnabled": false,
+  "positiveExecutionAuthorized": false
+}

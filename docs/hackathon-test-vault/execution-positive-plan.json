@@ -1,0 +1,151 @@
+{
+  "version": "clear-hackathon-test-execution-positive-plan.1",
+  "status": "NOT_RUN_AWAITING_EXPLICIT_E3_FINAL_HEAD_INTAKE",
+  "preparedFromE3Source": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+  "acceptedE3Head": null,
+  "currentScope": "COMPILE_ABI_ARTIFACT_AND_NEGATIVE_DEFAULT_BLOCK_ONLY",
+  "executionAuthorized": false,
+  "cases": [
+    {
+      "id": "fresh-runtime",
+      "status": "NOT_RUN",
+      "setup": "새 fixed-token/execution instance를 정상 Shanghai/EIP170 설정의 승인된 격리 memory EVM에 배포",
+      "expected": "정확 deployed code/domain/salt/역할 pin을 측정하고 준비 runtime/old instance와 구분"
+    },
+    {
+      "id": "first-accept-mutual",
+      "status": "NOT_RUN",
+      "setup": "현재MET+전액100+두 역할 동의+exact chain preparation 뒤 유효 .3 서명",
+      "expected": "relayer accept에서 nonce1회 소비, 고정 AcceptedRight 저장, R/O/B 불변"
+    },
+    {
+      "id": "first-accept-deadline",
+      "status": "NOT_RUN",
+      "setup": "새 판정 publication120초 경과, 원래600/source/expiry 안, route2 current consent set",
+      "expected": "양측 조기 동의 없이 route2 가능; published+120==cap 경계는 거부"
+    },
+    {
+      "id": "valid-signer-negative-controls",
+      "status": "NOT_RUN",
+      "setup": "승인된 새 ephemeral TEST signing provider로 strict low-s 양성 및 잘못된 key/높은s/v/length/zero",
+      "expected": "정확 signer만 통과; private key export/log 없음"
+    },
+    {
+      "id": "exact-24-field-domain",
+      "status": "NOT_RUN",
+      "setup": "24필드와 domain chain/address/salt/name/version 각 변조",
+      "expected": "registered prepared digest/strict signature/current state 불일치로 최초 accept 거부"
+    },
+    {
+      "id": "nonce-one-use",
+      "status": "NOT_RUN",
+      "setup": "같은 nonce로 같은/다른app 재시도, 다른 operationId 제출",
+      "expected": "권리1회; nonce는 instance에서1회, 실패한 accept는 미소비"
+    },
+    {
+      "id": "latest-cas",
+      "status": "NOT_RUN",
+      "setup": "E3 내부CAS 또는 chainversion이 준비뒤 전진",
+      "expected": "옛 signer 발급/accept 거부, publication baseline과 최신CAS를 혼용하지 않음"
+    },
+    {
+      "id": "no-unprepared-signing",
+      "status": "NOT_RUN",
+      "setup": "미등록/미배정/partial reserve/다른digest",
+      "expected": "키provider 미호출 및 contract accept 거부"
+    },
+    {
+      "id": "current-source-and-objection",
+      "status": "NOT_RUN",
+      "setup": "cap/source/expiry equality, revoked key, epoch변경, cancel/currentfalse, unassessed/valid objection, 새오류",
+      "expected": "firstaccept 거부; 단순false/receiptHash로 우회불가"
+    },
+    {
+      "id": "both-consent-withdrawal",
+      "status": "NOT_RUN",
+      "setup": "조기route의 한 역할 철회/권한철회/다른scope",
+      "expected": "E3 현재성·chain commitment 재검사 거부; 옛AGREE fallback 없음"
+    },
+    {
+      "id": "replacement-stable-allocation",
+      "status": "NOT_RUN",
+      "setup": "같은decisionId higherrevision 또는 새ID 정정",
+      "expected": "stableallocation/한100/R/O/원래firstStart 유지, 옛서명거부, 새동의/기한"
+    },
+    {
+      "id": "accepted-first",
+      "status": "NOT_RUN",
+      "setup": "accept 확정 뒤 correction/terminate 시도",
+      "expected": "권리변경/예약해제 거부, current state와분리된claim 가능"
+    },
+    {
+      "id": "terminate-first",
+      "status": "NOT_RUN",
+      "setup": "정당조건+terminator 종료 확정 뒤 옛accept",
+      "expected": "nonce/준비물/epoch 경계로 거부; R/O원자해제"
+    },
+    {
+      "id": "accepted-independent-claim",
+      "status": "NOT_RUN",
+      "setup": "accept뒤 source/cap/서명expiry 경과, keyrevoke, pause, offchain정정",
+      "expected": "새서명/현재key/epoch/자료 없이 anycaller claim→고정recipient1001회"
+    },
+    {
+      "id": "exact-transfer-and-accounting",
+      "status": "NOT_RUN",
+      "setup": "첫claim 및 중복claim/동시caller",
+      "expected": "B/R/O 각각100감소·exact수취100·SETTLEDtombstone, 다른예약보존"
+    },
+    {
+      "id": "150-plus-50",
+      "status": "NOT_RUN",
+      "setup": "150예치에2의무, 첫100배정후50보충, 각accept/claim",
+      "expected": "부분예약/타예약차용/기수전용 없음, currentMET수락sequence전액순"
+    },
+    {
+      "id": "termination-three-conditions",
+      "status": "NOT_RUN",
+      "setup": "다른역할/임의reason/earlycancel/fundingwait 종료 및3정당조건",
+      "expected": "권한+조건동시검사, 실패원자rollback, 적법종료만O/R해제"
+    },
+    {
+      "id": "transfer-failure-rollback",
+      "status": "NOT_RUN",
+      "setup": "승인된 테스트 harness에서 exact transfer failure 재현",
+      "expected": "ACCEPTED권리/R/O/B복원, 지급없음; fixedcodepin우회와실제지원token범위구분"
+    },
+    {
+      "id": "reentrancy-boundary",
+      "status": "NOT_RUN",
+      "setup": "고정token code거부반례 및 통제된 별도probe로 callback재진입 검증",
+      "expected": "재진입/이중지급거부; unsupported 악성token을제품token으로수락했다고주장하지않음"
+    },
+    {
+      "id": "signer-lifecycle",
+      "status": "NOT_RUN",
+      "setup": "인증된E3내부callback+확인된runtime/chainCAS, signing전후현재성재검사",
+      "expected": "기본차단→명시intake후만키provider, provider오류/상태변경시서명출력폐기; logs원문없음"
+    },
+    {
+      "id": "operation-recovery",
+      "status": "NOT_RUN",
+      "setup": "accept/claim응답유실 후 canonical receipt/권리 재조회",
+      "expected": "서명재발급/중복지급 없이확정상태회복, reorg/FINALIZED구분"
+    },
+    {
+      "id": "e5-persistent-backend-stop",
+      "status": "NOT_RUN",
+      "setup": "별도승인된persistentchain에서accept뒤backend중단",
+      "expected": "별도anycaller 직접claim, 사용자DB/체인reset없음; 메모리시험으로대체금지"
+    }
+  ],
+  "plannedCasesAreExecutedTests": false,
+  "executionContractDeployments": 0,
+  "authorizationSignatures": 0,
+  "validSignerPositiveControls": 0,
+  "accepts": 0,
+  "claims": 0,
+  "persistentChains": 0,
+  "externalRpc": 0,
+  "keyReads": 0
+}
