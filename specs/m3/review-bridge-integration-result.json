@@ -1,0 +1,62 @@
+{
+  "version": "clear-review-bridge-offline-composition.1",
+  "kind": "OFFLINE_SYNTHETIC_MODULE_COMPOSITION",
+  "cases": [
+    {
+      "mode": "html",
+      "sourceCalls": 5,
+      "mockObservations": 1,
+      "status": "BOUND_WITHOUT_AUTHORITY"
+    },
+    {
+      "mode": "plain",
+      "sourceCalls": 5,
+      "mockObservations": 1,
+      "status": "BOUND_WITHOUT_AUTHORITY"
+    },
+    {
+      "mode": "access",
+      "sourceCalls": 2,
+      "mockObservations": 1,
+      "status": "BOUND_WITHOUT_AUTHORITY"
+    },
+    {
+      "mode": "changed",
+      "sourceCalls": 5,
+      "mockObservations": 0,
+      "status": "REJECTED_BEFORE_AI"
+    },
+    {
+      "mode": "unsupported",
+      "sourceCalls": 5,
+      "mockObservations": 0,
+      "status": "REJECTED_BEFORE_AI"
+    },
+    {
+      "mode": "late-query",
+      "sourceCalls": 5,
+      "mockObservations": 0,
+      "status": "REJECTED_BEFORE_AI"
+    },
+    {
+      "mode": "late-result",
+      "sourceCalls": 5,
+      "mockObservations": 1,
+      "status": "LATE_RECEIPT_STAYS_STALE"
+    }
+  ],
+  "actualHttpRequests": 0,
+  "actualMoodleRetests": 0,
+  "actualModelCalls": 0,
+  "paidCalls": 0,
+  "productAcceptance": false,
+  "paymentAllowed": false,
+  "dependencyHeads": {
+    "frozenContract": "31879659e11d9cbfa0aa88e48d825047080f4e39",
+    "commonAdapter": "7b231540eea5519f97f091fe219218e3bdb06436",
+    "moodle": "988091d4212216d1c011e5356681706b161d0a4a",
+    "ai": "244beb2b7fabde395782193c6e2819ce0680abae"
+  },
+  "fixtureScope": "PUBLIC_SYNTHETIC_BOUND_POLICY_NOT_ACADEMY_PRESET",
+  "executionCheckout": "ISOLATED_DETACHED_WORKTREE_NO_DEVELOP_MAIN_UPDATE"
+}

@@ -1,0 +1,29 @@
+{
+  "version": "clear-e6-usage-definition-evidence.2",
+  "checkedOn": "2026-10-19",
+  "rest": {
+    "url": "https://ai.google.dev/api/generate-content#UsageMetadata",
+    "totalDefinition": "prompt + tool-use prompt + thoughts + response candidates",
+    "arithmeticBasis": "CURRENT_REST_USAGE_METADATA"
+  },
+  "sources": {
+    "pythonUsageMetadata": {
+      "commit": "364889aafe40bfa8f3b9db847ba272d299f7d632",
+      "url": "https://raw.githubusercontent.com/googleapis/python-genai/364889aafe40bfa8f3b9db847ba272d299f7d632/google/genai/types.py",
+      "sha256": "fa5363caa74a232a6fdab957d08c06d278e73dc1b091277844521604ce6a6493"
+    },
+    "generateContentProto": {
+      "commit": "e7513c828b8db536fa12fc5493d541f323aedf90",
+      "url": "https://raw.githubusercontent.com/googleapis/googleapis/e7513c828b8db536fa12fc5493d541f323aedf90/google/ai/generativelanguage/v1beta/generative_service.proto",
+      "sha256": "c64e082244f326e528d474d7b78834c2439bdc49811645aa3291dfb12d4499c3"
+    }
+  },
+  "interpretation": {
+    "sdkClass": "UsageMetadata",
+    "sdkOptionalThoughtsSupportingOnly": true,
+    "sdkResponseNamingNotRestWireMapping": true,
+    "protoInt32PresenceDoesNotProveProviderExplicitZero": true,
+    "protoOlderTotalCommentNotArithmeticBasis": true,
+    "individualMissingThoughtsNeverRewrittenAsReportedZero": true
+  }
+}

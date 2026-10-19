@@ -1,0 +1,529 @@
+{
+  "version": "clear-e6-paid-wire-v3-actual-result.3",
+  "occurredOn": "2026-10-19",
+  "recordedAt": "2026-10-19T08:32:40.983Z",
+  "execution": "ACTUAL",
+  "status": "FINISHED",
+  "recordedAfterExecution": true,
+  "executedCodeHead": "636817f679e009a6ad3194b7c549606cd24d112f",
+  "executedHeadCleanBeforeAndAfter": true,
+  "pins": {
+    "codeHead": "636817f679e009a6ad3194b7c549606cd24d112f",
+    "planHash": "0x29be00a2f5c79a757b41bf0e7f41c278c5ed403b9f4fb5aea4e50c1cf8d12bfb",
+    "corpusSha256": "1a304a596a15fedcda846ed721b87d0a6daa418fa019ecebe2f55443e7a8b951",
+    "goldSha256": "4f13f00b884d9360e6526fac2e80147466bfd17c8410509a18f6f72cd825e83a",
+    "requestsSha256": "67abe0f16b950cb58400aae1631f57abec3adf6520a1b25f7a6c1a500c8b66f8",
+    "usagePolicyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902"
+  },
+  "approvalHash": "779909fc5b48a5b59bd1be30de94132499467edba87290e027e541efa4e60247",
+  "authorizationEvidenceSource": "ROOT_RELAY_OF_DIRECT_HUMAN_REPLY",
+  "keySourceId": "clear-e6-existing-server-gemini-env.1",
+  "summarySha256": "bf60361cd501615077886860b1bd5b0fc363b75524ac5b7f72c8df23633b9812",
+  "fetchObservationSha256": "e5fefec5956f15eb033761bda70d50f1157f4448676faffc7504a4fb961e6859",
+  "callCounts": {
+    "cliExecutions": 1,
+    "preDispatchGenerationReservations": 8,
+    "actualFetchInvocations": 8,
+    "http2xxResponses": 8,
+    "httpNon2xxResponses": 0,
+    "networkErrors": 0,
+    "pendingRequests": 0,
+    "unapprovedFetchBlocked": 0,
+    "countTokensCalls": 0,
+    "modelListCalls": 0,
+    "retries": 0,
+    "continuations": 0,
+    "fallbacks": 0
+  },
+  "timing": {
+    "firstDispatchKst": "2026-10-19T17:22:45.198+09:00",
+    "lastDispatchKst": "2026-10-19T17:29:45.587+09:00",
+    "dispatchEpochMs": [
+      1792398165198,
+      1792398225251,
+      1792398285310,
+      1792398345350,
+      1792398405410,
+      1792398465454,
+      1792398525519,
+      1792398585587
+    ],
+    "observedDispatchIntervalsMs": [
+      60053,
+      60059,
+      60040,
+      60060,
+      60044,
+      60065,
+      60068
+    ],
+    "minimumObservedIntervalMs": 60040
+  },
+  "attempts": [
+    {
+      "caseId": "PY01",
+      "requestSha256": "3f79fb6e544851abed927978b5f1a9378215a64bbffbf1ab0e06f2a23e157fd6",
+      "status": "PASS",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "PASS",
+        "code": null,
+        "responseSha256": "b6f1848b765b49b861db962a15227a66298166437e463dd72337bc56f64f32ef",
+        "assessment": {
+          "errors": 0,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": true,
+          "scoredTopics": 3,
+          "correctTopicStates": 3,
+          "expectedPresentTopics": 3,
+          "groundedPresentTopics": 3
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 314,
+          "candidatesTokenCount": 225,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 539
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 225,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "656700",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    },
+    {
+      "caseId": "PY02",
+      "requestSha256": "c72f0639f62356995e5490a4c9d970d80e30ad613c7f1def78b3da7142cc30b7",
+      "status": "PASS",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "PASS",
+        "code": null,
+        "responseSha256": "e1e5a1a7a6a45ef12aac95ad8cb2c275e8b831c38865b27bd7a150d15acfbf01",
+        "assessment": {
+          "errors": 0,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": true,
+          "scoredTopics": 3,
+          "correctTopicStates": 3,
+          "expectedPresentTopics": 3,
+          "groundedPresentTopics": 3
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 313,
+          "candidatesTokenCount": 224,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 537
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 224,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "653900",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    },
+    {
+      "caseId": "PY03",
+      "requestSha256": "2b255673b1ce99ca9a278924bdbf7bce9295bf808fd348a5b10f95ecf51c40f2",
+      "status": "PASS",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "PASS",
+        "code": null,
+        "responseSha256": "b6f1848b765b49b861db962a15227a66298166437e463dd72337bc56f64f32ef",
+        "assessment": {
+          "errors": 0,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": true,
+          "scoredTopics": 3,
+          "correctTopicStates": 3,
+          "expectedPresentTopics": 3,
+          "groundedPresentTopics": 3
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 325,
+          "candidatesTokenCount": 225,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 550
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 225,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "660000",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    },
+    {
+      "caseId": "PY04",
+      "requestSha256": "df6f5382acf272d44d0bc8daafbc3b9f2748df9b0925ff6e3b905d9b829ccf6f",
+      "status": "PASS",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "PASS",
+        "code": null,
+        "responseSha256": "a5ceb9970116a5f38dd55d0e72aa4e733fa646431d751aa83e393ef9ecc99fc9",
+        "assessment": {
+          "errors": 0,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": false,
+          "scoredTopics": 3,
+          "correctTopicStates": 3,
+          "expectedPresentTopics": 2,
+          "groundedPresentTopics": 2
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 296,
+          "candidatesTokenCount": 187,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 483
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 187,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "556300",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    },
+    {
+      "caseId": "PY05",
+      "requestSha256": "0053a9129daad8acbddbf8296e34f6106b37c02ba774dae49302b001e5d05709",
+      "status": "NEEDS_IMPROVEMENT",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "NEEDS_IMPROVEMENT",
+        "code": null,
+        "responseSha256": "56c41ed24262347b4ca9e477a5a388423440482623889537283fa253e8874707",
+        "assessment": {
+          "errors": 2,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": false,
+          "scoredTopics": 3,
+          "correctTopicStates": 2,
+          "expectedPresentTopics": 2,
+          "groundedPresentTopics": 2
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 316,
+          "candidatesTokenCount": 227,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 543
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 227,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "662300",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    },
+    {
+      "caseId": "PY06",
+      "requestSha256": "0763a62a30f9a3fefd97090623b8da2d06314b7c543b4835d47efa65c4fe57df",
+      "status": "PASS",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "PASS",
+        "code": null,
+        "responseSha256": "9046bd7c9e7d765ebb5130041a0c015c6ece231da266707b2016ef97d4d80df9",
+        "assessment": {
+          "errors": 0,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": false,
+          "scoredTopics": 3,
+          "correctTopicStates": 3,
+          "expectedPresentTopics": 2,
+          "groundedPresentTopics": 2
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 352,
+          "candidatesTokenCount": 183,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 535
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 183,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "563100",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    },
+    {
+      "caseId": "PY07",
+      "requestSha256": "abfb92d99451a4179de1cdbcbc4bf6b7be950cb4dff7815fa7aaf4f4a9a157f6",
+      "status": "PASS",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "PASS",
+        "code": null,
+        "responseSha256": "b3d0b174597cc79344b111919e94160b7a0c80ac04fed5a2858a67ecada951d0",
+        "assessment": {
+          "errors": 0,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": true,
+          "scoredTopics": 3,
+          "correctTopicStates": 3,
+          "expectedPresentTopics": 3,
+          "groundedPresentTopics": 3
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 342,
+          "candidatesTokenCount": 135,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 477
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 135,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "440100",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    },
+    {
+      "caseId": "PY08",
+      "requestSha256": "ca2a7cb3e1ee69d52b6db347a17bda9085e7dca84a0aeb086c21d3ed318dea25",
+      "status": "PASS",
+      "dispatchReserved": true,
+      "quality": {
+        "status": "PASS",
+        "code": null,
+        "responseSha256": "8ae5e9da875693152d04e806431ec5698b45be1d1c7956226e5f4d131853791f",
+        "assessment": {
+          "errors": 0,
+          "falseHoldTopics": 0,
+          "falseHoldCases": 0,
+          "normalControl": true,
+          "scoredTopics": 3,
+          "correctTopicStates": 3,
+          "expectedPresentTopics": 3,
+          "groundedPresentTopics": 3
+        }
+      },
+      "usage": {
+        "status": "CONDITIONAL_BOUND",
+        "policyHash": "0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902",
+        "rawUsage": {
+          "promptTokenCount": 327,
+          "candidatesTokenCount": 227,
+          "thoughtsTokenCount": null,
+          "totalTokenCount": 554
+        },
+        "reportedServiceTier": "standard",
+        "serviceTierBasis": "REPORTED_STANDARD_NOT_BILLING_AUTH",
+        "thoughtsFieldPresence": "OMITTED",
+        "derived": {
+          "combinedGeneratedUpperBoundTokens": 227,
+          "nonCandidateResidualTokens": 0,
+          "individualThoughtsReported": false
+        },
+        "conditionalGenerationEstimateNanoUsd": "665600",
+        "invoiceVerified": false,
+        "providerHardCashCapVerified": false
+      },
+      "stopCode": null
+    }
+  ],
+  "tokens": {
+    "reportedPromptTokenSum": 2585,
+    "reportedCandidateTokenSum": 1633,
+    "reportedTotalTokenSum": 4218,
+    "separatelyReportedThoughtsTokenSum": null,
+    "thoughtsReportedCases": 0,
+    "thoughtsUnreportedCases": 8,
+    "derivedCombinedGeneratedUpperBoundTokenSum": 1633,
+    "derivedNonCandidateResidualTokenSum": 0,
+    "derivedZeroResidualIsNotReportedThoughtsZero": true
+  },
+  "cost": {
+    "mode": "REQUEST_LIMITED_ESTIMATE_NOT_HARD_CASH_CAP",
+    "scenarioNanoUsd": "27680000",
+    "knownCompletedUsageEstimateNanoUsd": "4858000",
+    "unknownUsageReservedCalls": 0,
+    "measurement": "DERIVED_COMBINED_BOUND_NOT_INVOICE",
+    "invoiceVerified": false,
+    "providerHardCashCapVerified": false,
+    "conditionalGenerationEstimateUsd": "0.004858",
+    "inputUsdPerMillion": "0.30",
+    "outputIncludingThinkingUsdPerMillion": "2.50",
+    "pricingSource": "https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite",
+    "priceReviewedOn": "2026-10-19",
+    "actualInvoiceUsd": null,
+    "costUnknownDueToMissingWholeUsageCalls": 0,
+    "individualThinkingMeasurementVerified": false
+  },
+  "quality": {
+    "plannedCases": 8,
+    "scorableCases": 8,
+    "passed": 7,
+    "needsImprovement": 1,
+    "notRun": 0,
+    "scoredTopics": 24,
+    "correctTopicStates": 23,
+    "topicAccuracy": 0.9583333333333334,
+    "expectedPresentTopicsAssessed": 21,
+    "groundedPresentTopics": 21,
+    "assessedNormalControls": 5,
+    "assessedNormalControlTopics": 15,
+    "falseHoldTopics": 0,
+    "falseHoldCases": 0,
+    "falseHoldTopicRate": 0,
+    "falseHoldCaseRate": 0,
+    "httpSuccessIsQualityPass": false,
+    "modelQuality": "FIXED_SYNTHETIC_EIGHT_COMPLETED_WITH_ONE_NEEDS_IMPROVEMENT",
+    "independentHoldout": false,
+    "needsImprovementCaseIds": [
+      "PY05"
+    ],
+    "errorCategoryOrExactModelAnswerRetained": false,
+    "semanticFindings": [
+      {
+        "caseId": "PY05",
+        "topicId": "problem-solving-process",
+        "expectedState": "UNCERTAIN",
+        "retainedActualState": null,
+        "mismatchIdentifiedFrom": "PUBLIC_GOLD_AND_SAFE_COUNTS_UNDER_EXECUTED_SCORER",
+        "expectedPresentTopicsGrounded": 2,
+        "correctTopicStates": 2,
+        "scoredTopics": 3,
+        "totalCheckErrors": 2,
+        "twoErrorsDoNotMeanTwoWrongTopics": true,
+        "rawErrorCodeArrayRetained": false,
+        "actualLabelOrAnswerMustNotBeReconstructed": true
+      }
+    ],
+    "wireSuccessDoesNotResolveSemanticMismatch": true,
+    "p0RequirementPreserved": "DIRECT_ORIGINAL_SOURCE_GROUNDING_AND_HOLD_FOR_AMBIGUOUS_STATE"
+  },
+  "stop": {
+    "triggered": false,
+    "completionReason": "PINNED_EIGHT_COMPLETED_NO_FURTHER_CALLS",
+    "notRunCaseIds": []
+  },
+  "previousSeparateStoppedRuns": {
+    "count": 2,
+    "actualFetchInvocations": 2,
+    "scorableCases": 0,
+    "preserved": true,
+    "costAndInvoiceStillUnknown": true,
+    "resultFiles": [
+      "e6-paid-eight-actual-20261019.json",
+      "e6-paid-usage-v2-actual-20261019.json"
+    ]
+  },
+  "cumulativeTheseThreeObservedRuns": {
+    "actualFetchInvocations": 10,
+    "http2xxResponses": 10,
+    "countTokensCalls": 0,
+    "retries": 0,
+    "fallbacks": 0,
+    "scorableCases": 8,
+    "completeAllRunEstimateUsd": null,
+    "actualInvoiceUsd": null
+  },
+  "macCi": {
+    "independentOfThisCli": true,
+    "originalFailureResolved": false,
+    "originalRunId": 39219934005,
+    "originalAttempt": 1,
+    "originalJobId": 117952603977,
+    "originalDiagnostic": "STALE_RECOVERY:EPERM",
+    "inappropriateRerunAttempt": 2,
+    "rerunSuccessDoesNotResolveOriginal": true,
+    "mergeAuthorized": false
+  },
+  "privacy": {
+    "publicSyntheticPythonTextOnly": true,
+    "actualMoodleRecords": 0,
+    "actualHackerRankRecords": 0,
+    "rawResponseRetained": false,
+    "sourceOrGoldSentInReport": false,
+    "keyOrProjectIdRetained": false,
+    "httpRawRetained": false,
+    "onlyCountersAggregatesFixedCodesAndHashes": true
+  },
+  "usableForAcceptance": false,
+  "paymentAuthority": false,
+  "paymentAllowed": false
+}
