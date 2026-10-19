@@ -39,6 +39,7 @@ export function prepareNormalReflectionPacket({request,decisionRef=null,messageF
  return freeze({...p,planHash:p0Hash('E6-FIRST-NORMAL-REFLECTION',p)});
 }
 export function validateNormalReflectionClearance({packet,approval,codeState,day}){
+ check(typeof day==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(day),'NORMAL_APPROVAL_REQUIRED');
  check(packet?.model===NORMAL_REFLECTION_MODEL&&packet.wirePolicyHash===NORMAL_REFLECTION_WIRE_POLICY_HASH&&packet.promptSha256===PROMPT_HASH
   &&packet.schemaHash===p0Hash('E6-QUALITY-SCHEMA',NORMAL_REFLECTION_SCHEMA)&&packet.maxGenerationCalls===1&&packet.maxCountCalls===0
   &&packet.automaticRetries===0&&packet.continuations===0&&packet.fallbacks===0&&packet.maxOutputTokens===1024,'NORMAL_FIXED_PROFILE');

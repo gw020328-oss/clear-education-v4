@@ -42,7 +42,7 @@ test('same schema/profile, async original lease, one simulated ACTUAL path and v
  await assert.rejects(runFirstNormalReflection(x.args),/false|spent/);assert.equal(x.counts().fetches,1);
 });
 test('no approval, old eight-run approval, input/policy/current mutation and fake ACTUAL adapter cannot read key or dispatch',async()=>{
- for(const change of [x=>x.args.approval=null,x=>x.approval.scope='E6_PAID_WIRE_V3_FRESH_EIGHT',x=>x.approval.maxGenerationCalls=8,
+ for(const change of [x=>x.args.day=undefined,x=>x.args.approval=null,x=>x.approval.scope='E6_PAID_WIRE_V3_FRESH_EIGHT',x=>x.approval.maxGenerationCalls=8,
   x=>x.approval.authorization.kind='OFFLINE_TEST_ONLY',x=>x.args.context={...x.f.context,evidenceRevision:2}]){
   const x=fixture();change(x);await assert.rejects(runFirstNormalReflection(x.args));assert.equal(x.counts().keys,0);assert.equal(x.counts().reads,0);
  }
