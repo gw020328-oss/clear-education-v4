@@ -195,3 +195,15 @@ root는 [공식 UsageMetadata 합계](https://ai.google.dev/api/generate-content
 Draft PR95/head `3e11a8eb8f1925aad0d2a93f405f80e4b4ba6835`는 기존필수6/6이 성공했으나 새 E5 PR workflow [39202079577/job117899079948](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39202079577/job/117899079948)의 실제33개 중32PASS/1FAIL이다. 두 service process nonce 경합의 성공개수가 기대1 대신0이었다. 자식 stdout/stderr가 폐기되고 catch가 고정 exit87만 남겨 최초 거부 원인은 미확정이다. push 동반 실행이나 과거 local 성공으로 이 실패를 대체하지 않는다. E5-A 전체 인수와 후속 실제 API dispatch는 false다.
 
 Astra/High로 자식의 비밀없는 phase/code/exit 진단과 제어된 경합 재현을 요청했다. 같은 canonical checkpoint를 매번 새 관측 sequence로 append하면, nonce에서 지는 다른 process의 관측이 승자 after-sign CAS도 중단시킬 수 있다는 구체 interleaving 가설을 소스에서 찾았다. 이것은 최초 CI 원인으로 확정된 사실이 아니다. 동일 checkpoint의 멱등 처리와 실제 다른 checkpoint의 CAS 거부를 구분해 근거를 확보한 뒤 필요한 부분만 수정한다. nonce/fence/lease/chain guard 완화나 기댓값0, 원래 workflow 무근거 재실행으로 넘기지 않는다.
+
+### 새 제어 경합 재현과 서비스 회귀
+
+E4 소유자는 실제 Geth/두 프로세스의 순서를 고정해 수정 전 A의 서명1회 후 checkpoint CAS 거부, B의 키 접근0/noncebusy 거부를 재현했다. 해당 재현의 lease 잔여120초로 만료/timeout과 구분했다. 동일runtime/hash/number/time/finality의 관측만 멱등 처리한 뒤 같은블록1승과 새블록CAS거부가 통과했다. 최초CI의 미보존 child 원인을 소급확정하지 않는다. 전체 회귀에서 별도 환경 생성의 두 오류도 발견됐고, Geth의 transaction indexing is in progress 로그에 따라 이미 전송된 같은txHash의 bounded receipt 조회를 보강 중이다. 새 서명·전송이 아니며 최종 전체검사/CI는 아직 대기다.
+
+### usage v2 새 승인·두 번째 실제 중단
+
+Draft PR97/head `cafbf3bd087104a34b3c3000885fdcd4674c4e21`·planHash `0x640a78767508987d92abab8defe0c102bcdaf05644ecec3ea715d614c3d604b6`는 신규25/사전검토175·AI/document291 및 CI6/6이다. root는 순수usage helper·공식근거·runner delta·CLI를 읽었다. 담당채팅에서 exact head/plan의 **추가8건** 질문에 사용자가 추정 비용/초과 가능성을 수락해 직접 승인한 기록을 읽어 확인했고, 중복 승인을 요구하지 않았다.
+
+그러나 이 실행도 첫fetch/HTTP2xx1회 뒤 `E6_UV2_SERVICE_TIER`로 중단했다. v1/v2 총 실제fetch2, count0, 품질채점0이며 각 실행의나머지7건은NOT_RUN이다. 코드가uppercase STANDARD만허용한 반면 [공식 REST ServiceTier](https://ai.google.dev/api/generate-content#ServiceTier)는 소문자standard/unspecified/flex/priority를 정의한다. 이 wire 호환성검토누락을 인정하며, 미보존된실제tier값을소급추정하지 않는다. 추가유료호출은0으로멈춘다.
+
+다음 단위는 특정enum만바꿔곧바로다시8건을요청하는것이아니다. 정확REST의enum/optionalmetadata와모든guard를공식문서fixture로대조하고, 이미받은유효응답의메모리내품질평가와usage에따른후속dispatch중단을분리할수있는지오프라인으로검토한다. 비용N/A/부분품질과전체완료를구분하고과거raw가없는두응답을소급채점하지않는다. 새실행질문은root의이검토후에한곳에서조정하며, 기존승인/원장을재사용하거나자동재개하지않는다.

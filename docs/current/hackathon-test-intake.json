@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 15,
+  "repositoryPlanRevision": 16,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -304,7 +304,17 @@
           "hypothesis": "IDENTICAL_CHECKPOINT_APPEND_CAN_INVALIDATE_AFTER_SIGN_CAS_WHILE_OTHER_PROCESS_LATER_LOSES_NONCE_RESERVATION",
           "hypothesisConfirmedAsHistoricalCause": false
         },
-        "nextUnit": "ASTRA_HIGH_CONTROLLED_DIAGNOSTIC_AND_NECESSARY_FIX_BEFORE_FULL_SERVICE_ACCEPTANCE"
+        "nextUnit": "ASTRA_HIGH_CONTROLLED_DIAGNOSTIC_AND_NECESSARY_FIX_BEFORE_FULL_SERVICE_ACCEPTANCE",
+        "controlledReplay": {
+          "sameCheckpointInterleavingReproduced": true,
+          "oldWinnerRefusal": "E5_CHECKPOINT_CAS_RETRY_REQUIRED_AFTER_ONE_TRANSACTION_SIGNATURE",
+          "oldLoserRefusal": "E5_ROLE_NONCE_BUSY_WITH_ZERO_KEY_ACCESS",
+          "leaseRemainingSeconds": 120,
+          "historicalExactChildCauseStillUnproven": true,
+          "fixScope": "EXACT_RUNTIME_HASH_NUMBER_TIME_FINALITY_CHECKPOINT_IDEMPOTENCE_ONLY",
+          "newBlockCasRefusalPreserved": true,
+          "fullRegressionAndFinalCi": "PENDING_ADDITIONAL_SETUP_RECEIPT_INDEXING_FIX"
+        }
       }
     },
     {
@@ -417,7 +427,34 @@
             "completeMeasuredCostNanoUsd": null,
             "actualRunClosedWithoutResume": true,
             "usageCompatibilityFix": "OFFLINE_PREPARATION_ONLY_NO_NEW_EXECUTION_APPROVAL"
-          }
+          },
+          "usageCompatibilityV2": {
+            "pr": 97,
+            "reviewedHead": "cafbf3bd087104a34b3c3000885fdcd4674c4e21",
+            "planHash": "0x640a78767508987d92abab8defe0c102bcdaf05644ecec3ea715d614c3d604b6",
+            "newOfflineTests": 25,
+            "precheckRegression": 175,
+            "aiPolicyAndDocumentRegression": 291,
+            "remoteCi": "6_OF_6_SUCCESS",
+            "newDirectHumanApprovalVerifiedInOwnerThread": true,
+            "approvedAdditionalGenerations": 8,
+            "status": "FIRST_HTTP_SUCCESS_STOPPED_SERVICE_TIER_COMPATIBILITY",
+            "actualFetchInvocations": 1,
+            "http2xxResponses": 1,
+            "reservedCalls": 1,
+            "countCalls": 0,
+            "qualityAssessedCases": 0,
+            "notRunCases": 7,
+            "stopCode": "E6_UV2_SERVICE_TIER",
+            "journalPreserved": true,
+            "invoiceVerified": false,
+            "wireBug": "GUARD_ACCEPTS_UPPERCASE_STANDARD_BUT_OFFICIAL_REST_USES_LOWERCASE_STANDARD_UNSPECIFIED",
+            "actualTierValue": "NOT_IN_RETAINED_SUMMARY_OWNER_AUDIT_PENDING",
+            "furtherActualRunsApproved": false,
+            "nextScope": "COMPREHENSIVE_OFFLINE_WIRE_GUARD_REVIEW_AND_CURRENT_RESPONSE_QUALITY_METRIC_SEPARATION_ROOT_REVIEW_BEFORE_NEW_APPROVAL_QUESTION"
+          },
+          "totalActualFetchAcrossNewPaidRuns": 2,
+          "totalAssessedCasesAcrossNewPaidRuns": 0
         },
         "hackerrank": {
           "availability": "HUMAN_REPORTED_EXISTING_OWN_PYTHON_BASIC_CERTIFICATE_ACCOUNT",
