@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {browserRecovery,chromePath,gatePrefix,parseProcesses,usesProfile} from '../../src/mac-collector/browser-recovery.mjs';
+import {recoveryDiagnostic} from '../../src/mac-collector/recovery-diagnostics.mjs';
 const path='/tmp/Synthetic App/session-one';
 const proc=(pid=300,overrides={})=>({pid,pgid:pid,uid:501,state:'S',command:`${chromePath} --user-data-dir=${path}/profile --headless=new`,...overrides});
 function setup(initial,options={}){
@@ -46,4 +47,14 @@ test('process listing requires complete fields and ignores only zombies',()=>{
  assert.deepEqual(parseProcesses('300 300 501 Z gone\n'),[]);
  assert.equal(parseProcesses(`300 300 501 S ${chromePath} --user-data-dir=${path}/profile\n`)[0].command,proc().command.replace(' --headless=new',''));
  assert.throws(()=>parseProcesses('truncated'),/BROWSER_PROCESS_CHECK_FAILED/);
+});
+for(const stage of ['BROWSER_PROCESS_QUERY','BROWSER_SIGNAL_TERM','BROWSER_SIGNAL_KILL'])test(`controlled ${stage} EPERM aborts without retry or weaker ownership`,async()=>{
+ const error=Object.assign(new Error('PRIVATE_PROCESS_DETAIL'),{code:'EPERM',syscall:stage==='BROWSER_PROCESS_QUERY'?'spawn /private/ps':'kill'}),signals=[];
+ const api=browserRecovery({uid:501,wait:async()=>{},
+  readProcesses:async()=>{if(stage==='BROWSER_PROCESS_QUERY')throw error;return [proc()];},
+  signalGroup:async(pid,signal)=>{signals.push(signal);if(signal===(stage==='BROWSER_SIGNAL_TERM'?'SIGTERM':'SIGKILL'))throw error;},
+ });
+ await assert.rejects(api.recover(path,300),e=>e===error);
+ assert.deepEqual(signals,stage==='BROWSER_PROCESS_QUERY'?[]:stage==='BROWSER_SIGNAL_TERM'?['SIGTERM']:['SIGTERM','SIGKILL']);
+ assert.deepEqual(recoveryDiagnostic(error),{stage,resource:stage==='BROWSER_PROCESS_QUERY'?'PROCESS_TABLE':'BROWSER_GROUP',syscall:stage==='BROWSER_PROCESS_QUERY'?'spawn':'kill'});
 });
