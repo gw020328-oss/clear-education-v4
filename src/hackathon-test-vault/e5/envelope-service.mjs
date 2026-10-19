@@ -156,6 +156,11 @@ export class OwnedExecutionService {
   ensure(request.manifestHash===row.manifestHash,'E5_MANIFEST_HASH');
   if(purpose==='dispatch')ensure(sha(binding)===sha(row.binding),'E5_DISPATCH_ORIGINAL_FENCE_REQUIRED');
  }
+ envelope(request){
+  const row=this.row(request.ref);this.authenticateReference(request,row,'recover');ensure(row.manifestHash&&row.txHash,'E5_NOT_SEALED');
+  this.transaction(()=>this.current(request.binding,{recovery:true,ref:row.ref},'RECOVER'));
+  return {version:'clear-e5-public-envelope.1',ref:row.ref,manifestHash:row.manifestHash,state:row.state,runtimeHash:row.runtimeHash,intentId:row.binding.intentId,requestId:row.binding.requestId,attemptId:row.binding.attemptId,lineage:row.binding.lineage,workerFence:row.binding.workerFence,commandHash:row.binding.commandHash,sender:row.sender,transactionNonce:row.nonce,authorizationNonce:row.authorizationNonce,to:row.to,value:'0',chainId:this.manifest.chainId,dataHash:row.dataHash,txHash:row.txHash,dispatchUntil:row.dispatchUntil,bytesUntil:row.bytesUntil};
+ }
  async dispatch(request){
   request=structuredClone(request);
   let row=this.row(request.ref);this.authenticateReference(request,row,'dispatch');
@@ -205,6 +210,6 @@ export class OwnedExecutionService {
 // Worker composition receives these bound methods only, never the owner instance/DB.
 export function workerFacade(service){
  ensure(service instanceof OwnedExecutionService,'E5_OWNER_SERVICE_REQUIRED');
- return Object.freeze({observe:input=>service.reader.observe(structuredClone(input)),seal:request=>service.seal(request),dispatch:request=>service.dispatch(request),recover:request=>service.recover(request)});
+ return Object.freeze({observe:input=>service.reader.observe(structuredClone(input)),envelope:request=>service.envelope(request),seal:request=>service.seal(request),dispatch:request=>service.dispatch(request),recover:request=>service.recover(request)});
 }
 export function openOwnedExecutionPorts(configuration){const service=new OwnedExecutionService(configuration);return Object.freeze({worker:workerFacade(service),owner:Object.freeze({close:()=>service.close(),prune:request=>service.prune(request)})});}

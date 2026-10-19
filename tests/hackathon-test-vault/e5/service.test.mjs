@@ -46,14 +46,15 @@ test('durable accept, authenticated commit and fixed claim after key revocation/
   const bad=structuredClone(req);bad.capability={payload:bad.binding,signature:Wallet.createRandom().signingKey.sign(sha(bad.binding)).serialized};await assert.rejects(()=>f.service.seal(bad),/E5_CERTIFICATE_SIGNER/);
   await assert.rejects(()=>f.service.seal({...req,command:{...ready.command,args:[hash(),...ready.command.args.slice(1)]}}),/E5_CAPABILITY_COMMAND/);assert.equal(f.service.metrics.keyAccesses,0);
  });
- const facade=workerFacade(f.service);assert.deepEqual(Object.keys(facade).sort(),['dispatch','observe','recover','seal']);assert.equal(facade.db,undefined);assert.equal(facade.verifyBytes,undefined);assert.equal(facade.bytesPath,undefined);
+ const facade=workerFacade(f.service);assert.deepEqual(Object.keys(facade).sort(),['dispatch','envelope','observe','recover','seal']);assert.equal(facade.db,undefined);assert.equal(facade.verifyBytes,undefined);assert.equal(facade.bytesPath,undefined);
  const sealed=await facade.seal(req),row=f.service.row(sealed.ref);assert.deepEqual(Object.keys(sealed).sort(),['manifestHash','ref']);assert.equal(row.state,'SEALED');assert.notEqual(row.nonce,ready.msg.nonce);
+ const manifest=facade.envelope({...req,...sealed});assert.equal(manifest.txHash,row.txHash);assert.equal(manifest.transactionNonce,row.nonce);for(const key of ['raw','signature','command','db','bytesPath','verifyBytes'])assert.equal(manifest[key],undefined);
  assert.equal(lstatSync(f.service.bytesPath(sealed.ref)).mode&0o777,0o600);assert.equal(lstatSync(f.service.root).mode&0o777,0o700);
  const bytes=readPrivate(f.service.bytesPath(sealed.ref));
  await t.test('same request returns same durable bytes across service restart',async()=>{f.restart();assert.deepEqual(await f.service.seal(req),sealed);assert.equal(readPrivate(f.service.bytesPath(sealed.ref)),bytes);assert.equal(f.service.metrics.keyAccesses,0);});
  await t.test('same operation/request with changed payload conflicts',async()=>{const altered=command('accept',[ready.command.args[0],ready.msg,String(BigInt(ready.command.args[2])+1n)],ready.app);const other=await f.request(altered);await assert.rejects(()=>f.service.seal(other));});
  await t.test('caller commit=true cannot bypass internal durable API commit',async()=>{await assert.rejects(()=>f.service.dispatch({...req,...sealed,commit:true,verified:true}),/E5_TEST_API_COMMIT_MISSING/);assert.equal(f.service.metrics.broadcasts,0);});
- f.controller.commit(sealed);const accepted=await f.service.dispatch({...req,...sealed});assert.equal(accepted.status,'INCLUDED');assert.equal(accepted.finalized,false);assert.equal(accepted.observation.business.right.amountAtoms,'100000000');
+ f.controller.commit(sealed);const accepted=await f.included({...req,...sealed},await f.service.dispatch({...req,...sealed}));assert.equal(accepted.status,'INCLUDED');assert.equal(accepted.finalized,false);assert.equal(accepted.observation.business.right.amountAtoms,'100000000');
  await t.test('historical prepare readback never downgrades the accepted authorization nonce tombstone',async()=>{
   const n=f.service.db.prepare('SELECT * FROM authorization_nonces WHERE nonce=?').get(ready.msg.nonce);assert.equal(n.state,'ACCEPTED');
   const p=JSON.parse(f.service.db.prepare('SELECT record FROM envelopes WHERE request_id=?').get(n.prepare_request).record);
@@ -117,7 +118,7 @@ test('broadcast response loss and post-commit readback error recover by canonica
  const f=await setup(t),r=await f.ready(),req=await f.request(r.command),sealed=await f.service.seal(req);f.controller.commit(sealed);
  f.restart({cut:phase=>{if(phase==='BROADCAST_RESPONSE')throw Error('E5_TEST_RESPONSE_LOSS');}});assert.equal((await f.service.dispatch({...req,...sealed})).status,'UNKNOWN');
  const rpc=async(method,args)=>{if(method==='eth_getTransactionReceipt')throw Error('E5_TEST_RPC_DOWN');return f.reader.rpc(method,args);};f.restart({reader:new ExecutionReader(f.m,{rpc})});assert.equal((await f.service.recover({...req,...sealed})).status,'UNKNOWN');
- f.restart();const recovered=await f.service.recover({...req,...sealed});assert.equal(recovered.status,'INCLUDED');assert.equal(f.service.metrics.keyAccesses,0);assert.equal(f.service.metrics.broadcasts,0);
+ f.restart();const recovered=await f.included({...req,...sealed},await f.service.recover({...req,...sealed}));assert.equal(recovered.status,'INCLUDED');assert.equal(f.service.metrics.keyAccesses,0);assert.equal(f.service.metrics.broadcasts,0);
  const row=f.service.row(sealed.ref);assert.equal(row.state,'INCLUDED');
 });
 test('dispatch TTL, secret deletion failure and secret-free tombstone preserve nonce barrier',async t=>{
@@ -134,7 +135,7 @@ test('sealed claim remains dispatchable after source withdrawal, key revocation 
  const f=await setup(t),ready=await f.ready();assert.equal((await f.submit(ready.command)).result.status,'INCLUDED');
  const req=await f.request(command('claim',[ready.app],ready.app)),sealed=await f.service.seal(req);f.controller.commit(sealed);const signed=f.service.metrics.paymentSignatures;
  await f.sent(f.vault.connect(f.wallet('keyAdmin')).revokeKey(hash(),f.m.signerKeyId));await f.sent(f.vault.connect(f.wallet('keyAdmin')).setPause(hash(),true));f.controller.state.current=false;
- const result=await f.service.dispatch({...req,...sealed});assert.equal(result.status,'INCLUDED');assert.equal(result.observation.business.application.state,'6');assert.equal(f.service.metrics.paymentSignatures,signed);
+ const result=await f.included({...req,...sealed},await f.service.dispatch({...req,...sealed}));assert.equal(result.status,'INCLUDED');assert.equal(result.observation.business.application.state,'6');assert.equal(f.service.metrics.paymentSignatures,signed);
 });
 test('two service processes cannot reserve the same role nonce; changed bytes fail reverse verification',async t=>{
  const f=await setup(t),req=await f.request(command('approve',[f.m.vaultAddress,'1'])),other=await f.request(command('approve',[f.m.vaultAddress,'2']));
@@ -152,7 +153,7 @@ test('new lineage is rejected, and a post-read current withdrawal prevents SEND_
 
 test('process exits after actual broadcast: restart confirms original hash with zero new signing or sends',async t=>{
  const f=await setup(t),r=await f.ready(),req=await f.request(r.command),sealed=await f.service.seal(req);crash(f,{...req,...sealed},'dispatch','BROADCAST_RESPONSE');
- assert.equal(f.service.row(sealed.ref).state,'SEND_STARTED');const result=await f.service.recover({...req,...sealed});assert.equal(result.status,'INCLUDED');assert.equal(f.service.metrics.keyAccesses,0);assert.equal(f.service.metrics.broadcasts,0);
+ assert.equal(f.service.row(sealed.ref).state,'SEND_STARTED');const result=await f.included({...req,...sealed},await f.service.recover({...req,...sealed}));assert.equal(result.status,'INCLUDED');assert.equal(f.service.metrics.keyAccesses,0);assert.equal(f.service.metrics.broadcasts,0);
  assert.equal(f.service.db.prepare('SELECT count(*) AS n FROM receipt_observations WHERE ref=?').get(sealed.ref).n,1);
 });
 

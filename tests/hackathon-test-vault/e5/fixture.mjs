@@ -13,7 +13,8 @@ export async function fixture(existingId){
  let service=new OwnedExecutionService({environmentId:id,controller});
  const f={id,m,reader,controller,provider,wallet,vault,token,get service(){return service;},hash,
   async request(command,{bindingPatch={},reader:rd=reader}={}){const o=await rd.observe({applicationId:command.applicationId,nonce:command.method==='accept'?command.args[1].nonce:ZERO});const binding={version:'clear-e5-execution-capability.1',intentId:randomUUID(),requestId:randomUUID(),attemptId:randomUUID(),runtimeHash:reader.runtimeHash,lineage:controller.state.lineage,workerFence:controller.state.fence,workerId:'test-worker',leaseId:randomUUID(),expiresAt:Math.floor(Date.now()/1000)+120,e3Commitment:hash(),commandHash:sha(command),anchor:o.checkpoint,businessHash:businessHashFor(command,o),...bindingPatch};return {binding,command,capability:controller.certify(binding)};},
-  async submit(command){const req=await f.request(command),sealed=await service.seal(req);controller.commit(sealed);return {req,sealed,result:await service.dispatch({...req,...sealed})};},
+  async included(request,result){if(result.status==='UNKNOWN'&&!result.code){await provider.waitForTransaction(service.row(request.ref).txHash,1,10000);return service.recover(request);}return result;},
+  async submit(command){const req=await f.request(command),sealed=await service.seal(req);controller.commit(sealed);const request={...req,...sealed};return {req,sealed,result:await f.included(request,await service.dispatch(request))};},
   restart(options={}){service.close();service=new OwnedExecutionService({environmentId:id,controller,...options});return service;},
   async sent(p){return (await p).wait();},
   async ready(){

@@ -4,7 +4,7 @@
 
 ## 구성과 권한
 
-`openOwnedExecutionPorts({environmentId, controller})`의 worker에는 observe/seal/dispatch/recover bound facade만 전달한다. owner에는 close/prune만 남는다. `OwnedExecutionService` 전체 instance·db·verifyBytes·bytesPath를 worker에 넘기지 않는다. 같은 프로세스/UID에 임의 파일 읽기 권한을 준 비신뢰 코드를 격리한다는 뜻은 아니다.
+`openOwnedExecutionPorts({environmentId, controller})`의 worker에는 observe/envelope/seal/dispatch/recover bound facade만 전달한다. owner에는 close/prune만 남는다. `OwnedExecutionService` 전체 instance·db·verifyBytes·bytesPath를 worker에 넘기지 않는다. 같은 프로세스/UID에 임의 파일 읽기 권한을 준 비신뢰 코드를 격리한다는 뜻은 아니다.
 
 `OwnedExecutionService({environmentId, controller})`는 새 소유 환경의 private manifest/키만 읽는 내부 구성이다. 브라우저·API body로 구성하거나 flags로 활성화하지 않는다. `ExecutionReader(manifest)`는 검토된 로컬 manifest의 loopback RPC와 frozen compiled ABI를 소비한다. 운영자가 새 환경을 만드는 명령은 `./tools/node src/hackathon-test-vault/e5/host.mjs create`; status/start/stop/probe에는 출력된 environment ID만 전달한다. 키나 서명, raw transaction을 CLI 인수로 전달하지 않는다.
 
@@ -38,6 +38,8 @@ binding의 정확 필드:
 `capability`는 정확 binding에 대한 controller 인증 증명이다. 해시·ref·verified boolean 자체는 권한이 아니다. 이 포트에 E3 commitment를 만드는 실제 DB adapter는 API 소유자의 후속 구현/검토가 필요하다.
 
 `seal` 성공 반환은 **`{ref, manifestHash}`만**이다. 정확 .3 signature/raw signed tx는 새 private 디렉터리의 0600 파일에만 보관한다. transaction hash/nonce/sender/to/calldata digest를 포함하는 비밀 없는 manifest는 서비스 메타데이터에 보존한다. 동일 request/intent/attempt/operation의 다른 payload는 충돌이다. 같은 요청의 SEALED 재조회는 같은 ref/hash/bytes를 돌려주며 재서명하지 않는다.
+
+`envelope({...request, ref, manifestHash})`는 인증 후 비밀 없는 txHash/sender/두 nonce/to/chainId/dataHash/intent·attempt·계보·기한을 조회한다. manifestHash는 소유자가 보존한 전체 SEALED metadata의 지문이며 이 축약 DTO 자체의 지문은 아니다. raw bytes/signature/DB accessor는 반환하지 않는다.
 
 `dispatch({...request, ref, manifestHash})`는 원래 fence/binding으로만 가능하다. 새 fence의 recovery는 조회 권한이며, SEALED의 동일 bytes를 새 worker가 인수해 전송하는 adoption은 E5-B 미완료다. 새 chain/current 확인 → 정확 bytes 역검증 → 인증된 API commit 조회 → 최종 동기 current/fence 확인 → 영속 SEND_STARTED → broadcast 순서다. DB 검사와 네트워크 전송은 분산 원자 연산이 아니다. 이미 SEND_STARTED인 호출은 같은 ref라도 재전송하지 않고 조회한다.
 
