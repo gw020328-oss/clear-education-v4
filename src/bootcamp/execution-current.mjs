@@ -95,5 +95,5 @@ export function createExecutionCurrent({db,heads,source,operatorBindings}){
    sourceCommitment:src.commitment,sourceValidUntilExclusive:src.validUntilExclusive,reviewCapAt:p.reviewCapAt,consentSetHash:set.hash,
    preparationId:i.preparationId,payload,productionEnabled:false});
  }
- return {inspect,right};
+ return {inspect,right,consents};
 }

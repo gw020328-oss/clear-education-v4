@@ -10,16 +10,17 @@ import {hashTestUnsignedPayload} from '../bootcamp-authorization/test-encoding-v
 import {createExecutionCurrent} from './execution-current.mjs';
 import {createExecutionHandshake} from './execution-handshake.mjs';
 import {createRuntimeAuthority} from './execution-authority.mjs';
+import {createApiExecutionBridge} from './execution-api-bridge.mjs';
 
 const freshId=prefix=>prefix+'-'+randomUUID();
 const kinds=['REGISTER','ALLOCATE','START_REVIEW','OBSERVE','BIND_CONSENTS','PREPARE','ACCEPT','TERMINATE'];
 const bodyKeys=['expectedRevision','expectedLedgerSequence','targetDecisionId','targetDecisionRevision','targetDecisionHash',
  'kind','operationId','caller','expectedChainVersion','payloadHash','preparationId','authorizationDigest'];
 export function createExecutionOperations({db,transaction,authentication,operatorBindings,app,refresh,tick,sessionHash,ledger,heads,source,
- services=null,e4CurrentPorts={configured:false},fenceWitness={configured:false},fault=()=>{}}){
+ services=null,e4CurrentPorts={configured:false},e4BridgePorts={configured:false},fenceWitness={configured:false},fault=()=>{}}){
  const l=executionLedger(db),ports=createExecutionPorts(services),get=(sql,...args)=>db.prepare(sql).get(...args);
  const current=createExecutionCurrent({db,heads,source,operatorBindings});
- const global=ports.configured?createRuntimeAuthority({db,runtimeId:ports.runtimeId,runtimePinHash:ports.runtimePinHash,e4Runtime:e4CurrentPorts.runtime??null,requireWitness:fenceWitness.configured,fault}):null;
+ const global=ports.configured?createRuntimeAuthority({db,runtimeId:ports.runtimeId,runtimePinHash:ports.runtimePinHash,e4Runtime:e4CurrentPorts.runtime??null,authorityScope:e4BridgePorts.scope??null,requireWitness:fenceWitness.configured,fault}):null;
  const decode=row=>row?JSON.parse(row.record):null;
  const decision=a=>decode(get('SELECT record FROM decisions WHERE id=?',a.decision_id));
  const configured=()=>check(ports.configured,'BC_E5_UNCONFIGURED');
@@ -62,6 +63,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
  function handle(h){exactKeys(h,['intentId','owner','workerFence','generation','leaseRevision'],'BC_E5_LEASE_HANDLE');id(h.intentId);id(h.owner);
   for(const k of ['workerFence','generation','leaseRevision'])revision(h[k]);return h;}
  function live(h,time,owner){handle(h);const i=intent(h.intentId),r=runtime(),lease=l.lease(i.intentId);
+  check(!e4BridgePorts.configured||!get('SELECT 1 FROM e5b_completions WHERE intent_id=?',h.intentId),'BC_E5B_ALREADY_COMPLETED');
   check(lease&&lease.owner===h.owner&&lease.owner===owner&&lease.fence===h.workerFence&&lease.generation===h.generation
    &&lease.revision===h.leaseRevision&&lease.expires_at>time&&r.generation===h.generation,'BC_E5_FENCED');return {i,r,lease};}
  function business(i,time){
@@ -105,6 +107,10 @@ export function createExecutionOperations({db,transaction,authentication,operato
    .run(reason,canonical(record),r.id,r.revision);event(i,'RUNTIME_SUSPENDED',{generation:r.generation,reason},time);return {status:'BLOCKED',reason};
  }
  const api={
+  connectBridge(context){
+   check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');service(context,'B_CONNECT',null,time=>ensureRuntime(time));
+   return createApiExecutionBridge({db,ports:e4BridgePorts,service,live,basis,sameBasis,business,app,current,heads,source,global,runtime,event,fault},context);
+  },
   acquireRuntime(context,body){exactKeys(body,['owner','expectedFence','generation','leaseSeconds'],'BC_E5_GLOBAL_ACQUIRE');
    return service(context,'ACQUIRE_RUNTIME',null,(time,authority)=>global.acquire(time,authority,runtime(),body));},
   heartbeatRuntime(context,h,seconds=30){return service(context,'HEARTBEAT_RUNTIME',null,(time,authority)=>global.heartbeat(h,time,authority,seconds));},
@@ -163,8 +169,10 @@ export function createExecutionOperations({db,transaction,authentication,operato
    return service(context,'ACQUIRE',intentId,(time,authority)=>{
     check(owner===authority.serviceId,'BC_E5_SERVICE_AUTHORITY');const i=intent(intentId),r=runtime(),old=l.lease(i.intentId);
     check(['UNOBSERVED','ACTIVE'].includes(r.status)&&r.generation===generation,'BC_E5_RUNTIME_SUSPENDED');
+    check(!e4BridgePorts.configured||!get('SELECT 1 FROM e5b_completions WHERE intent_id=?',i.intentId),'BC_E5B_ALREADY_COMPLETED');
     check((old?.fence??0)===expectedFence&&(!old||old.expires_at<=time),'BC_E5_LEASE_BUSY');
-    check(!get('SELECT 1 FROM e5_leases l JOIN e5_intents i ON i.id=l.intent_id WHERE i.runtime_id=? AND i.application_id=? AND i.id!=? AND l.expires_at>?',r.id,i.applicationId,i.intentId,time),'BC_E5_APPLICATION_BUSY');
+    check(!get('SELECT 1 FROM e5_leases l JOIN e5_intents i ON i.id=l.intent_id WHERE i.runtime_id=? AND i.application_id=? AND i.id!=? AND l.expires_at>?'+
+     (e4BridgePorts.configured?' AND NOT EXISTS(SELECT 1 FROM e5b_completions c WHERE c.intent_id=i.id)':''),r.id,i.applicationId,i.intentId,time),'BC_E5_APPLICATION_BUSY');
     const expiresAt=Math.min(time+leaseSeconds,authority.expiresAt),fence=(old?.fence??0)+1;
     check(Number.isSafeInteger(fence),'BC_E5_FENCE');
     db.prepare('INSERT INTO e5_leases VALUES(?,?,?,?,?,1) ON CONFLICT(intent_id) DO UPDATE SET owner=excluded.owner,fence=excluded.fence,generation=excluded.generation,expires_at=excluded.expires_at,revision=e5_leases.revision+1')

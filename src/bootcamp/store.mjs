@@ -13,6 +13,8 @@ import {createExecutionOperations} from './execution-operations.mjs';
 import {createExecutionPorts,sync} from './execution-ports.mjs';
 import {createE4CurrentPorts} from './execution-e4-ports.mjs';
 import {migrateExecutionAuthority,createFenceWitness} from './execution-authority.mjs';
+import {createE4BridgePorts} from './execution-e4b-ports.mjs';
+import {migrateExecutionBridge} from './execution-b-ledger.mjs';
 
 const mapping=JSON.parse(readFileSync(new URL('../../specs/bootcamp/p0-runtime-mapping.json',import.meta.url)));
 export const DEFAULT_MAPPING_HASH=p0Hash('RUNTIME-MAPPING',mapping);
@@ -58,14 +60,17 @@ const requestGuardHash=(g,version)=>version==='clear-bootcamp-bound-request.2'?p
 // authentication and in-process producer/source authority; HTTP never supplies it.
 export function createBootcampStore({directory,authentication,instanceId,demoStartedAt,courseOperatorRef='course-operator-demo',
   mode='DISABLED',runtimeMappingHash=DEFAULT_MAPPING_HASH,producers={},resolveSource=()=>null,
-  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null,executionConnection=null,executionFenceWitness=null}){
+  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null,executionConnection=null,executionFenceWitness=null,executionBridge=null}){
   id(instanceId);id(courseOperatorRef);epoch(demoStartedAt);hash(runtimeMappingHash);
   check(['DISABLED','SYNTHETIC_FIXTURE'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
   check(typeof authentication?.authorizeWorkflow==='function','BC_AUTHENTICATION');
   check(procedurePorts===null||procedurePorts?.execution==='SYNTHETIC_PORT_FIXTURE'&&mode==='SYNTHETIC_FIXTURE','BC_E3_PORT_CONFIGURATION');
   createExecutionPorts(executionServices); // Validate constructor-only services before opening a DB; never invokes them.
   const e4CurrentPorts=createE4CurrentPorts(executionConnection);
-  const fenceWitness=createFenceWitness(executionFenceWitness);
+  const e4BridgePorts=createE4BridgePorts(executionBridge);
+  check(!e4BridgePorts.configured||mode==='SYNTHETIC_FIXTURE'&&!e4CurrentPorts.configured&&executionFenceWitness===null
+    &&executionServices?.runtimeId===e4BridgePorts.scope.runtimeId&&executionServices?.runtimePinHash===e4BridgePorts.scope.runtimePinHash,'BC_E5B_CONFIGURATION');
+  const fenceWitness=createFenceWitness(e4BridgePorts.configured?e4BridgePorts.fenceReader:executionFenceWitness);
   check(!e4CurrentPorts.configured||mode==='SYNTHETIC_FIXTURE'&&executionServices!==null&&executionServices.runtimePinHash===e4CurrentPorts.runtime.runtimeHash,'BC_E5_E4_CONFIGURATION');
   const registry=new Map();
   for(const [key,p] of Object.entries(producers)){
@@ -76,10 +81,14 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   }
   const file=openPrivateDb(directory,'bootcamp.sqlite',{version:BOOTCAMP_STORE_VERSION,instanceId,demoStartedAt,courseOperatorRef,mode,
     policyHash:compiled.policyHash,runtimeMappingHash},schema,tables),{db,transaction:baseTransaction}=file;
-  try{migrateR2({db,transaction:baseTransaction,fault});migrateProcedure({db,transaction:baseTransaction,fault});migrateExecution({db,transaction:baseTransaction,fault});migrateExecutionAuthority({db,transaction:baseTransaction,fault});}catch(error){file.close();throw error;}
-  const transaction=fn=>baseTransaction(()=>{db.prepare('UPDATE e5_worker_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=1 WHERE id=1').run();
+  try{migrateR2({db,transaction:baseTransaction,fault});migrateProcedure({db,transaction:baseTransaction,fault});migrateExecution({db,transaction:baseTransaction,fault});migrateExecutionAuthority({db,transaction:baseTransaction,fault});
+   if(e4BridgePorts.configured)migrateExecutionBridge({db,transaction:baseTransaction,scope:e4BridgePorts.scope,fault});
+   else check(!db.prepare("SELECT 1 FROM sqlite_schema WHERE type='table' AND name='e5b_meta'").get(),'BC_E5B_CONFIGURATION_REQUIRED');
+  }catch(error){file.close();throw error;}
+  const transaction=fn=>baseTransaction(()=>{if(e4BridgePorts.configured)db.prepare('UPDATE e5b_meta SET writer=1 WHERE id=1').run();
+    db.prepare('UPDATE e5_worker_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=1 WHERE id=1').run();
     db.prepare('UPDATE e3_meta SET writer=1 WHERE id=1').run();
-    try{return sync(fn());}finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_worker_meta SET writer=0 WHERE id=1').run();}});
+    try{return sync(fn());}finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_worker_meta SET writer=0 WHERE id=1').run();if(e4BridgePorts.configured)db.prepare('UPDATE e5b_meta SET writer=0 WHERE id=1').run();}});
   const ledger=r2Ledger(db,measurement);
   const normalizeOperators=bindings=>{check(Array.isArray(bindings),'BC_OPERATOR_BINDING');return bindings.map(b=>{
     exactKeys(b,['wallet','courseOperatorRef'],'BC_OPERATOR_BINDING');id(b.courseOperatorRef);
@@ -372,5 +381,5 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   };
   return Object.assign(service,createOperations({db,transaction,authentication,operatorBindings:currentOperators,app,refresh,tick,sessionHash,ledger,heads,replay,command,
     projectOperation:projection2,source,mode,procedurePorts,fault}),{execution:createExecutionOperations({db,transaction,authentication,operatorBindings:currentOperators,
-      app,refresh,tick,sessionHash,ledger,heads,source,services:executionServices,e4CurrentPorts,fenceWitness,fault})});
+      app,refresh,tick,sessionHash,ledger,heads,source,services:executionServices,e4CurrentPorts,e4BridgePorts,fenceWitness,fault})});
 }

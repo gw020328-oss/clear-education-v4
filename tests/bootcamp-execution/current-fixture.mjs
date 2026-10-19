@@ -6,7 +6,7 @@ import {hashTestUnsignedPayload} from '../../src/bootcamp-authorization/test-enc
 
 // No real E4 runtime/keys/network. The E3 records/source guards are the actual
 // store implementation, while this public reader/service is explicitly offline.
-export async function currentFixture(t,{kind='PREPARE',issuer=true,seal=true,route='MUTUAL'}={}){
+export async function currentFixture(t,{kind='PREPARE',issuer=true,seal=true,route='MUTUAL',setupOnly=false}={}){
  const f=await executionFixture(t);if(route==='MUTUAL'){f.consent(f.a);f.consent(f.a,f.operatorContext);}else f.setTime(f.time+120);
  const preparationId=f.prepare(f.a).record.target.preparationId;
  const prepared=database(f,db=>JSON.parse(db.prepare('SELECT record FROM e3_prepared WHERE id=?').get(preparationId).record));
@@ -28,8 +28,9 @@ export async function currentFixture(t,{kind='PREPARE',issuer=true,seal=true,rou
   certificateIssuer:issuer?{certifySync(payload){metrics.certificates++;certifyHook(payload);return {payload,signature:certificateWallet.signingKey.sign(e4Hash(payload)).serialized};}}:null,
   service:seal?{observe:async()=>snapshot(),async seal(request){metrics.seals++;await sealHook(request);return {ref:'env-'+randomUUID(),manifestHash:H('sealed-exact-original-bytes-hash-only')};},
    async dispatch(){metrics.dispatches++;throw Error('OFFLINE_MUST_NOT_DISPATCH');},async recover(){metrics.recoveries++;throw Error('OFFLINE_RECOVERY_NOT_CONNECTED');}}:null};
- f.configuration.executionConnection=configuration;f.configuration.fault=stage=>faultHook(stage);f.restart();
  const command={method:kind==='ACCEPT'?'accept':'prepareUnsigned',args:[f.chain.operation.operationId,m,'4'],applicationId:m.applicationId};
+ if(setupOnly)return {...f,get store(){return f.store;},get time(){return f.time;},m,prepared,digest,runtime,observation,snapshot,certificateWallet,command};
+ f.configuration.executionConnection=configuration;f.configuration.fault=stage=>faultHook(stage);f.restart();
  const i=f.enqueue({kind,preparationId,authorizationDigest:digest,caller:kind==='ACCEPT'?runtime.roles.relayer:runtime.roles.registrar,payloadHash:e4Hash(command)}).receipt.intentId;
  let h=f.acquire(i),runtimeHandle=f.store.execution.acquireRuntime(f.context,{owner:'worker-one',expectedFence:0,generation:1,leaseSeconds:30});
  f.store.execution.bindRuntimeIntent(f.context,runtimeHandle,h);connection=f.store.execution.connectCurrentController(f.context,runtimeHandle);
@@ -37,7 +38,7 @@ export async function currentFixture(t,{kind='PREPARE',issuer=true,seal=true,rou
  const currentRequest=binding=>{const o={...snapshot(),executionBusinessHash:binding.businessHash,operationMethod:command.method};return {binding,observation:o,
   payload:{version:'clear-e5-current-witness.1',challenge:randomUUID(),phase:'BEFORE_KEY_FINAL_SYNC',bindingHash:e4Hash(binding),observationHash:e4Hash(o),runtimeHash:runtime.runtimeHash}};};
  const commitRequest=(binding,result)=>({binding,payload:{version:'clear-e5-api-commit.1',challenge:randomUUID(),ref:result.ref,manifestHash:result.manifestHash,bindingHash:e4Hash(binding),runtimeHash:runtime.runtimeHash}});
- return {...f,get store(){return f.store;},get time(){return f.time;},get connection(){return connection;},get h(){return h;},get runtimeHandle(){return runtimeHandle;},i,m,prepared,digest,configuration,runtime,command,metrics,prepare,snapshot,currentRequest,commitRequest,
+ return {...f,get store(){return f.store;},get time(){return f.time;},get connection(){return connection;},get h(){return h;},get runtimeHandle(){return runtimeHandle;},i,m,prepared,digest,configuration,storeConfiguration:f.configuration,runtime,command,metrics,prepare,snapshot,currentRequest,commitRequest,
   observation,readHook:fn=>{readHook=fn;},sealHook:fn=>{sealHook=fn;},certifyHook:fn=>{certifyHook=fn;},compareHook:fn=>{compareHook=fn;},
   setOperators(bindings){f.configuration.operatorBindings=bindings;},
   setFault(callback){faultHook=callback;},

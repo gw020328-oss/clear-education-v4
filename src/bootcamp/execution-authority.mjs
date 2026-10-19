@@ -57,8 +57,10 @@ export function createFenceWitness(configuration=null){
   consume(ticket){check(tickets.has(ticket),'BC_E5_UNTRUSTED_FENCE_WITNESS');return tickets.get(ticket);},
  });
 }
-export function createRuntimeAuthority({db,runtimeId,runtimePinHash,e4Runtime=null,requireWitness=false,fault=()=>{}}){
- const incarnation='worker-'+randomUUID(),scopeKey=e4Hash(e4Runtime?{kind:'VAULT',chainId:e4Runtime.domain.chainId,vault:e4Runtime.domain.verifyingContract,instance:e4Runtime.domain.salt}:
+export function createRuntimeAuthority({db,runtimeId,runtimePinHash,e4Runtime=null,authorityScope=null,requireWitness=false,fault=()=>{}}){
+ if(authorityScope){exactKeys(authorityScope,['runtimeId','runtimePinHash','scopeKey'],'BC_E5B_SCOPE');
+  check(authorityScope.runtimeId===runtimeId&&authorityScope.runtimePinHash===runtimePinHash&&requireWitness,'BC_E5B_SCOPE');hash(authorityScope.scopeKey);}
+ const incarnation='worker-'+randomUUID(),scopeKey=authorityScope?.scopeKey??e4Hash(e4Runtime?{kind:'VAULT',chainId:e4Runtime.domain.chainId,vault:e4Runtime.domain.verifyingContract,instance:e4Runtime.domain.salt}:
   {kind:'METADATA_ONLY',runtimePinHash});
  const get=()=>db.prepare('SELECT * FROM e5_runtime_workers WHERE runtime_id=?').get(runtimeId)??null;
  const decode=r=>r?JSON.parse(r.record):null;
@@ -141,6 +143,16 @@ export function createRuntimeAuthority({db,runtimeId,runtimePinHash,e4Runtime=nu
    db.prepare('UPDATE e5_runtime_workers SET slot_revision=?,slot_id=NULL,intent_id=NULL,local_fence=NULL,local_revision=NULL WHERE runtime_id=?').run(n,runtimeId);
    fault('e5-global-after-release');
    return freeze({released:true,workerFence:h.workerFence,transactionReplacement:false});
+  },
+  complete(h,local,time,authority){this.slot(h,local,time,authority);
+   const c=decode(db.prepare('SELECT record FROM e5b_completions WHERE intent_id=?').get(local.intentId));
+   check(c&&['INCLUDED','REVERTED'].includes(c.status)&&canonical(c.globalHandle)===canonical(h)&&canonical(c.localHandle)===canonical(local),'BC_E5B_COMPLETION_REQUIRED');
+   const row=get(),n=row.slot_revision+1;check(Number.isSafeInteger(n),'BC_E5_GLOBAL_SLOT_EXHAUSTED');
+   const record={version:'clear-bootcamp-runtime-intent-slot.1',kind:'RELEASE',slotId:'runtime-release-'+randomUUID(),runtimeId,scopeKey,globalFence:row.fence,
+    revision:n,intentId:local.intentId,releaseOf:row.slot_id,recordedAt:time,completionHash:e4Hash(c)};
+   db.prepare('INSERT INTO e5_worker_slots VALUES(?,?,?,?)').run(runtimeId,n,record.slotId,canonical(record));
+   db.prepare('UPDATE e5_runtime_workers SET slot_revision=?,slot_id=NULL,intent_id=NULL,local_fence=NULL,local_revision=NULL WHERE runtime_id=?').run(n,runtimeId);
+   fault('e5b-after-terminal-slot-release');return freeze({released:true,completionHash:record.completionHash,transactionReplacement:false});
   },
   witnessQuery(){return {runtimeId,runtimePinHash,scopeKey};},
   witnessBasis(){const row=get();return e4Hash(row?{fence:row.fence,leaseId:row.lease_id,incarnation:row.incarnation,generation:row.generation}:null);},
