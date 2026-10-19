@@ -182,6 +182,13 @@
           "approvalPlanHead": "fccd49d1d4e695ce49e32e023de1dd1628c68627",
           "planCases": 7,
           "runnerCases": 19
+        },
+        "hackerrank": {
+          "availability": "HUMAN_REPORTED_EXISTING_OWN_PYTHON_BASIC_CERTIFICATE_ACCOUNT",
+          "connectAfterSafeCollectorPreparation": true,
+          "accountIdentifierCollected": false,
+          "actualProofPairsCollected": 0,
+          "sourceTrustActivated": false
         }
       }
     },
