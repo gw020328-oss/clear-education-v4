@@ -1,5 +1,7 @@
 # CLEAR 문서
 
+[2026-10-19 공개 현황](status.md#2026-10-19-공개-현황)은 미병합 TEST 준비·모델 차단·비지급 경계와 Mac 검사 실패/후속 성공을 구분합니다. 외부 PR의 준비 성과는 main의 로컬 기능·사용법으로 안내하지 않습니다.
+
 [2026-10-18 공개 현황](status.md#2026-10-18-공개-현황)에서 새 부트캠프 관련 열린 PR과 현재 main의 재현 경로를 구분합니다. 미병합 코드·설계는 외부 PR 링크로만 안내하며 main의 로컬 기능/사용법으로 표시하지 않습니다.
 
 [2026-10-17 공개 현황](status.md#2026-10-17-공개-현황)에서 main의 기존 제공 범위와 develop의 C1~C3·Moodle·AI 진행을 구분합니다. 상세 개발 계약은 [고정 develop 커밋](https://github.com/gw020328-oss/clear-education-v4/blob/4756589659a40c8f8fe45452a698b8a56487628c/docs/current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md)의 외부 링크로 안내하며 main에서 사용할 수 있는 로컬 파일·명령으로 표시하지 않습니다.
