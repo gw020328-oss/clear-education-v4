@@ -1,0 +1,111 @@
+{
+  "version": "clear-hackathon-test-execution-compile-verification.1",
+  "date": "2026-10-19",
+  "stage": "COMPILE_ONLY_E3_FINAL_INTAKE_PENDING",
+  "branch": "codex/hackathon-test-execution-preparation",
+  "preservedPreparationHead": "d287b3789a678a1e6984b583e4c85859e9e97a22",
+  "e3SourceHead": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+  "e3MergeCommit": "b58ab767e2c80050fcbfddf1505ea0e458be2cd9",
+  "acceptedE3Head": null,
+  "modelRequested": "GPT-6 Astra / High",
+  "actualModelIndependentlyVerified": false,
+  "executed": {
+    "compileAbiArtifactAndPreservationCases": 6,
+    "blockedAndNegativeUnsignedModuleCases": 60,
+    "totalDistinct": 66,
+    "pass": 66,
+    "fail": 0,
+    "repeatedRunsAddedToTotal": false
+  },
+  "history": [
+    {
+      "log": "execution-signer-first.log",
+      "pass": 31,
+      "fail": 29,
+      "cause": "Wrong scope decisionRevision number assumption masked downstream checks; two expected refusal codes also corrected."
+    },
+    {
+      "log": "execution-signer-second.log",
+      "pass": 60,
+      "fail": 0
+    },
+    {
+      "log": "execution-preparation-final.log",
+      "pass": 66,
+      "fail": 0
+    },
+    {
+      "log": "execution-preparation-reviewed.log",
+      "pass": 66,
+      "fail": 0
+    }
+  ],
+  "notExecuted": {
+    "executionContractEvmDeployments": 0,
+    "authorizationV3Signatures": 0,
+    "validSignerPositiveControls": 0,
+    "accepts": 0,
+    "claims": 0,
+    "newPersistentChains": 0,
+    "externalRpc": 0,
+    "actualSources": 0,
+    "keyReads": 0
+  },
+  "compilation": {
+    "solc": "0.8.30",
+    "optimizerRuns": 200,
+    "evmVersion": "shanghai",
+    "runtimeBytes": 24080,
+    "runtimeLimitBytes": 24576,
+    "creationBytes": 26870,
+    "constructorArgumentBytes": 320,
+    "initcodeBytes": 27190,
+    "initcodeLimitBytes": 49152,
+    "warnings": 0,
+    "allowUnlimitedContractSize": false
+  },
+  "preservation": {
+    "result": "PASS",
+    "mode": "PORTABLE_CONTENT",
+    "originalFingerprintsPreserved": true,
+    "publishedReferences": 4,
+    "schemaVersion": 4,
+    "sourceReferenceFiles": 191,
+    "profiles": 3,
+    "runtime": "24.21.0",
+    "dependencyGraphPreserved": true,
+    "pendingManifestsNotClaimable": true
+  },
+  "oldPreparationCases": {
+    "count": 50,
+    "newExecutionCases": false,
+    "sourceAndArtifactsUnchanged": true,
+    "rerunInThisUnit": false
+  },
+  "positivePlan": {
+    "file": "execution-positive-plan.json",
+    "cases": 22,
+    "status": "NOT_RUN"
+  },
+  "runtimePin": null,
+  "newTestsInCommonCi": false,
+  "note": "New tests executed explicitly in owned folder; common workflow and existing entry point were not directly changed. E3 common files arrived only through normal merge.",
+  "sourceSha256": {
+    "src/hackathon-test-vault/HackathonTestVaultExecution.sol": "3720e6cb41ecb7efcad34e3c1d932208c2396e7c93093cef4b3dee924c0e7f29",
+    "src/hackathon-test-vault/execution-signer.mjs": "0e2e1c7a6d80c63c3fb9ad2246b22be7e64e16088328bf872d6ed12f771185ab",
+    "tests/hackathon-test-vault/execution-artifact.mjs": "4d6c734fc699d66239a0e06ede3d2f0693a8eb316269c4d56e558833917eddc3",
+    "tests/hackathon-test-vault/execution-build.mjs": "8ac7602b9562ee57d2f70ea63d153267bb9985f3d73d85be8588a5634e248b59",
+    "tests/hackathon-test-vault/execution-candidate-fixture.mjs": "4ebb6521a22aeb3cf4af0e9d04ba4d13ecefe6672800eaeeeb10bccffdf047a3",
+    "tests/hackathon-test-vault/execution-compile.test.mjs": "f3257c1d60dc423e47a439bdbb1ff416d8affde256a78b17b5a6e03ff104558b",
+    "tests/hackathon-test-vault/execution-signer.test.mjs": "1b797c0a0610222a833d61caa63253234c95fea8bc879bc604276cb1f76afbbd"
+  },
+  "localLogSha256": {
+    "execution-signer-first.log": "95ea06957e0f202b475bbe1b586aba749259b1f64b11dc1522be3c027e8ef48b",
+    "execution-signer-second.log": "7e2e3c69c59ce9b0a5f30f2ee51778346eca3fb04cbe8ea59f8cf923e76be56e",
+    "execution-preparation-final.log": "8323e0a827fe032e077cb51b23e58de9d37ba56de0804874dfbcce78dfe10fa6",
+    "execution-preparation-reviewed.log": "c3d49ae39ca295fc85814c317248a60d43c4488d6f6c4288f7a4dbb6f22b115e",
+    "execution-preservation.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0"
+  },
+  "publicHistoryScan": "Exact committed head result recorded in Draft PR body",
+  "remoteCi": "Inherited suites only, not proof of execution or of these66 explicit tests; status recorded in Draft PR body"
+}
