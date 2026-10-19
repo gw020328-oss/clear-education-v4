@@ -1,0 +1,25 @@
+{
+  "version": "clear-e5-normal-path-source-pins.1",
+  "baseHead": "a4a05c7aa6a1614760273e78edb5ba6ccb556232",
+  "scope": "NEW_ENVIRONMENT_MAPPING_AND_CANONICAL_ADDRESS_REPRESENTATION",
+  "changes": {
+    "src/hackathon-test-vault/e5/environment.mjs": {
+      "before": "a38dc46a8d0c9afd91b68d295c1d4aaaa3a5815ba8fe70338a9fa68e4fb3666e",
+      "after": "eb434625f9c4ec54965c9fb1f55db66d37bdf37c85d44d50f704908d5ecc1d26"
+    },
+    "src/hackathon-test-vault/e5/reader.mjs": {
+      "before": "34f0b529dd459881bc82032efb9d7c3eaec6818928c4f23d2e046f649f3eddfd",
+      "after": "af6c782cd4722e4b3a8c3b32070ff022ef09bd46ef2302956ca451f31ef3b56d"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "b34bfb2d48775676fd1d24288dc4292215e8c2f79bfcee3ee3d3bc6acbdc74bd",
+      "after": "937863f967022983706f998163c23893b13727361b3b38691b02ec2aa08e40c9"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "6ae5ec81a746b485d257791dd3fa2c0aea31dbe5914031a2a54e029bff9616bb",
+      "after": "c9eb45e68f95209464bab2211d3f208ad540f93e81a274b05cb096eb871ff495"
+    }
+  },
+  "existingEnvironmentMigration": false,
+  "fullActualSourceDemoCompleted": false
+}

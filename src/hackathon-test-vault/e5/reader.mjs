@@ -48,6 +48,9 @@ export class ExecutionReader {
   const b=await this.block(blockHash),runtime=await this.validate(b),m=this.manifest;
   const application=plain((await this.call('application',[applicationId],b))[0]);
   const right=plain((await this.call('acceptedRight',[applicationId],b))[0]);
+  // Canonical wire addresses must be normalized before hashing/private witness issuance.
+  application.recipient=lower(application.recipient);
+  right.recipient=lower(right.recipient);right.token=lower(right.token);
   const accounting=plain(await this.call('accounting',[],b));
   const ids=(await this.call('applicationIds',[],b))[0],queue=[];
   for(const appId of ids){const a=plain((await this.call('application',[appId],b))[0]);if(a.state==='1'&&a.currentMet&&!a.validObjection&&!a.unassessedObjection&&!a.newValidError&&!a.terminalError&&BigInt(a.target.sourceValidUntilExclusive)>BigInt(b.timestamp))queue.push({applicationId:appId,sequence:a.target.acceptanceSequence});}

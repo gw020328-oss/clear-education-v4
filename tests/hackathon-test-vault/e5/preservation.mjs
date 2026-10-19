@@ -14,6 +14,20 @@ assert.equal(intake.e4.artifactSha256AtAcceptedHead[consumer],'b053742d1d3f0e8e9
 for(const [path,expected]of Object.entries(intake.e4.artifactSha256AtAcceptedHead))assert.equal(digest(path),path===consumer?consumerV4:expected,path);
 const service=JSON.parse(readFileSync(new URL('specs/bootcamp/hackathon-test-e5-service-intake-v1.json',root)));
 const preserved=Object.entries(service.sourceArtifacts).filter(([path])=>path!=='tests/hackathon-test-vault/e5/preservation.mjs');
-for(const [path,expected]of preserved)assert.equal(digest(path),expected,path);
+// Explicit normal-path fixes requested by the API owner; original intake remains unchanged.
+const normalPathChanges=[
+  [
+    "src/hackathon-test-vault/e5/environment.mjs",
+    "a38dc46a8d0c9afd91b68d295c1d4aaaa3a5815ba8fe70338a9fa68e4fb3666e",
+    "eb434625f9c4ec54965c9fb1f55db66d37bdf37c85d44d50f704908d5ecc1d26"
+  ],
+  [
+    "src/hackathon-test-vault/e5/reader.mjs",
+    "34f0b529dd459881bc82032efb9d7c3eaec6818928c4f23d2e046f649f3eddfd",
+    "af6c782cd4722e4b3a8c3b32070ff022ef09bd46ef2302956ca451f31ef3b56d"
+  ]
+];
+for(const [path,before,after]of normalPathChanges){assert.equal(service.sourceArtifacts[path],before,path);assert.equal(digest(path),after,path);}
+for(const [path,expected]of preserved)assert.equal(digest(path),normalPathChanges.find(([p])=>p===path)?.[2]??expected,path);
 assert.equal(digest(intake.frozenInputs.memoryBoundary),intake.frozenInputs.memoryBoundarySha256);
-console.log(JSON.stringify({frozenE4Files:8,explicitV4MemoryConsumer:consumerV4,frozenE5Artifacts:preserved.length,explicitPreservationTestUpdate:true,memoryBoundaryV1:'UNCHANGED'}));
+console.log(JSON.stringify({frozenE4Files:8,explicitV4MemoryConsumer:consumerV4,frozenE5Artifacts:preserved.length-normalPathChanges.length,explicitNormalPathChanges:normalPathChanges.length,explicitPreservationTestUpdate:true,memoryBoundaryV1:'UNCHANGED'}));
