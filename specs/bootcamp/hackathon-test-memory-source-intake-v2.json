@@ -12,7 +12,6 @@
   "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
   "acceptedE3StageHead": "c3b71c710f558529680e255222857f0e81fe1dcb",
   "currentSourceCandidateHead": "d534f4bc3fbf56845239853cc947a496a97847a2",
-  "sourcePublicationState": "LOCAL_COMMIT_PENDING_OWNER_INTEGRATION",
   "e3ArtifactSha256": {
     "src/bootcamp/procedure.mjs": "91ec8afd7e6aa001bb25ff8e716d168eb37f0e39e6fd09824b535889848d764f",
     "src/bootcamp/procedure-ledger.mjs": "db6d5a0273bb135c120828fc6ed32a4f1b6e2bb46182337908410948ada9035f",
@@ -61,6 +60,15 @@
     "VERIFY_CURRENT_E3_FILES_AGAINST_V2_SOURCE_SHA_TABLE_NOT_OLD_SOURCE_BYTES",
     "RECORD_CURRENT_COMPATIBLE_SOURCE_HEAD_SEPARATELY_FROM_ACCEPTED_E3_STAGE_HEAD",
     "KEEP_E2_AND_E4_PREPARATION_PIN_CHECKS_AND_DEFAULT_BLOCKED_ADAPTER",
-    "RUN_EXISTING_MEMORY_TESTS_WITH_CURRENT_SOURCE_AND_NEW_METADATA_TESTS_BEFORE_ACCEPTANCE"
-  ]
+    "RUN_EXISTING_MEMORY_TESTS_WITH_CURRENT_SOURCE_AND_NEW_METADATA_TESTS_BEFORE_ACCEPTANCE",
+    "VERIFY_FIVE_NEW_EXECUTION_IMPORTS_AGAINST_ADDITIONAL_SOURCE_SHA_TABLE"
+  ],
+  "additionalSourceArtifactSha256": {
+    "src/bootcamp/execution-ledger.mjs": "2da2ecf181a408af00f817a18fe5516c4c6775e9ed081794878e0db514d74f41",
+    "src/bootcamp/execution-operations.mjs": "74d061bc7de34c052f330510d433be26ce35ed4624ddb05088453bc9c69eabb0",
+    "src/bootcamp/execution-ports.mjs": "4dae489da512de8b1d287dc3351992d67a2cf1928eb83637c34ec1cb8fde5270",
+    "src/bootcamp/execution-readback.mjs": "a285e68128cd813039a5b1da5c23ebdd6873d0cbf4bf4a67d6558bf26801519c",
+    "src/bootcamp/execution-worker.mjs": "1e838e7c199390f23e2d392639d1db1f30551e000c12cadf33342dfb2deac4a8"
+  },
+  "sourcePublicationAtReview": "LOCAL_COMMIT_PENDING_OWNER_INTEGRATION"
 }
