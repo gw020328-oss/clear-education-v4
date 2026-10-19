@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 11,
+  "repositoryPlanRevision": 12,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -309,7 +309,7 @@
           "actualModelQuality": "N/A",
           "remoteCi": "6_OF_6_SUCCESS_DEDICATED_FOCUSED_TESTS_SEPARATE",
           "actualCommonApiAcceptance": false,
-          "nextUnit": "NEW_PYTHON_MODEL_APPROVAL_AND_VERIFIED_COST_BOUNDS_PENDING_ACTUAL_BLOCKED",
+          "nextUnit": "REVIEW_CONCRETE_EXISTING_PAID_KEY_EIGHT_GENERATION_PLAN_BEFORE_NEW_EXECUTION",
           "leasePreparationBaseHead": "d7a6f302378818430212aabeec2a9ddb8c55156d",
           "approvalPlanHead": "fccd49d1d4e695ce49e32e023de1dd1628c68627",
           "planCases": 7,
@@ -318,7 +318,7 @@
             "pr": 94,
             "reviewedHead": "74db9d1b4cf92aefda2d1b0d3a7588b7fe149e0c",
             "planHash": "0x9afeecb7fbdf1d7d7df2cf53dc3061fd49996c7277f3ad301dc5286f9e185881",
-            "status": "CODE_REVIEWED_NEW_HUMAN_APPROVAL_AND_FREE_PROJECT_LOCAL_SETUP_PENDING",
+            "status": "PRESERVED_NOT_ACTIVATED_HUMAN_PREFERS_EXISTING_PAID_KEY",
             "newOfflineCases": 23,
             "relatedLocalCases": 460,
             "remoteCi": "6_OF_6_SUCCESS_DEDICATED_23_CASES_LOCAL_SEPARATE",
@@ -330,7 +330,21 @@
             "existingPaidApprovalReused": false,
             "approvalQuestionPresented": true,
             "privateCredentialExistenceChecked": false,
-            "actualCommonApiAcceptance": false
+            "actualCommonApiAcceptance": false,
+            "approvalGranted": false
+          },
+          "paidEvaluationPreparation": {
+            "status": "NEW_EIGHT_GENERATION_SCOPE_AND_COST_PREPARATION_IN_PROGRESS",
+            "humanPreference": "USE_EXISTING_PAID_API_KEY",
+            "newFreeProjectRequired": false,
+            "existingPaidPlanAndSpentApprovalsPreserved": true,
+            "actualNewRunApproved": false,
+            "actualGenerationCalls": 0,
+            "actualCountCalls": 0,
+            "actualKeyReads": 0,
+            "hardUsd005CapVerified": false,
+            "requestedModel": "gpt-6.1-sol",
+            "thinking": "high"
           }
         },
         "hackerrank": {
