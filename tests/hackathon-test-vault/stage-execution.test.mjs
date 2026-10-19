@@ -11,7 +11,7 @@ function record(name,value){mkdirSync(output,{recursive:true});writeFileSync(new
 after(()=>{const totals={...memoryStageTotals(),controlledProbes:{...probes}};record('stage-execution-metrics.json',totals);console.log('E4_MEMORY_STAGE_METRICS '+JSON.stringify(totals));});
 test('actual E1 E2 E3 authenticated module flow reaches fresh memory .3 accept and fixed claim',async t=>{
  const f=await setup(t),h=await f.ready(),signed=await f.sign(h);assert.equal(signed.status,'SIGNED_MEMORY_STAGE_ONLY');
- const before=await f.token.balanceOf(f.registration(f.firstApp).registration.recipient),accounting=Array.from(await f.vault.accounting());const accepted=await f.accept(h,signed);assert.equal(f.chainState(f.firstApp).state,5n);assert.deepEqual(Array.from(await f.vault.accounting()),accounting);const settled=await f.claim(f.firstApp);record('stage-runtime-example.json',{pin:f.pin,acceptTransaction:accepted.hash,claimTransaction:settled.hash,authorizationDigest:signed.digest,metrics:f.metrics});
+ const before=await f.token.balanceOf(f.registration(f.firstApp).registration.recipient),accounting=Array.from(await f.vault.accounting());const accepted=await f.accept(h,signed);assert.equal(f.chainState(f.firstApp).state,5n);assert.deepEqual(Array.from(await f.vault.accounting()),accounting);const settled=await f.claim(f.firstApp);record('stage-runtime-example.json',{pin:f.pin,domain:f.domain,deploymentTransactions:{vault:f.vault.deploymentTransaction().hash,token:f.token.deploymentTransaction().hash},preparedChainCas:signed.chainCas,preparedE3Cas:signed.e3Cas,acceptTransaction:accepted.hash,acceptBlock:{number:accepted.blockNumber,hash:accepted.blockHash},claimTransaction:settled.hash,claimBlock:{number:settled.blockNumber,hash:settled.blockHash},authorizationDigest:signed.digest,metrics:f.metrics});
  assert.equal(f.chainState(f.firstApp).state,6n);assert.equal(await f.token.balanceOf(f.registration(f.firstApp).registration.recipient),before+100000000n);
 });
 
@@ -256,4 +256,15 @@ for(const phase of ['before-key','after-sign'])test('E3 withdrawal during awaite
  const result=await f.sign(h);assert.equal(changed,true);assert.equal(result.status,'BLOCKED');assert.equal(result.signature,null);
  assert.equal(f.metrics.keyProviderCalls,phase==='before-key'?0:1);
  assert.equal(f.metrics.signaturesDiscarded,phase==='before-key'?0:1);
+});
+
+test('measured role readback mismatch rejects signing before key access',async t=>{
+ const f=await setup(t),h=await f.ready(),send=f.provider.send.bind(f.provider),selector=f.vault.interface.getFunction('roles').selector;
+ const measured=await f.vault.roles(),bad=Array.from(measured);bad[0]=await f.accounts[6].getAddress();let intercepted=false;
+ f.provider.send=async(method,args)=>{
+  const result=await send(method,args);
+  if(method==='eth_call'&&args[0].data.startsWith(selector)){intercepted=true;return f.vault.interface.encodeFunctionResult('roles',bad);}
+  return result;
+ };
+ assert.equal((await blocked(f,h)).code,'STAGE_RUNTIME_PIN');assert.equal(intercepted,true);
 });

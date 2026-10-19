@@ -71,10 +71,13 @@ export async function createFreshMemoryStage(configuration={}){
  const tokenAddress=(await token.getAddress()).toLowerCase(),vaultAddress=(await vault.getAddress()).toLowerCase();
  const domain={name:'ClearBootcampTestPayment',version:'3',chainId:'431709',verifyingContract:vaultAddress,salt:instanceId};
  const keyId=hexlify(randomBytes(32));await sent(vault.connect(accounts[1]).registerKey(op(),keyId,wallet.address));
+ const roleValues=await vault.roles();
+ const measuredRoles=Object.fromEntries(Object.keys(roles).map((k,i)=>[k,roleValues[i].toLowerCase()]));
+ check(eq(measuredRoles,Object.fromEntries(Object.entries(roles).map(([k,v])=>[k,v.toLowerCase()]))),'STAGE_ROLE_PIN');
  const pin=freeze({version:'clear-hackathon-memory-runtime.1',kind:MEMORY_STAGE,intakeCommit:INTAKE_COMMIT,e3Head:accepted.e3.head,
   chainId:domain.chainId,genesisHash:(await provider.send('eth_getBlockByNumber',['0x0',false])).hash,
   vaultAddress,vaultCodeHash:keccak256(await provider.send('eth_getCode',[vaultAddress,'latest'])),tokenAddress,tokenCodeHash:keccak256(await provider.send('eth_getCode',[tokenAddress,'latest'])),
-  instanceId,policyHash:p0PolicyHash(P0_POLICY),runtimeMappingHash,operationsPolicyHash:await vault.PROFILE(),domainSeparator:await vault.domainSeparator(),typeHash:await vault.TYPE_HASH(),roles:Object.fromEntries(Object.entries(roles).map(([k,v])=>[k,v.toLowerCase()])),signerKeyId:keyId,signerAddress:wallet.address.toLowerCase()});
+  instanceId,policyHash:p0PolicyHash(P0_POLICY),runtimeMappingHash,operationsPolicyHash:await vault.PROFILE(),domainSeparator:await vault.domainSeparator(),typeHash:await vault.TYPE_HASH(),roles:measuredRoles,signerKeyId:keyId,signerAddress:wallet.address.toLowerCase()});
  check(pin.tokenCodeHash===build.tokenCodeHash&&pin.domainSeparator===TypedDataEncoder.hashDomain(domain),'STAGE_DEPLOYMENT_PIN');
  const meta=new Map(),handles=new WeakMap();let cache={checkpoint:null,apps:new Map()};
  const faults={duringSigning:null,providerFailure:false,providerWrongDomain:null};
@@ -114,9 +117,9 @@ export async function createFreshMemoryStage(configuration={}){
  async function sync(){
   check(!closed,'STAGE_CLOSED');
   const b=await provider.send('eth_getBlockByNumber',['latest',false]),tag=Number(BigInt(b.number)),opts={blockTag:tag};
-  const [vaultCode,tokenCode,genesis,chainId,domainHash,typeHash,paused,accounting,key]=await Promise.all([
-   provider.send('eth_getCode',[vaultAddress,b.number]),provider.send('eth_getCode',[tokenAddress,b.number]),provider.send('eth_getBlockByNumber',['0x0',false]),provider.send('eth_chainId',[]),vault.domainSeparator(opts),vault.TYPE_HASH(opts),vault.newOperationsPaused(opts),vault.accounting(opts),vault.keys(keyId,opts)]);
-  check(keccak256(vaultCode)===pin.vaultCodeHash&&keccak256(tokenCode)===pin.tokenCodeHash&&genesis.hash===pin.genesisHash&&BigInt(chainId).toString()===pin.chainId&&domainHash===pin.domainSeparator&&typeHash===pin.typeHash,'STAGE_RUNTIME_PIN');
+  const [vaultCode,tokenCode,genesis,chainId,domainHash,typeHash,paused,accounting,key,actualRoles]=await Promise.all([
+   provider.send('eth_getCode',[vaultAddress,b.number]),provider.send('eth_getCode',[tokenAddress,b.number]),provider.send('eth_getBlockByNumber',['0x0',false]),provider.send('eth_chainId',[]),vault.domainSeparator(opts),vault.TYPE_HASH(opts),vault.newOperationsPaused(opts),vault.accounting(opts),vault.keys(keyId,opts),vault.roles(opts)]);
+  check(keccak256(vaultCode)===pin.vaultCodeHash&&keccak256(tokenCode)===pin.tokenCodeHash&&genesis.hash===pin.genesisHash&&BigInt(chainId).toString()===pin.chainId&&domainHash===pin.domainSeparator&&typeHash===pin.typeHash&&eq(Object.fromEntries(Object.keys(roles).map((k,i)=>[k,actualRoles[i].toLowerCase()])),pin.roles),'STAGE_RUNTIME_PIN');
   const apps=new Map();
   for(const [app,m]of meta){const r=m.registrations.at(-1),opaque=r?.opaqueTarget.applicationId;
    if(opaque)apps.set(app,{application:await vault.application(opaque,opts),nonceAvailable:!await vault.usedNonces(m.nonce,opts),signerActive:key.signer.toLowerCase()===pin.signerAddress&&!key.revoked});}
