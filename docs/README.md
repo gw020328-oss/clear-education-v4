@@ -1,5 +1,7 @@
 # CLEAR 문서
 
+[2026-10-19 미병합 준비·CI 현황](status.md#2026-10-19-미병합-준비ci-현황)은 새 E1~E6 TEST 준비·Mac 시험 보강과 실패/후속 성공을 구분합니다. 열린 의존 PR과 TEST 운영 제안을 현재 제품 인수나 실제 지급 완료로 해석하지 않습니다.
+
 [2026-10-18 미병합 작업 현황](status.md#2026-10-18-미병합-작업-현황)은 새 부트캠프·HackerRank·ledger·권한 리뷰 PR과 Moodle/AI 갱신을 현재 병합 코드와 구분합니다. CI 성공만으로 운영 원천·지급·모든 로컬 시험 coverage 완료를 주장하지 않습니다.
 
 최신 develop 진행은 [2026-10-17 원격 확인](status.md#2026-10-17-원격-확인)을 우선합니다. [C3 합성 증거/평가](current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md), [원문·C1·C2 HTTP 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), [격리 Moodle](moodle/LOCAL_API_LAB.ko.md), [AI workflow adapter](ai-vision/WORKFLOW_ADAPTERS.ko.md)는 각 구현 범위와 운영 차단을 함께 확인합니다. 과거 문서의 Draft/미구현 표현을 현재 병합 상태와 구분합니다.

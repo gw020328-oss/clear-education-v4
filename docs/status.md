@@ -1,5 +1,37 @@
 # 개발 현황
 
+## 2026-10-19 미병합 준비·CI 현황
+
+원격 확인 **2026-10-19 11:02 KST**. develop은 [97d5024](https://github.com/gw020328-oss/clear-education-v4/commit/97d5024ebb1a8371ae8a996cf76624af9e067269)(문서 PR #82), main은 [8f50a53](https://github.com/gw020328-oss/clear-education-v4/commit/8f50a531d7f04c311f9929fcce36bbf53c64a518)(문서 PR #83)이다. 어제 이후 새 기능 병합은 없다. 아래는 각 열린 PR 설명·공개 검증이 보고한 범위이며 현재 develop/main 기능이나 운영 인수 완료가 아니다.
+
+| 열린 PR | 새로 확인한 준비/작업 | 활성화와 미검증의 구분 |
+| --- | --- | --- |
+| [#78](https://github.com/gw020328-oss/clear-education-v4/pull/78), [#84](https://github.com/gw020328-oss/clear-education-v4/pull/84) | E0 TEST 운영 profile·E0~E7 인수 계획, E1 고정 producer 연결과 원문/session/current 무효화 합성 경계 | TEST profile/별도 namespace의 미병합 의존 이력. 운영 source·서명·지급 인수와 구분 |
+| [#85](https://github.com/gw020328-oss/clear-education-v4/pull/85) | 고정 review/source window에 결합한 unsigned TEST v3 | 성공도 unsigned 사전 검사. usableForIssuance/paymentAllowed=false, 실제 signer/현재 체인·지급 권한 아님 |
+| [#86](https://github.com/gw020328-oss/clear-education-v4/pull/86) | E6 Python 회고 자료·기본 차단 평가 실행기/횟수·예약 guard 준비 | 실제 모델 실행 0, 승인/endpoint 비용·출력 상한 근거 미해소. 과거 일반 후기 승인을 재사용하지 않으며 Python 품질은 N/A |
+| [#87](https://github.com/gw020328-oss/clear-education-v4/pull/87) | 새 격리 Moodle fixture·stop/start 재수집 기록·비동기 raw getter 준비 | 보고 시점 환경 보존과 token/raw lease 상태를 구분. E1 민감 경계·전체 조건·AI·제품 runtime ready·지급 인수 아님. 이번 문서 작업은 로컬 환경에 접속하지 않음 |
+| [#88](https://github.com/gw020328-oss/clear-education-v4/pull/88) | E4 TEST 의무/예약·원자 target 교체·종료의 비지급 준비 계약 | payoutEnabled=false, accept/claim 활성화 없음. 선행 E3 인수와 후속 실행 계약은 별도 |
+| [#89](https://github.com/gw020328-oss/clear-education-v4/pull/89) | E3 검토 절차·두 역할 DTO·E4 인계, 고정 cap/재검증·이의 경계 | stacked Draft·미병합. push Mac 실패가 있어 전체 CI 성공으로 표시하지 않음 |
+| [#90](https://github.com/gw020328-oss/clear-education-v4/pull/90) | Mac hard-kill trial별 supervisor·소유 프로세스/삭제 순서 시험 보강 | 시험 전용 변경이며 제품 복구 코드 수정·과거 timeout 단일 원인 입증 아님. legacy 합산 60초에서 회당 60초로 예산 단위가 달라진 점도 구분 |
+
+### 정확한 최신 head의 원격 CI
+
+| PR / head | PR·push 실행 | 확인 결과 |
+| --- | --- | --- |
+| [#78](https://github.com/gw020328-oss/clear-education-v4/pull/78) `040e31107d97c98a9a5fe588153aa828039f9519` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39139721068) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39139716600) | 6/6 SUCCESS; 미병합 |
+| [#84](https://github.com/gw020328-oss/clear-education-v4/pull/84) `6b4b0cf2d847937aebc6da69f9e7df62e926fa50` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39136605335) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39136594968) | 6/6 SUCCESS; 미병합 |
+| [#85](https://github.com/gw020328-oss/clear-education-v4/pull/85) `d9407b06b8a13122a489193119c1899929f83fe4` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39137293165) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39137290110) | 6/6 SUCCESS; 미병합 |
+| [#86](https://github.com/gw020328-oss/clear-education-v4/pull/86) `e9ea4547d795ee833a8175c02c0cc23b21a7d823` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39141738504) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39141734345) | 6/6 SUCCESS; 미병합 |
+| [#87](https://github.com/gw020328-oss/clear-education-v4/pull/87) `22640db091d5d3ac5d8a3535280b393d6f618d65` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39138081645) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39138073059) | 6/6 SUCCESS; 미병합 |
+| [#88](https://github.com/gw020328-oss/clear-education-v4/pull/88) `d287b3789a678a1e6984b583e4c85859e9e97a22` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39141692233) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39141689785) | 6/6 SUCCESS; 미병합 |
+| [#89](https://github.com/gw020328-oss/clear-education-v4/pull/89) `fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39142236991) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39142228451) | 5/6 SUCCESS; push Mac FAILURE, PR Mac SUCCESS; 미병합 |
+| [#90](https://github.com/gw020328-oss/clear-education-v4/pull/90) `41354e0283709f74dd64a9dc6435703c804853c6` | [실행 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39187720556) / [실행 2](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39187717033) | 6/6 SUCCESS; 미병합 |
+
+각 성공 6건은 PR/push의 Public content history·Public synthetic tests·Mac synthetic recovery다. [PR #89 push 실패](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39142228451)와 [PR #90 후속 성공](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39187720556)은 서로 다른 head/시험이며 실패를 재실행 통과나 원인 해결로 대체하지 않는다. PR #90 본문의 원격 진행 중 표시는 작성 당시 기록이고 위 표는 이번 조회 상태다. root CI 성공만으로 각 전용 로컬 시험 전부의 coverage나 실제 source·모델·지급 성공을 주장하지 않는다.
+
+이 PR들은 선행 미병합 기능 이력을 포함할 수 있으며 이 문서 자동화에서 수정·병합하지 않는다. 기존 #60·#66·#69~#75·#79~#81도 미병합이다. 새 TEST 운영 profile과 기존 제품/실험의 정책을 섞지 않고, 실제 원천·동일인·민감자료/모델 승인·발급/지급·독립 청구의 미해소 관문은 각 버전의 공개 근거를 따른다. 새 로그인·원문 수집·유료 모델·서명/거래를 실행하지 않았고, 저장된 시험 수를 서로 합산하지 않는다.
+
+
 ## 2026-10-18 미병합 작업 현황
 
 원격 확인 **2026-10-18 12:11 KST**. develop은 [`9c542c3`](https://github.com/gw020328-oss/clear-education-v4/commit/9c542c38892d0a5d5e71fcbe4f87f1017d8fe843)(문서 PR #76), main은 [`72fe051`](https://github.com/gw020328-oss/clear-education-v4/commit/72fe051c1aad6b99def4d864cd2e3841308e857c)(문서 PR #77)이다. 어제 확인 이후 새 기능 병합은 없다. 아래는 열린 PR의 제안/작업이며 현재 develop/main 기능·최종 정책·배포 완료가 아니다.

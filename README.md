@@ -1,5 +1,7 @@
 # CLEAR
 
+2026-10-19 추가 현황: E1~E6 TEST 준비와 Mac 강제 종료 시험 보강 PR #84~#90은 아직 미병합입니다. [최신 준비 범위와 정확한 CI](docs/status.md#2026-10-19-미병합-준비ci-현황)에서 unsigned/비지급·모델 기본 차단과 PR #89 push Mac 실패를 구분합니다. 기존 병합 코드의 제공 범위는 유지합니다.
+
 2026-10-18 추가 현황: Python 부트캠프 계획·HackerRank 오프라인 증거·합성 ledger·지급 권한/재원 경계 PR #78~#81이 열렸지만 develop/main에는 미병합입니다. [정확한 head·CI와 미검증 범위](docs/status.md#2026-10-18-미병합-작업-현황)를 확인하세요. 기존 C1~C3 구현 범위는 유지합니다.
 
 2026-10-17 원격 현황: develop [4756589](https://github.com/gw020328-oss/clear-education-v4/commit/4756589659a40c8f8fe45452a698b8a56487628c)에 C1~C3 합성 HTTP/증거·평가 흐름, 격리 Moodle 실측, AI 후속이 병합됐습니다. main에는 기능 코드가 미반영입니다. [최신 병합·CI·실제/합성 구분](docs/status.md#2026-10-17-원격-확인)을 먼저 확인하세요. 아래 날짜별 상태는 당시 기록입니다.
