@@ -82,7 +82,7 @@ test('failed attempt preserves one logical failure, successful retry records suc
 });
 test('metric ID conflicts and new IDs for same logical event reject; person/wait union is distinct and epoch mixing rejects',async t=>{
  const f=await storeFixture(t),a=f.create(),v=f.view(a),db=new DatabaseSync(join(f.directory,'bootcamp.sqlite'));t.after(()=>db.close());
- db.prepare('UPDATE e3_meta SET writer=1 WHERE id=1').run();
+ db.prepare('UPDATE e5_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE e3_meta SET writer=1 WHERE id=1').run();
  try{
  const l=r2Ledger(db),base={version:'clear-bootcamp-metric-event.2',eventId:'metric-fixture',scenarioRunId:'run-fixture',applicationRef:a,
   decisionRevision:v.decision.record.decisionRevision,decisionHash:v.decision.record.decisionHash,operationId:'operation-fixture',eventType:'HUMAN_WORK_INTERVAL',
@@ -95,7 +95,7 @@ test('metric ID conflicts and new IDs for same logical event reject; person/wait
  const wait={...base,eventId:'metric-wait',operationId:'operation-wait',eventType:'WAIT_INTERVAL',startedAtMs:15,endedAtMs:50};
  const m=summarizeMetrics([base,other,wait]);assert.equal(m.humanWorkMs,30);assert.equal(m.waitingWallMs,35);assert.equal(m.overallElapsedMs,null);assert.equal(m.humanWorkReductionPercent,null);
  assert.throws(()=>summarizeMetrics([base,{...other,scenarioRunId:'different-epoch'}]),/BC_METRIC_EPOCH_MIX/);
- }finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();}
+ }finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=0 WHERE id=1').run();}
 });
 
 // Execute the frozen v1 implementation against a fresh synthetic directory.
