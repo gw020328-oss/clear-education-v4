@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 16,
+  "repositoryPlanRevision": 17,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -228,7 +228,7 @@
     {
       "stage": "E5",
       "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
-      "status": "SERVICE_REQUIRED_CHECK_DIAGNOSIS_API_CURRENT_PREPARATION_REVIEWED",
+      "status": "SERVICE_COMPONENT_ACCEPTED_GLOBAL_API_FENCE_AND_ACTUAL_BRIDGE_PENDING",
       "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -314,7 +314,28 @@
           "fixScope": "EXACT_RUNTIME_HASH_NUMBER_TIME_FINALITY_CHECKPOINT_IDEMPOTENCE_ONLY",
           "newBlockCasRefusalPreserved": true,
           "fullRegressionAndFinalCi": "PENDING_ADDITIONAL_SETUP_RECEIPT_INDEXING_FIX"
-        }
+        },
+        "status": "HISTORICAL_FAILED_CANDIDATE_SUPERSEDED_BY_REVIEWED_FIX"
+      },
+      "serviceExecution": {
+        "acceptedHead": "0e6d4225e5b645e57e3988dc426937b08069ead8",
+        "implementationHead": "bbadeff4ce510d02d9a48a2c0e22f0c253aa6cb1",
+        "pr": 95,
+        "componentAccepted": true,
+        "intake": "specs/bootcamp/hackathon-test-e5-service-intake-v1.json",
+        "localFinalPass": 42,
+        "remoteCi": "8_OF_8_SUCCESS",
+        "remoteE5PerRun": 42,
+        "remoteFrozenE4PerRun": 164,
+        "unresolvedReviewThreads": 0,
+        "fullRuntimeAccepted": false
+      },
+      "globalLeasePreparation": {
+        "status": "API_IMPLEMENTATION_IN_PROGRESS_OFFLINE_ONLY",
+        "baseHead": "97f6413da80f8c9075baf344b5e2bf3f8c221360",
+        "requestedSetting": "gpt-6-astra/high",
+        "protocolDraft": "docs/current/HACKATHON_TEST_E5_BRIDGE_PROTOCOL_DRAFT.ko.md",
+        "e4ReadOnlyReview": "NO_POLICY_CONFLICT_RESTRICTED_ISSUER_WITNESS_ADOPTION_LOOKUP_DETAILS_PENDING"
       }
     },
     {
@@ -610,7 +631,8 @@
       "accepted": true,
       "started": true,
       "sourceScope": "NEW_OWNED_LOCAL_RUNTIME_HASH_BOUND_READER_PRIVATE_DURABLE_ENVELOPE",
-      "stageAccepted": false
+      "stageAccepted": false,
+      "componentAcceptedHead": "0e6d4225e5b645e57e3988dc426937b08069ead8"
     },
     "apiE5B": {
       "baseHead": "d534f4bc3fbf56845239853cc947a496a97847a2",
@@ -621,6 +643,12 @@
       "sourceScope": "AUTHENTICATED_E3_CURRENT_CONTROLLER_API_SERVICE_HANDSHAKE_AND_SETTLEMENT_PREPARATION",
       "e4FinalHeadPending": true,
       "finalCombinedPushPermittedBeforeReviewedPins": false
+    },
+    "apiE5GlobalLease": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "started": true,
+      "scope": "OFFLINE_GLOBAL_RUNTIME_LEASE_AND_FENCE_ALIGNMENT_NOT_ACTUAL_DISPATCH"
     }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
@@ -682,5 +710,6 @@
     "publicHistory": "356_COMMITS_1885_BLOBS_FINDINGS_0",
     "actualE6AdapterAccepted": false
   },
-  "e5DevelopmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json"
+  "e5DevelopmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json",
+  "e5ServiceIntake": "specs/bootcamp/hackathon-test-e5-service-intake-v1.json"
 }

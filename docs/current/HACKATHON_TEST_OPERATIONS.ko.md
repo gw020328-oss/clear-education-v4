@@ -207,3 +207,9 @@ Draft PR97/head `cafbf3bd087104a34b3c3000885fdcd4674c4e21`·planHash `0x640a7876
 그러나 이 실행도 첫fetch/HTTP2xx1회 뒤 `E6_UV2_SERVICE_TIER`로 중단했다. v1/v2 총 실제fetch2, count0, 품질채점0이며 각 실행의나머지7건은NOT_RUN이다. 코드가uppercase STANDARD만허용한 반면 [공식 REST ServiceTier](https://ai.google.dev/api/generate-content#ServiceTier)는 소문자standard/unspecified/flex/priority를 정의한다. 이 wire 호환성검토누락을 인정하며, 미보존된실제tier값을소급추정하지 않는다. 추가유료호출은0으로멈춘다.
 
 다음 단위는 특정enum만바꿔곧바로다시8건을요청하는것이아니다. 정확REST의enum/optionalmetadata와모든guard를공식문서fixture로대조하고, 이미받은유효응답의메모리내품질평가와usage에따른후속dispatch중단을분리할수있는지오프라인으로검토한다. 비용N/A/부분품질과전체완료를구분하고과거raw가없는두응답을소급채점하지않는다. 새실행질문은root의이검토후에한곳에서조정하며, 기존승인/원장을재사용하거나자동재개하지않는다.
+
+### E5-A 서비스 최종 인수와 B 준비
+
+Draft PR95의 최종 `0e6d4225e5b645e57e3988dc426937b08069ead8`(구현bbadeff4)은 local42/42·exact-head CI8/8, 두전용실행의각각새42+기존E4 164 PASS, fail/cancel/skip0으로확인했다. root가공개source23개지문일치와깨끗한작업본,최종diff·고정진단·새블록거부·receipt색인조회처리를읽었고reviewthreads0/추가페이지없음을확인했다. [서비스인수v1](../../specs/bootcamp/hackathon-test-e5-service-intake-v1.json)은다음격리TEST연결용component만인수한다. 전체API/자동지급/E6 source/public-finalized/production인수는아니다. 기존3e11원격실패와미보존원인한계는남긴다.
+
+[E5 bridge 초안](HACKATHON_TEST_E5_BRIDGE_PROTOCOL_DRAFT.ko.md)은전역runtimelease/fence와intent별lease,제한issuer·canonical witness,불변거래인수·기존요청조회,별도claim job을구분한다. E4의Astra/High읽기전용검토에서정책충돌은발견하지않았으며포트의접근범위/재사용/기한을구체화해야한다. API소유자는97f후손에서전역권한기반을오프라인구현중이다. 실제B연결은그포트와새source핀/관련시험을인수한뒤수행하며원래승인정책의재질문은필요없다.
