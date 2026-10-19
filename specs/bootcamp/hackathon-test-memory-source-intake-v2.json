@@ -1,0 +1,66 @@
+{
+  "version": "clear-hackathon-test-memory-source-intake.2",
+  "date": "2026-10-19",
+  "status": "REVIEWED_FOR_SCOPED_MEMORY_COMPATIBILITY_TESTS_ONLY",
+  "purpose": "CONTINUE_HISTORICAL_MEMORY_BOUNDARY_WITH_REVIEWED_E5_METADATA_EXTENSION",
+  "commonRecordBase": "249f4bd2088cea687333f02fb2e18add2c15efcd",
+  "normativeBoundary": {
+    "head": "085878860d604095b0a6152329f8d82a445574b7",
+    "path": "specs/bootcamp/hackathon-test-boundary-intake-v1.json",
+    "sha256": "cfb42a8f559a54b94188df6f94cb7d67d9a7085b32990ce55968be62904c3fa0"
+  },
+  "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "acceptedE3StageHead": "c3b71c710f558529680e255222857f0e81fe1dcb",
+  "currentSourceCandidateHead": "d534f4bc3fbf56845239853cc947a496a97847a2",
+  "sourcePublicationState": "LOCAL_COMMIT_PENDING_OWNER_INTEGRATION",
+  "e3ArtifactSha256": {
+    "src/bootcamp/procedure.mjs": "91ec8afd7e6aa001bb25ff8e716d168eb37f0e39e6fd09824b535889848d764f",
+    "src/bootcamp/procedure-ledger.mjs": "db6d5a0273bb135c120828fc6ed32a4f1b6e2bb46182337908410948ada9035f",
+    "src/bootcamp/procedure-ports.mjs": "f6e51f4f23ccaf5d55f5754cd3308df13e3894dc282256556feae1613137bbfc",
+    "src/bootcamp/store.mjs": "db19b7fbfeec8ddf5cada6c53e4aff1d9c8857cd014eeb9d8ce2b8dd9df98f64",
+    "src/bootcamp/operations.mjs": "7228821abd7d8f1157e889a0bb9173e465afd7fa662e9c139d4eecff99b2e37d",
+    "src/bootcamp/http.mjs": "06c7b249e6cc0a876bda8de0ea99b42f3f1cc8fb53f4edec2a1efb7f36c5d7a9",
+    "docs/bootcamp-procedure/e4-port-proposal.json": "74f5472788fd3c807a931033e8e6383b8793f8b8f02be283d746e23bbab12f7e",
+    "docs/bootcamp-procedure/synthetic-intake-example.json": "309072d4eea6e3e8f7d233f13e9160621f89861a3099038987668b49d684b494"
+  },
+  "changedFromAcceptedE3": [
+    "src/bootcamp/store.mjs"
+  ],
+  "e2ConsumerInput": {
+    "path": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
+    "sha256": "7b7b63427e98e232a483af41418b551df854195bd083ef430b52df809af2d52d"
+  },
+  "review": {
+    "scope": "STORE_CONSTRUCTOR_MIGRATION_WRITER_AND_METADATA_SERVICE_CONNECTION_ONLY",
+    "newE5Tests": 44,
+    "existingE1E3Regression": 158,
+    "pass": 202,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "crashPoints": 5,
+    "independentProcessLeaseRace": "ONE_WIN_ONE_REFUSAL",
+    "migrationRollbackPoints": 2,
+    "newServiceDefault": "UNCONFIGURED_THEN_METADATA_ONLY",
+    "executionAuthorized": false,
+    "dispatchAuthorized": false,
+    "rootSourceReview": "NO_RAW_SOURCE_OR_PRIVATE_KEY_STORE_OR_HTTP_EXECUTION_AUTHORITY_ADDED",
+    "payoutOrChainExecution": false,
+    "finalCombinedCi": "PENDING_EXPLICIT_CONSUMER_PIN_AND_OWNER_HISTORY_INTEGRATION"
+  },
+  "allowedRuntimeKinds": [
+    "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS"
+  ],
+  "persistentRuntimeAllowedByThisIntake": false,
+  "fullRuntimeAccepted": false,
+  "existingV1GatesChanged": false,
+  "productionEnabled": false,
+  "consumerUpdateRequired": [
+    "KEEP_NORMATIVE_BOUNDARY_V1_FILE_AND_POLICY_UNCHANGED",
+    "PIN_THIS_V2_FILE_HASH_EXPLICITLY_AND_VERIFY_SCOPE_PROFILE_AND_BASE_BOUNDARY",
+    "VERIFY_CURRENT_E3_FILES_AGAINST_V2_SOURCE_SHA_TABLE_NOT_OLD_SOURCE_BYTES",
+    "RECORD_CURRENT_COMPATIBLE_SOURCE_HEAD_SEPARATELY_FROM_ACCEPTED_E3_STAGE_HEAD",
+    "KEEP_E2_AND_E4_PREPARATION_PIN_CHECKS_AND_DEFAULT_BLOCKED_ADAPTER",
+    "RUN_EXISTING_MEMORY_TESTS_WITH_CURRENT_SOURCE_AND_NEW_METADATA_TESTS_BEFORE_ACCEPTANCE"
+  ]
+}

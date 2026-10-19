@@ -159,3 +159,11 @@ E4 PR93 `17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b`은 로컬/PR/push 새48개 �
 root는 새 E4와 현재 공통/Moodle/AI 준비를 별도 임시 작업본에서 정상 이력 병합했다. 조합 `aeb53ee8ffb0b04618fdb854938f61db7234e9ae`의 E3전용47+E4메모리48=95/95, 취소/skip0, 원본191·graph·diff PASS, 공개이력356commits/1885blobs/findings0이다. 기존430·새95·개별 회귀66은 다른 실행 범위이며 합산하지 않는다. 실제 source·public RPC·persistent chain은0이고 실제 E6 adapter 인수는 아니다. 임시 SDK 링크는 검사 후 제거했으며 tracked tree는 clean이다.
 
 [별도 E5 개발 인수](../../specs/bootcamp/hackathon-test-e5-development-intake-v1.json)는 새 소유 격리 persistent local EVM·API outbox/worker·실행 reader·private durable envelope·backend-stop 직접 claim의 TEST 개발/검증만 허용한다. 기존 memory boundary-v1 scope/SHA와 default signer 차단은 보존하고 변경된 source에는 새 검토된 버전 입력을 사용한다. 실제 인터넷 원천·기존 사용자 키/환경·유료 모델·공개체인·production·main/develop 병합은 이 단위에 없다. E5 구현·지속 runtime의 최종 인수는 아직 false다.
+
+### E5-A API 메타데이터 로컬 검토와 memory 호환 입력v2
+
+API 소유 `d534f4bc3fbf56845239853cc947a496a97847a2`는 새44+기존E1/E3 158=202/202, 강제종료5지점·독립process lease1승/1거부·migration rollback2지점을 통과했다. root는 store 연결부와 새 원장/port/operation/worker/readback을 읽었다. 기본 UNCONFIGURED, 구성 후 METADATA_ONLY이고 모든 executionAuthorized/dispatchAuthorized는 false다. HTTP 실행경로·sign/broadcast/rebase는 아직 없다. source expiry 무효화는 command rollback과 분리하고, worker heartbeat는 업무sequence와진행중cap의원래만료를연장하지않는다.
+
+E3 지문8개 중 store.mjs 연결부1개만 변경됐다. [memory 호환 입력v2](../../specs/bootcamp/hackathon-test-memory-source-intake-v2.json)는 이 후보의 source SHA를 memory-only 호환시험용으로 고정한다. 과거 boundary-v1 자체 SHA/scope와 E2/준비 입력은 보존한다. E4 소비자가 새 파일hash를 명시적으로 인수하고 정상 이력 통합·memory48 및새metadata/기존회귀·exactCI를 완료한 뒤에만 통합 결과를 수락한다. 후보는 현재 local commit이며 아직 source PR/CI 공개 인수가 아니다.
+
+E5-B에는 실제 E3 현재 승인·서명/dispatch handshake, worker takeover 뒤원래SEALED자료를재서명없이연결할명시적binding, ACCEPT 후자동고정claim과별도claim상태/영수증복구가필요하다. claim에는onchain opId가없으므로일반operation mapping으로완료를판정하지않는다. accepted claim에새source/지급승인을요구하지않으며, 정상자동지급과intentional backend-stop 후직접claim을별도로검증한다.
