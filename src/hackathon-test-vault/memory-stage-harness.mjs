@@ -144,9 +144,9 @@ export async function createFreshMemoryStage(configuration={}){
   const target=f.store.inspectPreparedForE4(f.operatorContext,app,preparationId);await sent(vault.prepareUnsigned(op(),target.payload.message,current(app).application.version));await sync();
   const latest=f.store.inspectPreparedForE4(f.operatorContext,app,preparationId),h=Object.freeze({stage:MEMORY_STAGE,preparationId});
   handles.set(h,{app,preparationId,target:structuredClone(latest),expectedE3:cas(latest),expectedChain:{...cache.checkpoint,version:current(app).application.version.toString()}});return h;}
- async function recheck(h){
-  const owned=handles.get(h);check(owned,'STAGE_CAPABILITY_REQUIRED');await sync();const a=current(owned.app).application;
-  check(eq({...cache.checkpoint,version:a.version.toString()},owned.expectedChain),'STAGE_CHAIN_CAS');
+ // Synchronous authenticated read repeated immediately next to key use/output.
+ // An awaited chain read must not leave an unchecked E3 mutation before signing.
+ function authenticatedCurrent(owned){
   const r=f.store.inspectRegistrationForE4(f.operatorContext,owned.app,row(owned.app).registrationId);
   const t=f.store.inspectPreparedForE4(f.operatorContext,owned.app,owned.preparationId,owned.expectedE3);
   check(t.status==='UNSIGNED_PREFLIGHT_ONLY'&&eq(t.payload,owned.target.payload)&&r.record.sourceCurrentCommitment===t.sourceCurrentCommitment,'STAGE_E3_CURRENT');
@@ -154,25 +154,31 @@ export async function createFreshMemoryStage(configuration={}){
   check(eq(t.payload.domain,domain)&&m.token===tokenAddress&&m.runtimeMappingHash===pin.runtimeMappingHash&&m.policyHash===pin.policyHash&&m.amountAtoms==='100000000','STAGE_RUNTIME_TARGET');
   const inspection=createTestDraftInspector(t.snapshot,{clock:()=>cache.checkpoint.time}).inspect(t.payload,t.currentServerState);check(inspection.status==='UNSIGNED_PREFLIGHT_ONLY','STAGE_E2_CURRENT');
   check(p0Hash('E3-APP-CONSENT-SET',t.consentSet)===m.consentSetHash,'STAGE_CONSENT_RECIPE');
+  return {target:t,digest:inspection.hashes.digest};
+ }
+ async function recheck(h){
+  const owned=handles.get(h);check(owned,'STAGE_CAPABILITY_REQUIRED');await sync();const a=current(owned.app).application;
+  check(eq({...cache.checkpoint,version:a.version.toString()},owned.expectedChain),'STAGE_CHAIN_CAS');
+  const inspected=authenticatedCurrent(owned),m=inspected.target.payload.message;
   check(a.state===3n&&a.allocationId===m.allocationId&&!cache.paused&&cache.accounting.R>=AMOUNT,'STAGE_FULL_RESERVATION');
-  const checked=await vault.checkPrepared(m,{blockTag:Number(owned.expectedChain.number)});check(checked.digest===inspection.hashes.digest&&checked.canPay===false,'STAGE_PREPARED_DIGEST');
-  check((await provider.send('eth_getBlockByNumber',['latest',false])).hash===cache.checkpoint.hash,'STAGE_CHAIN_MOVED');return {owned,target:t,digest:inspection.hashes.digest};
+  const checked=await vault.checkPrepared(m,{blockTag:Number(owned.expectedChain.number)});check(checked.digest===inspected.digest&&checked.canPay===false,'STAGE_PREPARED_DIGEST');
+  check((await provider.send('eth_getBlockByNumber',['latest',false])).hash===cache.checkpoint.hash,'STAGE_CHAIN_MOVED');return {owned,...inspected};
  }
  async function sign(h){
   if(closed||busy)return freeze({status:'BLOCKED',code:closed?'STAGE_CLOSED':'STAGE_BUSY',signature:null});busy=true;let generated=false;
-  try{const first=await recheck(h);bump('keyProviderCalls');
+  try{const first=await recheck(h);authenticatedCurrent(first.owned);bump('keyProviderCalls');
    if(faults.providerFailure)throw Error('STAGE_PROVIDER_FAILURE');
    const p=structuredClone(first.target.payload);
    if(faults.providerWrongDomain){const k=faults.providerWrongDomain;p.domain[k]=k==='chainId'?'431710':k==='verifyingContract'?addresses[6].toLowerCase():k==='salt'?hexlify(randomBytes(32)):k==='version'?'99':'OtherDomain';}
    const signature=await wallet.signTypedData(p.domain,TYPES,p.message);generated=true;bump('signaturesGenerated');
    if(faults.duringSigning)await faults.duringSigning();
-   const final=await recheck(h);check(final.digest===first.digest,'STAGE_TARGET_CHANGED');
+   const final=await recheck(h);authenticatedCurrent(final.owned);check(final.digest===first.digest,'STAGE_TARGET_CHANGED');
    const sig=Signature.from(signature);check(signature.length===132&&[27,28].includes(sig.v)&&BigInt(sig.s)>0n&&BigInt(sig.s)<=HALF&&verifyTypedData(first.target.payload.domain,TYPES,first.target.payload.message,signature).toLowerCase()===pin.signerAddress,'STAGE_PROVIDER_SIGNATURE');
    bump('signaturesReturned');return freeze({status:'SIGNED_MEMORY_STAGE_ONLY',signature,digest:first.digest,payload:structuredClone(first.target.payload),chainCas:structuredClone(first.owned.expectedChain),e3Cas:structuredClone(first.owned.expectedE3)});
   }catch(e){if(generated)bump('signaturesDiscarded');return freeze({status:'BLOCKED',code:/^STAGE_[A-Z0-9_]+$/.test(e.message)?e.message:'STAGE_INTERNAL_CURRENT_REJECTED',signature:null});}
   finally{busy=false;}
  }
- async function accept(h,result,operation=op()){const checked=await recheck(h);check(result.status==='SIGNED_MEMORY_STAGE_ONLY'&&result.digest===checked.digest&&eq(result.payload,checked.target.payload),'STAGE_SIGNED_TARGET');
+ async function accept(h,result,operation=op()){const checked=await recheck(h);authenticatedCurrent(checked.owned);check(result.status==='SIGNED_MEMORY_STAGE_ONLY'&&result.digest===checked.digest&&eq(result.payload,checked.target.payload),'STAGE_SIGNED_TARGET');
   const tx=await vault.connect(accounts[2]).accept(operation,result.payload.message,result.signature,BigInt(checked.owned.expectedChain.version)),receipt=await tx.wait();row(checked.owned.app).lastTransactionHash=tx.hash;bump('accepts');await sync();return receipt;}
  async function claim(app,caller=5){const tx=await vault.connect(accounts[caller]).claim(row(app).registrations.at(-1).opaqueTarget.applicationId),receipt=await tx.wait();row(app).lastTransactionHash=tx.hash;bump('claims');await sync();return receipt;}
  async function observe(app,patch={}){await sync();const a=current(app).application,r=row(app).registrations.at(-1);

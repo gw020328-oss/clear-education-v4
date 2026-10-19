@@ -241,3 +241,17 @@ test('initialization failure after store creation closes both owned databases',a
  try{await assert.rejects(()=>createFreshMemoryStage(),/INJECTED_VM_CONSTRUCTION_FAILURE/);assert.equal(closed,2);assert.deepEqual(memoryStageTotals(),before);}
  finally{Object.defineProperty(ganache,'provider',vm);db.mock.restore();}
 });
+
+for(const phase of ['before-key','after-sign'])test('E3 withdrawal during awaited chain read at '+phase+' is fenced synchronously',async t=>{
+ const f=await setup(t),h=await f.ready(),send=f.provider.send.bind(f.provider),selector=f.vault.interface.getFunction('checkPrepared').selector;
+ let armed=phase==='before-key',changed=false;
+ if(phase==='after-sign')f.faults.duringSigning=async()=>{armed=true;};
+ f.provider.send=async(method,args)=>{
+  const result=await send(method,args);
+  if(armed&&!changed&&method==='eth_call'&&args[0].data.startsWith(selector)){changed=true;f.consent(f.firstApp,'operator','WITHDRAW');}
+  return result;
+ };
+ const result=await f.sign(h);assert.equal(changed,true);assert.equal(result.status,'BLOCKED');assert.equal(result.signature,null);
+ assert.equal(f.metrics.keyProviderCalls,phase==='before-key'?0:1);
+ assert.equal(f.metrics.signaturesDiscarded,phase==='before-key'?0:1);
+});
