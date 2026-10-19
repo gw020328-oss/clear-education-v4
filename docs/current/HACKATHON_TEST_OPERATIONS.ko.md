@@ -143,3 +143,9 @@ E3 PR89 `c3b71c710f558529680e255222857f0e81fe1dcb`은 기존 구현 `fb9e6d3`와
 E4 실행 준비 PR93 `9dd69ca47e41d2b419b961ede30eafd00c3585e7`은 별도 실행 계약과 기본 차단 signer의 새66개 검사만 완료했다. E3 새 head를 추가 병합한 후보는 `ab02b2846c224d8f28cd7bf497aa9582b955c909`이며 해당 CI와 양성 실행 결과를 별도 인수한다. 이전22개 미실행 계획을 완료 결과로 세지 않는다. 기존 PR88 비지급 준비50개와 artifact도 보존한다.
 
 E4 새 양성 단위는 기존 Reclaim 세션에 Astra/High로 전달했고 시작을 확인했다. E3 이력 병합 후 실행 준비 `ab02b28`의 exact-head CI6/6과 E4/E2 소유 파일 보존도 확인했다. 66개 compile/차단 검사를 반복하지 않고 새 메모리 EVM 양성·반례를 추가한다. 기존 API 세션은 E5 읽기 전용 준비만 완료했으며 구현·트랜잭션은 시작하지 않았다. [E5 복구 경계 사전 검토](HACKATHON_TEST_E5_BOUNDARY_PREPARATION.ko.md)는 동기 DB/RPC 분리, immutable intent와 정확 전송 자료, worker fencing, INCLUDED/FINALIZED·reorg 재기준 및 accepted-first 직접 청구의 인수 조건을 정리한다. E4 최종 포트 인수 전 완료 구현으로 세지 않는다.
+
+### E4 첫 실행 묶음과 E5 복구 검토 checkpoint
+
+E4 새 memory suite 최초 실행은36개 중32통과/4실패(약91초), 취소·skip0이다. 같은 실행의37새instance·32서명생성/22반환/10폐기·6accept/3claim은 그 실행의 계측이며 이전 단일 성공이나 기존66과 합산하지 않는다. 실제 원천/외부RPC/persistent chain0이다. 실패는 부족 거부 사유가 estimateGas 오류에 가려진2건, 실패 거래의 새 블록으로 옛 stage CAS가 올바르게 거부된1건, ethers Result Proxy 값 비교1건이다. 원래로그 지문을 인수표에 보존했고, 근거에 맞춘 시험 수정 전 이 묶음을 수락하지 않는다. 새 checkout의 metric 부모 디렉터리 생성 문제도 root 검토에서 확인했다.
+
+E5 추가 Astra/High 읽기 전용 검토는 관측 generation과 실제 contract epoch/worker fence를 분리하고, 이미 외부로 나간 거래를 DB 세대 변경으로 취소했다고 주장하지 않도록 정리했다. 등록/배정이 reorg로 사라져 고정 공개 시각을 복원할 수 없으면 RECOVERY_BLOCKED이며120/600을 새로 시작하지 않는다. FINALIZED 충돌은 자동 재기준화가 아니다. 내구 envelope·blockHash 결합·원천/동의의 새 계보 membership과 결정적 중단 반례를 [E5 사전 검토](HACKATHON_TEST_E5_BOUNDARY_PREPARATION.ko.md)에 추가했으나 구현/실행 인수는 아직 아니다.

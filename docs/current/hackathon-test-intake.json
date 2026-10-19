@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 7,
+  "repositoryPlanRevision": 8,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -126,7 +126,8 @@
         "payoutAuthorizationSignatures": 0,
         "accepts": 0,
         "claims": 0,
-        "recipientPayments": 0
+        "recipientPayments": 0,
+        "scope": "HISTORICAL_NON_PAYOUT_PREPARATION_CHECKPOINT"
       },
       "preparationAcceptedHead": "d287b3789a678a1e6984b583e4c85859e9e97a22",
       "pullRequest": 88,
@@ -142,6 +143,42 @@
         "acceptedForFullRuntime": false,
         "historyMergedHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
         "remoteCi": "6_OF_6_SUCCESS"
+      },
+      "memoryExecution": {
+        "status": "FIRST_SUITE_32_PASS_4_FAIL_REPAIR_PENDING_NOT_ACCEPTED",
+        "firstSuite": {
+          "tests": 36,
+          "pass": 32,
+          "fail": 4,
+          "cancelled": 0,
+          "skipped": 0,
+          "durationMs": 91164.207459,
+          "metrics": {
+            "instances": 37,
+            "executionDeployments": 37,
+            "tokenDeployments": 37,
+            "keyProviderCalls": 33,
+            "signaturesGenerated": 32,
+            "signaturesReturned": 22,
+            "signaturesDiscarded": 10,
+            "accepts": 6,
+            "claims": 3,
+            "actualSources": 0,
+            "externalRpc": 0,
+            "persistentChains": 0
+          },
+          "countsAreThisRunOnly": true,
+          "logSha256": "49ca6ca454c5179c07b82cf2e2a6254600d6f9085805c093263a9628a74c2493",
+          "diagnosis": [
+            "TWO_EXPECTED_SHORTFALL_REASONS_HIDDEN_BY_ESTIMATE_GAS_ERROR",
+            "MINED_FAILED_TRANSACTION_CORRECTLY_INVALIDATES_OLD_STAGE_CHAIN_CAS",
+            "ETHERS_RESULT_PROXY_EQUALITY_REQUIRES_PLAIN_VALUE_COMPARISON"
+          ]
+        },
+        "rootReviewAdditionalIssue": "METRICS_OUTPUT_PARENT_NOT_CREATED_IN_CLEAN_CHECKOUT",
+        "outOfScopeHistoricalResponseAccepted": false,
+        "acceptedForE5": false,
+        "existingPrivateKeysRead": 0
       }
     },
     {
@@ -164,7 +201,9 @@
           "SIGNER_AND_DURABLE_ENVELOPE_CAPABILITY",
           "AUTHENTICATED_CANONICAL_REORG_REBASE_PROTOCOL",
           "INDEPENDENT_PERSISTENT_CHAIN_LIFECYCLE"
-        ]
+        ],
+        "sensitiveReviewRequestedSetting": "gpt-6-astra/high",
+        "sensitiveReadOnlyReviewComplete": true
       }
     },
     {

@@ -55,3 +55,30 @@ E3 동기 transaction에 async callback/RPC를 넣지 않는다. enqueue 당시 
 새 소유 persistent EVM을 backend와 별도 lifecycle로 보존한다. accept 후 backend/worker/signer를 중단하고 별도 anycaller가 source·새 서명·현재 key 없이 고정 recipient에게100을 한 번만 청구하는지 확인한다. backend 재시작 readback·동시/중복 claim·응답 유실·reorg는 각각 검증한다. 메모리 EVM 결과는 이 검증을 대신하지 않는다. 기존 사용자 DB·체인·키·volume은 초기화하지 않는다.
 
 이 문서 자체의 실행·서명·지급·원천 수락은0이다. E4 양성 및 E5 최종 포트 인수 전의 준비 기록이며 기존 v1/상용 차단을 변경하지 않는다. main/develop 병합·배포는 포함하지 않는다.
+
+## Astra/High 복구 검토 추가 — 여전히 미구현
+
+기존 API 세션의 별도 Astra/High 읽기 전용 검토는 관측 재기준화와 거래 재실행을 분리하도록 결론냈다. 다음은 E5 구현 전 확정해야 하는 내부 계약이다.
+
+- 금고 단위 `runtimeLineageGeneration`, 계보 안의 실제 block hash/number·contract version/epoch, 독립 `workerFence`를 분리한다. 실제 chain epoch/version에 가상 숫자를 더하지 않는다. 인증된 ancestry와 이전 canonical 이탈 근거 없이 RPC 오류·낮은 버전만으로 새 계보를 만들지 않는다.
+- CAS로 기존 계보를 닫고 OBSERVATION_INVALIDATED/REBASE_PENDING을 추가한다. E4 저장소의 fence 반영과 새 canonical 전체 상태 확인이 모두 끝나기 전에는 실행하지 않는다. 두 저장소 사이 원자성을 주장하지 않는다. FINALIZED로 인정한 checkpoint와 충돌하면 자동 재기준화 대신 정지한다.
+- 과거 source/consent/preparation/envelope는 새 계보의 권한으로 자동 승격하지 않는다. source 취득시각·expiry, 원래 공개·120/600, business 재검증 횟수와 불변 decisionHash는 유지한다. 옛 권한 nonce도 재발급하지 않는다.
+- 기존 준비 전용 port를 실제 실행 port로 이름만 바꾸지 않는다. 새 내부 실행 projection/CAS와 활성 계보 membership을 버전 분리하며 기존 HTTP/.3의24필드 wire를 보존한다.
+
+현재 실행 계약은 publication이 allocation/target 기록 시각 이후여야 한다. reorg로 등록·배정이 사라진 뒤 새 블록에서 복원하면 기존 고정 공개 시각을 만족하지 못할 수 있다. 최소 복구는 이 경우 RECOVERY_BLOCKED로 남긴다. 공개 시각·firstStart·600초를 새로 시작하거나 새 절차를 만들어 우회하지 않는다. startReview만 사라지고 배정/target 시각이 기존 공개 이전이면 남은 고정 창을 만족하는 재실행을 별도로 검증한다.
+
+canonical accept가 사라진 경우는 현재 수락 권리가 없고, accept가 남아 claim만 사라진 경우는 source/새 지급 승인 없이 다시 청구할 권리가 남는다. canonical SETTLED는 정산 완료를 유지한다. orphan 관측은 REORGED 이력으로 남기되 현재 완료 표시로 쓰지 않는다. accepted-first 권리 보존은 현재 canonical 이력의 수락을 뜻하며 모든 분기의 orphan 거래가 영구 유효하다는 보장이 아니다.
+
+관측 세대와 fencing은 이미 외부로 나간 서명을 체인에서 취소하지 못한다. 과거 epoch/version/prepared/nonce가 돌아오는 ABA에서는 옛 서명이 다시 유효할 수 있다. 실제 canonical 무효화 거래와 accept의 순서 및 계약 조건으로 판정하며, API 세대 전환만으로 모든 분기의 재실행을 막았다고 주장하지 않는다.
+
+### 내구 envelope의 추가 합격 조건
+
+opaque ref는 bearer 권한이 아니다. E4가 내부 호출자·command·generation/fence를 인증한다. API worker에는 .3 signature/raw signed transaction을 반환하지 않는다. 정확 bytes를 내구 저장하고 sender/chainId/to/value/nonce/calldata/txHash를 역검증한 SEALED 이후 같은 요청 ID는 동일 manifest만 반환한다. API의 ref commit 확인 후 현재성 재검사와 영속 SEND_STARTED를 거쳐 broadcast한다. 서로 다른 nonce(계정 거래 nonce와 .3 권한 nonce)를 혼동하지 않는다.
+
+UNKNOWN의 자동 교체·취소·수수료 인상은 최소 구현에서 제외한다. 별도 dispatch 기한·복구 bytes 보존기한·비밀 삭제/실패·비밀 없는 tombstone 보존을 명시하고 source 원문의 보존정책에서 자동 유추하지 않는다. 삭제/TTL은 이미 유출·전송된 raw transaction을 무효화하지 않는다. fence 수락 후 옛 worker의 새 dispatch는 막지만 이미 시작된 전송은 나중에 채굴될 수 있다.
+
+### 블록 결합과 실행 환경의 준비 상태
+
+블록 높이 조회의 앞뒤 hash 비교만으로는 중간에 분기가 바뀌었다 돌아오는 ABA를 배제할 수 없다. [EIP-1898](https://eips.ethereum.org/EIPS/eip-1898)은 이 문제와 blockHash/requireCanonical 선택자를 명시한다. 실행 reader는 지원되는 블록 hash 결합을 실제 확인하고, 지원하지 않는 조회를 같은 보장으로 표시하지 않아야 한다.
+
+현재 설치된 Ganache7.9.2의 선언은 eth_call blockNumber에 QUANTITY/Tag만 표시한다. 이는 런타임 지원 여부의 완전한 증거가 아니며 실제 capability probe는 E5 단위에서 수행한다. 읽기 전용 inventory에서 anvil/geth 실행 파일은 없고 Docker는 있었다. 대안인 [Geth 개발 모드](https://geth.ethereum.org/docs/developers/dapp-developer/dev-mode)는 외부 peer 없는 로컬 개발망이며, [공식 RPC 문서](https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-eth)는 EIP-1898 선택자를 설명한다. [공식 container 배포](https://geth.ethereum.org/docs/getting-started/installing-geth)를 선택한다면 새 소유 환경·고정 image digest·독립 volume·loopback만 사용한다. 이번 준비에서는 image pull·새 chain 시작·외부 RPC를 하지 않았다.
