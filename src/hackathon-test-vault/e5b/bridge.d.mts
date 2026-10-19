@@ -130,13 +130,24 @@ export interface RuntimeManifest {
  checkpoint: {number: Decimal; hash: Hex}; blockHashCapability: unknown;
 }
 export interface ApiBridge {
- version: 'clear-e5-api-bridge.1'; runtime: DeepReadonly<{runtimeHash: Hex; manifest: RuntimeManifest}>;
- reader: {observe(command: Command): Promise<{observation: CanonicalObservation; businessHash: Hex}>};
+ version: 'clear-e5-api-bridge.1'; runtime: DeepReadonly<{runtimeHash: Hex; manifest: RuntimeManifest; vaultScope: {chainId: Decimal; vaultAddress: Hex; instanceId: Hex}; authorityScope: FenceQuery}>;
+ reader: {observe(command: Command): Promise<{observation: CanonicalObservation; businessHash: Hex}>;
+  compare(input: {previous: Checkpoint; current: Checkpoint}): Promise<{status: 'CANONICAL_ANCESTOR'; previous: Hex; current: Hex} | {status: 'REORG_PROVEN_RECOVERY_BLOCKED'; oldHash: Hex; replacementHash: Hex; currentHash: Hex; commonAncestor: Checkpoint; automaticRebase: false}>;
+ };
  worker: Readonly<WorkerPorts>;
- owner: {bindController(factory: ControllerFactory): void; close(): void;
+ owner: {fenceReader: FenceReader; bindController(factory: ControllerFactory): void; close(): void;
   metrics(): {keyAccesses: number; paymentSignatures: number; transactionSignatures: number; broadcasts: number};
   prune(request: ReferenceRequest): {ref: string; status: EnvelopeState; secretDeletion: 'DELETED'; nonceRetained: true; invalidatesBroadcast: false};
  };
 }
+export interface FenceQuery {runtimeId: string; runtimePinHash: Hex; scopeKey: Hex}
+export interface FenceWitness extends FenceQuery {version: 'clear-bootcamp-runtime-fence-witness.1'; highestFence: number}
+/** Capture this owner-only reader in the API constructor; mandatory before acquire.
+ * E4 scopeKey = SHA256(canonical({chainId, vaultAddress, instanceId})). The API
+ * adapter must explicitly consume this mapping; old metadata projections differ.
+ * Highest fence comes from the E4 database, never a query value. No transaction
+ * in the API may be held across read; API owns the post-await CAS and 5s lifetime.
+ */
+export interface FenceReader {readonly version: 'clear-bootcamp-runtime-fence-reader.1'; read(query: FenceQuery): Promise<DeepReadonly<FenceWitness>>}
 /** Trusted owner only; never accept environment/clock/cut from an HTTP body. */
 export function openOwnedApiBridge(configuration: {environmentId: string; clock?: () => UnixSeconds; cut?: (phase: string, ownedPrivateRow: unknown) => void}): Readonly<ApiBridge>;

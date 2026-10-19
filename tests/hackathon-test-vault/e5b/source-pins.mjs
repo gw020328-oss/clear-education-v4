@@ -1,0 +1,18 @@
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {stripTypeScriptTypes} from 'node:module';
+import assert from 'node:assert/strict';
+const root=new URL('../../../',import.meta.url);
+const read=p=>readFileSync(new URL(p,root));
+const digest=p=>createHash('sha256').update(read(p)).digest('hex');
+const pins=JSON.parse(read('docs/hackathon-test-vault/e5b/source-pins.json'));
+assert.equal(pins.version,'clear-e5b-component-source-pins.1');
+assert.equal(pins.actualApiConnected,false);assert.equal(pins.fullE5Accepted,false);
+for(const [path,expected]of Object.entries(pins.sourceArtifactSha256))assert.equal(digest(path),expected,path);
+for(const [path,expected]of Object.entries(pins.immutableInputs))assert.equal(digest(path),expected,path);
+const v4=JSON.parse(read('specs/bootcamp/hackathon-test-memory-source-intake-v4.json'));
+assert.equal(v4.currentSourceCandidateHead,'4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0');
+const current={...v4.e3ArtifactSha256,...v4.additionalSourceArtifactSha256};assert.equal(Object.keys(current).length,17);
+for(const [path,expected]of Object.entries(current))assert.equal(digest(path),expected,path);
+stripTypeScriptTypes(read('src/hackathon-test-vault/e5b/bridge.d.mts').toString());
+console.log(JSON.stringify({componentArtifacts:Object.keys(pins.sourceArtifactSha256).length,immutableInputs:Object.keys(pins.immutableInputs).length,reviewedV4Sources:17,declarationSyntax:'PASS_NOT_FULL_TSC',actualApiConnected:false}));

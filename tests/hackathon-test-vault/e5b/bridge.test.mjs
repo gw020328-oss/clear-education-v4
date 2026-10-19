@@ -14,6 +14,18 @@ const metadata=f=>new DatabaseSync(join(f.dir,'envelopes','metadata.sqlite'),{re
 const savedRow=(f,ref)=>{const db=metadata(f);try{return JSON.parse(db.prepare('SELECT record FROM envelopes WHERE ref=?').get(ref).record);}finally{db.close();}};
 const secretHash=(f,ref)=>sha(readFileSync(join(f.dir,'envelopes',ref+'.json'),'utf8'));
 
+test('owner fence witness reads the separate durable E4 counter with exact scope before controller bootstrap',async t=>{
+ const f=await bridgeFixture(t),query=f.bridge.runtime.authorityScope,unbound=openOwnedApiBridge({environmentId:f.f.id});
+ assert.equal(query.runtimeId,f.f.id);assert.equal(query.runtimePinHash,f.bridge.runtime.runtimeHash);assert.equal(query.scopeKey,sha(f.bridge.runtime.vaultScope));
+ assert.equal((await unbound.owner.fenceReader.read(query)).highestFence,0);unbound.owner.close();
+ assert.equal(f.bridge.worker.fenceReader,undefined);assert.equal(f.bridge.reader.fenceReader,undefined);
+ const req=await f.request(command('approve',[f.f.m.vaultAddress,'1']));await f.refresh(req);const issued=await f.bridge.owner.fenceReader.read(query);assert.equal(issued.highestFence,2);
+ f.restart();assert.deepEqual(await f.bridge.owner.fenceReader.read(query),issued);assert.equal(f.bridge.owner.metrics().keyAccesses,0);
+ for(const key of ['runtimeId','runtimePinHash','scopeKey'])await assert.rejects(()=>f.bridge.owner.fenceReader.read({...query,[key]:'wrong'}),/E5B_FENCE_SCOPE/);
+ await assert.rejects(()=>f.bridge.owner.fenceReader.read({...query,highestFence:0}),/E5B_FENCE_QUERY/);
+ assert.equal((await f.bridge.owner.fenceReader.read(query)).highestFence,2);assert(Object.isFrozen(issued));
+});
+
 test('one-time bootstrap, restricted issuer and first seal have no callback recursion or exposed secrets',async t=>{
  const f=await bridgeFixture(t),unbound=openOwnedApiBridge({environmentId:f.f.id});
  assert.throws(()=>unbound.worker.lookup({}),/E5B_CONTROLLER_UNBOUND/);unbound.owner.bindController(f.factory);assert.throws(()=>unbound.owner.bindController(f.factory),/E5B_CONTROLLER_ALREADY_BOUND/);unbound.owner.close();
@@ -66,6 +78,17 @@ test('private witness clone/replay, general signing and reentrant worker calls c
  const req=await f.request(command('approve',[f.f.m.vaultAddress,'1']));assert(req.capability);assert.throws(()=>f.state.ports.issuer.capability(stolen),/E5B_ISSUER_SCOPE/);assert.equal(f.bridge.owner.metrics().keyAccesses,0);
 });
 
+test('registered reader proof rejects invented anchor number or time even with an actual block hash',async t=>{
+ const f=await bridgeFixture(t),req=await f.request(command('approve',[f.f.m.vaultAddress,'1']));
+ for(const field of ['number','time']){
+  const binding=structuredClone(req.binding);binding.anchor[field]=String(BigInt(binding.anchor[field])+1n);
+  await assert.rejects(()=>f.bridge.worker.authorize({binding,command:req.command}),/E5B_ANCHOR_METADATA/);
+  await assert.rejects(()=>f.bridge.reader.compare({previous:binding.anchor,current:req.binding.anchor}),/E5B_ANCHOR_METADATA/);
+ }
+ assert.equal((await f.bridge.reader.compare({previous:req.binding.anchor,current:req.binding.anchor})).status,'CANONICAL_ANCESTOR');
+ assert.equal(f.bridge.owner.metrics().keyAccesses,0);assert.equal(f.bridge.owner.metrics().broadcasts,0);
+});
+
 test('new authority cannot extend original business expiry; recovery remains source-independent',async t=>{
  const f=await bridgeFixture(t),req=await f.request(command('approve',[f.f.m.vaultAddress,'1'])),sealed=await f.bridge.worker.seal(req),original=savedRow(f,sealed.ref);f.state.clockOffset=121;
  await assert.rejects(()=>f.refresh(req),/E5B_BUSINESS_EXPIRED/);f.state.current=false;const recovery=await f.refresh(req,{purpose:'RECOVER'});assert.equal(f.bridge.worker.lookup(recovery).envelope.ref,sealed.ref);assert.equal(savedRow(f,sealed.ref).businessValidUntil,original.businessValidUntil);
@@ -107,7 +130,8 @@ test('real child exit after SEND_STARTED survives restart without rebroadcast or
 
 test('actual retained-orphan reorg stops B adoption and survives bridge restart',async t=>{
  const f=await bridgeFixture(t),cmd=command('approve',[f.f.m.vaultAddress,'1']),req=await f.request(cmd),sealed=await f.bridge.worker.seal(req),adoption=await f.bridge.worker.adopt({...req,...sealed});f.commit(adoption);
- await retainedOrphan({...f.f,service:{track:async observation=>{const concurrent=await f.request(command('approve',[f.f.m.vaultAddress,'2']));assert.equal(concurrent.binding.anchor.hash,observation.checkpoint.hash);await assert.rejects(()=>f.bridge.worker.seal(concurrent),/E5_ROLE_NONCE_BUSY/);}}});
+ let orphan;await retainedOrphan({...f.f,service:{track:async observation=>{orphan=observation.checkpoint;const concurrent=await f.request(command('approve',[f.f.m.vaultAddress,'2']));assert.equal(concurrent.binding.anchor.hash,observation.checkpoint.hash);await assert.rejects(()=>f.bridge.worker.seal(concurrent),/E5_ROLE_NONCE_BUSY/);}}});
+ const current=(await f.bridge.reader.observe(cmd)).observation.checkpoint;assert.equal((await f.bridge.reader.compare({previous:orphan,current})).status,'REORG_PROVEN_RECOVERY_BLOCKED');
  await assert.rejects(()=>f.bridge.worker.dispatch({...req,...sealed,adoptionId:adoption.adoptionId,adoptionHash:adoption.adoptionHash}),/E5_RECOVERY_BLOCKED/);f.restart();const fresh=await f.refresh(req,{purpose:'RECOVER'});assert.equal((await f.bridge.worker.recover({...fresh,...sealed})).status,'RECOVERY_BLOCKED');assert.equal(f.bridge.owner.metrics().keyAccesses,0);assert.equal(f.bridge.owner.metrics().broadcasts,0);
 });
 

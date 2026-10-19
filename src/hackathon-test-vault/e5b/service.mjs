@@ -5,7 +5,8 @@ import {Transaction,TypedDataEncoder,verifyTypedData,keccak256} from 'ethers';
 import {OwnedExecutionService,RETENTION,verifyCertificate} from '../e5/envelope-service.mjs';
 import {ownedTestWallet} from '../e5/environment.mjs';
 import {atomicPrivate,ensure,sha,json} from '../e5/private-storage.mjs';
-import {businessHashFor,ZERO} from '../e5/reader.mjs';
+import {businessHashFor,checkpoint,ZERO} from '../e5/reader.mjs';
+import {exactKeys} from '../../policy/values.mjs';
 import {TYPES} from '../../bootcamp-authorization/test-schema-v3.mjs';
 import {validateWindowShape,validateBusinessWindow} from './business-window.mjs';
 const recoveryPhases=new Set(['RECOVER','RECOVER_FINAL_SYNC','RETENTION','LOOKUP']);
@@ -19,6 +20,7 @@ export class BridgeExecutionService extends OwnedExecutionService {
  validateBinding(binding,command){
   ensure(binding?.version==='clear-e5-execution-capability.2'&&['EXECUTE','RECOVER'].includes(binding.purpose),'E5B_BINDING_VERSION');
   const {business,purpose,...v1}=binding;super.validateBinding({...v1,version:'clear-e5-execution-capability.1'},command);validateWindowShape(business);this.command(command);this.commands.set(binding.commandHash,structuredClone(command));
+  exactKeys(binding.anchor,['hash','number','time'],'E5B_ANCHOR_SHAPE');ensure(typeof binding.anchor.time==='string'&&/^(0|[1-9][0-9]*)$/.test(binding.anchor.time),'E5B_ANCHOR_TIME');
  }
  row(ref){const row=super.row(ref);ensure(row.version==='clear-e5-private-envelope.2','E5B_LEGACY_ENVELOPE_READ_ONLY');return row;}
  fence(binding,{recovery=false}={}){
@@ -32,6 +34,7 @@ export class BridgeExecutionService extends OwnedExecutionService {
   observation.executionBusinessHash=businessHashFor(command,observation);observation.operationMethod=command.method;
   ensure(observation.executionBusinessHash===binding.businessHash,'E5_BUSINESS_CHANGED');
   const ancestry=await this.reader.ancestry(binding.anchor,observation.checkpoint);await this.reader.checkCommand(command,observation);
+  ensure(sha(checkpoint(await this.reader.block(binding.anchor.hash)))===sha(binding.anchor),'E5B_ANCHOR_METADATA');
   validateBusinessWindow(binding.business,command,observation,this.clock());
   this.proofs.set(observation,{kind:'REGISTERED_CANONICAL_READER',runtimeHash:this.runtimeHash,query,anchor:structuredClone(binding.anchor),current:structuredClone(observation.checkpoint),businessHash:binding.businessHash,commandHash:binding.commandHash,bindingHash:sha(binding),ancestry});
   return observation;

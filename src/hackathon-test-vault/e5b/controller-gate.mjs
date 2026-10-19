@@ -17,6 +17,7 @@ export function controllerGate(environmentId,runtimeHash){
  };
  const ports=Object.freeze({witnesses:Object.freeze({consume}),issuer:Object.freeze({capability:ticket=>issue('capability',ticket),current:ticket=>issue('current',ticket),commit:ticket=>issue('commit',ticket)})});
  return Object.freeze({
+  assertIdle(){ensure(!active,'E5B_CONTROLLER_REENTRANT');},
   assertBound(){ensure(controller,'E5B_CONTROLLER_UNBOUND');ensure(!active,'E5B_CONTROLLER_REENTRANT');},
   bind(factory){ensure(!attempted,'E5B_CONTROLLER_ALREADY_BOUND');attempted=true;ensure(typeof factory==='function','E5B_CONTROLLER_FACTORY');const next=factory(ports);if(next?.then)Promise.resolve(next).catch(()=>{});ensure(next&&!next.then&&['authorizeSync','readCurrentSync','commitCurrentSync'].every(k=>typeof next[k]==='function'),'E5B_CONTROLLER_SHAPE');controller=Object.freeze(Object.fromEntries(['authorizeSync','readCurrentSync','commitCurrentSync'].map(k=>[k,next[k].bind(next)])));},
   invoke(kind,{binding,command,observation,proof,phase,payload,reference=null}){
