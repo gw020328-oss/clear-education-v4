@@ -8,6 +8,7 @@ import {randomUUID,randomBytes} from 'node:crypto';
 import {Interface,Wallet,ContractFactory,JsonRpcProvider,keccak256,hexlify,TypedDataEncoder} from 'ethers';
 import {atomicPrivate,readPrivate,privateDirectory,ensure,sha} from './private-storage.mjs';
 import {loopbackRpc,blockHashCapability} from './rpc.mjs';
+import {waitSetupReceipt} from './setup-receipt.mjs';
 import {buildExecution} from '../../../tests/hackathon-test-vault/execution-build.mjs';
 import {buildPreparation} from '../../../tests/hackathon-test-vault/build.mjs';
 import {P0_POLICY,p0PolicyHash} from '../../../specs/bootcamp/p0-contract.mjs';
@@ -44,11 +45,11 @@ export async function createEnvironment({testAfterStarted=()=>{}}={}){
   const provider=new JsonRpcProvider(record.endpoint,undefined,{cacheTimeout:-1,batchMaxCount:1});provider.pollingInterval=50;
   try{
    const tokenBuild=buildPreparation().ClearTestToken,build=buildExecution();
-   const token=await new ContractFactory(tokenBuild.abi,tokenBuild.bytecode,wallets.depositor.connect(provider)).deploy(10000000000n);await token.waitForDeployment();
+   const token=await new ContractFactory(tokenBuild.abi,tokenBuild.bytecode,wallets.depositor.connect(provider)).deploy(10000000000n);const tokenReceipt=await waitSetupReceipt(provider,token.deploymentTransaction().hash);ensure(tokenReceipt.contractAddress?.toLowerCase()===(await token.getAddress()).toLowerCase(),'E5_SETUP_DEPLOYMENT_ADDRESS');
    const roles=Object.fromEntries(roleNames.slice(0,6).map(k=>[k,addresses[k]])),instanceId=hexlify(randomBytes(32));
-   const vault=await new ContractFactory(build.contract.abi,'0x'+build.contract.evm.bytecode.object,wallets.registrar.connect(provider)).deploy(await token.getAddress(),instanceId,p0PolicyHash(P0_POLICY),DEFAULT_MAPPING_HASH,roles);await vault.waitForDeployment();
+   const vault=await new ContractFactory(build.contract.abi,'0x'+build.contract.evm.bytecode.object,wallets.registrar.connect(provider)).deploy(await token.getAddress(),instanceId,p0PolicyHash(P0_POLICY),DEFAULT_MAPPING_HASH,roles);const vaultReceipt=await waitSetupReceipt(provider,vault.deploymentTransaction().hash);ensure(vaultReceipt.contractAddress?.toLowerCase()===(await vault.getAddress()).toLowerCase(),'E5_SETUP_DEPLOYMENT_ADDRESS');
    const tokenAddress=(await token.getAddress()).toLowerCase(),vaultAddress=(await vault.getAddress()).toLowerCase(),keyId=hexlify(randomBytes(32));
-   await (await vault.connect(wallets.keyAdmin.connect(provider)).registerKey(hexlify(randomBytes(32)),keyId,addresses.initialSigner)).wait();
+   const registration=await vault.connect(wallets.keyAdmin.connect(provider)).registerKey(hexlify(randomBytes(32)),keyId,addresses.initialSigner);await waitSetupReceipt(provider,registration.hash);
    const domain={name:'ClearBootcampTestPayment',version:'3',chainId,verifyingContract:vaultAddress,salt:instanceId},actualRoles=await vault.roles();
    ensure(roleNames.slice(0,6).every((k,i)=>actualRoles[i].toLowerCase()===roles[k]),'E5_ROLE_READBACK');
    const block=await rpc('eth_getBlockByNumber',['latest',false]);

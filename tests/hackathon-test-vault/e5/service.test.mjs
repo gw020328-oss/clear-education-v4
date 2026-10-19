@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {spawn,spawnSync} from 'node:child_process';
+import {spawnSync} from 'node:child_process';
 import {join} from 'node:path';
 import {lstatSync,mkdirSync,renameSync,existsSync,readFileSync,writeFileSync} from 'node:fs';
 import {Wallet,keccak256,Transaction} from 'ethers';
 import {fixture,hash} from './fixture.mjs';
+import {raceChild} from './race-fixture.mjs';
+import {childDiagnostic} from './child-diagnostics.mjs';
 import {createExecutionService,OwnedExecutionService,RETENTION,workerFacade} from '../../../src/hackathon-test-vault/e5/envelope-service.mjs';
 import {ExecutionReader,ZERO} from '../../../src/hackathon-test-vault/e5/reader.mjs';
 import {environmentRecord,parkEnvironment,stopEnvironment,startEnvironment,environmentStatus,ownedTestWallet} from '../../../src/hackathon-test-vault/e5/environment.mjs';
@@ -16,7 +18,9 @@ const rowFor=(f,request)=>JSON.parse(f.service.db.prepare('SELECT record FROM en
 const requestRef=(req,sealed)=>({...req,...sealed});
 const crash=(f,request,action,cut)=>{
  f.service.close();const {dir}=environmentRecord(f.id);atomicPrivate(join(dir,'crash-request.json'),request);
- const r=spawnSync(process.execPath,['tests/hackathon-test-vault/e5/crash-child.mjs',f.id,action,cut],{encoding:'utf8',timeout:45000});assert.equal(r.status,86,`crash status ${r.status}`);assert.equal(r.stdout,'');
+ const r=spawnSync(process.execPath,['tests/hackathon-test-vault/e5/crash-child.mjs',f.id,action,cut],{encoding:'utf8',timeout:45000});
+ const diagnostics=(r.stderr??'').split('\n').filter(x=>x.startsWith('E5_CHILD_DIAGNOSTIC ')).flatMap(x=>{try{return [childDiagnostic(JSON.parse(x.slice(20)).diagnostic)];}catch{return [];}});
+ assert.equal(r.status,86,JSON.stringify({exitCode:r.status,timedOut:r.error?.code==='ETIMEDOUT',stdoutBytes:Buffer.byteLength(r.stdout??''),stderrBytes:Buffer.byteLength(r.stderr??''),diagnostics}));assert.equal(Buffer.byteLength(r.stdout??''),0);
  f.restart();
 };
 test('E5 default stays blocked; body flags and a reference do not activate it',async()=>{
@@ -138,12 +142,48 @@ test('sealed claim remains dispatchable after source withdrawal, key revocation 
  const result=await f.included({...req,...sealed},await f.service.dispatch({...req,...sealed}));assert.equal(result.status,'INCLUDED');assert.equal(result.observation.business.application.state,'6');assert.equal(f.service.metrics.paymentSignatures,signed);
 });
 test('two service processes cannot reserve the same role nonce; changed bytes fail reverse verification',async t=>{
- const f=await setup(t),req=await f.request(command('approve',[f.m.vaultAddress,'1'])),other=await f.request(command('approve',[f.m.vaultAddress,'2']));
- const {dir}=environmentRecord(f.id);atomicPrivate(join(dir,'race-a-request.json'),req);atomicPrivate(join(dir,'race-b-request.json'),other);f.service.close();
- const run=slot=>new Promise(resolve=>{const p=spawn(process.execPath,['tests/hackathon-test-vault/e5/crash-child.mjs',f.id,'seal','none',slot],{stdio:['ignore','ignore','ignore']});p.on('exit',code=>resolve({slot,code}));});
- const results=await Promise.all([run('a'),run('b')]);assert.equal(results.filter(r=>r.code===0).length,1);assert.equal(results.filter(r=>r.code===87).length,1);f.restart();
- const success=results.find(r=>r.code===0),winner=success.slot==='a'?req:other,sealed=JSON.parse(readPrivate(join(dir,'race-'+success.slot+'-result.json'))),row=f.service.row(sealed.ref),secret=JSON.parse(readPrivate(f.service.bytesPath(sealed.ref)));
+ const f=await setup(t),{dir}=environmentRecord(f.id);f.service.close();
+ const a=raceChild(t,f.id,'a','nonce'),b=raceChild(t,f.id,'b','nonce');await Promise.all([a.wait('READY'),b.wait('READY')]);
+ // Compile both real readers before issuing the ordinary 120-second capability.
+ const req=await f.request(command('approve',[f.m.vaultAddress,'1'])),other=await f.request(command('approve',[f.m.vaultAddress,'2']));atomicPrivate(join(dir,'race-a-request.json'),req);atomicPrivate(join(dir,'race-b-request.json'),other);
+ // Finish both BEFORE_SIGN observations before racing synchronous nonce reservation.
+ a.release('READY');await a.wait('NONCE_READY');b.release('READY');await b.wait('NONCE_READY');a.release('NONCE_READY');b.release('NONCE_READY');
+ const results=await Promise.all([a.finished,b.finished]);console.log('E5_NONCE_RACE '+JSON.stringify(results));assert.equal(results.filter(r=>r.exitCode===0).length,1,JSON.stringify(results));assert.equal(results.filter(r=>r.exitCode===87).length,1);assert.equal(results.find(r=>r.exitCode===87).events.at(-1).diagnostic.code,'E5_ROLE_NONCE_BUSY');f.restart();
+ assert.equal(f.service.db.prepare('SELECT count(*) AS n FROM envelopes').get().n,1);
+ const success=results.find(r=>r.exitCode===0),winner=success.slot==='a'?req:other,sealed=JSON.parse(readPrivate(join(dir,'race-'+success.slot+'-result.json'))),row=f.service.row(sealed.ref),secret=JSON.parse(readPrivate(f.service.bytesPath(sealed.ref)));
  secret.raw=secret.raw.slice(0,-2)+(secret.raw.endsWith('00')?'01':'00');atomicPrivate(f.service.bytesPath(sealed.ref),secret);f.controller.commit(sealed);await assert.rejects(()=>f.service.dispatch({...winner,...sealed}));assert.equal(f.service.metrics.broadcasts,0);
+});
+test('checkpoint contention after signing: identical observation is idempotent; new block still refuses',async t=>{
+ for(const advance of [false,true])await t.test(advance?'new canonical block':'identical canonical checkpoint',async sub=>{
+  const f=await setup(sub),{dir}=environmentRecord(f.id);f.service.close();
+  const a=raceChild(sub,f.id,'a','checkpoint'),b=raceChild(sub,f.id,'b','checkpoint');await Promise.all([a.wait('READY'),b.wait('READY')]);
+  const req=await f.request(command('approve',[f.m.vaultAddress,'1'])),other=await f.request(command('approve',[f.m.vaultAddress,'2']));atomicPrivate(join(dir,'race-a-request.json'),req);atomicPrivate(join(dir,'race-b-request.json'),other);
+  a.release('READY');await a.wait('NONCE_READY');a.release('NONCE_READY');await a.wait('CHECKPOINT_READY');
+  if(advance)await f.mine(); // Actual owned Geth block; never fabricate an RPC observation.
+  b.release('READY');await b.wait('NONCE_READY');b.release('NONCE_READY');const loser=await b.finished;a.release('CHECKPOINT_READY');const winner=await a.finished;
+  console.log('E5_CHECKPOINT_RACE '+JSON.stringify({advance,children:[winner,loser]}));assert.equal(loser.exitCode,87);assert.equal(loser.events.at(-1).diagnostic.code,'E5_ROLE_NONCE_BUSY');assert.equal(loser.events.at(-1).diagnostic.metrics.keyAccesses,0);
+  assert.equal(winner.exitCode,advance?87:0);assert.equal(winner.events.at(-1).diagnostic.code,advance?'E5_CHECKPOINT_CAS_RETRY_REQUIRED':'OK');
+  f.restart();const row=rowFor(f,req);assert.equal(row.state,advance?'SIGNING_UNCERTAIN':'SEALED');assert.equal(f.service.db.prepare('SELECT count(*) AS n FROM envelopes').get().n,1);assert.equal(existsSync(f.service.bytesPath(row.ref)),!advance);assert.equal(winner.events.at(-1).diagnostic.metrics.transactionSignatures,1);assert.equal(winner.events.at(-1).diagnostic.metrics.broadcasts,0);
+  const observations=f.service.db.prepare('SELECT record FROM observations ORDER BY sequence').all().map(r=>JSON.parse(r.record));assert.equal(observations.length,advance?2:1);if(advance)assert.notEqual(observations[0].checkpoint.hash,observations[1].checkpoint.hash);
+  if(advance){await assert.rejects(()=>f.service.seal(req),/E5_EXISTING_ATTEMPT_RECOVER_ONLY/);assert.equal(f.service.metrics.keyAccesses,0);assert.equal(f.service.metrics.broadcasts,0);}
+ });
+});
+test('expired capability remains a diagnosed pre-key refusal after child compilation',async t=>{
+ const f=await setup(t),{dir}=environmentRecord(f.id);f.service.close();const child=raceChild(t,f.id,'a','nonce');await child.wait('READY');
+ const req=await f.request(command('approve',[f.m.vaultAddress,'1']),{bindingPatch:{expiresAt:Math.floor(Date.now()/1000)-1}});atomicPrivate(join(dir,'race-a-request.json'),req);child.release('READY');const result=await child.finished;
+ console.log('E5_CHILD_EXPIRED '+JSON.stringify(result));assert.equal(result.exitCode,87);assert.equal(result.timedOut,false);const d=result.events.at(-1).diagnostic;assert.equal(d.code,'E5_CAPABILITY_EXPIRED');assert(d.leaseRemainingSeconds<0);assert.equal(d.metrics.keyAccesses,0);f.restart();assert.equal(f.service.db.prepare('SELECT count(*) AS n FROM envelopes').get().n,0);
+});
+test('checkpoint idempotence requires exact runtime, hash, number, time and finality',async t=>{
+ const f=await setup(t),o=await f.reader.observe();await f.service.track(o);
+ const base={checkpoint:o.checkpoint,runtimeHash:f.reader.runtimeHash,finality:'INCLUDED'},compare=f.service.reader.compare.bind(f.service.reader);
+ const append=record=>f.service.db.prepare('INSERT INTO observations(record) VALUES(?)').run(JSON.stringify(record));
+ const changes=[{...base,runtimeHash:hash()},{...base,checkpoint:{...base.checkpoint,hash:hash()}},{...base,checkpoint:{...base.checkpoint,number:String(BigInt(base.checkpoint.number)+1n)}},{...base,checkpoint:{...base.checkpoint,time:String(BigInt(base.checkpoint.time)+1n)}},{...base,finality:'FINALIZED'}];
+ for(const changed of changes){
+  // Synthetic concurrent metadata corruption, not a fabricated canonical RPC result.
+  f.service.reader.compare=async(...args)=>{const result=await compare(...args);append(changed);return result;};
+  await assert.rejects(()=>f.service.track(o),/E5_CHECKPOINT_CAS_RETRY_REQUIRED/);append(base);
+ }
+ f.service.reader.compare=compare;const before=f.service.db.prepare('SELECT count(*) AS n FROM observations').get().n;await f.service.track(o);assert.equal(f.service.db.prepare('SELECT count(*) AS n FROM observations').get().n,before);assert.equal(f.service.metrics.keyAccesses,0);
 });
 test('new lineage is rejected, and a post-read current withdrawal prevents SEND_STARTED',async t=>{
  const f=await setup(t),r=await f.ready(),req=await f.request(r.command),sealed=await f.service.seal(req);f.controller.commit(sealed);

@@ -79,7 +79,16 @@ export class OwnedExecutionService {
  async track(observation){
   const last=this.db.prepare('SELECT sequence,record FROM observations ORDER BY sequence DESC LIMIT 1').get();
   if(last){const prior=JSON.parse(last.record),proof=await this.reader.compare(prior.checkpoint,observation.checkpoint);if(proof.status!=='CANONICAL_ANCESTOR'){this.transaction(()=>this.db.prepare('INSERT OR REPLACE INTO stops VALUES(1,?)').run(json(proof)));throw Error('E5_RECOVERY_BLOCKED');}}
-  this.transaction(()=>{const latest=this.db.prepare('SELECT sequence FROM observations ORDER BY sequence DESC LIMIT 1').get();ensure(latest?.sequence===last?.sequence,'E5_CHECKPOINT_CAS_RETRY_REQUIRED');this.db.prepare('INSERT INTO observations(record) VALUES(?)').run(json({checkpoint:observation.checkpoint,runtimeHash:this.runtimeHash,finality:'INCLUDED'}));});
+  const record={checkpoint:observation.checkpoint,runtimeHash:this.runtimeHash,finality:'INCLUDED'};
+  this.transaction(()=>{
+   const latest=this.db.prepare('SELECT sequence,record FROM observations ORDER BY sequence DESC LIMIT 1').get();
+   // The canonical comparison above still runs. An exactly identical persisted
+   // runtime/checkpoint (hash, number AND time)/finality is not a new observation.
+   // Any different concurrent checkpoint retains the original CAS refusal.
+   if(latest&&sha(JSON.parse(latest.record))===sha(record))return;
+   ensure(latest?.sequence===last?.sequence,'E5_CHECKPOINT_CAS_RETRY_REQUIRED');
+   this.db.prepare('INSERT INTO observations(record) VALUES(?)').run(json(record));
+  });
  }
  async checked(binding,command,phase){
   const observation=await this.reader.observe({applicationId:command.applicationId,nonce:command.method==='accept'?command.args[1].nonce:ZERO});
