@@ -30,7 +30,9 @@ jobs:
         with:
           node-version: '24.21.0'
       - name: Install frozen graph without scripts
-        run: ./tools/npm ci --ignore-scripts --no-audit --no-fund
+        run: |
+          ./tools/npm ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts --no-audit --no-fund
       - name: Pull pinned official free Geth runtime
         run: docker pull ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd
       - name: Bridge component and actual child restart tests
