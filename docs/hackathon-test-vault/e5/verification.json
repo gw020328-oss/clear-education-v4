@@ -45,7 +45,16 @@
     "sourcePreservation191": true,
     "dependencyGraphUnchanged": true,
     "frozenE4Files": 9,
-    "memoryBoundaryV1Unchanged": true
+    "memoryBoundaryV1Unchanged": true,
+    "finalAppendOnlyRecovery": {
+      "sourceHead": "4367b43318ff5318d305fe5ba926265355b09632",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logSha256": "e5361d51581bedfbda12437e346fee9ae1458720e34eeccfa0ab0833a500622a"
+    }
   },
   "runtimeProbe": {
     "ganacheHashSelectors": "REJECTED_NO_FALLBACK",
@@ -97,8 +106,9 @@
     "tests/hackathon-test-vault/e5/ganache-probe.mjs": "daf54a791fb5a4e92f7f510a1171c96be7414c5b2ec5dbbcc2f96f88facaf2b9",
     "tests/hackathon-test-vault/e5/preservation.mjs": "186c565f20d2123ef9c1fe85b8a9294b6b386528b5224a79f9e97dcfaf901ca7",
     "tests/hackathon-test-vault/e5/reorg.test.mjs": "7f3144f7c654985d3ff936c54de6796b65b62a9ad81e3626a6c6eb2cf452c885",
-    "tests/hackathon-test-vault/e5/service.test.mjs": "0af34ed704b9ab766ebc313414f18e06e0d203d41b89900e3b4bc926bed89a00",
+    "tests/hackathon-test-vault/e5/service.test.mjs": "c68e729077c7838812da8ee24e486f0072f172170055055b2b45e299bff27b68",
     "tests/hackathon-test-vault/e5/setup-failure.test.mjs": "e43251e4611b670c56fe486b92608f6aa11ce5e4d4244c5f1c17553f5acb0d29",
     "tests/hackathon-test-vault/e5/storage-rpc.test.mjs": "e2ba0ccdad6dab44dc8e5a6bb95327b1038c1872ae1c3bbf5d4ebdfa251b8b27"
-  }
+  },
+  "finalTestHead": "4367b43318ff5318d305fe5ba926265355b09632"
 }
