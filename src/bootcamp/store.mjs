@@ -8,6 +8,9 @@ import {compiled,criterion,id,epoch,revision,hash,validateGuard,guardExpiry,guar
 import {migrateR2,r2Ledger} from './r2-ledger.mjs';
 import {createOperations} from './operations.mjs';
 import {migrateProcedure} from './procedure-ledger.mjs';
+import {migrateExecution} from './execution-ledger.mjs';
+import {createExecutionOperations} from './execution-operations.mjs';
+import {createExecutionPorts,sync} from './execution-ports.mjs';
 
 const mapping=JSON.parse(readFileSync(new URL('../../specs/bootcamp/p0-runtime-mapping.json',import.meta.url)));
 export const DEFAULT_MAPPING_HASH=p0Hash('RUNTIME-MAPPING',mapping);
@@ -53,11 +56,12 @@ const requestGuardHash=(g,version)=>version==='clear-bootcamp-bound-request.2'?p
 // authentication and in-process producer/source authority; HTTP never supplies it.
 export function createBootcampStore({directory,authentication,instanceId,demoStartedAt,courseOperatorRef='course-operator-demo',
   mode='DISABLED',runtimeMappingHash=DEFAULT_MAPPING_HASH,producers={},resolveSource=()=>null,
-  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null}){
+  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null}){
   id(instanceId);id(courseOperatorRef);epoch(demoStartedAt);hash(runtimeMappingHash);
   check(['DISABLED','SYNTHETIC_FIXTURE'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
   check(typeof authentication?.authorizeWorkflow==='function','BC_AUTHENTICATION');
   check(procedurePorts===null||procedurePorts?.execution==='SYNTHETIC_PORT_FIXTURE'&&mode==='SYNTHETIC_FIXTURE','BC_E3_PORT_CONFIGURATION');
+  createExecutionPorts(executionServices); // Validate constructor-only services before opening a DB; never invokes them.
   const registry=new Map();
   for(const [key,p] of Object.entries(producers)){
     criterion(key);check(p?.execution==='SYNTHETIC_FIXTURE'&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
@@ -67,10 +71,10 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   }
   const file=openPrivateDb(directory,'bootcamp.sqlite',{version:BOOTCAMP_STORE_VERSION,instanceId,demoStartedAt,courseOperatorRef,mode,
     policyHash:compiled.policyHash,runtimeMappingHash},schema,tables),{db,transaction:baseTransaction}=file;
-  try{migrateR2({db,transaction:baseTransaction,fault});migrateProcedure({db,transaction:baseTransaction,fault});}catch(error){file.close();throw error;}
-  const transaction=fn=>baseTransaction(()=>{db.prepare('UPDATE r2_meta SET writer=1 WHERE id=1').run();
+  try{migrateR2({db,transaction:baseTransaction,fault});migrateProcedure({db,transaction:baseTransaction,fault});migrateExecution({db,transaction:baseTransaction,fault});}catch(error){file.close();throw error;}
+  const transaction=fn=>baseTransaction(()=>{db.prepare('UPDATE e5_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=1 WHERE id=1').run();
     db.prepare('UPDATE e3_meta SET writer=1 WHERE id=1').run();
-    try{return fn();}finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();}});
+    try{return sync(fn());}finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=0 WHERE id=1').run();}});
   const ledger=r2Ledger(db,measurement);
   const normalizeOperators=bindings=>{check(Array.isArray(bindings),'BC_OPERATOR_BINDING');return bindings.map(b=>{
     exactKeys(b,['wallet','courseOperatorRef'],'BC_OPERATOR_BINDING');id(b.courseOperatorRef);
@@ -362,5 +366,6 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     },
   };
   return Object.assign(service,createOperations({db,transaction,authentication,operatorBindings:currentOperators,app,refresh,tick,sessionHash,ledger,heads,replay,command,
-    projectOperation:projection2,source,mode,procedurePorts,fault}));
+    projectOperation:projection2,source,mode,procedurePorts,fault}),{execution:createExecutionOperations({db,transaction,authentication,operatorBindings:currentOperators,
+      app,refresh,tick,sessionHash,ledger,heads,source,services:executionServices,fault})});
 }
