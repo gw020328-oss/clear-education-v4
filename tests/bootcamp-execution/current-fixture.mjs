@@ -21,24 +21,27 @@ export async function currentFixture(t,{kind='PREPARE',issuer=true,seal=true,rou
    preparedDigest:kind==='ACCEPT'?digest:ZERO,preparedNonce:kind==='ACCEPT'?m.nonce:ZERO,deadlinePolicyHash:kind==='ACCEPT'?m.deadlinePolicyHash:ZERO,terminationReason:'0',terminationReceiptHash:ZERO},
   right:{recipient:'0x'+'00'.repeat(20),token:'0x'+'00'.repeat(20),amountAtoms:'0',allocationId:ZERO,authorizationDigest:ZERO,nonce:ZERO,signerKeyId:ZERO,authorizationEpoch:'0',acceptedAt:'0',settledAt:'0'},
   accounting:{B:'150000000',R:'100000000',O:'200000000',A:'50000000',U:'100000000',S:'50000000',surplus:'0'},queue:[],nextAllocatable:ZERO,paused:false,nonce:m.nonce,nonceUsed:false,keyRevoked:false},businessHash:''};
- const metrics={reads:0,compares:0,certificates:0,seals:0,dispatches:0,recoveries:0};let readHook=async()=>{},sealHook=async()=>{},certifyHook=()=>{},compareHook=null,connection;
+ const metrics={reads:0,compares:0,certificates:0,seals:0,dispatches:0,recoveries:0};let readHook=async()=>{},sealHook=async()=>{},certifyHook=()=>{},compareHook=null,connection,faultHook=()=>{};
  const snapshot=()=>{const o=structuredClone(observation);o.businessHash=e4Hash(o.business);return o;};
  const configuration={version:'clear-bootcamp-e4-current-connection.1',sourceMode:'SYNTHETIC_TEST_SOURCE',runtime,
   reader:{async observe(request){metrics.reads++;await readHook();const o=snapshot();o.business.nonce=request.nonce;if(request.nonce!==m.nonce)o.business.nonceUsed=false;o.businessHash=e4Hash(o.business);return o;},async compare(from,to){metrics.compares++;return compareHook?compareHook(from,to):{status:'CANONICAL_ANCESTOR',previous:from.hash,current:to.hash};}},
   certificateIssuer:issuer?{certifySync(payload){metrics.certificates++;certifyHook(payload);return {payload,signature:certificateWallet.signingKey.sign(e4Hash(payload)).serialized};}}:null,
   service:seal?{observe:async()=>snapshot(),async seal(request){metrics.seals++;await sealHook(request);return {ref:'env-'+randomUUID(),manifestHash:H('sealed-exact-original-bytes-hash-only')};},
    async dispatch(){metrics.dispatches++;throw Error('OFFLINE_MUST_NOT_DISPATCH');},async recover(){metrics.recoveries++;throw Error('OFFLINE_RECOVERY_NOT_CONNECTED');}}:null};
- f.configuration.executionConnection=configuration;f.restart();
+ f.configuration.executionConnection=configuration;f.configuration.fault=stage=>faultHook(stage);f.restart();
  const command={method:kind==='ACCEPT'?'accept':'prepareUnsigned',args:[f.chain.operation.operationId,m,'4'],applicationId:m.applicationId};
  const i=f.enqueue({kind,preparationId,authorizationDigest:digest,caller:kind==='ACCEPT'?runtime.roles.relayer:runtime.roles.registrar,payloadHash:e4Hash(command)}).receipt.intentId;
- const h=f.acquire(i);connection=f.store.execution.connectCurrentController(f.context);
- const prepare=()=>connection.worker.prepare(h,f.inspect(h));
+ let h=f.acquire(i),runtimeHandle=f.store.execution.acquireRuntime(f.context,{owner:'worker-one',expectedFence:0,generation:1,leaseSeconds:30});
+ f.store.execution.bindRuntimeIntent(f.context,runtimeHandle,h);connection=f.store.execution.connectCurrentController(f.context,runtimeHandle);
+ const prepare=()=>connection.worker.prepare(h,connection.worker.inspect(h));
  const currentRequest=binding=>{const o={...snapshot(),executionBusinessHash:binding.businessHash,operationMethod:command.method};return {binding,observation:o,
   payload:{version:'clear-e5-current-witness.1',challenge:randomUUID(),phase:'BEFORE_KEY_FINAL_SYNC',bindingHash:e4Hash(binding),observationHash:e4Hash(o),runtimeHash:runtime.runtimeHash}};};
  const commitRequest=(binding,result)=>({binding,payload:{version:'clear-e5-api-commit.1',challenge:randomUUID(),ref:result.ref,manifestHash:result.manifestHash,bindingHash:e4Hash(binding),runtimeHash:runtime.runtimeHash}});
- return {...f,get store(){return f.store;},get time(){return f.time;},get connection(){return connection;},i,h,m,prepared,digest,configuration,runtime,command,metrics,prepare,snapshot,currentRequest,commitRequest,
+ return {...f,get store(){return f.store;},get time(){return f.time;},get connection(){return connection;},get h(){return h;},get runtimeHandle(){return runtimeHandle;},i,m,prepared,digest,configuration,runtime,command,metrics,prepare,snapshot,currentRequest,commitRequest,
   observation,readHook:fn=>{readHook=fn;},sealHook:fn=>{sealHook=fn;},certifyHook:fn=>{certifyHook=fn;},compareHook:fn=>{compareHook=fn;},
   setOperators(bindings){f.configuration.operatorBindings=bindings;},
-  setFault(callback){f.configuration.fault=callback;},
-  reconnect(){f.restart();connection=f.store.execution.connectCurrentController(f.context);return connection;}};
+  setFault(callback){faultHook=callback;},
+  reconnect(){f.restart();const expiry=database(f,db=>Math.max(db.prepare('SELECT expires_at FROM e5_runtime_workers').get().expires_at,db.prepare('SELECT expires_at FROM e5_leases WHERE intent_id=?').get(i).expires_at));
+   f.setTime(Math.max(f.time,expiry));h=f.acquire(i,{expectedFence:h.workerFence});runtimeHandle=f.store.execution.acquireRuntime(f.context,{owner:'worker-one',expectedFence:runtimeHandle.workerFence,generation:1,leaseSeconds:30});
+   f.store.execution.bindRuntimeIntent(f.context,runtimeHandle,h);connection=f.store.execution.connectCurrentController(f.context,runtimeHandle);return connection;}};
 }

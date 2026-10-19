@@ -14,6 +14,12 @@ process.on('message',async message=>{
    ...syntheticAuthority({now:()=>message.time}),now:()=>message.time,operatorBindings:message.bindings,executionServices,
    fault:stage=>{if(stage===message.crashStage)process.kill(process.pid,'SIGKILL');}});
   let result;
+  if(message.action==='global-acquire'||message.action==='global-bind'||message.action==='global-release'){
+   result=store.execution.acquireRuntime(serviceContext,{owner:message.owner??'worker-one',expectedFence:message.expectedFence??0,generation:1,leaseSeconds:30});
+   if(message.action!=='global-acquire')store.execution.bindRuntimeIntent(serviceContext,result,message.handle);
+   if(message.action==='global-release')store.execution.releaseRuntimeIntent(serviceContext,result,message.handle);
+   if(message.killAfterGlobalCommit)process.kill(process.pid,'SIGKILL');
+  }
   if(message.action==='acquire')result=store.execution.acquire(serviceContext,message.intentId,{owner:message.owner,generation:1});
   if(message.action==='enqueue')store.execution.enqueue(message.context,message.applicationId,message.body,message.key);
   if(message.action==='attempt')store.execution.beginAttempt(serviceContext,message.handle,store.execution.inspect(serviceContext,message.handle));

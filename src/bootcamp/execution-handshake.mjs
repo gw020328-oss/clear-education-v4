@@ -6,24 +6,34 @@ const phases=['BEFORE_SIGN','BEFORE_NONCE_RESERVATION','BEFORE_KEY_FINAL_SYNC','
  'AFTER_SIGN','AFTER_SIGN_FINAL_SYNC','RECOVER_DURABLE_SEAL','BEFORE_DISPATCH','SEND_STARTED_FINAL_SYNC'];
 // Owner-only composition. The worker gets a closed facade, never the service,
 // issuer, DB, wallet, raw bytes, or the synchronous controller callbacks.
-export function createExecutionHandshake({ports,current,service,live,basis,sameBasis,intent,runtime,l,event,business,db,fault},context){
+export function createExecutionHandshake({ports,current,service,live,basis:localBasis,sameBasis,intent,runtime,l,event,business,db,fault,global},context,runtimeHandle){
  check(ports.configured,'BC_E5_E4_UNCONFIGURED');
+ const g=freeze(structuredClone(runtimeHandle));
+ function basis(i,r,lease,time,authority){
+  const local={intentId:i.intentId,owner:lease.owner,workerFence:lease.fence,generation:lease.generation,leaseRevision:lease.revision};
+  const state=global.slot(g,local,time,authority),captured=localBasis(i,r,lease,time,authority);
+  return freeze({...captured,version:'clear-bootcamp-test-execution-cas.2',runtimeAuthority:state.commitment,
+   authorityExpiresAt:Math.min(captured.authorityExpiresAt,state.row.expires_at)});
+ }
  const stored=i=>l.events(i.intentId).find(e=>e.kind==='E4_CURRENT_BINDING')??null;
  const reference=i=>l.events(i.intentId).find(e=>e.kind==='E4_SEALED_REFERENCE')??null;
  const lastObservation=i=>db.prepare("SELECT record FROM e5_events WHERE runtime_id=? AND kind='E4_CHAIN_OBSERVATION' ORDER BY sequence DESC").all(i.runtimeId)
   .map(r=>JSON.parse(r.record)).find(r=>r.applicationId===i.applicationId)?.observation??null;
  const run=(action,h,fn)=>service(context,action,h.intentId,(time,authority)=>{
   const state=live(h,time,authority.serviceId);check(state.r.pin_hash===ports.runtime.runtimeHash,'BC_E5_RUNTIME_PIN');
+  check(g.generation===state.r.generation,'BC_E5_GLOBAL_FENCED');global.slot(g,h,time,authority);
   check(['UNOBSERVED','ACTIVE'].includes(state.r.status),'BC_E5_RUNTIME_SUSPENDED');return fn({...state,time,authority});
  });
  function bound(binding){
   check(binding&&typeof binding.intentId==='string','BC_E5_E4_BINDING');const i=intent(binding.intentId),record=stored(i);
   check(record&&canonical(record.binding)===canonical(binding),'BC_E5_E4_IMMUTABLE_BINDING');
+  check(record.runtimeHandle&&canonical(record.runtimeHandle)===canonical(g),'BC_E5_GLOBAL_BINDING_REVIEW_REQUIRED');
   return record;
  }
  function recheck(state,record,observation=record.observation){
   const {i,r,lease,time,authority}=state;
   check(time<record.binding.expiresAt,'BC_E5_E4_CAPABILITY_EXPIRED');
+  check(record.runtimeHandle&&canonical(record.runtimeHandle)===canonical(g),'BC_E5_GLOBAL_BINDING_REVIEW_REQUIRED');
   sameBasis(record.basis,basis(i,r,lease,time,authority),time);
   check(observation.businessHash===record.binding.businessHash,'BC_E5_E4_BUSINESS_CHANGED');
   const value=current.inspect(i,business(i,time).a,observation,ports.runtime,time);
@@ -56,6 +66,7 @@ export function createExecutionHandshake({ports,current,service,live,basis,sameB
  }
  const worker=Object.freeze({
   status(){return freeze({status:'CURRENT_ADAPTER_ONLY',sourceMode:'SYNTHETIC_TEST_SOURCE',dispatch:'BLOCKED_E4_FINAL_PORT_REVIEW',settlementJob:'NOT_IMPLEMENTED',productionEnabled:false});},
+  inspect(h){return run('E4_INSPECT_CURRENT',h,state=>basis(state.i,state.r,state.lease,state.time,state.authority));},
   async prepare(h,expected){
    const request=run('E4_READ_CURRENT',h,state=>{
     sameBasis(expected,basis(state.i,state.r,state.lease,state.time,state.authority),state.time);
@@ -76,13 +87,13 @@ export function createExecutionHandshake({ports,current,service,live,basis,sameB
     // is a local current-reader state; it does not enable dispatch or production.
     if(r.status==='UNOBSERVED')db.prepare("UPDATE e5_runtimes SET status='ACTIVE',revision=revision+1 WHERE id=?").run(r.id);
     const attempt={version:'clear-bootcamp-test-execution.1',attemptId:'execution-attempt-'+randomUUID(),intentId:i.intentId,operationId:i.operationId,
-     generation:r.generation,workerFence:lease.fence,recordedAt:time,transactionState:'NOT_DISPATCHED'};
+     generation:r.generation,workerFence:lease.fence,runtimeWorkerFence:g.workerFence,recordedAt:time,transactionState:'NOT_DISPATCHED'};
     db.prepare('INSERT INTO e5_attempts VALUES(?,?,?,?)').run(attempt.attemptId,i.intentId,canonical(attempt),l.next());
     const captured=basis(i,runtime(),lease,time,authority),binding={version:'clear-e5-execution-capability.1',intentId:i.intentId,requestId:i.intentId,attemptId:attempt.attemptId,
-     runtimeHash:ports.runtime.runtimeHash,lineage:String(r.generation),workerFence:String(lease.fence),workerId:lease.owner,
-     leaseId:'lease-'+e4Hash(h).slice(2,50),expiresAt:Math.min(captured.authorityExpiresAt,value.sourceValidUntilExclusive,value.reviewCapAt,Number(value.payload.message.expiresAt)),
+     runtimeHash:ports.runtime.runtimeHash,lineage:String(r.generation),workerFence:String(g.workerFence),workerId:g.owner,
+     leaseId:g.leaseId,expiresAt:Math.min(captured.authorityExpiresAt,value.sourceValidUntilExclusive,value.reviewCapAt,Number(value.payload.message.expiresAt)),
      e3Commitment:e4Hash(captured),commandHash:e4Hash(value.command),anchor:observation.checkpoint,businessHash:observation.businessHash};
-    event(i,'E4_CURRENT_BINDING',{binding,basis:captured,current:value,observation,handle:h},time,'e4-current-'+i.intentId);fault('e5-after-current-binding');
+    event(i,'E4_CURRENT_BINDING',{binding,basis:captured,current:value,observation,handle:h,runtimeHandle:g},time,'e4-current-'+i.intentId);fault('e5-after-current-binding');
     saveRead(state,observation);
     // Final local current check catches a provider callback that changed source
     // or scope even when no E3 command was emitted.

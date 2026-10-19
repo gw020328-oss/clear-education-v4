@@ -28,7 +28,7 @@ test('connection rejects owner class/DB/key accessors, wrong mode/runtime and as
 test('browser user/session and arbitrary snapshot cannot substitute for internal service/read ticket',async t=>{
  const f=await currentFixture(t);assert.throws(()=>f.store.execution.connectCurrentController(f.aliceContext),/SERVICE_FORBIDDEN/);
  assert.throws(()=>createE4CurrentPorts(f.configuration).consume({observation:f.snapshot()}),/BC_E5_E4_UNTRUSTED_TICKET/);
- assert.deepEqual(Object.keys(f.connection.worker),['status','prepare','seal','readAcceptedRight','dispatch']);
+ assert.deepEqual(Object.keys(f.connection.worker),['status','inspect','prepare','seal','readAcceptedRight','dispatch']);
  for(const secret of ['db','row','verifyBytes','bytesPath','certify','issuer','controller','ownedTestWallet'])assert.equal(f.connection.worker[secret],undefined);
 });
 test('reader methods are pinned and reads happen outside SQLite transaction',async t=>{
@@ -79,21 +79,22 @@ test('proven reorg durably stops runtime without replacing binding or rebasing g
  const f=await currentFixture(t),first=await f.prepare(),before=dump(f);f.observation.checkpoint={number:'101',hash:H('new'),time:String(f.time)};
  f.compareHook((from,to)=>({status:'REORG_PROVEN_RECOVERY_BLOCKED',oldHash:from.hash,replacementHash:H('fork'),currentHash:to.hash,commonAncestor:{number:'99',hash:H('ancestor'),time:String(f.time)},automaticRebase:false}));
  assert.equal((await f.prepare()).reason,'RECOVERY_BLOCKED');assert.deepEqual(dump(f).e5_attempts,before.e5_attempts);assert.equal(first.binding.workerFence,'1');
- f.reconnect();assert.throws(()=>f.inspect(f.h),/BC_E5_RUNTIME_SUSPENDED/);assert.equal(f.store.execution.getInternal(f.context,f.i).runtime.generation,1);
+ assert.throws(()=>f.reconnect(),/BC_E5_RUNTIME_SUSPENDED/);const state=f.store.execution.getInternal(f.context,f.i).runtime;assert.equal(state.status,'RECOVERY_BLOCKED');assert.equal(state.generation,1);
 });
 test('takeover cannot reauthorize old envelope binding or create a new attempt/signature',async t=>{
  const f=await currentFixture(t),first=await f.prepare();f.setTime(f.time+30);
  const h=f.store.execution.acquire(f.other,f.i,{owner:'worker-two',generation:1,expectedFence:1});
  assert.throws(()=>f.connection.controller.readCurrentSync(f.currentRequest(first.binding)),/BC_E5_FENCED/);
- const other=f.store.execution.connectCurrentController(f.other);
- await assert.rejects(other.worker.prepare(h,f.store.execution.inspect(f.other,h)),/BC_E5_E4_CAPABILITY_EXPIRED|BC_E5_CURRENT_CHANGED/);
+ const g=f.store.execution.acquireRuntime(f.other,{owner:'worker-two',expectedFence:1,generation:1,leaseSeconds:30});f.store.execution.bindRuntimeIntent(f.other,g,h);
+ const other=f.store.execution.connectCurrentController(f.other,g);
+ await assert.rejects(other.worker.prepare(h,other.worker.inspect(h)),/BC_E5_E4_CAPABILITY_EXPIRED/);
  assert.equal(dump(f).e5_attempts.length,1);assert.equal(f.metrics.certificates,0);
 });
 test('seal returns only ref/hash; API commits immutable original binding and keeps dispatch blocked after restart',async t=>{
  const f=await currentFixture(t),{binding}=await f.prepare();
  const absent={ref:'missing-reference',manifestHash:H('missing')};assert.throws(()=>f.connection.controller.commitCurrentSync(f.commitRequest(binding,absent)),/BC_E5_E4_REFERENCE_NOT_COMMITTED/);
  const result=await f.connection.worker.seal(f.h);assert.equal(result.dispatchAuthorized,false);assert.equal(f.metrics.seals,1);
- f.reconnect();assert.throws(()=>f.connection.controller.commitCurrentSync(f.commitRequest(binding,result)),/BC_E5_E4_DISPATCH_REVIEW_PENDING/);
+ f.reconnect();assert.throws(()=>f.connection.controller.commitCurrentSync(f.commitRequest(binding,result)),/BC_E5_GLOBAL_BINDING_REVIEW_REQUIRED/);
  await assert.rejects(f.connection.worker.seal(f.h),/BC_E5_E4_REFERENCE_RECOVER_ONLY/);
  const saved=dump(f);assert.equal(saved.e5_events.filter(r=>r.kind==='E4_SEALED_REFERENCE').length,1);
  assert.equal(JSON.stringify(saved).includes('signature'),false);assert.equal(f.metrics.dispatches,0);
@@ -112,7 +113,7 @@ test('post-issuer source recheck prevents a certificate escaping after source re
 });
 test('removed course operator binding invalidates prior current capability across restart',async t=>{
  const f=await currentFixture(t),{binding}=await f.prepare();f.setOperators([]);f.reconnect();
- assert.throws(()=>f.connection.controller.readCurrentSync(f.currentRequest(binding)),/BC_E5_CURRENT_CHANGED/);assert.equal(f.metrics.certificates,0);
+ assert.throws(()=>f.connection.controller.readCurrentSync(f.currentRequest(binding)),/BC_E5_GLOBAL_BINDING_REVIEW_REQUIRED/);assert.equal(f.metrics.certificates,0);
 });
 test('scope removal before prepare fails mutual consent even if chain says mutual',async t=>{
  const f=await currentFixture(t);f.setOperators([]);f.reconnect();await assert.rejects(f.prepare(),/BC_E5_MUTUAL_CONSENT_REQUIRED/);
@@ -123,8 +124,8 @@ test('stored deadline route stays exact and never becomes a new 120/600 window',
  f.setTime(f.time+1);const second=await f.prepare();assert.deepEqual(second.binding,binding);assert.deepEqual(command.args[1],before);
 });
 test('wrong controller signer or altered signed payload is rejected',async t=>{
- const f=await currentFixture(t),wallet=Wallet.createRandom();
  for(const wrong of ['signer','payload']){
+  const f=await currentFixture(t),wallet=Wallet.createRandom();
   f.configuration.certificateIssuer={certifySync(payload){return {payload:wrong==='payload'?{...payload,phase:'FORGED'}:payload,signature:wallet.signingKey.sign(e4Hash(payload)).serialized};}};
   f.reconnect();const {binding}=await f.prepare();assert.throws(()=>f.connection.controller.readCurrentSync(f.currentRequest(binding)),wrong==='signer'?/BC_E5_CONTROLLER_SIGNER/:/BC_E5_CONTROLLER_CERTIFICATE/);
  }
@@ -138,7 +139,7 @@ test('response loss after seal request persists recovery barrier and never retri
 for(const stage of ['e5-after-current-binding','e5-after-seal-request','e5-after-e4-reference'])test(`${stage}: transaction rollback does not invent a committed capability/reference`,async t=>{
  const f=await currentFixture(t);
  if(stage!=='e5-after-current-binding')await f.prepare();
- f.setFault(s=>{if(s===stage)throw Error('E5_B_INJECTED_ROLLBACK');});f.reconnect();
+ f.setFault(s=>{if(s===stage)throw Error('E5_B_INJECTED_ROLLBACK');});
  await assert.rejects(stage==='e5-after-current-binding'?f.prepare():f.connection.worker.seal(f.h),/E5_B_INJECTED_ROLLBACK/);
  const events=dump(f).e5_events;
  assert.equal(events.filter(r=>r.kind===(stage==='e5-after-current-binding'?'E4_CURRENT_BINDING':stage==='e5-after-seal-request'?'E4_SEAL_REQUESTED':'E4_SEALED_REFERENCE')).length,0);
@@ -162,12 +163,12 @@ test('stored accepted right and SETTLED readback survive source/key/epoch/pause 
  b.right={recipient:f.m.recipient,token:f.m.token,amountAtoms:f.m.amountAtoms,allocationId:f.m.allocationId,authorizationDigest:f.digest,nonce:f.m.nonce,signerKeyId:f.m.signerKeyId,
   authorizationEpoch:f.m.authorizationEpoch,acceptedAt:f.m.issuedAt,settledAt:'0'};
  f.observation.checkpoint={number:'101',hash:H('accepted-block'),time:String(f.time)};
- const h=f.store.execution.acquire(f.context,f.i,{owner:'worker-one',generation:1,expectedFence:1});f.reconnect();
- const accepted=await f.connection.worker.readAcceptedRight(h);assert.equal(accepted.status,'ACCEPTED');assert.equal(accepted.claimOperationId,null);
+ f.reconnect();
+ const accepted=await f.connection.worker.readAcceptedRight(f.h);assert.equal(accepted.status,'ACCEPTED');assert.equal(accepted.claimOperationId,null);
  assert.equal(accepted.requiresCurrentSource,false);assert.equal(accepted.requiresCurrentSigner,false);assert.equal(accepted.claimExpiresAt,null);
  b.application.state='6';b.application.version='6';b.right.settledAt=String(f.time+1);b.accounting={B:'50000000',R:'0',O:'100000000',A:'50000000',U:'100000000',S:'50000000',surplus:'0'};
  f.observation.checkpoint={number:'102',hash:H('settled-block'),time:String(f.time+1)};
- const settled=await f.connection.worker.readAcceptedRight(h);assert.equal(settled.status,'SETTLED');assert.equal(settled.receiptVerified,false);
+ const settled=await f.connection.worker.readAcceptedRight(f.h);assert.equal(settled.status,'SETTLED');assert.equal(settled.receiptVerified,false);
  assert.equal(settled.automaticClaimImplemented,false);assert.equal(f.metrics.certificates,0);assert.equal(f.metrics.seals,0);
 });
 test('unregistered or wrong recipient accepted right never becomes readback',async t=>{
