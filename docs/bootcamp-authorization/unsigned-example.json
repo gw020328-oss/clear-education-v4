@@ -1,0 +1,158 @@
+{
+  "provenance": "SYNTHETIC_EXAMPLE_NOT_AN_AUTHORIZATION",
+  "snapshot": {
+    "version": "clear-bootcamp-unsigned-server-snapshot.1",
+    "provenance": "SYNTHETIC_EXAMPLE",
+    "registryVersion": "synthetic-registry.1",
+    "registrations": [
+      {
+        "kind": "APPLICATION",
+        "logicalId": "application-orchid",
+        "opaqueId": "0x0101010101010101010101010101010101010101010101010101010101010101"
+      },
+      {
+        "kind": "DECISION",
+        "logicalId": "decision-orchid",
+        "opaqueId": "0x0303030303030303030303030303030303030303030303030303030303030303"
+      },
+      {
+        "kind": "ALLOCATION",
+        "logicalId": "allocation-orchid",
+        "opaqueId": "0x0505050505050505050505050505050505050505050505050505050505050505"
+      }
+    ],
+    "logicalTarget": {
+      "applicationId": "application-orchid",
+      "decisionId": "decision-orchid",
+      "allocationId": "allocation-orchid"
+    },
+    "tokenDecimals": "6",
+    "domain": {
+      "name": "ClearBootcampPayment",
+      "version": "2",
+      "chainId": "31338",
+      "verifyingContract": "0x3333333333333333333333333333333333333333",
+      "salt": "0x1010101010101010101010101010101010101010101010101010101010101010"
+    },
+    "message": {
+      "applicationId": "0x0101010101010101010101010101010101010101010101010101010101010101",
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "runtimeMappingHash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+      "decisionId": "0x0303030303030303030303030303030303030303030303030303030303030303",
+      "decisionRevision": "1",
+      "decisionHash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+      "recipient": "0x1111111111111111111111111111111111111111",
+      "token": "0x2222222222222222222222222222222222222222",
+      "amountAtoms": "100000000",
+      "allocationId": "0x0505050505050505050505050505050505050505050505050505050505050505",
+      "consentSetHash": "0x0606060606060606060606060606060606060606060606060606060606060606",
+      "deadlinePolicyHash": "0x0707070707070707070707070707070707070707070707070707070707070707",
+      "eligibilityRoute": "1",
+      "nonce": "0x0808080808080808080808080808080808080808080808080808080808080808",
+      "issuedAt": "2000000100",
+      "expiresAt": "2000000160",
+      "signerKeyId": "0x0909090909090909090909090909090909090909090909090909090909090909",
+      "authorizationEpoch": "1"
+    },
+    "deadlineRecord": {
+      "version": "clear-bootcamp-unsigned-deadline-record.1",
+      "provenance": "SYNTHETIC_EXAMPLE",
+      "recordId": "0x1212121212121212121212121212121212121212121212121212121212121212",
+      "applicationId": "0x0101010101010101010101010101010101010101010101010101010101010101",
+      "decisionId": "0x0303030303030303030303030303030303030303030303030303030303030303",
+      "decisionRevision": "1",
+      "decisionHash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+      "allocationId": "0x0505050505050505050505050505050505050505050505050505050505050505",
+      "deadlinePolicyHash": "0x0707070707070707070707070707070707070707070707070707070707070707",
+      "eligibleAfter": "2000000050",
+      "authorizeUntil": "2000000300",
+      "claimUntil": "2000000500",
+      "maximumAuthorizationTtlSeconds": "75"
+    }
+  },
+  "input": {
+    "logicalTarget": {
+      "applicationId": "application-orchid",
+      "decisionId": "decision-orchid",
+      "allocationId": "allocation-orchid"
+    },
+    "domain": {
+      "name": "ClearBootcampPayment",
+      "version": "2",
+      "chainId": "31338",
+      "verifyingContract": "0x3333333333333333333333333333333333333333",
+      "salt": "0x1010101010101010101010101010101010101010101010101010101010101010"
+    },
+    "message": {
+      "applicationId": "0x0101010101010101010101010101010101010101010101010101010101010101",
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "runtimeMappingHash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+      "decisionId": "0x0303030303030303030303030303030303030303030303030303030303030303",
+      "decisionRevision": "1",
+      "decisionHash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+      "recipient": "0x1111111111111111111111111111111111111111",
+      "token": "0x2222222222222222222222222222222222222222",
+      "amountAtoms": "100000000",
+      "allocationId": "0x0505050505050505050505050505050505050505050505050505050505050505",
+      "consentSetHash": "0x0606060606060606060606060606060606060606060606060606060606060606",
+      "deadlinePolicyHash": "0x0707070707070707070707070707070707070707070707070707070707070707",
+      "eligibilityRoute": "1",
+      "nonce": "0x0808080808080808080808080808080808080808080808080808080808080808",
+      "issuedAt": "2000000100",
+      "expiresAt": "2000000160",
+      "signerKeyId": "0x0909090909090909090909090909090909090909090909090909090909090909",
+      "authorizationEpoch": "1"
+    }
+  },
+  "result": {
+    "status": "UNSIGNED_DRAFT_BLOCKED",
+    "version": "clear-bootcamp-payment-authorization.2",
+    "structureValid": true,
+    "serverSnapshotConsistent": true,
+    "snapshotHash": "0x5b922a51e95154711ce4318c43aaef76e13acc0e88e94815e4867f9d8666e8f0",
+    "registrySnapshotHash": "0xa6623401b424fff034f6682503915ef81c099a3eb51e457acf761a960083c240",
+    "deadlineRecordHash": "0x7ab8993138eb23dfc4fffbf619cd9369d0df878191b1c58c3ceb0518c6ade370",
+    "deadlineRecordConsistencyChecked": true,
+    "onchainDeadlineBindingVerified": false,
+    "hashes": {
+      "version": "clear-bootcamp-payment-authorization.2",
+      "primaryType": "BootcampPaymentAuthorizationV2",
+      "domainSeparator": "0x1b1223b7b07538fc563ece9903b1cfbb7fa3bb4ad6be11db500d4d0e4ce3fb80",
+      "structHash": "0xf323457c5ec5206dfffc30bfdb8902a16ce269fec9dfdd11ed9d6168ff6b6ea2",
+      "digest": "0x81c0d0469a976eaecf4b1917355a7b6d780c8cb6f58de2f177029cddfa837ff0",
+      "validationScope": "UNSIGNED_STRUCTURE_AND_HASH_ONLY",
+      "signatureVerified": false,
+      "sourceVerified": false,
+      "gates": {
+        "usableForIssuance": false,
+        "paymentAllowed": false,
+        "productionEnabled": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO"
+      }
+    },
+    "gates": {
+      "usableForIssuance": false,
+      "paymentAllowed": false,
+      "productionEnabled": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO"
+    },
+    "blockers": [
+      "G2_DEADLINE_AND_UNRESOLVED_OWNERSHIP",
+      "G3_ROLES_AND_KEY_LIFECYCLE",
+      "G4_OBLIGATION_ALLOCATION_ORDER",
+      "G5_CHAIN_FINALITY_AND_GAS",
+      "G6_ACTUAL_SOURCE_AND_P3_ACCEPTANCE",
+      "ONCHAIN_IMMUTABLE_DEADLINE_BINDING_UNVERIFIED"
+    ],
+    "currentStateVerified": false,
+    "consentVerified": false,
+    "clockFreshnessVerified": false,
+    "nonceConsumed": false,
+    "decisionHashSemantics": "UNCHANGED_P0_V1_BYTES32",
+    "acceptedRightCreated": false
+  }
+}

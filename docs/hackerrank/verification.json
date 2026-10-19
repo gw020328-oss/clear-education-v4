@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-17",
+  "scope": "P1_HACKERRANK_OFFLINE_ADAPTER_SYNTHETIC_CRYPTOGRAPHY",
+  "baseHead": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
+  "dependsOnPr": 78,
+  "sdk": {
+    "attestorCore": "5.1.4",
+    "ethers": "6.17.0",
+    "node": "24.21.0",
+    "dedicatedPrefixFreshNpmCi": true,
+    "lifecycleScriptsExecuted": false,
+    "rootLockChanged": false
+  },
+  "tests": {
+    "hackerrank": {
+      "pass": 82,
+      "fail": 0
+    },
+    "p0Contract": {
+      "pass": 20,
+      "fail": 0
+    },
+    "combined": {
+      "pass": 102,
+      "fail": 0
+    }
+  },
+  "verifiedBoundaries": [
+    "BOTH_SYNTHETIC_ATTESTOR_SIGNATURES_USING_REAL_SDK",
+    "PARTICIPANT_APPROVAL_WITH_DISTINCT_SDK_CLAIM_OWNER",
+    "SERVER_EXPECTED_REQUEST_AND_SIGNED_CONTEXT_BINDING_ON_BOTH_PROOFS",
+    "SIGNER_PROVIDER_RECIPE_URL_EPOCH_TRUST_WINDOW_PINS",
+    "TRUST_CONFIG_AND_RECIPE_HASH_IN_PARTICIPANT_REQUEST",
+    "SAME_RECORD_CERTIFICATE_CLASS_STATUS_ID_AND_USERNAME",
+    "NO_FIRST_ARRAY_ITEM_OR_REAL_ACCOUNT_ID_PIN",
+    "EXPLICIT_SELECTION_OR_AMBIGUOUS",
+    "REQUEST_MAX_900_SECONDS_AND_EXCLUSIVE_EXPIRY",
+    "SIGNED_TIMESTAMPS_MAX_900_SECONDS_AND_NO_FUTURE_OR_PRE_REQUEST_PROOF",
+    "CLOCK_RECHECK_AFTER_ASYNC_SIGNATURE_WORK",
+    "NO_PROOF_TIMESTAMP_AS_ACHIEVEMENT_DATE",
+    "BOUNDED_DUPLICATE_SAFE_SIGNED_JSON",
+    "SNAPSHOTS_AGAINST_CALLER_MUTATION_DURING_AWAIT",
+    "NO_RAW_PROOF_IDENTITY_SIGNATURE_OR_NONCE_IN_OUTPUT",
+    "KEYED_PRIVATE_FACT_COMMITMENTS",
+    "PRODUCER_OBJECT_PROVENANCE_AND_EXPIRY_RECHECK",
+    "REPLAY_REMAINS_EXTERNAL_DURABLE_TRANSACTION_RESPONSIBILITY",
+    "PUBLISHED_UNSIGNED_HASH_VECTOR_MATCHES_P0_REQUEST_RECIPE_TRUST",
+    "SDK_SUCCESSFUL_ALTERNATIVE_WITH_NAMED_GROUP_CAN_EXTRACT_NOTHING"
+  ],
+  "preservedCounterexamples": [
+    "SAME_REQUEST_CAN_BE_REVERIFIED_BEFORE_EXTERNAL_NONCE_CONSUMPTION",
+    "VERIFIER_RESTART_DOES_NOT_PRESERVE_GLOBAL_SPENT_STATE",
+    "SDK_EMPTY_EXTRACTION_CAN_RETAIN_CALLER_EXTRACTED_PARAMETERS_REQUIRING_LIVE_RECIPE_REVIEW"
+  ],
+  "priorExperiment": {
+    "readOnlySummaryAndRunnerInspected": true,
+    "originalClaimsEnvAndJoinedClaimFilesRead": false,
+    "privateIdentifiersCopiedToFixtures": false,
+    "reportedJoinSuccessIndependentlyRerun": false,
+    "replayBooleansAssertedByInspectedRunner": false
+  },
+  "newActualPersonalProofs": 0,
+  "newOfficialHostedProofs": 0,
+  "realHackerRankAuthenticatedSourceRecipeTested": false,
+  "realHackerRankCertificateRecordGrammarTested": false,
+  "newLiveSignerTrustApproved": false,
+  "actualSignedRequestContextPairTested": false,
+  "defaultTrust": "UNCONFIGURED_BLOCKED",
+  "syntheticSourceStatus": "MOCK_VERIFIED",
+  "achievementAt": null,
+  "durableNonceConsumptionImplemented": false,
+  "productSchemaHttpDbRegistryModified": false,
+  "existingYbmResearchModified": false,
+  "commonCiModified": false,
+  "ciScope": "Existing shared CI only; new dedicated HackerRank tests and SDK prefix are local explicit checks. Exact head and run outcomes are in Draft PR.",
+  "remainingGates": [
+    "APPROVED_SIGNER_TRUST_CONFIG_AND_KEY_LIFECYCLE",
+    "AUTHENTICATED_DASHBOARD_SEMANTICS_AND_MANDATORY_SOURCE_CAPTURE",
+    "LIVE_CERTIFICATE_ARRAY_GRAMMAR_AND_SAME_RECORD_RECIPE",
+    "FRESH_OFFICIAL_PAIR_WITH_SIGNED_REQUEST_CONTEXT",
+    "MANAGED_COLLECTOR_AND_RAW_LIFETIME",
+    "TRUSTED_PRODUCER_INTEGRATION_CURRENT_MAPPING_TRUST_CAS",
+    "ATOMIC_GLOBAL_NONCE_EVIDENCE_ACCEPTANCE_AND_CRASH_RECOVERY"
+  ],
+  "paymentAllowed": false,
+  "productEligible": false,
+  "productionEnabled": false,
+  "grant": "HOLD",
+  "outbox": "HOLD",
+  "independentClaim": "NO_GO",
+  "excludedTiers": [
+    400,
+    500
+  ],
+  "loginRequested": false,
+  "review": "REVIEW.ko.md",
+  "workspacePreservation": "PASS_PORTABLE_CONTENT_191_SOURCE_REFERENCE_FILES"
+}

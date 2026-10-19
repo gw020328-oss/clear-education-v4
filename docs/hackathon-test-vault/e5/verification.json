@@ -1,0 +1,179 @@
+{
+  "version": "clear-e5-a-verification.1",
+  "status": "OWNED_TEST_IMPLEMENTATION_API_INTEGRATION_PENDING",
+  "sourceImplementationHead": "bbadeff4ce510d02d9a48a2c0e22f0c253aa6cb1",
+  "base": "e38ef0b",
+  "acceptedE4": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
+  "commonIntake": "249f4bd2088cea687333f02fb2e18add2c15efcd",
+  "local": {
+    "e5Full": {
+      "sourceHead": "2a834af057255da1ab812774e2a2efb651814774",
+      "logSha256": "f1a1ccfdd1737fffc53b02f4c48f799d8772293acb36493fbebb4b675687cf23",
+      "tests": 33,
+      "pass": 33,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "finalFacadeAndInclusion": {
+      "sourceHead": "400ec7d9284c41fc97d1c0e74fda1f9a3be49d38",
+      "logSha256": "c7a5f3d5335af623a91afc276a1c5d9931133d9ad1c50c2d4fdb06bf1909d792",
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "prepared": {
+      "sourceHead": "UNCHANGED_E4_INPUTS",
+      "logSha256": "7214125771f944b377cf3997593eefc41ac907aae207b75875e9199cf6a7de4a",
+      "tests": 50,
+      "pass": 50,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "compileSignerAndMemory": {
+      "sourceHead": "UNCHANGED_E4_INPUTS",
+      "logSha256": "6d8946adb28c2dbad1057e518624fd6d92d501213b6ed5be8d37047f09cf7904",
+      "tests": 114,
+      "pass": 114,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "sourcePreservation191": true,
+    "dependencyGraphUnchanged": true,
+    "frozenE4Files": 9,
+    "memoryBoundaryV1Unchanged": true,
+    "finalAppendOnlyRecovery": {
+      "sourceHead": "4367b43318ff5318d305fe5ba926265355b09632",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logSha256": "e5361d51581bedfbda12437e346fee9ae1458720e34eeccfa0ab0833a500622a"
+    },
+    "finalCasAndSetupFull": {
+      "sourceHead": "bbadeff4ce510d02d9a48a2c0e22f0c253aa6cb1",
+      "tests": 42,
+      "pass": 42,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "durationMs": 194520.116667,
+      "logSha256": "c630c2b6855f60dae61f3a65e1a899487760f13fc5e5d67b404522337b9c0e37"
+    }
+  },
+  "runtimeProbe": {
+    "ganacheHashSelectors": "REJECTED_NO_FALLBACK",
+    "gethVersion": "1.17.8",
+    "localArchitecture": "linux-arm64",
+    "imageDigest": "sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd",
+    "canonicalAndHistoricalHashSelectors": true,
+    "retainedOrphanRequireCanonicalRejected": true,
+    "retainedOrphanWithoutCanonicalAvailable": true,
+    "persistentStopStartStatePreserved": true,
+    "chainIdAndNetworkIdIndependentlyVerified": true,
+    "hostRpcLoopbackOnly": true,
+    "externalPeers": 0,
+    "finality": "INCLUDED_ONLY"
+  },
+  "boundaries": {
+    "defaultSigner": "BLOCKED",
+    "defaultService": "BLOCKED",
+    "apiController": "EXPLICIT_TEST_FIXTURE_ONLY",
+    "apiWorkerFacade": "NO_RAW_SIGNATURE_TRANSACTION_OR_DB_ACCESSOR",
+    "authorizationNonce": "DURABLE_BEFORE_PREPARE_BOUND_TO_APP_LINEAGE_DIGEST",
+    "preKeyFenceAfterReservationCut": true,
+    "reorgRebase": "RECOVERY_BLOCKED",
+    "sealedTakeoverNewWorker": "E5_B_NOT_IMPLEMENTED",
+    "actualApiAdapter": false,
+    "automaticAcceptToClaim": false,
+    "fullApiWorkerBackendStopIntegration": false,
+    "sourceManifestV2Consumed": false,
+    "realSourceReads": 0,
+    "existingUserKeyReads": 0,
+    "publicChainTransactions": 0,
+    "paidModelCalls": 0,
+    "production": false,
+    "identicalCheckpointObservation": "IDEMPOTENT_ONLY_EXACT_RUNTIME_HASH_NUMBER_TIME_FINALITY_AFTER_CANONICAL_COMPARE",
+    "differentCheckpointConcurrentChange": "CAS_REFUSAL_NO_RESIGN",
+    "setupReceiptReadback": "SAME_HASH_ONLY_BOUNDED_15_SECONDS_INDEXING_OR_PENDING_NO_RESEND"
+  },
+  "remoteCi": "PENDING_NEW_FINAL_HEAD_SEE_PR_CHECKS_OLD_3E11_PR_FAILURE_PRESERVED",
+  "sourceSha256": {
+    ".github/workflows/hackathon-e5.yml": "fee28eb517ba2e96495d39f2aade786bf98289c89fab7a8fa20768791dd7a959",
+    "src/hackathon-test-vault/e5/envelope-service.mjs": "cd73c063aff3d75aba9532361f2592299260729565875b7721bfdf515083f87b",
+    "src/hackathon-test-vault/e5/environment.mjs": "a38dc46a8d0c9afd91b68d295c1d4aaaa3a5815ba8fe70338a9fa68e4fb3666e",
+    "src/hackathon-test-vault/e5/host.mjs": "8d4e611c4c8a18a1280223e81180bc38fab4a37a7e647dca399b878ae0413f82",
+    "src/hackathon-test-vault/e5/private-storage.mjs": "7a140d7ea36b0a3917b9ccd0e935558d0cf9272a09f47d50d915cd29b1a6d220",
+    "src/hackathon-test-vault/e5/reader.mjs": "34f0b529dd459881bc82032efb9d7c3eaec6818928c4f23d2e046f649f3eddfd",
+    "src/hackathon-test-vault/e5/rpc.mjs": "cfe996ccfdcf16b9885bde2b1c75ff6ff70887d313aaecf44482a73cc1e5dea5",
+    "tests/hackathon-test-vault/e5/controller-fixture.mjs": "20dc2e1a19cd1f6362ca19e0dd77d8674ae7d066da6e9c499da26dcbd1cab8f5",
+    "tests/hackathon-test-vault/e5/crash-child.mjs": "0eb3b3fb5f39d9df86e4e466030446ba39c2ed7d389032de30f6981555eb9714",
+    "tests/hackathon-test-vault/e5/create-host.mjs": "3456c5e7012b749a8b6fcba7eedc4095289cb5ea7ae7ae3f7b404f4c2ceb74c5",
+    "tests/hackathon-test-vault/e5/fixture.mjs": "acf20f6e615165c80f077b979a76dcbba412c75594082c11583f8edbaf394d19",
+    "tests/hackathon-test-vault/e5/fork-fixture.mjs": "4b302ebabebb74d0d23fb004b3215560eb403d591d3db37fdb5f02433dbdc6bb",
+    "tests/hackathon-test-vault/e5/ganache-probe.mjs": "daf54a791fb5a4e92f7f510a1171c96be7414c5b2ec5dbbcc2f96f88facaf2b9",
+    "tests/hackathon-test-vault/e5/preservation.mjs": "186c565f20d2123ef9c1fe85b8a9294b6b386528b5224a79f9e97dcfaf901ca7",
+    "tests/hackathon-test-vault/e5/reorg.test.mjs": "7f3144f7c654985d3ff936c54de6796b65b62a9ad81e3626a6c6eb2cf452c885",
+    "tests/hackathon-test-vault/e5/service.test.mjs": "5f09cab3956dc6ffcdbb318c73f4cd834e4a489179d089d3c4263293ed864daf",
+    "tests/hackathon-test-vault/e5/setup-failure.test.mjs": "e43251e4611b670c56fe486b92608f6aa11ce5e4d4244c5f1c17553f5acb0d29",
+    "tests/hackathon-test-vault/e5/storage-rpc.test.mjs": "e2ba0ccdad6dab44dc8e5a6bb95327b1038c1872ae1c3bbf5d4ebdfa251b8b27",
+    "src/hackathon-test-vault/e5/setup-receipt.mjs": "b5bba70c88015f3e23027b29c4ff16d118bc5d576da3b0dfcde9644d737a31c9",
+    "tests/hackathon-test-vault/e5/child-diagnostics.mjs": "f90683d1d12668d26eecc1c0acc8297f46eb3a0664e2073b778be674b031702f",
+    "tests/hackathon-test-vault/e5/child-diagnostics.test.mjs": "21b239c369d6a73e6302c8f939dcdd00a88c79d39aeeb60976f234ae9a423111",
+    "tests/hackathon-test-vault/e5/race-fixture.mjs": "ef71ee18aa21770836bb7e9e4af6232a9de1a55f9d0db230b184b7d9c45465ea",
+    "tests/hackathon-test-vault/e5/setup-receipt.test.mjs": "492726178544a9456670dac31561cc9621e8014190649257cad95f9db3099f10"
+  },
+  "finalTestHead": "bbadeff4ce510d02d9a48a2c0e22f0c253aa6cb1",
+  "failureInvestigation": {
+    "originalHead": "3e11a8eb8f1925aad0d2a93f405f80e4b4ba6835",
+    "originalRun": 39202079577,
+    "originalJob": 117899079948,
+    "originalE5": {
+      "pass": 32,
+      "fail": 1,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "originalChildCodes": "NOT_RECORDED_STDOUT_STDERR_IGNORED",
+    "originalRootCause": "UNCONFIRMED_CONTROLLED_SAME_CHECKPOINT_INTERLEAVING_PROVEN_SEPARATELY",
+    "oldWorkflowRerun": false,
+    "controlledBeforeFix": {
+      "productHead": "3e11a8eb8f1925aad0d2a93f405f80e4b4ba6835",
+      "fixture": "NEW_DIAGNOSTIC_BARRIER_WORKTREE",
+      "tests": 2,
+      "pass": 2,
+      "a": "E5_CHECKPOINT_CAS_RETRY_REQUIRED_AFTER_ONE_SIGNATURE",
+      "b": "E5_ROLE_NONCE_BUSY_BEFORE_KEY",
+      "leaseRemainingSeconds": 120,
+      "timeout": false
+    },
+    "targetedAfterCasFix": {
+      "tests": 5,
+      "pass": 5
+    },
+    "intermediateLocalFull": {
+      "tests": 33,
+      "pass": 30,
+      "fail": 3,
+      "cause": "TWO_SETUP_RECEIPT_INDEXING_ERRORS_ONE_PARENT_FAILURE_INCLUDED",
+      "durationMs": 6729202.255416,
+      "clockGapCause": "UNCONFIRMED"
+    },
+    "targetedSetupFix": {
+      "tests": 13,
+      "pass": 13
+    },
+    "logSha256": {
+      "checkpoint-before-fix.tap": "6c05e1bcd31dcfb6d320b372ddfd7e1342c82622c15cdb2d29b8bc4fd1c4c35e",
+      "checkpoint-after-fix.tap": "f33fb0dab79de439366fdcd3064656bb1b24cf9739fc303270e221c24f410b23",
+      "cas-final-local.tap": "099abb7b65b096f0bab9ade5b4514d404733f957e6d7ba05a3b9fa22bdc42a1c",
+      "setup-readback-targeted.tap": "c7b7fd740d1299e52a9407d09b7868c944d8b066f0aae1c83a0568920983684f",
+      "final-pr-job.log": "6d63a7e79a03edeb31d8b3ab9811ce401e679572b62e8561698aeb2a384555b3"
+    }
+  }
+}
