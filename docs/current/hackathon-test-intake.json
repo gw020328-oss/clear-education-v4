@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 6,
+  "repositoryPlanRevision": 7,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -112,7 +112,7 @@
     {
       "stage": "E4",
       "scope": "TEST_CONTRACT_FUNDING_ROLES_SIGNER_TERMINATION",
-      "status": "NON_PAYOUT_PREPARATION_ACCEPTED_MEMORY_EVM_POSITIVE_UNIT_ALLOWED",
+      "status": "MEMORY_EVM_POSITIVE_AND_ADVERSARIAL_IMPLEMENTATION_IN_PROGRESS",
       "requestedSetting": "gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -134,13 +134,14 @@
         "head": "9dd69ca47e41d2b419b961ede30eafd00c3585e7",
         "pullRequest": 93,
         "mergedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
-        "nextCandidateHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
         "distinctCompileAndBlockedCases": 66,
         "executedContractDeployments": 0,
         "authorizationSignatures": 0,
         "accepts": 0,
         "claims": 0,
-        "acceptedForFullRuntime": false
+        "acceptedForFullRuntime": false,
+        "historyMergedHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
+        "remoteCi": "6_OF_6_SUCCESS"
       }
     },
     {
@@ -152,7 +153,19 @@
       "dependsOn": [
         "E4"
       ],
-      "tests": null
+      "tests": null,
+      "preparation": {
+        "status": "READ_ONLY_PLAN_COMPLETE_E4_FINAL_PORTS_PENDING",
+        "record": "docs/current/HACKATHON_TEST_E5_BOUNDARY_PREPARATION.ko.md",
+        "sourceEdits": false,
+        "executionStarted": false,
+        "requires": [
+          "EXECUTION_READER_AND_RUNTIME_PIN",
+          "SIGNER_AND_DURABLE_ENVELOPE_CAPABILITY",
+          "AUTHENTICATED_CANONICAL_REORG_REBASE_PROTOCOL",
+          "INDEPENDENT_PERSISTENT_CHAIN_LIFECYCLE"
+        ]
+      }
     },
     {
       "stage": "E6",
@@ -326,6 +339,17 @@
       "productSourceChanged": false,
       "commonHistoryMerged": true,
       "e3HistoryMergeRequested": true
+    },
+    "reclaimE4Positive": {
+      "inputCommit": "085878860d604095b0a6152329f8d82a445574b7",
+      "acceptedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
+      "executionPreparationHead": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "NEW_ISOLATED_MEMORY_EVM_EPHEMERAL_TEST_SIGNER_ACCEPT_CLAIM_AND_ADVERSARIAL_TESTS",
+      "persistentRuntimeAllowedByThisUnit": false
     }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",

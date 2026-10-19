@@ -141,3 +141,5 @@ E3 PR89 `c3b71c710f558529680e255222857f0e81fe1dcb`은 기존 구현 `fb9e6d3`와
 [경계 인수표](../../specs/bootcamp/hackathon-test-boundary-intake-v1.json)는 새 격리 메모리 EVM의 E4 양성/반례 harness를 허용한다. 정확24필드·새 TEST 키·실측 runtime/domain/token/역할·내부 current/CAS 재검사와 실제 accept/claim·회계·선후 순서를 검증한다. E3는 TEST fixture 포트 기반이며 실제 원천 수락이나 E5 canonical reader 연결은 아직 아니다. 이 인수는 persistent signer·지속 체인·실제 source·상용 활성화가 아니다.
 
 E4 실행 준비 PR93 `9dd69ca47e41d2b419b961ede30eafd00c3585e7`은 별도 실행 계약과 기본 차단 signer의 새66개 검사만 완료했다. E3 새 head를 추가 병합한 후보는 `ab02b2846c224d8f28cd7bf497aa9582b955c909`이며 해당 CI와 양성 실행 결과를 별도 인수한다. 이전22개 미실행 계획을 완료 결과로 세지 않는다. 기존 PR88 비지급 준비50개와 artifact도 보존한다.
+
+E4 새 양성 단위는 기존 Reclaim 세션에 Astra/High로 전달했고 시작을 확인했다. E3 이력 병합 후 실행 준비 `ab02b28`의 exact-head CI6/6과 E4/E2 소유 파일 보존도 확인했다. 66개 compile/차단 검사를 반복하지 않고 새 메모리 EVM 양성·반례를 추가한다. 기존 API 세션은 E5 읽기 전용 준비만 완료했으며 구현·트랜잭션은 시작하지 않았다. [E5 복구 경계 사전 검토](HACKATHON_TEST_E5_BOUNDARY_PREPARATION.ko.md)는 동기 DB/RPC 분리, immutable intent와 정확 전송 자료, worker fencing, INCLUDED/FINALIZED·reorg 재기준 및 accepted-first 직접 청구의 인수 조건을 정리한다. E4 최종 포트 인수 전 완료 구현으로 세지 않는다.
