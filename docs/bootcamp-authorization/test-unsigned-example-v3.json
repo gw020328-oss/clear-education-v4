@@ -1,0 +1,231 @@
+{
+  "provenance": "SYNTHETIC_EXAMPLE_NOT_AN_AUTHORIZATION",
+  "snapshot": {
+    "version": "clear-bootcamp-test-unsigned-snapshot.1",
+    "provenance": "SYNTHETIC_EXAMPLE",
+    "profilePin": {
+      "profileId": "clear-hackathon-test-operations.1",
+      "sourceCommit": "67b6a0731f97df98fda7820ab24ed85a57796a83",
+      "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98"
+    },
+    "registrations": [
+      {
+        "kind": "APPLICATION",
+        "logicalId": "application-orchid",
+        "opaqueId": "0x0101010101010101010101010101010101010101010101010101010101010101"
+      },
+      {
+        "kind": "DECISION",
+        "logicalId": "decision-orchid",
+        "opaqueId": "0x0303030303030303030303030303030303030303030303030303030303030303"
+      },
+      {
+        "kind": "ALLOCATION",
+        "logicalId": "allocation-orchid",
+        "opaqueId": "0x0505050505050505050505050505050505050505050505050505050505050505"
+      },
+      {
+        "kind": "PROCEDURE",
+        "logicalId": "procedure-orchid",
+        "opaqueId": "0x1313131313131313131313131313131313131313131313131313131313131313"
+      }
+    ],
+    "logicalTarget": {
+      "applicationId": "application-orchid",
+      "decisionId": "decision-orchid",
+      "allocationId": "allocation-orchid",
+      "procedureId": "procedure-orchid"
+    },
+    "tokenDecimals": "6",
+    "domain": {
+      "name": "ClearBootcampTestPayment",
+      "version": "3",
+      "chainId": "31338",
+      "verifyingContract": "0x3333333333333333333333333333333333333333",
+      "salt": "0x1010101010101010101010101010101010101010101010101010101010101010"
+    },
+    "message": {
+      "applicationId": "0x0101010101010101010101010101010101010101010101010101010101010101",
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "runtimeMappingHash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+      "decisionId": "0x0303030303030303030303030303030303030303030303030303030303030303",
+      "decisionRevision": "1",
+      "decisionHash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+      "recipient": "0x1111111111111111111111111111111111111111",
+      "token": "0x2222222222222222222222222222222222222222",
+      "amountAtoms": "100000000",
+      "allocationId": "0x0505050505050505050505050505050505050505050505050505050505050505",
+      "consentSetHash": "0x0606060606060606060606060606060606060606060606060606060606060606",
+      "deadlinePolicyHash": "0xcfa712e78481bfcd410eff6707bbe706fe43ef3f6c2816bac55644c8ab30b790",
+      "eligibilityRoute": "1",
+      "nonce": "0x0808080808080808080808080808080808080808080808080808080808080808",
+      "issuedAt": "2000000150",
+      "expiresAt": "2000000250",
+      "signerKeyId": "0x0909090909090909090909090909090909090909090909090909090909090909",
+      "authorizationEpoch": "1",
+      "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "procedureId": "0x1313131313131313131313131313131313131313131313131313131313131313",
+      "firstReviewStartedAt": "2000000000",
+      "decisionPublishedAt": "2000000020",
+      "sourceValidUntilExclusive": "2000000300",
+      "revalidationCount": "0"
+    },
+    "deadlineRecord": {
+      "version": "clear-bootcamp-test-first-accept-window.3",
+      "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "applicationId": "0x0101010101010101010101010101010101010101010101010101010101010101",
+      "procedureId": "0x1313131313131313131313131313131313131313131313131313131313131313",
+      "decisionId": "0x0303030303030303030303030303030303030303030303030303030303030303",
+      "decisionRevision": "1",
+      "decisionHash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+      "allocationId": "0x0505050505050505050505050505050505050505050505050505050505050505",
+      "eligibilityRoute": "1",
+      "firstReviewStartedAt": "2000000000",
+      "decisionPublishedAt": "2000000020",
+      "sourceValidUntilExclusive": "2000000300",
+      "issuedAt": "2000000150",
+      "expiresAt": "2000000250",
+      "revalidationCount": "0"
+    }
+  },
+  "input": {
+    "logicalTarget": {
+      "applicationId": "application-orchid",
+      "decisionId": "decision-orchid",
+      "allocationId": "allocation-orchid",
+      "procedureId": "procedure-orchid"
+    },
+    "domain": {
+      "name": "ClearBootcampTestPayment",
+      "version": "3",
+      "chainId": "31338",
+      "verifyingContract": "0x3333333333333333333333333333333333333333",
+      "salt": "0x1010101010101010101010101010101010101010101010101010101010101010"
+    },
+    "message": {
+      "applicationId": "0x0101010101010101010101010101010101010101010101010101010101010101",
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "runtimeMappingHash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+      "decisionId": "0x0303030303030303030303030303030303030303030303030303030303030303",
+      "decisionRevision": "1",
+      "decisionHash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+      "recipient": "0x1111111111111111111111111111111111111111",
+      "token": "0x2222222222222222222222222222222222222222",
+      "amountAtoms": "100000000",
+      "allocationId": "0x0505050505050505050505050505050505050505050505050505050505050505",
+      "consentSetHash": "0x0606060606060606060606060606060606060606060606060606060606060606",
+      "deadlinePolicyHash": "0xcfa712e78481bfcd410eff6707bbe706fe43ef3f6c2816bac55644c8ab30b790",
+      "eligibilityRoute": "1",
+      "nonce": "0x0808080808080808080808080808080808080808080808080808080808080808",
+      "issuedAt": "2000000150",
+      "expiresAt": "2000000250",
+      "signerKeyId": "0x0909090909090909090909090909090909090909090909090909090909090909",
+      "authorizationEpoch": "1",
+      "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "procedureId": "0x1313131313131313131313131313131313131313131313131313131313131313",
+      "firstReviewStartedAt": "2000000000",
+      "decisionPublishedAt": "2000000020",
+      "sourceValidUntilExclusive": "2000000300",
+      "revalidationCount": "0"
+    }
+  },
+  "state": {
+    "status": "RESERVED",
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+    "consentSetHash": "0x0606060606060606060606060606060606060606060606060606060606060606",
+    "deadlinePolicyHash": "0xcfa712e78481bfcd410eff6707bbe706fe43ef3f6c2816bac55644c8ab30b790",
+    "nonce": "0x0808080808080808080808080808080808080808080808080808080808080808",
+    "applicationId": "0x0101010101010101010101010101010101010101010101010101010101010101",
+    "procedureId": "0x1313131313131313131313131313131313131313131313131313131313131313",
+    "firstReviewStartedAt": "2000000000",
+    "decisionPublishedAt": "2000000020",
+    "decisionId": "0x0303030303030303030303030303030303030303030303030303030303030303",
+    "decisionRevision": "1",
+    "decisionHash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+    "runtimeMappingHash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+    "allocationId": "0x0505050505050505050505050505050505050505050505050505050505050505",
+    "recipient": "0x1111111111111111111111111111111111111111",
+    "token": "0x2222222222222222222222222222222222222222",
+    "amountAtoms": "100000000",
+    "authorizationEpoch": "1",
+    "signerKeyId": "0x0909090909090909090909090909090909090909090909090909090909090909",
+    "revalidationCount": "0",
+    "domain": {
+      "name": "ClearBootcampTestPayment",
+      "version": "3",
+      "chainId": "31338",
+      "verifyingContract": "0x3333333333333333333333333333333333333333",
+      "salt": "0x1010101010101010101010101010101010101010101010101010101010101010"
+    },
+    "signerActive": true,
+    "nonceAvailable": true,
+    "reservedBalanceAtoms": "100000000",
+    "currentDecision": true,
+    "currentDecisionStatus": "MET",
+    "fullAllocation": true,
+    "bothPartiesConsent": true,
+    "unresolvedValidObjection": false,
+    "unassessedSubstantiveObjection": false,
+    "newValidError": false,
+    "sourceWindow": {
+      "verifiedValidUntilExclusive": "2000000900",
+      "moodleObservedAt": [
+        "2000000000",
+        "2000000000",
+        "2000000000"
+      ],
+      "reclaimIssuedAt": [
+        "1999999900",
+        "1999999900"
+      ],
+      "rawAcquiredAt": "2000000000",
+      "authLeaseExpiresAt": "2000000900",
+      "rawLeaseExpiresAt": "2000000900",
+      "queryLeaseExpiresAt": "2000000900"
+    }
+  },
+  "now": 2000000160,
+  "result": {
+    "status": "UNSIGNED_PREFLIGHT_ONLY",
+    "version": "clear-bootcamp-test-payment-authorization.3",
+    "hashes": {
+      "version": "clear-bootcamp-test-payment-authorization.3",
+      "primaryType": "BootcampTestPaymentAuthorizationV3",
+      "domainSeparator": "0x2c6a1793334910a378671c1b070559474c135289d027f6325c7c9a5d3ca75347",
+      "structHash": "0x162a8ad14cab6e3de47687dd442639fa9527e5dd215c60f2ba9916fbac4478a2",
+      "digest": "0x38abc249ef4e5668351a4fedd34d84ab47cd0d78fdce4f260f7fad80969b3c3b",
+      "validationScope": "UNSIGNED_STRUCTURE_AND_HASH_ONLY",
+      "signatureVerified": false,
+      "sourceVerified": false,
+      "gates": {
+        "usableForIssuance": false,
+        "paymentAllowed": false,
+        "productionEnabled": false,
+        "grant": "HOLD",
+        "outbox": "HOLD",
+        "independentClaim": "NO_GO"
+      }
+    },
+    "snapshotHash": "0x3537f83bfac94b3f4015c2bd215ad24e81c9379479d136f20e98aa2d0705591a",
+    "stateSnapshotHash": "0x81c7c3595972071792b4695debaec289a2c0004f41b95e35c4ef9e6cee3a4162",
+    "firstAcceptBoundsConsistent": true,
+    "sourceSignatureVerified": false,
+    "consentAuthenticityVerified": false,
+    "onchainStateVerified": false,
+    "profilePinMatchesE0": true,
+    "nonceConsumed": false,
+    "blockers": [
+      "E1_E3_CROSS_ACCEPTANCE_REQUIRED",
+      "E4_AUTHORITY_AND_FUNDING_RUNTIME_NOT_IMPLEMENTED"
+    ],
+    "gates": {
+      "usableForIssuance": false,
+      "paymentAllowed": false,
+      "productionEnabled": false,
+      "grant": "HOLD",
+      "outbox": "HOLD",
+      "independentClaim": "NO_GO"
+    }
+  }
+}
