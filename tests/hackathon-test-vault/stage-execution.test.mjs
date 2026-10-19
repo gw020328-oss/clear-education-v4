@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {writeFileSync,mkdirSync,existsSync} from 'node:fs';
 import {createFreshMemoryStage,memoryStageTotals} from '../../src/hackathon-test-vault/memory-stage-harness.mjs';
 const setup=async t=>{const f=await createFreshMemoryStage();t.after(()=>f.close());return f;};
-const probes={deployments:0,codeInjections:0,injectedClaims:0,contractLevelAccepts:0};
+const probes={deployments:0,codeInjections:0,injectedClaims:0,contractLevelAccepts:0,contractLevelClaims:0};
 const output=new URL('../../.toolchain/hackathon-test-vault/',import.meta.url);
 function record(name,value){mkdirSync(output,{recursive:true});writeFileSync(new URL(name,output),JSON.stringify(value,null,2)+'\n');}
 after(()=>{const totals={...memoryStageTotals(),controlledProbes:{...probes}};record('stage-execution-metrics.json',totals);console.log('E4_MEMORY_STAGE_METRICS '+JSON.stringify(totals));});
@@ -230,8 +230,13 @@ for(const mode of [1,2,3])test('controlled unsupported-token VM probe '+mode+' c
 test('two concurrent any-callers produce exactly one fixed settlement',async t=>{
  const f=await setup(t),h=await f.ready(),s=await f.sign(h);await f.accept(h,s);
  const recipient=f.registration(f.firstApp).registration.recipient,before=await f.token.balanceOf(recipient);
- const results=await Promise.allSettled([f.claim(f.firstApp,5),f.claim(f.firstApp,6)]);
- assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(f.metrics.claims,1);
+ // Contract concurrency uses receipts, not a wrapper promise that also performs
+ // a strict latest-checkpoint readback while the competing transaction is mining.
+ const results=await Promise.allSettled([5,6].map(i=>sent(f.vault.connect(f.accounts[i]).claim(appid(f),{gasLimit:1000000}))));
+ assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
+ const success=results.find(r=>r.status==='fulfilled').value,failure=results.find(r=>r.status==='rejected').reason;
+ assert.equal(success.status,1);assert.equal(failure.code,'CALL_EXCEPTION');assert.equal(failure.receipt.status,0);
+ probes.contractLevelClaims++;assert.equal(f.metrics.claims,0);await f.sync();
  assert.equal(await f.token.balanceOf(recipient),before+A);assert.deepEqual(Array.from(await f.vault.accounting()).slice(0,3),[0n,0n,0n]);
 });
 
@@ -267,4 +272,18 @@ test('measured role readback mismatch rejects signing before key access',async t
   return result;
  };
  assert.equal((await blocked(f,h)).code,'STAGE_RUNTIME_PIN');assert.equal(intercepted,true);
+});
+
+test('settled claim with moving readback checkpoint rejects acknowledgment without a second payment',async t=>{
+ const f=await setup(t),h=await f.ready(),s=await f.sign(h);await f.accept(h,s);
+ const send=f.provider.send.bind(f.provider),recipient=f.registration(f.firstApp).registration.recipient,before=await f.token.balanceOf(recipient);let injected=false;
+ f.provider.send=async(method,args)=>{
+  const result=await send(method,args);
+  if(!injected&&method==='eth_getCode'){injected=true;await f.raw.request({method:'evm_mine',params:[]});}
+  return result;
+ };
+ await assert.rejects(()=>f.claim(f.firstApp),/STAGE_CHAIN_MOVED/);assert.equal(injected,true);
+ assert.equal(f.metrics.claims,1);assert.equal((await f.vault.application(appid(f))).state,6n);assert.equal(await f.token.balanceOf(recipient),before+A);
+ await f.sync();await assert.rejects(()=>f.vault.connect(f.accounts[6]).claim.staticCall(appid(f)),/ACCEPTED_RIGHT_REQUIRED/);
+ assert.equal(f.metrics.keyProviderCalls,1);
 });
