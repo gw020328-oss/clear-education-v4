@@ -133,3 +133,11 @@ PR90 `41354e0283709f74dd64a9dc6435703c804853c6`의 실제 변경과 최종 반�
 공통 브랜치에 해당 이력을 정상 병합했다. E3 소유자에게도 동일 이력 병합과 새 head 필수 검사 확인을 요청했다. E3 최종 인수와 E4 양성 지급 harness 허용은 이 확인 뒤에 기록한다. develop/main 병합·배포는 수행하지 않는다.
 
 본인 HackerRank Python(Basic) 인증 보유 계정이 있다는 사용자 답변은 수집 준비에만 반영했다. 식별자·증명·로그인은 수집하지 않았고 원천 신뢰나 지급 조건을 활성화하지 않았다. 안전한 수집·요청/지갑 결합 준비 후 실제 연결을 진행한다.
+
+### 2026-10-19 — E3 최종 인수와 E4 메모리 시험 허용
+
+E3 PR89 `c3b71c710f558529680e255222857f0e81fe1dcb`은 기존 구현 `fb9e6d3`와 검토된 Mac `41354e0`을 부모로 한 정상 병합이다. 새 exact-head 필수 CI6/6, 미해결 리뷰 대화0, 경계표 E3 source/artifact8개 SHA 동일을 root가 확인했다. 공통 `aed466074b046834838a7c727afe7f2106c893ab`도 CI6/6이다. 과거 실패 실행은 역사 기록으로 보존하며 정체 원인은 계속 미확정이다.
+
+[경계 인수표](../../specs/bootcamp/hackathon-test-boundary-intake-v1.json)는 새 격리 메모리 EVM의 E4 양성/반례 harness를 허용한다. 정확24필드·새 TEST 키·실측 runtime/domain/token/역할·내부 current/CAS 재검사와 실제 accept/claim·회계·선후 순서를 검증한다. E3는 TEST fixture 포트 기반이며 실제 원천 수락이나 E5 canonical reader 연결은 아직 아니다. 이 인수는 persistent signer·지속 체인·실제 source·상용 활성화가 아니다.
+
+E4 실행 준비 PR93 `9dd69ca47e41d2b419b961ede30eafd00c3585e7`은 별도 실행 계약과 기본 차단 signer의 새66개 검사만 완료했다. E3 새 head를 추가 병합한 후보는 `ab02b2846c224d8f28cd7bf497aa9582b955c909`이며 해당 CI와 양성 실행 결과를 별도 인수한다. 이전22개 미실행 계획을 완료 결과로 세지 않는다. 기존 PR88 비지급 준비50개와 artifact도 보존한다.

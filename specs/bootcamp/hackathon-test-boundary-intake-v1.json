@@ -1,15 +1,15 @@
 {
   "version": "clear-hackathon-test-boundary-intake.1",
   "date": "2026-10-19",
-  "status": "AWAITING_E3_MAC_FIX_MERGED_HEAD_CI",
+  "status": "ACCEPTED_FOR_STAGE_SCOPED_MEMORY_EVM_PAYOUT_HARNESS",
   "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
   "encodingPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
   "e3": {
-    "head": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+    "head": "c3b71c710f558529680e255222857f0e81fe1dcb",
     "pullRequest": 89,
     "requestedModel": "gpt-6.1-sol",
     "thinking": "high",
-    "remoteCi": "5_OF_6_SUCCESS_ONE_MAC_CANCELLATION",
+    "remoteCi": "6_OF_6_SUCCESS",
     "localReported": {
       "e3Dedicated": 47,
       "relatedIncludingE1E2E3": 592
@@ -24,8 +24,16 @@
       "docs/bootcamp-procedure/e4-port-proposal.json": "74f5472788fd3c807a931033e8e6383b8793f8b8f02be283d746e23bbab12f7e",
       "docs/bootcamp-procedure/synthetic-intake-example.json": "309072d4eea6e3e8f7d233f13e9160621f89861a3099038987668b49d684b494"
     },
-    "accepted": false,
-    "macBlocker": {
+    "accepted": true,
+    "macFix": {
+      "head": "41354e0283709f74dd64a9dc6435703c804853c6",
+      "pullRequest": 90,
+      "remoteCi": "6_OF_6_SUCCESS",
+      "fullMacCases": 105,
+      "sourceSemanticChanges": false
+    },
+    "sourceImplementationHead": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+    "historicalRequiredCheckFailure": {
       "run": "39142228451",
       "job": "117718818737",
       "test": "SIGKILL legacy-missing",
@@ -35,15 +43,10 @@
       "prCompanionMac": "62_OF_62_PASS_NOT_SUBSTITUTE_FOR_FAILED_PUSH",
       "cause": "HISTORICAL_STALL_UNPROVEN_HARNESS_GAPS_FIXED",
       "blindRerunPerformed": false,
-      "resolution": "NEW_MERGED_HEAD_REQUIRED_CI_PENDING"
+      "resolution": "REVIEWED_MAC_HISTORY_MERGED_NEW_EXACT_HEAD_CI_6_OF_6_SUCCESS"
     },
-    "macFix": {
-      "head": "41354e0283709f74dd64a9dc6435703c804853c6",
-      "pullRequest": 90,
-      "remoteCi": "6_OF_6_SUCCESS",
-      "fullMacCases": 105,
-      "sourceSemanticChanges": false
-    }
+    "artifactSha256PreservedOnAcceptedHead": true,
+    "unresolvedReviewThreads": 0
   },
   "e4Preparation": {
     "head": "d287b3789a678a1e6984b583e4c85859e9e97a22",
@@ -122,13 +125,29 @@
     "actualE3ToE4ChainAdapterAccepted": false
   },
   "boundaries": {
-    "acceptedForStageScopedPayoutHarness": false,
+    "acceptedForStageScopedPayoutHarness": true,
     "fullRuntimeAccepted": false,
     "persistentSignerActivated": false,
     "realSourceTrustActivated": false,
     "existingV1GatesChanged": false,
     "productionEnabled": false,
     "automaticMerge": false,
-    "nextUnit": "E4_TEST_SIGNER_ACCEPT_CLAIM_ONLY_AFTER_E3_CI_INTAKE"
+    "nextUnit": "E4_MEMORY_EVM_SIGNER_ACCEPT_CLAIM_AND_ADVERSARIAL_VALIDATION",
+    "allowedRuntimeKinds": [
+      "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS"
+    ],
+    "harnessSigner": "NEW_EPHEMERAL_TEST_KEY_WITH_INTERNAL_CURRENT_CAS_AND_MEASURED_CHAIN_PINS_ONLY",
+    "persistentRuntimeAllowedByThisIntake": false
+  },
+  "acceptanceBasis": {
+    "commonPrecedingHead": "aed466074b046834838a7c727afe7f2106c893ab",
+    "commonPrecedingRemoteCi": "6_OF_6_SUCCESS",
+    "e3SourceAndArtifacts": "8_OF_8_PINNED_SHA256_IDENTICAL",
+    "preparationSourceAndArtifacts": "5_OF_5_PINNED_SHA256_IDENTICAL",
+    "macFixHead": "41354e0283709f74dd64a9dc6435703c804853c6",
+    "e3AcceptedParents": [
+      "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+      "41354e0283709f74dd64a9dc6435703c804853c6"
+    ]
   }
 }
