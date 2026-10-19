@@ -57,7 +57,7 @@ SQLite FULL 동기·짧은 BEGIN IMMEDIATE transaction으로 role account nonce�
 
 bytes 저장 뒤 SEALED 전 프로세스 종료는 일치하는 기존 bytes를 검증해 복구한다. bytes가 없거나 서명 여부가 불확실하면 자동 재서명하지 않는다. 응답 유실은 저장 txHash의 canonical 조회만 수행한다. fee bump/cancel/replacement/new operation 자동 발급은 없다.
 
-dispatch 기한은 seal 시점부터 최대120초와 lease 기한 중 이른 값이다. 복구 bytes는 생성부터7일 보존한다. 별도 원천 raw의 승인된 최대1800초·최소 lease 정책에서 유추한 값이 아니며 TEST 정책으로 고정했다. `prune`은 인증된 내부 호출로 기한 뒤 unlink+부모 fsync를 수행한다. 삭제 실패는 FAILED로 남긴다. 비밀 없는 tombstone·nonce barrier는 환경 수명 동안 유지한다. 파일 삭제는 포렌식 완전 소거나 이미 유출/전송된 tx의 취소가 아니다.
+dispatch 기한은 seal 시점부터 최대120초와 lease 기한 중 이른 값이다. 복구 bytes는 생성부터7일 보존한다. 별도 원천 raw의 승인된 최대1800초·최소 lease 정책에서 유추한 값이 아니며 TEST 정책으로 고정했다. `prune`은 인증된 내부 호출로 기한 뒤 unlink+부모 fsync를 수행한다. 운영 maintenance 호출 연결은 API 후속이며, 이 모듈만으로 정시 자동 삭제나 앱 미실행 중 삭제를 보장하지 않는다. 삭제 실패는 FAILED로 남긴다. 비밀 없는 tombstone·nonce barrier는 환경 수명 동안 유지한다. 파일 삭제는 포렌식 완전 소거나 이미 유출/전송된 tx의 취소가 아니다.
 
 ## canonical과 복구 정지
 

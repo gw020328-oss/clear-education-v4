@@ -1,0 +1,177 @@
+{
+  "version": "clear-e5-public-runtime-example.1",
+  "sourceHead": "400ec7d9284c41fc97d1c0e74fda1f9a3be49d38",
+  "scope": "OWNED_TEST_SERVICE_ONLY",
+  "runtime": {
+    "id": "e5-569a4c48-d204-45c9-b9b0-61cba68583a0",
+    "manifest": {
+      "imageId": "sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd",
+      "platform": "linux",
+      "networkIsolation": "BRIDGE_WITH_GETH_DEV_NO_P2P",
+      "version": "clear-e5-test-runtime.1",
+      "environmentId": "e5-569a4c48-d204-45c9-b9b0-61cba68583a0",
+      "image": "ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd",
+      "clientVersion": "Geth/v1.17.8-stable-a5790770/linux-arm64/go1.27.1",
+      "chainId": "155162128673812",
+      "networkId": "155162128673813",
+      "genesisHash": "0x1d5e748b8d33cda30bbe1419b5089a91552e80801a91b4487b8e00c27b99f814",
+      "endpoint": "http://127.0.0.1:56607/",
+      "tokenAddress": "0xcb5f8ba03705f7fcb2cc9969759a255844636371",
+      "tokenCodeHash": "0x24e0b4b9b20ccf0949acdf19c53041e404f82c7d17dd7fe322d68ac2b7e9e952",
+      "vaultAddress": "0x9a31cb3e36ac2ce6f0e56f4ed83c976d98f2a868",
+      "vaultCodeHash": "0x7ac148345237980e01539b92e184fa974dec575c16dfd1ef47cc4c0a7f31a230",
+      "instanceId": "0xa046699389e62a2676b51013b6c2151b9977fbe373732941c2a6cf4b0afc5606",
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+      "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "domain": {
+        "name": "ClearBootcampTestPayment",
+        "version": "3",
+        "chainId": "155162128673812",
+        "verifyingContract": "0x9a31cb3e36ac2ce6f0e56f4ed83c976d98f2a868",
+        "salt": "0xa046699389e62a2676b51013b6c2151b9977fbe373732941c2a6cf4b0afc5606"
+      },
+      "typeHash": "0x0420a07c2295bca1fc66f0033f2afa0c6e430c7d7cccb48fa23a98c84d97fa8f",
+      "domainSeparator": "0xecf91be38e8a709b3326fe247d9e70332f1e2181438232bff838c46fc65099a1",
+      "roles": {
+        "registrar": "0xa1f4cd34fa2a98944604f873b49f11d96ac33ab6",
+        "initialSigner": "0xf68b457ae1e37560e6d4cd2dfd4c9fd8b63e77ac",
+        "keyAdmin": "0xe4238af717baf7298f170702a7270938d532efa0",
+        "relayer": "0xdabc2ae8441cf5ee2805ef3f489f145c30626ac4",
+        "depositor": "0x5c88bfffa8f3c67dee6b4f1139e5fa3e0a8c5cb1",
+        "terminator": "0x898432707bf1066289d593cbfcb293cef17ed82c"
+      },
+      "signerKeyId": "0x02a830ed6bf5b43cf5a83d4b8c3e7bf679dcc441246f718ea373b03e715f4d12",
+      "signerAddress": "0xf68b457ae1e37560e6d4cd2dfd4c9fd8b63e77ac",
+      "controllerAddress": "0x018260b5ba7fe02c7b453a300b69d469bea2888e",
+      "deploymentTransactions": {
+        "token": "0x159acd808d5b978f4446ea2b6edd938c2b2b3efd32909ba8f5b91ef681160637",
+        "vault": "0xbbd5d81c5e9f8ae062b4caca3f81ff4b1cdc0019fa96304f9d11d2ead6103cd7"
+      },
+      "checkpoint": {
+        "number": "3",
+        "hash": "0x38284d9f1fb79b8556015c6de3aac78e07c50c5a17cfac40af1bec191c61689b"
+      },
+      "blockHashCapability": {
+        "version": "clear-e5-blockhash-capability.1",
+        "blockHash": "0x1d5e748b8d33cda30bbe1419b5089a91552e80801a91b4487b8e00c27b99f814",
+        "methods": [
+          "eth_getCode",
+          "eth_getBalance",
+          "eth_getTransactionCount",
+          "eth_call"
+        ],
+        "unknownHashRejected": true,
+        "numberFallback": false
+      },
+      "finalityPolicy": "LOCAL_DEV_INCLUSION_ONLY",
+      "production": false
+    },
+    "runtimeHash": "0xb289bf6b44c5cc6259a4ff46e3567a6a0a7c267a9c3f77dc8676b30067925476",
+    "serviceStoppedClaim": {
+      "txHash": "0x4810bb422202d17c36ef8d929308bd52e904d43991378c34db95761b0cf7fc0b",
+      "blockHash": "0x74e17b262c566f8e077ea809fce58ed49a1a347501a8128fc47f9fec43e65658",
+      "apiBackendStopIntegrated": false
+    }
+  },
+  "retainedOrphanProbe": {
+    "runtime": {
+      "imageId": "sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd",
+      "platform": "linux",
+      "networkIsolation": "BRIDGE_WITH_GETH_DEV_NO_P2P",
+      "version": "clear-e5-test-runtime.1",
+      "environmentId": "e5-3a6eae93-ffed-4e04-a3c5-2cd5efeced1a",
+      "image": "ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd",
+      "clientVersion": "Geth/v1.17.8-stable-a5790770/linux-arm64/go1.27.1",
+      "chainId": "273022423680811",
+      "networkId": "273022423680812",
+      "genesisHash": "0x3ce51a5a7bc87592896185b80cf5f8e83ba5d50ddd712451c0b85242bc1daf91",
+      "endpoint": "http://127.0.0.1:56232/",
+      "tokenAddress": "0xce923ea0fca9e9f44389e725b4c839f5d75b55de",
+      "tokenCodeHash": "0x24e0b4b9b20ccf0949acdf19c53041e404f82c7d17dd7fe322d68ac2b7e9e952",
+      "vaultAddress": "0x02250580130435a83f099686fdcad7a6d7d857dd",
+      "vaultCodeHash": "0xce0f76d82a588a28ade459055277b736ffd103a883bb0b070f9e983947fb8b43",
+      "instanceId": "0x022b467c05ef266f662f01f0eb95018ec31058d6094b3a2bdc883a47c0e024e7",
+      "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+      "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+      "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+      "domain": {
+        "name": "ClearBootcampTestPayment",
+        "version": "3",
+        "chainId": "273022423680811",
+        "verifyingContract": "0x02250580130435a83f099686fdcad7a6d7d857dd",
+        "salt": "0x022b467c05ef266f662f01f0eb95018ec31058d6094b3a2bdc883a47c0e024e7"
+      },
+      "typeHash": "0x0420a07c2295bca1fc66f0033f2afa0c6e430c7d7cccb48fa23a98c84d97fa8f",
+      "domainSeparator": "0x5622e93dd23e32dd856d817c968d6b1c1cd0ad736fb25a28ae53588b517e8873",
+      "roles": {
+        "registrar": "0x2078447f014ce5472db61610c90bed8f9274fd95",
+        "initialSigner": "0xd9ce5b551c6c31be76c823dcc14aaa37c447970d",
+        "keyAdmin": "0x970e9259e1bf8a291672fa09dc6ac73ff892516e",
+        "relayer": "0xe52df93cb3158093c334fc8bcc2d86bfb16110e9",
+        "depositor": "0xe7bbff36b896d5df0b089fd3e89ad7444ad94a66",
+        "terminator": "0xf92013b97f45abfd1eda88f08a38499cc5864b78"
+      },
+      "signerKeyId": "0x3648c6cbf07c6fae982e98734a46b371b729148a2ed30570c8cf990d546a3e12",
+      "signerAddress": "0xd9ce5b551c6c31be76c823dcc14aaa37c447970d",
+      "controllerAddress": "0x57f9737c1aef4a3d732c35e159aa5a99574d947a",
+      "deploymentTransactions": {
+        "token": "0x95600292fcee744f7b5b3ad4078f39694af65ff2bab30fd040f1068f3f8e8822",
+        "vault": "0x6b25a09c42258aef4a37fd8cb6f29632b952f0a1937e9b7f72826a75bae582ad"
+      },
+      "checkpoint": {
+        "number": "3",
+        "hash": "0x8a4aa2b912ce892f8efe9e57996cbd81f4ea96c7f4cc0d2c0df9d95121913c51"
+      },
+      "blockHashCapability": {
+        "version": "clear-e5-blockhash-capability.1",
+        "blockHash": "0x3ce51a5a7bc87592896185b80cf5f8e83ba5d50ddd712451c0b85242bc1daf91",
+        "methods": [
+          "eth_getCode",
+          "eth_getBalance",
+          "eth_getTransactionCount",
+          "eth_call"
+        ],
+        "unknownHashRejected": true,
+        "numberFallback": false
+      },
+      "finalityPolicy": "LOCAL_DEV_INCLUSION_ONLY",
+      "production": false
+    },
+    "orphan": {
+      "number": "4",
+      "hash": "0x2e293a5e76f7cb884d3f580a8ce8fac91be7fb2e1f1dca835642927619cafd10",
+      "time": "1792385329"
+    },
+    "replacement": {
+      "number": "4",
+      "hash": "0x55d9892b13184c1df2346b4a0a87af787821669f96b3d57b101701b11a3b79a5",
+      "time": "1792385328"
+    },
+    "orphanBlockRetained": true,
+    "capabilities": [
+      {
+        "method": "eth_getCode",
+        "nonCanonicalAvailable": true,
+        "requireCanonicalRejected": true
+      },
+      {
+        "method": "eth_getBalance",
+        "nonCanonicalAvailable": true,
+        "requireCanonicalRejected": true
+      },
+      {
+        "method": "eth_getTransactionCount",
+        "nonCanonicalAvailable": true,
+        "requireCanonicalRejected": true
+      },
+      {
+        "method": "eth_call",
+        "nonCanonicalAvailable": true,
+        "requireCanonicalRejected": true
+      }
+    ],
+    "automaticRebase": false
+  },
+  "notApiBackendStopIntegration": true
+}
