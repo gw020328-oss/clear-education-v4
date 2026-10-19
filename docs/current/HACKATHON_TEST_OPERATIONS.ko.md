@@ -189,3 +189,9 @@ API 로컬 `97f6413da80f8c9075baf344b5e2bf3f8c221360`은 새36+metadata44+기존
 승인된9aa 실행은 실제 전송1/예약1/count0, 첫 HTTP 성공 뒤 `E6_PAID8_USAGE_UNKNOWN`으로 중단했다. prompt314/candidate135/total449가 명시됐고 thoughts 세부 항목은 없었다. 나머지7건은NOT_RUN, 채점사례0/모델품질N/A·실제invoice N/A다. 알려진완료비용 필드의0을 무료나 실제요금0으로 해석하지 않는다. 원문 미저장 정책 때문에 첫 응답을 사후 채점 성공으로 바꿀 수도 없다. 기존 원장·승인·실패 결과는 보존하고 자동 재전송하지 않는다.
 
 root는 [공식 UsageMetadata 합계](https://ai.google.dev/api/generate-content#UsageMetadata)와 [공식 SDK UsageMetadata](https://github.com/googleapis/python-genai/blob/main/google/genai/types.py)를 확인했다. no-tools 고정 요청에서 total-prompt를 결합 출력량으로 유도하는 호환 처리를 오프라인으로 검토한다. 관측 thoughts 부재를 그대로 남기고 파생값·실측필드·과금 추정을 구분하며, total 누락/불일치·뜻밖의 도구/캐시·overflow는 계속 차단해야 한다. 이 검토가 기존9aa 실행의 소급 성공이나 새 호출 승인은 아니다.
+
+### E5-A 새 필수 CI 실패 — 원인 진단 중
+
+Draft PR95/head `3e11a8eb8f1925aad0d2a93f405f80e4b4ba6835`는 기존필수6/6이 성공했으나 새 E5 PR workflow [39202079577/job117899079948](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39202079577/job/117899079948)의 실제33개 중32PASS/1FAIL이다. 두 service process nonce 경합의 성공개수가 기대1 대신0이었다. 자식 stdout/stderr가 폐기되고 catch가 고정 exit87만 남겨 최초 거부 원인은 미확정이다. push 동반 실행이나 과거 local 성공으로 이 실패를 대체하지 않는다. E5-A 전체 인수와 후속 실제 API dispatch는 false다.
+
+Astra/High로 자식의 비밀없는 phase/code/exit 진단과 제어된 경합 재현을 요청했다. 같은 canonical checkpoint를 매번 새 관측 sequence로 append하면, nonce에서 지는 다른 process의 관측이 승자 after-sign CAS도 중단시킬 수 있다는 구체 interleaving 가설을 소스에서 찾았다. 이것은 최초 CI 원인으로 확정된 사실이 아니다. 동일 checkpoint의 멱등 처리와 실제 다른 checkpoint의 CAS 거부를 구분해 근거를 확보한 뒤 필요한 부분만 수정한다. nonce/fence/lease/chain guard 완화나 기댓값0, 원래 workflow 무근거 재실행으로 넘기지 않는다.

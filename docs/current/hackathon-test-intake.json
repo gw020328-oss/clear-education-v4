@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 14,
+  "repositoryPlanRevision": 15,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -228,7 +228,7 @@
     {
       "stage": "E5",
       "scope": "OUTBOX_WORKER_RELAYER_READER_RECOVERY",
-      "status": "API_CURRENT_HANDSHAKE_REVIEWED_FULL_EXECUTION_CONNECTION_PENDING",
+      "status": "SERVICE_REQUIRED_CHECK_DIAGNOSIS_API_CURRENT_PREPARATION_REVIEWED",
       "requestedSetting": "gpt-6.1-sol/high; sensitive recovery gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -285,6 +285,26 @@
         "combinedCi": "PENDING",
         "sourceReview": "THREE_NEW_MODULES_STORE_AND_OPERATIONS_CONNECTION_READ",
         "fullE5BAccepted": false
+      },
+      "serviceCandidate": {
+        "pr": 95,
+        "head": "3e11a8eb8f1925aad0d2a93f405f80e4b4ba6835",
+        "accepted": false,
+        "existingRequiredCi": "6_OF_6_SUCCESS",
+        "newRequiredCi": "PR_E5_FAILURE_PUSH_RESULT_PENDING_AT_RECORD",
+        "failure": {
+          "run": "39202079577",
+          "job": "117899079948",
+          "event": "pull_request",
+          "pass": 32,
+          "fail": 1,
+          "test": "TWO_SERVICE_PROCESSES_NONCE_RACE_ZERO_SUCCESSES_EXPECT_ONE",
+          "firstChildRefusalCause": "UNPROVEN_NO_CHILD_FIXED_DIAGNOSTICS",
+          "blindRerun": false,
+          "hypothesis": "IDENTICAL_CHECKPOINT_APPEND_CAN_INVALIDATE_AFTER_SIGN_CAS_WHILE_OTHER_PROCESS_LATER_LOSES_NONCE_RESERVATION",
+          "hypothesisConfirmedAsHistoricalCause": false
+        },
+        "nextUnit": "ASTRA_HIGH_CONTROLLED_DIAGNOSTIC_AND_NECESSARY_FIX_BEFORE_FULL_SERVICE_ACCEPTANCE"
       }
     },
     {
@@ -358,7 +378,7 @@
             "actualNewRunApproved": true,
             "actualGenerationCalls": 1,
             "actualCountCalls": 0,
-            "actualKeyReads": "SELECTED_EXISTING_SOURCE_READ_ACTUAL_COUNT_PENDING_OWNER_REPORT",
+            "actualKeyReads": null,
             "hardUsd005CapVerified": false,
             "requestedModel": "gpt-6.1-sol",
             "thinking": "high",
@@ -389,7 +409,14 @@
               "total": 449
             },
             "invoiceVerified": false,
-            "originalJournalPreserved": true
+            "originalJournalPreserved": true,
+            "selectedExistingKeyReadOccurred": true,
+            "actualKeyReadCount": "NOT_SEPARATELY_INSTRUMENTED_EXISTING_SOURCE_USED",
+            "publicActualResult": "tests/ai-review-precheck/e6-paid-eight-actual-20261019.json",
+            "knownPromptCandidatePortionNanoUsd": "431700",
+            "completeMeasuredCostNanoUsd": null,
+            "actualRunClosedWithoutResume": true,
+            "usageCompatibilityFix": "OFFLINE_PREPARATION_ONLY_NO_NEW_EXECUTION_APPROVAL"
           }
         },
         "hackerrank": {
