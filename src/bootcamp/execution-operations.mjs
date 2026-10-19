@@ -9,15 +9,17 @@ import {compareExecutionObservations,executionReadback} from './execution-readba
 import {hashTestUnsignedPayload} from '../bootcamp-authorization/test-encoding-v3.mjs';
 import {createExecutionCurrent} from './execution-current.mjs';
 import {createExecutionHandshake} from './execution-handshake.mjs';
+import {createRuntimeAuthority} from './execution-authority.mjs';
 
 const freshId=prefix=>prefix+'-'+randomUUID();
 const kinds=['REGISTER','ALLOCATE','START_REVIEW','OBSERVE','BIND_CONSENTS','PREPARE','ACCEPT','TERMINATE'];
 const bodyKeys=['expectedRevision','expectedLedgerSequence','targetDecisionId','targetDecisionRevision','targetDecisionHash',
  'kind','operationId','caller','expectedChainVersion','payloadHash','preparationId','authorizationDigest'];
 export function createExecutionOperations({db,transaction,authentication,operatorBindings,app,refresh,tick,sessionHash,ledger,heads,source,
- services=null,e4CurrentPorts={configured:false},fault=()=>{}}){
+ services=null,e4CurrentPorts={configured:false},fenceWitness={configured:false},fault=()=>{}}){
  const l=executionLedger(db),ports=createExecutionPorts(services),get=(sql,...args)=>db.prepare(sql).get(...args);
  const current=createExecutionCurrent({db,heads,source,operatorBindings});
+ const global=ports.configured?createRuntimeAuthority({db,runtimeId:ports.runtimeId,runtimePinHash:ports.runtimePinHash,e4Runtime:e4CurrentPorts.runtime??null,requireWitness:fenceWitness.configured,fault}):null;
  const decode=row=>row?JSON.parse(row.record):null;
  const decision=a=>decode(get('SELECT record FROM decisions WHERE id=?',a.decision_id));
  const configured=()=>check(ports.configured,'BC_E5_UNCONFIGURED');
@@ -47,11 +49,13 @@ export function createExecutionOperations({db,transaction,authentication,operato
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
+   const corruption=global.audit(c.time);if(corruption)return {error:new Error('BC_E5_GLOBAL_STOPPED:'+corruption)};
    const i=l.intent(intentId);if(i)refresh(app(i.applicationId),c.time,c.reversed);db.exec('SAVEPOINT e5_service');
    try{const value=sync(fn(c.time,authority)),end=tick();check(!end.reversed&&end.time===c.time,'BC_E5_CLOCK_CHANGED');
     const final=ports.authorize(context,request,end.time);check(final.serviceId===authority.serviceId&&final.expiresAt>=authority.expiresAt,'BC_E5_SERVICE_AUTHORITY');
+    check(!global.audit(end.time)||value?.status==='BLOCKED','BC_E5_GLOBAL_STOPPED');
     db.exec('RELEASE e5_service');return {value};
-   }catch(error){db.exec('ROLLBACK TO e5_service; RELEASE e5_service');if(i){const end=tick();refresh(app(i.applicationId),end.time,end.reversed);}return {error};}
+   }catch(error){db.exec('ROLLBACK TO e5_service; RELEASE e5_service');const end=tick();if(i)refresh(app(i.applicationId),end.time,end.reversed);global.audit(end.time);return {error};}
   });if(result.error)throw result.error;return result.value;
  }
  function intent(intentId){id(intentId);const i=l.intent(intentId);check(i&&i.runtimeId===ports.runtimeId,'BC_NOT_FOUND');return i;}
@@ -101,12 +105,24 @@ export function createExecutionOperations({db,transaction,authentication,operato
    .run(reason,canonical(record),r.id,r.revision);event(i,'RUNTIME_SUSPENDED',{generation:r.generation,reason},time);return {status:'BLOCKED',reason};
  }
  const api={
-  connectCurrentController(context){
+  acquireRuntime(context,body){exactKeys(body,['owner','expectedFence','generation','leaseSeconds'],'BC_E5_GLOBAL_ACQUIRE');
+   return service(context,'ACQUIRE_RUNTIME',null,(time,authority)=>global.acquire(time,authority,runtime(),body));},
+  heartbeatRuntime(context,h,seconds=30){return service(context,'HEARTBEAT_RUNTIME',null,(time,authority)=>global.heartbeat(h,time,authority,seconds));},
+  bindRuntimeIntent(context,g,h){return service(context,'BIND_RUNTIME_INTENT',h.intentId,(time,authority)=>{
+   live(h,time,authority.serviceId);return global.bind(g,h,time,authority);});},
+  releaseRuntimeIntent(context,g,h){return service(context,'RELEASE_RUNTIME_INTENT',h.intentId,(time,authority)=>{
+   live(h,time,authority.serviceId);return global.release(g,h,time,authority);});},
+  async observeRuntimeFence(context,g=null){
+   const request=service(context,'READ_RUNTIME_FENCE',null,(time,authority)=>{runtime();if(g)global.live(g,time,authority.serviceId);check(fenceWitness.configured,'BC_E5_FENCE_WITNESS_UNCONFIGURED');return {query:global.witnessQuery(),basis:global.witnessBasis()};});
+   const ticket=await fenceWitness.read(request.query);
+   return service(context,'COMMIT_RUNTIME_FENCE',null,(time,authority)=>{if(g)global.live(g,time,authority.serviceId);check(request.basis===global.witnessBasis(),'BC_E5_GLOBAL_WITNESS_CAS');return global.acceptWitness(fenceWitness.consume(ticket),time);});
+  },
+  connectCurrentController(context,g){
    configured();check(e4CurrentPorts.configured,'BC_E5_E4_UNCONFIGURED');
    // Never routed through HTTP. Validate the service credential before returning
    // separated controller/worker facades; every later call revalidates it too.
-   ports.authorize(context,{action:'CONNECT_E4_CURRENT',intentId:null,runtimeId:ports.runtimeId},tick().time);
-   return createExecutionHandshake({ports:e4CurrentPorts,current,service,live,basis,sameBasis,intent,runtime,l,event,business,db,fault},context);
+   service(context,'CONNECT_E4_CURRENT',null,(time,authority)=>global.live(g,time,authority.serviceId));
+   return createExecutionHandshake({ports:e4CurrentPorts,current,service,live,basis,sameBasis,intent,runtime,l,event,business,db,fault,global},context,g);
   },
   status(){return freeze({version:EXECUTION_VERSION,status:ports.status,signingImplemented:false,broadcastImplemented:false,rebaseImplemented:false,paymentAuthority:false,
    currentConnection:{status:e4CurrentPorts.status??'UNCONFIGURED',ownerSealPortConfigured:!!e4CurrentPorts.sealPortConfigured,dispatchAuthorized:false}});},
