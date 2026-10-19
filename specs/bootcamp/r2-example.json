@@ -1,0 +1,181 @@
+{
+  "version": "clear-bootcamp-r2-design-vector.2",
+  "ready": false,
+  "usableForClaim": false,
+  "provenance": "SYNTHETIC_EXAMPLE_NOT_MEASUREMENT",
+  "frozenV1Files": {
+    "p0-policy.json": "53df7e4aff20639b73353e7e5fd5d3032c1f847f96fbae749c654df76a932dcd",
+    "p0-runtime-mapping.json": "05a753930a6cd843b056e8fbb5b693a1bf47fc16eaea46e0ac46d988fc7823f5",
+    "p0-contract.mjs": "c3a5a28d81704221e0dd407e9b1afd45697175d68fe5f2cbf7af62d3db0f584c",
+    "p0-example.mjs": "602f3cc24e0e0207f14964aed76d081c07693d6eb77a69204c07a2c0e1eb1f02",
+    "reflection-example.json": "426eecf5b6c6b6967c319239ecc2a79cf07c1f2b124dd15b147b1feb63debace"
+  },
+  "fundingShortfall": {
+    "confirmedBalanceAtoms": "120000000",
+    "obligations": [
+      {
+        "obligationId": "obligation-a",
+        "applicationRef": "application-a",
+        "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "recipientRef": "recipient-a",
+        "amountAtoms": "100000000"
+      },
+      {
+        "obligationId": "obligation-b",
+        "applicationRef": "application-b",
+        "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "recipientRef": "recipient-b",
+        "amountAtoms": "100000000"
+      }
+    ],
+    "allocations": [
+      {
+        "obligationId": "obligation-a",
+        "applicationRef": "application-a",
+        "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "recipientRef": "recipient-a",
+        "amountAtoms": "100000000",
+        "allocationId": "allocation-a"
+      }
+    ]
+  },
+  "metricEvents": [
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-1",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-1",
+      "eventType": "CASE_STARTED",
+      "startedAtMs": 0,
+      "endedAtMs": 0,
+      "actorRef": "system-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-2",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-2",
+      "eventType": "CONDITION_VERIFIED",
+      "startedAtMs": 1000,
+      "endedAtMs": 4000,
+      "actorRef": "system-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-3",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-3",
+      "eventType": "AUTO_OPERATION_COMPLETED",
+      "startedAtMs": 4000,
+      "endedAtMs": 4000,
+      "actorRef": "system-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-4",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-4",
+      "eventType": "HUMAN_WORK_INTERVAL",
+      "startedAtMs": 10000,
+      "endedAtMs": 20000,
+      "actorRef": "actor-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-5",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-5",
+      "eventType": "HUMAN_WORK_INTERVAL",
+      "startedAtMs": 15000,
+      "endedAtMs": 25000,
+      "actorRef": "actor-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-6",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-6",
+      "eventType": "WAIT_INTERVAL",
+      "startedAtMs": 25000,
+      "endedAtMs": 85000,
+      "actorRef": "system-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-7",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-7",
+      "eventType": "SUPPLEMENT_REQUESTED",
+      "startedAtMs": 20000,
+      "endedAtMs": 20000,
+      "actorRef": "system-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-8",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-8",
+      "eventType": "TX_CONFIRMED",
+      "startedAtMs": 88000,
+      "endedAtMs": 88000,
+      "actorRef": "system-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    },
+    {
+      "version": "clear-bootcamp-metric-event.2",
+      "eventId": "event-9",
+      "scenarioRunId": "run-example",
+      "applicationRef": "application-a",
+      "decisionRevision": 1,
+      "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "operationId": "operation-9",
+      "eventType": "CASE_FINISHED",
+      "startedAtMs": 90000,
+      "endedAtMs": 90000,
+      "actorRef": "system-demo",
+      "provenance": "SYNTHETIC_EXAMPLE"
+    }
+  ],
+  "authorization": {
+    "status": "NOT_ISSUED_REQUIRED_FIELDS_ONLY",
+    "version": "clear-bootcamp-payment-authorization.2",
+    "signature": null,
+    "chainId": null,
+    "verifyingContract": null,
+    "signerKeyId": null,
+    "decisionHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "amountAtoms": "100000000",
+    "productionEnabled": false
+  }
+}

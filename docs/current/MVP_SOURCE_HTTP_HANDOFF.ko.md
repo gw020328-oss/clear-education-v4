@@ -1,5 +1,9 @@
 <!-- 최신 C2 구현 절이 아래의 과거 계약/미구현 상태보다 우선한다. -->
+
+2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.
 # MVP HTTP 연결·서준형 프론트 인계
+
+2026-10-17 추가 승인·계획 revision2: [MVP 보완 계약·실행 백로그](PYTHON_BOOTCAMP_R2.ko.md)를 우선한다. 기존 P0 동결03fa643과 네 조건/100 TEST·P1/P2는 유지한다. Oracle 승인·부족알림/영향 대기열·학생/운영자 두 화면·기존 relayer 가스 UX·실측 이벤트를 P3→P4→P5의 실제 구현 범위에 추가했다. 별도 v2 envelope/이행 인수이며 기존 v1 wire·ABI는 바꾸지 않는다. 현재 지급/production을 켜지 않으며 P4 권한·자금 코드는 Astra/High 경계 리뷰 후 격리 TEST로 진행한다. 아래의 종전 P3/P4/P5 계획만 정리한다는 문구는 이 추가 승인 이전 범위다.
 
 **최신 병합 완료:** PR63 최종 head `230a951e0e22babc3c1e751e52bba196e41aefba`, develop merge `890ad93cfb3677c5b4107428095c6f0b15efa9a4` (2026-10-15 12:21:11 UTC). push38733401299·PR38733410892 CI6/6 SUCCESS, 관련312/312 PASS. 보호 우회 없이 정상 병합했으며 아래 과거 Draft/병합대기 기록보다 이 문장이 우선한다.
 
@@ -371,3 +375,12 @@ C3 구현 코드 `6d4cd6baed0be7d64afdd5567af14eadba4849fd`, [Draft PR67](https:
 
 
 최신 PR67 검토: [Mac 원인·영속 무효화 rollback 수정·검증 근거](PR67_FINAL_REVIEW.ko.md)를 따른다. 쿠키 변조는 실제 서버403까지 가로채기를 유지한다. C3 정책 무효화는 거부된 transaction 뒤에도 남아 과거 결과가 되살아나지 않는다. 관련363/363·Mac62/62 로컬 통과이며 최종 head CI/대화 및 실제 develop merge SHA는 [PR67 완료 기록](https://github.com/gw020328-oss/clear-education-v4/pull/67)을 확인한다. 위 Draft/미승인·원인 미확정 문구는 이전 시점 기록이다. DTO/version과 합성 전용 제약은 유지된다.
+
+
+2026-10-16 후속 계약 제안: [Moodle 후기→C2 제출・AI 관찰](MOODLE_REVIEW_C2_CONTRACT.ko.md)을 참조한다. 미병합 PR71 LOCAL facts와 PR72 FIXTURE proposal을 그대로 import하지 않는다. sourceBundle/inputHash/기존 DTO는 유지하며 별도 receipt hash·registry/본문 결합·두DB 수락 경쟁/권한·수명은 후속 구현 관문이다. 현재 endpoint·합성-only 업로드·운영 수락 capability는 바꾸지 않았다.
+
+
+2026-10-17 후속: [후기 bridge v1 고정 계약·소비/인수](REVIEW_BRIDGE_V1.ko.md), 고정 commit31879659e11d9cbfa0aa88e48d825047080f4e39를 기준으로 기존 Moodle/AI 세션에 전용 어댑터 구현을 각각 Sol/Medium으로 전달했다. 공통 제한 HTML/registry/메모리 lease adapter는 통합 소유이며 현재 제품 수락·HTTP/DB 연결/운영 권한은 열지 않는다. 양쪽 구현/실제와 합성 검증·남은 관문은 PR71/72/74의 exact head 기록을 따른다. develop/main 미병합 유지.
+
+
+2026-10-17 새 P0 정본: [CLEAR Python 부트캠프 정책·기록 계약](PYTHON_BOOTCAMP_P0.ko.md)을 따른다. 활동완료·과제제출·회고3항목·HackerRank Python(Basic) 보유형 인증의 AND, 고정100 TEST/decimals6/100000000 atoms다. 실제 Moodle ID는 소유 fixture 검증 전null/ready=false이며 증명시각을 합격시각으로 바꾸지 않는다. P1/P2 연결만 구현하고 P3/P4/P5는 관계·관문/인수부터 정리한다. 제품 API/DB는 별도 기존 세션 단일 소유, 이 통합 세션은 docs/동결계약·교차인수만 담당한다.
