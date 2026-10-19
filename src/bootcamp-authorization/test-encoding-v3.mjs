@@ -77,7 +77,7 @@ export function createTestDraftInspector(serverSnapshot,{clock}={}){
  if(serverSnapshot===undefined)return freeze({inspect:()=>freeze({status:'UNCONFIGURED',code:'SERVER_SNAPSHOT_REQUIRED',gates:GATES})});
  let s;try{s=freeze(structuredClone(serverSnapshot));}catch{throw new DraftError('SNAPSHOT_SHAPE');}
  keys(s,['version','provenance','profilePin','registrations','logicalTarget','tokenDecimals','domain','message','deadlineRecord'],'SNAPSHOT_SHAPE');
- check(s.version==='clear-bootcamp-test-unsigned-snapshot.1'&&['SYNTHETIC_EXAMPLE','SERVER_OWNED_UNCONFIGURED'].includes(s.provenance),'SNAPSHOT_VERSION');
+ check(s.version==='clear-bootcamp-test-unsigned-snapshot.1'&&['SYNTHETIC_EXAMPLE','SERVER_OWNED_UNCONFIGURED','REGISTERED_TEST_SOURCE'].includes(s.provenance),'SNAPSHOT_VERSION');
  check(clock===undefined||s.provenance==='SYNTHETIC_EXAMPLE','REAL_CLOCK_REQUIRED');
  keys(s.profilePin,['profileId','sourceCommit','profileHash'],'PROFILE_PIN');check(s.profilePin.profileId===PROFILE_ID&&s.profilePin.sourceCommit===PROFILE_COMMIT&&s.profilePin.profileHash===PROFILE_HASH,'PROFILE_PIN');
  validateTestUnsignedPayload({domain:s.domain,message:s.message});check(s.tokenDecimals==='6','TOKEN_DECIMALS');
