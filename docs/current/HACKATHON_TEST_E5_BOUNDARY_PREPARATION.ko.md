@@ -82,3 +82,13 @@ UNKNOWN의 자동 교체·취소·수수료 인상은 최소 구현에서 제외
 블록 높이 조회의 앞뒤 hash 비교만으로는 중간에 분기가 바뀌었다 돌아오는 ABA를 배제할 수 없다. [EIP-1898](https://eips.ethereum.org/EIPS/eip-1898)은 이 문제와 blockHash/requireCanonical 선택자를 명시한다. 실행 reader는 지원되는 블록 hash 결합을 실제 확인하고, 지원하지 않는 조회를 같은 보장으로 표시하지 않아야 한다.
 
 현재 설치된 Ganache7.9.2의 선언은 eth_call blockNumber에 QUANTITY/Tag만 표시한다. 이는 런타임 지원 여부의 완전한 증거가 아니며 실제 capability probe는 E5 단위에서 수행한다. 읽기 전용 inventory에서 anvil/geth 실행 파일은 없고 Docker는 있었다. 대안인 [Geth 개발 모드](https://geth.ethereum.org/docs/developers/dapp-developer/dev-mode)는 외부 peer 없는 로컬 개발망이며, [공식 RPC 문서](https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-eth)는 EIP-1898 선택자를 설명한다. [공식 container 배포](https://geth.ethereum.org/docs/getting-started/installing-geth)를 선택한다면 새 소유 환경·고정 image digest·독립 volume·loopback만 사용한다. 이번 준비에서는 image pull·새 chain 시작·외부 RPC를 하지 않았다.
+
+## E4 입력 지문과 E5 변경의 통합 순서
+
+E4 memory host는 공통085의 boundary-v1 파일 자체 SHA와 그 안의 E3 source8개, E2 consumer 입력을 고정한다. 이 memory-only 승인 파일의 scope를 E5 persistent 허용으로 바꾸거나 기존 지문을 조용히 갱신하지 않는다. source 파일이 변경되면 STAGE_SOURCE_PIN 거부가 나는 것은 의도된 인수 차단이며 CI rerun으로 우회할 문제가 아니다.
+
+E5가 기존 store/procedure/operations의 검토된 변경을 필요로 하면 새 버전의 memory 호환 입력을 만든다. 같은 정책·memory-only 범위와 E2 wire를 유지하고, 새 API 구현 head·source SHA·변경 리뷰/기존 회귀 결과를 명시한다. E4 소유자는 명시된 새 입력 path/hash를 소비하도록 host를 갱신한다. E5 실행/지속 환경 허용은 별도 단계 승인 artifact에 두어 과거 memory scope를 넓히지 않는다.
+
+통합은 API의 보존된 구현 commit→공통 리뷰/새 입력 지문→E4 소비자 정상 병합과 새 pin→API/E4 이력의 정상 통합→관련 교차 검사·최종 exact-head CI 순서다. consuming harness 자신의 hash를 그 harness가 고정하는 입력에 다시 포함시켜 순환 hash를 만들지 않는다. 최종 바깥 인수표가 source commit과 실제 파일 지문을 별도로 고정한다.
+
+E4의 synthetic funding queue는 최소 fixture이며 WAITING_FUNDS의 shortfall 값까지 실제 E5 조회 구현으로 재사용하지 않는다. 실제 실행 port는 B/R/O와 A=B-R,U=O-R,S=max(0,U-A), 현재 MET 수락 순서를 읽어야 한다.150예치/2의무/첫100예약이면 부족50을 정확히 표시하고 추가50 뒤 전액100 배정이 가능해야 한다.
