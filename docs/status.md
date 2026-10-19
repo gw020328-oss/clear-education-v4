@@ -1,5 +1,16 @@
 # 개발 현황
 
+## 2026-10-19 공개 현황
+
+원격 확인 **2026-10-19 11:02 KST**. main [8f50a53](https://github.com/gw020328-oss/clear-education-v4/commit/8f50a531d7f04c311f9929fcce36bbf53c64a518)과 develop [97d5024](https://github.com/gw020328-oss/clear-education-v4/commit/97d5024ebb1a8371ae8a996cf76624af9e067269)은 어제 문서 병합 이후 새 기능 병합이 없다. main의 기존 코드·의존성·설치/실행 방법은 그대로다.
+
+새 [E1 #84](https://github.com/gw020328-oss/clear-education-v4/pull/84)·[unsigned E2 #85](https://github.com/gw020328-oss/clear-education-v4/pull/85)·[AI E6 준비 #86](https://github.com/gw020328-oss/clear-education-v4/pull/86)·[Moodle 재수집 준비 #87](https://github.com/gw020328-oss/clear-education-v4/pull/87)·[비지급 E4 #88](https://github.com/gw020328-oss/clear-education-v4/pull/88)·[E3 검토 절차 #89](https://github.com/gw020328-oss/clear-education-v4/pull/89)와 갱신된 [TEST 계획 #78](https://github.com/gw020328-oss/clear-education-v4/pull/78)은 **develop/main 미병합**이다. 공개 PR이 보고하는 합성 구현·격리 fixture·unsigned 준비를 main 제공 기능이나 실제 모델/원천 인수·권한 발급·지급으로 안내하지 않는다. AI Python 실제 평가는 기본 차단/품질 N/A이며, #88은 payoutEnabled=false로 지급 활성화가 아니다.
+
+#89의 정확한 head fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1는 [push Mac FAILURE](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39142228451)·[PR Mac SUCCESS](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39142236991)다. 후속 [Mac 시험 PR #90](https://github.com/gw020328-oss/clear-education-v4/pull/90)의 head 41354e0283709f74dd64a9dc6435703c804853c6에서는 [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39187720556)·[push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39187717033) 세 검사가 모두 성공했지만, 미병합 시험 보강이며 과거 실패 원인 해결이나 main 제품 복구 완료의 증거가 아니다.
+
+나머지 기존 열린 PR과 C1~C3의 develop 구현 범위·제약은 아래 날짜별 기록을 참고한다. 선행 기능 이력이 섞인 PR은 문서 PR로 취급하지 않는다. 이번 갱신은 공개 PR/CI만 대조했으며 실제 계정·원문·모델 API·서명/지급을 실행하지 않았다.
+
+
 ## 2026-10-18 공개 현황
 
 원격 확인 **2026-10-18 12:11 KST**. main은 [`72fe051`](https://github.com/gw020328-oss/clear-education-v4/commit/72fe051c1aad6b99def4d864cd2e3841308e857c), develop은 [`9c542c3`](https://github.com/gw020328-oss/clear-education-v4/commit/9c542c38892d0a5d5e71fcbe4f87f1017d8fe843)이며 어제 이후 새 기능 병합은 없다. main의 공개 코드·의존성·기존 설치/실행 방법은 그대로다.
