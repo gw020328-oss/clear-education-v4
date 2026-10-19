@@ -1,6 +1,6 @@
 # E5 실행 연결 프로토콜 초안
 
-2026-10-19. `DRAFT_IMPLEMENTATION_CONTRACT_NOT_ACTIVATION`. E5 개발 인수 범위 안의 소유자 간 구현안이다. E4-A 후보0e6d422의 로컬42개는 통과했으나 최종 원격 검사는 아직 대기다. API current 준비97f6413과 memory 호환 입력v3도 전체 연결 인수가 아니다. 아래 조립/복구 포트는 E4·API의 Astra/High 검토 후 확정하며, 기존 계약·24필드·정책·120/600·accepted 고정 권리를 변경하지 않는다.
+2026-10-19. `DRAFT_IMPLEMENTATION_CONTRACT_NOT_ACTIVATION`. E5 개발 인수 범위 안의 소유자 간 구현안이다. E4-A 0e6d422는 로컬42개·원격8/8 뒤 서비스 구성요소로 인수했다. API current 준비97f6413과 전역 권한 후보4dec3bd의 memory 호환 입력v3/v4도 전체 연결 인수가 아니다. 아래 조립/복구 포트는 E4·API의 Astra/High 검토 후 확정하며, 기존 계약·24필드·정책·120/600·accepted 고정 권리를 변경하지 않는다.
 
 ## 전역 작업자 권한과 intent별 권한
 
@@ -38,4 +38,4 @@ seal 응답 유실은 인증된 원래 request/intent/attempt/command identity�
 
 ## 소스 인수 순서
 
-원래 memory boundary-v1와 E2 입력은 유지한다. 검토된 current 준비97f의 v3는 immutable 검토 기록이며 추가 구현이 바꾸는 source에는 다시 새 버전의 검토 지문이 필요하다. 실제 소유 이력의 정상 merge·명시 consumer 갱신·관련 회귀와 exact-head 필수 CI 후에만 해당 범위를 인수한다. E4-A 원격 실패 해결 전 실제 B 실행 연결은 켜지 않는다. 이 초안으로 main/develop 병합·배포·실제 인터넷 원천·추가 유료 모델 호출을 허용하지 않는다.
+원래 memory boundary-v1와 E2 입력은 유지한다. 검토된 current 준비97f의 v3는 immutable 검토 기록이며 추가 구현이 바꾸는 source에는 다시 새 버전의 검토 지문이 필요하다. 실제 소유 이력의 정상 merge·명시 consumer 갱신·관련 회귀와 exact-head 필수 CI 후에만 해당 범위를 인수한다. E4-A의 과거 원격 실패와 제어 반례는 보존한다. B는 검토된 별도 포트와 source 입력으로만 연결하며 A 구성요소 인수를 전체 절차·자동 지급 인수로 확대하지 않는다. 이 초안으로 main/develop 병합·배포·실제 인터넷 원천·추가 유료 모델 호출을 허용하지 않는다.
