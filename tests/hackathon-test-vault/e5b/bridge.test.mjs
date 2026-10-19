@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import {join} from 'node:path';
 import {readFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
-import {keccak256} from 'ethers';
 import {retainedOrphan} from '../e5/fork-fixture.mjs';
 import {DatabaseSync} from 'node:sqlite';
 import {bridgeFixture,command} from './fixture.mjs';
@@ -65,6 +64,18 @@ test('B prepare and accept retain fixed claim after source withdrawal, key revoc
  const claim=await f.request(command('claim',[r.app],r.app)),sealed=await f.bridge.worker.seal(claim),before=f.bridge.owner.metrics().paymentSignatures;
  await f.f.sent(f.f.vault.connect(f.f.wallet('keyAdmin')).revokeKey(hash(),f.f.m.signerKeyId));await f.f.sent(f.f.vault.connect(f.f.wallet('keyAdmin')).setPause(hash(),true));f.state.current=false;
  const fresh=await f.refresh(claim),adoption=await f.bridge.worker.adopt({...fresh,...sealed});f.commit(adoption);const request={...fresh,...sealed,adoptionId:adoption.adoptionId,adoptionHash:adoption.adoptionHash};const result=await f.included(request,await f.bridge.worker.dispatch(request));assert.equal(result.status,'INCLUDED');assert.equal(result.observation.business.application.state,'6');assert.equal(f.bridge.owner.metrics().paymentSignatures,before);
+});
+
+test('prepare and accept observe their actual authorization nonce; consumed nonce cannot obtain a prepare capability',async t=>{
+ const f=await bridgeFixture(t),seen=new Set();f.state.before=e=>{
+  if(['prepareUnsigned','accept'].includes(e.command.method)&&e.proof.kind==='REGISTERED_CANONICAL_READER'){
+   assert.equal(e.proof.query.nonce,e.command.args[1].nonce);assert.equal(e.observation.business.nonce,e.command.args[1].nonce);seen.add(e.command.method);
+  }
+ };
+ const ready=await f.ready(),accepted=await f.submit(ready.command);assert.equal(accepted.result.status,'INCLUDED');assert.deepEqual([...seen].sort(),['accept','prepareUnsigned']);
+ const reused=command('prepareUnsigned',[hash(),ready.msg,ready.command.args[2]],ready.app),observation=(await f.bridge.reader.observe(reused)).observation;
+ assert.equal(observation.business.nonce,ready.msg.nonce);assert.equal(observation.business.nonceUsed,true);const before=f.bridge.owner.metrics();
+ await assert.rejects(()=>f.request(reused),/E5B_AUTHORIZATION_NONCE_USED/);assert.deepEqual(f.bridge.owner.metrics(),before);
 });
 
 
@@ -135,10 +146,15 @@ test('actual retained-orphan reorg stops B adoption and survives bridge restart'
  await assert.rejects(()=>f.bridge.worker.dispatch({...req,...sealed,adoptionId:adoption.adoptionId,adoptionHash:adoption.adoptionHash}),/E5_RECOVERY_BLOCKED/);f.restart();const fresh=await f.refresh(req,{purpose:'RECOVER'});assert.equal((await f.bridge.worker.recover({...fresh,...sealed})).status,'RECOVERY_BLOCKED');assert.equal(f.bridge.owner.metrics().keyAccesses,0);assert.equal(f.bridge.owner.metrics().broadcasts,0);
 });
 
-test('B service can stop after accepted right while an independent TEST transaction sponsor claims',async t=>{
- const f=await bridgeFixture(t),r=await f.ready();assert.equal((await f.submit(r.command)).result.status,'INCLUDED');const signatures=f.bridge.owner.metrics().paymentSignatures;f.bridge.owner.close();f.state.current=false;
+test('direct claim receipt intake after service stop derives canonical transaction and fixed accepted right without an envelope',async t=>{
+ const f=await bridgeFixture(t),r=await f.ready();assert.equal((await f.submit(r.command)).result.status,'INCLUDED');const signatures=f.bridge.owner.metrics().paymentSignatures;
+ await f.f.sent(f.f.vault.connect(f.f.wallet('keyAdmin')).revokeKey(hash(),f.f.m.signerKeyId));await f.f.sent(f.f.vault.connect(f.f.wallet('keyAdmin')).setPause(hash(),true));f.bridge.owner.close();f.state.current=false;
  const tx=await f.f.vault.connect(f.f.wallet('anycaller')).claim(r.app);const receipt=await tx.wait();assert.equal(receipt.status,1);const chainTx=await f.f.reader.rpc('eth_getTransactionByHash',[tx.hash]);
- const verified=await f.f.reader.receipt({txHash:tx.hash,sender:chainTx.from.toLowerCase(),to:f.f.m.vaultAddress,nonce:BigInt(chainTx.nonce).toString(),dataHash:keccak256(chainTx.input),applicationId:r.app,method:'claim'});assert.equal(verified.status,'INCLUDED');assert.equal(verified.observation.business.right.amountAtoms,'100000000');assert.equal(verified.observation.business.application.state,'6');assert(signatures>0);f.restart();assert.equal(f.bridge.owner.metrics().paymentSignatures,0);
+ assert(chainTx);assert(signatures>0);f.restart();const verified=await f.bridge.reader.claimReceipt({applicationId:r.app,txHash:tx.hash});assert.equal(verified.status,'INCLUDED');assert.equal(verified.observation.business.right.amountAtoms,'100000000');assert.equal(verified.observation.business.application.state,'6');assert.equal(verified.authorizationDigest,verified.observation.business.application.preparedDigest);assert.equal(verified.allocationId,verified.observation.business.application.allocationId);assert(Object.isFrozen(verified));
+ for(const query of [{applicationId:hash(),txHash:tx.hash},{applicationId:r.app,txHash:hash()},{applicationId:r.app,txHash:f.f.m.deploymentTransactions.token}]){const result=await f.bridge.reader.claimReceipt(query);assert.equal(result.status,'UNKNOWN');assert.equal(result.automaticPromotion,false);}
+ await assert.rejects(()=>f.bridge.reader.claimReceipt({applicationId:r.app,txHash:tx.hash,from:chainTx.from}),/E5B_CLAIM_QUERY/);
+ const db=metadata(f);try{assert.equal(db.prepare('SELECT count(*) AS n FROM envelopes WHERE record LIKE ?').get('%'+tx.hash+'%').n,0);}finally{db.close();}
+ assert.equal(f.bridge.owner.metrics().paymentSignatures,0);assert.equal(f.bridge.owner.metrics().keyAccesses,0);assert.equal(f.bridge.owner.metrics().broadcasts,0);
 });
 
 test('async controller and arbitrary callback errors are rejected without disclosing exception text',async t=>{

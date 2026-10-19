@@ -4,15 +4,15 @@
   "ownerInputs": {
     "e5A": "0e6d4225e5b645e57e3988dc426937b08069ead8",
     "api": "4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0",
-    "rootV4": "f5aaccb"
+    "rootV4": "f5aaccbc3a642aeeafac92763e6d9d0a6126033a"
   },
   "sourceArtifactSha256": {
-    "src/hackathon-test-vault/e5b/bridge.d.mts": "35cc167ebe83a6f7691a1f083efddc40e845788cec6658d81115953aaf6650d5",
-    "src/hackathon-test-vault/e5b/bridge.mjs": "c7d330ed816d2f2ccc857ab4eaf71c3a6a22c39924c378128924ae1dd3232d78",
+    "src/hackathon-test-vault/e5b/bridge.d.mts": "d767971dd5530223c1a976aff296a096618e1907e688c7a4b87eeb7448a14631",
+    "src/hackathon-test-vault/e5b/bridge.mjs": "6a551de303bfa5bf25c4987ec91ed791f6fed740dbc41bac05c387b61abb3e22",
     "src/hackathon-test-vault/e5b/business-window.mjs": "93c7153606b612568d155cc581ae57e21f322a3a06b497fe925ef844d5416cd8",
     "src/hackathon-test-vault/e5b/controller-gate.mjs": "88e5145d08cb9401f8e6a42cd373936532b32f78318aa372f25d531c3545397d",
-    "src/hackathon-test-vault/e5b/service.mjs": "bdb72c6b6406e90a12db2480b377c9b918a72f3ed0a1e48592c0d7be91fd29d4",
-    "tests/hackathon-test-vault/e5b/bridge.test.mjs": "8635d4445a3788e651cdf5a1969e6e319c4525496b2018028828f617b08ba54d",
+    "src/hackathon-test-vault/e5b/service.mjs": "fabdd5c1326e1aa0e7230b0d9dddaafcb3dc3a23c4c1e3e8374c0f046055f234",
+    "tests/hackathon-test-vault/e5b/bridge.test.mjs": "8c79152a036ac09a153950fb3501250de7fbc043d45614576a137795ff3eba68",
     "tests/hackathon-test-vault/e5b/business-window.test.mjs": "701ef75c40b3d58192f6f0357048ed959d964b2e35006aa909c6b01b2af3f401",
     "tests/hackathon-test-vault/e5b/controller-fixture.mjs": "39e005e339582ba5629d27f6dd8c47553c05a8c93d7c2739aca4276534be6238",
     "tests/hackathon-test-vault/e5b/crash-child.mjs": "7f2ed00d31b9017a948219b510f46dce731856de8deaeea6fd063c7ca1ce8314",
@@ -21,8 +21,8 @@
     "src/hackathon-test-vault/memory-stage-harness.mjs": "59e615aa4eac8797b84f4397c27daa2790c5023ace5d94d13b1913e15e391895",
     "tests/hackathon-test-vault/e5/preservation.mjs": "b34bfb2d48775676fd1d24288dc4292215e8c2f79bfcee3ee3d3bc6acbdc74bd",
     ".github/workflows/hackathon-e5b.yml": "a226a7e4944d5c5ea2529e185925c99c3437c4ef3b9e459274daaaac0a81b211",
-    "docs/hackathon-test-vault/e5b/PORTS.ko.md": "4d7d3cf466b96de6e7dfe62e495b344df675378ad60f58e9f7af4bc986c9d62c",
-    "docs/hackathon-test-vault/e5b/REVIEW.ko.md": "db3ee610fd745ecc69fcc60ec1808be7459abd8ea42542ab54580c305c20a7fe"
+    "docs/hackathon-test-vault/e5b/PORTS.ko.md": "08146fec6c9f9534f10d3800f237142b657eb3164f2ebd6288d4cb525d57dc11",
+    "docs/hackathon-test-vault/e5b/REVIEW.ko.md": "cd640a8413d22d5013c9a4f28053622dbde71723ca8ae42b11423931ede3fc4d"
   },
   "immutableInputs": {
     "specs/bootcamp/hackathon-test-boundary-intake-v1.json": "cfb42a8f559a54b94188df6f94cb7d67d9a7085b32990ce55968be62904c3fa0",

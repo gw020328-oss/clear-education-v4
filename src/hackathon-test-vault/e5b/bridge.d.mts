@@ -132,6 +132,7 @@ export interface RuntimeManifest {
 export interface ApiBridge {
  version: 'clear-e5-api-bridge.1'; runtime: DeepReadonly<{runtimeHash: Hex; manifest: RuntimeManifest; vaultScope: {chainId: Decimal; vaultAddress: Hex; instanceId: Hex}; authorityScope: FenceQuery}>;
  reader: {observe(command: Command): Promise<{observation: CanonicalObservation; businessHash: Hex}>;
+  claimReceipt(query: {applicationId: Hex; txHash: Hex}): Promise<DeepReadonly<DirectClaimReceipt>>;
   compare(input: {previous: Checkpoint; current: Checkpoint}): Promise<{status: 'CANONICAL_ANCESTOR'; previous: Hex; current: Hex} | {status: 'REORG_PROVEN_RECOVERY_BLOCKED'; oldHash: Hex; replacementHash: Hex; currentHash: Hex; commonAncestor: Checkpoint; automaticRebase: false}>;
  };
  worker: Readonly<WorkerPorts>;
@@ -140,6 +141,9 @@ export interface ApiBridge {
   prune(request: ReferenceRequest): {ref: string; status: EnvelopeState; secretDeletion: 'DELETED'; nonceRetained: true; invalidatesBroadcast: false};
  };
 }
+export type DirectClaimReceipt = {version: 'clear-e5b-direct-claim-receipt.1'; runtimeHash: Hex; applicationId: Hex; txHash: Hex} & (
+ {status: 'UNKNOWN'; code: 'E5B_CLAIM_READBACK_UNAVAILABLE'; automaticPromotion: false}
+ | {status: 'INCLUDED'; checkpoint: Checkpoint; observation: CanonicalObservation; allocationId: Hex; authorizationDigest: Hex; recipient: Hex; token: Hex; amountAtoms: '100000000'; finalized: false});
 export interface FenceQuery {runtimeId: string; runtimePinHash: Hex; scopeKey: Hex}
 export interface FenceWitness extends FenceQuery {version: 'clear-bootcamp-runtime-fence-witness.1'; highestFence: number}
 /** Capture this owner-only reader in the API constructor; mandatory before acquire.

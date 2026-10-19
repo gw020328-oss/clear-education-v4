@@ -29,12 +29,13 @@ export class BridgeExecutionService extends OwnedExecutionService {
   if(BigInt(binding.workerFence)>BigInt(state.fence))this.db.prepare('UPDATE runtime SET fence=? WHERE id=1').run(binding.workerFence);
  }
  async inspect(binding,command,{track=false}={}){
-  const query={applicationId:command.applicationId,nonce:command.method==='accept'?command.args[1].nonce:ZERO};
+  const query={applicationId:command.applicationId,nonce:['prepareUnsigned','accept'].includes(command.method)?command.args[1].nonce:ZERO};
   const observation=await this.reader.observe(query);if(track)await this.track(observation);
   observation.executionBusinessHash=businessHashFor(command,observation);observation.operationMethod=command.method;
   ensure(observation.executionBusinessHash===binding.businessHash,'E5_BUSINESS_CHANGED');
   const ancestry=await this.reader.ancestry(binding.anchor,observation.checkpoint);await this.reader.checkCommand(command,observation);
   ensure(sha(checkpoint(await this.reader.block(binding.anchor.hash)))===sha(binding.anchor),'E5B_ANCHOR_METADATA');
+  if(command.method==='prepareUnsigned')ensure(!observation.business.nonceUsed,'E5B_AUTHORIZATION_NONCE_USED');
   validateBusinessWindow(binding.business,command,observation,this.clock());
   this.proofs.set(observation,{kind:'REGISTERED_CANONICAL_READER',runtimeHash:this.runtimeHash,query,anchor:structuredClone(binding.anchor),current:structuredClone(observation.checkpoint),businessHash:binding.businessHash,commandHash:binding.commandHash,bindingHash:sha(binding),ancestry});
   return observation;
@@ -138,7 +139,7 @@ export class BridgeExecutionService extends OwnedExecutionService {
    observation=await this.checked(binding,command,'AFTER_SIGN');
    await this.reader.rpc('eth_call',[{from:route.sender,to:route.to,value:'0x0',gas:'0x2dc6c0',data},{blockHash:observation.checkpoint.hash,requireCanonical:true}]);
    this.transaction(()=>this.current(binding,observation,'AFTER_SIGN_FINAL_SYNC'));
-   Object.assign(row,{txHash:keccak256(raw),dataHash:keccak256(data),method:command.method,applicationId:command.applicationId,authorizationNonce:command.method==='accept'?command.args[1].nonce:ZERO,rawHash:sha(raw),paymentSignatureHash:signature?sha(signature):null});
+   Object.assign(row,{txHash:keccak256(raw),dataHash:keccak256(data),method:command.method,applicationId:command.applicationId,authorizationNonce:['prepareUnsigned','accept'].includes(command.method)?command.args[1].nonce:ZERO,rawHash:sha(raw),paymentSignatureHash:signature?sha(signature):null});
    this.reverse(row,{raw,signature});
    this.transaction(()=>{this.current(binding,observation,'BEFORE_PRIVATE_BYTES');this.save(row);});
    atomicPrivate(this.bytesPath(ref),{version:'clear-e5-secret-bytes.1',ref,bindingHash:sha(binding),raw,signature},{exclusive:true});

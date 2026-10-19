@@ -7,6 +7,8 @@
 - 최초 B 실행에서는 source 철회가 거부됐지만 복제된 A catch가 `E5B_` 코드를 일반 오류로 바꿔 시험 1개가 실패했다. B 고정 코드만 보존하도록 수정하고 controller의 임의 예외 원문은 여전히 폐기한다. 첫 실행 4/5, 후속 11/11, child/reorg/stop 등을 추가한 17/17, fence 포트를 추가한 18/18의 이력을 최종 검증과 구분한다.
 - private reader evidence에 anchor hash만 맞고 number/time이 허위인 값을 넣을 수 없도록 실제 블록 metadata와 정확히 대조했다. 제한된 compare 포트도 두 checkpoint metadata와 현재 runtime pin을 검증한다. 기존 A 모듈은 수정하지 않았다.
 - API의 일관된 과거 DB snapshot은 API 내부 journal만으로 식별할 수 없으므로 E4의 실제 영속 최고 fence를 읽는 owner 전용 포트를 추가했다. exact runtime/scope 질의, 정수 범위, 재시작 후 저장값과 body supplied counter 거부를 검사한다. 실제 API의 constructor capture/5초 preflight/CAS 소비는 후속 필수 조건이다.
+- API 담당의 연결 검토 코멘트에 따라 prepareUnsigned도 accept와 같은 실제 message nonce로 관측하도록 보강했다. private query/관측 nonce 일치와 이미 consumed인 nonce의 prepare 거부를 실제 TEST chain으로 검사한다. A 파일은 보존한다.
+- backend-stop 직접 claim에는 E4 envelope가 없으므로 `{applicationId,txHash}`만 받는 제한된 receipt 인수 포트를 추가했다. tx에서 기대 sender/nonce/calldata를 파생하고 실제 Transfer/RightSettled 및 accepted allocation/digest/nonce 관계를 검증한다. caller-supplied row/from은 받지 않으며 불확실은 UNKNOWN이다. API 전체 backend-stop 연결을 완료했다고 주장하지 않는다.
 
 ## 경계 검토
 

@@ -36,6 +36,14 @@ API callback은 실제 서비스 인증, intent/global lease 및 slot CAS, sourc
 
 `reader.compare({previous,current})`도 실제 두 블록의 hash/number/time을 대조한다. retained orphan 증거를 확인하면 `REORG_PROVEN_RECOVERY_BLOCKED`를 반환하고 자동 rebase하지 않는다. B 실행 경로는 별도 영속 stop을 유지한다. RPC 오류는 reorg 증명이 아니다.
 
+`prepareUnsigned`와 `accept`는 모두 .3 message의 실제 authorization nonce로 관측하며 private proof의 query에도 같은 nonce를 결합한다. ZERO nonce 관측을 새 nonce 검사로 대신하지 않는다. 이미 소비된 nonce의 prepare capability는 키 접근 전에 거부한다. API도 이 사실을 현재 nonce 예약/CAS와 대조해야 한다.
+
+## Envelope 없는 직접 claim receipt 인수
+
+등록된 `reader.claimReceipt({applicationId,txHash})`는 backend 중단 중 anycaller가 직접 claim한 경우의 읽기 포트다. 입력은 두 식별자뿐이며 from/nonce/calldata/row/verified/operationId를 받지 않는다. 실제 tx에서 sender/account nonce/calldata hash를 파생하고 정확한 고정 vault의 `claim(applicationId)` calldata인지 검사한다. 등록 reader가 canonical block의 transaction·receipt·log membership, 체인/runtime/code pin, RightSettled와 고정 recipient의 100 TEST Transfer, 실제 state/readback을 검증한다. accepted allocation 및 authorization digest/nonce를 저장된 application의 prepared 사실과 연결하고 used nonce도 확인한다.
+
+성공은 `clear-e5b-direct-claim-receipt.1`의 INCLUDED, 실제 checkpoint/observation, allocationId/authorizationDigest/recipient/token/amountAtoms와 `finalized:false`다. 조회 부재·잘못된 거래/app·실패 receipt·불완전 증거는 UNKNOWN/automaticPromotion:false로 남는다. 해당 거래에 가짜 envelope/ref/operation을 만들거나 state SETTLED만 보고 지급 완료로 승격하지 않는다. 새 원천/현재 key/epoch/pause를 claim 자격으로 요구하지 않는다. API는 constructor에 캡처한 이 포트의 결과만 private intake로 받아야 하며 browser JSON을 인증된 receipt로 받으면 안 된다. API 저장/재시작 통합 자체는 아직 미구현이다.
+
 ## API acquire 전 독립 fence 조회
 
 `owner.fenceReader`는 constructor 전용 `clear-bootcamp-runtime-fence-reader.1`이다. worker에 노출하지 않으며 controller binding 전에도 조회할 수 있어 초기 조립 순환을 만들지 않는다. API callback 중 재진입은 거부한다. 읽기는 실제 별도 E4 `metadata.sqlite`의 runtime row에서 수행하며 counter를 증가시키거나 고치지 않는다.
