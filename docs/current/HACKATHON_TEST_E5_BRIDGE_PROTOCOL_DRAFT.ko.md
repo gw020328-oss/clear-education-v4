@@ -39,3 +39,11 @@ seal 응답 유실은 인증된 원래 request/intent/attempt/command identity�
 ## 소스 인수 순서
 
 원래 memory boundary-v1와 E2 입력은 유지한다. 검토된 current 준비97f의 v3는 immutable 검토 기록이며 추가 구현이 바꾸는 source에는 다시 새 버전의 검토 지문이 필요하다. 실제 소유 이력의 정상 merge·명시 consumer 갱신·관련 회귀와 exact-head 필수 CI 후에만 해당 범위를 인수한다. E4-A의 과거 원격 실패와 제어 반례는 보존한다. B는 검토된 별도 포트와 source 입력으로만 연결하며 A 구성요소 인수를 전체 절차·자동 지급 인수로 확대하지 않는다. 이 초안으로 main/develop 병합·배포·실제 인터넷 원천·추가 유료 모델 호출을 허용하지 않는다.
+
+## 2026-10-19 연결 검토에서 확인한 항목
+
+E4-B의 새 authorityScope는 environmentId/manifest hash와 `SHA256(canonical({chainId,vaultAddress,instanceId}))`를 사용한다. API4dec의 옛 kind/chainId/vault/instance hash와 다르므로 새 명시 adapter에서 결합하고 기존 DB row/handle은 재해석하지 않는다. E4 소유 최고 fence reader의 실제 연결도 필수다.
+
+prepareUnsigned와 accept의 canonical 조회는 모두 정확한 .3 message nonce에 결합해야 한다. prepare 관측의 ZERO nonce를 실제 nonce 검증으로 간주하지 않는다.
+
+backend 중단 중 직접 claim은 기존 envelope ref가 없을 수 있다. 재시작 인수에는 등록된 E4 reader가 실제 canonical tx/receipt와 claim(applicationId) calldata, 고정 token·recipient·100 TEST Transfer 및 accepted 권리 관계를 검사하는 제한된 포트가 필요하다. state=SETTLED만으로 송금 검증을 대신하거나 가짜 ref/operationId를 만들지 않는다. 미완료 항목은 실제 API 연결 인수 전 닫는다.

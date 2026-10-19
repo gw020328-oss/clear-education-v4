@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-19",
-  "repositoryPlanRevision": 18,
+  "repositoryPlanRevision": 19,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -343,7 +343,21 @@
         "publiclyPushed": false,
         "actualE4WitnessConnected": false,
         "actualDispatch": false
-      }
+      },
+      "requiredConnectionFindings": [
+        {
+          "kind": "SCOPE_MAPPING",
+          "status": "NEW_EXPLICIT_B_MAPPING_REQUIRES_API_ADAPTER_NO_OLD_ROW_REINTERPRETATION"
+        },
+        {
+          "kind": "PREPARE_UNSIGNED_NONCE",
+          "status": "E4_B_OWNER_MUST_QUERY_EXACT_MESSAGE_NONCE_FOR_PREPARE_AND_ACCEPT"
+        },
+        {
+          "kind": "BACKEND_STOP_DIRECT_CLAIM",
+          "status": "CANONICAL_TX_CALLDATA_AND_FIXED_TRANSFER_RECEIPT_PORT_REQUIRED_WITHOUT_FAKE_REF_OR_OPERATION"
+        }
+      ]
     },
     {
       "stage": "E6",
@@ -491,11 +505,53 @@
             "scope": "OFFICIAL_WIRE_DEFAULTS_AND_PARTIAL_SCORING_WITH_EXPLICIT_CASE_TOPIC_DENOMINATORS",
             "freshAdditionalMax8DirectHumanApproved": true,
             "approvalEvidence": "request_user_input_async/call_02475adfc6334e038d04b26b796c24b4/0",
-            "executionResult": "PENDING_OWNER_SINGLE_RUN",
+            "executionResult": "FINISHED_FIXED_PUBLIC_SYNTHETIC_EIGHT_WITH_ONE_SEMANTIC_MISMATCH",
             "priorActualCalls": 2,
             "priorScoredCases": 0,
             "countRetryFallbackCallsAuthorized": 0,
-            "macFailureResolutionClaimed": false
+            "macFailureResolutionClaimed": false,
+            "resultRecordHead": "a70183d0ccde07bf8b6473d806ae8dbf39918d07",
+            "actualFetch": 8,
+            "http2xx": 8,
+            "count": 0,
+            "retries": 0,
+            "fallbacks": 0,
+            "scoredCases": 8,
+            "passCases": 7,
+            "needsImprovementCases": 1,
+            "topicStateMatches": 23,
+            "topicDenominator": 24,
+            "groundedPresentTopics": 21,
+            "expectedPresentTopics": 21,
+            "normalControlFalseHoldCases": 0,
+            "assessedNormalControls": 5,
+            "normalControlFalseHoldTopics": 0,
+            "assessedNormalControlTopics": 15,
+            "conditionalEstimateUsd": "0.004858",
+            "invoiceVerified": false,
+            "providerHardCashCapVerified": false,
+            "remainingApprovedCalls": 0,
+            "cumulativeActualCallsAcrossThreeRuns": 10,
+            "cumulativeScoredCases": 8,
+            "semanticMismatch": {
+              "case": "PY05",
+              "topic": "problem-solving-process",
+              "expected": "UNCERTAIN",
+              "exactActualLabelRetained": false,
+              "rawResponseRetained": false,
+              "resolved": false
+            },
+            "rootOfflineIntegrationVerification": {
+              "pass": 31,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "networkBlocked": true,
+              "compositionHead": "3911d5039d0f7cc5de9ac0b6da30e84d820f28e0",
+              "logSha256": "96db569c5ac2a3d694e21b42edf09bdff004bd9f56d875cf6cbfad739984eb6c"
+            },
+            "usableForAcceptance": false,
+            "paymentAuthority": false
           }
         },
         "hackerrank": {
@@ -689,9 +745,23 @@
       "rerunAttempt": 2,
       "rerunJob": "117954326684",
       "rerunSuccessAcceptedAsResolution": false,
-      "diagnosticChangesInProgress": true,
+      "diagnosticChangesInProgress": false,
       "localFullRunExit137": "SEPARATE_UNEXPLAINED_INTERRUPTION_PRESERVED",
-      "additionalBlindRerunPermitted": false
+      "additionalBlindRerunPermitted": false,
+      "diagnosticComponentReviewedHead": "f4f9994e3add8b0054ad493a6db095b5e243d6f4",
+      "diagnosticPullRequest": 99,
+      "diagnosticOnlyAccepted": true,
+      "newHeadCi": "6_OF_6_SUCCESS_PUSH_AND_PR_ATTEMPT_1",
+      "newMacPerRun": {
+        "pass": 113,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "reviewThreads": 0,
+      "rootReadSourceDiffAndControlledCases": true,
+      "originalCauseResolved": false,
+      "localExit137Resolved": false
     }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
