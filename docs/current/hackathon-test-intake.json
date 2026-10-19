@@ -76,19 +76,39 @@
     {
       "stage": "E3",
       "scope": "120_1_600_PROCEDURE_AND_TWO_VIEW_DTO",
-      "status": "IMPLEMENTATION_ACTIVE_TRUSTED_FUNDING_PORT_DEFAULT_BLOCKED",
+      "status": "IMPLEMENTED_LOCAL_VALIDATED_BLOCKED_REQUIRED_MAC_CHECK",
       "requestedSetting": "gpt-6.1-sol/high",
       "acceptedHead": null,
       "dependsOn": [
         "E1",
         "E2"
       ],
-      "tests": null
+      "tests": {
+        "e3Dedicated": 47,
+        "relatedReported": 592,
+        "remoteCi": "5_OF_6_SUCCESS_ONE_MAC_CANCELLATION",
+        "actualSourceAcceptances": 0,
+        "payoutAuthorizationSignatures": 0,
+        "recipientPayments": 0
+      },
+      "candidateHead": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+      "pullRequest": 89,
+      "blocker": {
+        "run": "39142228451",
+        "job": "117718818737",
+        "test": "SIGKILL legacy-missing",
+        "result": "TEST_TIMEOUT_60000_MS",
+        "failed": 0,
+        "cancelled": 1,
+        "prCompanionMac": "62_OF_62_PASS_NOT_SUBSTITUTE_FOR_FAILED_PUSH",
+        "cause": "PENDING_BOUNDED_LIFECYCLE_DIAGNOSIS",
+        "blindRerunPerformed": false
+      }
     },
     {
       "stage": "E4",
       "scope": "TEST_CONTRACT_FUNDING_ROLES_SIGNER_TERMINATION",
-      "status": "BOUNDARY_NON_PAYOUT_COMPONENT_PREPARATION_ACTIVE_E3_INTAKE_PENDING",
+      "status": "NON_PAYOUT_PREPARATION_ACCEPTED_E3_INTAKE_PENDING",
       "requestedSetting": "gpt-6-astra/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -96,7 +116,16 @@
         "E2",
         "E3"
       ],
-      "tests": null
+      "tests": {
+        "distinctPreparationCases": 50,
+        "remoteCi": "6_OF_6_SUCCESS",
+        "payoutAuthorizationSignatures": 0,
+        "accepts": 0,
+        "claims": 0,
+        "recipientPayments": 0
+      },
+      "preparationAcceptedHead": "d287b3789a678a1e6984b583e4c85859e9e97a22",
+      "pullRequest": 88
     },
     {
       "stage": "E5",
@@ -140,15 +169,19 @@
         },
         "ai": {
           "pr": 86,
-          "acceptedHead": "d7a6f302378818430212aabeec2a9ddb8c55156d",
+          "acceptedHead": "e9ea4547d795ee833a8175c02c0cc23b21a7d823",
           "status": "OFFLINE_BORROWED_LEASE_PREPARATION_ACCEPTED_NOT_COMMON_CONSUMER_INTEGRATION",
           "focusedReported": 8,
-          "regressionReported": 411,
+          "regressionReported": 437,
           "paidCalls": 0,
           "actualModelQuality": "N/A",
           "remoteCi": "6_OF_6_SUCCESS_DEDICATED_FOCUSED_TESTS_SEPARATE",
           "actualCommonApiAcceptance": false,
-          "nextUnit": "CONCRETE_SYNTHETIC_CORPUS_AND_APPROVAL_PLAN_PREPARATION_NO_KEY_OR_MODEL_CALLS"
+          "nextUnit": "NEW_PYTHON_MODEL_APPROVAL_AND_VERIFIED_COST_BOUNDS_PENDING_ACTUAL_BLOCKED",
+          "leasePreparationBaseHead": "d7a6f302378818430212aabeec2a9ddb8c55156d",
+          "approvalPlanHead": "fccd49d1d4e695ce49e32e023de1dd1628c68627",
+          "planCases": 7,
+          "runnerCases": 19
         }
       }
     },
@@ -242,7 +275,16 @@
     },
     "newSessionsOrSubagents": 0,
     "activeTurnsInterrupted": false,
-    "additionalHeadquartersMessageSent": false
+    "additionalHeadquartersMessageSent": false,
+    "apiMacDiagnosis": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "accepted": true,
+      "started": true,
+      "sourceScope": "READ_ONLY_E3_REQUIRED_MAC_CHECK_CAUSE_AND_MINIMAL_FIX_PLAN",
+      "sourceEdits": false,
+      "rerun": false
+    }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
   "crossAcceptance": {
@@ -258,5 +300,29 @@
     "externalRpc": 0,
     "actualSource": 0,
     "paymentTransactions": 0
+  },
+  "boundaryIntake": "specs/bootcamp/hackathon-test-boundary-intake-v1.json",
+  "newCrossVerification": {
+    "fixedInputs": [
+      "040e31107d97c98a9a5fe588153aa828039f9519",
+      "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+      "d287b3789a678a1e6984b583e4c85859e9e97a22",
+      "22640db091d5d3ac5d8a3535280b393d6f618d65",
+      "e9ea4547d795ee833a8175c02c0cc23b21a7d823"
+    ],
+    "prePublicationComposition": "02d2f41c1d01c2f124f92debd8da2c13333b9b7b",
+    "prePublicationPass": 430,
+    "prePublicationFail": 0,
+    "finalComposition": "6c29a606eb7023ed3f8b1c70bd5dc08849c408d1",
+    "finalE3FocusedPass": 47,
+    "finalE3FocusedFail": 0,
+    "change": "INTERNAL_SNAPSHOT_HASH_LABEL_RENAMED_AUTHORIZATIONPORT_AND_EXAMPLE_REGENERATED",
+    "preservation": "191_SOURCE_FILES_PASS",
+    "dependencyGraph": "PASS",
+    "temporaryCheckSetupCorrection": "ROOT_NODE_MODULES_SYMLINK_REPLACED_WITH_IGNORED_DIRECTORY_AND_PACKAGE_LINKS",
+    "actualChainAdapterAccepted": false,
+    "externalRpc": 0,
+    "actualSourceAcceptances": 0,
+    "recipientPayments": 0
   }
 }

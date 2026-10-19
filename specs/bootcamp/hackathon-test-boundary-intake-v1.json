@@ -1,0 +1,126 @@
+{
+  "version": "clear-hackathon-test-boundary-intake.1",
+  "date": "2026-10-19",
+  "status": "BLOCKED_REQUIRED_E3_MAC_CHECK",
+  "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "encodingPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
+  "e3": {
+    "head": "fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1",
+    "pullRequest": 89,
+    "requestedModel": "gpt-6.1-sol",
+    "thinking": "high",
+    "remoteCi": "5_OF_6_SUCCESS_ONE_MAC_CANCELLATION",
+    "localReported": {
+      "e3Dedicated": 47,
+      "relatedIncludingE1E2E3": 592
+    },
+    "artifactSha256": {
+      "src/bootcamp/procedure.mjs": "91ec8afd7e6aa001bb25ff8e716d168eb37f0e39e6fd09824b535889848d764f",
+      "src/bootcamp/procedure-ledger.mjs": "db6d5a0273bb135c120828fc6ed32a4f1b6e2bb46182337908410948ada9035f",
+      "src/bootcamp/procedure-ports.mjs": "f6e51f4f23ccaf5d55f5754cd3308df13e3894dc282256556feae1613137bbfc",
+      "src/bootcamp/store.mjs": "d6f7b7c4b832441310bba6ad7c407019872c598059585c187be5fa196b32b607",
+      "src/bootcamp/operations.mjs": "7228821abd7d8f1157e889a0bb9173e465afd7fa662e9c139d4eecff99b2e37d",
+      "src/bootcamp/http.mjs": "06c7b249e6cc0a876bda8de0ea99b42f3f1cc8fb53f4edec2a1efb7f36c5d7a9",
+      "docs/bootcamp-procedure/e4-port-proposal.json": "74f5472788fd3c807a931033e8e6383b8793f8b8f02be283d746e23bbab12f7e",
+      "docs/bootcamp-procedure/synthetic-intake-example.json": "309072d4eea6e3e8f7d233f13e9160621f89861a3099038987668b49d684b494"
+    },
+    "accepted": false,
+    "macBlocker": {
+      "run": "39142228451",
+      "job": "117718818737",
+      "test": "SIGKILL legacy-missing",
+      "result": "TEST_TIMEOUT_60000_MS",
+      "failed": 0,
+      "cancelled": 1,
+      "prCompanionMac": "62_OF_62_PASS_NOT_SUBSTITUTE_FOR_FAILED_PUSH",
+      "cause": "PENDING_BOUNDED_LIFECYCLE_DIAGNOSIS",
+      "blindRerunPerformed": false
+    }
+  },
+  "e4Preparation": {
+    "head": "d287b3789a678a1e6984b583e4c85859e9e97a22",
+    "pullRequest": 88,
+    "requestedModel": "gpt-6-astra",
+    "thinking": "high",
+    "remoteCi": "6_OF_6_SUCCESS",
+    "distinctLocalCases": 50,
+    "artifactSha256": {
+      "src/hackathon-test-vault/HackathonTestVaultPreparation.sol": "d8c7467d433e7a428bbd75fe79707b963b4e8208842b89a32ff9a8bae9b60029",
+      "src/hackathon-test-vault/StrictECDSA.sol": "d2873eb2ac6205adc268f5eddf4ba89fbd3e046a83785d44f8715616a74fd69a",
+      "src/hackathon-test-vault/reader.mjs": "9dd7a3d97a7ed20e85c0cccd26bd62a9abc30a91b0c77454bddb2f3f169c3d50",
+      "docs/hackathon-test-vault/preparation-artifact.json": "d9e35c1b634b1e0756b258d6ffaa6f15b76118b634a689ec79cee3ddefa0af35",
+      "docs/hackathon-test-vault/PORTS.ko.md": "d2f7707551a122ebf49557d3dda1157ea2a38f9ad5783d8105064355a8c43ba2"
+    },
+    "payoutFunctionsImplemented": false,
+    "payoutAuthorizationSignatures": 0,
+    "accepts": 0,
+    "claims": 0,
+    "acceptedForNonPayoutPreparation": true
+  },
+  "interface": {
+    "bootstrap": [
+      "AUTHENTICATED_INTERNAL_REGISTRATION_TARGET_BEFORE_CHAIN_REGISTRATION",
+      "SINGLE_DURABLE_OPAQUE_ID_REGISTRY_NO_BROWSER_MAPPING",
+      "NO_REVIEW_TIMER_OR_CONSENT_CREATED_BY_BOOTSTRAP",
+      "CONFIRMED_FULL_ALLOCATION_BEFORE_PUBLICATION_THEN_CHAIN_START_REVIEW"
+    ],
+    "unsigned": "EXACT_E2_V3_24_FIELDS_AND_CURRENT_INTERNAL_E3_CAS_REQUIRED",
+    "consentScope": "clear-bootcamp-app-consent-scope.1",
+    "consentSet": "clear-bootcamp-app-consent-set.1",
+    "consentHashesIncludeFinalAuthorizationNonceOrIssuedAtOrExpiry": false,
+    "replacement": {
+      "allocationId": "STABLE",
+      "obligation": "ONE_100_TEST_OBLIGATION",
+      "previousTarget": "EXACT_PREVIOUS_DECISION_REVISION_HASH",
+      "publicationEpochAndVersion": "BASELINE_NOT_LATEST_CHAIN_CAS",
+      "previousEpochAndVersion": "AT_LEAST_PUBLICATION_AND_LAST_OBSERVED_BASELINE",
+      "currentEpochAndVersion": "EXACT_CURRENT_CONFIRMED_CHECKPOINT",
+      "olderReceiptMayOverwriteLatestTarget": false,
+      "originalReviewCapMayReset": false
+    },
+    "termination": {
+      "reasons": [
+        "REVIEW_CAP_UNRESOLVED",
+        "NEW_VALID_ERROR_AFTER_ONE_REVERIFICATION",
+        "EXPIRED_EVIDENCE_NOT_REFRESHED_WITHIN_CAP"
+      ],
+      "cancelBeforeCap": "INVALIDATED_WAIT_FOR_TERMINATION_CONDITION",
+      "dbIntentReleasesReservation": false,
+      "contractMustCheck": [
+        "NOT_ACCEPTED",
+        "VALID_CONDITION",
+        "AUTHORIZED_TERMINATOR"
+      ],
+      "acceptedFirst": "FIXED_RECIPIENT_AND_AMOUNT_PRESERVED"
+    },
+    "sourceWindow": "EARLIEST_EXCLUSIVE_VERIFIED_SOURCE_AND_AUTH_RAW_QUERY_BOUND",
+    "acceptedClaimRequiresCurrentSourceOrKeyOrEpochOrNewSignature": false
+  },
+  "crossVerification": {
+    "prePublicationComposition": "02d2f41c1d01c2f124f92debd8da2c13333b9b7b",
+    "prePublicationCases": 430,
+    "prePublicationFailures": 0,
+    "finalComposition": "6c29a606eb7023ed3f8b1c70bd5dc08849c408d1",
+    "finalE3FocusedCases": 47,
+    "finalE3FocusedFailures": 0,
+    "changeBetweenE3Inputs": "INTERNAL_AUTHORIZATION_SNAPSHOT_HASH_LABEL_RENAMED_AUTHORIZATIONPORT_AND_EXAMPLE_REGENERATED",
+    "otherAcceptedSourceTreesChanged": false,
+    "preservation": "191_SOURCE_REFERENCE_FILES_PASS",
+    "dependencyGraph": "PASS",
+    "externalRpc": 0,
+    "actualSourceAcceptances": 0,
+    "payoutAuthorizationSignatures": 0,
+    "recipientPayments": 0,
+    "actualE3ToE4ChainAdapterAccepted": false
+  },
+  "boundaries": {
+    "acceptedForStageScopedPayoutHarness": false,
+    "fullRuntimeAccepted": false,
+    "persistentSignerActivated": false,
+    "realSourceTrustActivated": false,
+    "existingV1GatesChanged": false,
+    "productionEnabled": false,
+    "automaticMerge": false,
+    "nextUnit": "E4_TEST_SIGNER_ACCEPT_CLAIM_ONLY_AFTER_E3_CI_INTAKE"
+  }
+}

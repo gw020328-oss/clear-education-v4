@@ -80,7 +80,7 @@ E1/E2는 본부가 이번 새 승인으로 기존 세션에 직접 재개 지시
 
 ## 완료 증거와 현재 상태
 
-E0 정책과 E1/E2 기반은 아래 고정 head로 인수했고 E3 구현·E4 비지급 경계 준비를 실제 시작했다. E6 source/AI 사전준비도 아래 범위로 인수했으며 전체 E6 수락은 아니다. 미커밋 초안·당시81개 보고·과거 unsigned hash 초안을 최종 인수 완료로 세지 않는다. 이후 dispatch·환경/실패/시험/정확 HEAD는 [실행 인수표](hackathon-test-intake.json)와 PR exact-head 결과로 갱신한다. 정책 확정·UNIT/REFERENCE·SYNTHETIC_INTEGRATION·REAL_SOURCE·LOCAL_CHAIN·TESTNET_E2E 분모를 분리한다.
+E0 정책과 E1/E2 기반을 인수했고 E3 구현·E4 비지급 경계 준비를 진행했다. E3의 로컬 구현 검증은 끝났으나 아래 Mac 필수 검사 실패로 인수는 보류한다. E6 source/AI 사전준비도 아래 범위로 인수했으며 전체 E6 수락은 아니다. 미커밋 초안·당시81개 보고·과거 unsigned hash 초안을 최종 인수 완료로 세지 않는다. 이후 dispatch·환경/실패/시험/정확 HEAD는 [실행 인수표](hackathon-test-intake.json)와 PR exact-head 결과로 갱신한다. 정책 확정·UNIT/REFERENCE·SYNTHETIC_INTEGRATION·REAL_SOURCE·LOCAL_CHAIN·TESTNET_E2E 분모를 분리한다.
 
 필수 인수는 양측 동의/120초 지급,1회/600초·옛 동의 거부, meaningful unassessed 이의 차단, 종료와 accept 양순서·epoch/예약/의무 원자성,150+50·다른 예약 보존·중복 의무 거부, 금액/수령인/chain/decision/nonce 변조, 원문/권한 철회, backend 중단 직접 claim, 응답유실/reorg, 두 화면/version·tx확정과 실제 처리/사람개입/가스 계측이다. 미측정 baseline/개선율은 N/A. P0를 고객 실제 환급 사례로 소개하지 않는다.
 
@@ -113,3 +113,15 @@ source의 비동기 `getRaw`는 매번 실제 probe하고 기존 receipt·관측
 AI PR86/head `d7a6f302378818430212aabeec2a9ddb8c55156d`는 집중8·회귀411 보고와 문서/CI6/6을 확인해 **borrowed lease 오프라인 사전준비**로 인수했다. `release`는 borrowed 참조만 놓고 shared owner의 dispose와 구분한다. HTML 원문 UTF-16 위치와 normalized 위치, producer domain hash와 raw UTF-8 SHA256을 구분한다. lease 축소/철회·새 source/decision·늦은 응답은 무효화하며 재검증 횟수나600초가 그 무효화를 막지 않는다. 실제 공통 연결·실제 모델 품질은 N/A, 새 키 조회·유료 호출0이다.
 
 두 전용 검사는 기본 원격 CI 자동 대상과 분리해 표시한다. 다음 AI 단위는 개인정보 없는 고정8사례 corpus/gold·prompt/profile/hash·현재 공식 모델/가격·요청/토큰/US$0.05 상한 제안의 승인용 준비다. 실제 generation/countTokens·키 읽기는 승인 전 실행하지 않는다. 전체 E6는 E3~E5 및 실제 source/trust·안전한 collection과 별도 인수한다.
+
+## 2026-10-19 교차 검토·필수 Mac 검사 보류
+
+E3 PR89/head `fb9e6d3a9f35c8d12b80f0c84e01d8a6db9aeda1`은 전용47(로컬 관련592에 포함)을 통과했다. 교차 검토에서 stable allocation, 공개 baseline과 최신 chain CAS 구분, 승인된 종료조건 전 취소의 예약 해제 금지, 배정 전에 필요한 opaque ID bootstrap 순환을 수정했다. bootstrap은 단일 registry의 ID만 먼저 발급하고 절차 창·동의를 시작하지 않는다. E4 등록→전액배정 확인→API 공개→chain startReview 순서를 따른다.
+
+E4 비지급 준비 PR88/head `d287b3789a678a1e6984b583e4c85859e9e97a22`은50개·CI6/6으로 준비 범위만 인수했다. 같은 판정 ID의 새 revision/hash도 target 교체로 구분한다. 전체 E4의 signer/accept/claim과 지속 runtime은 아직 미구현이다. [경계 인수표](../../specs/bootcamp/hackathon-test-boundary-intake-v1.json)에13개 source/artifact SHA와 제안 연결을 고정하되, E3 필수 검사 때문에 payout harness 허용은 false다.
+
+별도 조합의 사전 공개430/430과 최종 E3 필드명 명확화 뒤 관련47/47을 구분한다. 조합 head·입력·범위는 실행 인수표에 있다. 변경은 내부 snapshot hash의 authorization→authorizationPort 명칭과 합성 예제 재생성이다. 실제 source 수락/외부RPC/지급승인 서명/수령인 지급0이며 실제 E3→chain adapter 인수는 아니다. 원본191개/고정 graph도 통과했다. 임시 checkout의 전체 node_modules symlink 때문에 최초 Git ignore 보존 검사가 실패했고, 소유 임시 디렉터리와 package별 링크로 바꿔 통과했다. 제품 코드나 dependency graph 오류로 세지 않는다.
+
+PR89는 원격5/6이다. push run `39142228451`/Mac job `117718818737`의 `SIGKILL legacy-missing`이60000ms로 취소됐다(pass61/fail0/cancel1). 동반 PR Mac의62/62 성공은 실패를 상쇄하지 않는다. 원래 PR67의 cookie403 fixture 수명 경쟁과 이번 강제종료 검사 timeout은 구분한다. E3 인수·payout signer를 보류하고 기존 API 세션의 별도 Astra/High 읽기 전용 단위에서 원인을 분석한다. 이 단계에서는 CI rerun·Mac 시험 재실행·제품 코드 수정을 하지 않았다.
+
+AI PR86의 추가 승인 계획/차단 실행기 head `e9ea4547d795ee833a8175c02c0cc23b21a7d823`은 새 runner19·관련437·CI6/6으로 준비만 인수했다. 고정8건 corpus/gold와 요청·budget/checkpoint를 만들었으나 새 사용자 승인, countTokens 과금 및 출력/thinking 결합 상한 확인이 남아 실제 모델 호출·키 조회0, 품질N/A다. 과거 일반후기8건 승인을 새 Python 평가에 전용하지 않는다. 승인 원본3개 SHA도 고정 입력과 동일함을 다시 확인했다.
