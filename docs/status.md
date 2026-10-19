@@ -1,5 +1,34 @@
 # 개발 현황
 
+## 2026-10-18 미병합 작업 현황
+
+원격 확인 **2026-10-18 12:11 KST**. develop은 [`9c542c3`](https://github.com/gw020328-oss/clear-education-v4/commit/9c542c38892d0a5d5e71fcbe4f87f1017d8fe843)(문서 PR #76), main은 [`72fe051`](https://github.com/gw020328-oss/clear-education-v4/commit/72fe051c1aad6b99def4d864cd2e3841308e857c)(문서 PR #77)이다. 어제 확인 이후 새 기능 병합은 없다. 아래는 열린 PR의 제안/작업이며 현재 develop/main 기능·최종 정책·배포 완료가 아니다.
+
+| 열린 PR | 공개된 작업 범위 | 미검증·차단 |
+| --- | --- | --- |
+| [#78](https://github.com/gw020328-oss/clear-education-v4/pull/78) | Python 부트캠프 P0와 versioned addendum·후속 백로그, oracle/재원·화면·가스·계측 경계 제안 | 기존 동결/새 revision을 구분. 새 signer·allocation ledger·worker·운영 지급 구현 완료가 아님 |
+| [#79](https://github.com/gw020328-oss/clear-education-v4/pull/79) | 참가자 request와 HackerRank 보유형 인증을 결합하는 오프라인 producer | 기본 UNCONFIGURED_BLOCKED. 새 실제 개인/공식 hosted proof 0, 실제 grammar·trust·collector 수명·원자 제품 수락은 미검증 |
+| [#80](https://github.com/gw020328-oss/clear-education-v4/pull/80) | 별도 bootcamp ledger의 합성 증거 수락·nonce/current·멱등/재시작·무효화 | 기본 DISABLED/SYNTHETIC_FIXTURE, realAcceptanceReady=false. 100 TEST는 후보 금액이며 실제 source 연결·권한 발급·재원/지급 완료가 아님 |
+| [#81](https://github.com/gw020328-oss/clear-education-v4/pull/81) | 지급 권한의 취소/회전·확정 후 권리·공용 풀·relayer 경계 설계 리뷰 | 최종 ABI/encoding·accept/revoke 경합·풀 회계/예약 귀속의 결정 관문이 남음. 새 권한 키·지급 서명·거래 구현 아님 |
+
+#79/#80/#81의 develop diff에는 미병합 선행 #74/#78 등의 의존 이력이 포함된다. PR 제목이나 고유 커밋의 문서 변경만 보고 문서 전용 PR로 판단하지 않는다. 이 자동화는 이 PR들을 수정하거나 병합하지 않는다. source/identity·grant/outbox HOLD, paymentAllowed/productionEnabled=false·독립 청구 NO_GO 등 각 작업의 차단을 해제하지 않는다.
+
+[Moodle #71](https://github.com/gw020328-oss/clear-education-v4/pull/71) head `488a09ce8af62aad2067680dbb459eb0358f452e`는 새 합성 계정/강좌의 격리 fixture와 활동·과제·회고 출처를 다룬다. 실험 fixture는 제품 runtime mapping ready나 실제 기관/최종 AND·지급의 증거가 아니다. [AI #72](https://github.com/gw020328-oss/clear-education-v4/pull/72) head `f98e1040c01034b59fba7f1d5fe1c230965d628a`는 Python 회고 세 항목 원문 근거의 MOCK 검토이며 실제 Python 회고 모델 품질 성공이 아니다. PR #72는 담당 전용 로컬 시험과 기존 root CI coverage를 구분해야 한다. 두 PR 모두 미병합이다.
+
+### 정확한 열린 head의 CI
+
+| PR / head | PR CI / push CI | 확인 상태 |
+| --- | --- | --- |
+| [#78](https://github.com/gw020328-oss/clear-education-v4/pull/78) `733fe693f4fd2e16977b0c52ef88e35ee9687f2c` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39002878174) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39002875162) | 세 검사 양쪽 SUCCESS; 미병합 |
+| [#79](https://github.com/gw020328-oss/clear-education-v4/pull/79) `0da3abe89e2361ac75c19a331e7910afa7ecc70a` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39000201167) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39000192081) | 세 검사 양쪽 SUCCESS; 미병합 |
+| [#80](https://github.com/gw020328-oss/clear-education-v4/pull/80) `66893eab4bdafc574147ebee497e3f5a9edafb08` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39000849334) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39000840775) | 세 검사 양쪽 SUCCESS; 미병합 |
+| [#81](https://github.com/gw020328-oss/clear-education-v4/pull/81) `c9c0ee069e01407eccca66022326136cf5dbe35f` | [PR](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39002754526) / [push](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39002746624) | 세 검사 양쪽 SUCCESS; 미병합 |
+
+세 검사는 Public content history, Public synthetic tests, Mac synthetic recovery다. CI 성공은 해당 workflow의 공개/합성 검사 성공이며 PR의 모든 신규 로컬 시험 포함·실제 원천/모델/지급·병합 완료를 뜻하지 않는다. 저장된 로컬/실제 실험 결과를 이번 문서 확인에서 재실행하지 않았으며 시험 수를 합산하지 않는다.
+
+기존 미병합 #60·#66·#69·#70·#73·#74·#75와 아래 2026-10-17의 구현 범위·한계는 유지한다. 최신 제안과 현재 병합된 C1~C3 구현을 구분한다.
+
+
 ## 2026-10-17 원격 확인
 
 확인 시각 **2026-10-17 11:08 KST**. develop은 [4756589659a40c8f8fe45452a698b8a56487628c](https://github.com/gw020328-oss/clear-education-v4/commit/4756589659a40c8f8fe45452a698b8a56487628c)(PR #67 병합), main은 `58261aa2465bfc4b34d181dde2757add6eec7283`(PR #50 문서 병합)이다. 아래 추가 구현은 develop 기준이며 main 기능 코드·배포 완료가 아니다. 시험·실제 API 결과는 저장된 공개 보고서를 대조했으며 이번 문서 작업의 재실행이 아니다.
