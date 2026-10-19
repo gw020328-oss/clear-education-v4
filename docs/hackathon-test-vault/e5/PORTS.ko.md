@@ -63,7 +63,7 @@ dispatch 기한은 seal 시점부터 최대120초와 lease 기한 중 이른 값
 
 상태 eth_call/code/balance/txcount는 EIP-1898 `{blockHash, requireCanonical:true}`에 결합한다. 숫자 블록 조회 fallback은 없다. receipt/transaction/block membership/logIndex/event/calldata actor와 계약 state를 검증한다. claim은 SETTLED·저장 AcceptedRight·RightSettled·정확 token Transfer를 검증한다.
 
-서비스는 관측 checkpoint 이력을 영속 보존한다. 정상 새 블록은 canonical ancestry+업무 동일성+controller 재검증으로만 허용한다. 낮은 checkpoint/RPC 오류만으로 세대를 바꾸지 않는다. 실제 reorg 증거가 확인되면 영속 RECOVERY_BLOCKED로 새 실행을 중지한다. **새 lineage 활성화·등록/공개 순서 복원은 이 버전에 없다.** API와 E4 저장소를 함께 인수하는 별도 절차가 필요하다. 고정 publication/firstStart/120/600을 새로 시작하는 복구는 없다. 옛 receipt는 새 lineage 권한으로 자동 승격되지 않는다. DB fence는 이미 밖으로 나간 서명이나 전송을 취소하지 못한다.
+서비스는 관측 checkpoint 이력을 영속 보존한다. canonical 비교 뒤 최신 runtimeHash·checkpoint hash/number/time·finality가 정확히 같은 관측은 중복 sequence를 만들지 않는다. 다른 관측의 동시 변경은 CAS로 거부하며 receipt 관측의 append-only 기록은 유지한다. 정상 새 블록은 canonical ancestry+업무 동일성+controller 재검증으로만 허용한다. 낮은 checkpoint/RPC 오류만으로 세대를 바꾸지 않는다. 실제 reorg 증거가 확인되면 영속 RECOVERY_BLOCKED로 새 실행을 중지한다. **새 lineage 활성화·등록/공개 순서 복원은 이 버전에 없다.** API와 E4 저장소를 함께 인수하는 별도 절차가 필요하다. 고정 publication/firstStart/120/600을 새로 시작하는 복구는 없다. 옛 receipt는 새 lineage 권한으로 자동 승격되지 않는다. DB fence는 이미 밖으로 나간 서명이나 전송을 취소하지 못한다.
 
 ## 공동 후속
 
