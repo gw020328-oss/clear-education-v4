@@ -24,6 +24,8 @@ E4 `checked`의 async 관측이 API 사전 읽기보다 새 블록에 도달할 
 
 인수와 새 commit 확인이 완료되기 전 송신은 금지한다. 이미 SEND_STARTED/UNKNOWN이면 자동 재전송·재서명·fee bump·새 operation을 만들지 않고 원래 hash의 canonical 조회만 한다. DB fence가 이미 시작된 네트워크 송신을 취소했다고 주장하지 않는다.
 
+인수 설계에서 **worker 권한 만료와 불변 업무/서명 송신 한도**를 분리해야 한다. A의 row는 dispatchUntil을 원래 worker capability 만료에도 묶으므로, lease 만료 후에만 새 worker가 인수한다면 그 A row를 송신할 수 없다. 이를 기존 row의 기한 덮어쓰기로 해결하지 않는다. B의 새 명시 버전은 seal 때 원래 source cutoff·.3 message expiry·review cap·독립적인 최대 envelope 송신 수명 안의 불변 businessValidUntil을 검증해 저장하고, 현재 worker authorityUntil은 별도로 둔다. 새 인수는 fresh worker 권한과 같은 업무의 재검사를 통해 businessValidUntil 안에서만 현재 송신 허용을 만들 수 있다. heartbeat는 그 허용을 자동 갱신하지 않는다. A의 과거 row/binding/manifest는 그대로 원래 의미로 보존한다. 이 구분은 source 수명·120/600 또는 claim 권리 만료를 바꾸는 정책 변경이 아니다.
+
 seal 응답 유실은 인증된 원래 request/intent/attempt/command identity로 기존 ref/hash를 조회하는 포트가 필요하다. 조회가 불확실하면 HOLD이며 E4_SEAL_REQUESTED를 지우고 다시 seal하지 않는다. 비밀 bytes/서명은 조회 결과에도 반환하지 않는다. source-independent recovery/retention 권한은 새 지급 자격 승인과 구분한다.
 
 ## 전체 절차와 별도 settlement
