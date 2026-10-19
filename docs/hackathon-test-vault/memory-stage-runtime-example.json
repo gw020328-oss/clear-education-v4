@@ -1,0 +1,47 @@
+{
+  "version": "clear-hackathon-memory-stage-runtime-example.1",
+  "executionSourceHead": "41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a",
+  "sourceRun": "stage-suite-fenced-final.log",
+  "status": "DISPOSABLE_INSTANCE_CLOSED_AFTER_TEST",
+  "activeRuntime": false,
+  "containsPrivateKeyOrSignatureOrSourceRaw": false,
+  "pin": {
+    "version": "clear-hackathon-memory-runtime.1",
+    "kind": "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS",
+    "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
+    "e3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
+    "chainId": "431709",
+    "genesisHash": "0x1745e984cd5002813c50dafdb305d55b5447da1a0963f86b75569469bc19cddc",
+    "vaultAddress": "0xb06a9c522a927ea1bd955b54f0d4d1553dd7d9da",
+    "vaultCodeHash": "0x17c54041668ca09c8c1c49b3de7dc2b30e108ecfe2aca5986627b9e8a6d3fb44",
+    "tokenAddress": "0x43ff4fdb210cf1c9de30a0634a70ff2b900d2919",
+    "tokenCodeHash": "0x24e0b4b9b20ccf0949acdf19c53041e404f82c7d17dd7fe322d68ac2b7e9e952",
+    "instanceId": "0xbab192add720ba687cda6883baed44d6d5dd1885eed47b0c063bae8b5eacfe5c",
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "runtimeMappingHash": "0x76d1c8585013440e31ed8b52b5295255e521404acc6bca2535c7099097c1b732",
+    "operationsPolicyHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+    "domainSeparator": "0xb068f5ba4a26c243e1da7730bb3bd9c546dab7f15d8f14d5bc2a8eec24327ddb",
+    "typeHash": "0x0420a07c2295bca1fc66f0033f2afa0c6e430c7d7cccb48fa23a98c84d97fa8f",
+    "roles": {
+      "registrar": "0x77d9540e8aacc352b6f54061bc294e9a0d0dded5",
+      "initialSigner": "0x7af8229723a1ae91bb80d8955bbe8882bb2aa7f6",
+      "keyAdmin": "0x4f0acf059c739ce073d644b4abcdbda9c3084ced",
+      "relayer": "0xea8fda7dbda54df495084735614fa2995439e93b",
+      "depositor": "0xeac72351e1f11264b72a813899583daf1bfbe46a",
+      "terminator": "0xf3ee80670a53940fe3af057f6a83b1ca6c4ba79f"
+    },
+    "signerKeyId": "0x7bad1fbc5bac770b7546aac90843c72d1855700492d7c9166467749a9ec74123",
+    "signerAddress": "0x7af8229723a1ae91bb80d8955bbe8882bb2aa7f6"
+  },
+  "acceptTransaction": "0x35f69cc45a47def23540e82892de5c4dfa63b3fe76baebe0983c2117b7c5d605",
+  "claimTransaction": "0x5571cba33abbe87b22fa02c6bbfa562dfd95c5b369b46fe31a84278b53c6a888",
+  "authorizationDigest": "0x3061a43ccbd386b937bbecc4001eb2b7723250a2d0433af433413f869ac47cc9",
+  "metrics": {
+    "keyProviderCalls": 1,
+    "signaturesGenerated": 1,
+    "signaturesReturned": 1,
+    "signaturesDiscarded": 0,
+    "accepts": 1,
+    "claims": 1
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "version": "clear-hackathon-memory-stage-positive-results.1",
+  "sourceHead": "221aac70b8b2868971ffc77f25016724e3b92a2c",
+  "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
+  "historicalPlan": "execution-positive-plan.json",
+  "historicalPlanUnchanged": true,
+  "planCases": 22,
+  "memoryStageCases": 18,
+  "controlledProbeCases": 2,
+  "deferredE5Cases": 2,
+  "cases": [
+    {
+      "id": "fresh-runtime",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "actual E1 E2 E3 authenticated module flow reaches fresh memory .3 accept and fixed claim"
+      ]
+    },
+    {
+      "id": "first-accept-mutual",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "actual E1 E2 E3 authenticated module flow reaches fresh memory .3 accept and fixed claim"
+      ]
+    },
+    {
+      "id": "first-accept-deadline",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "route2 requires full120 seconds and a current empty consent set",
+        "correction preserves allocation100 and original600; late route2 cannot reset cap"
+      ]
+    },
+    {
+      "id": "valid-signer-negative-controls",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "valid low-s .3 signature and malformed/high-s/v/zero recovery controls",
+        "signature from another fresh instance cannot authorize this runtime"
+      ]
+    },
+    {
+      "id": "exact-24-field-domain",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "all24 signed fields are constrained by exact registered prepared digest",
+        "all5 domain mutations by a faulty provider discard signed output; correct pinned domain succeeds"
+      ]
+    },
+    {
+      "id": "nonce-one-use",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "once digest binds full calldata; failed operation rolls back and same successful operation has one effect",
+        "150 plus50 preserves another reservation; consumed nonce cannot prepare a second application"
+      ]
+    },
+    {
+      "id": "latest-cas",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "latest E3 CAS and latest chain CAS are independent required fences",
+        "once digest binds full calldata; failed operation rolls back and same successful operation has one effect"
+      ]
+    },
+    {
+      "id": "no-unprepared-signing",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "default adapter and external runtime/config flags never mint a signing capability",
+        "forged unregistered, unallocated and partial allocation commands never access signing key"
+      ]
+    },
+    {
+      "id": "current-source-and-objection",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "authenticated E3 lease blocks signing before key access",
+        "authenticated E3 objection blocks signing before key access",
+        "authenticated E3 new-error blocks signing before key access",
+        "contract rechecks valid-objection after a valid signature",
+        "exclusive source equality rejects first acceptance but retains reservation",
+        "exclusive expiry equality rejects first acceptance but retains reservation"
+      ]
+    },
+    {
+      "id": "both-consent-withdrawal",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "authenticated E3 withdraw blocks signing before key access",
+        "authenticated E3 logout blocks signing before key access",
+        "authenticated E3 scope blocks signing before key access",
+        "post-sign withdraw discards generated signature"
+      ]
+    },
+    {
+      "id": "replacement-stable-allocation",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "correction preserves allocation100 and original600; late route2 cannot reset cap",
+        "same decision ID higher revision keeps reservation and rejects stale E3 capability",
+        "one assessed revalidation is preserved and second valid error terminates before cap"
+      ],
+      "limit": "E3 real-module new-ID correction and contract-only same-ID/higher-revision mutation distinguished."
+    },
+    {
+      "id": "accepted-first",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "accepted-first protects stored right from terminate/correction; any caller claims after source key pause expiry changes"
+      ]
+    },
+    {
+      "id": "terminate-first",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "terminate-first invalidates old signature and atomically removes only unaccepted obligation"
+      ]
+    },
+    {
+      "id": "accepted-independent-claim",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "accepted-first protects stored right from terminate/correction; any caller claims after source key pause expiry changes"
+      ]
+    },
+    {
+      "id": "exact-transfer-and-accounting",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "actual E1 E2 E3 authenticated module flow reaches fresh memory .3 accept and fixed claim",
+        "two concurrent any-callers produce exactly one fixed settlement",
+        "150 plus50 preserves another reservation; consumed nonce cannot prepare a second application"
+      ]
+    },
+    {
+      "id": "150-plus-50",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "150 plus50 preserves another reservation; consumed nonce cannot prepare a second application"
+      ]
+    },
+    {
+      "id": "termination-three-conditions",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "correction preserves allocation100 and original600; late route2 cannot reset cap",
+        "one assessed revalidation is preserved and second valid error terminates before cap",
+        "terminate-first invalidates old signature and atomically removes only unaccepted obligation",
+        "wrong roles and arbitrary early termination reasons do not release funds or nonce",
+        "forged unregistered, unallocated and partial allocation commands never access signing key"
+      ]
+    },
+    {
+      "id": "transfer-failure-rollback",
+      "status": "PASS_CONTROLLED_MEMORY_PROBE",
+      "tests": [
+        "controlled out-of-gas claim failure rolls back state and transfer; subsequent claim succeeds",
+        "controlled unsupported-token VM probe 2 checks claim boundary then restores fixed asset",
+        "controlled unsupported-token VM probe 3 checks claim boundary then restores fixed asset"
+      ],
+      "limit": "Unsupported-token constructor rejection plus explicit fresh-memory VM code injection, followed by snapshot restoration and normal fixed-token claim. No production token extension."
+    },
+    {
+      "id": "reentrancy-boundary",
+      "status": "PASS_CONTROLLED_MEMORY_PROBE",
+      "tests": [
+        "controlled unsupported-token VM probe 1 checks claim boundary then restores fixed asset"
+      ],
+      "limit": "Unsupported-token constructor rejection plus explicit fresh-memory VM code injection, followed by snapshot restoration and normal fixed-token claim. No production token extension."
+    },
+    {
+      "id": "signer-lifecycle",
+      "status": "PASS_MEMORY_STAGE",
+      "tests": [
+        "provider failure and overlapping signing calls remain closed without output",
+        "post-sign withdraw discards generated signature",
+        "post-sign logout discards generated signature",
+        "post-sign chain discards generated signature",
+        "post-sign key discards generated signature",
+        "post-sign close discards generated signature",
+        "disconnect failure still closes owned stores and removes temporary directory",
+        "initialization failure after store creation closes both owned databases",
+        "E3 withdrawal during awaited chain read at before-key is fenced synchronously",
+        "E3 withdrawal during awaited chain read at after-sign is fenced synchronously"
+      ]
+    },
+    {
+      "id": "operation-recovery",
+      "status": "NOT_RUN_E5",
+      "tests": [],
+      "limit": "Only contract once/full-calldata rollback/idempotence and stored-right semantics tested; canonical receipt/readback/reorg recovery NOT_RUN."
+    },
+    {
+      "id": "e5-persistent-backend-stop",
+      "status": "NOT_RUN_E5",
+      "tests": [],
+      "limit": "No persistent chain or stopped backend; disposable memory claim is not a substitute."
+    }
+  ],
+  "planRowsAreNotDistinctTestCount": true
+}

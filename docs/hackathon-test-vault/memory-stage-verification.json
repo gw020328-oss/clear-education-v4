@@ -1,0 +1,208 @@
+{
+  "version": "clear-hackathon-memory-stage-verification.1",
+  "date": "2026-10-19",
+  "stage": "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS",
+  "sourceHead": "221aac70b8b2868971ffc77f25016724e3b92a2c",
+  "implementationHead": "41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a",
+  "commonMergeHead": "4964a152a10597fac900b35002395c616a2b5122",
+  "intakeCommit": "085878860d604095b0a6152329f8d82a445574b7",
+  "acceptedE3Head": "c3b71c710f558529680e255222857f0e81fe1dcb",
+  "requestedModel": "GPT-6 Astra / High",
+  "actualModelIndependentlyVerified": false,
+  "executed": {
+    "distinctStageTests": 46,
+    "pass": 46,
+    "fail": 0,
+    "fullSuiteSourceHead": "41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a",
+    "finalTestOnlyDelta": "Additional accepted correction staticCall before pause: focused 1/1 PASS; not a new distinct case.",
+    "historicalCompileAndBlockedRegression": {
+      "tests": 66,
+      "pass": 66,
+      "fail": 0
+    },
+    "repeatedRunsAddedToTotal": false
+  },
+  "fullSuiteMetrics": {
+    "instances": 46,
+    "executionDeployments": 46,
+    "tokenDeployments": 46,
+    "keyProviderCalls": 42,
+    "signaturesGenerated": 41,
+    "signaturesReturned": 30,
+    "signaturesDiscarded": 11,
+    "accepts": 12,
+    "claims": 10,
+    "actualSources": 0,
+    "externalRpc": 0,
+    "persistentChains": 0,
+    "controlledProbes": {
+      "deployments": 3,
+      "codeInjections": 3,
+      "injectedClaims": 1,
+      "contractLevelAccepts": 1
+    }
+  },
+  "metricsMeaning": {
+    "keyProviderCalls": "Fresh ephemeral TEST signing provider accesses, not existing-key reads.",
+    "accepts": "12 authenticated stage wrapper successes. One additional explicit contract-level successful accept is in controlledProbes.contractLevelAccepts.",
+    "claims": "10 normal fixed-token stage wrapper settlements. One extra injected-code probe settlement is recorded separately and reverted by snapshot.",
+    "signaturesGenerated": "41 total includes 11 subsequently discarded; 30 returned. E1/auth login signatures are outside this payout counter.",
+    "runtimeInstances": "Fresh disposable memory instances only; failed initialization before deployment is not counted.",
+    "reruns": "Counts from final full suite only. Prior/focused/remote runs are separate, not cumulative."
+  },
+  "history": [
+    {
+      "log": "stage-suite-first.log",
+      "tests": 36,
+      "pass": 32,
+      "fail": 4,
+      "cause": [
+        "Two SHORTFALL assertions used estimateGas error text; exact staticCall plus real rollback added.",
+        "Failed transaction moved checkpoint: correct STAGE_CHAIN_CAS refusal retained, once behavior separated into contract-level calls.",
+        "ethers Result proxies compared directly: explicit accounting values now compared."
+      ]
+    },
+    {
+      "log": "stage-targeted-fixes.log",
+      "tests": 7,
+      "pass": 7,
+      "fail": 0
+    },
+    {
+      "log": "stage-probes.log",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0
+    },
+    {
+      "log": "stage-init-cleanup.log",
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "cause": "Ganache provider is a getter, not a method; fixture now saves and restores descriptor."
+    },
+    {
+      "log": "stage-init-cleanup-fixed.log",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0
+    },
+    {
+      "log": "stage-suite-final.log",
+      "tests": 43,
+      "pass": 43,
+      "fail": 0
+    },
+    {
+      "log": "stage-suite-reviewed.log",
+      "tests": 44,
+      "pass": 44,
+      "fail": 0
+    },
+    {
+      "log": "stage-await-fence.log",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "reason": "Review found E3 could change during awaited chain read before key access; synchronous final current checks added."
+    },
+    {
+      "log": "stage-suite-fenced-final.log",
+      "tests": 46,
+      "pass": 46,
+      "fail": 0,
+      "sourceHead": "41983cc1a8fe509a643f7cbc9b76cb7ca7a32e2a"
+    },
+    {
+      "log": "stage-accepted-correction.log",
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "cause": "Additional accepted-target assertion encountered PAUSED first; moved assertion before pause to isolate accepted-state guard."
+    },
+    {
+      "log": "stage-accepted-correction-fixed.log",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "newDistinctTest": false,
+      "sourceHead": "221aac70b8b2868971ffc77f25016724e3b92a2c"
+    }
+  ],
+  "preservation": {
+    "result": "PASS",
+    "mode": "PORTABLE_CONTENT",
+    "originalFingerprintsPreserved": true,
+    "publishedReferences": 4,
+    "schemaVersion": 4,
+    "sourceReferenceFiles": 191,
+    "profiles": 3,
+    "runtime": "24.21.0",
+    "dependencyGraphPreserved": true,
+    "pendingManifestsNotClaimable": true
+  },
+  "historicalArtifacts": {
+    "baseline": "ab02b2846c224d8f28cd7bf497aa9582b955c909",
+    "filesCompared": 35,
+    "changed": 0,
+    "preparation50Unchanged": true,
+    "compile66AndOriginalPlan22Unchanged": true,
+    "e2EncodingAndConsumerPinsUnchanged": true,
+    "dependencyFilesUnchanged": true
+  },
+  "runtimeExample": "memory-stage-runtime-example.json",
+  "planResults": "memory-stage-positive-plan-results.json",
+  "ci": {
+    "entryPoint": "tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs",
+    "workflowChanged": false,
+    "inheritedGlob": "tests/product-workflow/*.test.mjs",
+    "networkGuard": "tests/ybm-collector/network-guard.mjs",
+    "stageTestsActuallyIncluded": true,
+    "finalExactHeadResult": "Recorded in PR93 body after completion; not inferred from inherited suites."
+  },
+  "review": {
+    "kind": "DIRECT_SOURCE_AND_ADVERSARIAL_BOUNDARY_REVIEW_BY_SAME_SESSION",
+    "independentAudit": false,
+    "fixes": [
+      "Initialization cleanup and remaining releases after disconnect failure",
+      "Exact intake/consumer manifest pins",
+      "Synchronous authenticated E3 checks adjacent to key access/output after asynchronous chain reads",
+      "Clean-checkout metrics parent creation and dedicated CI entry",
+      "Precise shortage, CAS, rollback and accepted-target guard assertions"
+    ],
+    "unresolvedInStageScope": []
+  },
+  "notExecuted": {
+    "persistentChains": 0,
+    "existingKeyReads": 0,
+    "actualSources": 0,
+    "externalRpc": 0,
+    "productionActivations": 0,
+    "canonicalReceiptRecovery": true,
+    "reorgRecovery": true,
+    "durableSigningEnvelope": true,
+    "persistentBackendStop": true
+  },
+  "sourceSha256": {
+    "src/hackathon-test-vault/memory-stage-harness.mjs": "c0a4841676e9a189f28f01ec13669484cbfee467aa9da423037a7f8591a84a9b",
+    "tests/hackathon-test-vault/stage-execution.test.mjs": "5901544c80621c86a9e2d59c9f63ffa73bbd58860d96aab6100afb825c853d09",
+    "tests/hackathon-test-vault/StageClaimBoundaryProbe.sol": "0e712d6929121ce1bb46fac877d203d49b034607d40ea8b74cf0a4b0c02cc1be",
+    "tests/hackathon-test-vault/stage-probe-build.mjs": "723ef3c0e44d8ca2e12765ac84d9496f123589c02ee3e68232105cc489ffaca2",
+    "tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs": "94eed77eb6825f71f1045d5c8e29f8798b6cb3bbd1f656f74d484692ac31f298"
+  },
+  "localLogSha256": {
+    "stage-suite-first.log": "49ca6ca454c5179c07b82cf2e2a6254600d6f9085805c093263a9628a74c2493",
+    "stage-targeted-fixes.log": "e0710ba358e8fe24290a537f3ff4db12119690f2cca66fa95e4972bb34e5ca78",
+    "stage-probes.log": "fe261ceae15fe2064f5e818f5a68165d4678711d5d6cceee8e3ecf2134f424c4",
+    "stage-init-cleanup.log": "ba97d40762644bf8f1c412c196a154f6408a65832eb3b00a735657887d7084b4",
+    "stage-init-cleanup-fixed.log": "b7efe9567d106b30c2ae75aa9a49a1282828371a13af101c66b21619cf10b02c",
+    "stage-suite-final.log": "1d7d81117544cec794e704b2af2dd721c6e23c8394e54a46227da352ed3c296f",
+    "stage-suite-reviewed.log": "910c6775602f967d011687b2f37079a0e18aac437847ad0abaa4d12d65ec0a27",
+    "stage-await-fence.log": "5ec9f2d5efa369bf88c943dec55906d12c87dc1d88b7d73d7f154ceb363a9fb3",
+    "stage-suite-fenced-final.log": "08b239e7095721684f6771f79642bd5992ea13c5489ab529ab07c42d941f966d",
+    "stage-accepted-correction.log": "db91d2bed21b87e015704aacfa05163ee7cee12998aa4240c078e04e86985cee",
+    "stage-accepted-correction-fixed.log": "0776271b40b712d7d1131870e340a617d564666dbd439ccc5b6c51debd6861e3",
+    "execution-regression-final.log": "44083bac143a32d579bdb8429f40d249dc1ff50cd27d07e5ebc552ed7d82eb6b",
+    "stage-preservation.json": "2596f8546919432f04d1d71addee7e47e4ff95cfd5657c25fd4dfc36fa079ad0"
+  }
+}
