@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {TypedDataEncoder,keccak256,toUtf8Bytes} from 'ethers';
 import {TEST_OPERATIONS as p,validateTestOperations,testOperationsHash,referenceReviewVector as review,referenceFirstAcceptVector as accept,referenceQueue} from '../../specs/bootcamp/hackathon-test-contract.mjs';
 import {referenceFunding,frozenFileSha256} from '../../specs/bootcamp/r2-reference.mjs';
 const target={decisionId:'decision-orchid',revision:1,hash:'0x'+'1'.repeat(64)};
@@ -15,6 +16,12 @@ test('new TEST approval preserves base policy and separates activation from prod
  for(const [file,sha] of Object.entries(inputs.baseFrozenFiles))assert.equal(frozenFileSha256(file),sha,file);
  assert.deepEqual(inputs.files.map(f=>f.priority),[1,2,3]);assert.equal(inputs.files[0].scope,'DECISION_REVISION_1');
  assert.equal(p.activation.stageScopedTestHarnessesBeforeFullRuntime,true);
+ const pins=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-consumer-pins-v1.json',import.meta.url))),typed=pins.typedEncoding;
+ assert.equal(pins.operationsProfile.contentHash,testOperationsHash());assert.equal(typed.messageFields.length,24);
+ assert.equal(typed.primaryType,'BootcampTestPaymentAuthorizationV3');assert.equal(typed.domainVersion,'3');
+ const typeString=TypedDataEncoder.from({[typed.primaryType]:typed.messageFields}).encodeType(typed.primaryType);
+ assert.equal(typeString,typed.typeString);assert.equal(keccak256(toUtf8Bytes(typeString)),typed.typeHash);
+ assert.equal(pins.boundaries.payoutSignerMayActivateBeforeE3BoundaryAcceptance,false);
 });
 test('120-second deadline boundary is inclusive and early consent may skip waiting',()=>{
  assert.equal(review({...f(),now:1119}).path,'WAITING_FOR_CONFIRMATION');assert.equal(review(f()).path,'DEADLINE_CANDIDATE');
@@ -38,6 +45,9 @@ test('late correction cannot use a shortened deadline but may obtain fresh mutua
  const current={decisionId:'decision-late',revision:2,hash:'0x'+'3'.repeat(64)};
  const v={...f(),now:1590,history:[...f().history,{...current,firstStartedAt:1000,publishedAt:1550}],reverificationCount:1};
  assert.equal(review(v).path,'FULL_120_DEADLINE_ROUTE_UNAVAILABLE');assert.equal(review({...v,consents:consents(current)}).path,'EARLY_CONSENT_CANDIDATE');
+ const exact={...v,history:[v.history[0],{...v.history[1],publishedAt:1480}],now:1599};
+ assert.equal(review(exact).confirmAt,1600);assert.equal(review(exact).path,'FULL_120_DEADLINE_ROUTE_UNAVAILABLE');
+ assert.equal(accept({...exact,now:1600,authorizationExpiresAt:1700,sourceValidUntilExclusive:1700}).eligible,false);
 });
 test('material unassessed or unresolved objection blocks both consent and deadline routes',()=>{
  for(const k of ['materialUnassessedObjection','validUnresolvedObjection'])for(const c of [[],consents(target)])assert.equal(review({...f(),[k]:true,consents:c}).path,'OBJECTION_BLOCKED');
