@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-boundary-intake.1",
   "date": "2026-10-19",
-  "status": "BLOCKED_REQUIRED_E3_MAC_CHECK",
+  "status": "AWAITING_E3_MAC_FIX_MERGED_HEAD_CI",
   "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
   "encodingPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
   "e3": {
@@ -33,8 +33,16 @@
       "failed": 0,
       "cancelled": 1,
       "prCompanionMac": "62_OF_62_PASS_NOT_SUBSTITUTE_FOR_FAILED_PUSH",
-      "cause": "PENDING_BOUNDED_LIFECYCLE_DIAGNOSIS",
-      "blindRerunPerformed": false
+      "cause": "HISTORICAL_STALL_UNPROVEN_HARNESS_GAPS_FIXED",
+      "blindRerunPerformed": false,
+      "resolution": "NEW_MERGED_HEAD_REQUIRED_CI_PENDING"
+    },
+    "macFix": {
+      "head": "41354e0283709f74dd64a9dc6435703c804853c6",
+      "pullRequest": 90,
+      "remoteCi": "6_OF_6_SUCCESS",
+      "fullMacCases": 105,
+      "sourceSemanticChanges": false
     }
   },
   "e4Preparation": {

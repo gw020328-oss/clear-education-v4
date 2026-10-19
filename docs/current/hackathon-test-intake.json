@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
-  "date": "2026-10-18",
-  "repositoryPlanRevision": 4,
+  "date": "2026-10-19",
+  "repositoryPlanRevision": 5,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -76,7 +76,7 @@
     {
       "stage": "E3",
       "scope": "120_1_600_PROCEDURE_AND_TWO_VIEW_DTO",
-      "status": "IMPLEMENTED_LOCAL_VALIDATED_BLOCKED_REQUIRED_MAC_CHECK",
+      "status": "AWAITING_REQUIRED_CHECKS_ON_MAC_FIX_HISTORY_MERGE",
       "requestedSetting": "gpt-6.1-sol/high",
       "acceptedHead": null,
       "dependsOn": [
@@ -101,8 +101,9 @@
         "failed": 0,
         "cancelled": 1,
         "prCompanionMac": "62_OF_62_PASS_NOT_SUBSTITUTE_FOR_FAILED_PUSH",
-        "cause": "PENDING_BOUNDED_LIFECYCLE_DIAGNOSIS",
-        "blindRerunPerformed": false
+        "cause": "HISTORICAL_STALL_UNPROVEN_HARNESS_GAPS_FIXED",
+        "blindRerunPerformed": false,
+        "resolution": "NEW_MERGED_HEAD_REQUIRED_CI_PENDING_NOT_OLD_RUN_RERUN"
       }
     },
     {
@@ -290,7 +291,24 @@
       "started": true,
       "sourceScope": "READ_ONLY_E3_REQUIRED_MAC_CHECK_CAUSE_AND_MINIMAL_FIX_PLAN",
       "sourceEdits": false,
-      "rerun": false
+      "rerun": false,
+      "completed": true
+    },
+    "apiMacLifecycleFix": {
+      "requestedModel": "gpt-6-astra",
+      "thinking": "high",
+      "pullRequest": 90,
+      "reviewedHead": "41354e0283709f74dd64a9dc6435703c804853c6",
+      "remoteCi": "6_OF_6_SUCCESS",
+      "fullMacCases": 105,
+      "includedNativeTrials": 9,
+      "includedInjectedCases": 39,
+      "historicalStallRootCause": "UNPROVEN",
+      "oldWorkflowRerun": false,
+      "timeoutBudgetUnitChange": "LEGACY_FIVE_TRIALS_COMBINED_60S_TO_EACH_TRIAL_60S_LAUNCHER_20S_UNCHANGED",
+      "productSourceChanged": false,
+      "commonHistoryMerged": true,
+      "e3HistoryMergeRequested": true
     }
   },
   "commonConsumerPins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
