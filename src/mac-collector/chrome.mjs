@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { writePrivate, requireValue } from './storage.mjs';
+import { recoveryStep } from './recovery-diagnostics.mjs';
 const exec=promisify(execFile);
 import { chromePath, gateScript, parseProcesses, browserRecovery } from './browser-recovery.mjs';
 export { chromePath } from './browser-recovery.mjs';
@@ -14,7 +15,7 @@ const recovery=browserRecovery({
 });
 const stopBrowserGroup=recovery.stopGroup;
 export async function stopRecordedBrowser(path) {
-  const record=await fs.readFile(join(path,'browser.json'),'utf8').catch(e=>{if(e.code==='ENOENT')return null;throw e;});
+  const record=await recoveryStep('BROWSER_METADATA_READ','BROWSER_METADATA',()=>fs.readFile(join(path,'browser.json'),'utf8').catch(e=>{if(e.code==='ENOENT')return null;throw e;}));
   let pid;
   if(record){
     // A crashed write can leave an incomplete record. Discovery is still

@@ -1,0 +1,174 @@
+{
+  "version": "clear-e6-python-quality-gold.1",
+  "basis": "POLICY_DERIVED_SYNTHETIC_EXPECTATIONS_PENDING_HUMAN_REVIEW",
+  "cases": [
+    {
+      "caseId": "PY01",
+      "normalControl": true,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "리스트의 숫자를 합산하는 Python 함수를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "PRESENT",
+          "quote": "빈 리스트에서 결과가 None이 되어 초기값을 0으로 바꾸고 다시 실행했습니다."
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "PRESENT",
+          "quote": "초기값과 경계 입력을 함께 테스트해야 한다는 점을 배웠습니다."
+        }
+      ]
+    },
+    {
+      "caseId": "PY02",
+      "normalControl": true,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "리스트의 숫자를 합산하는 Python 함수를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "PRESENT",
+          "quote": "문제는 없었고 빈 리스트와 한 원소 입력을 넣어 결과를 점검했습니다."
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "PRESENT",
+          "quote": "초기값과 경계 입력을 함께 테스트해야 한다는 점을 배웠습니다."
+        }
+      ]
+    },
+    {
+      "caseId": "PY03",
+      "normalControl": true,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "리스트의 숫자를 합산하는 Python 함수를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "PRESENT",
+          "quote": "빈 리스트에서 결과가 None이 되어 초기값을 0으로 바꾸고 다시 실행했습니다."
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "PRESENT",
+          "quote": "초기값과 경계 입력을 함께 테스트해야 한다는 점을 배웠습니다."
+        }
+      ]
+    },
+    {
+      "caseId": "PY04",
+      "normalControl": false,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "리스트의 숫자를 합산하는 Python 함수를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "PRESENT",
+          "quote": "빈 리스트에서 결과가 None이 되어 초기값을 0으로 바꾸고 다시 실행했습니다."
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "MISSING",
+          "quote": null
+        }
+      ]
+    },
+    {
+      "caseId": "PY05",
+      "normalControl": false,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "리스트의 숫자를 합산하는 Python 함수를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "UNCERTAIN",
+          "quote": null
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "PRESENT",
+          "quote": "초기값과 경계 입력을 함께 테스트해야 한다는 점을 배웠습니다."
+        }
+      ]
+    },
+    {
+      "caseId": "PY06",
+      "normalControl": false,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "리스트의 숫자를 합산하는 Python 함수를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "CONFLICT",
+          "quote": null
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "PRESENT",
+          "quote": "초기값과 경계 입력을 함께 테스트해야 한다는 점을 배웠습니다."
+        }
+      ]
+    },
+    {
+      "caseId": "PY07",
+      "normalControl": true,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "리스트의 숫자를 합산하는 Python 함수를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "PRESENT",
+          "quote": "빈 리스트에서 결과가 None이 되어 초기값을 0으로 바꾸고 다시 실행했습니다."
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "PRESENT",
+          "quote": "초기값과 경계 입력을 함께 테스트해야 한다는 점을 배웠습니다."
+        }
+      ]
+    },
+    {
+      "caseId": "PY08",
+      "normalControl": true,
+      "topics": [
+        {
+          "topicId": "work-performed",
+          "state": "PRESENT",
+          "quote": "목록 A&amp;B의 합계를 구하는 코드를 작성했습니다."
+        },
+        {
+          "topicId": "problem-solving-process",
+          "state": "PRESENT",
+          "quote": "문제는 없었고 빈 리스트와 한 원소 입력을 넣어 결과를 점검했습니다."
+        },
+        {
+          "topicId": "learning-takeaway",
+          "state": "PRESENT",
+          "quote": "초기값과 경계 입력을 함께 테스트해야 한다는 점을 배웠습니다."
+        }
+      ]
+    }
+  ]
+}
