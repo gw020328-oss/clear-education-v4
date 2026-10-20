@@ -1,5 +1,7 @@
 # 첫 정상 TEST용 HackerRank 수집 입구
 
+최신: [focused 비교 준비](SOURCE_EXTRACTION_REVIEW.ko.md)는 계정 사본·같은 인증서 행·선택 경로의 값 없는 진단을 구현한다. 목록만으로 종료하지 않고 선택 관찰까지 기다리며 기존 수명/정리 경계를 유지한다. production extractor/recipe/trust 활성화가 아니며 다음 사용자 준비 신호 전 실제 실행은 보류한다.
+
 2026-10-20 최신: schema.2 실행49450 후 [추가 로그인 없는 원천·추출 검토](SOURCE_EXTRACTION_REVIEW.ko.md)를 기록했다. 공개 코드의 계정 경로/인증서 의미와 실제 계정 재확인을 구분하며, 현행 진단을 그대로 반복하지 않는다. 실행 코드·verifier·trust 변경0, 실제 proof0/API HOLD다. 아래82588 준비 기록보다 이 검토를 우선한다.
 
 현재 준비 범위: 이번82588의 account 2차 parser 실패·certificate flat 구조 미확정을 바탕으로 [다음 단1회 진단 준비](LAYOUT_DIAGNOSTIC.ko.md)의 `HACKERRANK_LAYOUT_SCHEMA.2`를 보완한다. 두 parser 상세 거부 사유, 허용/가림 경로·자료형, 행별 필드와 한도 표시만 반환한다. 본부에 준비 완료를 보고한 뒤 사용자 준비 신호 전에는 실제 창/재로그인을 시작하지 않는다. 실제 proof0·trust UNCONFIGURED는 유지한다.

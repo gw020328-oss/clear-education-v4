@@ -1,5 +1,15 @@
 # HackerRank 원천 형식 관찰 — 실행 전 인계
 
+## 최신: focused 비교를 포함한 다음1회 준비
+
+[추출 검토의 최신 후속](SOURCE_EXTRACTION_REVIEW.ko.md)에 따라 `HACKERRANK_FOCUSED_REVIEW.1`을 기존 schema.2 옆에 추가했다. exact direct/cache username의 유일성·타입·동등성, certificate query/같은 row의 계정·ID·metadata·status·test ID 연결, target 수·중복·선택 ID를 값 없는 enum/bool/type으로 비교한다. 공개 근거가 없는 certificates 문자열 fallback은 없으며 실제 미관찰 metadata 누락은 UNRESOLVED로 남긴다.
+
+**완료 조건이 변경됐다:** account 응답 + certificate 목록 응답 + 같은 탭 top-frame의 인증서 상세 선택 경로를 모두 관찰해야 자동 종료한다. 목록만 받아 창이 닫혀 선택을 놓치는 일을 막는다. SPA와 full navigation을 처리하고 다른 탭·하위 frame을 제외한다. 상세 본문·새 endpoint·쿠키 API는 추가하지 않는다. 경로는 영숫자 ID와 끝 slash만 허용하며 query/추가 경로는 INVALID다. 완료 출력의 `observationsComplete=true`는 비교·proof 성공이 아니다.
+
+다음 실행은 기존 launcher/15분 상한/정리를 유지한다. 사용자 준비 신호 뒤 본인 로그인, 완료 신호 뒤 ready1회, 계정 안내 뒤 **같은 탭에서 본인 프로필의 Certificates를 거쳐 Python(Basic) 상세 화면까지 열기**가 필요한 전부다. 목록 뒤에도 창이 열려 있는 것이 정상이며 선택까지 관찰한 뒤 자동 종료한다. 선택을 못 보거나 취소/만료하면 부분 관찰이며 반복 실행하지 않는다.
+
+focused outcome은 WAITING_FOR_INPUT / UNRESOLVED / STRUCTURE_AND_RELATIONS_OBSERVED다. 마지막 상태도 계정 통제·동일 계정 proof·서명·request-bound를 입증하지 않는다. test_failed는 관계가 일치해도 FAILED로 별도 표시한다. 기존 schema.2의 탐색 제한은 보존하고 focused 고정 경로와 구분해 읽는다. 비교 문자열 참조는 완료/취소/close에서 해제하며 민감 값·URL·해시는 출력하지 않는다. 실제 recipe·trust는 변경0이고 실제 새 실행은 아직 하지 않았다.
+
 ## 최신: schema.2 실행49450 후 추가 로그인 없는 추출 검토
 
 `5270cf1`의 실행49450은 사용자 로그인 완료 후 ready1회, 두 응답 관찰, exit0/profilesDeleted:true로 정상 자동 종료했다. account는 primary SIZE_LIMIT / secondary ACCEPTED이나 두 username 경로 중간 키가 가려졌고 PATH_DEPTH_LIMIT가 남았다. certificate는 primary NUMBER_FRACTION / secondary ACCEPTED였으며 data 단일 object 행과 그 안의 certificates string 배열을 별도 후보로 보고했다. 실제 proof0/API HOLD다.

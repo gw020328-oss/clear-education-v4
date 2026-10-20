@@ -1,5 +1,27 @@
 # HackerRank 원천 의미·추출 규칙 검토
 
+## 최신 후속: 고정 경로 비교의 진단 전용 준비
+
+본부의 계속 준비 지시에 따라 [layout-focused.mjs](../../src/hackerrank-evidence/layout-focused.mjs)를 추가했다. 아래 a024aeb 조사에서 공개 근거로 확인한 경로만 비교한다. 결과는 `focusedReview.version=HACKERRANK_FOCUSED_REVIEW.1`이며 기존 schema.2 구조 요약을 유지한다. 아래 “문서만 변경/비교 코드 미구현”은 **a024aeb 당시 조사 기록**이다.
+
+- account는 하나의 NEXT_DATA와 정확한 direct/cache 경로, queryKey `["prefetchData"]`의 유일성, 두 username의 string/기존 source ID 형식/동등성을 확인한다. 다른 query·다른 위치의 username으로 보충하지 않는다.
+- certificate는 data의 최대32행 안에서 id·username·status·label/level/track_slug·두 test ID의 타입과 관계를 보고한다. ID 중복·shadow certificateId·다른 계정·교차 row·선택 ID 부재/충돌을 일치로 처리하지 않는다. **certificate.unique_id의 실제 존재는 아직 미확정**이며 누락은 UNAVAILABLE/UNRESOLVED다. attributes.certificates는 비교에 사용하지 않는다.
+- 전체 JSON을 먼저 기존 bounded scanner(depth48/node32768, account1MiB/certificate64KiB)로 검사한다. 그 뒤 진단 내부의 JSON.parse 사본에서 숫자는 reviver가 즉시 타입용 sentinel로 버리며 값 비교/수치 연산에 사용하지 않는다. 필수 필드 숫자는 number로 보고하고 string으로 인정하지 않는다. 이는 아래 “수치 해석 없는 scanner” 방향의 진단 적용이며 signed strictJson은 그대로다. decoded 중복/위험 key·전체 문법·한도는 검사 전후 우회하지 않는다.
+- 일반 schema.2의 unrelated PATH_DEPTH_LIMIT와 고정 경로 비교 결과는 별개다. focused 비교도 전체 JSON 검사를 통과해야 하지만, 경로를 알고 있는 필드를 찾기 위해 모든 하위 경로를 재귀 탐색하지 않는다.
+- private username/query/행 ID/선택 ID는 비교 closure에만 머물며 완료·취소·close에서 참조를 해제한다. 원문 bytes는 기존 finally에서 덮어쓴다. 출력은 고정 enum/bool/type/최대32 slot이며 값·해시·임의 key·URL을 내보내지 않는다. JavaScript 문자열/GC/swap의 물리적 완전 소거 보장은 아니다.
+- 관찰기는 ready 이후 같은 CDP session의 top-frame full navigation 또는 SPA navigation에서 `/certificates/<영숫자 ID>`(끝 `/` 허용)를 확인한다. 상세 페이지 본문을 읽거나 새 endpoint를 요청하지 않는다. 다른 탭/하위 frame은 제외한다. query/추가 경로는 INVALID로 표시하며 값은 출력하지 않는다.
+- 자동 종료는 **account body + certificate list body + 선택 경로 관찰**의 세 조건이다. 목록만으로 닫지 않는다. 세 조건 충족은 관찰 완료이며 비교 통과가 아니다. 선택이 없으면 기존 15분 상한·close/취소를 유지한다. 종료 시 `observationsComplete`와 focused outcome을 따로 읽는다.
+
+`STRUCTURE_AND_RELATIONS_OBSERVED`는 두 계정 사본·query·모든 행 계정·유일 선택 ID·목표 종류·허용 status·test 연결이 관찰상 일치했다는 뜻이다. FAILED status도 관계 확인에는 들어갈 수 있으므로 자격/합격 성공을 뜻하지 않는다. 여러 target이 있으면 targetCount=MULTIPLE로 남고 관찰된 명시 선택과 한 row의 연결을 별도 검사한다. 누락·미지원·충돌은 UNRESOLVED, 미관찰 입력은 WAITING_FOR_INPUT이다. 어느 경우에도 proof/account-control/account-join/request-bound는 false, API HOLD다.
+
+관련 합성 검증은 새 focused 비교10개와 변경된 capture/runner 경계를 대상으로 한다. 다른 계정/query/ID/인증 종류·복수target·중복ID/부모·교차row·cache 충돌·숫자/타입/누락·한도·선택 대기/취소/다른frame·동시 응답·비노출 및 관찰기 전체를 거치는 합성 연결 사례를 포함한다. 기존 일반 suite를 수동 반복하지 않고 기존 HR CI wildcard가 이 파일도 실행한다. 최신 수치·원격 결과는 PR103의 해당 head 기록을 따른다.
+
+로컬 최종 검증은 고정 Node24.21.0/network guard 아래 focused **10/10**, capture/runner **27/27**, 합계 **37/37 PASS**다. 마지막 정상 capture 연결 fixture의 구문 오류는 검사에서 발견해 수정한 뒤 해당 파일27개를 다시 통과했다. 제품 경계(values/verifier/recipes/request/collector/pending-trust) diff0, 문서 상대 링크/diff check PASS다. 기존 schema survey13개는 변경하지 않아 로컬에서 반복하지 않았고, 기존 HR CI wildcard는 세 파일을 함께 실행한다.
+
+**다음 사용자 행동:** 준비 완료 보고와 사용자 준비 신호 후에만 새 진단을 한 번 연다. 사용자는 본인 로그인 완료만 알리고, ready 이후 계정 관찰 안내가 나오면 **같은 탭에서 본인 프로필 → Certificates → Python(Basic) 상세 화면**까지 연다. 목록 수집 뒤 창이 유지되는 것이 정상이다. 세 관찰 완료 시 자동 종료한다. 알려지지 않은 metadata는 그대로 미확정으로 보고하며 재로그인을 자동 반복하지 않는다. 실제 attestor recipe/최소 공개·signer/epoch/context는 아래 설계 관문으로 계속 남는다.
+
+## a024aeb의 추가 로그인 없는 조사 기록
+
 2026-10-20. PR103의 `5270cf125e04e36a63ecea551967e82ff6897042` / schema.2 실제 실행 **49450**을 출발점으로 한 추가 로그인 없는 조사다. 82588·92921 결과를 이번 관찰로 바꾸지 않는다. 추천 설정은 증명·개인정보 경계 검토에 맞춘 Astra / High이며, 안내만으로 현재 턴의 실제 모델 설정이 바뀌었다고 주장하지 않는다.
 
 **결론:** 공개 배포 코드로 계정 경로 후보와 인증서 목록의 ID·제목·상태 해석을 좁혔다. 실제 계정의 정확한 경로·값 일치와, 선택 공개된 바이트만으로 경로/중복/동일 레코드를 검증할 recipe는 미확정이다. 기존 flat 합성 recipe를 실제 nested 응답에 적용하지 않는다. verifier·recipe·trust·collector·진단 실행 코드는 변경하지 않았다. 새 로그인/창/실제 proof/신청/AI/체인/지급은 0건이다.

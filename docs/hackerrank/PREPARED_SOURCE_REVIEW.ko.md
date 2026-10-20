@@ -1,5 +1,7 @@
 # 과거 성공 경로 대조와 같은 owner의 수집 연결
 
+최신 후속은 [진단 전용 고정 경로 비교 준비](SOURCE_EXTRACTION_REVIEW.ko.md)다. 기존 schema.2에 focusedReview를 추가하고 두 응답과 선택 경로까지 기다리는 완료 조건을 합성 검증한다. 실제 recipe/verifier/trust와 owner/lease는 그대로이며 사용자 준비 신호 전 실제 창/로그인/proof는 실행하지 않는다.
+
 2026-10-20 최신: schema.2 실행49450은 정상 정리했으며 실제 proof0이다. 추가 로그인 없이 공식 공개 소스를 대조한 [추출 규칙 검토](SOURCE_EXTRACTION_REVIEW.ko.md)를 우선한다. 계정 두 경로와 인증서 metadata 후보는 좁혔지만 최소 공개 recipe·실제 값 일치·signer/epoch/context는 미확정이다. 아래 schema.2 준비 문구는 그 실행 이전 기록이다.
 
 최신 사용자 지시로 다음 실제 관찰 전 [schema.2 진단 준비](LAYOUT_DIAGNOSTIC.ko.md)를 먼저 마친다. 이번82588의 값 없는 결과와 다음 한 번의 판정 체크리스트를 그 문서에 기록했다. 진단 전용 숫자 정규화 재판독은 이제 값 대신 자료형만 저장하는 bounded parser로 교체하며, 1차 실제 strict parser 및 제품 verifier는 그대로다. 실제 재실행은 준비 보고 후 사용자 준비 신호까지 보류한다.

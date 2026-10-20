@@ -41,7 +41,7 @@ test('HR login CONNECT allows exact Google account host and rejects unapproved t
 function fakeBrowser(){
  const handlers=new Map(),calls=[],bodies=new Map();
  return {calls,bodies,closed:new Promise(()=>{}),on(name,fn){handlers.set(name,fn);return()=>handlers.delete(name);},emit(name,e,sid='page'){handlers.get(name)?.(e,sid);},
-  async send(name,args,sid){calls.push([name,args,sid]);if(name==='Network.getResponseBody')return {body:bodies.get(args.requestId),base64Encoded:false};if(name==='Target.getTargets')return {targetInfos:[{type:'page',targetId:'target'}]};if(name==='Target.attachToTarget')return {sessionId:'page'};return {};},async close(){calls.push(['close']);},handlerCount:()=>handlers.size};
+  async send(name,args,sid){calls.push([name,args,sid]);if(name==='Network.getResponseBody')return {body:bodies.get(args.requestId),base64Encoded:false};if(name==='Page.getFrameTree')return {frameTree:{frame:{id:'main'}}};if(name==='Target.getTargets')return {targetInfos:[{type:'page',targetId:'target'}]};if(name==='Target.attachToTarget')return {sessionId:'page'};return {};},async close(){calls.push(['close']);},handlerCount:()=>handlers.size};
 }
 function events(browser,id,url,body,{sid='page',method='GET',status=200,mimeType=url===ACCOUNT_URL?'text/html':'application/json',redirectResponse,fromServiceWorker=false,fromDiskCache=false}={}){
  browser.bodies.set(id,body);browser.emit('Network.requestWillBeSent',{requestId:id,request:{url,method},redirectResponse},sid);
@@ -113,7 +113,7 @@ test('type-only survey accepts escaped strings without converting numeric source
  const a=inspectSourceLayout('account',Buffer.from('<script type="application/json">'+unsafe+'</script>'));
  assert.equal(a.structureParsed,false);assert.deepEqual(a.candidateJsonPaths,[]);
 });
-test('runner announces automatic close after both responses even when certificate JSON is rejected',async()=>{
+test('runner announces automatic close only after both responses and certificate selection, without implying comparison success',async()=>{
  const previous=process.env.CLEAR_LOCKED;process.env.CLEAR_LOCKED='1';
  try{
   const input=new PassThrough(),browser=fakeBrowser(),messages=[];
@@ -123,6 +123,7 @@ test('runner announces automatic close after both responses even when certificat
    if(name==='Network.setBypassServiceWorker')setImmediate(()=>{
     events(browser,'account',ACCOUNT_URL,account);
     events(browser,'certificate',certUrl,'{"data":[],"score":0.5}');
+    browser.emit('Page.navigatedWithinDocument',{frameId:'main',url:'https://www.hackerrank.com/certificates/SYNTHETICID'});
    });
    return result;
   };
@@ -133,7 +134,8 @@ test('runner announces automatic close after both responses even when certificat
    launchBrowser:async()=>browser});
   assert.equal(result.layouts.certificate.jsonParsed,false);assert.equal(result.proofVerified,false);
   const notice=messages.findIndex(message=>message.includes('자동으로 닫습니다'));
-  assert(notice>messages.findIndex(message=>message.startsWith('인증서 응답 관찰 완료')));
+  assert(notice>messages.findIndex(message=>message.startsWith('인증서 목록 응답 관찰 완료')));
+  assert.equal(result.observationsComplete,true);assert.equal(result.focusedReview.outcome,'UNRESOLVED');
   assert.equal(messages.filter(message=>message.includes('자동으로 닫습니다')).length,1);
   assert.equal(browser.calls.filter(call=>call[0]==='close').length,1);
   assert.doesNotMatch(messages.join('\n'),/SYNTHETIC_SECRET/);
@@ -145,11 +147,83 @@ test('capture reads no body before ready or for off-route/session traffic and ne
  events(browser,'foreign','https://example.org/',account);events(browser,'other',ACCOUNT_URL,account,{sid:'other'});
  events(browser,'query',certUrl+'&extra=1',certificate);await tick();assert.equal(browser.calls.filter(c=>c[0]==='Network.getResponseBody').length,0);
  events(browser,'account',ACCOUNT_URL,account);await tick();events(browser,'certificate',certUrl,certificate);
+ browser.emit('Page.navigatedWithinDocument',{frameId:'main',url:'https://www.hackerrank.com/certificates/SYNTHETICID'});
  const result=await capture.done;await capture.close();
  assert.equal(result.apiAcceptance,'HOLD');assert.equal(result.proofVerified,false);assert.equal(result.requestBound,false);assert.equal(result.paymentAllowed,false);
  assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC_SECRET/);
  assert.deepEqual(browser.calls.filter(c=>c[0]==='Network.getResponseBody').map(c=>c[1].requestId),['account','certificate']);
  assert.ok(!browser.calls.some(c=>/cookie|claim|sign/i.test(c[0])));assert.equal(browser.handlerCount(),0);
+});
+test('list capture waits for committed same-tab top-frame SPA selection and never reads certificate page body',async()=>{
+ const browser=fakeBrowser(),capture=createLayoutCapture({browser,sessionId:'page'});await capture.arm();
+ events(browser,'account',ACCOUNT_URL,account);events(browser,'certificate',certUrl,certificate);await tick();
+ let resolved=false;capture.done.then(()=>{resolved=true;});
+ for(const [name,event,sid]of [
+  ['Page.navigatedWithinDocument',{frameId:'main',url:'https://www.hackerrank.com/certificates/SYNTHETICID'},'other'],
+  ['Page.navigatedWithinDocument',{frameId:'child',url:'https://www.hackerrank.com/certificates/SYNTHETICID'},'page'],
+  ['Page.frameNavigated',{frame:{id:'child',parentId:'main',url:'https://www.hackerrank.com/certificates/SYNTHETICID'}},'page'],
+ ])browser.emit(name,event,sid);
+ events(browser,'detail','https://www.hackerrank.com/certificates/SYNTHETICID','SYNTHETIC_SECRET_PAGE');
+ await tick();assert.equal(resolved,false);assert.equal(capture.summary().observationsComplete,false);
+ browser.emit('Page.navigatedWithinDocument',{frameId:'main',url:'https://www.hackerrank.com/certificates/SYNTHETICID'});
+ const result=await capture.done;assert.equal(result.observationsComplete,true);await capture.close();
+ assert.deepEqual(browser.calls.filter(c=>c[0]==='Network.getResponseBody').map(c=>c[1].requestId),['account','certificate']);
+ assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC/);
+});
+test('top-level full navigation supports selection before list; invalid query path is unresolved and closes safely',async()=>{
+ for(const suffix of ['', '?secret=SYNTHETIC_SECRET']){
+  const browser=fakeBrowser(),capture=createLayoutCapture({browser,sessionId:'page'});await capture.arm();
+  browser.emit('Page.frameNavigated',{frame:{id:'new-main',url:'https://www.hackerrank.com/certificates/SYNTHETICID'+suffix}});
+  events(browser,'account',ACCOUNT_URL,account);events(browser,'certificate',certUrl,certificate);
+  const result=await capture.done;await capture.close();
+  assert.equal(result.focusedReview.selection.status,suffix?'INVALID':'OBSERVED');
+  assert.equal(result.focusedReview.outcome,'UNRESOLVED');assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC/);
+ }
+});
+test('response username cannot differ from the observed request username',async()=>{
+ const browser=fakeBrowser(),capture=createLayoutCapture({browser,sessionId:'page'});await capture.arm();
+ browser.emit('Network.requestWillBeSent',{requestId:'cert',request:{url:certUrl,method:'GET'}});
+ browser.emit('Network.responseReceived',{requestId:'cert',response:{url:CERTIFICATE_URL+'?username=SYNTHETIC_OTHER',status:200,mimeType:'application/json'}});
+ await assert.rejects(capture.done,/LAYOUT_CAPTURE_FAILED/);await capture.close();
+ assert.ok(!browser.calls.some(c=>c[0]==='Network.getResponseBody'));
+});
+test('capture connects private account, request query, row and selected path without exposing values',async()=>{
+ const username='SYNTHETIC_SECRET_USER',id='SYNTHETICID',profile={username};
+ const a='<script id="__NEXT_DATA__" type="application/json">'+JSON.stringify({props:{pageProps:{
+  prefetchedData:{profile},dehydrateState:{queries:[{queryKey:['prefetchData'],state:{data:{profile}}}]}}}})+'</script>';
+ const c=JSON.stringify({data:[{id,attributes:{username,status:'test_passed',test_unique_id:'SYNTHETICTEST',
+  certificate:{label:'Python',level:'Basic',track_slug:'python_basic',unique_id:'SYNTHETICTEST'}}}],unrelated:1.5});
+ const browser=fakeBrowser(),capture=createLayoutCapture({browser,sessionId:'page'});await capture.arm();
+ events(browser,'account',ACCOUNT_URL,a);events(browser,'certificate',certUrl,c);
+ browser.emit('Page.navigatedWithinDocument',{frameId:'main',url:'https://www.hackerrank.com/certificates/'+id});
+ const result=await capture.done;await capture.close();
+ assert.equal(result.focusedReview.outcome,'STRUCTURE_AND_RELATIONS_OBSERVED');
+ assert.equal(result.focusedReview.relations.accountQuery,'MATCH');assert.equal(result.focusedReview.relations.selectedAccount,'MATCH');
+ assert.equal(result.layouts.certificate.jsonParsed,false);assert.equal(result.proofVerified,false);
+ assert.equal(result.observationsComplete,true);assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC/);
+});
+test('partial close or cancellation while awaiting selection preserves unresolved summary and disposes safely',async()=>{
+ for(const cancel of [false,true]){
+  const browser=fakeBrowser(),controller=new AbortController(),capture=createLayoutCapture({browser,sessionId:'page',signal:controller.signal});
+  await capture.arm();events(browser,'account',ACCOUNT_URL,account);events(browser,'certificate',certUrl,certificate);await tick();
+  if(cancel){controller.abort();await assert.rejects(capture.done,/LAYOUT_CAPTURE_FAILED/);}
+  await capture.close();const r=capture.summary();
+  assert.equal(r.observationsComplete,false);assert.equal(r.focusedReview.outcome,'WAITING_FOR_INPUT');
+  assert.equal(r.focusedReview.selection.status,'NOT_OBSERVED');assert.equal(browser.handlerCount(),0);
+  assert.doesNotMatch(JSON.stringify(r),/SYNTHETIC/);
+ }
+});
+test('concurrent duplicate role responses cannot overwrite the body selected for focused comparisons',async()=>{
+ const browser=fakeBrowser(),send=browser.send.bind(browser);let release;
+ browser.send=async(name,...args)=>{
+  if(name==='Network.getResponseBody'&&args[0].requestId==='first'){browser.calls.push([name,args[0]]);return new Promise(r=>{release=()=>r({body:account,base64Encoded:false});});}
+  return send(name,...args);
+ };
+ const capture=createLayoutCapture({browser,sessionId:'page'});await capture.arm();
+ events(browser,'first',ACCOUNT_URL,account);events(browser,'second',ACCOUNT_URL,'SYNTHETIC_PRIVATE_OTHER');
+ release();await tick();await capture.close();
+ assert.deepEqual(browser.calls.filter(c=>c[0]==='Network.getResponseBody').map(c=>c[1].requestId),['first']);
+ assert.equal(capture.summary().layouts.account.htmlParsed,true);
 });
 for(const [label,options]of Object.entries({post:{method:'POST'},redirect:{redirectResponse:{}},status:{status:302},mime:{mimeType:'text/plain'},serviceWorker:{fromServiceWorker:true},diskCache:{fromDiskCache:true}}))test(`capture rejects ${label} before body access`,async()=>{
  const browser=fakeBrowser(),capture=createLayoutCapture({browser,sessionId:'page'});await capture.arm();events(browser,'account',ACCOUNT_URL,account,options);

@@ -42,13 +42,16 @@ export async function runHackerRankLayout(session,{signal,input=process.stdin,ou
   phase='DASHBOARD_NAVIGATE';const navigation=await browser.send('Page.navigate',{url:ACCOUNT_URL},sessionId);check(!navigation.errorText,'LAYOUT_NAVIGATION');
   output('HackerRank 원천 형식 진단입니다. 증명 생성·API 수락·지급은 하지 않습니다.');
   output('이 새 Chrome에서 본인 계정으로 로그인한 뒤 터미널에 ready를 입력하세요. close로 종료할 수 있습니다.');
-  capture=createLayoutCapture({browser,sessionId,signal:live,onProgress:({role})=>output(role==='account'?'계정 응답 관찰 완료. 같은 탭에서 본인의 프로필·인증서 화면을 열어 주세요.':'인증서 응답 관찰 완료. 구조 해석 결과는 종료 요약에서 확인합니다.')});
+  capture=createLayoutCapture({browser,sessionId,signal:live,onProgress:({role})=>output(role==='account'
+   ?'계정 응답 관찰 완료. 같은 탭에서 본인의 프로필을 거쳐 Python (Basic) 인증서 화면을 열어 주세요.'
+   :role==='certificate'?'인증서 목록 응답 관찰 완료. 같은 탭의 본인 Python (Basic) 인증서 화면 선택까지 기다립니다.'
+   :'인증서 화면 선택 경로 관찰 완료. 값 없는 비교 결과는 종료 요약에서 확인합니다.')});
   phase='READY_WAIT';lines=createInterface({input,terminal:false});
   return await new Promise((resolve,reject)=>{
    let armed=false;
    abort=()=>reject(new EvidenceError('LAYOUT_CANCELLED'));live.addEventListener('abort',abort,{once:true});
    capture.done.then(result=>{
-    if(result.layouts.account&&result.layouts.certificate)output('두 응답 관찰을 마쳤습니다. 임시 자료 정리를 위해 진단용 Chrome을 자동으로 닫습니다. 증명 검증 성공을 뜻하지 않습니다.');
+    if(result.observationsComplete)output('두 응답과 인증서 화면 선택 경로 관찰을 마쳤습니다. 임시 자료 정리를 위해 진단용 Chrome을 자동으로 닫습니다. 비교 통과나 증명 검증 성공을 뜻하지 않습니다.');
     resolve(result);
    },reject).catch(reject);
    lines.once('close',()=>resolve(capture.summary()));browser.closed.then(()=>resolve(capture.summary()),reject);
