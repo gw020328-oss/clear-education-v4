@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-20",
-  "repositoryPlanRevision": 22,
+  "repositoryPlanRevision": 23,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -937,8 +937,37 @@
     "apiSourceFiles": 27,
     "producerSeamFiles": 6,
     "normalEntryFiles": 3,
-    "explicitConsumerGuards": "PENDING_OWNER_INTEGRATION",
-    "actualSourceAcceptance": false
+    "explicitConsumerGuards": "CONSUMED_BY_OWNER_97827dd_WITH_EXACT_SCOPE_AND_SOURCE_CHECKS",
+    "actualSourceAcceptance": false,
+    "consumerCommit": "97827ddbeb1eb90007de57cd9053fa9cc1a86aee",
+    "consumerSha256": "7b4e94abd861bc0a57f0bf2d433ed2ebc9ec0054147c9da6f05801e5403cd928",
+    "ownerReportedTests": {
+      "memoryAndE4": 165,
+      "api": 295,
+      "b": 20
+    },
+    "finalApiHeadAtIntake": "8ce113cae8dece67064ae7cd2cec2d41172addc7",
+    "remoteCiAtIntake": "RUNNING_CHECK_EXACT_HEAD_IN_PR102",
+    "remoteCiLink": "https://github.com/gw020328-oss/clear-education-v4/pull/102",
+    "ciInstallationFix": {
+      "ownerCommit": "727254e",
+      "scope": "A_WORKFLOW_INSTALL_EXISTING_FROZEN_HACKERRANK_PREFIX_ONLY",
+      "originalFailedHead": "1ef53ce63e9d38e1908d15a62921401370c4938f",
+      "originalRun": "39394319216",
+      "originalJob": "118533146735",
+      "originalPass": 6,
+      "originalLoadFail": 4,
+      "cause": "ERR_MODULE_NOT_FOUND_ATTESTOR_CORE_FROM_NEW_STATIC_COLLECTOR_IMPORT",
+      "controlledCleanRootOnlyReproduced": true,
+      "sameImportAfterFrozenPrefixInstallPassed": true,
+      "priorAcceptanceBytesChanged": false,
+      "blindRerun": false
+    },
+    "localProductRegression": {
+      "head": "1ef53ce63e9d38e1908d15a62921401370c4938f",
+      "pass": 708,
+      "doesNotReplaceNewHeadCi": true
+    }
   },
   "hackerRankLayoutDiagnostic": {
     "implementationHead": "df352f3686a6fe7897f1f0e11483acddb1af576e",
@@ -947,10 +976,25 @@
     "ownerWorkspace": "clear-hackerrank-bootcamp",
     "guide": "docs/hackerrank/LAYOUT_DIAGNOSTIC.ko.md",
     "ownerNetworkBlockedPass": 108,
-    "actualLoginRuns": 0,
     "proofVerified": false,
     "requestBound": false,
     "paymentAllowed": false,
-    "status": "REVIEWED_MINIMAL_DIAGNOSTIC_WAITING_CENTRAL_USER_LOGIN_COORDINATION"
+    "status": "HEADQUARTERS_OWNS_GOOGLE_LOGIN_STATIC_RESOURCE_DIAGNOSIS_NO_DUPLICATE_RUN",
+    "latestReviewedHead": "925e3d0",
+    "sourceObservationRuns": 0,
+    "hostedProofRuns": 0,
+    "rootFinalPhaseNetworkBlockedPass": 14,
+    "ownerExactGoogleHostNetworkBlockedPass": 16,
+    "startupDependencyFix": "PINNED_YBM_PREFIX_INSTALLED_THREE_IMPORTS_CHECKED_BEFORE_CONNECTION",
+    "latestClosedRun": {
+      "session": "57208",
+      "ready": false,
+      "layoutsEmpty": true,
+      "profilesDeleted": true,
+      "proofCount": 0,
+      "blocker": "GOOGLE_LOGIN_CONNECT_HOST_ALLOWLIST_CONFIRMED_AND_MINIMALLY_FIXED"
+    },
+    "remainingLoginUiCause": "STATIC_RESOURCE_BLOCKING_SUSPECTED_NOT_CONFIRMED_NO_REPEATED_NEXT",
+    "actualSourceAccepted": false
   }
 }

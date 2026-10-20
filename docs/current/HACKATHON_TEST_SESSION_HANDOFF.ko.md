@@ -7,8 +7,8 @@
 | 소유자 | 작업본 / 현재 기준 | 현재 다음 한 작업과 소유 경로 |
 | --- | --- | --- |
 | 통합 | `clear-education-v4` / `codex/python-bootcamp-p0`, PR78 | 단일 실행 순서·실제 차단점·검토 source pin과 최종 인수. `docs/current`, `specs/bootcamp` |
-| API | `clear-bootcamp-api-store` / `codex/bootcamp-e5-api-bridge`, PR102·937f982 API checkpoint / 62f2c59 소유 인계 병합 | 실제 source consumer와 실행 entry 구현, v5 지문 소비 대기. `src/bootcamp`, `tools/bootcamp`; 후속 미커밋은 API 소유자가 보존·확정 |
-| 금고/P1 | `clear-hackerrank-bootcamp` / `codex/hackathon-normal-source-entry`, PR100 고정a4·후속2be/4d·5465178·8851775 | 실제 형식 진단 명령 준비, 중앙 로그인 안내 대기. `src/hackerrank-evidence`; 고정 금고/typed 변경 이력 보존 |
+| API | `clear-bootcamp-api-store` / `codex/bootcamp-e5-api-bridge`, PR102·937f982 source / 8ce113c CI 설치 보완 head | 실제 source consumer와 실행 entry 구현, v5 명시 소비 완료, 새 exact-head CI 확인. `src/bootcamp`, `tools/bootcamp`; 후속 소유 커밋과 원격 CI는 API 담당이 확정 |
+| 금고/P1 | `clear-hackerrank-bootcamp` / `codex/hackathon-normal-source-entry`, PR100 고정a4·후속97827dd·6efc402·925e3d0·727254e | 비수락 진단과 v5 guard 구현 완료, 로그인 정적 자원 차단은 본부와 조정. `src/hackerrank-evidence`; 고정 금고/typed 변경 이력 보존 |
 | Moodle | `clear-moodle-review-api` / 기존 전용 브랜치, PR87·d3709a0 인계 | API가 확정한 binding으로 기존 source를 마지막에 fresh 획득. [정상 인계](../moodle/REVIEW_API_NORMAL_PATH_HANDOFF.ko.md) |
 | AI | `clear-ai-review-precheck` / `codex/ai-first-normal-handoff`, PR101·1276b91 | 같은 신청의 현재 원문 packet 연결, 새 단1회 승인 전 호출0. [정상 인계](../ai-vision/REVIEW_PRECHECK_FIRST_NORMAL_HANDOFF.ko.md) |
 
@@ -21,3 +21,7 @@ API가 발급했던 `normal-live-4d15aa1e...` 준비는 원천0·배정0이고 �
 2026-10-20 추가 인수: 통합 소유자가 API937의 bridge·원자 ledger·current/권한 및 실제 source consumer/entry를 읽고 [memory 호환 v5](../../specs/bootcamp/hackathon-test-memory-source-intake-v5.json)에 API27·producer seam6·entry3개 지문을 고정했다. 기존 v1–v4 및 정상3개 delta는 보존하며, 금고 소유자가 새 consumer/guard를 명시 소비하고 관련 검사를 마치기 전에는 결합 CI 인수가 아니다. 이 기록은 실제 HR trust·proof·새 AI 호출·실제 source 전체 시연 승인이 아니다.
 
 HackerRank [비수락 형식 진단 안내](https://github.com/gw020328-oss/clear-education-v4/blob/8851775fa4f34e1af0a858436cf3dea648eda9af/docs/hackerrank/LAYOUT_DIAGNOSTIC.ko.md)는 금고/P1 작업본의 `./tools/node src/hackerrank-evidence/layout-launch.mjs`다. 새 Chrome에서 본인 로그인 뒤 ready, 같은 탭 본인 인증서 화면을 여는 사용자 행동이 필요하다. 원문 없는 구조만 반환하고 proof/API 수락/지급은 하지 않는다. root는 정확 코드177줄을 읽었으며 실제 로그인0이다. 본부에서 한 번 안내하도록 조정하며 다른 담당이 중복 로그인·유료 승인 질문을 보내지 않는다.
+
+2026-10-20 v5 소비 후속: 금고 소유 guard `97827dd`가 exact v5/36개 source를 소비했고 memory consumer SHA는 `7b4e94abd861bc0a57f0bf2d433ed2ebc9ec0054147c9da6f05801e5403cd928`다. 소유 검사 memory165/API295/B20 및 보존 검사가 각각 통과했다. API `1ef53ce`의 제품708 통과와 별도로, 원격 A 검사10개 중4개가 HR SDK 정적 import 부재로 load 실패했다. 원본 로그를 보존했고 깨끗한 사본의 root-only 실패→동일 frozen HR prefix 설치 후 import 통과를 확인했다. workflow 설치만 보완한 `727254e`를 인수한 API `8ce113c`의 원격 CI는 기록 시점 진행 중이며 PR102에서 exact head로 확인한다. 기존 source937/v5와 정책·지급 조건은 바꾸지 않았다.
+
+진단 시작 전 의존성 누락은 설치 및 고정 phase 진단 `6efc402`로 분리했다. 이후 본부 단일 실행이 로그인 대기까지 도달했으나 Google host의 CONNECT403으로 막혔고 ready0/layouts없음/proof0 상태로 정리·삭제를 확인했다. `925e3d0`은 정확 accounts.google.com 중계만 추가하며 Google 본문 관찰0·유사 host 거부 시험16개가 통과했다. Google UI 정적 자원 차단 가능성은 아직 원인 미확정이며 본부/E4가 host 이름의 제한된 근거만 확인한다. 중복 실행·로그인 재입력·실제 proof/지급 수락은 하지 않는다.
