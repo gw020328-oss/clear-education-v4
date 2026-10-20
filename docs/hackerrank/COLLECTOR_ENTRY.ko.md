@@ -37,3 +37,13 @@
 `LOG_LEVEL=silent ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/*.test.mjs`
 
 네트워크 차단 상태에서 기존 P1와 신규 collection/cookie/lease 경계를 검사한다. 임시 무작위 키의 실제 EIP191 서명 및 발명한 응답을 사용한다. 정상 pair·틀린 요청/서명·trusted signer의 잘못된 context·첫 증명 실패 시 certificate 미접근·재실행 거부·취소·원문 없는 결과·lease 위조/만료/dispose를 포함한다. 실제 hosted SDK 증명 생성/Chrome 로그인 통합을 대신하지 않는다. 타입 파일은 선언 구문 검사이며 전체 TypeScript typecheck를 주장하지 않는다.
+
+## 2026-10-20 현재 단위 인계 — 7항목
+
+1. **성공/차단:** request-bound collector와 process-local branded lease, 원문 없는 형식 진단 CLI를 준비했다. 실제 HR 로그인/증명 0건, pending trust는 UNCONFIGURED다. 실제 계정 통제 의미·recipe·registry signer/epoch·hosted context 검토가 다음 차단점이다. API가 보고한 합성 source의 canonical claim/exact100TEST 성공을 실제 source 성공으로 표시하지 않는다.
+2. **작업본/이력:** `workspaces/clear-hackerrank-bootcamp`, `codex/hackathon-normal-source-entry`. collector `a7587d153aad982e0dc86d11d84ae1dfc6f58508`, E2 호환 `5465178`, 진단 `df352f3686a6fe7897f1f0e11483acddb1af576e`. 기존 [PR100](https://github.com/gw020328-oss/clear-education-v4/pull/100)은 a4a05c7 고정이며 후속 패킷은 API [PR102](https://github.com/gw020328-oss/clear-education-v4/pull/102) 통합 담당과 연결한다. 자동 merge/deploy 없음.
+3. **미커밋/보존:** 위 구현·검증·공개 안내는 모두 커밋했다. `.toolchain/hackathon-test-vault/e5b/`의 합성 검증 로그와 기존 private 인계 문서는 소유 작업본에 보존한다. 키/쿠키/raw proof/token을 새 문서·fixture로 복사하지 않는다. 기존 TEST 환경은 초기화하지 않는다.
+4. **재현/환경/pin:** 위 network-guard HR 시험 명령 및 `tests/hackathon-test-vault/normal-source-compatibility.test.mjs`; E4 회귀 명령은 `.github/workflows/hackathon-e5.yml`의 Frozen E4 단계다. 정상 source intake `specs/bootcamp/hackathon-test-normal-source-intake-v1.json` SHA `410ec5bab91a365cee6909328b0c1a2f847283738b27f66aaf911e2300f47dc9`, 기존 E2/v1/v4 원본 보존. 실제 진단 명령·사용자 행동·외부 전달·비용 제한은 [LAYOUT_DIAGNOSTIC.ko.md](LAYOUT_DIAGNOSTIC.ko.md). 아직 실제 명령 실행 전이다.
+5. **검증 구분:** HR 108 PASS(신규 진단14), E4/메모리/서명+원본 snapshot 165 PASS, 모두 fail/cancel/skip0. A/B source 보존 검사 PASS. 고정 launcher/worker 구문 및 개인정보/ready/정리 순서 코드 리뷰 완료. 합성 검증이며 실제 Mac 로그인·SDK hosted proof·actual-source end-to-end 증거가 아니다.
+6. **다음 한 작업/소유:** 본부 한 곳에서 위 준비된 비수락 진단을 안내해 실제 형식의 값 없는 요약을 얻고, P1 소유 `src/hackerrank-evidence/` 및 `docs/hackerrank/`에서 recipe 검토를 진행한다. 실제 proof host는 단일 run의 issueRequest가 만든 owner를 먼저 받아 새 mapping/app/.2 request를 발급하고 같은 run의 submit lease를 API에 인계해야 한다. API input 만료·이전 owner·다른 run 재사용은 금지한다. API 937f982 source v5 인수는 root 소유다.
+7. **종료 작업:** PR21/36은 다시 시작하지 않는다. 새 세션/에이전트 생성, 기존 채팅 archive, 독립 고도화는 수행하지 않는다. 정상 시연 완료 또는 사용자의 차단점 종료 결정 뒤 본부가 다음 인계를 결정한다.
