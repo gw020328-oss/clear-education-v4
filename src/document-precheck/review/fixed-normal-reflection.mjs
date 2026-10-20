@@ -58,7 +58,7 @@ export function validateNormalReflectionClearance({packet,approval,codeState,day
 }
 // Native Developer transport is the only dispatcher. Injected readers/fetch in offline tests are explicitly test doubles.
 // Caller supplies the existing v3 safe wire reader, durable single-run store and authenticated current resolver.
-export function createFixedNormalReflectionAdapter({packet,approval,codeState,day,currentCodeState,currentDay,currentApprovalHash,
+function buildFixedNormalReflectionAdapter({packet,approval,codeState,day,currentCodeState,currentDay,currentApprovalHash,
  assertCurrent,store,readResponse,nowMs=()=>Date.now(),transportOptions}={}){
  packet=structuredClone(packet);approval=structuredClone(approval);codeState=structuredClone(codeState);
  validateNormalReflectionClearance({packet,approval,codeState,day});
@@ -67,10 +67,18 @@ export function createFixedNormalReflectionAdapter({packet,approval,codeState,da
  const approvalHash=hash(JSON.stringify(approval)),state={used:false,claimed:false,report:{execution:'ACTUAL',generationCalls:0,countCalls:0,
   status:'PREPARED',transportInvocations:0,providerResponsesReceived:0,contextHash:packet.contextHash,planHash:packet.planHash,approvalHash,codeHead:codeState.head,
   cost:null,usableForAcceptance:false,paymentAuthority:false,paymentAllowed:false}};
+ const syncGuard=()=>{
+  const currentCode=currentCodeState(),currentDate=currentDay(),currentHash=currentApprovalHash();
+  check(!currentHash?.then,'NORMAL_SYNC_HOST_REQUIRED');
+  validateNormalReflectionClearance({packet,approval,codeState:currentCode,day:currentDate});
+  check(currentCode.head===codeState.head&&currentDate===day&&currentHash===approvalHash,'NORMAL_CURRENT');
+  check(nowMs()<packet.leaseExpiresAtMs,'NORMAL_EXPIRED');
+  const current=assertCurrent();check(!current?.then,'NORMAL_SYNC_HOST_REQUIRED');
+ };
  const guard=async()=>{
   validateNormalReflectionClearance({packet,approval,codeState:currentCodeState(),day:currentDay()});
   check(currentCodeState().head===codeState.head&&currentDay()===day&&await currentApprovalHash()===approvalHash,'NORMAL_CURRENT');
-  check(nowMs()<packet.leaseExpiresAtMs,'NORMAL_EXPIRED');await assertCurrent();
+  check(nowMs()<packet.leaseExpiresAtMs,'NORMAL_EXPIRED');await assertCurrent();syncGuard();
  };
  const reserve=async()=>{
   await guard();if(state.claimed)return;
@@ -87,15 +95,25 @@ export function createFixedNormalReflectionAdapter({packet,approval,codeState,da
     &&request.profileHash===packet.profileHash,'NORMAL_INPUT_CHANGED');
    check(!signal?.aborted,'NORMAL_CANCELLED');await reserve();
    state.report.generationCalls=1;state.report.status='DISPATCH_RESERVED';await store.checkpoint(structuredClone(state.report));
-   await guard();await beforeDispatch?.();check(!signal?.aborted,'NORMAL_CANCELLED');
+   await guard();await beforeDispatch();syncGuard();check(!signal?.aborted,'NORMAL_CANCELLED');
    try{
-    state.report.transportInvocations++;const response=await developerTransport(transportOptions).request(NORMAL_REFLECTION_MODEL,'generateContent',body,signal);
+    state.report.transportInvocations++;const response=await developerTransport({...transportOptions,keyReader:()=>{syncGuard();check(!signal?.aborted,'NORMAL_CANCELLED');return transportOptions?transportOptions.keyReader():process.env.GEMINI_API_KEY;}}).request(NORMAL_REFLECTION_MODEL,'generateContent',body,signal);
     state.report.providerResponsesReceived++;await guard();check(!signal?.aborted,'NORMAL_CANCELLED');const received=readResponse(response);
     state.report.status='RECEIVED';state.report.cost=received.usage;state.report.responseSha256=received.responseSha256;
     await store.checkpoint(structuredClone(state.report));return received.output;
    }catch(e){state.report.status='UNKNOWN_STOPPED';if(!signal?.aborted)await store.checkpoint(structuredClone(state.report));throw Error('NORMAL_MODEL_STOPPED');}
   },summary:()=>freeze(structuredClone(state.report))});
  adapters.set(adapter,state);return adapter;
+}
+// Live callers cannot replace the native transport or the existing server key source.
+export function createFixedNormalReflectionAdapter(options={}){
+ check(!Object.hasOwn(options,'transportOptions'),'NORMAL_LIVE_OVERRIDE_FORBIDDEN');
+ return buildFixedNormalReflectionAdapter(options);
+}
+// Offline-only fixture seam. Results from its entry never receive the live-result brand.
+export function createOfflineNormalReflectionFixtureAdapter(options={}){
+ check(typeof options.transportOptions?.keyReader==='function'&&typeof options.transportOptions?.fetchImpl==='function','NORMAL_OFFLINE_TRANSPORT_REQUIRED');
+ return buildFixedNormalReflectionAdapter(options);
 }
 // Preserve core timeout/cancellation semantics without passing ACTUAL through the MOCK boundary.
 export async function invokeFixedNormalReflection(adapter,input,{signal,timeoutMs,beforeDispatch}={}){

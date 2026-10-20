@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {bootcampFixture,reflectionMock} from './bootcamp-fixture.mjs';
 import {E6_OPERATIONS_HASH,createE6LeasedReflectionSession} from '../../src/document-precheck/review/e6-leased-reflection.mjs';
-import {NORMAL_REFLECTION_MODEL,NORMAL_REFLECTION_SCHEMA,NORMAL_REFLECTION_COST_ACK,createFixedNormalReflectionAdapter} from '../../src/document-precheck/review/fixed-normal-reflection.mjs';
+import {NORMAL_REFLECTION_MODEL,NORMAL_REFLECTION_SCHEMA,NORMAL_REFLECTION_COST_ACK,createFixedNormalReflectionAdapter,createOfflineNormalReflectionFixtureAdapter} from '../../src/document-precheck/review/fixed-normal-reflection.mjs';
 import {E6_QUALITY_SCHEMA} from './e6-quality-plan.mjs';
-import {prepareFirstNormalReflectionPacket,runFirstNormalReflection} from './first-normal-reflection-entry.mjs';
+import {prepareFirstNormalReflectionPacket,runFirstNormalReflection as runLive,runFirstNormalReflectionOfflineFixture as runFirstNormalReflection,isFirstNormalReflectionResult,consumeFirstNormalReflection} from './first-normal-reflection-entry.mjs';
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
 function fixture(options={}){
  const f=bootcampFixture(options),messageFormat=options.messageFormat??2;f.context.modelVersion=NORMAL_REFLECTION_MODEL;
@@ -92,4 +92,37 @@ test('cancel while async source getter ignores abort returns without reading any
  const pending=runFirstNormalReflection({...x.args,signal:controller.signal});await ready;controller.abort();
  const r=await pending;assert.equal(r.view.current,false);assert.equal(x.counts().keys,0);assert.equal(x.counts().fetches,0);
  assert.equal(x.counts().releases,1);finish(x.f.text);await new Promise(resolve=>setImmediate(resolve));assert.equal(x.counts().keys,0);r.close();
+});
+
+test('live entry rejects transport/store overrides and fixture or forged results have no live identity',async()=>{
+ const x=fixture();assert.throws(()=>runLive(x.args),/NORMAL_LIVE_OVERRIDE_FORBIDDEN/);
+ assert.throws(()=>createFixedNormalReflectionAdapter(x.args),/NORMAL_LIVE_OVERRIDE_FORBIDDEN/);
+ const r=await runFirstNormalReflection(x.args);assert.equal(r.report.provenance,'OFFLINE_FIXTURE');
+ assert.equal(isFirstNormalReflectionResult(r),false);assert.equal(isFirstNormalReflectionResult({...r}),false);
+ assert.throws(()=>consumeFirstNormalReflection(r),/NORMAL_LIVE_RESULT_REQUIRED/);r.close();
+});
+test('old await-order control dispatches after revocation; fixed final guard stops all mutations',async()=>{
+ let oldKeys=0,oldFetches=0,approved=true;
+ const oldOrder=async()=>{assert.equal(approved,true);await(async()=>{approved=false;})();oldKeys++;oldFetches++;};
+ await oldOrder();assert.deepEqual({approved,oldKeys,oldFetches},{approved:false,oldKeys:1,oldFetches:1});
+ for(const mutation of ['approval','code','day','expiry']){
+  const x=fixture();let currentHash=hash(x.approval),currentCode=x.args.codeState,currentDay=x.args.day;
+  const adapter=createOfflineNormalReflectionFixtureAdapter({...x.args,readResponse:()=>{throw Error('unreachable');},
+   currentApprovalHash:()=>currentHash,currentCodeState:()=>currentCode,currentDay:()=>currentDay,assertCurrent:()=>{}});
+  const request={purpose:'REFLECTION_REQUIRED_TOPICS.1',contextHash:x.packet.contextHash,profileHash:x.packet.profileHash,
+   instruction:(await import('../../src/document-precheck/review/bootcamp-reflection.mjs')).REFLECTION_INSTRUCTION,
+   topicIds:x.f.context.topicIds,sources:[{sourceId:x.f.context.sourceId,kind:'TEXT',text:x.f.text}]};
+  request.topicIds=(await import('../../src/document-precheck/review/bootcamp-reflection.mjs')).REFLECTION_TOPICS;
+  await assert.rejects(adapter.observe(request,{beforeDispatch:async()=>{
+   if(mutation==='approval')currentHash=null;if(mutation==='code')currentCode={...currentCode,head:'d'.repeat(40)};
+   if(mutation==='day')currentDay='2026-10-20';if(mutation==='expiry')x.f.clock.value=x.packet.leaseExpiresAtMs;
+  }}));assert.equal(x.counts().keys,0);assert.equal(x.counts().fetches,0);
+ }
+});
+
+test('code mutation during last awaited host assertion stops before key read',async()=>{
+ const x=fixture();let calls=0,currentCode=x.args.codeState;
+ const adapter=createOfflineNormalReflectionFixtureAdapter({...x.args,readResponse:()=>({}),currentCodeState:()=>currentCode,
+  assertCurrent:()=>{calls++;if(calls===1)return Promise.resolve().then(()=>{currentCode={...currentCode,clean:false};});}});
+ await assert.rejects(adapter.reserve());assert.equal(x.counts().keys,0);assert.equal(x.counts().fetches,0);
 });

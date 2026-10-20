@@ -87,3 +87,14 @@ lease의 `readBody({signal})`는 API owner가 `const raw=await sourceHandle.getR
 고정 transport/async getter의 fake-network 시험8개와 기존 관련 회귀를 포함해333/333 통과했다. MOCK 기존 관측 hash·HTML 원본 span·불확실 HOLD·source getter 도중 철회/취소·승인 변경·사전 checkpoint 실패·timeout/늦은 응답 무시·소진 grant 재사용 차단을 확인했다. 이 숫자는 실제 모델/실제 source/tx 성공이 아니다. E6 과거8건 결과/원장과636 실행 소스 이력은 변경하지 않았다.
 
 API는 준비된 `createLiveMoodleConsumer` 안에서 같은 모듈 트리/검토된 codeHead의 entry를 주입해야 한다. 별도 checkout의 adapter 객체만 옛 MOCK 전용 core로 복사하거나 직렬화하지 않는다. packet은 현재 body/context/decision/expiry를 고정하므로 만료나 변경 뒤에는 되살려 실행하지 않는다. transportInvocations·providerResponsesReceived와 generationCalls(사전 예약)는 서로 다른 숫자다. 현재 이 정상 entry의 승인0·키 읽기0·실제 모델0·active approval 작성0이며 root의 코드/입력 검토 및 최소 새 승인 전 실행하지 않는다.
+
+
+## 호출 직전 경계 보정 (2026-10-20)
+
+마지막 await 후와 실제 keyReader 진입 직전에 code/clean/day/승인 hash/expiry/current를 동기로 다시 검사한다. currentCodeState/currentDay/currentApprovalHash/assertCurrent는 이 마지막 검사에서 동기 snapshot을 반환해야 하며 Promise를 반환하면 차단한다. beforeDispatch에서 철회되거나 마지막 host await 중 코드가 변경되는 경우 키0/fetch0이다. 이전 await 순서가 철회 후 dispatch하는 제어반례도 오프라인 시험으로 보존했다.
+
+실제 `runFirstNormalReflection`과 `createFixedNormalReflectionAdapter`는 transportOptions override를 거부한다. 실제 entry는 fixture store도 거부하고 기존 별도 durable store와 native Developer transport/GEMINI_API_KEY 경로만 사용한다. 명시적인 `runFirstNormalReflectionOfflineFixture`/`createOfflineNormalReflectionFixtureAdapter`는 offline DI 전용이고 report.provenance=OFFLINE_FIXTURE이며 제품 live 결과 identity를 받지 않는다. 이 시험의 ACTUAL core 분기 실행은 실제 모델 호출의 증거가 아니다.
+
+API는 같은 모듈 트리에서 `isFirstNormalReflectionResult(result)`와 `consumeFirstNormalReflection(result)`를 import한다. 실제 entry 반환만 private WeakSet identity를 받고, 복제/JSON/fixture 반환은 차단한다. consume 반환의 current/observation과 API 소유 외부 fresh probe/CAS 검사는 계속 필요하다. transport 성공 문자열만으로 source/evidence/지급 권한을 만들지 않는다.
+
+API가 새 TEST 신청/지갑 결합 metadata 준비를 알렸지만 아직 source 수집·짧은 lease·AI packet·새승인은 발급되지 않았다. 이전 날짜/lease를 현재 것으로 재사용하지 않는다. 이번 변경의 키조회/유료호출/tx는0이다.
