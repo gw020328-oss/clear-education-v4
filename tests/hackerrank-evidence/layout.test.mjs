@@ -84,9 +84,9 @@ test('diagnostic separates strict numeric policy from schema-only inspection and
  for(const [body,status]of cases){
   const result=inspectSourceLayout('certificate',Buffer.from(body));
   assert.equal(result.jsonStatus,status);assert.equal(result.jsonParsed,false);
-  const safeNumeric=status==='STRICT_VALUE_OR_GRAMMAR_POLICY'&&!body.includes('"data":[],"data":[]');
-  assert.equal(result.structureParsed,safeNumeric);
-  assert.deepEqual(result.recordShapes,safeNumeric?[{path:'data',bounded:true,fields:[],hasExtraFields:false}]:[]);
+  const schemaAccepted=status==='STRICT_VALUE_OR_GRAMMAR_POLICY'&&!body.includes('"data":[],"data":[]')||status==='STRICT_DEPTH_OR_NODE_LIMIT';
+  assert.equal(result.structureParsed,schemaAccepted);
+  assert.deepEqual(result.recordShapes,schemaAccepted?[{path:'data',bounded:true,fields:[],hasExtraFields:false}]:[]);
   assert.equal(result.accountJoinProven,false);
   assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC_SECRET|score|9007199254740992/);
  }
@@ -103,7 +103,7 @@ test('account diagnostic reports fixed parser statuses and only allowlisted stri
  assert.equal(result.structureParsed,true);
  assert.equal(result.authenticatedAccountControlProven,false);assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC_SECRET|unknown|score/);
 });
-test('numeric normalization preserves escaped string content and never converts numeric source fields to strings',()=>{
+test('type-only survey accepts escaped strings without converting numeric source fields to strings',()=>{
  const rows={data:[{username:'SYNTHETIC_SECRET_1e3_"\\',certificate_id:'SYNTHETIC_SECRET_ID_0.5',certificate_name:'Python (Basic)',status:1.5}],score:0.5};
  const result=inspectSourceLayout('certificate',Buffer.from(JSON.stringify(rows)));
  assert.equal(result.jsonParsed,false);assert.equal(result.structureParsed,true);

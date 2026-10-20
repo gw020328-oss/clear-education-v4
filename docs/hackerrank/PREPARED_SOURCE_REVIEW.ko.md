@@ -1,5 +1,7 @@
 # 과거 성공 경로 대조와 같은 owner의 수집 연결
 
+최신 사용자 지시로 다음 실제 관찰 전 [schema.2 진단 준비](LAYOUT_DIAGNOSTIC.ko.md)를 먼저 마친다. 이번82588의 값 없는 결과와 다음 한 번의 판정 체크리스트를 그 문서에 기록했다. 진단 전용 숫자 정규화 재판독은 이제 값 대신 자료형만 저장하는 bounded parser로 교체하며, 1차 실제 strict parser 및 제품 verifier는 그대로다. 실제 재실행은 준비 보고 후 사용자 준비 신호까지 보류한다.
+
 최신 후속: 사용자가 자체 비밀번호 설정과 관리형 Chrome 로그인 완료를 확인했고, `fc803e4`에서 비수락 형식 진단 한 번을 실행했다. account/certificate 응답 관찰 후 exit0/profilesDeleted:true로 자동 종료했으나 계정 username 경로는 비었고 certificate strict JSON 해석은 실패했다. 새 proof는 0건이다. [실제 결과와 최소 진단 보완](LAYOUT_DIAGNOSTIC.ko.md)의 최신 절을 따른다. 아래 로그인/계정 변경0 및 복구 가능 여부 미확정은 이 실행 전 조사 시점의 기록이다. `fc803e4` 원격 CI는 3/3 SUCCESS이며 후속 소스 변경의 CI 결과와 구분한다.
 
 2026-10-20. 새 PR 기준은 API PR102의 실제 로컬/원격 ref `codex/bootcamp-e5-api-bridge`, 커밋 `6962c1394b82aac633a686e1d197475d1803aacb`다. 이 기준은 이전 HR head `7b35bb3`를 포함한다. 기존 HR 작업본은 미커밋 변경 없이 인수했으며 옛 브랜치는 보존하고 `codex/hackerrank-prepared-owner-lease`로 분리했다. 선행 코드가 develop에 없으므로 API 브랜치 대상 stacked Draft PR로 차분을 제한한다.
