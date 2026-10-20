@@ -109,3 +109,19 @@ API가 새 TEST 신청/지갑 결합 metadata 준비를 알렸지만 아직 sour
 5. 검증/출처: 관련 오프라인336/336 및 root의 경계11/11 확인은 실제 모델/원천/지급 완료가 아니다. 이전 v3 합성8건 결과는 [기존 실제 호출 보고](REVIEW_PRECHECK_E6_WIRE_V3_ACTUAL_20261019.ko.md)에 별도 보존한다. API가 보고한 합성 원천100TEST 수령도 실제 원천 전체 연결 성공과 구분한다.
 6. 다음 한 작업/소유: API가 발급한 새 동일신청 context와 Moodle current raw lease를 기존 AI entry에 연결하고 정확 packet·전송 범위를 root에 전달한다. AI는 `src/document-precheck/review/`, `tests/ai-review-precheck/`, 이 전용 문서만 소유한다. API는 private result identity/외부 fresh probe/current-CAS를 유지하고, root 한곳에서 당일 새 단회 승인 질문을 준비한다. 승인 전 호출0을 유지한다.
 7. 재개 금지: 끝난 PR21/PR36·추가평가·Vision/RAG·Mac/Windows 과거 재시험·독립 고도화를 재개하지 않는다. 현재 정상 시연 연결은 계속하며, 본부 인계 확인 전 새 세션/에이전트·기존 채팅 archive·자동 merge/배포를 하지 않는다.
+
+
+## 새 담당의 최신 API 접점·단회 준비 (2026-10-20)
+
+AI `84a33d5`와 Moodle `dd3c04d`의 clean 작업본을 인수했다. API `ff07743bd599456686346326236dff3847d63264`의 실제 consumer와 entry를 읽었고, `first-normal-reflection-entry.mjs`/`fixed-normal-reflection.mjs`/`e6-leased-reflection.mjs`는 AI 작업본과 바이트가 같다. Moodle producer3개도 소유 작업본과 같다. 위의 `4dec3bd` MOCK 전용 공백은 과거 상태이며 최신 `createLiveMoodleConsumer`는 private live result identity/ACTUAL/context와 모델 이후 fresh `getRaw`를 검사한다. 새 AI adapter 수정이나 전체 테스트 반복은 필요하지 않았다. 실제 호출·수락 검증은 아니다.
+
+통합의 `reviewReflection(args)` 연결 순서는 다음과 같다. 같은 API 모듈 트리의 entry에서 함수를 import해 WeakSet identity를 보존한다. `args.lease.readBody({signal:args.signal})`로 권한 있는 현재 body를 읽고 `prepareFirstNormalReflectionPacket({...args,text,leaseExpiresAtMs:args.resolveCurrent().leaseExpiresAtMs})`를 호출한다. 원문은 메모리에서만 유지하고 본부에는 packet의 hash/상한/현재 신청 context 참조만 전달한다. 이 단계는 generate/count/key/journal 발급0이다. 직접 인간의 새 exact packet/code/day/가격 승인 뒤에만 `runFirstNormalReflection({...args,packet,approval,codeState,day,currentCodeState,currentDay,currentApprovalHash})`를 실행한다. `codeState`는 실행 모듈 트리의 clean HEAD이며 현재 callbacks는 마지막 key 진입 전 동기 snapshot이어야 한다. 별도 checkout의 결과/fixture/clone을 반환하지 않는다.
+
+현재 consumer의 `decisionRef=null`은 판정 전 증거 수집 단계와 맞으며 최종 decision을 지어내지 않는다. lease는 원래 source/auth/query의 최소값이며30초/남은 lease 제한을 유지한다. packet 승인 대기 중 만료되면 실행하지 않고 본부·통합에 차단을 알린다. 이전 승인/packet·시각을 바꿔 재사용하지 않는다. 통합이 HR 준비를 알리기 전 fresh source/packet/240초 창 발급0이다.
+
+2026-10-20 [공식 Standard 가격](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite)을 다시 확인했다. 기존 `gemini-3.5-flash-lite` 입력 US$0.30/백만 토큰, 출력(thinking 포함) US$2.50/백만 토큰으로 현재 clearance의300/2500 nanoUSD/토큰과 같다. 새 회고1건·generateContent최대1/count0·retry/continuation/fallback0·본문2048/전체8192 UTF-8바이트·maxOutputTokens1024·MINIMAL 범위를 유지한다. 입력3000+결합생성1024 가정의 조건부 비용은 **US$0.00346**이며 실제 token/count/invoice나 provider hard cash cap을 검증한 수치는 아니다. 기존 acknowledgment의 진행중 US$0.05 초과 가능성을 숨기거나 확정 상한으로 보고하지 않는다.
+
+정확한 실제 inputHash/bodySha/contextHash/planHash는 HR와 실행 신청 준비 전에는 발급할 수 없다. 현재는 예산 준비만 완료했으며 새 active approval·키조회·source·모델·tx는0이다. 통합 담당 `01a158a8-96c6-7d31-bf99-1468c9768992`가 새 packet을 본부에 모아 승인 요청하고 동일 신청 실행 순서를 조율한다. 새 모델 평가·공통 API/DB/web 변경은 없다.
+
+
+추가 실행 차단: 위 callback 계약은 데이터 호환 설명이며 현재 상태의 전체 실행 가능 순서를 뜻하지 않는다. 통합과 대조한 결과 `collectBridge` 전체30초 안에 사람의 새 exact packet 승인을 기다리게 된다. 기존 clearance는 packet의 context/plan/expiry/code/day 정확 결합을 요구하므로 사전 원문·프로필 검토를 새 런타임 packet의 자동 승인으로 치환할 기존 방식이 없다. 승인 구조를 느슨하게 하거나30초를 조용히 늘리지 않는다. 통합에 **같은 현재 request/source handle의 packet 준비·직접 승인 gate를 producer30초 밖으로 분리하고, 원래240초 만료를 유지한 채 승인 뒤 AI/검증30초를 시작하는 최소 소유 API 접점**을 검토 요청했다. 이 API 접점은 아직 구현·인수되지 않았고 실제 packet 발급도0이다. 사전 검토 입력/가격 준비는 가능하지만 새 exact packet 승인 없이 key/model dispatch는 계속 차단한다.
