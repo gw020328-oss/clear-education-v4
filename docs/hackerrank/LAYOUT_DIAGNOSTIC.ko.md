@@ -1,5 +1,11 @@
 # HackerRank 원천 형식 관찰 — 실행 전 인계
 
+## 최신: schema.2 실행49450 후 추가 로그인 없는 추출 검토
+
+`5270cf1`의 실행49450은 사용자 로그인 완료 후 ready1회, 두 응답 관찰, exit0/profilesDeleted:true로 정상 자동 종료했다. account는 primary SIZE_LIMIT / secondary ACCEPTED이나 두 username 경로 중간 키가 가려졌고 PATH_DEPTH_LIMIT가 남았다. certificate는 primary NUMBER_FRACTION / secondary ACCEPTED였으며 data 단일 object 행과 그 안의 certificates string 배열을 별도 후보로 보고했다. 실제 proof0/API HOLD다.
+
+[원천 의미·추출 규칙 검토](SOURCE_EXTRACTION_REVIEW.ko.md)에 공식 공개 코드와 익명 페이지를 대조한 경로 후보, certificate ID/종류/status 관계, SDK 중복키/경로 반례, 다음 한 번에 필요한 값 없는 비교 및 통과/보류 기준을 기록했다. 추출 규칙·verifier·trust는 변경하지 않았다. 현행 schema.2는 새 비교 전체를 지원하지 않으므로 같은 조건의 재로그인을 먼저 요청하지 않는다. 아래 “schema.2 준비”와 “실제 실행 전” 표현은 49450 이전 기록이다.
+
 ## 최신: 다음 한 번의 관찰을 위한 schema.2 준비
 
 이번82588은 `3d968e7`의 수정 진단이며 이전92921과 구분한다. 자체 로그인 후 두 허용 응답을 관찰했고 정상 자동 종료(exit0/profilesDeleted:true)했다. account는 `STRICT_SIZE_LIMIT` 뒤 `structureParsed=false`, username 위치 미확정이었다. certificate는 `STRICT_VALUE_OR_GRAMMAR_POLICY` / `structureParsed=true`, data 배열 32행 이하이나 공통 직계 문자열 필드 목록이 비어 있었다. 이 결과는 실제 JSON의 숫자 정책 불일치와 flat 구조 가정의 부족을 보여 주며, account의 2차 실패 이유는 당시 출력으로 알 수 없다. 원문은 삭제되어 복원하지 않는다.
