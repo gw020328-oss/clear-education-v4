@@ -35,3 +35,5 @@ HackerRank [비수락 형식 진단 안내](https://github.com/gw020328-oss/clea
 2026-10-20 새 담당 인수: 본부가 사용자 요청에 따라 HR `01a158a8-8a98-78e2-a6e5-9c4a5332a70b`, Moodle·AI `01a158a8-900a-7662-bccc-557f553d21ea`, 실행통합 `01a158a8-96c6-7d31-bf99-1468c9768992`를 지정했다. 실행통합은 API 및 이 공통 문서/specs 소유를 합쳐 인수하며 기존 세션은 재개시키지 않는다. 이후 새 채팅/하위 에이전트 추가 생성은 없다. 위 생성 전 표기는 당시 기록이다.
 
 새 소작업에서 기존 API 포트와 두 원천 담당의 계약을 대조했다. HR은 검토 pins/안전 수집 경로 미확정으로 제공 불가이며, AI의 exact packet 승인 대기가 현재 collectBridge 전체30초 안에 들어가는 별도 순서 누락도 확인했다. [첫 정상 addendum](HACKATHON_TEST_OPERATIONS.ko.md)의 최신 단락과 기계 인수표를 따른다. 새 신청·원천·유료·체인 실행0, 소스/pin 변경0이다. 원래240초 자료 유효시간을 유지한 packet 준비/승인→AI30초 분리는 다음 API 소작업이며, HR 경로 확정 전에 가정으로 구현하지 않는다.
+
+그 뒤 본부는 HR와 독립인 AI 최소 준비/실행 분리를 Astra / High로 승인했다. API source92387a4, 정확 v6 pin 및 금고 소유 guard7b35bb3를 정상 이력으로 결합했고 공통 작업본도 이 검토된 조합을 fast-forward 인수했다. 새 packet/source/request/lease 발급 없이 승인 후 한 번 재개하며 source240초·네트워크/모델30초 및 기존 최종 검사를 유지한다. source5cc의 관련103/103, receiver923의 준비20/20, 소유 guard39/39, API 결합 gate11/11은 별도 실행 분모다. 원격 CI는 최종 push head 확인 대기이며 HR 실제 경로/새 exact 승인·전체 실제 시연은 미완료다. 상세 [API 인계](../bootcamp-execution/E5B_NORMAL_PATH.ko.md)를 따르고 일반 API 작업 추천은 Sol / High로 되돌린다.
