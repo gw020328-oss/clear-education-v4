@@ -81,7 +81,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     criterion(key);check((mode!=='ISOLATED_LIVE_TEST'&&p?.execution==='SYNTHETIC_FIXTURE'||mode==='ISOLATED_LIVE_TEST'&&(isLiveMoodleConsumer(p)||isLiveReclaimConsumer(p)))&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
     // Pin methods: mutating a registration object cannot substitute a producer.
     check(!p.bridgeVersion||p.bridgeVersion==='clear-bootcamp-producer-bridge.2'&&typeof p.reference==='function','BC_BRIDGE_VERSION');
-    registry.set(key,{dataMode:mode==='ISOLATED_LIVE_TEST'?p.dataMode:'SYNTHETIC_FIXTURE',verify:p.verify.bind(p),recheck:p.recheck.bind(p),bridgeVersion:p.bridgeVersion??null,reference:p.reference?.bind(p),close:p.close?.bind(p)});
+    registry.set(key,{dataMode:mode==='ISOLATED_LIVE_TEST'?p.dataMode:'SYNTHETIC_FIXTURE',verify:p.verify.bind(p),recheck:p.recheck.bind(p),bridgeVersion:p.bridgeVersion??null,reference:p.reference?.bind(p),close:p.close?.bind(p),prepareReflection:p.prepareReflection?.bind(p)});
   }
   const file=openPrivateDb(directory,'bootcamp.sqlite',{version:BOOTCAMP_STORE_VERSION,instanceId,demoStartedAt,courseOperatorRef,mode,
     policyHash:compiled.policyHash,runtimeMappingHash},schema,tables),{db,transaction:baseTransaction}=file;
@@ -219,6 +219,13 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     decision:{record:decode(get('SELECT record FROM decisions WHERE id=?',a.decision_id)),current:a.status==='ACTIVE'},
     evidence:heads(a).map(h=>({record:h.evidence,current:h.valid&&a.status==='ACTIVE',invalidationReason:h.reason})),gates:P0_GATES});
 
+  const requestAuthority=(context,applicationId,wallet,r)=>()=>{try{
+    const a=owned(wallet,applicationId),row=get('SELECT status FROM requests WHERE id=?',r.requestId);
+    if(a.status!=='ACTIVE'||a.policy_hash!==r.policyHash||a.mapping_hash!==r.runtimeMappingHash
+      ||sessionHash(context,wallet)!==r.authContextHash||actor(context,true)!==wallet)return false;
+    if(row?.status==='PENDING')return a.revision===r.expectedRevision&&epoch(now())<r.expiresAt;
+    return row?.status==='CONSUMED'&&!!get('SELECT 1 FROM evidence e JOIN evidence_heads h ON h.evidence_id=e.id WHERE e.request_hash=? AND h.valid=1',r.requestHash);
+  }catch{return false;}};
   const service={
     origin:authentication.origin,close(){for(const p of registry.values())p.close?.();file.close();},
     policy(context){actor(context,false);return freeze({...compiled,mode,realAcceptanceReady:false,gates:P0_GATES});},
@@ -267,6 +274,26 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       id(requestId);return access(context,applicationId,false,()=>{const r=get('SELECT * FROM requests WHERE id=? AND application_id=?',requestId,applicationId);check(r,'BC_NOT_FOUND');
         check(decode(r).version===(bridge?'clear-bootcamp-bound-request.2':'clear-bootcamp-request.1'),'BC_REQUEST_VERSION');return freeze({record:decode(r),status:r.status,gates:P0_GATES});});
     },
+    // Source/packet only. Human approval happens after this returns, before collectBridge's execution timer starts.
+    async prepareBridgeReflection(context,applicationId,body,{signal,timeoutMs=30000}={}){
+      exactKeys(body,['requestId','expectedRevision'],'BC_COLLECT_BODY');id(body.requestId);revision(body.expectedRevision);
+      check(mode==='ISOLATED_LIVE_TEST'&&Number.isSafeInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=30000,'BC_TIMEOUT');
+      const started=access(context,applicationId,true,(a,wallet,time)=>{
+        ready(a);cas(a,body.expectedRevision);window(a,time);
+        const row=get('SELECT * FROM requests WHERE id=? AND application_id=?',body.requestId,a.id);check(row?.status==='PENDING','BC_REQUEST_NOT_PENDING');
+        const r=freeze(decode(row)),producer=registry.get(r.criterionId),g=source(a,r.criterionId,time);
+        check(r.version==='clear-bootcamp-bound-request.2'&&r.criterionId==='reflection-topics'&&typeof producer?.prepareReflection==='function','BC_LIVE_AI_PREPARATION_REQUEST');
+        check(r.expectedRevision===a.revision&&time<r.expiresAt&&g&&requestGuardHash(g,r.version)===r.sourceGuardHash,'BC_REQUEST_STALE');
+        return {request:r,wallet,producer};
+      });
+      const controller=new AbortController(),combined=signal?AbortSignal.any([signal,controller.signal]):controller.signal;
+      let timer,prepared;
+      try{
+        prepared=await Promise.race([started.producer.prepareReflection(started.request,{signal:combined,isAuthorized:requestAuthority(context,applicationId,started.wallet,started.request)}),
+          new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('BC_PRODUCER_TIMEOUT'));},Math.min(timeoutMs,Math.max(0,(started.request.expiresAt-epoch(now()))*1000)));})]);
+        check(prepared.isCurrent(),'BC_LIVE_AI_PREPARATION_STALE');return prepared;
+      }catch(e){controller.abort();prepared?.dispose();throw e;}finally{clearTimeout(timer);}
+    },
     async collect(context,applicationId,body,key,{signal,timeoutMs=5000,bridge=false}={}){
       exactKeys(body,['requestId','expectedRevision'],'BC_COLLECT_BODY');id(body.requestId);revision(body.expectedRevision);
       check(Number.isSafeInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=(mode==='ISOLATED_LIVE_TEST'?300000:30000),'BC_TIMEOUT');
@@ -289,13 +316,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       // Read-only lease authority: no recursive source resolution/transaction.
       // A consumed request retains raw access only while its exact accepted
       // evidence is the valid head. A new decision never revives a retired head.
-      const isAuthorized=()=>{try{
-        const r=started.request,a=owned(started.wallet,applicationId),row=get('SELECT status FROM requests WHERE id=?',r.requestId);
-        if(a.status!=='ACTIVE'||a.policy_hash!==r.policyHash||a.mapping_hash!==r.runtimeMappingHash
-          ||sessionHash(context,started.wallet)!==r.authContextHash||actor(context,true)!==started.wallet)return false;
-        if(row?.status==='PENDING')return a.revision===r.expectedRevision&&epoch(now())<r.expiresAt;
-        return row?.status==='CONSUMED'&&!!get('SELECT 1 FROM evidence e JOIN evidence_heads h ON h.evidence_id=e.id WHERE e.request_hash=? AND h.valid=1',r.requestHash);
-      }catch{return false;}};
+      const isAuthorized=requestAuthority(context,applicationId,started.wallet,started.request);
       try{
         candidate=await Promise.race([Promise.resolve().then(()=>{
           check(!controller.signal.aborted,'BC_CANCELLED');
