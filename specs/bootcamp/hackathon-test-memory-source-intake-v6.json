@@ -11,7 +11,7 @@
   },
   "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
   "acceptedE3StageHead": "c3b71c710f558529680e255222857f0e81fe1dcb",
-  "currentSourceCandidateHead": "5cc2c3660789cb19b721deb151c2e058cf506ee6",
+  "currentSourceCandidateHead": "92387a49a7808af0f7b240021aafcd01edc17253",
   "e3ArtifactSha256": {
     "src/bootcamp/procedure.mjs": "d2e35144694dfa58fda8c0afc6d49e4739118fdabfa27ac1b7586f4f1e33a27a",
     "src/bootcamp/procedure-ledger.mjs": "db6d5a0273bb135c120828fc6ed32a4f1b6e2bb46182337908410948ada9035f",
@@ -40,7 +40,7 @@
     "src/bootcamp/execution-e4b-ports.mjs": "86e9315176b9b2a73a467100d9b3c0a4c3dae53a366e5c9089f65227aee3e02d",
     "src/bootcamp/model.mjs": "92aad7b638597573b96da1c5ecc1b5560ef8388e86ca0c3f3bcd77a59037195e",
     "src/bootcamp/r2-ledger.mjs": "dcde4df3e456d4b97101250ccc591d12c0f0bd84263cccd81c950cd358e01e2a",
-    "src/bootcamp/moodle-live-consumer.mjs": "79b89a2c7beb412c801f650464081825dfdd314c3fc3e219c9cd299dd4219b4f",
+    "src/bootcamp/moodle-live-consumer.mjs": "a4ab5e1ae3f46fcd2c3000fe4dd379bdcd11f898c08358d7ad21d895c37d8bbf",
     "src/bootcamp/reclaim-live-consumer.mjs": "3eb29f8d0bbc08a075b59c913530ac2d87c4a4dfb564de44978ceaf4f3867e95"
   },
   "producerSeamArtifactSha256": {
@@ -114,7 +114,7 @@
     },
     "src/bootcamp/moodle-live-consumer.mjs": {
       "before": "4bb7ebc7992e7e23cb1651adce2771191912ca56528595e0fbd80fd352c11a40",
-      "after": "79b89a2c7beb412c801f650464081825dfdd314c3fc3e219c9cd299dd4219b4f"
+      "after": "a4ab5e1ae3f46fcd2c3000fe4dd379bdcd11f898c08358d7ad21d895c37d8bbf"
     },
     "tools/bootcamp/live-context.mjs": {
       "before": "8d07781cfa6a7ff334d737c91a661ee3756210f1bb53f5ef89c2cbc5aef87218",
@@ -137,13 +137,22 @@
     "chainTransactions": 0,
     "ownerGuardConsumed": false,
     "testPath": "tests/bootcamp-store/reflection-preparation.test.mjs",
-    "testSha256": "511bc036ca0912195b034b87150b0bdcecc50747249454b7cd0a7d01fc77d8f2",
+    "testSha256": "6992a381ae063b6052d7d7ee577564838a8554e928c51cc2f5370bd8c9924f43",
     "relatedPass": 103,
     "relatedFail": 0,
     "relatedLogSha256": "cc6965e2b28611f68b1333a4f3fdc319198f97da5c6e97c6f698105141cc4ac8",
     "priorTestAssertionFailurePreserved": true,
     "recommendedSetting": "GPT-6 Astra / High",
     "runtimeModelIdIndependentlyVerified": false,
-    "returnToGeneralApiRecommendedSetting": "GPT-6.1 Sol / High"
+    "returnToGeneralApiRecommendedSetting": "GPT-6.1 Sol / High",
+    "relatedPassSourceHead": "5cc2c3660789cb19b721deb151c2e058cf506ee6",
+    "receiverGuardFollowup": {
+      "sourceHead": "92387a49a7808af0f7b240021aafcd01edc17253",
+      "pass": 20,
+      "fail": 0,
+      "logSha256": "9bcbefbb92966d0721e7c39da4644b40690de61cd6c4383c99ff0458bde1b6cc",
+      "scope": "PRESERVE_TRUSTED_HOST_METHOD_RECEIVER_AND_VERIFY_ACTUAL_CURRENT_CALLBACKS",
+      "wholeRelatedSuiteRepeated": false
+    }
   }
 }
