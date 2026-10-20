@@ -11,7 +11,9 @@ assert.equal(pins.actualApiConnected,false);assert.equal(pins.fullE5Accepted,fal
 // Original PR100 pins remain historical evidence; only these exact normal-path changes are admitted.
 const normal=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins.json'));
 assert.equal(normal.baseHead,'a4a05c7aa6a1614760273e78edb5ba6ccb556232');
-assert.deepEqual(Object.keys(normal.changes).sort(),['src/hackathon-test-vault/e5/environment.mjs','src/hackathon-test-vault/e5/reader.mjs','tests/hackathon-test-vault/e5/preservation.mjs','tests/hackathon-test-vault/e5b/source-pins.mjs'].sort());
+assert.deepEqual(Object.keys(normal.changes).sort(),['src/hackathon-test-vault/memory-stage-harness.mjs','src/hackathon-test-vault/e5/environment.mjs','src/hackathon-test-vault/e5/reader.mjs','tests/hackathon-test-vault/e5/preservation.mjs','tests/hackathon-test-vault/e5b/source-pins.mjs'].sort());
+assert.deepEqual(Object.keys(normal.additions),['src/hackathon-test-vault/normal-source-compatibility.mjs']);
+for(const [path,expected]of Object.entries(normal.additions))assert.equal(digest(path),expected,path);
 const service=JSON.parse(read('specs/bootcamp/hackathon-test-e5-service-intake-v1.json'));
 for(const [path,{before,after}]of Object.entries(normal.changes)){assert.equal(before,pins.sourceArtifactSha256[path]??service.sourceArtifacts[path],path);assert.equal(digest(path),after,path);}
 for(const [path,expected]of Object.entries(pins.sourceArtifactSha256))assert.equal(digest(path),normal.changes[path]?.after??expected,path);

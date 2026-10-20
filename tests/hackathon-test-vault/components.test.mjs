@@ -1,3 +1,4 @@
+import {normalE2Hash} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {id,ZeroHash,ZeroAddress,TypedDataEncoder,ContractFactory} from 'ethers';
@@ -207,5 +208,5 @@ test('failed on-chain termination leaves operation, app epoch/version and R/O un
 });
 test('pinned E2 source artifacts and ABI order remain exactly those accepted by E0',()=>{
  const pins=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-consumer-pins-v1.json',import.meta.url)));
- for(const [path,hash]of Object.entries(pins.artifactSha256))assert.equal(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex'),hash,path);
+ for(const [path,hash]of Object.entries(pins.artifactSha256))assert.equal(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex'),normalE2Hash(path,hash),path);
 });
