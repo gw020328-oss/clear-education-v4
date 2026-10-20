@@ -3,6 +3,7 @@ import {bytesDigest,identifier,hash32,revision} from '../../product-workflow/con
 import {P0_POLICY,P0_GATES,p0Hash,p0PolicyHash,validateP0Policy} from '../../../specs/bootcamp/p0-contract.mjs';
 import {invokeMockObservation} from '../../ai-policy/model-boundary.mjs';
 import {validateGroundedReview} from './grounding.mjs';
+import {isFixedNormalReflectionAdapter,invokeFixedNormalReflection} from './fixed-normal-reflection.mjs';
 
 validateP0Policy(P0_POLICY);
 const criterion=P0_POLICY.criteria.find(c=>c.capability==='REFLECTION_REQUIRED_TOPICS.1');
@@ -59,9 +60,9 @@ function reviewTopics(raw,context,text){
   });
 }
 const unknownTopics=code=>REFLECTION_TOPICS.map(id=>unresolved(id,'UNCERTAIN',code));
-function record(context,topics,current=true){
+function record(context,topics,current=true,execution='MOCK'){
   const states=topics.map(t=>t.state),contentStatus=!current?'STALE':states.includes('CONFLICT')?'CONFLICT':states.includes('UNCERTAIN')?'UNCERTAIN':states.includes('MISSING')?'MISSING':'CHECKED';
-  const result={version:'clear-bootcamp-reflection-observation.1',capability:REFLECTION_CAPABILITY,execution:'MOCK',
+  const result={version:'clear-bootcamp-reflection-observation.1',capability:REFLECTION_CAPABILITY,execution,
     context:structuredClone(context),contextHash:reflectionContextHash(context),originalBodyHash:context.inputHash,
     sourceStatus:context.sourceStatus,contentStatus,outcome:contentStatus==='CHECKED'?'TOPICS_PRESENT':contentStatus==='MISSING'?'NEEDS_SUPPLEMENT':'UNDETERMINED',
     topics,current,verifiedEvidenceCondition:'UNKNOWN',usableForAcceptance:false,realDataAllowed:false,gates:P0_GATES};
@@ -90,19 +91,23 @@ export function createBootcampReflectionSession(resolveCurrent,{nowMs=()=>Date.n
       const context=structuredClone(input.context),text=input.text;validateReflectionContext(context);
       check(typeof text==='string'&&text.length<=32000&&text.isWellFormed()&&bytesDigest(Buffer.from(text,'utf8'))===context.inputHash,'REFLECTION_ORIGINAL_INPUT');
       const started=fresh(context);
-      check(adapter?.execution==='MOCK'&&typeof adapter.observe==='function'&&adapter.modelVersion===context.modelVersion,'REFLECTION_MOCK_REQUIRED');
+      const actual=adapter?.execution==='ACTUAL'&&isFixedNormalReflectionAdapter(adapter);
+      check((adapter?.execution==='MOCK'||actual)&&typeof adapter.observe==='function'&&adapter.modelVersion===context.modelVersion,'REFLECTION_MOCK_REQUIRED');
+      const execution=actual?'ACTUAL':'MOCK';
       check(Number.isInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=30000,'REFLECTION_TIMEOUT');
       const runKey=context.runId+':'+context.attempt;check(runs.size<1024&&!runs.has(runKey),'REFLECTION_RUN_REUSE');runs.add(runKey);const ticket=++generation;
       const issue=r=>{receipts.set(r,{context,generation:ticket,current:r.current});return r;};
-      const stale=()=>issue(record(context,unknownTopics('STALE_CONTEXT'),false));
+      const stale=()=>issue(record(context,unknownTopics('STALE_CONTEXT'),false,execution));
       let topics;
       if(text.length===0)topics=unknownTopics('INPUT_UNAVAILABLE'); // presence is another producer's job
       else{
-        const result=await invokeMockObservation({execution:'MOCK',observe(request,options){
-          fresh(context);check(ticket===generation&&!options.signal?.aborted,'REFLECTION_DISPATCH_REVOKED');return adapter.observe(request,options);
-        }},{purpose:REFLECTION_CAPABILITY,contextHash:reflectionContextHash(context),profileHash:context.profileHash,promptVersion:context.promptVersion,
-          instruction:REFLECTION_INSTRUCTION,topicIds:REFLECTION_TOPICS,sources:[{sourceId:context.sourceId,kind:'TEXT',text}]},
-        {signal,timeoutMs:Math.min(timeoutMs,context.expiresAtMs-started)});
+        const request={purpose:REFLECTION_CAPABILITY,contextHash:reflectionContextHash(context),profileHash:context.profileHash,promptVersion:context.promptVersion,
+          instruction:REFLECTION_INSTRUCTION,topicIds:REFLECTION_TOPICS,sources:[{sourceId:context.sourceId,kind:'TEXT',text}]};
+        const beforeDispatch=()=>{fresh(context);check(ticket===generation,'REFLECTION_DISPATCH_REVOKED');};
+        const options={signal,timeoutMs:Math.min(timeoutMs,context.expiresAtMs-started)};
+        const result=actual?await invokeFixedNormalReflection(adapter,request,{...options,beforeDispatch}):await invokeMockObservation({execution:'MOCK',observe(request,options){
+          beforeDispatch();check(!options.signal?.aborted,'REFLECTION_DISPATCH_REVOKED');return adapter.observe(request,options);
+        }},request,options);
         try{fresh(context);}catch{return stale();}
         if(ticket!==generation)return stale();
         if(result.status==='SUCCEEDED'){try{topics=reviewTopics(result.output,context,text);}catch{topics=unknownTopics('MODEL_OUTPUT_INVALID');}}
@@ -111,10 +116,10 @@ export function createBootcampReflectionSession(resolveCurrent,{nowMs=()=>Date.n
       try{fresh(context);}catch{return stale();}
       if(ticket!==generation)return stale();
       if(signal?.aborted)topics=unknownTopics('CANCELLED');
-      return issue(record(context,topics));
+      return issue(record(context,topics,true,execution));
     },
     isCurrent,
     consume(r){const entry=receipts.get(r);check(entry,'REFLECTION_RECEIPT_REQUIRED');if(isCurrent(r))return r;
-      entry.current=false;const stale=record(entry.context,unknownTopics('STALE_CONTEXT'),false);receipts.set(stale,{...entry,current:false});return stale;},
+      entry.current=false;const stale=record(entry.context,unknownTopics('STALE_CONTEXT'),false,r.execution);receipts.set(stale,{...entry,current:false});return stale;},
   };
 }

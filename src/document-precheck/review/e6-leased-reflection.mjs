@@ -3,6 +3,7 @@ import {exactKeys,freeze,requireRule as check} from '../../policy/values.mjs';
 import {identifier,revision,hash32} from '../../product-workflow/contract.mjs';
 import {p0Hash,P0_GATES} from '../../../specs/bootcamp/p0-contract.mjs';
 import {createBootcampReflectionSession,validateReflectionContext,reflectionContextHash} from './bootcamp-reflection.mjs';
+import {isFixedNormalReflectionAdapter} from './fixed-normal-reflection.mjs';
 
 const operations=JSON.parse(readFileSync(new URL('../../../specs/bootcamp/hackathon-test-operations-v1.json',import.meta.url)));
 check(operations.version==='clear-hackathon-test-operations.1'&&operations.decisionRevision===1&&operations.repositoryPlanRevision===4,'E6_OPERATIONS_PROFILE');
@@ -64,7 +65,8 @@ export function createE6LeasedReflectionSession(resolveCurrent,{nowMs=()=>Date.n
     async review({context,decisionRef=null,messageFormat,lease},adapter,{signal,timeoutMs=1000}={}){
       check(!closed,'E6_DISPOSED');validateReflectionContext(context);decisionHash(decisionRef);
       check([1,2].includes(messageFormat),'E6_FORMAT_UNSUPPORTED');
-      check(adapter?.execution==='MOCK'&&adapter.modelVersion===context.modelVersion&&typeof adapter.observe==='function','E6_MOCK_REQUIRED');
+      check((adapter?.execution==='MOCK'||(adapter?.execution==='ACTUAL'&&isFixedNormalReflectionAdapter(adapter)))
+        &&adapter.modelVersion===context.modelVersion&&typeof adapter.observe==='function','E6_MOCK_REQUIRED');
       check(lease&&['isCurrent','readBody','release'].every(k=>typeof lease[k]==='function'),'E6_BORROW_REQUIRED');
       check(Number.isInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=30000,'E6_TIMEOUT');
       const runKey=context.runId+':'+context.attempt;check(used.size<1024&&!used.has(runKey),'E6_RUN_REUSE');
@@ -75,11 +77,15 @@ export function createE6LeasedReflectionSession(resolveCurrent,{nowMs=()=>Date.n
       try{
         fresh(job);if(signal?.aborted)cancel();fresh(job);job.active=true;arm(job);
         job.core=createBootcampReflectionSession(()=>{fresh(job);return {context:job.context,rawAvailable:true};},{nowMs:clock});
-        // The v1 text getter is evaluated once only after live lease checks.
+        // The original-body owner getter is read once only after live lease checks.
         // No originalBody string is cached in a candidate/view/session entry.
-        const input={context:job.context,get text(){fresh(job);let text;
-          try{text=job.lease.readBody();}catch{check(false,'E6_LEASE_CLOSED');}fresh(job);return text;}};
-        const observer={...adapter,observe(request,options){fresh(job);return adapter.observe({...request,
+        fresh(job);let text;
+        let abortRead;const handle=job.lease;
+        try{text=await Promise.race([Promise.resolve().then(()=>{fresh(job);return handle.readBody({signal:job.controller.signal});}),
+          new Promise((_,reject)=>{abortRead=()=>reject(Error('E6_LEASE_CLOSED'));job.controller.signal.addEventListener('abort',abortRead,{once:true});})]);}
+        catch{check(false,'E6_LEASE_CLOSED');}finally{job.controller.signal.removeEventListener('abort',abortRead);}fresh(job);
+        const input={context:job.context,text};
+        const observer=adapter.execution==='ACTUAL'?adapter:{...adapter,observe(request,options){fresh(job);return adapter.observe({...request,
           sourceFormat:{messageFormat,locationBasis:'ORIGINAL_REFLECTION_BODY_UTF16',normalizationApplied:false},
           operationsProfileHash:E6_OPERATIONS_HASH,decisionRef:job.decisionRef},options);}};
         job.receipt=await job.core.review(input,observer,{signal:job.controller.signal,timeoutMs:Math.min(timeoutMs,job.capMs-clock())});
