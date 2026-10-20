@@ -56,3 +56,21 @@ fixture report hash:
 입력 준비의 남은 정확한 값은 **실제 API application/participant/wallet,그에 대한 승인된 Moodle user3 연결,API runtime mapping/current request/권한·lease**다. 공동 source/ledger/HTTP/web 코드를 이 담당이 중복 구현하지 않는다. 이 값이 정해지면 source는 새로 읽어 한 정상 consumer 실행에 사용할 수 있다. 추가 model/개인 source/서명·transaction 호출은 수행하지 않았다.
 
 첫 정상 흐름에서는 기존120/1/600·source 만료/변경·새 decision 동의·배정/수령인/단회/원자성 guard를 유지한다. 신규 복구·takeover/reorg·부족queue/재충전·새 시간 시나리오를 앞세우지 않는다. productionfalse/C2개인자료 제한을 유지하고 새 TEST 활성화의 영구 중단으로 옛 HOLD를 적용하지 않는다. 자동 merge/상용배포/새 세션/하위 에이전트/다른 채팅 발신은 없다.
+
+## 2026-10-20 현재 소작업 종료 인계 — 정상 연결은 계속
+
+중앙 입구는 root `ec0c7df`의 `docs/current/HACKATHON_TEST_SESSION_HANDOFF.ko.md`다. 이 추가 기록은 새 세션 생성/기존 채팅 archive/정상 시연 중단 지시가 아니다.
+
+1. **실제 성공 / 정확한 차단점:** 생성 합성 Moodle 계정의 실제 REST로 활동 COMPLETED·과제 SUBMITTED·선택 회고 body를 확인한 결과는 위 링크를 보존한다. 10/20에는 API가 허용한 preparation/mapping metadata2개와 세 pin 형식 호환성만 확인했고 source/model 호출0이다. API는 기존 준비 신청의 최초접수1800초 창 만료를 확인해,기존 시간을 늘리지 않고 HRcollector/AI 준비 후 새 run directory·새 신청/current request·lease를 발급할 예정이다. API가 보고한 run3 합성 원천100TEST 수령/중복거부는 Moodle이 확인한 실제 원천 전체 E2E/tx 성공으로 혼용하지 않는다.
+
+2. **worktree / branch / commit / PR:** `/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-moodle-review-api`, `codex/moodle-e6-recollection`, 기능/source 관측 기준 `d3709a01e8eefc77b207e4a1ea87c8ae3f8ccf24`, [Draft PR87](https://github.com/gw020328-oss/clear-education-v4/pull/87). 이 인계 문서 추가의 최종 head는 PR에서 확인한다. PR71/488a09c 및 옛18766/18767 정리 이력은 보존하며 현재 ready로 재사용하지 않는다.
+
+3. **미커밋 소유 / 보존:** 이 추가 직전 tracked 미커밋0. `.toolchain/moodle-normal-binding-checkpoint.json`은 ignored 재개 요약이며 fresh evidence가 아니다. 소유 var/moodle-e6·실행중 fixture/volume·API의 기존 키/DB/chain/신청/실패기록은 보존한다. role/auth/DB/raw/token 파일을 탐색·복사하지 않는다. 새 source session은 직렬화된 metadata만으로 복원하지 않는다.
+
+4. **재현 명령 / 환경 / 공개 pin:** 위 정상 source 명령 및 [E6 source 설명](REVIEW_API_E6_SOURCE.ko.md)의 withReader/readBootcampMoodle/openMoodleSourceSession을 재사용한다. 소유 E6 environment `e6-20261018-run1`,18768,user3,course2/cm3·4·5/forum3/selectedPost1,report hash `0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28`은 [mapping-report](../../spikes/moodle-review-api/e6/mapping-report.json)를 참조한다. 과거 관측의 생존/lease를 오늘의 fresh 보증으로 쓰지 않고 실제 실행 때 새로 읽는다. 지금은 API 요청대로 추가 source/token 발급을 하지 않는다.
+
+5. **검증 / 실제·합성 구분:** d3709a0의 fresh local source 읽기46회는 실제 로컬 HTTP/생성 합성 계정이며 외부 학원·실명·wallet 통제 proof가 아니다. 기존 해당 head 원격CI6/6·원본191개/의존성 보존·공개 이력 검사는 당시 근거다. 10/20 metadata 대조는 요청/키발급/source/AI/chain/지급 검사가 아니고 의도적으로 만료·미발급 값의 pin shape 검사만 포함한다. 새 코드/복구/평가를 추가하거나 옛250개를 반복하지 않았다.
+
+6. **다음 한 작업 / 소유 경로:** API가 새 비밀없는 metadata와 실제 발급 .2 current request/승인 user3 mapping·auth/raw/query 최소 lease를 전달하면,HR/chain 준비 후 같은 신청의 Moodle source를 마지막에 fresh 수집해 정상 consumer→AI raw getter로만 연결한다. AI는 async readBody/getRaw·borrow release·모델 후 fresh probe/원래receipt 대조·API 최종 dispose 경계를 유지한다. AI PR101 head1276b91은 통합 재검토 대기라는 전달을 받았으며 신규 모델 승인 없이 호출하지 않는다. 직접 소유는 기존 src/review-evidence/moodle·tests/moodle-review·spikes/moodle-review-api·docs/moodle뿐이며 공통/API/DB/HTTP/web는 해당 담당이 연결한다. 필요한 기존 세션 협업은 사용자 승인 아래 유지하되 새 기능/세션/에이전트/자동 merge/상용배포는 없다.
+
+7. **종료한 과거 작업 재개 금지:** PR21/PR36 및 옛 Mac/Windows·별도 복구 연구로 돌아가지 않는다. 첫 정상 실제자료→AI→100TEST 흐름의 필수 검증/입력 연결만 이어가며,새 세션/최종 분배는 정상 시연 완료 또는 사용자의 차단점 종료 결정 뒤 본부의 인계 확인에 따른다. 현재는 그 전환을 실행하지 않는다.
