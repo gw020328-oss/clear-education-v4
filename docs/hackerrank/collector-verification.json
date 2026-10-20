@@ -1,0 +1,39 @@
+{
+  "version": "clear-hackerrank-collector-preparation.1",
+  "date": "2026-10-20",
+  "scope": "TRUSTED_HOST_ENTRY_PREPARATION_ONLY",
+  "sourceSha256": {
+    "src/hackerrank-evidence/collector.mjs": "3486f93fc5b70d7972cb2470e4b3820cb7915c282c726fdab85e0c9232f37c5e",
+    "src/hackerrank-evidence/collector.d.mts": "1416668f05e944a086b7399c04153d718cd8b827e01795c84cdbfb85f3f5dfb6",
+    "src/hackerrank-evidence/browser-source.mjs": "9d9b71fbff42cc97fdd8f2463c9c6cae62237fb8c6dd22f35b6fedeb83a82c08",
+    "src/hackerrank-evidence/run.mjs": "67cb99407c6b92952a9f7b0a2c002261dc01e2284c2b7e920e3f84cfeb576822",
+    "src/hackerrank-evidence/run.d.mts": "fe0dbc603995c1d33286d1cebfa72c184b28d45daeb1d961f2feb27d3e0522f0",
+    "tests/hackerrank-evidence/collector.test.mjs": "c563aa2ea0655e634b90679b7c78a4d354cb25a2c237b94f3e9e92e76160dbae",
+    "tests/hackerrank-evidence/browser-source.test.mjs": "98d84018dfb77b0c0b27d7151600f7ce7021e881dd70257748e811f571558b49"
+  },
+  "tests": {
+    "command": "LOG_LEVEL=silent ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/*.test.mjs",
+    "pass": 94,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "externalNetwork": "DISABLED",
+    "fixtures": "INVENTED_BODIES_EPHEMERAL_REAL_SIGNATURES",
+    "declarations": "SYNTAX_CHECK_ONLY"
+  },
+  "review": "OWNER_DIRECT_SOURCE_REVIEW_NOT_INDEPENDENT_AUDIT",
+  "actualHackerRankCollectionCount": 0,
+  "actualHostedProofCount": 0,
+  "managedRunIntegrationExecuted": false,
+  "loginReady": false,
+  "pendingTrust": "UNCONFIGURED",
+  "productionEnabled": false,
+  "paymentAllowed": false,
+  "remaining": [
+    "AUTHENTICATED_SOURCE_AND_RECORD_RECIPE_REVIEW",
+    "OFFICIAL_SIGNER_EPOCH_AND_HOSTED_CONTEXT_REVIEW",
+    "TRUSTED_HOST_LOCK_STORAGE_APPROVAL_AND_CLEANUP_ASSEMBLY",
+    "API_FRESH_REQUEST_LEASE_CURRENT_AND_ATOMIC_ACCEPTANCE",
+    "EXTERNAL_SERVICE_COST_AND_SCOPE_CONFIRMATION"
+  ]
+}

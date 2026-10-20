@@ -1,0 +1,39 @@
+# 첫 정상 TEST용 HackerRank 수집 입구
+
+2026-10-20. 실제 원천→AI→100 TEST 정상 시연의 P1 소유 부분이다. 기존 verifier/recipe/pending trust와 .1 request/candidate 형식은 변경하지 않는다. **실제 로그인·원천 수집·공식 hosted proof 생성은 아직 0건이다.** `pending-trust.json`은 계속 UNCONFIGURED다.
+
+## 연결 함수
+
+`src/hackerrank-evidence/run.mjs`의 `runHackerRankCollection(session, options)`를 **새 관리형 저장 worker 안에서** 호출한다. `CLEAR_LOCKED=1`은 기존 locked launcher의 내부 표시다. 외부 HTTP/브라우저 입력으로 session/config/functions를 받아 실행하는 API가 아니다. 실제 실행은 host의 잠금·저장 preflight 및 기존 Chrome 종료/프로필 삭제 책임이 연결되어야 한다. 현재 독립 로그인 CLI/제품 UI는 제공하지 않는다.
+
+정확한 타입은 `run.d.mts`와 `collector.d.mts`다. trusted host가 제공할 함수는 다음과 같다.
+
+1. `waitForReady({signal})`: 새 전용 Chrome에서 본인이 로그인한 후 명시적으로 수집을 시작한다. 기존 사용자 프로필/세션을 재사용하지 않는다. 쿠키/비밀번호를 터미널에 입력하지 않는다.
+2. `issueRequest({claimOwner, trustConfigHash, recipeHash, signal})`: API가 현재 신청·participant/wallet·runtimeMappingHash에 결합한 기존 `clear-hackerrank-request.1`을 새로 발급한다. nonce/900초 이하 기간은 API 소유다. `.2` bridge request와 이 P1 요청의 연결도 API가 등록한다.
+3. `approveRequest({request, message, signal})`: `requestMessage(request)` 전체에 대한 참가자 승인 envelope를 돌려준다. 수집 동의이며 추가 지급 서명이 아니다. expectedRequest는 서버 발급값이며 envelope.request로 대신하지 않는다.
+4. `submit({candidate, recheck, lease, signal})`: 원문 없는 candidate와 process-local lease만 API에 넘긴다. lease는 `read/recheck/isCurrent/dispose`를 제공한다. API는 임의 객체의 메서드를 신뢰하지 않고 **같은 모듈에서 직접 import한 `readHackerRankCollectorLease(lease)`**로 매 수락 직전 검증한다. 이 함수는 private WeakMap identity와 발행한 동일 verifier의 receipt WeakMap·expectedRequest·현재 시각을 검사하고 `{candidate,binding}`을 반환한다.
+
+브라우저 종료와 candidate lease의 수명은 분리한다. lease에는 raw proof/claim context/cookie/owner key가 없으며 원래 request/trust/proof 만료 또는 dispose 뒤 사용할 수 없다. API는 여기에 실제 mode/신청/계정/정책·mapping·`.2` request/lease/current/nonce·중복 방지와 원자 CAS를 추가한다. `durableConsumptionPerformed=false`를 자체 수락으로 바꾸지 않는다. JSON/spread로 복제한 lease와 같은 모양의 콜백은 거부한다. 모듈을 다른 사본으로 로드하면 같은 identity로 인정되지 않는다.
+
+## 수집과 정리 경계
+
+- 수집기 안에서 새 proof owner를 만들고 공개 주소만 요청 발급에 제공한다. owner key는 외부 인수/출력/파일로 전달하지 않는다.
+- 첫 account claim의 신뢰한 signer/epoch, 실제 서명, owner, 요청 hash/role/recipe/providerHash, 시간 및 필수 username을 확인한 뒤에만 certificate URL을 구성한다. username 인수나 첫 번째 인증서 하드코딩은 없다. 최종 proof pair는 기존 P1 verifier에서 다시 검사한다.
+- context에는 새 요청에 따른 네 필드만 넣고 `extractedParameters`를 클라이언트에서 주입하지 않는다. 고정 SDK 5.1.4, STWO, 동시성1, 최대시도1, 동일 official client를 사용한다. HR prefix의 별도 TLS 인스턴스도 WebCrypto로 초기화한다. recipe를 런타임 응답/OPRF 결과로 다시 쓰지 않는다.
+- 쿠키는 고정 dashboard URL 또는 서명으로 확인한 username의 certificate URL에 대한 `Network.getCookies`만 허용한다. 전체 cookie dump/개인 프로필/원문 파일/로그 API는 없다. foreign domain·중복 이름·헤더 주입을 거부한다.
+- abort/close는 client 연결 종료를 요청하고 진행 중 작업의 종료를 기다린다. finally에서 key/claim/secret 참조를 해제한다. JS/SDK 문자열·GC·OS swap의 완전 소거를 주장하지 않는다.
+- run은 브라우저→route→client 정리를 모두 시도하고 실패를 고정 코드로 반환한다. 정리 실패 때 인계한 candidate lease도 폐기한다. host는 run이 끝난 뒤 기존 `stopRecordedBrowser` 확인→`removeSession` 순서를 유지하며, 이 단계가 실패해도 lease를 폐기해야 한다. 실제 사용자 환경에서 이 조합의 전체 실행/정리는 아직 미실행이다.
+
+## 실제 시작 전에 남은 정확한 공백
+
+`syntheticRecipe()`는 발명한 본문용이라 live로 승격하지 않는다. 실제 authenticated dashboard와 인증서 전체 레코드의 구조/계정 통제 의미, anonymous·다른 계정/인증서 혼입 거부, 필수 capture와 SDK empty-extraction 반례를 검토해야 한다. 공식 registry에서 별도로 얻은 signer/epoch 및 hosted signed request context도 확인해야 한다. proof가 자기 선언한 attestor address로 신뢰 목록을 만들지 않는다.
+
+이번 함수는 REVIEWED config가 없는 상태에서 owner·연결·브라우저·쿠키 읽기를 시작하지 않는다. 따라서 현행 pending config로 로그인을 요구할 단계가 아니다. 실제 원천 형식 관찰용 안전한 명령과 검토 입력, host 잠금/정리/승인 callback 연결을 먼저 준비하고 본부 한 곳에서 최소 행동을 요청한다. 이전 proof나 만료된 request를 새 실행으로 재사용하지 않는다.
+
+연결 시 HackerRank 및 공식 Reclaim attestor/registry에 접속한다. 현재 외부 호출/요금 발생은 0이며 향후 서비스 비용·제약을 확인하기 전 무료라고 단정하지 않는다. 실제 서명 원문은 attestor 및 이 메모리 verifier의 처리 범위이고 공개 저장소/체인/보고서에는 게시하지 않는다. 기존 개인정보 비공개·추가 지급 서명 없음 조건을 해제하지 않는다.
+
+## 검증
+
+`LOG_LEVEL=silent ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/*.test.mjs`
+
+네트워크 차단 상태에서 기존 P1와 신규 collection/cookie/lease 경계를 검사한다. 임시 무작위 키의 실제 EIP191 서명 및 발명한 응답을 사용한다. 정상 pair·틀린 요청/서명·trusted signer의 잘못된 context·첫 증명 실패 시 certificate 미접근·재실행 거부·취소·원문 없는 결과·lease 위조/만료/dispose를 포함한다. 실제 hosted SDK 증명 생성/Chrome 로그인 통합을 대신하지 않는다. 타입 파일은 선언 구문 검사이며 전체 TypeScript typecheck를 주장하지 않는다.
