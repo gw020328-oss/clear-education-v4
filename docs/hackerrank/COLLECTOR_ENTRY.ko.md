@@ -47,3 +47,13 @@
 5. **검증 구분:** HR 108 PASS(신규 진단14), E4/메모리/서명+원본 snapshot 165 PASS, 모두 fail/cancel/skip0. A/B source 보존 검사 PASS. 고정 launcher/worker 구문 및 개인정보/ready/정리 순서 코드 리뷰 완료. 합성 검증이며 실제 Mac 로그인·SDK hosted proof·actual-source end-to-end 증거가 아니다.
 6. **다음 한 작업/소유:** 본부 한 곳에서 위 준비된 비수락 진단을 안내해 실제 형식의 값 없는 요약을 얻고, P1 소유 `src/hackerrank-evidence/` 및 `docs/hackerrank/`에서 recipe 검토를 진행한다. 실제 proof host는 단일 run의 issueRequest가 만든 owner를 먼저 받아 새 mapping/app/.2 request를 발급하고 같은 run의 submit lease를 API에 인계해야 한다. API input 만료·이전 owner·다른 run 재사용은 금지한다. API 937f982 source v5 인수는 root 소유다.
 7. **종료 작업:** PR21/36은 다시 시작하지 않는다. 새 세션/에이전트 생성, 기존 채팅 archive, 독립 고도화는 수행하지 않는다. 정상 시연 완료 또는 사용자의 차단점 종료 결정 뒤 본부가 다음 인계를 결정한다.
+
+## 2026-10-20 실제 진단 시작 실패 후 최소 인계 — 7항목
+
+1. 본부 실행은 ready/login prompt 전에 종료됐다. 로컬 정적 검사에서 ybm-collector 의존성 세 모듈 누락을 확인해 설치했다. 실제 접속/Chrome 기동/프로필 삭제 성공은 아직 확인하지 않았다.
+2. 소유 작업본/branch는 위와 같다. phase/preflight 수정과 정확 실행 안내는 이 절과 같은 커밋이다. 별도 v5 guard는 `97827ddbeb1eb90007de57cd9053fa9cc1a86aee`, 정상 이력 merge는 `d080211`이다. PR100 고정/API PR102 후속 인수.
+3. 수정은 커밋으로 보존하고 설치한 node_modules 및 합성 로그는 ignored 상태다. 키·쿠키·기존 프로필·DB·raw proof를 읽거나 복사하지 않았다. 원문 실패 로그를 요청하지 않는다.
+4. 정확 명령은 [LAYOUT_DIAGNOSTIC.ko.md](LAYOUT_DIAGNOSTIC.ko.md)의 기존 주작업본 pinned Node 직접 경로다. 현재 worktree의 ybm prefix에 lockfile 기반 npm ci --ignore-scripts 설치 완료. launcher는 저장/네트워크 전에 모듈 경로를 확인하고 worker는 고정 phase만 출력한다.
+5. 세 SDK 모듈의 network-blocked/silent import PASS, HR108 PASS 및 최종 phase/cleanup 진단14 PASS, launcher/worker 구문 PASS. import 점검의 최초 기본 SDK 경고는 silent 설정으로 정정했다. 합성 검증이며 실제 source 성공은 아니다.
+6. 다음 한 작업은 본부가 수정된 명령으로 단계 식별 실행을 한 번 수행하는 것이다. 본 담당은 실제 재실행/로그인 요청을 하지 않았다. 로그인 안내 여부는 본부가 기동 상태를 확인한 뒤 결정한다. 소유 경로는 layout-launch/run/worker 및 진단 문서다.
+7. 일반 복구 고도화/동시 진단/기존 사용자 프로필·볼륨 삭제/새 세션/PR21·36/자동 merge·deploy 없음. 기존 개인정보 경계와 추가 지급 서명 없음 조건 유지.

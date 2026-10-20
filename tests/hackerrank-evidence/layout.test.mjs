@@ -75,8 +75,8 @@ test('runner cleanup closes every owned transport after ready and terminal close
 test('runner rejects outside managed worker before transport and redacts connection failures',async()=>{
  const previous=process.env.CLEAR_LOCKED;delete process.env.CLEAR_LOCKED;let called=false;
  try{
-  await assert.rejects(runHackerRankLayout({path:'/synthetic'},{openClient:async()=>{called=true;}}),e=>e.message==='LAYOUT_DIAGNOSTIC_FAILED');assert.equal(called,false);
-  process.env.CLEAR_LOCKED='1';await assert.rejects(runHackerRankLayout({path:'/synthetic'},{openClient:async()=>{throw Error('SYNTHETIC_SECRET_TOKEN');}}),e=>e.message==='LAYOUT_DIAGNOSTIC_FAILED');
+  await assert.rejects(runHackerRankLayout({path:'/synthetic'},{openClient:async()=>{called=true;}}),e=>e.message==='LAYOUT_DIAGNOSTIC_FAILED'&&e.phase==='MANAGED_WORKER');assert.equal(called,false);
+  process.env.CLEAR_LOCKED='1';await assert.rejects(runHackerRankLayout({path:'/synthetic'},{openClient:async()=>{throw Error('SYNTHETIC_SECRET_TOKEN');}}),e=>e.message==='LAYOUT_DIAGNOSTIC_FAILED'&&e.phase==='ATTESTOR_CONNECT'&&!JSON.stringify(e).includes('SYNTHETIC_SECRET'));
  }finally{if(previous===undefined)delete process.env.CLEAR_LOCKED;else process.env.CLEAR_LOCKED=previous;}
 });
 test('aborted transport detaches observers without issuing CDP on a closed channel',async()=>{
@@ -89,7 +89,7 @@ test('runner attempts remaining cleanup after an owned browser close failure',as
  try{
   const input=new PassThrough(),browser=fakeBrowser();browser.close=async()=>{closed.push('browser');throw Error('SYNTHETIC_SECRET_PATH');};
   await assert.rejects(runHackerRankLayout({path:'/synthetic'},{input,output:m=>{if(m.includes('ready'))setImmediate(()=>input.write('close\n'));},
-   openClient:async()=>({client:{},close:async()=>closed.push('client')}),openRoute:async()=>({signal:new AbortController().signal,proxyUrl:'http://127.0.0.1:1',close:async()=>closed.push('route')}),launchBrowser:async()=>browser}),e=>e.message==='LAYOUT_CLEANUP_FAILED');
+   openClient:async()=>({client:{},close:async()=>closed.push('client')}),openRoute:async()=>({signal:new AbortController().signal,proxyUrl:'http://127.0.0.1:1',close:async()=>closed.push('route')}),launchBrowser:async()=>browser}),e=>e.message==='LAYOUT_CLEANUP_FAILED'&&e.phase==='TRANSPORT_CLEANUP');
   assert.deepEqual(closed,['browser','route','client']);
  }finally{if(previous===undefined)delete process.env.CLEAR_LOCKED;else process.env.CLEAR_LOCKED=previous;}
 });

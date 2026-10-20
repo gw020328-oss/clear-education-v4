@@ -1,13 +1,13 @@
 # HackerRank 원천 형식 관찰 — 실행 전 인계
 
-2026-10-20. 정상 시연의 실제 recipe 검토 입력을 얻는 최소 진단이다. **명령은 준비됐지만 실제 로그인·실제 본문 관찰·hosted proof는 아직 실행하지 않았다.** 본부가 사용자에게 한 번 안내한 뒤 실행한다. UNCONFIGURED trust를 변경하거나 synthetic recipe를 실제 recipe로 승격하지 않는다.
+2026-10-20. 정상 시연의 실제 recipe 검토 입력을 얻는 최소 진단이다. **본부의 첫 실행은 로그인 안내 전에 종료됐다. 실제 로그인·실제 본문 관찰·hosted proof는 아직 실행하지 않았다.** 본부가 사용자에게 한 번 안내한 뒤 실행한다. UNCONFIGURED trust를 변경하거나 synthetic recipe를 실제 recipe로 승격하지 않는다.
 
 ## 정확한 실행 방법
 
-소유 작업본 `workspaces/clear-hackerrank-bootcamp`에서 고정 Node 24.21.0과 기존 설치된 root/ybm-collector/hackerrank-evidence 의존성을 사용한다. Apple Silicon Mac, 설치된 Chrome, FileVault 및 기존 관리형 저장 정책이 선행 조건이다.
+소유 작업본 `workspaces/clear-hackerrank-bootcamp`에서 고정 Node 24.21.0과 설치된 root/ybm-collector/hackerrank-evidence 의존성을 사용한다. 이 작업본 자체에는 고정 Node가 없고 시스템 Node는 25.6.1이어서 아래 기존 주작업본의 고정 실행 파일을 명시한다. 시스템 Node로 대체하지 않는다. Apple Silicon Mac, 설치된 Chrome, FileVault 및 기존 관리형 저장 정책이 선행 조건이다.
 
 ```sh
-./tools/node src/hackerrank-evidence/layout-launch.mjs
+../clear-education-v4/.toolchain/node-v24.21.0-darwin-arm64/bin/node src/hackerrank-evidence/layout-launch.mjs
 ```
 
 이 명령은 바로 공식 attestor 연결과 새 전용 Chrome을 연다. 따라서 준비 확인을 위해 미리 실행하지 않는다. 인수·환경 파일·기존 키·proof 파일·API 토큰 입력은 없다. 기존 사용자 Chrome 프로필을 재사용하지 않는다.
@@ -40,3 +40,13 @@
 108 PASS, FAIL/CANCELLED/SKIPPED 0. 이 중 신규 진단 14개는 합성 본문·가짜 browser transport로 ready 이전/경로 밖 접근 금지, 원문 없는 요약, redirect/cache/오류 거부, 진행 중 읽기의 정리 대기, 전체 transport 정리, worker 밖 실행 거부를 확인했다. launcher/worker 구문 검사를 통과했다. 실제 Mac 실행/로그인/정리 통합 결과를 대신하지 않는다.
 
 코드 리뷰에서 취소 신호가 먼저 CDP를 닫아 정상 정리를 실패시키는 순서를 발견해, 관찰 중지 후 transport 취소 순서로 수정했다. 실제 Chrome과 같은 abort-sensitive 가짜 transport로 정상 종료를 검증했고, 이미 취소된 채널에는 CDP 명령을 추가 발행하지 않으며 브라우저 정리 실패 뒤에도 route/client 정리를 계속하는 검사를 추가했다.
+
+## 첫 Mac 시작 실패의 최소 수정
+
+본부의 첫 `tools/node` 실행은 고정 runtime 부재/시스템 Node25.6.1로 preflight에서 종료됐고, 고정 실행 파일을 직접 지정한 두 번째 시도는 ready/login prompt 전에 일반 실패 코드로 종료됐다. 프로필 삭제 성공을 이 로그만으로 단정하지 않는다.
+
+이 작업본의 `src/ybm-collector/node_modules` 부재와 실제 client가 요구하는 TLS/TLS-WebCrypto/attestor-core 세 모듈의 resolution 실패를 로컬 정적 검사로 확인했다. 고정 Node의 `npm ci --prefix src/ybm-collector --ignore-scripts --no-audit --no-fund`로 기존 잠금 파일대로 설치했다. global Node·잠금 파일·기존 사용자 프로필은 변경하지 않았다. 새 launcher는 이 의존성을 저장/네트워크 시작 전에 검사하고 누락 시 `HACKERRANK_LAYOUT_DEPENDENCY_MISSING`만 표시한다.
+
+새 worker/run의 실패 출력은 `HACKERRANK_LAYOUT_PHASE`의 고정 값으로 한정한다: STORAGE_RECOVERY, SESSION_CREATE, MANAGED_WORKER, ATTESTOR_CONNECT, LOCAL_ROUTE, CHROME_START, CHROME_TARGET, DASHBOARD_NAVIGATE, READY_WAIT, SOURCE_LAYOUT, TRANSPORT_CLEANUP, UNEXPECTED_TERMINATION. 예외 message/stack/path/host 응답은 출력하지 않는다. 기존 프로필 검색·일반 복구·볼륨 삭제·동시 진단을 추가하지 않았다. 설치 후에도 실제 연결/Chrome 정상 기동은 아직 확인하지 않았으므로 본부가 위 명령으로 한 번 단계 확인 후 사용자에게 로그인 필요 시점을 안내한다.
+
+설치 후 세 모듈의 import를 `LOG_LEVEL=silent` 및 외부 네트워크 차단 아래 확인했다. SDK 기본 경고가 로컬 경로를 표시한 최초 점검은 무출력 설정으로 정정했다. 실제 client는 기존대로 SDK import 전에 LOG_LEVEL=silent와 quiet logger를 적용한다. 진단 합성14개/전체 HR108개 검사를 통과했으며 실제 접속 성공을 대신하지 않는다.
