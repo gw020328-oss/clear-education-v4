@@ -29,7 +29,7 @@ const normalPathChanges=[
     "af6c782cd4722e4b3a8c3b32070ff022ef09bd46ef2302956ca451f31ef3b56d"
   ]
 ];
-const ciChanges=[['.github/workflows/hackathon-e5.yml','fee28eb517ba2e96495d39f2aade786bf98289c89fab7a8fa20768791dd7a959','10609ae4213bee930c8f32eab943eb8a09afc8e826c9adcae8c64257a87903a6']];
+const ciChanges=[['.github/workflows/hackathon-e5.yml','fee28eb517ba2e96495d39f2aade786bf98289c89fab7a8fa20768791dd7a959','8b24df4c694b623be5ebc5ab61a02610ad02c1e85ac53839638ac02d78aeb29a']];
 for(const [path,before,after]of ciChanges){assert.equal(service.sourceArtifacts[path],before,path);assert.equal(digest(path),after,path);}
 for(const [path,before,after]of normalPathChanges){assert.equal(service.sourceArtifacts[path],before,path);assert.equal(digest(path),after,path);}
 for(const [path,expected]of preserved)assert.equal(digest(path),[...normalPathChanges,...ciChanges].find(([p])=>p===path)?.[2]??expected,path);

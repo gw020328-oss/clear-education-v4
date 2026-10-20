@@ -1,6 +1,6 @@
 {
   "version": "clear-e5-ci-source-pins.1",
-  "scope": "INSTALL_EXISTING_FROZEN_HACKERRANK_GRAPH_FOR_A_STATIC_IMPORT_ONLY",
+  "scope": "FROZEN_HR_GRAPH_AND_SILENT_SDK_INITIALIZATION_IN_A_JOB",
   "previousRecord": {
     "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v2.json",
     "sha256": "7edbb1408ecc1ed6ddafd9caf0b3928b88c40199556606fae9ee735048dc924c"
@@ -8,11 +8,11 @@
   "changes": {
     ".github/workflows/hackathon-e5.yml": {
       "before": "fee28eb517ba2e96495d39f2aade786bf98289c89fab7a8fa20768791dd7a959",
-      "after": "10609ae4213bee930c8f32eab943eb8a09afc8e826c9adcae8c64257a87903a6"
+      "after": "8b24df4c694b623be5ebc5ab61a02610ad02c1e85ac53839638ac02d78aeb29a"
     },
     "tests/hackathon-test-vault/e5/preservation.mjs": {
       "before": "28a0319699bf1ca4e7905e22bbdb30cebee7e43b2b498a8d9c5ec952765f1c6b",
-      "after": "80335ec093b982042ba61a0e0154d6d6d80a838d7b6aeab1c37919e820325ebe"
+      "after": "a27dfb3c2e64ea7425c352a85f8bb1670ee4f836041d47713b104917f5f9294e"
     },
     "tests/hackathon-test-vault/e5b/source-pins.mjs": {
       "before": "9deac0c1c2f38a2af32335c211e7b95faa7ae8133b012ba2265afb659217cbff",
@@ -21,5 +21,10 @@
   },
   "sourcePolicyChanged": false,
   "v5IntakeChanged": false,
-  "actualSourceAccepted": false
+  "actualSourceAccepted": false,
+  "priorReviewedCandidate": {
+    "head": "8ce113cae8dece67064ae7cd2cec2d41172addc7",
+    "recordSha256": "7777842cdcdc81e5f2e75088e3ac5ce8f5ed7b739d3eeac188404363d36640a7",
+    "historicalBytesPreservedInGit": true
+  }
 }
