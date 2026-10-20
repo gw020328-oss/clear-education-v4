@@ -1,8 +1,9 @@
 import {randomUUID} from 'node:crypto';
 import {canonical,freeze,requireRule as check} from '../policy/values.mjs';
 
-const tables=['e5b_meta','e5b_requests','e5b_bindings','e5b_events','e5b_completions','e5b_claim_jobs'];
+const tables=['e5b_meta','e5b_requests','e5b_bindings','e5b_events','e5b_completions','e5b_claim_jobs','e5b_claim_settlements'];
 const schema=`
+CREATE TABLE e5b_claim_settlements(job_id TEXT PRIMARY KEY REFERENCES e5b_claim_jobs(id),record TEXT NOT NULL) STRICT;
 CREATE TABLE e5b_meta(id INTEGER PRIMARY KEY CHECK(id=1),version INTEGER NOT NULL CHECK(version=1),writer INTEGER NOT NULL CHECK(writer IN(0,1)),scope TEXT NOT NULL) STRICT;
 CREATE TABLE e5b_requests(intent_id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE,record TEXT NOT NULL) STRICT;
 CREATE TABLE e5b_bindings(id TEXT PRIMARY KEY,intent_id TEXT NOT NULL REFERENCES e5b_requests(intent_id),record TEXT NOT NULL) STRICT;
@@ -45,6 +46,7 @@ export function executionBridgeLedger(db){
  const event=(id,kind)=>decode(db.prepare('SELECT record FROM e5b_events WHERE intent_id=? AND kind=? ORDER BY rowid DESC LIMIT 1').get(id,kind));
  const completion=id=>decode(db.prepare('SELECT record FROM e5b_completions WHERE intent_id=?').get(id));
  return {request,event,completion,
+  settle(jobId,value){const old=decode(db.prepare('SELECT record FROM e5b_claim_settlements WHERE job_id=?').get(jobId));if(old){check(canonical(old)===canonical(value),'BC_E5B_CLAIM_SETTLEMENT_CONFLICT');return freeze(old);}db.prepare('INSERT INTO e5b_claim_settlements VALUES(?,?)').run(jobId,canonical(value));return freeze(value);},
   bindings:id=>db.prepare('SELECT record FROM e5b_bindings WHERE intent_id=? ORDER BY rowid').all(id).map(decode),
   requestOnce(id,value){const prior=request(id);if(prior){check(canonical(prior)===canonical(value),'BC_E5B_REQUEST_CONFLICT');return freeze(prior);}
    db.prepare('INSERT INTO e5b_requests VALUES(?,?,?)').run(id,value.attemptId,canonical(value));return freeze(value);},

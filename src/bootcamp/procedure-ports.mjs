@@ -1,3 +1,4 @@
+import {isCanonicalProcedurePorts} from './execution-development.mjs';
 import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 import {P0_POLICY,p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {same} from '../policy/mvp/contract.mjs';
@@ -8,13 +9,13 @@ const address=v=>check(typeof v==='string'&&/^0x[0-9a-f]{40}$/.test(v)&&!/^0x0+$
 const atoms=v=>check(typeof v==='string'&&/^(0|[1-9][0-9]{0,77})$/.test(v)&&BigInt(v)<(1n<<256n),'BC_E3_ATOMS');
 export const snapshotHash=v=>p0Hash('E3-SERVER-PORT',v);
 export function createProcedurePorts(configuration,mode){
- check(configuration===null||configuration?.execution==='SYNTHETIC_PORT_FIXTURE'&&mode==='SYNTHETIC_FIXTURE','BC_E3_PORT_CONFIGURATION');
+ check(configuration===null||(configuration?.execution==='SYNTHETIC_PORT_FIXTURE'&&mode==='SYNTHETIC_FIXTURE'||isCanonicalProcedurePorts(configuration)&&mode!=='DISABLED'),'BC_E3_PORT_CONFIGURATION');
  // An actual E4 port needs a separate reviewed activation. No browser/body can
  // provide snapshots, provenance labels, source assertions or a verified flag.
  function read(name,context){
   if(!configuration||typeof configuration[name]!=='function')return freeze({implementation:'NOT_IMPLEMENTED',snapshotId:null});
   const value=structuredClone(configuration[name](freeze(structuredClone(context))));
-  check(value?.execution==='SYNTHETIC_PORT_FIXTURE'&&!Object.hasOwn(value,'implementation'),'BC_E3_PORT_EXECUTION');return value;
+  check(value?.execution===configuration.execution&&!Object.hasOwn(value,'implementation'),'BC_E3_PORT_EXECUTION');return value;
  }
  function funding(a,d,acceptanceSequence){
   const v=read('funding',{applicationId:a.id,decisionId:d.decisionId,decisionRevision:d.decisionRevision,decisionHash:d.decisionHash,acceptanceSequence});

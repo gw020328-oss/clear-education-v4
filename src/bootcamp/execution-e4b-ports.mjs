@@ -1,3 +1,4 @@
+import {isDevelopmentConnection} from './execution-development.mjs';
 import {recoverAddress,Signature,TypedDataEncoder,id as ethersId} from 'ethers';
 import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 import {hash,id} from './model.mjs';
@@ -25,7 +26,7 @@ export function validateBridgeCommand(command){
 export function createE4BridgePorts(configuration=null){
  if(configuration===null)return Object.freeze({configured:false});
  exactKeys(configuration,['version','sourceMode','runtime','reader','worker','bindController','fenceReader'],'BC_E5B_CONFIGURATION');
- check(configuration.version==='clear-bootcamp-e4b-connection.1'&&configuration.sourceMode==='SYNTHETIC_TEST_SOURCE','BC_E5B_CONFIGURATION');
+ check(configuration.version==='clear-bootcamp-e4b-connection.1'&&(configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'||configuration.sourceMode==='REGISTERED_TEST_SOURCE'&&isDevelopmentConnection(configuration)),'BC_E5B_CONFIGURATION');
  const projection=copy(configuration.runtime);exactKeys(projection,['runtimeHash','manifest','vaultScope','authorityScope'],'BC_E5B_RUNTIME');
  const m=projection.manifest;
  exactKeys(m,['version','environmentId','production','finalityPolicy','imageId','platform','image','clientVersion','networkIsolation','chainId','networkId','genesisHash','endpoint','tokenAddress','tokenCodeHash','vaultAddress','vaultCodeHash','instanceId','policyHash','runtimeMappingHash','operationsPolicyHash','domain','typeHash','domainSeparator','roles','signerKeyId','signerAddress','controllerAddress','deploymentTransactions','checkpoint','blockHashCapability'],'BC_E5B_MANIFEST');
@@ -64,7 +65,7 @@ export function createE4BridgePorts(configuration=null){
   try{signer=recoverAddress(e4Hash(payload),Signature.from(value.signature)).toLowerCase();}catch{throw Error('BC_E5B_CERTIFICATE');}
   check(signer===runtime.controllerAddress,'BC_E5B_CONTROLLER_SIGNER');return copy(value);
  }
- return Object.freeze({configured:true,scope:copy(scope),runtime,projection,executionEnabled:false,
+ return Object.freeze({configured:true,sourceMode:configuration.sourceMode,scope:copy(scope),runtime,projection,executionEnabled:isDevelopmentConnection(configuration),
   fenceReader:Object.freeze({version:'clear-bootcamp-runtime-fence-reader.1',read:query=>floor(copy(query))}),
   bind(factory){check(!bound,'BC_E5B_ALREADY_BOUND');bound=true;
    sync(bind(owner=>{
@@ -93,8 +94,8 @@ export function createE4BridgePorts(configuration=null){
    const allowed=['ref','lineage','automaticResign','status','txHash','checkpoint','observation','currentObservation','blockHash','finalized','code','historicalObservation','automaticPromotion'];
    check(Object.keys(r).every(k=>allowed.includes(k))&&r.ref===request.ref&&typeof r.status==='string','BC_E5B_RECEIPT_SHAPE');
    return ticket('RECEIPT',r);},
-  async seal(){throw Error('BC_E5B_FINAL_PACKET_ACTIVATION_PENDING');},
-  async dispatch(){throw Error('BC_E5B_FINAL_PACKET_ACTIVATION_PENDING');},
+  async seal(request){check(isDevelopmentConnection(configuration),'BC_E5B_FINAL_PACKET_ACTIVATION_PENDING');const r=await worker.seal(copy(request));exactKeys(r,['ref','manifestHash'],'BC_E5B_REFERENCE');check(typeof r.ref==='string'&&r.ref.length<=128,'BC_E5B_REFERENCE');hash(r.manifestHash);return ticket('REFERENCE',r);},
+  async dispatch(request){check(isDevelopmentConnection(configuration),'BC_E5B_FINAL_PACKET_ACTIVATION_PENDING');return worker.dispatch(copy(request));},
   async directClaimReceipt(query){check(claimReceipt,'BC_E5B_DIRECT_CLAIM_READER_UNCONFIGURED');exactKeys(query,['applicationId','txHash'],'BC_E5B_CLAIM_QUERY');Object.values(query).forEach(hash);
    const r=await claimReceipt(copy(query));
    check(r.version==='clear-e5b-direct-claim-receipt.1'&&r.runtimeHash===runtime.runtimeHash&&r.applicationId===query.applicationId&&r.txHash===query.txHash,'BC_E5B_CLAIM_RECEIPT');

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {TypedDataEncoder} from 'ethers';
@@ -31,6 +32,12 @@ test('E4 proposed port fields match current runtime adapter; E2 source SHA/type 
   [proposal.registrationFields,f.configuration.procedurePorts.registration({applicationId:a,decisionId:v.decisionId,decisionRevision:v.decisionRevision,decisionHash:v.decisionHash})]])
   assert.deepEqual([...fields].sort(),Object.keys(value).sort());
  const pins=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-consumer-pins-v1.json',import.meta.url)));
- for(const [path,expected]of Object.entries(pins.artifactSha256))assert.equal(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex'),expected);
+ const delta=JSON.parse(readFileSync(new URL('../../docs/bootcamp-execution/normal-consumer-source-delta.json',import.meta.url)));
+ const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+ for(const [path,expected]of Object.entries(pins.artifactSha256)){
+  const change=delta.changes[path];
+  if(change){assert.equal(change.before,expected);assert.equal(sha(execFileSync('git',['show',delta.baselineCommit+':'+path])),expected);}
+  assert.equal(sha(readFileSync(new URL('../../'+path,import.meta.url))),change?.after??expected);
+ }
  assert.equal(proposal.e2TypeHash,pins.typedEncoding.typeHash);assert.equal(TypedDataEncoder.hashStruct(PRIMARY_TYPE,TYPES,sample.target.payload.message),sample.target.inspection.hashes.structHash);
 });

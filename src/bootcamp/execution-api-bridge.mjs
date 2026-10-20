@@ -146,6 +146,16 @@ export function createApiExecutionBridge({db,ports,service,live,basis,sameBasis,
     const receipt=validateE4Observation(result.observation,ports.runtime);check(canonical(receipt.checkpoint)===canonical(result.checkpoint)&&receipt.business.applicationId===command.applicationId,'BC_E5B_RECEIPT');
     const envelope=ledger.event(h.intentId,'ENVELOPE');check(envelope&&envelope.ref===request.ref&&envelope.manifestHash===request.manifestHash&&envelope.txHash===result.txHash,'BC_E5B_ENVELOPE_REQUIRED');
     const c=latest.observation.business.application;check(BigInt(c.version)>=BigInt(receipt.business.application.version),'BC_E5B_RECEIPT_REGRESSION');
+    if(result.status==='INCLUDED'){
+     const a=receipt.business.application,args=command.args;
+     if(command.method==='registerCurrentMet')check(a.state==='1'&&a.recipient===args[2]&&canonical(a.target)===canonical(args[3]),'BC_E5B_RECEIPT_POSTCONDITION');
+     else if(command.method==='allocate')check(a.state==='2'&&a.allocationId===args[2],'BC_E5B_RECEIPT_POSTCONDITION');
+     else if(command.method==='startReview')check(a.state==='3'&&a.procedureId===args[2]&&a.publishedAt===args[3]&&a.firstStartedAt===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
+     else if(command.method==='bindConsents')check(a.state==='3'&&a.consentSetHash===args[2]&&a.mutualConsent===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
+     else if(command.method==='prepareUnsigned')check(a.state==='3'&&a.preparedDigest===s.i.authorizationDigest&&a.preparedNonce===args[1].nonce,'BC_E5B_RECEIPT_POSTCONDITION');
+     else check(command.method==='accept','BC_E5B_RECEIPT_POSTCONDITION');
+     check(c.version===a.version&&canonical(c.target)===canonical(a.target)&&c.recipient===a.recipient&&c.allocationId===a.allocationId,'BC_E5B_RECEIPT_POSTCONDITION');
+    }
     let job=null;
     if(result.status==='INCLUDED'&&command.method==='accept'){
      const accepted=current.right(app(s.i.applicationId),receipt,ports.runtime),fresh=current.right(app(s.i.applicationId),latest.observation,ports.runtime);
@@ -177,9 +187,8 @@ export function createApiExecutionBridge({db,ports,service,live,basis,sameBasis,
     const job=ledger.claimJob(jobId);check(canonical(job)===canonical(expected.job),'BC_E5B_CLAIM_JOB_CHANGED');
     const accepted=job.right,at=receipt.observation.business.right,now=o.business.right;
     check(canonical({...accepted,settledAt:at.settledAt})===canonical(at)&&canonical(now)===canonical(at)&&o.business.application.state==='6','BC_E5B_CLAIM_RIGHT_CHANGED');
-    // Completion persistence and a separate claim lease are added by the
-    // settlement module. A verified receipt alone is not a fake operation/ref.
-    return freeze({status:'VERIFIED_RECEIPT_PENDING_JOB_COMMIT',jobId,receipt,currentCheckpoint:o.checkpoint,claimOperationId:null});
+    const value={status:'SETTLED',jobId,receipt,claimOperationId:null};
+    return ledger.settle(jobId,value);
    });
   },
  };

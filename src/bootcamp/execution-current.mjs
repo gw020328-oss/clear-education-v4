@@ -85,13 +85,13 @@ export function createExecutionCurrent({db,heads,source,operatorBindings}){
    unassessedSubstantiveObjection:false,sourceWindow:src.window,deadlinePolicyHash:m.deadlinePolicyHash,nonce:m.nonce,currentDecisionStatus:d.conditionsStatus,fullAllocation:true,newValidError:false};
   // This is the frozen synthetic-source E2 snapshot, not a relabelled E4 chain
   // observation. All current values above came from DB or the registered reader.
-  for(const at of [time,Number(observation.checkpoint.time)]){
-   const result=createTestDraftInspector(prepared.snapshot,{clock:()=>at}).inspect(payload,current);
+  for(const at of prepared.snapshot.provenance==='SYNTHETIC_EXAMPLE'?[time,Number(observation.checkpoint.time)]:[null]){
+   const result=createTestDraftInspector(prepared.snapshot,at===null?{}:{clock:()=>at}).inspect(payload,current);
    check(result.status==='UNSIGNED_PREFLIGHT_ONLY','BC_E5_CURRENT_'+(result.code??'REJECTED'));
   }
   const method=i.kind==='PREPARE'?'prepareUnsigned':'accept',command={method,args:[i.operationId,m,i.expectedChainVersion],applicationId:i.chainApplicationId};
   check(i.caller===(i.kind==='PREPARE'?runtime.roles.registrar:runtime.roles.relayer)&&i.payloadHash===e4Hash(command),'BC_E5_EXACT_COMMAND');
-  return freeze({version:'clear-bootcamp-e3-execution-current.1',sourceMode:'SYNTHETIC_TEST_SOURCE',command,authorizationDigest:digest,
+  return freeze({version:'clear-bootcamp-e3-execution-current.1',sourceMode:prepared.snapshot.provenance==='SYNTHETIC_EXAMPLE'?'SYNTHETIC_TEST_SOURCE':'REGISTERED_TEST_SOURCE',command,authorizationDigest:digest,
    sourceCommitment:src.commitment,sourceValidUntilExclusive:src.validUntilExclusive,reviewCapAt:p.reviewCapAt,consentSetHash:set.hash,
    preparationId:i.preparationId,payload,productionEnabled:false});
  }

@@ -65,3 +65,22 @@ test('current and commit use UUID v4 challenges, including a leading digit, with
  invalid.makeEnvelope(b.binding);
  assert.throws(()=>invalid.invoke('commit',b.binding,'COMMIT'),/BC_E5B_CHALLENGE/);
 });
+
+test('canonical PREPARE receipt completes its intent, frees the global slot and preserves original request',async t=>{
+ const f=await bridgeFixture(t),r=await f.prepare();f.makeEnvelope(r.binding);await f.bridge.lookup(f.g,f.h,r.binding);
+ Object.assign(f.observation.business.application,{preparedDigest:f.digest,preparedNonce:f.m.nonce,deadlinePolicyHash:f.m.deadlinePolicyHash,version:'5'});
+ const o=f.snapshot();f.setReceipt({ref:'env-offline',status:'INCLUDED',txHash:H('tx'),checkpoint:o.checkpoint,observation:o,automaticResign:false});
+ const result=await f.bridge.recover(f.g,f.h,r.binding);assert.equal(result.completion.status,'INCLUDED');assert.equal(result.claimJob,null);
+ assert.equal(database(f,db=>db.prepare('SELECT COUNT(*) n FROM e5b_requests').get().n),1);
+ assert.equal(database(f,db=>db.prepare('SELECT COUNT(*) n FROM e5b_completions').get().n),1);
+ assert.throws(()=>f.store.execution.acquire(f.context,f.i,{owner:'worker-one',generation:1,expectedFence:f.h.workerFence}),/BC_E5B_ALREADY_COMPLETED/);
+ const next=f.enqueue({kind:'PREPARE',operationId:H('next-operation'),preparationId:f.prepared.preparationId,authorizationDigest:f.digest,caller:f.projection.manifest.roles.registrar,payloadHash:e4Hash({...f.command,args:[H('next-operation'),...f.command.args.slice(1)]})}).receipt.intentId;
+ const lease=f.acquire(next);assert.ok(f.store.execution.bindRuntimeIntent(f.context,f.g,lease));
+});
+test('INCLUDED label without exact prepared postcondition cannot finish or release intent',async t=>{
+ const f=await bridgeFixture(t),r=await f.prepare();f.makeEnvelope(r.binding);await f.bridge.lookup(f.g,f.h,r.binding);
+ const o=f.snapshot();f.setReceipt({ref:'env-offline',status:'INCLUDED',txHash:H('tx'),checkpoint:o.checkpoint,observation:o,automaticResign:false});
+ await assert.rejects(f.bridge.recover(f.g,f.h,r.binding),/BC_E5B_RECEIPT_POSTCONDITION/);
+ assert.equal(database(f,db=>db.prepare('SELECT COUNT(*) n FROM e5b_completions').get().n),0);
+ assert.ok(f.bridge.inspect(f.g,f.h));
+});

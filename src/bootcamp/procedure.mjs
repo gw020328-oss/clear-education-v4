@@ -153,7 +153,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    signerKeyId:auth.signerKeyId,authorizationEpoch:auth.authorizationEpoch,operationsPolicyHash:PROFILE_HASH,firstReviewStartedAt:String(st.p.firstStartedAt),
    decisionPublishedAt:String(st.pub.publishedAt),sourceValidUntilExclusive:String(src.validUntilExclusive),revalidationCount:String(st.count)};
   message.deadlinePolicyHash=testDeadlineHash(message);
-  const snapshot={version:'clear-bootcamp-test-unsigned-snapshot.1',provenance:'SYNTHETIC_EXAMPLE',profilePin:{profileId:PROFILE_ID,sourceCommit:PROFILE_COMMIT,profileHash:PROFILE_HASH},
+  const snapshot={version:'clear-bootcamp-test-unsigned-snapshot.1',provenance:mode==='ISOLATED_LIVE_TEST'?'REGISTERED_TEST_SOURCE':'SYNTHETIC_EXAMPLE',profilePin:{profileId:PROFILE_ID,sourceCommit:PROFILE_COMMIT,profileHash:PROFILE_HASH},
    registrations,logicalTarget:target,tokenDecimals:'6',domain:auth.domain,message,deadlineRecord:testDeadlineRecord(message)};
   const payload={logicalTarget:target,domain:auth.domain,message};
   const current={status:'RESERVED',...Object.fromEntries(['applicationId','procedureId','firstReviewStartedAt','decisionPublishedAt','decisionId','decisionRevision','decisionHash','runtimeMappingHash','allocationId','recipient','token','amountAtoms',
@@ -161,7 +161,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    domain:auth.domain,signerActive:auth.signerActive,nonceAvailable:auth.nonceAvailable,reservedBalanceAtoms:st.funding.reservedAtoms,currentDecision:st.met,
    bothPartiesConsent:st.both,unresolvedValidObjection:st.objections.some(r=>r.assessment?.outcome==='VALID_UNRESOLVED'),unassessedSubstantiveObjection:st.objections.some(r=>!r.assessment),
    sourceWindow:src.window,currentDecisionStatus:st.d.conditionsStatus,fullAllocation:true,newValidError:!!st.termination};
-  const inspection=createTestDraftInspector(snapshot,{clock:()=>time}).inspect(payload,current);
+  const inspection=createTestDraftInspector(snapshot,mode==='ISOLATED_LIVE_TEST'?{}:{clock:()=>time}).inspect(payload,current);
   check(inspection.status==='UNSIGNED_PREFLIGHT_ONLY','BC_E3_PREFLIGHT_'+(inspection.code??'REJECTED'));
   return freeze({snapshot,payload,current,inspection,consentSet:set.record,sourceCommitment:src.commitment,
    fundingSnapshotHash:snapshotHash(st.funding),authorizationSnapshotHash:snapshotHash(auth),chainSnapshotHash:snapshotHash(st.chain)});

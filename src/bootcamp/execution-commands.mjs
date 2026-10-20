@@ -37,14 +37,14 @@ export function executionCommands({db,current,heads,source}){
      command={method:'startReview',args:[i.operationId,i.chainApplicationId,opaque('PROCEDURE',p.procedureId),String(pub.publishedAt),i.expectedChainVersion],applicationId:i.chainApplicationId};
     }else if(i.kind==='BIND_CONSENTS'){
      check(c.state==='3'&&c.procedureId===opaque('PROCEDURE',p.procedureId)&&c.firstStartedAt===String(p.firstStartedAt)&&c.publishedAt===String(pub.publishedAt),'BC_E5B_REVIEW_STATE');
-     const set=current.consents(a,pub,'2');command={method:'bindConsents',args:[i.operationId,i.chainApplicationId,set.hash,set.both,i.expectedChainVersion],applicationId:i.chainApplicationId};
+     const set=current.consents(a,pub,'1');command={method:'bindConsents',args:[i.operationId,i.chainApplicationId,set.hash,set.both,i.expectedChainVersion],applicationId:i.chainApplicationId};
     }else throw Error('BC_E5B_COMMAND_NOT_IMPLEMENTED');
    }
   }
   check(i.caller===runtime.roles.registrar&&i.payloadHash===e4Hash(command),'BC_E5_EXACT_COMMAND');
   return freeze({command,sourceCommitment:src.commitment,sourceValidUntilExclusive:src.validUntilExclusive,reviewCapAt,payload:null,productionEnabled:false});
  }
- function command(i){
+ function command(i,{verifyHash=true}={}){
   // The immutable request is reconstructed from owner records and subsequently
   // compared with current facts; no arbitrary method/args callback is accepted.
   const a=db.prepare('SELECT * FROM applications WHERE id=?').get(i.applicationId);check(a,'BC_NOT_FOUND');
@@ -57,9 +57,9 @@ export function executionCommands({db,current,heads,source}){
   if(i.kind==='REGISTER'){check(r,'BC_E5B_REGISTRATION_REQUIRED');method='registerCurrentMet';args=[i.operationId,i.chainApplicationId,a.wallet,{decisionId:i.chainDecisionId,revision:String(d.decisionRevision),decisionHash:d.decisionHash,sourceValidUntilExclusive:String(r.sourceValidUntilExclusive),acceptanceSequence:String(r.decisionAcceptanceSequence),sourceReceiptHash:r.sourceCurrentCommitment}];}
   else if(i.kind==='ALLOCATE'){check(r,'BC_E5B_REGISTRATION_REQUIRED');method='allocate';args=[i.operationId,i.chainApplicationId,opaque('ALLOCATION',r.registration.allocationId),i.expectedChainVersion];}
   else if(i.kind==='START_REVIEW'){check(p&&pub,'BC_E5B_PUBLICATION_REQUIRED');method='startReview';args=[i.operationId,i.chainApplicationId,opaque('PROCEDURE',p.procedureId),String(pub.publishedAt),i.expectedChainVersion];}
-  else if(i.kind==='BIND_CONSENTS'){check(pub,'BC_E5B_PUBLICATION_REQUIRED');const set=current.consents(a,pub,'2');method='bindConsents';args=[i.operationId,i.chainApplicationId,set.hash,set.both,i.expectedChainVersion];}
+  else if(i.kind==='BIND_CONSENTS'){check(pub,'BC_E5B_PUBLICATION_REQUIRED');const set=current.consents(a,pub,'1');method='bindConsents';args=[i.operationId,i.chainApplicationId,set.hash,set.both,i.expectedChainVersion];}
   else throw Error('BC_E5B_COMMAND_NOT_IMPLEMENTED');
-  const result={method,args,applicationId:i.chainApplicationId};check(e4Hash(result)===i.payloadHash,'BC_E5_EXACT_COMMAND');return result;
+  const result={method,args,applicationId:i.chainApplicationId};if(verifyHash)check(e4Hash(result)===i.payloadHash,'BC_E5_EXACT_COMMAND');return result;
  }
  return {inspect,command};
 }

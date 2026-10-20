@@ -1,3 +1,5 @@
+import {isLiveMoodleConsumer} from './moodle-live-consumer.mjs';
+import {isCanonicalProcedurePorts} from './execution-development.mjs';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
@@ -62,22 +64,23 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   mode='DISABLED',runtimeMappingHash=DEFAULT_MAPPING_HASH,producers={},resolveSource=()=>null,
   now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null,executionConnection=null,executionFenceWitness=null,executionBridge=null}){
   id(instanceId);id(courseOperatorRef);epoch(demoStartedAt);hash(runtimeMappingHash);
-  check(['DISABLED','SYNTHETIC_FIXTURE'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
+  check(['DISABLED','SYNTHETIC_FIXTURE','ISOLATED_LIVE_TEST'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
   check(typeof authentication?.authorizeWorkflow==='function','BC_AUTHENTICATION');
-  check(procedurePorts===null||procedurePorts?.execution==='SYNTHETIC_PORT_FIXTURE'&&mode==='SYNTHETIC_FIXTURE','BC_E3_PORT_CONFIGURATION');
+  check(procedurePorts===null||(procedurePorts?.execution==='SYNTHETIC_PORT_FIXTURE'&&mode==='SYNTHETIC_FIXTURE'||isCanonicalProcedurePorts(procedurePorts)&&mode!=='DISABLED'),'BC_E3_PORT_CONFIGURATION');
   createExecutionPorts(executionServices); // Validate constructor-only services before opening a DB; never invokes them.
   const e4CurrentPorts=createE4CurrentPorts(executionConnection);
   const e4BridgePorts=createE4BridgePorts(executionBridge);
-  check(!e4BridgePorts.configured||mode==='SYNTHETIC_FIXTURE'&&!e4CurrentPorts.configured&&executionFenceWitness===null
+  check(!e4BridgePorts.configured||mode!=='DISABLED'&&!e4CurrentPorts.configured&&executionFenceWitness===null
+    &&(mode==='ISOLATED_LIVE_TEST'?e4BridgePorts.sourceMode==='REGISTERED_TEST_SOURCE':e4BridgePorts.sourceMode==='SYNTHETIC_TEST_SOURCE')
     &&executionServices?.runtimeId===e4BridgePorts.scope.runtimeId&&executionServices?.runtimePinHash===e4BridgePorts.scope.runtimePinHash,'BC_E5B_CONFIGURATION');
   const fenceWitness=createFenceWitness(e4BridgePorts.configured?e4BridgePorts.fenceReader:executionFenceWitness);
   check(!e4CurrentPorts.configured||mode==='SYNTHETIC_FIXTURE'&&executionServices!==null&&executionServices.runtimePinHash===e4CurrentPorts.runtime.runtimeHash,'BC_E5_E4_CONFIGURATION');
   const registry=new Map();
   for(const [key,p] of Object.entries(producers)){
-    criterion(key);check(p?.execution==='SYNTHETIC_FIXTURE'&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
+    criterion(key);check((mode!=='ISOLATED_LIVE_TEST'&&p?.execution==='SYNTHETIC_FIXTURE'||mode==='ISOLATED_LIVE_TEST'&&isLiveMoodleConsumer(p))&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
     // Pin methods: mutating a registration object cannot substitute a producer.
     check(!p.bridgeVersion||p.bridgeVersion==='clear-bootcamp-producer-bridge.2'&&typeof p.reference==='function','BC_BRIDGE_VERSION');
-    registry.set(key,{verify:p.verify.bind(p),recheck:p.recheck.bind(p),bridgeVersion:p.bridgeVersion??null,reference:p.reference?.bind(p),close:p.close?.bind(p)});
+    registry.set(key,{dataMode:mode==='ISOLATED_LIVE_TEST'?p.dataMode:'SYNTHETIC_FIXTURE',verify:p.verify.bind(p),recheck:p.recheck.bind(p),bridgeVersion:p.bridgeVersion??null,reference:p.reference?.bind(p),close:p.close?.bind(p)});
   }
   const file=openPrivateDb(directory,'bootcamp.sqlite',{version:BOOTCAMP_STORE_VERSION,instanceId,demoStartedAt,courseOperatorRef,mode,
     policyHash:compiled.policyHash,runtimeMappingHash},schema,tables),{db,transaction:baseTransaction}=file;
@@ -117,7 +120,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     run('UPDATE applications SET decision_id=? WHERE id=?',d.decisionId,a.id);return d;
   }
   function source(a,c,time){
-    if(mode!=='SYNTHETIC_FIXTURE'||!registry.has(c))return null;
+    if(mode==='DISABLED'||!registry.has(c))return null;
     try{
       const g=structuredClone(resolveSource(freeze({participantId:a.participant_id,participantWallet:a.wallet,applicationId:a.id,criterionId:c,
         policyHash:a.policy_hash,runtimeMappingHash:a.mapping_hash})));
@@ -197,7 +200,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     if(measurementInfo.extraEvent)emit(measurementInfo.extraEvent);
     return r;
   }
-  const ready=a=>check(a.status==='ACTIVE'&&mode==='SYNTHETIC_FIXTURE','BC_ACCEPTANCE_DISABLED');
+  const ready=a=>check(a.status==='ACTIVE'&&mode!=='DISABLED','BC_ACCEPTANCE_DISABLED');
   const cas=(a,expected)=>{revision(expected);check(a.revision===expected,'BC_REVISION_CONFLICT');};
   function window(a,time){
     const elapsed=time-demoStartedAt;check(elapsed>=0&&elapsed<(a.initial_received_at===null?1800:3600),'BC_RECEIPT_WINDOW');
@@ -252,7 +255,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
           applicationId:a.id,criterionId:body.criterionId,policyHash:a.policy_hash,runtimeMappingHash:a.mapping_hash,
           expectedRevision:a.revision,authContextHash:sessionHash(context,wallet),nonceHash:p0Hash('NONCE',randomBytes(32).toString('hex')),issuedAt:time,
           expiresAt:Math.min(time+900,guardExpiry(g)),receiptWindowUntilExclusive:demoStartedAt+(a.initial_received_at===null?1800:3600),
-          sourceGuardHash:requestGuardHash(g,version),dataMode:'SYNTHETIC_FIXTURE',...(bridge?{producerVersion:producer.bridgeVersion,producerTrustHash:g.trustHash,
+          sourceGuardHash:requestGuardHash(g,version),dataMode:producer.dataMode,...(bridge?{producerVersion:producer.bridgeVersion,producerTrustHash:g.trustHash,
             plannedEvidenceId:newId('evidence'),plannedEvidenceRevision:(get('SELECT MAX(revision) n FROM evidence WHERE application_id=? AND criterion_id=?',a.id,body.criterionId).n??0)+1}:{})};
         r.requestHash=p0Hash('REQUEST',r);run("INSERT INTO requests VALUES(?,?,?,?,?,?,'PENDING')",r.requestId,a.id,r.criterionId,r.requestHash,r.nonceHash,canonical(r));
         const d=decide(a,time);return projection(command(a,wallet,route,key,body,{requestId:r.requestId,decisionId:d.decisionId},time,{extraEvent:h?'REVERIFICATION_REQUESTED':null}));
@@ -311,7 +314,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
         check(!get('SELECT 1 FROM evidence WHERE bundle_hash=?',safe.proofBundleHash),'BC_PROOF_REPLAY');
         const priorEvidence=get('SELECT id,revision FROM evidence WHERE application_id=? AND criterion_id=? ORDER BY revision DESC LIMIT 1',a.id,r.criterionId);
         const nextRevision=(priorEvidence?.revision??0)+1;check(!bridge||r.plannedEvidenceRevision===nextRevision,'BC_REVISION_CONFLICT');
-        const e=evidenceRecord(safe,r,{evidenceId:bridge?r.plannedEvidenceId:newId('evidence'),evidenceRevision:nextRevision,previousEvidenceId:priorEvidence?.id??null,condition});
+        const e=evidenceRecord(safe,r,{evidenceId:bridge?r.plannedEvidenceId:newId('evidence'),evidenceRevision:nextRevision,previousEvidenceId:priorEvidence?.id??null,condition,dataMode:started.producer.dataMode});
         const reference=started.producer.bridgeVersion?started.producer.reference(candidate,started.request):null;
         if(reference)check(reference.ledgerRequestHash===r.requestHash&&reference.ledgerNonceHash===r.nonceHash,'BC_BRIDGE_REQUEST');
         // Recheck immediately before the first write; callbacks must be synchronous.

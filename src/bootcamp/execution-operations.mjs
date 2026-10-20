@@ -1,3 +1,5 @@
+import {executionCommands} from './execution-commands.mjs';
+import {e4Hash} from './execution-e4-ports.mjs';
 import {randomUUID} from 'node:crypto';
 import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 import {id,hash,revision,epoch} from './model.mjs';
@@ -107,6 +109,18 @@ export function createExecutionOperations({db,transaction,authentication,operato
    .run(reason,canonical(record),r.id,r.revision);event(i,'RUNTIME_SUSPENDED',{generation:r.generation,reason},time);return {status:'BLOCKED',reason};
  }
  const api={
+  plan(context,applicationId,{kind,operationId,expectedChainVersion,preparationId=null}){
+   check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');check(kinds.includes(kind),'BC_E5_KIND');hash(operationId);u64(expectedChainVersion);
+   return withUser(context,applicationId,false,(a,s,time)=>{
+    const d=decision(a),opaque=type=>get('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?',type,type==='APPLICATION'?a.id:d.decisionId)?.opaque_id;
+    const body={expectedRevision:a.revision,expectedLedgerSequence:ledger.sequence(),targetDecisionId:d.decisionId,targetDecisionRevision:d.decisionRevision,targetDecisionHash:d.decisionHash,
+     kind,operationId,caller:kind==='ACCEPT'?e4BridgePorts.runtime.roles.relayer:e4BridgePorts.runtime.roles.registrar,expectedChainVersion,preparationId,authorizationDigest:null};
+    const i={...body,applicationId:a.id,chainApplicationId:opaque('APPLICATION'),chainDecisionId:opaque('DECISION')};
+    const command=executionCommands({db,current,heads,source}).command(i,{verifyHash:false});body.payloadHash=e4Hash(command);
+    if(preparationId){const p=decode(get('SELECT record FROM e3_prepared WHERE application_id=? AND id=?',a.id,preparationId));check(p,'BC_E5_PREPARATION_REQUIRED');body.authorizationDigest=hashTestUnsignedPayload({domain:p.payload.domain,message:p.payload.message}).digest;}
+    return freeze({body,command});
+   });
+  },
   connectBridge(context){
    check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');service(context,'B_CONNECT',null,time=>ensureRuntime(time));
    return createApiExecutionBridge({db,ports:e4BridgePorts,service,live,basis,sameBasis,business,app,current,heads,source,global,runtime,event,fault},context);

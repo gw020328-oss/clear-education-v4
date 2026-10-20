@@ -96,13 +96,13 @@ export function validateCandidate(candidate,request,guard,now){
   check(c.capability==='REFLECTION_REQUIRED_TOPICS.1'||candidate.originalBody===null,'BC_RAW_INPUT');
   return predicate(c,candidate.facts,{acquiredAt:candidate.acquiredAt,originalBody:candidate.originalBody,source:candidate.source});
 }
-export function evidenceRecord(candidate,request,{evidenceId,evidenceRevision,previousEvidenceId,condition}){
+export function evidenceRecord(candidate,request,{evidenceId,evidenceRevision,previousEvidenceId,condition,dataMode='SYNTHETIC_FIXTURE'}){
   return freeze(validateP0Evidence({version:BOOTCAMP_CONTRACT,evidenceId,evidenceRevision,participantId:request.participantId,
     applicationId:request.applicationId,policyHash:request.policyHash,criterionId:request.criterionId,capability:criterion(request.criterionId).capability,
-    dataMode:'SYNTHETIC_FIXTURE',source:structuredClone(candidate.source),acquiredAt:candidate.acquiredAt,verifiedAt:candidate.verifiedAt,
+    dataMode,source:structuredClone(candidate.source),acquiredAt:candidate.acquiredAt,verifiedAt:candidate.verifiedAt,
     facts:structuredClone(candidate.facts),sourceVersion:candidate.sourceVersion,sourceHash:candidate.sourceHash,
     runtimeMappingHash:request.runtimeMappingHash,requestHash:request.requestHash,
-    verification:{sourceStatus:'MOCK_VERIFIED',participantBinding:'VERIFIED',requestBinding:'VERIFIED',integrity:'VERIFIED',freshness:'VERIFIED'},
+    verification:{sourceStatus:dataMode==='SYNTHETIC_FIXTURE'?'MOCK_VERIFIED':dataMode==='LOCAL_LMS_RECORD'?'VERIFIED_LOCAL_API':'VERIFIED_ATTESTOR_SIGNATURES',participantBinding:'VERIFIED',requestBinding:'VERIFIED',integrity:'VERIFIED',freshness:'VERIFIED'},
     condition,rawLocator:structuredClone(candidate.rawLocator),previousEvidenceId,gates:P0_GATES}));
 }
 export function decisionRecord(app,heads,{decisionId,decisionRevision,previousDecisionId,evaluatedAt}){

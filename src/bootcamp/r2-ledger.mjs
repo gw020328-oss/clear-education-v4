@@ -54,7 +54,7 @@ export function validateBridgeReference(r){
     for(const k of ['producerNonceHash','proofBundleHash','trustConfigHash','expectedClaimOwnerHash','recipeHash'])hash(r[k]);epoch(r.validUntilExclusive);
   }else{
     exactKeys(r,[...common,'sourceHash','sourceDataMode','execution','producerUsableForAcceptance','observationHash'],'BC_BRIDGE_REFERENCE');
-    check(r.producer==='offline-moodle-ai-composition.2'&&r.sourceDataMode==='LOCAL_LMS_RECORD'&&r.execution==='OFFLINE_SYNTHETIC_FIXTURE'
+    check(((r.producer==='offline-moodle-ai-composition.2'&&r.execution==='OFFLINE_SYNTHETIC_FIXTURE')||(r.producer==='live-moodle-ai-composition.1'&&r.execution==='OBSERVED_LOCAL_API'))&&r.sourceDataMode==='LOCAL_LMS_RECORD'
       &&r.producerUsableForAcceptance===false,'BC_BRIDGE_REFERENCE');hash(r.sourceHash);if(r.observationHash!==null)hash(r.observationHash);
   }
   for(const k of ['ledgerRequestHash','ledgerNonceHash','producerRequestHash','receiptHash'])hash(r[k]);return r;
