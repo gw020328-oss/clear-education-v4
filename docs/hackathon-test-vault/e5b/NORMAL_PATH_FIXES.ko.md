@@ -36,3 +36,11 @@ root의 `70979e2` 단일 intake 기록을 `9ac174e`로 출처를 남겨 가져�
 5. **검증/리뷰:** 기존 E4/memory/서명+snapshot 165 PASS(212.31초), 확장 snapshot 검사 별도2 PASS(기존1 중복), 네트워크 차단 API store/execution295 PASS(14.68초), 신규 소유 Geth B20 PASS(156.52초), A/B 보존 PASS. 모두 fail/cancel/skip0. memory 명령은 `.github/workflows/hackathon-e5.yml` Frozen E4 목록에 normal-source-compatibility.test.mjs를 더한 것이다. API는 `--import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-execution/*.test.mjs tests/bootcamp-store/*.test.mjs`, B는 `--test --test-concurrency=1 tests/hackathon-test-vault/e5b/*.test.mjs`. 리뷰는 exact record→4개 table 8+19+6+3→기존 E2 승인 예외 순서와 변경 없는 scope/role/current/signature/claim 경계를 확인했다. 실제 source·유료 호출·기존 run3 재실행 0.
 6. **다음 한 작업/소유:** API 담당이 이 guard 커밋을 정상 이력 merge하고 PR102의 관련 검증/공개 이력 검사 후 한 번 push한다. source implementation은 계속 exact937이다. 본 담당 소유는 memory-stage-harness 및 tests/hackathon-test-vault의 보존/지문 검사다. 실제 HR 진단은 본부가 별도로 안내한다.
 7. **종료 작업:** PR21/36 재개, 새 세션/에이전트, 독립 고도화, 자동 PR merge/deploy 없음. 중앙 인계는 root의 기존 문서를 사용한다.
+
+## 2026-10-20 A workflow의 동일 frozen graph 누락
+
+PR102 head1ef53ce의 A run39394319216/job118533146735는 API store→live HR consumer→collector 정적 import가 요구하는 attestor-core를 찾지 못해 키/실제 source 실행 전에 실패했다. B는 이미 prefix 설치가 있었으나 A는 root만 설치했다. A의 설치 단계에 같은 `./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts --no-audit --no-fund`를 추가했다. µWS의 Node JS fallback 경고는 이 오류와 별개다.
+
+깨끗한 archive 작업 사본에 root lockfile graph만 설치한 상태에서 network-guard 아래 `src/bootcamp/store.mjs` import의 `ERR_MODULE_NOT_FOUND @reclaimprotocol/attestor-core`를 재현했다. 이어 위 HR prefix frozen graph 설치 후 동일 import가 통과했다. 브라우저/실제 source/chain/키/paid 호출은 없다. 원본 CI 실패 로그는 그대로 보존한다. A/B preservation 및 36개 v5 source 검사는 PASS다. runtime/source policy/v5 record bytes는 변경하지 않았다.
+
+A workflow가 기존 service intake의 지문 대상이므로 원래 intake를 덮어쓰지 않고 별도 `ci-source-pins.json`에 workflow와 이를 소비하는 두 guard의 정확 before/after만 기록했다. 기존 component/normal/v5 acceptance 기록은 보존했다. 코드 리뷰에서 설치 명령이 B와 일치하고 lifecycle scripts를 허용하지 않으며 다른 작업 단계/권한/테스트는 동일함을 확인했다. 원격 A 성공은 아직 미확인이고 API 담당이 후속 head에서 CI를 확인한다.
