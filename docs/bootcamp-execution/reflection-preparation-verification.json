@@ -2,7 +2,7 @@
   "version": "clear-bootcamp-reflection-preparation-verification.1",
   "date": "2026-10-20",
   "sourceHead": "92387a49a7808af0f7b240021aafcd01edc17253",
-  "status": "LOCAL_SOURCE_VERIFIED_PENDING_OWNER_V6_GUARD_AND_COMBINED_CI",
+  "status": "LOCAL_SOURCE_AND_EXPLICIT_V6_GUARD_VERIFIED_REMOTE_CI_PENDING",
   "scope": "SAME_REQUEST_SOURCE_PACKET_PREPARATION_HUMAN_WAIT_SINGLE_RESUME",
   "changedProductFiles": [
     "src/bootcamp/store.mjs",
@@ -59,7 +59,21 @@
   "nextGeneralApiRecommendedSetting": "GPT-6.1 Sol / High",
   "remainingBlockers": [
     "HR_REVIEWED_TRUST_RECIPE_SIGNER_HOSTED_CONTEXT_AND_SAFE_AUTHENTICATED_COLLECTOR",
-    "OWNER_V6_GUARD_INTAKE_AND_REQUIRED_COMBINED_CHECKS",
+    "REQUIRED_REMOTE_CI_AT_FINAL_COMBINED_HEAD",
     "FRESH_EXACT_PACKET_SINGLE_CALL_USER_APPROVAL_AFTER_INPUTS_READY"
-  ]
+  ],
+  "ownerGuard": {
+    "commit": "7b35bb3dc47d5604f305cc4e063e003dbb1a79a8",
+    "memoryConsumerSha256": "7b80e10bd887179c2fce338570ed31eadca9980cd7b7978e8076896c82cb1b5f",
+    "ownerSensitiveReview": "NO_BLOCKING_FINDINGS_REPORTED_SOURCE_DIFF_READ_BY_INTEGRATOR",
+    "ownerNetworkBlockedPass": 39,
+    "ownerNetworkBlockedLogSha256": "9f65170a2313a11ee95737b80fe7c6c1e6afe489a0d0ceecd029b6c138fedd69",
+    "apiCombinedHead": "2ad4fdf52158a30ca36f22d9e8b80c37e464a902",
+    "apiCombinedGatePass": 11,
+    "apiCombinedGateLogSha256": "07afaf19f2fe8b21696fc89846c09936239d95217b5a5da806e2a1647a0ad8dd",
+    "aAndBPreservation": "PASS",
+    "originalV5AndCurrentV6SourcesEach": 36,
+    "immutableInputs": 8,
+    "actualSourceOrRuntimeActivationAccepted": false
+  }
 }
