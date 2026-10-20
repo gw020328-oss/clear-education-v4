@@ -67,3 +67,7 @@
 5. network-blocked 진단16 PASS, fail/cancel/skip0. 새2개는 실제 loopback 중계의 허용/거부와 Google 본문/cookie/proof 접근0을 검증했다. 관찰기는 기존 HR 두 응답만 유지하고 코드 리뷰에서 변경 범위를 확인했다. 실제 Google 로그인 성공은 아직 미검증이다.
 6. 다음 한 작업은 본부가 이전 실행 정리를 확인한 뒤 단일 진단을 다시 여는 것이다. 여기서는 재실행·동시 브라우저·사용자 로그인 요청을 하지 않는다. 추가 host는 실제 필요 확인 뒤 별도 판단한다.
 7. 새 SDK/scope/가입/보안설정/유료/일반 복구/PR21·36/새 세션/자동 merge·deploy 없음. 공식 attestor가 추가 Google 목적지·연결 메타데이터·TLS 암호문을 중계한다는 점을 진단 문서에 반영했다.
+
+Google ‘다음’ 무반응 후속은 중계 권한을 추가하지 않고 종료 시 고정 후보4개의 거부 CONNECT host/category/count만 내도록 했다. 임의host/URL/본문/계정정보는 보존하지 않는다. `scope:HACKERRANK_LAYOUT_LOGIN_TRANSPORT`의 값은 중계 차단의 한정된 근거이며 계정 보안 차단이나 필수 script 여부를 단정하지 않는다. networkblocked 진단17 PASS, actual재실행0. 본부가 정리 후 단일실행을 소유하며 자세한 후보/해석/제한은 기존 LAYOUT_DIAGNOSTIC 마지막절이다. 별도A CI누락수정727254e는API에인계했다.
+
+본부의 실제 요약 fonts.gstatic.com1/www.google.com17/www.gstatic.com5 및 단일 실행 정상 정리 보고를 받아 HR 진단에 정확한 이3개 host만 추가 허용했다. accounts와합쳐4 exact/443이며 미관찰ssl.gstatic/다른Google/API/서브도메인은거부한다. www.google.com을정적CDN이나필수script로단정하지않는다. 진단17PASS/Google네host본문·cookie·proof관찰0/실제담당재실행0. 추가TLS목적지·메타데이터중계범위를기존진단문서에반영했고본부가단일정상로그인시험을소유한다. source/v5/YBM/P1actualcollector불변.

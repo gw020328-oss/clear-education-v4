@@ -44,3 +44,17 @@ PR102 head1ef53ce의 A run39394319216/job118533146735는 API store→live HR con
 깨끗한 archive 작업 사본에 root lockfile graph만 설치한 상태에서 network-guard 아래 `src/bootcamp/store.mjs` import의 `ERR_MODULE_NOT_FOUND @reclaimprotocol/attestor-core`를 재현했다. 이어 위 HR prefix frozen graph 설치 후 동일 import가 통과했다. 브라우저/실제 source/chain/키/paid 호출은 없다. 원본 CI 실패 로그는 그대로 보존한다. A/B preservation 및 36개 v5 source 검사는 PASS다. runtime/source policy/v5 record bytes는 변경하지 않았다.
 
 A workflow가 기존 service intake의 지문 대상이므로 원래 intake를 덮어쓰지 않고 별도 `ci-source-pins.json`에 workflow와 이를 소비하는 두 guard의 정확 before/after만 기록했다. 기존 component/normal/v5 acceptance 기록은 보존했다. 코드 리뷰에서 설치 명령이 B와 일치하고 lifecycle scripts를 허용하지 않으며 다른 작업 단계/권한/테스트는 동일함을 확인했다. 원격 A 성공은 아직 미확인이고 API 담당이 후속 head에서 CI를 확인한다.
+
+## 2026-10-20 A crash child의 초기 SDK 경고
+
+의존성 수정 후 PR102 head8ce113c A run39395050964/job118535599965는44개 중39 PASS/5 FAIL이었다. 실패5개 모두 공통 crash helper의 exit86은 통과했으나 stdout===0 단언에서1439/1440바이트로 중단했다. **이 기존 실패 실행에서는 그 뒤 f.restart와 후속 복구 검사가 실행되지 않았다.** 원본 CI 실패 기록을 보존하며 성공으로 소급하지 않는다.
+
+별도 child의 APIstore static import를 network-guard 아래 제어 재현했다. LOG_LEVEL 미설정이면 exit0/stdout1566바이트, SDK의 RE2 fallback Pino 경고1건/다른 stdout0이었다. 프로세스 시작 전에 silent를 지정하면 exit0/stdout0이었다. 원문·경로·경고 상세는 출력하지 않고 고정 분류/길이만 확인했다. 바이트 수는 작업본 경로 등에 따라 달라지며 CI 경고와 숫자가 같아야 한다고 보지 않는다.
+
+단일 수정은 **A job env의 LOG_LEVEL:silent**다. 부모 graph 초기 import와 환경을 상속하는 모든 child에 SDK 초기화 전에 적용한다. crash fixture를 동적 import로 다시 쓰거나 출력 스트림을 버리는 변경은 하지 않았다. service/race/crash-child 파일 및 exit86/stdout0/cut/키·nonce/current/복구 단언은 원형을 보존했다. 현재 검토중 ci-source-pins의 버전은 유지하고 새 후보 after 지문과 원본8ce record SHA/Git 참조만 갱신했다. 기존 normative/service/component/normal/v5 및 fixture15개는8ce snapshot과 byte 일치를 확인했다.
+
+표적 검사는 실패했던5 crash cut와 checkpoint race를 포함해 초기9개 중8 PASS/1 FAIL(72.99초)이었다. 다섯 crash cut는 stdout0 및 재시작 뒤 복구/중복 서명·송신 차단까지 통과했다. checkpoint의 두 경우도 child stdout0으로 통과했다. 추가 nonce race 한 건은 child 실행 전 새 환경 준비에서 E5_SETUP으로 실패했고, 해당 새 환경의 소유 컨테이너 STOPPED/bridge REMOVED/chainAndKeysPreserved 기록을 확인했다. 원본 실패를 보존한 뒤 그 nonce race만 한 번 새 환경에서 재시험해1 PASS(11.39초), child2개 stdout0/exit0·87을 확인했다. 환경 준비 원인은 더 세분되지 않았으며 이를 logger 실패로 분류하지 않는다. 전체708/이전 head CI를 반복하지 않았다.
+
+명령은 `LOG_LEVEL=silent ./tools/node --test --test-concurrency=1 --test-name-pattern='durable SEALED|durable private bytes|crash before signing|SEND_STARTED crash|process exits after actual broadcast|two service processes|checkpoint contention' tests/hackathon-test-vault/e5/service.test.mjs` 및 nonce 이름만 지정한 별도 재시험이다. A/B 보존·36 v5 source 검사는 PASS다. 로컬 로그는 소유 e5b/a-silent-crash-targeted.tap와 a-silent-nonce-race.tap에 보존한다. 실제 source/paid/Google 재실행0이며 최종 원격 확인은 API 담당의 새 exact head CI에서 수행한다.
+
+추가 nonce 단독 확인 전 코드·설정 변경은 없었다. 최초 실행시간의 새 환경 metadata를 읽어 E5_SETUP 및 정리 상태를 구분한 뒤, nonce 시험만 새 소유 환경에서 분리한 것이다. 상세 준비 원인은 미확정이며 단독 PASS는 최초 setup 실패의 해결 증거가 아니다. 원본 로그·해당 metadata 참조·전후 조건은 소유 e5b/a-silent-setup-failure-summary.json에 보존한다. 이 최초 준비 실패는 미해결 기록으로 남기고 추가 재실행/일반 복구로 확대하지 않는다.
