@@ -1,5 +1,7 @@
 # 기존 로그인 Chrome에서 새 요청 결합 proof로 연결하는 경로 검토
 
+2026-10-20 후속: [과거 성공 대조와 준비 연결](PREPARED_SOURCE_REVIEW.ko.md)은 공식 Community 비밀번호 복구 후보의 확인 범위와 새 `prepareHackerRankSource`를 기록한다. 아래 검토 당시 없던 동일 owner의 `pins → collectLease` seam은 합성 구현했으나 관리형 로그인/실제 recipe/trust/host 연결은 여전히 미완료다. 아래 외부 인증 차단을 해소한 것으로 읽지 않는다.
+
 2026-10-20. 기준 `ced12b1e66e6c82aa86eabb88474247f2dcd5b10`, 작업본 `clear-hackerrank-bootcamp`, 브랜치 `codex/hackathon-normal-source-entry`. 이번 산출물은 **공식 지원 후보 하나와 현재 연결 불가 지점**이다. 실제 증명 성공이나 새 확장 도입 승인이 아니다.
 
 ## 결론과 선택한 후보
