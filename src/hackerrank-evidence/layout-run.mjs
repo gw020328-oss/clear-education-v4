@@ -9,15 +9,31 @@ import {check,EvidenceError} from './values.mjs';
 // Transport only. Google login content is outside the source observer.
 // No Google suffix wildcard or speculative static/API hosts.
 export const layoutTransportHost=host=>host==='accounts.google.com'||['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d));
+// Observation candidates are not transport permissions. Never retain an
+// arbitrary denied host, URL, request data or account-derived label.
+const googleResourceCandidates=new Map([
+ ['ssl.gstatic.com','GOOGLE_STATIC_CANDIDATE'],
+ ['www.gstatic.com','GOOGLE_STATIC_CANDIDATE'],
+ ['fonts.gstatic.com','GOOGLE_STATIC_CANDIDATE'],
+ ['www.google.com','GOOGLE_RESOURCE_CANDIDATE'],
+]);
+export function createLayoutTransportDiagnostics(){
+ const counts=new Map();
+ return {
+  allowHost(host){const allowed=layoutTransportHost(host);if(!allowed&&googleResourceCandidates.has(host))counts.set(host,Math.min(1000,(counts.get(host)??0)+1));return allowed;},
+  summary(){return Object.freeze([...counts].sort(([a],[b])=>a.localeCompare(b)).map(([host,count])=>Object.freeze({host,category:googleResourceCandidates.get(host),count})));},
+ };
+}
 
 // No proof API, cookie API, approval/signing key, submit port or payment port.
 export async function runHackerRankLayout(session,{signal,input=process.stdin,output=console.log,openClient=openOfficialClient,openRoute=createRoute,launchBrowser=startChrome}={}){
+ const transportDiagnostics=createLayoutTransportDiagnostics();
  const cancelled=new AbortController(),scope=AbortSignal.any([signal,cancelled.signal,AbortSignal.timeout(15*60*1000)].filter(Boolean));
  let connection,route,browser,capture,lines,abort,live,readyTask,phase='MANAGED_WORKER';
  try{
   check(process.env.CLEAR_LOCKED==='1'&&session&&typeof session.path==='string','LAYOUT_MANAGED_WORKER');
   phase='ATTESTOR_CONNECT';connection=await openClient({signal:scope,proofMode:false});
-  phase='LOCAL_ROUTE';route=await openRoute({client:connection.client,signal:scope,allowHost:layoutTransportHost});
+  phase='LOCAL_ROUTE';route=await openRoute({client:connection.client,signal:scope,allowHost:transportDiagnostics.allowHost});
   live=AbortSignal.any([scope,route.signal]);
   phase='CHROME_START';browser=await launchBrowser(session,{synthetic:false,proxyUrl:route.proxyUrl,headless:false,signal:live});
   phase='CHROME_TARGET';const {targetInfos}=await browser.send('Target.getTargets'),page=targetInfos.find(t=>t.type==='page');check(page,'LAYOUT_BROWSER_PAGE');
@@ -46,6 +62,7 @@ export async function runHackerRankLayout(session,{signal,input=process.stdin,ou
   try{await capture?.close();}catch{failed=true;}
   cancelled.abort();
   for(const close of [()=>browser?.close(),()=>route?.close(),()=>connection?.close()])try{await close();}catch{failed=true;}
+  output(JSON.stringify({scope:'HACKERRANK_LAYOUT_LOGIN_TRANSPORT',deniedGoogleResources:transportDiagnostics.summary()}));
   if(failed){const failure=new EvidenceError('LAYOUT_CLEANUP_FAILED');failure.phase='TRANSPORT_CLEANUP';throw failure;}
  }
 }

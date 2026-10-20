@@ -60,3 +60,13 @@ HR 형식 진단 경로만 정확한 `accounts.google.com:443` 중계를 추가�
 이 허용은 TLS 중계만 위한 것이다. 관찰기의 고정 HackerRank dashboard/certificate 범위는 그대로이며 Google popup과 같은 탭 Google 응답 모두 본문 읽기 0건으로 검사한다. 실제 OAuth URL/state/code·사용자 화면·쿠키를 로그나 fixture로 복사하지 않는다.
 
 수정 후 작은 합성 검사에서 exact Google CONNECT 허용, 유사 도메인·서브도메인·Google API/미확인 정적 host·비443 중계 거부, Google 본문/cookie/proof 접근 0을 확인한다. 실제 재실행은 본부가 기존 실행 정리를 확인한 뒤 위 고정 Node 명령으로 한 번 진행한다. 여기서는 브라우저를 열거나 사용자에게 로그인을 요청하지 않는다.
+
+## Google ‘다음’ 무반응의 host 수준 근거
+
+본부의 후속 실행은 Google 로그인 화면을 열었으나 사용자가 ‘다음’이 동작하지 않는다고 보고했다. 원인이 정적 리소스 중계 403인지 계정 보안 제한인지는 아직 확정하지 않는다. 실제 OAuth URL·화면 원문·계정 정보는 기록하지 않는다.
+
+새 진단은 기존 HR 전용 `allowHost` wrapper에서 **거부된 CONNECT** 중 다음 네 개의 고정 후보만 횟수를 센다: `ssl.gstatic.com`, `www.gstatic.com`, `fonts.gstatic.com`, `www.google.com`. 이 목록은 관측 후보이며 **중계 허용 목록이 아니다**. 앞의 세 개는 GOOGLE_STATIC_CANDIDATE, 마지막은 GOOGLE_RESOURCE_CANDIDATE로 표시한다. 모두 계속 거부하며 확인되지 않은 host를 추가 허용하지 않았다.
+
+종료·정리 뒤 `scope:HACKERRANK_LAYOUT_LOGIN_TRANSPORT` 줄의 `deniedGoogleResources`에 host/category/count만 출력한다. 각 count는1000 상한, 최대4행이다. URL/path/query/header/body/계정정보와 다른 임의 host는 저장·출력하지 않는다. Google 본문·cookie·OAuth 응답·callback·proof 관찰은 계속0이며 기본 route/YBM도 변경하지 않았다. 빈 목록은 이 네 후보의 거부 근거가 없다는 뜻이고 다른 원인까지 배제하지 않는다. 거부 목록이 있어도 host만으로 해당 리소스가 필수 script임을 확정하지 않는다.
+
+본부는 이전 실행 정리를 확인한 뒤 같은 명령으로 한 번 실행하고, 증상이 재현되면 ready를 입력하지 않고 close로 마친 뒤 위 요약만 확인한다. 이후 실제 거부 근거와 필요한 리소스를 대조해 정확한 host 하나의 허용 여부를 결정한다. 담당자는 별도 창을 열지 않았다. 합성 진단17개가 통과했고 임의 host 비보존·카운터 상한·run별 초기화·실제 wrapper 연결/종료 요약·기존 Google 관찰0을 확인했다. 실제 Google ‘다음’ 성공은 아직 미검증이다.

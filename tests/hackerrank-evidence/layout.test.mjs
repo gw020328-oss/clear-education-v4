@@ -5,13 +5,28 @@ import {setImmediate as tick} from 'node:timers/promises';
 import http from 'node:http';
 import {inspectSourceLayout} from '../../src/hackerrank-evidence/layout-review.mjs';
 import {createLayoutCapture} from '../../src/hackerrank-evidence/layout-capture.mjs';
-import {runHackerRankLayout,layoutTransportHost} from '../../src/hackerrank-evidence/layout-run.mjs';
+import {runHackerRankLayout,layoutTransportHost,createLayoutTransportDiagnostics} from '../../src/hackerrank-evidence/layout-run.mjs';
 import {createRoute,allowedHost} from '../../src/ybm-collector/route.mjs';
 import {FakeClient} from '../ybm-collector/fake-client.mjs';
 import {ACCOUNT_URL,CERTIFICATE_URL} from '../../src/hackerrank-evidence/recipes.mjs';
 const account='<script type="application/json">{"props":{"pageProps":{"current_hacker":{"username":"SYNTHETIC_SECRET_USER"}}},"SYNTHETIC_SECRET_KEY":{"username":"SYNTHETIC_SECRET_USER"}}</script>';
 const certificate=JSON.stringify({data:[{username:'SYNTHETIC_SECRET_USER',certificate_id:'SYNTHETIC_SECRET_ID',certificate_name:'SYNTHETIC_SECRET_NAME',status:'SYNTHETIC_SECRET_STATUS',other:'SYNTHETIC_SECRET_EXTRA'}]});
 const certUrl=CERTIFICATE_URL+'?username=SYNTHETIC_SECRET_USER';
+test('login diagnostics retain only fixed denied Google resource host categories and bounded counts',()=>{
+ const diagnostics=createLayoutTransportDiagnostics();
+ for(let i=0;i<1002;i++)assert.equal(diagnostics.allowHost('www.gstatic.com'),false);
+ assert.equal(diagnostics.allowHost('ssl.gstatic.com'),false);
+ assert.equal(diagnostics.allowHost('www.google.com'),false);
+ for(const host of ['SYNTHETIC_SECRET_HOST.example','SYNTHETIC_SECRET_HOST.gstatic.com','www.gstatic.com.evil.example','www.googleapis.com'])assert.equal(diagnostics.allowHost(host),false);
+ assert.equal(diagnostics.allowHost('accounts.google.com'),true);assert.equal(diagnostics.allowHost('www.hackerrank.com'),true);
+ assert.deepEqual(diagnostics.summary(),[
+  {host:'ssl.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1},
+  {host:'www.google.com',category:'GOOGLE_RESOURCE_CANDIDATE',count:1},
+  {host:'www.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1000},
+ ]);
+ assert.doesNotMatch(JSON.stringify(diagnostics.summary()),/SYNTHETIC_SECRET/);
+ assert.deepEqual(createLayoutTransportDiagnostics().summary(),[]);
+});
 test('HR login CONNECT allows exact Google account host and rejects unapproved targets before attestor RPC',async t=>{
  const client=new FakeClient(),route=await createRoute({client,allowHost:layoutTransportHost});t.after(()=>route.close());
  const proxy=new URL(route.proxyUrl);
@@ -91,10 +106,11 @@ test('runner cleanup closes every owned transport after ready and terminal close
  try{
   const input=new PassThrough(),browser=fakeBrowser(),closed=[],messages=[];
   const result=await runHackerRankLayout({path:'/synthetic/owned-session'},{input,output:m=>{messages.push(m);if(m.includes('ready'))setImmediate(()=>input.write('ready\n'));},
-   openClient:async()=>({client:{},close:async()=>closed.push('client')}),openRoute:async()=>({signal:new AbortController().signal,proxyUrl:'http://127.0.0.1:1',close:async()=>closed.push('route')}),
+   openClient:async()=>({client:{},close:async()=>closed.push('client')}),openRoute:async({allowHost})=>{assert.equal(allowHost('www.gstatic.com'),false);return {signal:new AbortController().signal,proxyUrl:'http://127.0.0.1:1',close:async()=>closed.push('route')};},
    launchBrowser:async(_session,{signal})=>{const send=browser.send.bind(browser);browser.send=async(name,...args)=>{signal.throwIfAborted();const r=await send(name,...args);if(name==='Network.setBypassServiceWorker')setImmediate(()=>input.write('close\n'));return r;};return browser;}});
   assert.equal(result.apiAcceptance,'HOLD');assert.deepEqual(closed,['route','client']);assert.equal(browser.calls.filter(c=>c[0]==='close').length,1);assert.equal(browser.handlerCount(),0);
   assert.doesNotMatch(messages.join('\n'),/SYNTHETIC_SECRET/);
+  assert.deepEqual(messages.filter(m=>m.startsWith('{')).map(m=>JSON.parse(m)),[{scope:'HACKERRANK_LAYOUT_LOGIN_TRANSPORT',deniedGoogleResources:[{host:'www.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1}]}]);
  }finally{if(previous===undefined)delete process.env.CLEAR_LOCKED;else process.env.CLEAR_LOCKED=previous;}
 });
 test('runner rejects outside managed worker before transport and redacts connection failures',async()=>{
