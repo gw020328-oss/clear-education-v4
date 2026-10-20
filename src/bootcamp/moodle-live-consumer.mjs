@@ -96,7 +96,7 @@ export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,reso
      check(bytesHash(Buffer.from(text,'utf8'))===entry.packet.inputHash&&entry.current(),'BC_LIVE_AI_PREPARATION_CHANGED');
      iterator=entry.iterator;
      const review=borrowedReview=await reviewReflection({...entry.args,signal,packet:entry.packet,codeState:entry.fixed.codeState,day:entry.fixed.day,
-      currentCodeState:reflectionHost.codeState,currentDay:reflectionHost.day});
+      currentCodeState:()=>reflectionHost.codeState(),currentDay:()=>reflectionHost.day()});
      check(entry.current(),'BC_LIVE_AI_PREPARATION_STALE');const done=await iterator.next(review);check(done.done,'BC_LIVE_AI_PREPARATION_STATE');
      entry.state='CONSUMED';clearTimeout(entry.timer);return done.value;
     }

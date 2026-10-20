@@ -22,7 +22,7 @@ async function fixture(t){
     timecreated:START-50,timemodified:START-10,capabilities:{view:true},isdeleted:false,isprivatereply:false},warnings:[]}};
   assert.ok(method in responses,'unexpected network method');return structuredClone(responses[method]);}});
  const consumer=createLiveMoodleConsumer({criterionId:'reflection-topics',withReader,resolvePin:pin,resolveLease:()=>state,modelVersion:'gemini-3.5-flash-lite',now:()=>f.time,
-  reflectionHost:{codeState:()=>code,day:()=>day},reviewReflection:async args=>{aiCalls++;seen=args;return review(args);}});
+  reflectionHost:{codeState(){assert.equal(this.marker,true);return code;},day(){assert.equal(this.marker,true);return day;},marker:true},reviewReflection:async args=>{aiCalls++;seen=args;return review(args);}});
  f.configuration.producers={'reflection-topics':consumer};f.configuration.resolveSource=consumer.resolveSource;f.restart();
  const app=f.create(),issue=()=>f.store.issueBridgeRequest(f.aliceContext,app,{criterionId:'reflection-topics',expectedRevision:f.view(app).revision},f.key());
  const request=issue(),requestBody={requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision};
@@ -41,7 +41,8 @@ test('packet preparation returns no raw or model result; approval wait precedes 
  await assert.rejects(x.collect(),/BC_PRODUCER_FAILED/);assert.equal(x.aiCalls,1);assert.ok(x.calls>count);
  assert.equal(x.seen.packet,p.packet);assert.equal(reflectionContextHash(x.seen.context),p.packet.contextHash);
  assert.equal(x.seen.context.requestHash,x.f.store.getRequest(x.f.aliceContext,x.app,x.requestBody.requestId,{bridge:true}).record.requestHash);
- assert.deepEqual(x.seen.codeState,p.codeState);assert.equal(x.seen.day,p.day);assert.equal(x.seen.timeoutMs,30000);
+ assert.deepEqual(x.seen.codeState,p.codeState);assert.equal(x.seen.day,p.day);
+ assert.deepEqual(x.seen.currentCodeState(),p.codeState);assert.equal(x.seen.currentDay(),p.day);assert.equal(x.seen.timeoutMs,30000);
  assert.equal(x.seen.context.expiresAtMs,(START+240)*1000);assert.equal(x.f.counts().evidence,0);assert.equal(x.status(),'PENDING');
  await assert.rejects(x.collect(),/BC_PRODUCER_FAILED/);assert.equal(x.aiCalls,1);await assert.rejects(x.prepare(),/BC_LIVE_AI_PREPARATION_REQUEST/);
 });
