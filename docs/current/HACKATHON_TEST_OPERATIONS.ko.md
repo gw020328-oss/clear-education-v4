@@ -237,3 +237,13 @@ PR100의 명시 B 포트와 현 API 구현을 재사용하며 불필요한 새 �
 | 두 화면 결과 인계 | 기존 E3 participant/operator DTO | 위 동일 실행의 API 결과·단계 상태를 web/ 소유자에게 인계 |
 
 **단일 조립·실행 명령:** API 소유자가 실제 entry point와 필요한 로컬 입력을 마무리 중이며 아직 실행 가능한 명령이 확정되지 않았다. 명령·입력 준비·단계별 tx 결과를 이 인수표와 실행 기록에 함께 고정한다. 준비/합성 검사를 실제 성공으로 표시하지 않는다. 실제 로그인이나 새 유료 호출이 필요하면 준비된 최소 행동·기존 예산 여부를 제시한 뒤 진행하며, 모의 응답으로 대체하지 않는다.
+
+2026-10-20 새 실행통합 인수: API `ff07743`의 `openLiveContext({preparationPath,withReader,hackerRank:{pins,collectLease},reviewReflection})` 포트를 새 HR·Moodle/AI 담당과 대조했다. 준비 파일과 실제 실행의 신청은 다르며 **실제 원천 결합은 openLiveContext 반환 metadata의 applicationId/participantId 및 collectLease 요청**을 따른다. constructor 자체가 새 신청을 만들므로 HR 준비 전 readiness 검사로 실행하지 않는다. Moodle은 소유 `withReader`를 주입하고 고정 신청의 query/collect는 사용하지 않는다. AI 결과는 같은 API 모듈 트리에서 생성한 private brand를 유지한다.
+
+현재 정확한 차단은 두 가지다. (1) HR live recipe·registry signer·hosted context가 미확정이며, 기존 상위 수집기가 내부에서 owner/전용 Chrome을 생성하므로 사전 pins→후속 collectLease 계약에 바로 넣을 수 없다. (2) AI 승인은 source expiry까지 포함한 이번 exact packet의 planHash/contextHash/codeHead/day에 결합돼야 하는데, 현재 callback 내부의 승인 대기는 collectBridge 전체30초 안에 들어간다. 사전 원문 승인만으로 미래 packet을 자동 승인하지 않는다. 다음 API 단위는 HR 안전 경로 확정 뒤 **동일 요청·source handle의 packet 준비/승인 대기와 AI30초 실행을 분리하는 최소 접점**이며 원래240초·권한/요청 만료를 유지해야 한다. 원문 수명 접점 변경은 Astra / High의 실질 경계 검토 대상으로 본부에 알렸다.
+
+이번 대조에서는 제품 소스·고정 pin 변경0, 새 신청/realm/lease0, 새 source/AI/체인 거래0, 성공 run3·전체 시험 재실행0이다. API 추천 Sol / High와 실제 모델 독립 미검증을 구분한다. 두 외부 준비가 끝나기 전 유료 승인 요청이나 fresh 실행을 시작하지 않는다.
+
+후속 승인 단위: 본부가 HR와 독립적인 AI packet 준비/승인 대기/실행 분리를 Astra / High로 지정했다. API `5cc2c3660789cb19b721deb151c2e058cf506ee6`는 인증된 `prepareBridgeReflection`과 실제 entry의 `collectSources({prepareReflection:true})`→승인 뒤 같은 `collectSources()` 재개를 구현했다. 같은 request/source handle/packet/code/day를 유지하고 source240초·준비 네트워크30초·실행30초를 연장하지 않는다. code/day·원문/format·권한/요청 변경·만료·한번소비/늦은 결과 거부 등 신규20 포함 관련103/103이 통과했다. 실제 AI/HR 수락·체인 양성은 미실행이다. 최초102/103 실패는 무승인 fixture의 codeHead 누락을 먼저 거부한 시험 예상 오류로 보존한다.
+
+[v6 후보 pin](../../specs/bootcamp/hackathon-test-memory-source-intake-v6.json)은 실제 변경된 store/live Moodle consumer/live entry 세 파일만 갱신하며 v5 및36개 원본 소스는 원래 Git snapshot으로 보존한다. 금고 담당의 명시 소비·경계 검토/필요 결합검증 전에는 최종 결합 인수가 아니다. 이 민감 수명 단위를 마친 뒤 일반 API 작업 추천은 Sol / High로 되돌린다. 런타임 모델 ID는 독립 확인하지 못했다.

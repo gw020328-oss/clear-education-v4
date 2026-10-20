@@ -31,3 +31,7 @@ HackerRank [비수락 형식 진단 안내](https://github.com/gw020328-oss/clea
 최종 CI 보완: A의 SDK 누락은 고정 HR graph 설치로, 새 SDK 초기 RE2 경고의 stdout 오염은 프로세스 시작 전 job env silent로 각각 제어 원인을 확인했다. 제품 source937/v5 및 crash fixture/exit86/stdout0/cut/복구 단언은 유지했다. 새 ff07743에서 A 서비스44·기존 E4 164, B 및 모든 Public/Mac 검사가 통과했다. 추가 local nonce 대조의 E5_SETUP1건은 원인 미확정으로 남기며 별도1PASS로 소급 해결하지 않는다.
 
 별도 미해결: root 문서 headc9의 push run39395283156 Linux 저장소·초기화 단계가 설정15분을 넘겨18분 이상 정체했다. 사전 metadata를 보존하고 정상 취소 요청한 뒤20분에 취소 완료됐으나 job API와 전체 workflow archive에 Linux 로그가 없다. 정확한 개별 test·runner/코드 원인은 미확정이고 소스 수정·같은 head 재실행0이다. 같은 head PR3/3 또는 이후 CI 성공으로 이를 해결 처리하지 않는다. 이 제한은 기계 인수표에 별도로 고정하며 PR78은 Draft다.
+
+2026-10-20 새 담당 인수: 본부가 사용자 요청에 따라 HR `01a158a8-8a98-78e2-a6e5-9c4a5332a70b`, Moodle·AI `01a158a8-900a-7662-bccc-557f553d21ea`, 실행통합 `01a158a8-96c6-7d31-bf99-1468c9768992`를 지정했다. 실행통합은 API 및 이 공통 문서/specs 소유를 합쳐 인수하며 기존 세션은 재개시키지 않는다. 이후 새 채팅/하위 에이전트 추가 생성은 없다. 위 생성 전 표기는 당시 기록이다.
+
+새 소작업에서 기존 API 포트와 두 원천 담당의 계약을 대조했다. HR은 검토 pins/안전 수집 경로 미확정으로 제공 불가이며, AI의 exact packet 승인 대기가 현재 collectBridge 전체30초 안에 들어가는 별도 순서 누락도 확인했다. [첫 정상 addendum](HACKATHON_TEST_OPERATIONS.ko.md)의 최신 단락과 기계 인수표를 따른다. 새 신청·원천·유료·체인 실행0, 소스/pin 변경0이다. 원래240초 자료 유효시간을 유지한 packet 준비/승인→AI30초 분리는 다음 API 소작업이며, HR 경로 확정 전에 가정으로 구현하지 않는다.
