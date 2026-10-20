@@ -1,3 +1,4 @@
+import {isLiveReclaimConsumer} from './reclaim-live-consumer.mjs';
 import {isLiveMoodleConsumer} from './moodle-live-consumer.mjs';
 import {isCanonicalProcedurePorts} from './execution-development.mjs';
 import {randomBytes,randomUUID} from 'node:crypto';
@@ -77,7 +78,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   check(!e4CurrentPorts.configured||mode==='SYNTHETIC_FIXTURE'&&executionServices!==null&&executionServices.runtimePinHash===e4CurrentPorts.runtime.runtimeHash,'BC_E5_E4_CONFIGURATION');
   const registry=new Map();
   for(const [key,p] of Object.entries(producers)){
-    criterion(key);check((mode!=='ISOLATED_LIVE_TEST'&&p?.execution==='SYNTHETIC_FIXTURE'||mode==='ISOLATED_LIVE_TEST'&&isLiveMoodleConsumer(p))&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
+    criterion(key);check((mode!=='ISOLATED_LIVE_TEST'&&p?.execution==='SYNTHETIC_FIXTURE'||mode==='ISOLATED_LIVE_TEST'&&(isLiveMoodleConsumer(p)||isLiveReclaimConsumer(p)))&&p.capability===criterion(key).capability&&typeof p.verify==='function'&&typeof p.recheck==='function','BC_PRODUCER');
     // Pin methods: mutating a registration object cannot substitute a producer.
     check(!p.bridgeVersion||p.bridgeVersion==='clear-bootcamp-producer-bridge.2'&&typeof p.reference==='function','BC_BRIDGE_VERSION');
     registry.set(key,{dataMode:mode==='ISOLATED_LIVE_TEST'?p.dataMode:'SYNTHETIC_FIXTURE',verify:p.verify.bind(p),recheck:p.recheck.bind(p),bridgeVersion:p.bridgeVersion??null,reference:p.reference?.bind(p),close:p.close?.bind(p)});
@@ -268,7 +269,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     },
     async collect(context,applicationId,body,key,{signal,timeoutMs=5000,bridge=false}={}){
       exactKeys(body,['requestId','expectedRevision'],'BC_COLLECT_BODY');id(body.requestId);revision(body.expectedRevision);
-      check(Number.isSafeInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=30000,'BC_TIMEOUT');
+      check(Number.isSafeInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=(mode==='ISOLATED_LIVE_TEST'?300000:30000),'BC_TIMEOUT');
       const route=(bridge?'collect2:':'collect:')+applicationId;
       const started=access(context,applicationId,true,(a,wallet,time)=>{
         const prior=replay(wallet,route,key,body);if(prior)return {prior:projection(prior)};
@@ -300,7 +301,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
           check(!controller.signal.aborted,'BC_CANCELLED');
           access(context,applicationId,true,a=>{cas(a,started.request.expectedRevision);check(isAuthorized(),'BC_COMMIT_AUTHORITY');});
           return started.producer.verify(started.request,{signal:controller.signal,isAuthorized});}),
-          new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('BC_PRODUCER_TIMEOUT'));},timeoutMs);})]);
+          new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('BC_PRODUCER_TIMEOUT'));},mode==='ISOLATED_LIVE_TEST'?Math.min(timeoutMs,Math.max(0,(started.request.expiresAt-epoch(now()))*1000)):timeoutMs);})]);
       }catch(error){failure=error;}finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
       reconcile(applicationId);
       try{return access(context,applicationId,true,(a,wallet,time)=>{

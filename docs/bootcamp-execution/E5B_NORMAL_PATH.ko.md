@@ -25,3 +25,13 @@
 회귀453개 중452개가 통과했고 한 건은 E2 enum 변경에 따른 구정본SHA 직접비교였다. 구 v1핀은 보존하고 [새 delta](normal-consumer-source-delta.json)로 원본Git snapshot과 현재 owner변경 SHA를 각각 검증했다. 해당 수정·AI brand 검사16개, 추가 API/원자종료·현재성 회귀91개 통과. live consumer의 네트워크 모사는 시험용이며 실제 source 성공 건수에 합산하지 않는다.
 
 남은 필수 입력은 fresh request-bound HackerRank pair/신뢰설정·새 실제 Moodle 자료·신규 단1회 AI 승인이다. 실제 원천 전체 연결과100TEST 정상 지급이 함께 확인되기 전에는 완료로 보고하지 않는다. 다음 유료 승인 질문은 코드와현재 원문 packet이 준비된 뒤 통합 소유자가 담당한다.
+
+## API 소유 인계 7항목
+
+1. **성공/차단:** run3 합성원천의 실제 격리100TEST 수령·중복거부 완료. 실제 HR recipe/registry/context·managed worker/로그인 UI·fresh source 및 AI새1call 승인은 미완료여서 전체 실제 시연은 차단이다. UNCONFIGURED를 긍정 판정으로 바꾸지 않는다.
+2. **작업본/브랜치/PR:** `workspaces/clear-bootcamp-api-store`, `codex/bootcamp-e5-api-bridge`, checkpoint `9b41ad9` 및 뒤 소유 커밋, [Draft PR102](https://github.com/gw020328-oss/clear-education-v4/pull/102). 정상 인수는 AI1276/P1 a758와 E2 4d 포함이다. 자동 병합하지 않는다.
+3. **소유/보존:** `src/bootcamp/*live-consumer.mjs`, `store/model/procedure/execution-*`, `tools/bootcamp/*`는 API 소유. 키·쿠키·proof·token을 인계 문서에 복사하지 않는다. private 아래 준비 신청과 만료 window, run1/2 실패 및 run3 성공의 DB·체인·TEST 키를 보존한다. 실제 원천 준비의 옛 mapping은 HR UNCONFIGURED 그대로다.
+4. **명령/환경/pin:** 합성 정상 명령은 위 기록을 재사용하고 성공 run3는 반복하지 않는다. 실제 연결은 `tools/bootcamp/live-context.mjs`의 `openLiveContext({preparationPath,withReader,hackerRank:{pins,collectLease},reviewReflection})` → `collectSources()` → `pay()` → `close()`다. 아직 실제 host HR source 설정이 없으므로 호출하지 않는다. `prepareLiveInput({hackerRankPins,identityPreparationPath})`는 REVIEWED pins에 새 불변 mapping이 필요할 때 기존 TEST identity를 재사용할 수 있다. 새 환경은 실제 시작 직전에만 만든다. 구 intake v1–v4와 새 `normal-consumer-source-delta.json`·`normal-chain-verification.json`을 함께 읽는다.
+5. **검증 구분:** source/P1/API·AI 관련282개와 전용 거부경계8개 네트워크 차단 시험 통과. 실제 hosted HR proof0·새AI호출0·실제source 전체 지급0다. PR102 원격 source pin 검사는 구 E2/API snapshot의 명시 후속 인수 대기이며 원본 실패 로그를 보존한다. 합성 입력의 실제 chain 지급 성공과 혼용하지 않는다.
+6. **다음 한 작업:** P1 소유가 실제 trust/managed login 입구를 준비하면 정확 pins와 request-bound collector callback만 연결한다. `readHackerRankCollectorLease`를 같은 module tree에서 직접 호출하여 candidate/nonce/request/participant/wallet/hash/기한을 재검사한다. HR900초 원천창을 먼저 열고 Moodle각240초·AI30초를 마지막에 취득한다. live collection command 최대300초도 request/min lease 잔여 이하다. 원래 source freshness/120·600초·금액·수령인·배정/재사용 guard는 유지한다. 새 원천이 준비되면 root가 고정 packet/code 기준 AI최대1call 새 승인을 맡는다.
+7. **끝난 작업:** PR21·PR36 검토나 과거 플랫폼 조사로 돌아가지 않는다. 첫 실제 정상 시연 이전의 새 기능·복구 확대·중복 평가·새 세션·에이전트는 진행하지 않는다.

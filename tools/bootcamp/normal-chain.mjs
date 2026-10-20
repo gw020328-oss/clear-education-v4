@@ -3,7 +3,6 @@
 import {randomBytes} from 'node:crypto';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {DatabaseSync} from 'node:sqlite';
 import {Contract,JsonRpcProvider} from 'ethers';
 import {createEnvironment,environmentRecord,ownedTestWallet,stopEnvironment,parkEnvironment} from '../../src/hackathon-test-vault/e5/environment.mjs';
 import {ExecutionReader} from '../../src/hackathon-test-vault/e5/reader.mjs';
@@ -64,7 +63,7 @@ export async function runSyntheticNormalChain(){
  try{
   stage('NEW_OWNED_CHAIN');
   provider=new JsonRpcProvider(m.endpoint,undefined,{cacheTimeout:-1,batchMaxCount:1});provider.pollingInterval=50;
-  const reader=new ExecutionReader(m),participant=ownedTestWallet(id,'recipient'),operator=ownedTestWallet(id,'terminator');
+  const participant=ownedTestWallet(id,'recipient'),operator=ownedTestWallet(id,'terminator');
   auth=createApplicationService({directory:join(dir,'api-auth'),origin:'https://clear-normal.example.invalid',chainId:Number(m.chainId),instanceId:m.instanceId,participants:[participant.address],operators:[operator.address],now});
   const login=async wallet=>{const q=auth.challenge({wallet:wallet.address,chainId:Number(m.chainId)}),r=auth.login({nonce:q.nonce,signature:await wallet.signMessage(q.message)},q.browserToken);return {token:r.token,wallet:r.wallet,chainId:Number(m.chainId),csrf:r.csrf};};
   const user=await login(participant),op=await login(operator),serviceContext=Object.freeze({});
