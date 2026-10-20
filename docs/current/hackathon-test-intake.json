@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-20",
-  "repositoryPlanRevision": 23,
+  "repositoryPlanRevision": 24,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -864,12 +864,12 @@
       "ADDITIONAL_MAC_WINDOWS_INVESTIGATION"
     ],
     "singleAssemblyCommand": null,
-    "singleAssemblyCommandStatus": "API_OWNER_IMPLEMENTING_NOT_YET_EXECUTABLE",
+    "singleAssemblyCommandStatus": "API_NORMAL_DRIVER_IMPLEMENTED_ACTUAL_HR_SAFE_PROOF_ENTRY_NOT_CONNECTED",
     "stageIntakeTable": "docs/current/HACKATHON_TEST_OPERATIONS.ko.md#2026-10-19--첫-정상-1건-우선-addendum",
     "firstExecution": {
       "applicationId": null,
-      "sourceMoodle": "LOCAL_SYNTHETIC_MOODLE_HTTP_PREPARED_COMMON_CONSUMER_NOT_CONNECTED",
-      "sourceHackerRank": "COLLECTOR_CORE_PREPARED_REAL_RECIPE_SIGNER_AND_LOGIN_DIAGNOSTIC_PENDING",
+      "sourceMoodle": "LOCAL_GENERATED_DEMO_HTTP_SOURCE_AND_LIVE_CONSUMER_READY_NOT_FRESH_COLLECTED",
+      "sourceHackerRank": "EXISTING_CHROME_AUTHENTICATED_SCREEN_CONFIRMED_REQUEST_BOUND_CRYPTOGRAPHIC_PROOF_NOT_CONNECTED",
       "sourceAi": "FIXED_SINGLE_CALL_LIVE_BOUNDARY_REVIEWED_NO_FRESH_CALL_APPROVAL",
       "remainingApprovedPaidCalls": 0,
       "sameDecisionConsents": false,
@@ -880,7 +880,7 @@
       "receivedAtoms": null,
       "duplicateRefusalVerified": false,
       "twoViewsResultHandedOff": false,
-      "status": "WAITING_FOR_REAL_SOURCE_ENTRY_PRIOR_UNCOLLECTED_PREPARATION_WINDOW_EXPIRED",
+      "status": "BLOCKED_ON_SAFE_ACTUAL_HACKERRANK_PROOF_CONNECTION_NOT_ACCOUNT_AVAILABILITY",
       "lastPreparedApplicationId": "application-3a3790b1-4664-42c5-ace8-dd36982ca7bd",
       "lastPreparedEnvironmentId": "e5-59f73a16-8c14-4ef9-b076-a33f87335468",
       "lastPreparedInstanceId": "normal-live-4d15aa1e-bb95-4b1d-981f-936fd57ef9f6",
@@ -946,8 +946,8 @@
       "api": 295,
       "b": 20
     },
-    "finalApiHeadAtIntake": "8ce113cae8dece67064ae7cd2cec2d41172addc7",
-    "remoteCiAtIntake": "RUNNING_CHECK_EXACT_HEAD_IN_PR102",
+    "finalApiHeadAtIntake": "ff07743bd599456686346326236dff3847d63264",
+    "remoteCiAtIntake": "SUCCESS_8_OF_8_EXACT_HEAD",
     "remoteCiLink": "https://github.com/gw020328-oss/clear-education-v4/pull/102",
     "ciInstallationFix": {
       "ownerCommit": "727254e",
@@ -967,6 +967,34 @@
       "head": "1ef53ce63e9d38e1908d15a62921401370c4938f",
       "pass": 708,
       "doesNotReplaceNewHeadCi": true
+    },
+    "unresolvedReviewThreads": 0,
+    "reviewThreadPaginationRemaining": false,
+    "draft": true,
+    "mergeStateAtIntake": "BEHIND",
+    "automaticMerge": false,
+    "ciSdkStdoutFix": {
+      "ownerCodeCommit": "a18e1af09cb08357df148418303c52386ec66fa8",
+      "ownerHandoffCommit": "ced12b1e66e6c82aa86eabb88474247f2dcd5b10",
+      "scope": "A_JOB_LOG_LEVEL_SILENT_BEFORE_ANY_PARENT_OR_CHILD_SDK_IMPORT",
+      "originalFailedHead": "8ce113cae8dece67064ae7cd2cec2d41172addc7",
+      "originalRun": "39395050964",
+      "originalPass": 39,
+      "originalFail": 5,
+      "cause": "SDK_RE2_FALLBACK_WARNING_ON_STDOUT_CONFIRMED_BY_CONTROLLED_IMPORT",
+      "exit86AndStdoutZeroAssertionsChanged": false,
+      "fiveFailedCutsAndSubsequentRestartRecoveryPassed": true,
+      "additionalLocalSetupFailure": "E5_SETUP_UNRESOLVED_BEFORE_NONCE_CHILD_START",
+      "isolatedNoncePassDoesNotResolveOriginalSetupFailure": true
+    },
+    "finalRemoteE5A": {
+      "run": "39396995886",
+      "servicePass": 44,
+      "frozenE4Pass": 164
+    },
+    "finalRemoteE5B": {
+      "run": "39396995914",
+      "status": "SUCCESS"
     }
   },
   "hackerRankLayoutDiagnostic": {
@@ -979,22 +1007,48 @@
     "proofVerified": false,
     "requestBound": false,
     "paymentAllowed": false,
-    "status": "HEADQUARTERS_OWNS_GOOGLE_LOGIN_STATIC_RESOURCE_DIAGNOSIS_NO_DUPLICATE_RUN",
-    "latestReviewedHead": "925e3d0",
+    "status": "EXISTING_AUTHENTICATED_CHROME_TAB_CONFIRMED_SAFE_PROOF_CONNECTION_UNIMPLEMENTED",
+    "latestReviewedHead": "b193010",
     "sourceObservationRuns": 0,
     "hostedProofRuns": 0,
     "rootFinalPhaseNetworkBlockedPass": 14,
     "ownerExactGoogleHostNetworkBlockedPass": 16,
     "startupDependencyFix": "PINNED_YBM_PREFIX_INSTALLED_THREE_IMPORTS_CHECKED_BEFORE_CONNECTION",
     "latestClosedRun": {
-      "session": "57208",
+      "session": "60088",
       "ready": false,
       "layoutsEmpty": true,
       "profilesDeleted": true,
       "proofCount": 0,
-      "blocker": "GOOGLE_LOGIN_CONNECT_HOST_ALLOWLIST_CONFIRMED_AND_MINIMALLY_FIXED"
+      "deniedGoogleResources": [],
+      "blocker": "GOOGLE_REFUSED_CURRENT_BROWSER_EXACT_CAUSE_NOT_SEPARATED"
     },
-    "remainingLoginUiCause": "STATIC_RESOURCE_BLOCKING_SUSPECTED_NOT_CONFIRMED_NO_REPEATED_NEXT",
-    "actualSourceAccepted": false
+    "actualSourceAccepted": false,
+    "ownerLatestHead": "ced12b1e66e6c82aa86eabb88474247f2dcd5b10",
+    "ownerObservedGoogleHostFix": "01dd2329454cccb04dc94576ad818fe255e5cca0",
+    "nativePasswordQuestion": "ON_HOLD_PER_LATEST_USER_STEERING",
+    "googleLoginRetry": "ON_HOLD",
+    "existingChromeScreenConfirmed": true,
+    "existingChromeReadOwner": "HEADQUARTERS_ONLY",
+    "cookieOrProfileExportAuthorized": false,
+    "newExtensionOrArchitectureAuthorized": false
+  },
+  "integrationDocumentationCiException": {
+    "head": "c9b0d940e1cf6fd98d32ef2a7f246efa8b7b4d05",
+    "run": "39395283156",
+    "job": "118536388523",
+    "configuredTimeoutMinutes": 15,
+    "jobObservedMinutesBeforeCancelRequest": 18,
+    "cancelledAfterMinutes": 20,
+    "status": "CANCELLED_UNRESOLVED_LINUX_STORAGE_INITIALIZATION_STALL",
+    "sameHeadPullRequestCi": "SUCCESS_3_OF_3_DOES_NOT_RESOLVE_PUSH_STALL",
+    "macAndHistoryJobs": "SUCCESS",
+    "jobLogs": "MISSING_IN_JOB_API_AND_ENTIRE_WORKFLOW_ARCHIVE",
+    "exactLastTestKnown": false,
+    "runnerOrCodeCauseConfirmed": false,
+    "sourceChangedFromPriorCodeIntegration": false,
+    "sameHeadRerunRequested": false,
+    "laterCiSuccessDoesNotResolveOriginal": true,
+    "cancelDoesNotProveResourceCleanup": true
   }
 }
