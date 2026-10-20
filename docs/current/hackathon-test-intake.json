@@ -1,7 +1,7 @@
 {
   "version": "clear-hackathon-test-intake.1",
   "date": "2026-10-20",
-  "repositoryPlanRevision": 21,
+  "repositoryPlanRevision": 22,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
   "sourceManifest": "specs/bootcamp/hackathon-test-inputs.json",
@@ -929,5 +929,28 @@
     "currentCoreFlowContinues": true,
     "handoffEntry": "docs/current/HACKATHON_TEST_SESSION_HANDOFF.ko.md",
     "creationAndFinalDistributionOwner": "HEADQUARTERS_AFTER_CURRENT_UNIT_AND_HANDOFF_REVIEW"
+  },
+  "memorySourceCompatibilityV5": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v5.json",
+    "sha256": "7b89a6c9f73797f0a6faff890f8a097f18dd3f91730eddc7f2cc56730c0f17ff",
+    "candidateHead": "937f982622643f0759d3ac1da2a42cdac93841b7",
+    "apiSourceFiles": 27,
+    "producerSeamFiles": 6,
+    "normalEntryFiles": 3,
+    "explicitConsumerGuards": "PENDING_OWNER_INTEGRATION",
+    "actualSourceAcceptance": false
+  },
+  "hackerRankLayoutDiagnostic": {
+    "implementationHead": "df352f3686a6fe7897f1f0e11483acddb1af576e",
+    "handoffHead": "8851775fa4f34e1af0a858436cf3dea648eda9af",
+    "command": "./tools/node src/hackerrank-evidence/layout-launch.mjs",
+    "ownerWorkspace": "clear-hackerrank-bootcamp",
+    "guide": "docs/hackerrank/LAYOUT_DIAGNOSTIC.ko.md",
+    "ownerNetworkBlockedPass": 108,
+    "actualLoginRuns": 0,
+    "proofVerified": false,
+    "requestBound": false,
+    "paymentAllowed": false,
+    "status": "REVIEWED_MINIMAL_DIAGNOSTIC_WAITING_CENTRAL_USER_LOGIN_COORDINATION"
   }
 }

@@ -7,8 +7,8 @@
 | 소유자 | 작업본 / 현재 기준 | 현재 다음 한 작업과 소유 경로 |
 | --- | --- | --- |
 | 통합 | `clear-education-v4` / `codex/python-bootcamp-p0`, PR78 | 단일 실행 순서·실제 차단점·검토 source pin과 최종 인수. `docs/current`, `specs/bootcamp` |
-| API | `clear-bootcamp-api-store` / `codex/bootcamp-e5-api-bridge`, PR102·9b41ad9 checkpoint | 실제 source consumer와 실행 entry 연결. `src/bootcamp`, `tools/bootcamp`; 후속 미커밋은 API 소유자가 보존·확정 |
-| 금고/P1 | `clear-hackerrank-bootcamp` / `codex/hackathon-normal-source-entry`, PR100 고정a4·후속2be/4d | 첫 실제 HackerRank 원천 형식/신뢰를 확인할 최소 안전 진단·수집 입구. `src/hackerrank-evidence`; 고정 금고/typed 변경 이력 보존 |
+| API | `clear-bootcamp-api-store` / `codex/bootcamp-e5-api-bridge`, PR102·937f982 API checkpoint / 62f2c59 소유 인계 병합 | 실제 source consumer와 실행 entry 구현, v5 지문 소비 대기. `src/bootcamp`, `tools/bootcamp`; 후속 미커밋은 API 소유자가 보존·확정 |
+| 금고/P1 | `clear-hackerrank-bootcamp` / `codex/hackathon-normal-source-entry`, PR100 고정a4·후속2be/4d·5465178·8851775 | 실제 형식 진단 명령 준비, 중앙 로그인 안내 대기. `src/hackerrank-evidence`; 고정 금고/typed 변경 이력 보존 |
 | Moodle | `clear-moodle-review-api` / 기존 전용 브랜치, PR87·d3709a0 인계 | API가 확정한 binding으로 기존 source를 마지막에 fresh 획득. [정상 인계](../moodle/REVIEW_API_NORMAL_PATH_HANDOFF.ko.md) |
 | AI | `clear-ai-review-precheck` / `codex/ai-first-normal-handoff`, PR101·1276b91 | 같은 신청의 현재 원문 packet 연결, 새 단1회 승인 전 호출0. [정상 인계](../ai-vision/REVIEW_PRECHECK_FIRST_NORMAL_HANDOFF.ko.md) |
 
@@ -17,3 +17,7 @@ API가 발급했던 `normal-live-4d15aa1e...` 준비는 원천0·배정0이고 �
 실행된 합성 명령은 `./tools/node tools/bootcamp/normal-chain.mjs --synthetic-source`이며, 저장 결과의 sourceMode/realSourceVerified=false를 유지한다. 이미 성공한 run3를 인계 확인용으로 재실행하지 않는다. 실제 원천 단일 명령은 API 담당이 확정 중이다. 키/쿠키/raw proof/token은 이 문서·채팅에 복사하지 않고 소유자의 안전 설정 참조만 전달한다. 기존 준비 metadata와 private 결과 파일은 소유 위치에 그대로 둔다.
 
 각 담당은 자기 현재 소작업을 끝낼 때 기존 전용 문서에 짧게 **현재 성공/차단점, repo·worktree·branch·commit/PR, 미커밋 소유자와 보존법, 실행 명령·소유 환경/프로세스·공개 pin, 실제/합성 구분과 검증, 다음 한 작업/소유 경로**를 남긴다. 다른 담당 파일을 중복 편집하거나 독립 후속 고도화를 시작하지 않는다. **PR21/PR36 등 끝난 과거 작업으로 돌아가지 않는다.** 현재 정상 시연 완료 또는 사용자가 필요한 차단점에서 단위를 종료하기로 결정한 뒤 본부에 이 입구와 소유 인계를 전달한다.
+
+2026-10-20 추가 인수: 통합 소유자가 API937의 bridge·원자 ledger·current/권한 및 실제 source consumer/entry를 읽고 [memory 호환 v5](../../specs/bootcamp/hackathon-test-memory-source-intake-v5.json)에 API27·producer seam6·entry3개 지문을 고정했다. 기존 v1–v4 및 정상3개 delta는 보존하며, 금고 소유자가 새 consumer/guard를 명시 소비하고 관련 검사를 마치기 전에는 결합 CI 인수가 아니다. 이 기록은 실제 HR trust·proof·새 AI 호출·실제 source 전체 시연 승인이 아니다.
+
+HackerRank [비수락 형식 진단 안내](https://github.com/gw020328-oss/clear-education-v4/blob/8851775fa4f34e1af0a858436cf3dea648eda9af/docs/hackerrank/LAYOUT_DIAGNOSTIC.ko.md)는 금고/P1 작업본의 `./tools/node src/hackerrank-evidence/layout-launch.mjs`다. 새 Chrome에서 본인 로그인 뒤 ready, 같은 탭 본인 인증서 화면을 여는 사용자 행동이 필요하다. 원문 없는 구조만 반환하고 proof/API 수락/지급은 하지 않는다. root는 정확 코드177줄을 읽었으며 실제 로그인0이다. 본부에서 한 번 안내하도록 조정하며 다른 담당이 중복 로그인·유료 승인 질문을 보내지 않는다.
