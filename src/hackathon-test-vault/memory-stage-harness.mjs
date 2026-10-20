@@ -17,8 +17,8 @@ import {TYPES} from '../bootcamp-authorization/test-schema-v3.mjs';
 import {canonical,freeze} from '../policy/values.mjs';
 export const MEMORY_STAGE='FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS';
 const INTAKE_COMMIT='085878860d604095b0a6152329f8d82a445574b7';
-const COMPATIBILITY_PATH='specs/bootcamp/hackathon-test-memory-source-intake-v4.json';
-const COMPATIBILITY_SHA='2cf7aba578d1ac5ed712a00288edcdff88d58e2152acdfd709c1228078f078a6';
+const COMPATIBILITY_PATH='specs/bootcamp/hackathon-test-memory-source-intake-v5.json';
+const COMPATIBILITY_SHA='7b89a6c9f73797f0a6faff890f8a097f18dd3f91730eddc7f2cc56730c0f17ff';
 const read=p=>readFileSync(new URL('../../'+p,import.meta.url));
 const digest=p=>'0x'+createHash('sha256').update(read(p)).digest('hex');
 const totals={instances:0,executionDeployments:0,tokenDeployments:0,keyProviderCalls:0,signaturesGenerated:0,signaturesReturned:0,signaturesDiscarded:0,accepts:0,claims:0,actualSources:0,externalRpc:0,persistentChains:0};
@@ -38,12 +38,14 @@ function intake(){
  const e2=JSON.parse(read('specs/bootcamp/hackathon-test-consumer-pins-v1.json'));
  check(digest(COMPATIBILITY_PATH)==='0x'+COMPATIBILITY_SHA,'STAGE_COMPATIBILITY_FILE_PIN');
  const c=JSON.parse(read(COMPATIBILITY_PATH));
- check(c.version==='clear-hackathon-test-memory-source-intake.4'&&c.status==='REVIEWED_FOR_SCOPED_MEMORY_COMPATIBILITY_TESTS_ONLY'&&c.acceptedE3StageHead===i.e3.head&&c.currentSourceCandidateHead==='4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0','STAGE_COMPATIBILITY');
+ check(c.version==='clear-hackathon-test-memory-source-intake.5'&&c.status==='REVIEWED_FOR_SCOPED_MEMORY_COMPATIBILITY_TESTS_ONLY'&&c.acceptedE3StageHead===i.e3.head&&c.currentSourceCandidateHead==='937f982622643f0759d3ac1da2a42cdac93841b7','STAGE_COMPATIBILITY');
  check(c.normativeBoundary.head===INTAKE_COMMIT&&c.normativeBoundary.path==='specs/bootcamp/hackathon-test-boundary-intake-v1.json'&&digest(c.normativeBoundary.path)==='0x'+c.normativeBoundary.sha256&&c.operationsProfileHash===i.operationsProfileHash,'STAGE_COMPATIBILITY_BOUNDARY');
  check(eq(c.allowedRuntimeKinds,[MEMORY_STAGE])&&!c.persistentRuntimeAllowedByThisIntake&&!c.fullRuntimeAccepted&&!c.existingV1GatesChanged&&!c.productionEnabled,'STAGE_COMPATIBILITY_SCOPE');
  check(c.e2ConsumerInput.path==='specs/bootcamp/hackathon-test-consumer-pins-v1.json'&&digest(c.e2ConsumerInput.path)==='0x'+c.e2ConsumerInput.sha256,'STAGE_COMPATIBILITY_E2');
- check(Object.keys(c.e3ArtifactSha256).length===8&&Object.keys(c.additionalSourceArtifactSha256).length===9,'STAGE_COMPATIBILITY_SOURCES');
- for(const [p,sha]of [...Object.entries(c.e3ArtifactSha256),...Object.entries(c.additionalSourceArtifactSha256),...Object.entries(i.e4Preparation.artifactSha256),...Object.entries(e2.artifactSha256)])check(digest(p)==='0x'+normalE2Hash(p,sha),'STAGE_SOURCE_PIN');
+ check(c.previousCompatibilityRecord.path==='specs/bootcamp/hackathon-test-memory-source-intake-v4.json'&&c.previousCompatibilityRecord.sha256==='2cf7aba578d1ac5ed712a00288edcdff88d58e2152acdfd709c1228078f078a6'&&digest(c.previousCompatibilityRecord.path)==='0x'+c.previousCompatibilityRecord.sha256&&c.previousCompatibilityRecord.immutable===true,'STAGE_PREVIOUS_COMPATIBILITY');
+ check(c.normalSourceDeltaInput.path==='specs/bootcamp/hackathon-test-normal-source-intake-v1.json'&&c.normalSourceDeltaInput.sha256==='410ec5bab91a365cee6909328b0c1a2f847283738b27f66aaf911e2300f47dc9'&&digest(c.normalSourceDeltaInput.path)==='0x'+c.normalSourceDeltaInput.sha256,'STAGE_NORMAL_SOURCE_DELTA');
+ check(Object.keys(c.e3ArtifactSha256).length===8&&Object.keys(c.additionalSourceArtifactSha256).length===19&&Object.keys(c.producerSeamArtifactSha256).length===6&&Object.keys(c.normalEntryArtifactSha256).length===3,'STAGE_COMPATIBILITY_SOURCES');
+ for(const [p,sha]of [...Object.entries(c.e3ArtifactSha256),...Object.entries(c.additionalSourceArtifactSha256),...Object.entries(c.producerSeamArtifactSha256),...Object.entries(c.normalEntryArtifactSha256),...Object.entries(i.e4Preparation.artifactSha256),...Object.entries(e2.artifactSha256)])check(digest(p)==='0x'+normalE2Hash(p,sha),'STAGE_SOURCE_PIN');
  return {...i,currentCompatibleSourceHead:c.currentSourceCandidateHead};
 }
 export async function createFreshMemoryStage(configuration={}){
