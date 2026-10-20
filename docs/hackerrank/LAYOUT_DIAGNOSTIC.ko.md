@@ -1,5 +1,21 @@
 # HackerRank 원천 형식 관찰 — 실행 전 인계
 
+## 2026-10-20 자체 비밀번호 로그인 후 실제 관찰
+
+사용자가 공식 경로의 자체 비밀번호 설정과 새 진단용 Chrome의 로그인 완료를 확인했다. PR103 `fc803e4`에서 기존 launcher를 한 번 실행했고, 살아 있는 실행에 사용자 완료 신호 이후 `ready`를 한 번 입력했다. 계정 응답 뒤 같은 탭의 인증서 응답까지 관찰되어 **exit0 / profilesDeleted:true로 자동 종료**됐다. 사용자가 보고한 “갑자기 꺼짐”은 이 정상 종료이며 timeout/crash가 아니다. Google OAuth 재시도·쿠키/프로필 복사·새 proof/신청/AI/지급은 없었다.
+
+값 없는 당시 요약은 account `htmlParsed=true`, `jsonScriptPresent=true`, `usernameKeyPresent=true`, `currentHackerKeyPresent=false`, `candidateJsonPaths=[]`; certificate `jsonParsed=false`, `recordShapes=[]`였다. `proofVerified`, `authenticatedAccountControlProven`, `requestBound`는 모두 false이며 API HOLD다. 허용된 HTTP200/JSON MIME 응답 관찰과 JSON 해석 성공을 구분한다. 원문은 보존하지 않아 그 실패 이유는 지금 복원할 수 없다.
+
+기존 진단은 정수·64KiB·depth/node/중복키 제한이 있는 signed-record용 `strictJson`을 계정 스크립트와 인증서 응답에 그대로 적용했다. 따라서 당시 `jsonParsed=false`는 일반 JSON 문법 오류와 strict 정책 거부를 구분하지 못한다. 소수 등이 실제 원인이었다고 단정하지 않는다.
+
+같은 PR의 후속은 `jsonStatus` / `jsonScriptStatuses`를 고정 분류로 추가한다: `STRICT_ACCEPTED`, `JSON_SYNTAX_INVALID`, `STRICT_SIZE_LIMIT`, `STRICT_DEPTH_OR_NODE_LIMIT`, `STRICT_DUPLICATE_OR_UNSAFE_KEY`, `STRICT_VALUE_OR_GRAMMAR_POLICY`. `jsonParsed`는 기존 strict parser 통과 의미를 유지한다.
+
+새 `structureParsed`는 **진단용 문자열 필드 구조만** 관찰했는지를 나타낸다. 일반 JSON 문법이 유효하지만 숫자/스크립트 크기 정책으로 거부된 경우, 문자열을 보존하고 숫자 token만 0으로 치환한 메모리 사본을 별도로 검사한다. 입력 한도(account 1MiB/certificate 64KiB), depth/node·중복/위험 key 거부는 유지하며, 값·본문·임의 key·예외 메시지는 출력하지 않는다. 정규화한 값은 proof/verifier/recipe/lease 입력으로 쓰지 않는다. required source field가 숫자이면 문자열로 인정하지 않는다. 실제 검증기의 `strictJson`과 서명/추출 정책은 변경하지 않는다.
+
+두 응답을 관찰하면 정리를 위해 창을 닫는다는 안내도 종료 전에 출력하도록 했다. 형식 해석 실패가 정상 정리와 구분되며, 수집 성공을 가장하지 않는다. 이 후속의 관련 network-blocked 진단 **21/21 PASS**다. 새 관찰 코드는 실제 재실행 전이며, 이전 원문을 가져와 새 결과로 승격하지 않았다.
+
+현재 브라우저/임시 프로필은 정상 정리되어 재사용할 세션이 없다. 다음 실제 관찰은 본부가 사용자와 한 번 조율한 뒤 새 진단에서 수행해야 한다. 당시 로그인 성공만으로 실제 recipe·account control·공식 signer/epoch/context·request-bound proof가 준비됐다고 표시하지 않는다. 아래 Google 차단 및 원천0 기록은 이 실행 이전 이력이다.
+
 2026-10-20. 정상 시연의 실제 recipe 검토 입력을 얻는 최소 진단이다. **본부의 후속 실행은 로그인 화면까지 열렸으나 사용자가 선택한 Google 로그인 popup의 중계가 차단됐다. ready·원천 본문 관찰·hosted proof는 아직 실행하지 않았다.** 본부가 사용자에게 한 번 안내한 뒤 실행한다. UNCONFIGURED trust를 변경하거나 synthetic recipe를 실제 recipe로 승격하지 않는다.
 
 ## 정확한 실행 방법

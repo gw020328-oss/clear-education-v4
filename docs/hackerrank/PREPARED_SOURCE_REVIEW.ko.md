@@ -1,5 +1,7 @@
 # 과거 성공 경로 대조와 같은 owner의 수집 연결
 
+최신 후속: 사용자가 자체 비밀번호 설정과 관리형 Chrome 로그인 완료를 확인했고, `fc803e4`에서 비수락 형식 진단 한 번을 실행했다. account/certificate 응답 관찰 후 exit0/profilesDeleted:true로 자동 종료했으나 계정 username 경로는 비었고 certificate strict JSON 해석은 실패했다. 새 proof는 0건이다. [실제 결과와 최소 진단 보완](LAYOUT_DIAGNOSTIC.ko.md)의 최신 절을 따른다. 아래 로그인/계정 변경0 및 복구 가능 여부 미확정은 이 실행 전 조사 시점의 기록이다. `fc803e4` 원격 CI는 3/3 SUCCESS이며 후속 소스 변경의 CI 결과와 구분한다.
+
 2026-10-20. 새 PR 기준은 API PR102의 실제 로컬/원격 ref `codex/bootcamp-e5-api-bridge`, 커밋 `6962c1394b82aac633a686e1d197475d1803aacb`다. 이 기준은 이전 HR head `7b35bb3`를 포함한다. 기존 HR 작업본은 미커밋 변경 없이 인수했으며 옛 브랜치는 보존하고 `codex/hackerrank-prepared-owner-lease`로 분리했다. 선행 코드가 develop에 없으므로 API 브랜치 대상 stacked Draft PR로 차분을 제한한다.
 
 **새 request-bound proof는 아직 0건이다.** 이번 변경은 신청 전에 공개 owner를 고정하고 같은 수집기로 검증된 lease를 반환하는 저수준 연결부다. 공식 로그인 가능성, 실제 recipe, 독립 signer/epoch 신뢰 설정, hosted signed context는 미확정이다. pending trust는 UNCONFIGURED이며 합성 recipe를 승격하지 않았다.

@@ -1,5 +1,7 @@
 # 첫 정상 TEST용 HackerRank 수집 입구
 
+최신 실제 진단: 자체 비밀번호 로그인은 사용자 완료 확인을 받았고 account/certificate 응답을 한 번 관찰했다. 기존 진단은 두 응답 후 정상 자동 종료(exit0/profilesDeleted:true)했으며, 계정 경로·인증서 JSON 해석은 아직 미확정이다. [진단 최신 결과](LAYOUT_DIAGNOSTIC.ko.md)의 strict parser 제한 구분과 값 없는 schema 관찰 보완을 따른다. 아래 실제 로그인0/복구 미확정은 이전 기록이고, **새 request-bound proof0·trust UNCONFIGURED**는 계속 유효하다.
+
 2026-10-20 새 PR 후속: [과거 경로 대조·준비 연결](PREPARED_SOURCE_REVIEW.ko.md)에 같은 collector의 owner를 미리 고정하는 `prepareHackerRankSource`를 추가했다. `pins → collectLease` 저수준 seam만 합성 검증했으며 기존 run/API에 자동 연결하지 않았다. 공식 Community 복구 후보는 확인했지만 Google 가입 계정 적용 가능성·실제 recipe/trust는 미확정이고 새 proof는 0건이다. 로그인 재요청은 본부의 실행 준비 후에만 한다.
 
 최신 2026-10-20 새 담당 인수: 기존 일반 Chrome은 로그인되어 있으나 안전한 request-bound proof 연결은 미완료다. [기존 Chrome 경로 검토](EXISTING_CHROME_ROUTE_REVIEW.ko.md)에 공식 확장 후보, 현재 collector/API 계약 차이, 정확한 외부 차단점과 다음 한 작업을 기록했다. 아래 새 전용 Chrome 재로그인 안내는 현재 실행 지시가 아니다. Google 재시도·비밀번호 변경·쿠키/프로필 복사·새 확장 설치를 수행하지 않는다.

@@ -70,6 +70,75 @@ test('layout summary emits only static schema labels; source values and unknown 
  assert.throws(()=>inspectSourceLayout('certificate',Buffer.alloc(65537)),/LAYOUT_SIZE/);
  assert.throws(()=>inspectSourceLayout('unknown',Buffer.from('{}')),/LAYOUT_ROLE/);
 });
+test('diagnostic separates strict numeric policy from schema-only inspection and keeps ambiguous structures rejected',()=>{
+ const cases=[
+  ['{"data":[],"score":1.5}','STRICT_VALUE_OR_GRAMMAR_POLICY'],
+  ['{"data":[],"score":1e2}','STRICT_VALUE_OR_GRAMMAR_POLICY'],
+  ['{"data":[],"score":9007199254740992}','STRICT_VALUE_OR_GRAMMAR_POLICY'],
+  ['{"data":[],"data":[]}','STRICT_DUPLICATE_OR_UNSAFE_KEY'],
+  ['{"data":[],"__proto__":{"SYNTHETIC_SECRET":"value"}}','STRICT_DUPLICATE_OR_UNSAFE_KEY'],
+  [JSON.stringify({data:[],unknown:Array.from({length:4100},()=>0)}),'STRICT_DEPTH_OR_NODE_LIMIT'],
+  ['{"SYNTHETIC_SECRET":','JSON_SYNTAX_INVALID'],
+  ['{"score":0.5,"data":[],"data":[]}','STRICT_VALUE_OR_GRAMMAR_POLICY'],
+ ];
+ for(const [body,status]of cases){
+  const result=inspectSourceLayout('certificate',Buffer.from(body));
+  assert.equal(result.jsonStatus,status);assert.equal(result.jsonParsed,false);
+  const safeNumeric=status==='STRICT_VALUE_OR_GRAMMAR_POLICY'&&!body.includes('"data":[],"data":[]');
+  assert.equal(result.structureParsed,safeNumeric);
+  assert.deepEqual(result.recordShapes,safeNumeric?[{path:'data',bounded:true,fields:[],hasExtraFields:false}]:[]);
+  assert.equal(result.accountJoinProven,false);
+  assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC_SECRET|score|9007199254740992/);
+ }
+ const accepted=inspectSourceLayout('certificate',Buffer.from(certificate));
+ assert.equal(accepted.jsonStatus,'STRICT_ACCEPTED');assert.equal(accepted.jsonParsed,true);
+});
+test('account diagnostic reports fixed parser statuses and only allowlisted string paths from schema inspection',()=>{
+ const accepted=account,decimal='<script type="application/json">{"user":{"username":"SYNTHETIC_SECRET"},"score":0.5}</script>';
+ const oversized='<script type="application/json">'+JSON.stringify({unknown:'x'.repeat(65536),user:{username:'SYNTHETIC_SECRET'}})+'</script>';
+ const broken='<script type="application/json">{"SYNTHETIC_SECRET":</script>';
+ const result=inspectSourceLayout('account',Buffer.from(accepted+decimal+oversized+broken+decimal));
+ assert.deepEqual(result.jsonScriptStatuses,['JSON_SYNTAX_INVALID','STRICT_ACCEPTED','STRICT_SIZE_LIMIT','STRICT_VALUE_OR_GRAMMAR_POLICY']);
+ assert.deepEqual(result.candidateJsonPaths,['props.pageProps.current_hacker.username','user.username']);
+ assert.equal(result.structureParsed,true);
+ assert.equal(result.authenticatedAccountControlProven,false);assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC_SECRET|unknown|score/);
+});
+test('numeric normalization preserves escaped string content and never converts numeric source fields to strings',()=>{
+ const rows={data:[{username:'SYNTHETIC_SECRET_1e3_"\\',certificate_id:'SYNTHETIC_SECRET_ID_0.5',certificate_name:'Python (Basic)',status:1.5}],score:0.5};
+ const result=inspectSourceLayout('certificate',Buffer.from(JSON.stringify(rows)));
+ assert.equal(result.jsonParsed,false);assert.equal(result.structureParsed,true);
+ assert.deepEqual(result.recordShapes,[{path:'data',bounded:true,fields:['username','certificate_id','certificate_name'],hasExtraFields:false}]);
+ assert.equal(result.accountJoinProven,false);assert.doesNotMatch(JSON.stringify(result),/SYNTHETIC_SECRET|1e3|0.5|1.5/);
+ const unsafe='{"score":0.5,"user":{"username":"SYNTHETIC_SECRET","__proto__":{}}}';
+ const a=inspectSourceLayout('account',Buffer.from('<script type="application/json">'+unsafe+'</script>'));
+ assert.equal(a.structureParsed,false);assert.deepEqual(a.candidateJsonPaths,[]);
+});
+test('runner announces automatic close after both responses even when certificate JSON is rejected',async()=>{
+ const previous=process.env.CLEAR_LOCKED;process.env.CLEAR_LOCKED='1';
+ try{
+  const input=new PassThrough(),browser=fakeBrowser(),messages=[];
+  const send=browser.send.bind(browser);
+  browser.send=async(name,...args)=>{
+   const result=await send(name,...args);
+   if(name==='Network.setBypassServiceWorker')setImmediate(()=>{
+    events(browser,'account',ACCOUNT_URL,account);
+    events(browser,'certificate',certUrl,'{"data":[],"score":0.5}');
+   });
+   return result;
+  };
+  const result=await runHackerRankLayout({path:'/synthetic/owned-session'},{input,
+   output:message=>{messages.push(message);if(message.includes('ready'))setImmediate(()=>input.write('ready\n'));},
+   openClient:async()=>({client:{},close:async()=>{}}),
+   openRoute:async()=>({signal:new AbortController().signal,proxyUrl:'http://127.0.0.1:1',close:async()=>{}}),
+   launchBrowser:async()=>browser});
+  assert.equal(result.layouts.certificate.jsonParsed,false);assert.equal(result.proofVerified,false);
+  const notice=messages.findIndex(message=>message.includes('자동으로 닫습니다'));
+  assert(notice>messages.findIndex(message=>message.startsWith('인증서 응답 관찰 완료')));
+  assert.equal(messages.filter(message=>message.includes('자동으로 닫습니다')).length,1);
+  assert.equal(browser.calls.filter(call=>call[0]==='close').length,1);
+  assert.doesNotMatch(messages.join('\n'),/SYNTHETIC_SECRET/);
+ }finally{if(previous===undefined)delete process.env.CLEAR_LOCKED;else process.env.CLEAR_LOCKED=previous;}
+});
 test('capture reads no body before ready or for off-route/session traffic and never reads cookies',async()=>{
  const browser=fakeBrowser(),capture=createLayoutCapture({browser,sessionId:'page'});
  events(browser,'before',ACCOUNT_URL,account);assert.equal(browser.calls.length,0);await capture.arm();
