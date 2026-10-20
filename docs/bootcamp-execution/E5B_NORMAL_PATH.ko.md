@@ -6,9 +6,9 @@
 
 작업 브랜치 `codex/bootcamp-e5-api-bridge`, 시작 HEAD `4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0`. 기존 미커밋 B scope·private controller·원자 ledger·명령/current 연결과 시험을 보존하여 마무리한다. 4dec와 원본 실패 로그를 변경하지 않는다.
 
-바로 다음: UUID v4 challenge 전용 검사 및 시험 설정 오류를 닫고, exact B 패킷의 등록→전액 배정→게시→양측 동의→prepare/accept→별도 claim을 단일 진입점으로 연결한다. source/current/lease/nonce/금액·수령인·중복 검사를 유지한다.
+초기 체크포인트의 당시 다음 작업(아래 재개 기록에서 완료): UUID v4 challenge 전용 검사 및 시험 설정 오류를 닫고, exact B 패킷의 등록→전액 배정→게시→양측 동의→prepare/accept→별도 claim을 단일 진입점으로 연결한다. source/current/lease/nonce/금액·수령인·중복 검사를 유지한다.
 
-현재 B 연결은 합성 원천을 명시한 오프라인 단위이며 실제 signer/sender는 아직 차단이다. 실제 Moodle/HR/AI 관측 수락은 미연결이며 fixture 성공을 실제로 표시하지 않는다. 실제 source는 신청·지갑·mapping/request/lease가 고정된 뒤 새로 수집한다. 과거 source 보고서와 AI 평가 결과는 재사용하지 않는다.
+초기 체크포인트에서 B 연결은 합성 원천을 명시한 오프라인 단위이며 실제 signer/sender는 차단 상태였다. 이후 격리 TEST 연결 결과는 아래 재개 기록을 따른다. 실제 Moodle/HR/AI 관측 수락은 미연결이며 fixture 성공을 실제로 표시하지 않는다. 실제 source는 신청·지갑·mapping/request/lease가 고정된 뒤 새로 수집한다. 과거 source 보고서와 AI 평가 결과는 재사용하지 않는다.
 
 기존 금고·DB·체인·키와 v1–v4 source pin 보존, 신규 격리 TEST만 허용. production/main/develop 자동 병합·배포 없음. 기존 정책 및 미확정 Mac 원인은 유지한다.
 
@@ -29,9 +29,9 @@
 ## API 소유 인계 7항목
 
 1. **성공/차단:** run3 합성원천의 실제 격리100TEST 수령·중복거부 완료. 실제 HR recipe/registry/context·managed worker/로그인 UI·fresh source 및 AI새1call 승인은 미완료여서 전체 실제 시연은 차단이다. UNCONFIGURED를 긍정 판정으로 바꾸지 않는다.
-2. **작업본/브랜치/PR:** `workspaces/clear-bootcamp-api-store`, `codex/bootcamp-e5-api-bridge`, checkpoint `9b41ad9` 및 뒤 소유 커밋, [Draft PR102](https://github.com/gw020328-oss/clear-education-v4/pull/102). 정상 인수는 AI1276/P1 a758와 E2 4d 포함이다. 자동 병합하지 않는다.
+2. **작업본/브랜치/PR:** `workspaces/clear-bootcamp-api-store`, `codex/bootcamp-e5-api-bridge`, API 소스 checkpoint `937f982`, root v5 `3c9fd00` 및 E4 guard `97827dd` 정상 이력 인수, [Draft PR102](https://github.com/gw020328-oss/clear-education-v4/pull/102). 정상 인수는 AI1276/P1 a758와 E2 4d 포함이다. 자동 병합하지 않는다.
 3. **소유/보존:** `src/bootcamp/*live-consumer.mjs`, `store/model/procedure/execution-*`, `tools/bootcamp/*`는 API 소유. 키·쿠키·proof·token을 인계 문서에 복사하지 않는다. private 아래 준비 신청과 만료 window, run1/2 실패 및 run3 성공의 DB·체인·TEST 키를 보존한다. 실제 원천 준비의 옛 mapping은 HR UNCONFIGURED 그대로다.
 4. **명령/환경/pin:** 합성 정상 명령은 위 기록을 재사용하고 성공 run3는 반복하지 않는다. 실제 연결은 `tools/bootcamp/live-context.mjs`의 `openLiveContext({preparationPath,withReader,hackerRank:{pins,collectLease},reviewReflection})` → `collectSources()` → `pay()` → `close()`다. 아직 실제 host HR source 설정이 없으므로 호출하지 않는다. `prepareLiveInput({hackerRankPins,identityPreparationPath})`는 REVIEWED pins에 새 불변 mapping이 필요할 때 기존 TEST identity를 재사용할 수 있다. 새 환경은 실제 시작 직전에만 만든다. 구 intake v1–v4와 새 `normal-consumer-source-delta.json`·`normal-chain-verification.json`을 함께 읽는다.
-5. **검증 구분:** source/P1/API·AI 관련282개와 전용 거부경계8개 네트워크 차단 시험 통과. 실제 hosted HR proof0·새AI호출0·실제source 전체 지급0다. PR102 원격 source pin 검사는 구 E2/API snapshot의 명시 후속 인수 대기이며 원본 실패 로그를 보존한다. 합성 입력의 실제 chain 지급 성공과 혼용하지 않는다.
+5. **검증 구분:** source/P1/API·AI 관련282개와 전용 거부경계8개 네트워크 차단 시험 통과. 실제 hosted HR proof0·새AI호출0·실제source 전체 지급0다. root v5와 E4 guard를 정상 인수했고 현재/원본937 소스36개, v1–v4/E2 원본 및 A/B 보존 검사가 통과했다. E4 소유 검증은 메모리·서명165개/API·저장소295개/B20개 통과이며, 최종 원격 CI 상태는 PR102의 해당 head에서 확인한다. 구 E2/API 지문 불일치 원본 실패 로그는 보존한다. 합성 입력의 실제 chain 지급 성공과 혼용하지 않는다.
 6. **다음 한 작업:** P1 소유가 실제 trust/managed login 입구를 준비하면 정확 pins와 request-bound collector callback만 연결한다. `readHackerRankCollectorLease`를 같은 module tree에서 직접 호출하여 candidate/nonce/request/participant/wallet/hash/기한을 재검사한다. HR900초 원천창을 먼저 열고 Moodle각240초·AI30초를 마지막에 취득한다. live collection command 최대300초도 request/min lease 잔여 이하다. 원래 source freshness/120·600초·금액·수령인·배정/재사용 guard는 유지한다. 새 원천이 준비되면 root가 고정 packet/code 기준 AI최대1call 새 승인을 맡는다.
 7. **끝난 작업:** PR21·PR36 검토나 과거 플랫폼 조사로 돌아가지 않는다. 첫 실제 정상 시연 이전의 새 기능·복구 확대·중복 평가·새 세션·에이전트는 진행하지 않는다.
