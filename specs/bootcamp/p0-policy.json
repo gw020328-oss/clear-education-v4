@@ -1,0 +1,20 @@
+{
+  "version": "clear-python-bootcamp-policy.1",
+  "policyId": "clear-python-bootcamp-demo",
+  "revision": 1,
+  "scope": "FICTIONAL_DEMO_NOT_ACADEMY_TERMS",
+  "courseLogicalId": "clear-python-bootcamp-demo",
+  "logic": "ALL",
+  "criteria": [
+    {"criterionId":"activity-complete","capability":"MOODLE_ACTIVITY_COMPLETION.1","source":"MOODLE","targetLogicalId":"python-intro-activity","predicate":{"state":"COMPLETED","completionConfiguration":"OBSERVED_AUTOMATIC_RULE","claimsLearningTime":false}},
+    {"criterionId":"assignment-submitted","capability":"MOODLE_ASSIGNMENT_SUBMISSION.1","source":"MOODLE","targetLogicalId":"python-practice-task","predicate":{"submissionState":"SUBMITTED","gradingRequired":false}},
+    {"criterionId":"reflection-topics","capability":"REFLECTION_REQUIRED_TOPICS.1","source":"MOODLE_PLUS_TEXT_REVIEW","targetLogicalId":"python-reflection","predicate":{"topics":["work-performed","problem-solving-process","learning-takeaway"],"requireOriginalTextEvidence":true,"allowExplicitNoIssueWithCheckProcess":true,"sentimentOrEffortScoreAllowed":false,"minimumCharacters":null,"photosRequired":false}},
+    {"criterionId":"python-basic-certificate","capability":"HACKERRANK_CERTIFICATE_HOLDING.1","source":"RECLAIM_HACKERRANK","targetLogicalId":"python-basic-certificate","predicate":{"certificateName":"Python (Basic)","issuerStatus":"test_passed","recognition":"PASSED_CERTIFICATE_PRESENT_AT_FRESH_OBSERVATION","accountAndCertificateBothRequired":true,"sameSignedUsernameAndClaimOwnerRequired":true,"sameCertificateRecordFieldsRequired":true,"selectedCertificateIdRequiredOnAmbiguity":true,"achievementAtRequired":false,"proofTimeMayReplaceAchievementAt":false}}
+  ],
+  "amount": {"symbol":"TEST","decimals":6,"displayWhole":"100","amountAtoms":"100000000","tokenContractRef":"contracts/ClearTestToken.sol","runtimeTokenMustMatch":true,"productionValue":false},
+  "time": {"profile":"EXPLICIT_DEMO_SELECTION_NOT_OPERATIONAL_SLA","scenarioClock":"SECONDS_FROM_PINNED_DEMO_START","initialReceiptWindowSeconds":{"from":0,"untilExclusive":1800},"supplementWindowUntilExclusiveSeconds":3600,"sourceClock":"REAL_UNIX_UTC_SECONDS","maxMoodleObservationAgeSeconds":300,"maxReclaimProofAgeSeconds":900,"requestExpirySeconds":900,"syntheticClockAdvance":"OFFLINE_TEST_ONLY_NEVER_REWRITES_SIGNED_SOURCE_TIME","consentObjectionWindowSeconds":null,"seventyTwoOrOneTwentyHoursApproved":false},
+  "runtimeMapping": {"policyIdsAreLogical":true,"numericMoodleIdsMustComeFromVerifiedIsolatedFixture":true,"mappingHashSeparateFromPolicyHash":true,"ready":false},
+  "privacy": {"maxRawRetentionSeconds":1800,"publicRawProofAllowed":false,"onChainRawAllowed":false,"existingC2SyntheticOnlyPreserved":true},
+  "gates": {"productEligible":false,"paymentAllowed":false,"grant":"HOLD","outbox":"HOLD","independentClaim":"NO_GO","productionEnabled":false},
+  "excluded": ["internal-quiz-required","photo-or-vision-required","ybm-score-as-main-demo","siwon-tier-as-main-demo","tier400","tier500","new-payout-signer-trust","production-funding"]
+}

@@ -1,0 +1,246 @@
+{
+  "version": "clear-moodle-normal-source-handoff.1",
+  "clientDate": "2026-10-19",
+  "checkedAtMs": 1792399855032,
+  "execution": "ACTUAL_LOCAL_API_GENERATED_SYNTHETIC_ACCOUNT",
+  "bindingLevel": "SOURCE_FIXTURE_ONLY_NOT_API_ACCEPTANCE",
+  "binding": {
+    "participantId": "participant-e6-one",
+    "applicationId": "application-e6-one",
+    "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+    "runtimeMappingHash": "0xeea837a718359345e0465ed121f641798e439b5c14014cb0c1d06bc5726a5a73",
+    "fixtureReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28"
+  },
+  "walletBinding": "NOT_SUPPLIED_BY_PRODUCT_API",
+  "records": [
+    {
+      "criterion": "activity-complete",
+      "request": {
+        "version": "clear-moodle-bootcamp-read.1",
+        "context": {
+          "participantId": "participant-e6-one",
+          "applicationId": "application-e6-one",
+          "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+          "criterionId": "activity-complete",
+          "capability": "MOODLE_ACTIVITY_COMPLETION.1",
+          "evidenceId": "e6-activity-complete",
+          "evidenceRevision": 1,
+          "runtimeMappingHash": "0xeea837a718359345e0465ed121f641798e439b5c14014cb0c1d06bc5726a5a73",
+          "fixtureReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "sourceRunId": "e6-read-30",
+          "sourceGeneration": 30,
+          "attempt": 1,
+          "issuedAtMs": 1792399850860,
+          "expiresAtMs": 1792400090860
+        },
+        "pin": {
+          "environmentRef": "e6-20261018-run1",
+          "runRef": "run1",
+          "sourceVersion": "moodle-4.5.15-215f4438",
+          "apiVersion": "2024100715",
+          "fixtureReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "courseId": 2,
+          "participantMapping": {
+            "participantId": "participant-e6-one",
+            "applicationId": "application-e6-one",
+            "moodleUserId": 3,
+            "accountBindingRef": "e6-one-account",
+            "revision": 1
+          },
+          "target": {
+            "targetLogicalId": "python-intro-activity",
+            "cmId": 3,
+            "instanceId": 1,
+            "module": "page",
+            "selectedPostId": null
+          },
+          "completionSetupReceiptHash": "0x1d4bede4680307fc8dad2b21022fb2b1b9826b8ac3e2857454a9e1ea22536e61"
+        }
+      },
+      "pinHash": "0xe30438abd6efdc2d7c45b931ccd48d45d17241f0af359c25a22bd31de3bca18e",
+      "sourceReceiptHash": "0x513cfaee01466035e9ca671e2db332f2d480822edad7b2e8293d890b50f389ad",
+      "sourceHash": "0x32c64e0f96a145af801a152034d21f330014586c38117b3be6a9924502075b1b",
+      "facts": {
+        "capability": "MOODLE_ACTIVITY_COMPLETION.1",
+        "targetLogicalId": "python-intro-activity",
+        "completionState": "COMPLETED",
+        "completionMode": "AUTOMATIC",
+        "completionRuleHash": "0x8110de2f3628b52722ad4ec356d7ca464f859d6321dd013b154edf9280d1a20d",
+        "ruleAssurance": "OBSERVED_API_AUTOMATIC_RULE",
+        "setupConfigurationReceiptHash": "0x1d4bede4680307fc8dad2b21022fb2b1b9826b8ac3e2857454a9e1ea22536e61",
+        "sourceCompletedAt": null,
+        "sourceStateModifiedAt": 1792334255,
+        "sourceTimeSemantics": "API_TIMECOMPLETED_IS_RECORD_LAST_MODIFIED_NOT_FIRST_COMPLETION"
+      },
+      "observed": {
+        "startedAtMs": 1792399851381,
+        "finishedAtMs": 1792399852109
+      },
+      "expiresAtMs": 1792400090860,
+      "originalBodyPublished": false
+    },
+    {
+      "criterion": "assignment-submitted",
+      "request": {
+        "version": "clear-moodle-bootcamp-read.1",
+        "context": {
+          "participantId": "participant-e6-one",
+          "applicationId": "application-e6-one",
+          "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+          "criterionId": "assignment-submitted",
+          "capability": "MOODLE_ASSIGNMENT_SUBMISSION.1",
+          "evidenceId": "e6-assignment-submitted",
+          "evidenceRevision": 1,
+          "runtimeMappingHash": "0xeea837a718359345e0465ed121f641798e439b5c14014cb0c1d06bc5726a5a73",
+          "fixtureReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "sourceRunId": "e6-read-31",
+          "sourceGeneration": 31,
+          "attempt": 1,
+          "issuedAtMs": 1792399852693,
+          "expiresAtMs": 1792400092693
+        },
+        "pin": {
+          "environmentRef": "e6-20261018-run1",
+          "runRef": "run1",
+          "sourceVersion": "moodle-4.5.15-215f4438",
+          "apiVersion": "2024100715",
+          "fixtureReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "courseId": 2,
+          "participantMapping": {
+            "participantId": "participant-e6-one",
+            "applicationId": "application-e6-one",
+            "moodleUserId": 3,
+            "accountBindingRef": "e6-one-account",
+            "revision": 1
+          },
+          "target": {
+            "targetLogicalId": "python-practice-task",
+            "cmId": 4,
+            "instanceId": 1,
+            "module": "assign",
+            "selectedPostId": null
+          },
+          "completionSetupReceiptHash": null
+        }
+      },
+      "pinHash": "0x8a272eaf2e45a38eda53a4a29c69fec725895d74ba0851b3f6c05d6e691679fd",
+      "sourceReceiptHash": "0x8add9cb0aea88d61d2a0889ed41a0ff8270cd30f29c9b2c26c21e74f63a9bf9c",
+      "sourceHash": "0x61c6d565eded185c17ad9cca5991f58abebca3973539d5e8e7b404771621da89",
+      "facts": {
+        "capability": "MOODLE_ASSIGNMENT_SUBMISSION.1",
+        "targetLogicalId": "python-practice-task",
+        "submissionState": "SUBMITTED",
+        "sourceSubmittedAt": null,
+        "sourceCreatedAt": 1792334255,
+        "sourceModifiedAt": 1792334256,
+        "submissionId": 1,
+        "attemptNumber": 0,
+        "gradingRequired": false,
+        "sourceTimeSemantics": "MODIFIED_IS_NOT_DEDICATED_SUBMITTED_AT"
+      },
+      "observed": {
+        "startedAtMs": 1792399852833,
+        "finishedAtMs": 1792399852968
+      },
+      "expiresAtMs": 1792400092693,
+      "originalBodyPublished": false
+    },
+    {
+      "criterion": "reflection-topics",
+      "request": {
+        "version": "clear-moodle-bootcamp-read.1",
+        "context": {
+          "participantId": "participant-e6-one",
+          "applicationId": "application-e6-one",
+          "policyHash": "0x1c6f90cd998e91a11bc6abc9fca3fb9f918238225b077b1aa0610de395fae281",
+          "criterionId": "reflection-topics",
+          "capability": "REFLECTION_REQUIRED_TOPICS.1",
+          "evidenceId": "e6-reflection-topics",
+          "evidenceRevision": 1,
+          "runtimeMappingHash": "0xeea837a718359345e0465ed121f641798e439b5c14014cb0c1d06bc5726a5a73",
+          "fixtureReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "sourceRunId": "e6-read-32",
+          "sourceGeneration": 32,
+          "attempt": 1,
+          "issuedAtMs": 1792399853502,
+          "expiresAtMs": 1792400093502
+        },
+        "pin": {
+          "environmentRef": "e6-20261018-run1",
+          "runRef": "run1",
+          "sourceVersion": "moodle-4.5.15-215f4438",
+          "apiVersion": "2024100715",
+          "fixtureReportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28",
+          "courseId": 2,
+          "participantMapping": {
+            "participantId": "participant-e6-one",
+            "applicationId": "application-e6-one",
+            "moodleUserId": 3,
+            "accountBindingRef": "e6-one-account",
+            "revision": 1
+          },
+          "target": {
+            "targetLogicalId": "python-reflection",
+            "cmId": 5,
+            "instanceId": 3,
+            "module": "forum",
+            "selectedPostId": 1
+          },
+          "completionSetupReceiptHash": null
+        }
+      },
+      "pinHash": "0xda95234a9e68fe544026b5c1588b74cc8e17ee2b30f7941292dfd79dae9de4b0",
+      "sourceReceiptHash": "0xeae070f9537d960c8841f008e7f8894fdea7b78c388dcb7bf54054c18e27ea31",
+      "sourceHash": "0x44193132150d0d04cb86b3b99dbc83d9ce0b787e63d5bc3d6a92202150dacd15",
+      "facts": {
+        "capability": "REFLECTION_REQUIRED_TOPICS.1",
+        "targetLogicalId": "python-reflection",
+        "sourceRecordId": 1,
+        "originalBodyHash": "0x55e3a6fd3ac8c7a7e93d349f1c02c02da8541d33fe74bf8fb485f3d316f5c70b",
+        "originalTitleHash": "0x928fecd8da4aa313de492c94b5db7f96accccbbd26e672444f57e3c5fda15c64",
+        "authorAccountId": 3,
+        "courseId": 2,
+        "forumId": 3,
+        "createdAt": 1792334257,
+        "modifiedAt": 1792334445,
+        "visibility": "AUTHENTICATED_PARTICIPANT_ONLY",
+        "topics": [
+          {
+            "topicId": "work-performed",
+            "state": "UNCERTAIN",
+            "reason": "TEXT_REVIEW_NOT_RUN"
+          },
+          {
+            "topicId": "problem-solving-process",
+            "state": "UNCERTAIN",
+            "reason": "TEXT_REVIEW_NOT_RUN"
+          },
+          {
+            "topicId": "learning-takeaway",
+            "state": "UNCERTAIN",
+            "reason": "TEXT_REVIEW_NOT_RUN"
+          }
+        ]
+      },
+      "observed": {
+        "startedAtMs": 1792399853673,
+        "finishedAtMs": 1792399853905
+      },
+      "expiresAtMs": 1792400093502,
+      "originalBodyPublished": false
+    }
+  ],
+  "metrics": {
+    "restReadCalls": 46,
+    "restWriteCalls": 0
+  },
+  "activeTokens": 0,
+  "rawHandlesDisposed": true,
+  "designatedTargetsDeleted": false,
+  "containersStopped": false,
+  "modelCalls": 0,
+  "personalSourceCalls": 0,
+  "productEvidenceAccepted": false,
+  "decisionRecorded": false,
+  "transactionSubmitted": false
+}
