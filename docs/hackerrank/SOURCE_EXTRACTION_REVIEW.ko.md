@@ -1,6 +1,8 @@
 # HackerRank 원천 의미·추출 규칙 검토
 
-## 최신 후속: 고정 경로 비교의 진단 전용 준비
+현재 우선순위는 [실제 증명 쌍과 정상 흐름 연결](PREPARED_SOURCE_REVIEW.ko.md)이다. 아래 focused 진단의 추가 실행·확장은 멈췄으며 준비 완료만으로 재로그인을 요청하지 않는다. `250946e` 원격4/4 SUCCESS로 해당 작은 단위를 마쳤다.
+
+## 완료한 작은 단위: 고정 경로 비교의 진단 전용 준비
 
 본부의 계속 준비 지시에 따라 [layout-focused.mjs](../../src/hackerrank-evidence/layout-focused.mjs)를 추가했다. 아래 a024aeb 조사에서 공개 근거로 확인한 경로만 비교한다. 결과는 `focusedReview.version=HACKERRANK_FOCUSED_REVIEW.1`이며 기존 schema.2 구조 요약을 유지한다. 아래 “문서만 변경/비교 코드 미구현”은 **a024aeb 당시 조사 기록**이다.
 
@@ -18,7 +20,7 @@
 
 로컬 최종 검증은 고정 Node24.21.0/network guard 아래 focused **10/10**, capture/runner **27/27**, 합계 **37/37 PASS**다. 마지막 정상 capture 연결 fixture의 구문 오류는 검사에서 발견해 수정한 뒤 해당 파일27개를 다시 통과했다. 제품 경계(values/verifier/recipes/request/collector/pending-trust) diff0, 문서 상대 링크/diff check PASS다. 기존 schema survey13개는 변경하지 않아 로컬에서 반복하지 않았고, 기존 HR CI wildcard는 세 파일을 함께 실행한다.
 
-**다음 사용자 행동:** 준비 완료 보고와 사용자 준비 신호 후에만 새 진단을 한 번 연다. 사용자는 본인 로그인 완료만 알리고, ready 이후 계정 관찰 안내가 나오면 **같은 탭에서 본인 프로필 → Certificates → Python(Basic) 상세 화면**까지 연다. 목록 수집 뒤 창이 유지되는 것이 정상이다. 세 관찰 완료 시 자동 종료한다. 알려지지 않은 metadata는 그대로 미확정으로 보고하며 재로그인을 자동 반복하지 않는다. 실제 attestor recipe/최소 공개·signer/epoch/context는 아래 설계 관문으로 계속 남는다.
+**현재 실행 조건:** 실제 원천 recipe·필수 검증과 통합 입력 준비를 먼저 끝낸 뒤 본부가 새 증명 한 번의 실행을 조율한다. 아래 진단 절차를 다음 로그인 요청으로 재사용하지 않는다.
 
 ## a024aeb의 추가 로그인 없는 조사 기록
 

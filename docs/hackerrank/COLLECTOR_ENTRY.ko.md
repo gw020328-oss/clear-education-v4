@@ -1,6 +1,6 @@
 # 첫 정상 TEST용 HackerRank 수집 입구
 
-최신: [focused 비교 준비](SOURCE_EXTRACTION_REVIEW.ko.md)는 계정 사본·같은 인증서 행·선택 경로의 값 없는 진단을 구현한다. 목록만으로 종료하지 않고 선택 관찰까지 기다리며 기존 수명/정리 경계를 유지한다. production extractor/recipe/trust 활성화가 아니며 다음 사용자 준비 신호 전 실제 실행은 보류한다.
+현재 정상 흐름용 입구는 [`withManagedHackerRankSource`](../../src/hackerrank-evidence/managed-source.mjs)다. 로그인 준비 후 같은 source의 pins를 mapping과 기존 API 실행기에 넘기는 범위를 추가했다. 아래 기존 `runHackerRankCollection` 입구도 보존한다. 자세한 callback 수명·소유 경계와 실제 차단점은 [준비 연결의 최신 절](PREPARED_SOURCE_REVIEW.ko.md)을 따른다. 일반 진단 확장은 중지했고 실제 nested 원천 recipe가 준비되기 전 새 로그인은 요청하지 않는다. 새 실제 proof0·trust UNCONFIGURED·API 미연결이다.
 
 2026-10-20 최신: schema.2 실행49450 후 [추가 로그인 없는 원천·추출 검토](SOURCE_EXTRACTION_REVIEW.ko.md)를 기록했다. 공개 코드의 계정 경로/인증서 의미와 실제 계정 재확인을 구분하며, 현행 진단을 그대로 반복하지 않는다. 실행 코드·verifier·trust 변경0, 실제 proof0/API HOLD다. 아래82588 준비 기록보다 이 검토를 우선한다.
 

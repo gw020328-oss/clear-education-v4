@@ -1,12 +1,18 @@
 # 과거 성공 경로 대조와 같은 owner의 수집 연결
 
-최신 후속은 [진단 전용 고정 경로 비교 준비](SOURCE_EXTRACTION_REVIEW.ko.md)다. 기존 schema.2에 focusedReview를 추가하고 두 응답과 선택 경로까지 기다리는 완료 조건을 합성 검증한다. 실제 recipe/verifier/trust와 owner/lease는 그대로이며 사용자 준비 신호 전 실제 창/로그인/proof는 실행하지 않는다.
+## 현재 작업: 새 실제 증명 쌍을 기존 정상 흐름에 연결
 
-2026-10-20 최신: schema.2 실행49450은 정상 정리했으며 실제 proof0이다. 추가 로그인 없이 공식 공개 소스를 대조한 [추출 규칙 검토](SOURCE_EXTRACTION_REVIEW.ko.md)를 우선한다. 계정 두 경로와 인증서 metadata 후보는 좁혔지만 최소 공개 recipe·실제 값 일치·signer/epoch/context는 미확정이다. 아래 schema.2 준비 문구는 그 실행 이전 기록이다.
+사용자의 전체 정상 흐름 우선 지시에 따라 일반 진단·schema 확장은 중지했다. 과거 Agent도 같은 `createClaimOnAttestor`를 사용하므로 이미 신청/owner/서명/관리형 저장 경계가 있는 현재 수집기를 재사용한다. 아래 과거 로그인 복구·진단 실행 안내는 현재 실행 지시가 아니다.
 
-최신 사용자 지시로 다음 실제 관찰 전 [schema.2 진단 준비](LAYOUT_DIAGNOSTIC.ko.md)를 먼저 마친다. 이번82588의 값 없는 결과와 다음 한 번의 판정 체크리스트를 그 문서에 기록했다. 진단 전용 숫자 정규화 재판독은 이제 값 대신 자료형만 저장하는 bounded parser로 교체하며, 1차 실제 strict parser 및 제품 verifier는 그대로다. 실제 재실행은 준비 보고 후 사용자 준비 신호까지 보류한다.
+[`withManagedHackerRankSource`](../../src/hackerrank-evidence/managed-source.mjs)가 공식 client와 동일 route의 새 관리형 Chrome을 열고, 준비 완료 후 `useSource(source, {signal})`에 기존 `pins/collectLease/close` 객체를 넘긴다. API 담당자는 이 callback 안에서 pins로 새 불변 mapping을 만들고 동일 source를 기존 `openLiveContext`에 전달한다. callback 종료 전에 lease 소비를 마쳐야 하며 종료/취소/실패 시 source와 lease를 폐기하고 모든 transport를 닫는다. 바깥 locked worker의 `stopRecordedBrowser → removeSession` 책임은 그대로다. pending/합성/잘못된 trust는 네트워크 전에 거부한다. API·Moodle·AI·금고 파일은 변경하지 않았다.
 
-최신 후속: 사용자가 자체 비밀번호 설정과 관리형 Chrome 로그인 완료를 확인했고, `fc803e4`에서 비수락 형식 진단 한 번을 실행했다. account/certificate 응답 관찰 후 exit0/profilesDeleted:true로 자동 종료했으나 계정 username 경로는 비었고 certificate strict JSON 해석은 실패했다. 새 proof는 0건이다. [실제 결과와 최소 진단 보완](LAYOUT_DIAGNOSTIC.ko.md)의 최신 절을 따른다. 아래 로그인/계정 변경0 및 복구 가능 여부 미확정은 이 실행 전 조사 시점의 기록이다. `fc803e4` 원격 CI는 3/3 SUCCESS이며 후속 소스 변경의 CI 결과와 구분한다.
+**실제 연결 완료는 아니다.** 새 host 연결부는 오프라인 transport 대역으로 수명/owner 전달을 검증했고, 새 실제 proof는 0건이다. 현재 결정적인 차단점은 `recipes.mjs`의 합성 flat 응답과 실제 dashboard NEXT_DATA/중첩 certificate 응답의 차이다. 원천 경로·중복·같은 행 관계를 보장하면서 필요한 값만 공개하는 실제 recipe와 해당 검증을 먼저 구현해야 한다. 전체 개인 응답 공개, JSONPath 선택만으로 경로를 입증했다고 간주, strict parser 일괄 완화는 적용하지 않았다. 원천 규칙이 준비되기 전 새 로그인은 요청하지 않는다.
+
+독립 signer는 기존 YBM의 공개 registry 조회 경로를 재사용할 수 있다. 공식 attestor-core 소스 revision `5db03f0622569740f72dd8f3295c22c3707905d6`의 [claimTunnel](https://github.com/reclaimprotocol/attestor-core/blob/5db03f0622569740f72dd8f3295c22c3707905d6/src/server/handlers/claimTunnel.ts#L74)은 epoch1, [request 검증](https://github.com/reclaimprotocol/attestor-core/blob/5db03f0622569740f72dd8f3295c22c3707905d6/src/server/utils/assert-valid-claim-request.ts#L142)은 입력 context에 providerHash/extractedParameters를 넣는 구현이다. 이는 배포 서버나 설치 SDK5.1.4의 동일 revision 확인이 아니며 실제 signed response 검증을 대체하지 않는다. pending trust는 UNCONFIGURED다.
+
+로컬 검증: 고정 Node24.21.0/network guard에서 새 host 수명7개+기존 prepared-source10개, 17/17 PASS. 정상/중간 실패/ready 취소/브라우저 종료/route 취소/정리 실패, private 오류 비노출과 동일 owner 전달을 확인했다. 실제 proof 또는 API 수락 시험이 아니다. 직전 진단 head `250946e`의 원격4개 검사는 모두 SUCCESS다. 최신 head 결과는 PR 기록을 따른다.
+
+## 이전 준비와 조사 기록
 
 2026-10-20. 새 PR 기준은 API PR102의 실제 로컬/원격 ref `codex/bootcamp-e5-api-bridge`, 커밋 `6962c1394b82aac633a686e1d197475d1803aacb`다. 이 기준은 이전 HR head `7b35bb3`를 포함한다. 기존 HR 작업본은 미커밋 변경 없이 인수했으며 옛 브랜치는 보존하고 `codex/hackerrank-prepared-owner-lease`로 분리했다. 선행 코드가 develop에 없으므로 API 브랜치 대상 stacked Draft PR로 차분을 제한한다.
 

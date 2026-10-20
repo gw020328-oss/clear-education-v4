@@ -1,5 +1,8 @@
 # HackerRank 원천 형식 관찰 — 실행 전 인계
 
+현재 지시: 일반 진단/schema 확장과 추가 진단 실행은 중지했다. 아래는 완료한 준비·과거 실행 기록이며 다음 로그인 지시가 아니다. [실제 증명 쌍과 정상 흐름 연결](PREPARED_SOURCE_REVIEW.ko.md)을 우선한다.
+
+
 ## 최신: focused 비교를 포함한 다음1회 준비
 
 [추출 검토의 최신 후속](SOURCE_EXTRACTION_REVIEW.ko.md)에 따라 `HACKERRANK_FOCUSED_REVIEW.1`을 기존 schema.2 옆에 추가했다. exact direct/cache username의 유일성·타입·동등성, certificate query/같은 row의 계정·ID·metadata·status·test ID 연결, target 수·중복·선택 ID를 값 없는 enum/bool/type으로 비교한다. 공개 근거가 없는 certificates 문자열 fallback은 없으며 실제 미관찰 metadata 누락은 UNRESOLVED로 남긴다.
