@@ -6,6 +6,10 @@ import {createLayoutCapture} from './layout-capture.mjs';
 import {ACCOUNT_URL} from './recipes.mjs';
 import {check,EvidenceError} from './values.mjs';
 
+// Transport only. Google login content is outside the source observer.
+// No Google suffix wildcard or speculative static/API hosts.
+export const layoutTransportHost=host=>host==='accounts.google.com'||['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d));
+
 // No proof API, cookie API, approval/signing key, submit port or payment port.
 export async function runHackerRankLayout(session,{signal,input=process.stdin,output=console.log,openClient=openOfficialClient,openRoute=createRoute,launchBrowser=startChrome}={}){
  const cancelled=new AbortController(),scope=AbortSignal.any([signal,cancelled.signal,AbortSignal.timeout(15*60*1000)].filter(Boolean));
@@ -13,7 +17,7 @@ export async function runHackerRankLayout(session,{signal,input=process.stdin,ou
  try{
   check(process.env.CLEAR_LOCKED==='1'&&session&&typeof session.path==='string','LAYOUT_MANAGED_WORKER');
   phase='ATTESTOR_CONNECT';connection=await openClient({signal:scope,proofMode:false});
-  phase='LOCAL_ROUTE';route=await openRoute({client:connection.client,signal:scope,allowHost:host=>['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d))});
+  phase='LOCAL_ROUTE';route=await openRoute({client:connection.client,signal:scope,allowHost:layoutTransportHost});
   live=AbortSignal.any([scope,route.signal]);
   phase='CHROME_START';browser=await launchBrowser(session,{synthetic:false,proxyUrl:route.proxyUrl,headless:false,signal:live});
   phase='CHROME_TARGET';const {targetInfos}=await browser.send('Target.getTargets'),page=targetInfos.find(t=>t.type==='page');check(page,'LAYOUT_BROWSER_PAGE');

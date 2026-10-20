@@ -57,3 +57,13 @@
 5. 세 SDK 모듈의 network-blocked/silent import PASS, HR108 PASS 및 최종 phase/cleanup 진단14 PASS, launcher/worker 구문 PASS. import 점검의 최초 기본 SDK 경고는 silent 설정으로 정정했다. 합성 검증이며 실제 source 성공은 아니다.
 6. 다음 한 작업은 본부가 수정된 명령으로 단계 식별 실행을 한 번 수행하는 것이다. 본 담당은 실제 재실행/로그인 요청을 하지 않았다. 로그인 안내 여부는 본부가 기동 상태를 확인한 뒤 결정한다. 소유 경로는 layout-launch/run/worker 및 진단 문서다.
 7. 일반 복구 고도화/동시 진단/기존 사용자 프로필·볼륨 삭제/새 세션/PR21·36/자동 merge·deploy 없음. 기존 개인정보 경계와 추가 지급 서명 없음 조건 유지.
+
+## 2026-10-20 Google 로그인 중계 후속 인계 — 7항목
+
+1. 본부 보고: 로그인 화면까지 기동했지만 사용자가 선택한 Google popup이 중계 403으로 차단됐다. 이전 실행 ready0, 본부 close 정리 중이며 삭제 성공은 미단정이다.
+2. 기존 clear-hackerrank-bootcamp / codex/hackathon-normal-source-entry에서 이 절과 같은 커밋으로 최소 수정한다. 기존 API source/v5 guard는 바꾸지 않는다.
+3. 변경 소유는 layout-run, 진단 시험과 기존 HR 안내 두 문서뿐이다. OAuth URL/state/code/화면/원문/쿠키/키 복사 없음. 기존 사용자 프로필 접근 없음.
+4. 정확 accounts.google.com:443만 HR 진단 TLS 중계에 추가했다. 미확인 정적 host와 Google API/서브도메인은 거부한다. 기존 route 기본값/YBM은 그대로다. 명령은 LAYOUT_DIAGNOSTIC.ko.md의 고정 Node 직접 경로다.
+5. network-blocked 진단16 PASS, fail/cancel/skip0. 새2개는 실제 loopback 중계의 허용/거부와 Google 본문/cookie/proof 접근0을 검증했다. 관찰기는 기존 HR 두 응답만 유지하고 코드 리뷰에서 변경 범위를 확인했다. 실제 Google 로그인 성공은 아직 미검증이다.
+6. 다음 한 작업은 본부가 이전 실행 정리를 확인한 뒤 단일 진단을 다시 여는 것이다. 여기서는 재실행·동시 브라우저·사용자 로그인 요청을 하지 않는다. 추가 host는 실제 필요 확인 뒤 별도 판단한다.
+7. 새 SDK/scope/가입/보안설정/유료/일반 복구/PR21·36/새 세션/자동 merge·deploy 없음. 공식 attestor가 추가 Google 목적지·연결 메타데이터·TLS 암호문을 중계한다는 점을 진단 문서에 반영했다.

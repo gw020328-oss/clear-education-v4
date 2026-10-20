@@ -1,6 +1,6 @@
 # HackerRank 원천 형식 관찰 — 실행 전 인계
 
-2026-10-20. 정상 시연의 실제 recipe 검토 입력을 얻는 최소 진단이다. **본부의 첫 실행은 로그인 안내 전에 종료됐다. 실제 로그인·실제 본문 관찰·hosted proof는 아직 실행하지 않았다.** 본부가 사용자에게 한 번 안내한 뒤 실행한다. UNCONFIGURED trust를 변경하거나 synthetic recipe를 실제 recipe로 승격하지 않는다.
+2026-10-20. 정상 시연의 실제 recipe 검토 입력을 얻는 최소 진단이다. **본부의 후속 실행은 로그인 화면까지 열렸으나 사용자가 선택한 Google 로그인 popup의 중계가 차단됐다. ready·원천 본문 관찰·hosted proof는 아직 실행하지 않았다.** 본부가 사용자에게 한 번 안내한 뒤 실행한다. UNCONFIGURED trust를 변경하거나 synthetic recipe를 실제 recipe로 승격하지 않는다.
 
 ## 정확한 실행 방법
 
@@ -25,7 +25,7 @@
 
 새 worker는 기존 전용 잠금과 보관 폴더를 사용한다. 브라우저→중계→client 정리를 모두 시도하고, 기록된 소유 브라우저 종료를 확인한 다음 임시 프로필 폴더를 삭제한다. 중단된 이전 실행은 기존 승인된 재시작 정리 정책을 따른다. 관리형 암호화 저장이며 완전한 무디스크 실행·문자열/GC/swap 완전 소거를 주장하지 않는다.
 
-**외부 전달:** 실행 시작부터 `wss://attestor.reclaimprotocol.org:444/ws`에 연결한다. 새 Chrome의 허용된 HackerRank/hrcdn HTTPS 트래픽을 공식 attestor가 중계하므로 목적지·연결 시각·암호문 트래픽 메타데이터를 볼 수 있다. 로그인 요청/응답의 평문은 HackerRank, 로컬 Chrome 및 이 로컬 관찰기의 처리 범위다. 이 진단에서는 `claimTunnel`이나 선택 공개 proof를 보내지 않는다. 나중 실제 proof 생성 단계에서 attestor에 공개되는 필드는 별도의 recipe 검토 대상이다. 현재 요약만으로 개인정보 비공개 보장이 검증됐다고 표시하지 않는다.
+**외부 전달:** 실행 시작부터 `wss://attestor.reclaimprotocol.org:444/ws`에 연결한다. 새 Chrome의 허용된 HackerRank/hrcdn HTTPS 트래픽과 정확한 accounts.google.com 로그인 HTTPS 트래픽을 공식 attestor가 중계하므로 해당 목적지·연결 시각·암호문 트래픽 메타데이터를 볼 수 있다. Google 로그인 평문은 Google과 로컬 Chrome이 처리하며, 로컬 원천 관찰기는 Google 본문·쿠키·토큰·OAuth 응답·callback을 읽거나 증명하지 않는다. HackerRank 원천 관찰은 위 두 응답의 메모리 처리 범위로 한정한다. 이 진단에서는 `claimTunnel`이나 선택 공개 proof를 보내지 않는다. 나중 실제 proof 생성 단계에서 attestor에 공개되는 필드는 별도의 recipe 검토 대상이다. 현재 요약만으로 개인정보 비공개 보장이 검증됐다고 표시하지 않는다.
 
 **비용:** 이 진단에는 모델 호출, 결제 API, app ID/secret, 구매/가입 자동화가 없다. 공개 attestor의 현재 접근 허용·요금·서비스 제한은 확인하지 못했으므로 무료라고 단정하지 않는다. 인증/결제 요구로 실패하면 그대로 중단한다. 승인 예산을 재사용하거나 개인 키/계정을 찾아 우회하지 않는다. [공식 attestor 인증 설명](https://docs.reclaimprotocol.org/manual/inapp-sdks/advanced/attestor-auth)은 private attestor의 인증·허용 도메인 설정을 설명하며 공개 endpoint의 무료 사용을 보증하지 않는다.
 
@@ -50,3 +50,13 @@
 새 worker/run의 실패 출력은 `HACKERRANK_LAYOUT_PHASE`의 고정 값으로 한정한다: STORAGE_RECOVERY, SESSION_CREATE, MANAGED_WORKER, ATTESTOR_CONNECT, LOCAL_ROUTE, CHROME_START, CHROME_TARGET, DASHBOARD_NAVIGATE, READY_WAIT, SOURCE_LAYOUT, TRANSPORT_CLEANUP, UNEXPECTED_TERMINATION. 예외 message/stack/path/host 응답은 출력하지 않는다. 기존 프로필 검색·일반 복구·볼륨 삭제·동시 진단을 추가하지 않았다. 설치 후에도 실제 연결/Chrome 정상 기동은 아직 확인하지 않았으므로 본부가 위 명령으로 한 번 단계 확인 후 사용자에게 로그인 필요 시점을 안내한다.
 
 설치 후 세 모듈의 import를 `LOG_LEVEL=silent` 및 외부 네트워크 차단 아래 확인했다. SDK 기본 경고가 로컬 경로를 표시한 최초 점검은 무출력 설정으로 정정했다. 실제 client는 기존대로 SDK import 전에 LOG_LEVEL=silent와 quiet logger를 적용한다. 진단 합성14개/전체 HR108개 검사를 통과했으며 실제 접속 성공을 대신하지 않는다.
+
+## Google 로그인 중계의 최소 허용
+
+본부는 사용자가 선택한 Google 로그인에서 ERR_TUNNEL_CONNECTION_FAILED가 발생했고 기존 HR/hrcdn 전용 중계가 accounts.google.com의 CONNECT를 403으로 거부함을 확인했다. 이전 실행에는 ready를 입력하지 않았으며 본부가 close로 정리를 진행한다. 이 보고만으로 삭제 성공을 확정하지 않는다.
+
+HR 형식 진단 경로만 정확한 `accounts.google.com:443` 중계를 추가했다. Google 전체 도메인·서브도메인·Google API·추측한 정적 host는 허용하지 않는다. 추가 정적 host의 필요는 확인되지 않아 추가하지 않았다. 기존 route 기본값과 YBM 경로는 수정하지 않았다. 로그인 권한·scope·SDK·사용자 보안 설정도 바꾸지 않았다.
+
+이 허용은 TLS 중계만 위한 것이다. 관찰기의 고정 HackerRank dashboard/certificate 범위는 그대로이며 Google popup과 같은 탭 Google 응답 모두 본문 읽기 0건으로 검사한다. 실제 OAuth URL/state/code·사용자 화면·쿠키를 로그나 fixture로 복사하지 않는다.
+
+수정 후 작은 합성 검사에서 exact Google CONNECT 허용, 유사 도메인·서브도메인·Google API/미확인 정적 host·비443 중계 거부, Google 본문/cookie/proof 접근 0을 확인한다. 실제 재실행은 본부가 기존 실행 정리를 확인한 뒤 위 고정 Node 명령으로 한 번 진행한다. 여기서는 브라우저를 열거나 사용자에게 로그인을 요청하지 않는다.
