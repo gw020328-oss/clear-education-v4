@@ -98,3 +98,14 @@ API는 준비된 `createLiveMoodleConsumer` 안에서 같은 모듈 트리/검�
 API는 같은 모듈 트리에서 `isFirstNormalReflectionResult(result)`와 `consumeFirstNormalReflection(result)`를 import한다. 실제 entry 반환만 private WeakSet identity를 받고, 복제/JSON/fixture 반환은 차단한다. consume 반환의 current/observation과 API 소유 외부 fresh probe/CAS 검사는 계속 필요하다. transport 성공 문자열만으로 source/evidence/지급 권한을 만들지 않는다.
 
 API가 새 TEST 신청/지갑 결합 metadata 준비를 알렸지만 아직 source 수집·짧은 lease·AI packet·새승인은 발급되지 않았다. 이전 날짜/lease를 현재 것으로 재사용하지 않는다. 이번 변경의 키조회/유료호출/tx는0이다.
+
+
+## 다음 세션용 현재 소작업 인계 (2026-10-20)
+
+1. 실제 성공/차단점: 정상 회고 단회 접점과 호출·출처 경계는 준비됐고 root가 1276b91의 좁은 경계 검토를 완료했다. 정상 경로의 새 모델/키조회/tx는0이다. API 통합 head·새 동일신청의 현재 source/packet·당일 가격 확인/직접 단회 승인이 남았다. 이전 신청의 접수1800초 창은 만료됐으며 연장/재사용하지 않는다. API가 기존 TEST 환경을 보존한 새 신청과 마지막 단계240초 lease를 발급한다.
+2. 작업본/이력: `workspaces/clear-ai-review-precheck`, branch `codex/ai-first-normal-handoff`, 구현 head `1276b91a9fc161683fe8965ba678cbf46e14c31c`, [Draft PR101](https://github.com/gw020328-oss/clear-education-v4/pull/101). 중앙 입구는 root ec0c7df의 `docs/current/HACKATHON_TEST_SESSION_HANDOFF.ko.md`다. 이 문서 추가 커밋은 구현/실행 head를 바꾸지 않는다.
+3. 미커밋/보존: 인계 작성 직전 추적 파일의 미커밋 변경은 없었다. AI 소유 경로 밖은 수정하지 않는다. 과거 평가·spent·journal·Mac 최초 실패는 보존한다. 비공개 키/쿠키/raw/token을 열거나 복사하지 않으며 이전8건 승인 잔여는0이다.
+4. 재현/환경/pin: 저장소 고정 `./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/ai-review-precheck/first-normal-reflection.test.mjs`로 오프라인 경계를 재현한다. API/Moodle 소유 환경·공개 binding/pin은 새 신청 발급 뒤 해당 소유자의 참조를 사용한다. 만료 metadata나 fixture application을 실제 현재 입력으로 재사용하지 않는다.
+5. 검증/출처: 관련 오프라인336/336 및 root의 경계11/11 확인은 실제 모델/원천/지급 완료가 아니다. 이전 v3 합성8건 결과는 [기존 실제 호출 보고](REVIEW_PRECHECK_E6_WIRE_V3_ACTUAL_20261019.ko.md)에 별도 보존한다. API가 보고한 합성 원천100TEST 수령도 실제 원천 전체 연결 성공과 구분한다.
+6. 다음 한 작업/소유: API가 발급한 새 동일신청 context와 Moodle current raw lease를 기존 AI entry에 연결하고 정확 packet·전송 범위를 root에 전달한다. AI는 `src/document-precheck/review/`, `tests/ai-review-precheck/`, 이 전용 문서만 소유한다. API는 private result identity/외부 fresh probe/current-CAS를 유지하고, root 한곳에서 당일 새 단회 승인 질문을 준비한다. 승인 전 호출0을 유지한다.
+7. 재개 금지: 끝난 PR21/PR36·추가평가·Vision/RAG·Mac/Windows 과거 재시험·독립 고도화를 재개하지 않는다. 현재 정상 시연 연결은 계속하며, 본부 인계 확인 전 새 세션/에이전트·기존 채팅 archive·자동 merge/배포를 하지 않는다.
