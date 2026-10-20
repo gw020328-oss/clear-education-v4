@@ -18,3 +18,11 @@
 API가 등록·검증한 실제 원천을 SYNTHETIC_EXAMPLE로 표시하지 않도록 E2 `test-encoding-v3.mjs`에 정확 `REGISTERED_TEST_SOURCE` provenance를 추가한다. 실제 provenance는 기존 REAL_CLOCK_REQUIRED를 그대로 적용하여 caller clock 주입을 거부한다. API procedure/current의 두 검사에서 이 provenance만 wall clock으로 검사하며 source/chain checkpoint/current를 별도로 검증한다. B에는 .2 binding+command만 전달되고 API snapshot은 메모리 harness에 전달되지 않는다(API 소유자 확인). 이 문자열은 source 인증 또는 지급 허가가 아니며 출력 sourceSignatureVerified/consentAuthenticityVerified/nonceConsumed/paymentAllowed는 계속 false다. .3 EIP712 domain/message/type, 해시, 금액, nonce, source cutoff·동의·현재성 검사는 변경하지 않는다.
 
 E2 변경 전 SHA256 `eb535f3f30e0bee8c1f3e7dff16c202baa72108ae1417f8b0e077870312d3c5a`, 변경 후 `e348a687265fd89c9a98e977dc20d213ed87bf4169da2063b8b68279a2ce9d7f`. E2 기존 회귀와 실제 시계·guard 시험 합계121 PASS, fail/cancelled/skipped0. 테스트 자료는 발명한 fixture이며 실제 원천 수집으로 간주하지 않는다. 기존 E2 consumer pin/intake 원본은 변경하지 않았다. 메모리 harness의 원본 E2 source pin은 새 호환 인수 전 이 변경을 거부한다. 통합 담당이 정확한 후속 지문을 검토·인수해야 하며 wildcard 허용으로 우회하지 않는다.
+
+## 2026-10-20 E2 검토 변경의 소스 지문 호환
+
+root의 `70979e2` 단일 intake 기록을 `9ac174e`로 출처를 남겨 가져왔다. `specs/bootcamp/hackathon-test-normal-source-intake-v1.json`의 정확한 SHA-256 `410ec5bab91a365cee6909328b0c1a2f847283738b27f66aaf911e2300f47dc9` 및 원래 immutable intake 지문을 검사한다. 새 compatibility helper는 E2 helper 한 파일의 승인된 before/after만 허용한다. 기존 E2/v1/v4 및 E5 service/component intake 파일은 수정하지 않았다. 다른 파일의 지문 검사는 유지한다.
+
+원래 E2 4개 지문을 accepted Git snapshot `d9407b06b8a13122a489193119c1899929f83fe4`에서 직접 검증하고, 현행 파일은 단일 승인 변경 외 원본과 일치하는지 검사한다. 잘못된 before hash는 거부한다. E4 memory harness의 기존 API v4 17개 소스 검사는 여전히 필요하며, 후속 API 구현 지문 변경을 자동 허용하지 않는다. API 새 소스는 root의 별도 intake를 기다린다. 지급 서명/ABI/domain/24개 필드/nonce/current/자금·claim 경계 변경은 없다.
+
+이 후속의 로컬 E4/메모리/서명 회귀 및 지문 검사는 165 PASS, FAIL/CANCELLED/SKIPPED 0(131.45초), E5 보존/17개 B component/17개 API v4 source 검사는 PASS다. 검토는 정확한 경로 예외·원본 snapshot 보존·기존 ABI/서명/nonce/claim 검사 유지 중심으로 수행했다. 실제 원천 성공, API 최신 v5 결합 또는 원격 CI 성공을 대신하지 않는다.

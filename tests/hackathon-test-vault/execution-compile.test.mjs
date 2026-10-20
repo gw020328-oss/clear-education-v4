@@ -1,3 +1,4 @@
+import {normalE2Hash} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -44,7 +45,7 @@ test('execution fixed token code and frozen preparation/E2 artifact sources rema
  const prep=JSON.parse(read('docs/hackathon-test-vault/preparation-artifact.json'));
  assert.equal(buildExecution().tokenCodeHash,prep.fixedToken.runtimeCodeHash);
  const e2=JSON.parse(read('specs/bootcamp/hackathon-test-consumer-pins-v1.json'));
- for(const [path,expected] of [...Object.entries(prep.sourceSha256),...Object.entries(e2.artifactSha256)])assert.equal(createHash('sha256').update(read(path)).digest('hex'),expected,path);
+ for(const [path,expected] of [...Object.entries(prep.sourceSha256),...Object.entries(e2.artifactSha256)])assert.equal(createHash('sha256').update(read(path)).digest('hex'),normalE2Hash(path,expected),path);
 });
 test('published execution compile artifact is reproducible and records zero execution',()=>{
  const stored=JSON.parse(read('docs/hackathon-test-vault/execution-artifact.json'));assert.deepEqual(stored,executionArtifact());

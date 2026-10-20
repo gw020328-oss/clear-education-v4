@@ -1,3 +1,4 @@
+import {normalE2Hash} from './normal-source-compatibility.mjs';
 // Explicit TEST-only integration host. Imports test fixtures intentionally:
 // it creates its own disposable E1/E3/auth stores, synthetic source and memory EVM.
 // It cannot attach an existing chain, key, DB, RPC URL, or caller-provided snapshot.
@@ -42,7 +43,7 @@ function intake(){
  check(eq(c.allowedRuntimeKinds,[MEMORY_STAGE])&&!c.persistentRuntimeAllowedByThisIntake&&!c.fullRuntimeAccepted&&!c.existingV1GatesChanged&&!c.productionEnabled,'STAGE_COMPATIBILITY_SCOPE');
  check(c.e2ConsumerInput.path==='specs/bootcamp/hackathon-test-consumer-pins-v1.json'&&digest(c.e2ConsumerInput.path)==='0x'+c.e2ConsumerInput.sha256,'STAGE_COMPATIBILITY_E2');
  check(Object.keys(c.e3ArtifactSha256).length===8&&Object.keys(c.additionalSourceArtifactSha256).length===9,'STAGE_COMPATIBILITY_SOURCES');
- for(const [p,sha]of [...Object.entries(c.e3ArtifactSha256),...Object.entries(c.additionalSourceArtifactSha256),...Object.entries(i.e4Preparation.artifactSha256),...Object.entries(e2.artifactSha256)])check(digest(p)==='0x'+sha,'STAGE_SOURCE_PIN');
+ for(const [p,sha]of [...Object.entries(c.e3ArtifactSha256),...Object.entries(c.additionalSourceArtifactSha256),...Object.entries(i.e4Preparation.artifactSha256),...Object.entries(e2.artifactSha256)])check(digest(p)==='0x'+normalE2Hash(p,sha),'STAGE_SOURCE_PIN');
  return {...i,currentCompatibleSourceHead:c.currentSourceCandidateHead};
 }
 export async function createFreshMemoryStage(configuration={}){
