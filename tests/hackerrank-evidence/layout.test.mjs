@@ -14,15 +14,12 @@ const certificate=JSON.stringify({data:[{username:'SYNTHETIC_SECRET_USER',certif
 const certUrl=CERTIFICATE_URL+'?username=SYNTHETIC_SECRET_USER';
 test('login diagnostics retain only fixed denied Google resource host categories and bounded counts',()=>{
  const diagnostics=createLayoutTransportDiagnostics();
- for(let i=0;i<1002;i++)assert.equal(diagnostics.allowHost('www.gstatic.com'),false);
- assert.equal(diagnostics.allowHost('ssl.gstatic.com'),false);
- assert.equal(diagnostics.allowHost('www.google.com'),false);
+ for(let i=0;i<1002;i++)assert.equal(diagnostics.allowHost('ssl.gstatic.com'),false);
+ for(const host of ['fonts.gstatic.com','www.gstatic.com','www.google.com'])assert.equal(diagnostics.allowHost(host),true);
  for(const host of ['SYNTHETIC_SECRET_HOST.example','SYNTHETIC_SECRET_HOST.gstatic.com','www.gstatic.com.evil.example','www.googleapis.com'])assert.equal(diagnostics.allowHost(host),false);
  assert.equal(diagnostics.allowHost('accounts.google.com'),true);assert.equal(diagnostics.allowHost('www.hackerrank.com'),true);
  assert.deepEqual(diagnostics.summary(),[
-  {host:'ssl.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1},
-  {host:'www.google.com',category:'GOOGLE_RESOURCE_CANDIDATE',count:1},
-  {host:'www.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1000},
+  {host:'ssl.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1000},
  ]);
  assert.doesNotMatch(JSON.stringify(diagnostics.summary()),/SYNTHETIC_SECRET/);
  assert.deepEqual(createLayoutTransportDiagnostics().summary(),[]);
@@ -34,11 +31,12 @@ test('HR login CONNECT allows exact Google account host and rejects unapproved t
   const request=http.request({host:proxy.hostname,port:proxy.port,method:'CONNECT',path:target});
   request.on('error',reject);request.on('connect',(response,socket)=>{socket.destroy();resolve(response.statusCode);});request.end();
  });
- assert.equal(await connect('accounts.google.com:443'),200);
- assert.deepEqual(client.calls.filter(c=>c.type==='createTunnel').map(c=>c.value.host),['accounts.google.com']);
- for(const target of ['google.com:443','sub.accounts.google.com:443','accounts.google.com.evil.example:443','evilaccounts.google.com:443','www.googleapis.com:443','ssl.gstatic.com:443','localhost:443','accounts.google.com.:443','accounts.google.com:80','user@accounts.google.com:443'])assert.equal(await connect(target),403,target);
- assert.equal(client.calls.filter(c=>c.type==='createTunnel').length,1);
- assert.equal(allowedHost('accounts.google.com'),false);
+ const permitted=['accounts.google.com','fonts.gstatic.com','www.gstatic.com','www.google.com'];
+ for(const host of permitted)assert.equal(await connect(host+':443'),200);
+ assert.deepEqual(client.calls.filter(c=>c.type==='createTunnel').map(c=>c.value.host),permitted);
+ for(const target of ['google.com:443','sub.accounts.google.com:443','accounts.google.com.evil.example:443','evilaccounts.google.com:443','www.googleapis.com:443','ssl.gstatic.com:443','localhost:443','accounts.google.com.:443','accounts.google.com:80','user@accounts.google.com:443','sub.www.gstatic.com:443','www.gstatic.com.evil.example:443','www.google.com.evil.example:443',...permitted.map(host=>host+':80')])assert.equal(await connect(target),403,target);
+ assert.equal(client.calls.filter(c=>c.type==='createTunnel').length,permitted.length);
+ for(const host of permitted)assert.equal(allowedHost(host),false);
 });
 function fakeBrowser(){
  const handlers=new Map(),calls=[],bodies=new Map();
@@ -53,8 +51,10 @@ function events(browser,id,url,body,{sid='page',method='GET',status=200,mimeType
 test('Google login responses are never observed before or after ready, including popup sessions',async()=>{
  const browser=fakeBrowser(),capture=createLayoutCapture({browser,sessionId:'page'});
  events(browser,'before-google','https://accounts.google.com/','SYNTHETIC_SECRET_BODY');await capture.arm();
- events(browser,'page-google','https://accounts.google.com/','SYNTHETIC_SECRET_BODY');
- events(browser,'popup-google','https://accounts.google.com/','SYNTHETIC_SECRET_BODY',{sid:'popup'});
+ for(const host of ['accounts.google.com','fonts.gstatic.com','www.gstatic.com','www.google.com']){
+  events(browser,'page-'+host,'https://'+host+'/','SYNTHETIC_SECRET_BODY');
+  events(browser,'popup-'+host,'https://'+host+'/','SYNTHETIC_SECRET_BODY',{sid:'popup'});
+ }
  await tick();assert.deepEqual(capture.summary().layouts,{});
  assert.ok(!browser.calls.some(c=>/getResponseBody|cookie|claim|sign/i.test(c[0])));
  await capture.close();assert.doesNotMatch(JSON.stringify(await capture.done),/SYNTHETIC_SECRET/);
@@ -106,11 +106,11 @@ test('runner cleanup closes every owned transport after ready and terminal close
  try{
   const input=new PassThrough(),browser=fakeBrowser(),closed=[],messages=[];
   const result=await runHackerRankLayout({path:'/synthetic/owned-session'},{input,output:m=>{messages.push(m);if(m.includes('ready'))setImmediate(()=>input.write('ready\n'));},
-   openClient:async()=>({client:{},close:async()=>closed.push('client')}),openRoute:async({allowHost})=>{assert.equal(allowHost('www.gstatic.com'),false);return {signal:new AbortController().signal,proxyUrl:'http://127.0.0.1:1',close:async()=>closed.push('route')};},
+   openClient:async()=>({client:{},close:async()=>closed.push('client')}),openRoute:async({allowHost})=>{assert.equal(allowHost('ssl.gstatic.com'),false);return {signal:new AbortController().signal,proxyUrl:'http://127.0.0.1:1',close:async()=>closed.push('route')};},
    launchBrowser:async(_session,{signal})=>{const send=browser.send.bind(browser);browser.send=async(name,...args)=>{signal.throwIfAborted();const r=await send(name,...args);if(name==='Network.setBypassServiceWorker')setImmediate(()=>input.write('close\n'));return r;};return browser;}});
   assert.equal(result.apiAcceptance,'HOLD');assert.deepEqual(closed,['route','client']);assert.equal(browser.calls.filter(c=>c[0]==='close').length,1);assert.equal(browser.handlerCount(),0);
   assert.doesNotMatch(messages.join('\n'),/SYNTHETIC_SECRET/);
-  assert.deepEqual(messages.filter(m=>m.startsWith('{')).map(m=>JSON.parse(m)),[{scope:'HACKERRANK_LAYOUT_LOGIN_TRANSPORT',deniedGoogleResources:[{host:'www.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1}]}]);
+  assert.deepEqual(messages.filter(m=>m.startsWith('{')).map(m=>JSON.parse(m)),[{scope:'HACKERRANK_LAYOUT_LOGIN_TRANSPORT',deniedGoogleResources:[{host:'ssl.gstatic.com',category:'GOOGLE_STATIC_CANDIDATE',count:1}]}]);
  }finally{if(previous===undefined)delete process.env.CLEAR_LOCKED;else process.env.CLEAR_LOCKED=previous;}
 });
 test('runner rejects outside managed worker before transport and redacts connection failures',async()=>{

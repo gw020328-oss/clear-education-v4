@@ -8,7 +8,8 @@ import {check,EvidenceError} from './values.mjs';
 
 // Transport only. Google login content is outside the source observer.
 // No Google suffix wildcard or speculative static/API hosts.
-export const layoutTransportHost=host=>host==='accounts.google.com'||['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d));
+const googleLoginHosts=new Set(['accounts.google.com','fonts.gstatic.com','www.gstatic.com','www.google.com']);
+export const layoutTransportHost=host=>googleLoginHosts.has(host)||['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d));
 // Observation candidates are not transport permissions. Never retain an
 // arbitrary denied host, URL, request data or account-derived label.
 const googleResourceCandidates=new Map([
