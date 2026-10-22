@@ -41,7 +41,9 @@ export function createTestWalletSession({origin,provider,fetchImpl=globalThis.fe
   if(ended||stamp!==generation||!wallet(a?.[0])||a[0].toLowerCase()!==connected||BigInt(c)!==BigInt(chainId)){void end();throw fail('TEST_WALLET_CHANGED');}}
  async function end(){if(ended)return;const h=headers(),had=!!auth;ended=true;generation++;lifetime.abort();connected=null;auth=null;try{onEnd();}catch{}
   if(had)try{await raw('/auth/logout',{method:'POST',body:{},headers:h});return 'REVOKED';}catch{return 'REVOCATION_UNCONFIRMED';}return 'ENDED';}
- const changed=()=>{if(connected)void end();};for(const event of ['accountsChanged','chainChanged','disconnect'])provider?.on?.(event,changed);
+ const events={accountsChanged:accounts=>{if(connected&&(!wallet(accounts?.[0])||accounts[0].toLowerCase()!==connected))void end();},
+  chainChanged:chain=>{if(connected){try{if(BigInt(chain)!==BigInt(chainId))void end();}catch{void end();}}},disconnect:()=>{if(connected)void end();}};
+ for(const [event,handler]of Object.entries(events))provider?.on?.(event,handler);
  return Object.freeze({publicRead:(path,options)=>raw(path,options),
   async network(config,{signal}={}){if(ended||connected||config?.phase!=='ACTIVE_LOCAL_TEST'||config.sourceMode!=='REGISTERED_TEST_SOURCE'||config.origin!==origin||!Number.isSafeInteger(config.chainId)||config.chainId<1
     ||config.network?.chainId!=='0x'+BigInt(config.chainId).toString(16)||config.network.rpcUrls?.length!==1)throw fail('TEST_NETWORK');
@@ -64,6 +66,6 @@ export function createTestWalletSession({origin,provider,fetchImpl=globalThis.fe
    try{const result=await raw(path,{...options,headers:{...headers(),...(options.idempotencyKey?{'idempotency-key':options.idempotencyKey}:{})},signal:s});await check(stamp,s);return result;}catch(e){if(e.status===401||['CSRF','WALLET_CONTEXT_CHANGED'].includes(e.code))await end();throw e;}},
   async sign(message,{signal}={}){const s=scope(signal),stamp=generation;await check(stamp,s);if(!auth||typeof message!=='string'||message.length>16384)throw fail('TEST_SIGNATURE');
    const signature=await rpc('personal_sign',[hex(message),connected],s);await check(stamp,s);return signature;},end,
-  dispose(){for(const event of ['accountsChanged','chainChanged','disconnect'])provider?.removeListener?.(event,changed);return end();}
+  dispose(){for(const [event,handler]of Object.entries(events))provider?.removeListener?.(event,handler);return end();}
  });
 }

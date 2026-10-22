@@ -3,8 +3,8 @@
   "date": "2026-10-23",
   "scope": "ONE_BACKEND_NORMAL_INTEGRATION_TEST_NOT_PRODUCT_FRONTEND",
   "relatedOfflineTests": {
-    "pass": 12,
-    "total": 12,
+    "pass": 13,
+    "total": 13,
     "realHttpsAuthAndStore": true,
     "inventedWalletsAndSourcesOnly": true
   },
@@ -24,8 +24,8 @@
       "test asset root URL pathname was encoded; corrected to fileURLToPath"
     ]
   },
-  "assetManifestPath": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS.json",
-  "assetManifestSha256": "6e3f89fa45b3e22d84cfdcee11617c7cf4e75c4bbdf1d2bfec0eeabd30111e89",
+  "assetManifestPath": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V2.json",
+  "assetManifestSha256": "6ca6c41575def55fe59a58e328cde2dc793551f95757add9eb6342127bf0422b",
   "coreV10Sources": 159,
   "coreSourceBytesChanged": false,
   "webTreeChanged": false,
@@ -57,5 +57,7 @@
     "SELF_HR_LOGIN_DURING_COORDINATED_RUN",
     "FRESH_EXACT_AI_PACKET_DIRECT_APPROVAL_DURING_RUN"
   ],
-  "ciEvidenceLocation": "GitHub current head of existing Draft PR #102 / #78; no prior head result reused"
+  "ciEvidenceLocation": "GitHub current head of existing Draft PR #102 / #78; no prior head result reused",
+  "priorAssetGenerationPreserved": true,
+  "v2Change": "Ignore identical initial wallet notifications; real account/chain changes still revoke original server session"
 }

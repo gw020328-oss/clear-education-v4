@@ -23,13 +23,13 @@ receipt는 기존 클라이언트의 canonical/고정100 TEST 검사를 재사�
 ./tools/node tools/bootcamp/normal-host.mjs serve-prepared --name normal-demo-20261022
 ```
 
-`frontendAccepted=true`는 **이 명시된 시험 자산의 계약/지문 수락**이다. 제품 프론트의 완료 승인이 아니다. 전용 `test-client-acceptance.json`에 이 범위를 기록한다. 공개 자산의 정확한 별도 지문은 BOOTCAMP_TEST_CLIENT_ASSETS.json에 기록한다. 기존 v10 core159개/이전 intake·guard bytes는 그대로다. 새 브라우저 자산은 기존 web-root snapshot gate가 다루는 별도 입력이며 memory EVM 인수 범위를 넓히지 않는다.
+`frontendAccepted=true`는 **이 명시된 시험 자산의 계약/지문 수락**이다. 제품 프론트의 완료 승인이 아니다. 전용 `test-client-acceptance.json`에 이 범위를 기록한다. 공개 자산의 정확한 별도 지문은 BOOTCAMP_TEST_CLIENT_ASSETS_V2.json에 기록한다. 기존 v10 core159개/이전 intake·guard bytes는 그대로다. 새 브라우저 자산은 기존 web-root snapshot gate가 다루는 별도 입력이며 memory EVM 인수 범위를 넓히지 않는다.
 
 준비 HTTPS의 `/__dev/config`는 PREPARED_NOT_ACTIVATED, network/chain/app=null이고 실제 API는503이다. 페이지를 준비 상태로만 제공해 검사할 수 있다. 이 단계에서 지갑 버튼은 차단된다. 준비 listener는 Ctrl-C로 닫고 모든 준비와 사용자 일정이 맞은 뒤에만 `run --activate`를 실행한다.
 
 ## 본부가 사용자에게 한 번에 요청할 준비
 
-- 서로 다른 **새 외부 테스트 지갑 공개 주소 두 개**: 참여자용, 운영자용. 개인키/시드/API 키를 제출하지 않는다. 서로 다른 브라우저 프로필에 각 지갑 확장을 준비하고 잠금을 해제한다.
+- 서로 다른 **외부 테스트 지갑 공개 주소 두 개**: 참여자용, 운영자용. 개인키/시드/API 키를 제출하지 않는다. 서로 다른 브라우저 프로필에 각 지갑 확장을 준비하고 잠금을 해제한다.
 - 두 프로필에서 같은 `https://127.0.0.1:9445`에 접속한다. 브라우저가 신뢰하도록 이 호스트의 공개 `ca.pem`만 사용자 검토 후 설치한다. 이 컴퓨터 경로는 `workspaces/clear-bootcamp-api-store/var/bootcamp-normal-host/normal-demo-20261022/ca.pem`이다. ca.key/server.key를 가져오거나 TLS 검증을 끄지 않는다.
 - chainId/RPC는 아직 없다. 실제 run의 새 realm 생성 후 페이지와 `/__dev/config`가 제공한다. 페이지의 네트워크 추가 버튼을 누른 뒤 지갑에서 표시된 chainId의 로컬 TEST 네트워크를 선택한다. 기존 C1 431701/옛 RPC를 복사하지 않는다. native ETH18은 로컬 가스 단위, 지급 토큰은 TEST6이다. 이 시험의 사용자 동작은 메시지 서명과 HTTP 동의이므로 실제 ETH 입금·가스 구매·공개 체인 송금은 필요하지 않다.
 - 관리 HR Chrome은 위 지갑 프로필과 별도다. 실제 실행 시 사용자 본인이 로그인하고 열어 둔다. 기존 비밀번호 설정/이전 로그인 완료 사실은 유지하며 재설정·Google 경로 확대를 요구하지 않는다.
@@ -50,3 +50,5 @@ receipt는 기존 클라이언트의 canonical/고정100 TEST 검사를 재사�
 ## 확인 범위
 
 외부 네트워크를 차단한 synthetic 지갑·원천 fixture에서 실제 HTTPS auth/store와 이 페이지의 transport/controller를 함께 검증한다. 키/서명은 fixture에서만 생성하며 실제 지갑·원천·모델·realm을 사용하지 않는다. 실제 지갑 브라우저 버튼·CA 신뢰 설치·최신 managed HR .3 로그인/proof·AI 호출·전체100 TEST 지급은 사용자 시점에 수행할 항목으로 남는다. 제품 프론트 완주는 별도다.
+
+v2는 초기 연결의 같은 계정/체인 중복 알림과 실제 변경을 구별하는 session.js 한 파일 delta다. v1 manifest 원본과 b83e482 소스 snapshot을 보존하며 새 manifest bytes도 검사의 고정 SHA로 잠근다. 기존 v10 core159개와 API 계약은 그대로다.

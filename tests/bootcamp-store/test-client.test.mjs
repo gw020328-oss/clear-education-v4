@@ -117,10 +117,19 @@ test('network button only offers the supplied loopback TEST chain and rejected w
 });
 test('exact test-client asset generation preserves every existing v10 core source and contract input',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
- const manifest=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS.json',import.meta.url)));
- assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS.json'),'6e3f89fa45b3e22d84cfdcee11617c7cf4e75c4bbdf1d2bfec0eeabd30111e89');assert.equal(manifest.version,'clear-bootcamp-backend-test-client-assets.1');assert.equal(manifest.productFrontendAccepted,false);assert.equal(manifest.actualExecutionApprovedByThisRecord,false);assert.equal(manifest.apiContractsChanged,false);
+ const manifest=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V2.json',import.meta.url)));
+ assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V2.json'),'6ca6c41575def55fe59a58e328cde2dc793551f95757add9eb6342127bf0422b');assert.equal(manifest.version,'clear-bootcamp-backend-test-client-assets.2');assert.equal(manifest.productFrontendAccepted,false);assert.equal(manifest.actualExecutionApprovedByThisRecord,false);assert.equal(manifest.apiContractsChanged,false);
+ const previous=JSON.parse(readFileSync(new URL('../../'+manifest.previousRecord.path,import.meta.url)));assert.equal(sha(manifest.previousRecord.path),'6e3f89fa45b3e22d84cfdcee11617c7cf4e75c4bbdf1d2bfec0eeabd30111e89');
+ const {execFileSync}=await import('node:child_process');for(const [p,h]of Object.entries(previous.sourceArtifacts))assert.equal(createHash('sha256').update(execFileSync('git',['show',manifest.previousRecord.sourceHead+':'+p])).digest('hex'),h,p);
+ assert.deepEqual(manifest.changedFromV1,['tools/bootcamp/test-client/session.js']);for(const [p,h]of Object.entries(previous.sourceArtifacts)){assert.equal(manifest.sourceArtifacts[p],manifest.sourceDelta[p]?.after??h,p);if(manifest.sourceDelta[p])assert.equal(manifest.sourceDelta[p].before,h,p);}
  assert.equal(Object.keys(manifest.sourceArtifacts).length,5);for(const [path,h]of Object.entries(manifest.sourceArtifacts))assert.equal(sha(path),h,path);
  assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),manifest.publicAssetSnapshotSha256);assert.equal(sha(manifest.normalClient.path),manifest.normalClient.sha256);
  assert.equal(sha(manifest.existingCoreIntake.path),'823761592e8178e682ad2f2c39dd6d95423dcbcebad9ffdd15bb2ccfb4424ba8');
  const v10=JSON.parse(readFileSync(new URL('../../'+manifest.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(v10.sourceArtifactSha256).length,159);for(const [path,h]of Object.entries(v10.sourceArtifactSha256))assert.equal(sha(path),h,path);
+});
+test('duplicate wallet notifications from initial connection keep the same authority, real chain change revokes it',async t=>{
+ const x=await fixture(t),a=x.browser(x.f.alice);await a.driver.config();await a.driver.login();a.provider.emit('accountsChanged',[x.f.alice.address]);a.provider.emit('chainChanged','0x'+x.f.config.chainId.toString(16));
+ await a.driver.refresh();assert.equal(a.ended,0);const token=a.cookies.get('__Host-clear-session');a.provider.emit('chainChanged','0x1');
+ for(let i=0;i<50&&a.counts.logout===null;i++)await new Promise(r=>setTimeout(r,5));assert.equal(a.ended,1);assert.deepEqual(a.counts.logout,{status:200,code:null,loggedOut:true});
+ assert.throws(()=>x.f.service.whoami({token,wallet:x.f.alice.address,chainId:x.f.config.chainId,csrf:null}),/AUTH_REQUIRED/);
 });
