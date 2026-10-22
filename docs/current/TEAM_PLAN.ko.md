@@ -1,5 +1,7 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-23 후속 우선순위: [핵심 시연 이후 AI 조건 구조화 계획/revision1](BOOTCAMP_AI_POLICY_FOLLOWUP_PLAN.ko.md)을 추가했다. 최우선은 같은 신청에서 실제 새 HR 증명·실제 로컬 Moodle·실제 Gemini 회고·양측 필요한 명시 동의→정확100 TEST 수령을 성공시키는 CORE-1이다. 사용자 준비 전 실행은 시작하지 않는다. 현재 별도 backend 시험 클라이언트/검증/CI/인계를 그대로 유지한다. 그 성공 후 첫 AI 후속은 안내문 snapshot→제한된 실제 조건 구조화→결정적 P0 검사→인증 운영자 정확 버전 확정→이후 신청 연결이다. 이번 변경은 계획·인터페이스 후보·소유 경계·완료 기준만이며 실제 후속 구현/유료 호출은 미착수다. 기존 P0/TEST 정책·자금/증명/권리와 상용 예치·배정 미확정 상태를 유지한다.
+
 2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.
 
 2026-10-17 추가 승인·계획 revision2: [MVP 보완 계약·실행 백로그](PYTHON_BOOTCAMP_R2.ko.md)를 우선한다. 기존 P0 동결03fa643과 네 조건/100 TEST·P1/P2는 유지한다. Oracle 승인·부족알림/영향 대기열·학생/운영자 두 화면·기존 relayer 가스 UX·실측 이벤트를 P3→P4→P5의 실제 구현 범위에 추가했다. 별도 v2 envelope/이행 인수이며 기존 v1 wire·ABI는 바꾸지 않는다. 현재 지급/production을 켜지 않으며 P4 권한·자금 코드는 Astra/High 경계 리뷰 후 격리 TEST로 진행한다. 아래의 종전 P3/P4/P5 계획만 정리한다는 문구는 이 추가 승인 이전 범위다.
