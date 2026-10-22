@@ -1,6 +1,8 @@
 # 현재 정상 시연 작업의 인계 입구
 
-최신 2026-10-22 경계 인수: source `b07be3c` + v7 guard `726c21d`가 HR e658을 정상 이력으로 결합했다. [v7 인수](BOOTCAMP_V7_INTAKE.ko.md)와 [외부 지갑 경계](BOOTCAMP_C2_UI_BOUNDARY.ko.md)가 현재 기준이다. 기존 v6/36개는 원래 snapshot으로 보존한다. 실제 입력 `.2`는 외부 참여자·운영자 주소만 고정하며, 브라우저의 원래 인증 세션과 정확한 원천 승인 서명이 필수다. 서버 TEST 참여자 키 fallback은 차단했다. 실제 source/로그인/realm/AI/거래는 이번 단위 0이며 canonical 지급 receipt HTTP와 화면 연결은 남아 있다. 아래 과거 날짜별 CI·차단 기록은 당시 사실로 보존한다.
+최신 C3 일반 연결: source `cbda762` + v8 guard `dd4a79a`의 [프론트 계약](BOOTCAMP_C3_FRONTEND.ko.md), [정확 v8 인수](BOOTCAMP_V8_INTAKE.ko.md), [본부 일괄 준비표](BOOTCAMP_NORMAL_RUN_READINESS.ko.md)가 현재 기준이다. 외부 원천 서명/명시 동의와 권한 있는 canonical receipt 조회를 API·브라우저 모듈에 연결했다. 실제 web 화면·두 역할 공개 주소/브라우저·host 안전 설정·AI 새 승인/첫 HR 실제 형식은 아직 미확인이고 실제 전체 시연은 미완료다. 직전 v7 `3e2f355`의 CI18/18 SUCCESS는 새 v8 head CI와 구분한다.
+
+2026-10-22 직전 경계 인수: source `b07be3c` + v7 guard `726c21d`가 HR e658을 정상 이력으로 결합했다. [v7 인수](BOOTCAMP_V7_INTAKE.ko.md)와 [외부 지갑 경계](BOOTCAMP_C2_UI_BOUNDARY.ko.md)가 현재 기준이다. 기존 v6/36개는 원래 snapshot으로 보존한다. 실제 입력 `.2`는 외부 참여자·운영자 주소만 고정하며, 브라우저의 원래 인증 세션과 정확한 원천 승인 서명이 필수다. 서버 TEST 참여자 키 fallback은 차단했다. 실제 source/로그인/realm/AI/거래는 이번 단위 0이며 canonical 지급 receipt HTTP와 화면 연결은 남아 있다. 아래 과거 날짜별 CI·차단 기록은 당시 사실로 보존한다.
 
 2026-10-20. 현재 단위를 중단하거나 새 세션을 만든 기록이 아니다. 사용자는 현재 작업을 마친 뒤 새 개발 세션으로 나누어 인계하도록 요청했다. 생성·최종 분배는 본부가 인계 확인 후 진행하며 기존 채팅은 아직 보관하지 않는다.
 
@@ -49,3 +51,5 @@ C1 소유 source `47972c12fa57d4a92b861f5917be2acae4e80bd6`는 [짧은 프론트
 HR 담당은 `01a158ea-cad1-7452-8fc0-8f027e49afa4`, 입력 담당은 기존 `01a158a8-900a-7662-bccc-557f553d21ea`다. PR103 관리형 `useSource(source)` callback 안에서 같은 owner의 pins→mapping/신청→openLiveContext 수집·지급·close를 마쳐야 한다. callback 밖으로 private lease를 직렬화하지 않는다. 구조관계는 관리형 worker 검사, 원천 바이트/서명은 Reclaim, API는 같은 호출/request의 genuine lease 수락으로 구분하며 숨긴 구조의 attestor 단독/독립 검증이라 표시하지 않는다. 미확정 recipe/trust는 계속 비활성이고 실제 검증 인수 전 source 수집0이다. Moodle/AI는 user3 생성 계정·같은 API 모듈의 private 결과·기존 prepare/resume을 재사용한다. 실제 원천용 새 신청/lease·HR 로그인·유료 호출은 아직0이다.
 
 2026-10-22 v7 경계 단위: 본부 소유 지정에 따라 guard 세 파일의 정확 변경과 helper 추가를 새 `normal-source-pins-v4`로 소비했다. v6 source36/이전 guard는 당시 Git snapshot으로 검사하고 현재36+전이85+자산13개를 v7 candidate에 대조한다. 로컬 UI/HTTP/동의34, 최종 recipe 수집 전 차단6, guard21, stage/AI68, A/B 보존 PASS. 새 head CI는 별도 확인한다. HR PR103은 파일 복사·기존 실패 재실행 대신 통합 인수 이력을 stacked base에 병합한다. 보안 경계 단위 이후 일반 연결 추천은 Sol / High이며 실제 모델 설정과 구분한다.
+
+C3 조회는 고정 수령인/token·100 TEST의 canonical claim receipt와 claim 당시 소유 실행 잔액 증가를 함께 확인한 경우에만 수령을 표시한다. 제출/accept/미확정·판독 불가는 null이며 INCLUDED와 FINALIZED를 혼동하지 않는다. source 만료 뒤 별도 accepted target을 보존하고 await 뒤 신청/역할을 재검사한다. HTTP GET은 기존 인증 handler와 같은 same-origin fetch 규칙을 따른다. 로컬 관련45/45·v8 exact generation24/24·A/B 보존 PASS, 실제행동0이며 새head CI는 별도 확인한다.
