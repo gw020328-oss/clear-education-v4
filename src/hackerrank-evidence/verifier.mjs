@@ -1,8 +1,9 @@
 import {assertValidClaimSignatures,getIdentifierFromClaimInfo,hashProviderParams} from '@reclaimprotocol/attestor-core';
 import {check,keys,canonical,freeze,hash,privateHash,isAddress,isId,isHash,isSourceId,epoch,strictJson,EvidenceError} from './values.mjs';
 import {CAPABILITY,CRITERION,verifyParticipant,validateRequest,requestHash} from './request.mjs';
-import {validateRecipe,parametersFor,syntheticRecipe} from './recipes.mjs';
+import {validateRecipe,parametersFor,syntheticRecipe,usesWorkerSource} from './recipes.mjs';
 import {NESTED_RECORD_SHAPE,readNestedCertificateRecords} from './source-records.mjs';
+import {readWorkerSource} from './worker-source.mjs';
 const GATES=freeze({productEligible:false,paymentAllowed:false,grant:'HOLD',outbox:'HOLD',independentClaim:'NO_GO',productionEnabled:false});
 const blocked=()=>freeze({version:'clear-hackerrank-candidate.1',status:'BLOCKED',code:'TRUST_NOT_CONFIGURED',condition:'UNKNOWN',gates:GATES});
 export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
@@ -11,8 +12,10 @@ export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
  keys(config,['version','status','dataMode','approvalRef','sourceReview','contextReview','audience','notBefore','expiresAt','signers','epochs','recipe','privacyKeyId'],'TRUST_SHAPE');
  check(config.version==='clear-hackerrank-trust.1'&&isId(config.audience)&&isId(config.approvalRef)&&isId(config.privacyKeyId),'TRUST_VERSION');
  const synthetic=config.dataMode==='SYNTHETIC_FIXTURE';
+ const worker=usesWorkerSource(config.recipe);
  check(synthetic||config.dataMode==='RECLAIM_SIGNED_RECORD','TRUST_MODE');
- check(config.sourceReview===(synthetic?'SYNTHETIC_ONLY':'AUTHENTICATED_SOURCE_REVIEWED')&&config.contextReview===(synthetic?'SYNTHETIC_ONLY':'SIGNED_REQUEST_CONTEXT_CONFIRMED'),'TRUST_SOURCE_REVIEW');
+ check(config.sourceReview===(synthetic?'SYNTHETIC_ONLY':worker?'TRUSTED_WORKER_TRANSCRIPT_REVIEWED':'AUTHENTICATED_SOURCE_REVIEWED')
+  &&config.contextReview===(synthetic?'SYNTHETIC_ONLY':worker?'SIGNED_REQUEST_CONTEXT_REQUIRED':'SIGNED_REQUEST_CONTEXT_CONFIRMED'),'TRUST_SOURCE_REVIEW');
  check(clock===undefined||synthetic,'REAL_CLOCK_REQUIRED');
  check(epoch(config.notBefore)&&epoch(config.expiresAt)&&config.expiresAt>config.notBefore,'TRUST_WINDOW');
  check(Array.isArray(config.signers)&&config.signers.length>0&&config.signers.length<=16&&config.signers.every(isAddress)&&new Set(config.signers).size===config.signers.length,'TRUST_SIGNERS');
@@ -32,18 +35,18 @@ export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
   check(config.epochs.includes(c.epoch),'CLAIM_EPOCH');
   check(epoch(c.timestampS)&&c.timestampS>=r.issuedAt&&c.timestampS>=config.notBefore&&c.timestampS<=t&&t-c.timestampS<=900&&c.timestampS<r.expiresAt,'PROOF_TIME');
   const params=strictJson(c.parameters),ctx=strictJson(c.context);
-  check(canonical(params)===canonical(parametersFor(config.recipe,role,username)),'SOURCE_RECIPE');
+  check(canonical(params)===canonical(parametersFor(config.recipe,role,username,r.selectedCertificateId)),'SOURCE_RECIPE');
   check(isHash(c.identifier)&&getIdentifierFromClaimInfo({...c})===c.identifier,'CLAIM_IDENTIFIER');
   try{await assertValidClaimSignatures({claim:c,signatures:{attestorAddress:proof.attestor,claimSignature:Buffer.from(proof.signature.slice(2),'hex')}});}catch{throw new EvidenceError('CLAIM_SIGNATURE');}
   keys(ctx,['clearSchema','clearRequestHash','clearSourceRole','clearRecipeHash','providerHash','extractedParameters'],'SIGNED_CONTEXT_REQUIRED');
   check(ctx.clearSchema==='clear-hackerrank-context.1'&&ctx.clearRequestHash===requestHash(r)&&ctx.clearSourceRole===role&&ctx.clearRecipeHash===r.recipeHash,'SIGNED_REQUEST_BINDING');
   check(ctx.providerHash===hashProviderParams(params),'PROVIDER_HASH');
   const fields=ctx.extractedParameters;
-  keys(fields,role==='account'?['username']:['records'],'EXTRACTED_FIELDS');
+  keys(fields,role==='account'?['username']:worker?['username','certificate_id','status','certificate_label','certificate_level','certificate_slug']:['records'],'EXTRACTED_FIELDS');
   const proofHash=hash('SIGNED_CLAIM',{identifier:c.identifier,owner:c.owner,timestampS:c.timestampS,epoch:c.epoch});
   return {fields,timestampS:c.timestampS,proofHash};
  }
- async function verify(input,expectedRequest){
+ async function verify(input,expectedRequest,{workerSources}={}){
   try{
    check(Buffer.byteLength(JSON.stringify(input))<=128*1024,'INPUT_LIMIT');
    const snapshot=structuredClone(input),expected=structuredClone(expectedRequest);keys(snapshot,['envelope','proofs'],'INPUT_SHAPE');
@@ -52,7 +55,15 @@ export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
    const account=await signedProof(snapshot.proofs.account,'account',r,undefined,acquiredAt);
    const username=account.fields.username;check(isSourceId(username),'SOURCE_USERNAME');
    const certificate=await signedProof(snapshot.proofs.certificate,'certificate',r,username,acquiredAt);
-   const records=config.recipe.recordShape===NESTED_RECORD_SHAPE?readNestedCertificateRecords(certificate.fields.records):strictJson(certificate.fields.records);check(Array.isArray(records)&&records.length<=32,'CERTIFICATE_RECORDS');
+   let records;
+   if(worker){
+    const observedAccount=readWorkerSource(workerSources?.account,{config,request:r,role:'account',proof:snapshot.proofs.account});
+    const observedCertificate=readWorkerSource(workerSources?.certificate,{config,request:r,role:'certificate',proof:snapshot.proofs.certificate});
+    check(canonical(observedAccount)===canonical(account.fields)&&canonical(observedCertificate)===canonical(certificate.fields),'WORKER_SIGNED_FIELDS');
+    const f=certificate.fields;check(f.certificate_label==='Python'&&f.certificate_level==='Basic'&&f.certificate_slug==='python_basic','CERTIFICATE_CLASS_OR_SELECTION');
+    records=[{username:f.username,certificate_id:f.certificate_id,certificate_name:'Python (Basic)',status:f.status}];
+   }else records=config.recipe.recordShape===NESTED_RECORD_SHAPE?readNestedCertificateRecords(certificate.fields.records):strictJson(certificate.fields.records);
+   check(Array.isArray(records)&&records.length<=32,'CERTIFICATE_RECORDS');
    const ids=new Set();for(const row of records){
     keys(row,['username','certificate_id','certificate_name','status'],'CERTIFICATE_RECORD_SHAPE');
     check(row.username===username,'ACCOUNT_JOIN');check(isSourceId(row.certificate_id)&&!ids.has(row.certificate_id),'CERTIFICATE_ID');ids.add(row.certificate_id);
@@ -74,7 +85,8 @@ export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
     binding,acquiredAt,verifiedAt,validUntilExclusive:Math.min(r.expiresAt,config.expiresAt,account.timestampS+901,certificate.timestampS+901),
     source:{provider:'reclaim-hackerrank',instanceRef:config.audience,recordRef:'hr-cert-'+facts.certificateIdHash.slice(2,42),accountBindingRef:'hr-account-'+facts.sourceUsernameHash.slice(2,42)},
     sourceVersion:config.recipe.version,sourceHash:hash('SOURCE_FACTS',facts),proofBundleHash:hash('PROOF_BUNDLE',[account.proofHash,certificate.proofHash]),
-    facts,verification:{sourceStatus:synthetic?'MOCK_VERIFIED':'VERIFIED_ATTESTOR_SIGNATURES',participantBinding:'VERIFIED',requestBinding:'VERIFIED',integrity:'VERIFIED',freshness:'VERIFIED'},
+    facts,verification:{sourceStatus:synthetic?'MOCK_VERIFIED':'VERIFIED_ATTESTOR_SIGNATURES',participantBinding:'VERIFIED',requestBinding:'VERIFIED',integrity:'VERIFIED',freshness:'VERIFIED',
+     ...(worker?{structureValidation:'TRUSTED_WORKER',disclosedFieldValidation:'ATTESTOR',independentStructureProof:false}:{})},
     cryptography:{bothAttestorSignaturesVerified:true,participantSignatureVerified:true,productionTrustActivated:false},
     condition:row.status==='test_passed'?'MET':'NOT_MET',durableAcceptance:'REQUIRED_EXTERNAL_TRANSACTION',gates:GATES};
    const receipt=freeze({...body,receiptHash:hash('CANDIDATE',body)});issued.set(receipt,requestHash(r));return receipt;

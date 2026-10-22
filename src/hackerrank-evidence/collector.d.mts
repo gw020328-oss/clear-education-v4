@@ -24,6 +24,13 @@ export interface Candidate {
  readonly condition:'MET'|'NOT_MET';
  readonly receiptHash:string;
  readonly validUntilExclusive:number;
+ readonly sourceVersion:string;
+ readonly verification:Readonly<{
+  sourceStatus:'MOCK_VERIFIED'|'VERIFIED_ATTESTOR_SIGNATURES';
+  participantBinding:'VERIFIED';requestBinding:'VERIFIED';integrity:'VERIFIED';freshness:'VERIFIED';
+  /** Present only for the .3 managed transcript profile. */
+  structureValidation?:'TRUSTED_WORKER';disclosedFieldValidation?:'ATTESTOR';independentStructureProof?:false;
+ }>;
  readonly gates:{readonly productEligible:false;readonly paymentAllowed:false;readonly grant:'HOLD';readonly outbox:'HOLD';readonly independentClaim:'NO_GO';readonly productionEnabled:false};
  readonly [field:string]:unknown;
 }

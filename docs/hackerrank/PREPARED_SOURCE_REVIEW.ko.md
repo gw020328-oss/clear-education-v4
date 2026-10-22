@@ -2,13 +2,13 @@
 
 ## 현재 작업: 새 실제 증명 쌍을 기존 정상 흐름에 연결
 
-2026-10-22 재개: [중첩 인증서의 서명 후 검증](SOURCE_EXTRACTION_REVIEW.ko.md)을 새 recordShape로 구현했다. managed-source/prepared-source 계약은 유지하며 API 소유 파일은 변경하지 않았다. 아직 source-bound HTTP capture recipe가 없으므로 새 로그인/실제 proof 준비 완료는 아니다. 아래 flat 응답만 지원한다는 설명은 이 추가 구현 전의 상태다.
+2026-10-22 최신: [관리형 동일 응답 검증](WORKER_SOURCE_REVIEW.ko.md)의 `.3` recipe와 private provenance를 구현했다. managed-source/prepared-source 계약은 유지하며 API 소유 파일은 변경하지 않았다. 본부 승인에 따라 전체 구조는 CLEAR worker가 같은 TLS 응답에서 검사하고 공개 필드는 공증 서명으로 검증한다. 실제 proof 성공이나 CLEAR 없는 독립 구조 증명을 뜻하지 않는다. 아래 flat 응답/recipe 미구현 설명은 이 추가 구현 전의 상태다.
 
 사용자의 전체 정상 흐름 우선 지시에 따라 일반 진단·schema 확장은 중지했다. 과거 Agent도 같은 `createClaimOnAttestor`를 사용하므로 이미 신청/owner/서명/관리형 저장 경계가 있는 현재 수집기를 재사용한다. 아래 과거 로그인 복구·진단 실행 안내는 현재 실행 지시가 아니다.
 
 [`withManagedHackerRankSource`](../../src/hackerrank-evidence/managed-source.mjs)가 공식 client와 동일 route의 새 관리형 Chrome을 열고, 준비 완료 후 `useSource(source, {signal})`에 기존 `pins/collectLease/close` 객체를 넘긴다. API 담당자는 이 callback 안에서 pins로 새 불변 mapping을 만들고 동일 source를 기존 `openLiveContext`에 전달한다. callback 종료 전에 lease 소비를 마쳐야 하며 종료/취소/실패 시 source와 lease를 폐기하고 모든 transport를 닫는다. 바깥 locked worker의 `stopRecordedBrowser → removeSession` 책임은 그대로다. pending/합성/잘못된 trust는 네트워크 전에 거부한다. API·Moodle·AI·금고 파일은 변경하지 않았다.
 
-**실제 연결 완료는 아니다.** 새 host 연결부는 오프라인 transport 대역으로 수명/owner 전달을 검증했고, 새 실제 proof는 0건이다. 현재 결정적인 차단점은 `recipes.mjs`의 합성 flat 응답과 실제 dashboard NEXT_DATA/중첩 certificate 응답의 차이다. 원천 경로·중복·같은 행 관계를 보장하면서 필요한 값만 공개하는 실제 recipe와 해당 검증을 먼저 구현해야 한다. 전체 개인 응답 공개, JSONPath 선택만으로 경로를 입증했다고 간주, strict parser 일괄 완화는 적용하지 않았다. 원천 규칙이 준비되기 전 새 로그인은 요청하지 않는다.
+**실제 연결 완료는 아니다.** 새 실제 proof는 0건이다. 원천 형식·가림·서명 결합은 공개 근거와 합성 응답으로 구현/검사했으며 실제 응답에서도 같은 규칙을 통과해야 한다. 다음은 API 담당의 새 source intake와 실행 호스트 배선, 로그인 전 registry 고정 및 동일 owner/request의 실제 증명 쌍 시험이다. 전체 개인 응답 공개, JSONPath 선택만으로 구조 증명 주장, signed strictJson 완화는 적용하지 않았다. 본부가 전체 실행 준비를 확인한 뒤에만 새 로그인을 안내한다.
 
 독립 signer는 기존 YBM의 공개 registry 조회 경로를 재사용할 수 있다. 공식 attestor-core 소스 revision `5db03f0622569740f72dd8f3295c22c3707905d6`의 [claimTunnel](https://github.com/reclaimprotocol/attestor-core/blob/5db03f0622569740f72dd8f3295c22c3707905d6/src/server/handlers/claimTunnel.ts#L74)은 epoch1, [request 검증](https://github.com/reclaimprotocol/attestor-core/blob/5db03f0622569740f72dd8f3295c22c3707905d6/src/server/utils/assert-valid-claim-request.ts#L142)은 입력 context에 providerHash/extractedParameters를 넣는 구현이다. 이는 배포 서버나 설치 SDK5.1.4의 동일 revision 확인이 아니며 실제 signed response 검증을 대체하지 않는다. pending trust는 UNCONFIGURED다.
 

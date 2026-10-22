@@ -1,5 +1,11 @@
 # HackerRank 원천 의미·추출 규칙 검토
 
+## 2026-10-22 C2: 승인된 관리형 동일 응답 검증 구현
+
+최신 구현·인수 계약은 [관리형 worker 원천 검증](WORKER_SOURCE_REVIEW.ko.md)을 따른다. 본부가 승인한 역할 분담에 맞춰 SDK의 같은 TLS transcript를 private 메모리에서 검사하고, 최종 공증 서명 필드와 비교하는 `.3` 경로를 구현했다. 구조 판단은 `TRUSTED_WORKER`, 공개 필드 서명은 `ATTESTOR`, `independentStructureProof:false`다. 기존 `.2` nested 검증과 `.1` 합성 경로는 보존한다. 아래의 “실제 recipe 미구현/설계 대안 검토 요청”은 이 구현 전의 조사 기록이다.
+
+새 실제 로그인/proof/API 수락은 아직 0이며 pending trust는 UNCONFIGURED다. 공개 registry 조회도 이번 합성 검사에서 실행하지 않았다. 코드 준비와 실제 원천 성공을 구분한다.
+
 ## 2026-10-22 C2: 중첩 인증서의 서명 후 검증 구현
 
 현재 head043abb4에서 작업본 clean/PR103 Draft/baseAPI를 재확인하고 계획 revision2의 C0→C2를 재개했다. 일반 진단 추가나 새 로그인/proof 실행은 하지 않았다.
