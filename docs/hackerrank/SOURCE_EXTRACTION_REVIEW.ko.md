@@ -1,5 +1,26 @@
 # HackerRank 원천 의미·추출 규칙 검토
 
+## 2026-10-22 C2: 중첩 인증서의 서명 후 검증 구현
+
+현재 head043abb4에서 작업본 clean/PR103 Draft/baseAPI를 재확인하고 계획 revision2의 C0→C2를 재개했다. 일반 진단 추가나 새 로그인/proof 실행은 하지 않았다.
+
+[`source-records.mjs`](../../src/hackerrank-evidence/source-records.mjs)의 `data-id-attributes-certificate.1`을 `hackerrank-two-proof.2`에 명시적으로 연결했다. 기존 `.1` flat 형식과 요청/candidate/lease 형식은 유지한다. **실제 HTTP 추출 recipe를 작성하거나 trust를 활성화한 것은 아니다.**
+
+- 서명·정확한 params/context/request 검증을 통과한 `extractedParameters.records` 배열만 입력으로 사용한다. unsigned 관찰 결과를 context에 넣지 않는다.
+- row.id, attributes.username/status/test_unique_id와 같은 row의 certificate.label/level/track_slug를 읽는다. Python/Basic/python_basic이 모두 일치할 때만 Python(Basic)으로 분류하며 충돌·타입 오류·shadow certificateId·다른 행 보충을 거부한다. `attributes.certificates`는 fallback이 아니다.
+- `certificate.unique_id`를 test ID라고 확정할 근거가 없으므로 그 필드의 존재/동등성을 요구하지 않는다. 이전 focused 진단의 testLink 조건을 실제 계약으로 승격하지 않는다. metadata가 동일한 signed row 안에 있는지 확인하는 것이 이 구현의 경계다.
+- 전체 입력 문법·decoded 중복/위험 key·64KiB/depth24/node4096/32행 한도를 유지한다. 미사용 숫자는 문법만 검사하고 값으로 해석하지 않는다. 필수 필드 숫자는 거부한다. `*`가 포함된 record는 가림으로 보수적으로 거부하며 mask 제거/접합은 하지 않는다. signed params/context의 기존 strictJson은 변경하지 않았다.
+- 기존 계정 join·중복ID·명시 선택/복수 후보·상태·nonce/time·신청/지갑·재검사 및 candidate-only 출력이 이어진다. recipe 버전만 바꿔 동일 합성 HTTP 규칙을 live로 승격하는 것도 거부한다.
+
+**남은 실제 차단점은 source capture의 위치 검증이다.** 새 parser는 전달받은 array 내부를 검증할 뿐 그 array가 HTTP 응답의 어느 경로에 있었는지 입증하지 않는다. SDK5.1.4 `Provider.getResponseRedactions`는 client-side이며 `assertValidProviderReceipt`는 공개된 response의 regex/contains를 검사한다. 따라서 JSONPath 선택 또는 로컬 검사만으로 가린 부모/중복 key/다른 record가 없다고 주장하지 않는다. dashboard 전체 개인 응답 공개는 대안으로 사용하지 않는다.
+
+가장 작은 대안 후보는 필요한 필드만 반환하는 인증된 원천 API의 완전한 응답을 증명하는 것이다. 공식 app 배포 코드 module890609의 `getFullLoggedInProfile`과 `loadFullLoggedInProfile`은 self profile 조회를 사용한다. 쿠키 없는 [self profile 후보](https://www.hackerrank.com/rest/hackers/me) GET은 HTTP200/redirect없음/model:null로 확인했다. 이는 self 조회 후보 근거이며 로그인 응답의 필드 projection 지원이나 source-control proof 성공 근거가 아니다. 전체 profile을 공개하거나 확인하지 않은 query 옵션을 구현하지 않았다. 그런 최소 응답 기능이 없다면 hosted provider의 구조 검증 지원이 필요하다는 설계 제약을 본부에 전달했다.
+
+공식 SDK의 더 작은 대안도 확인했다. `CreateClaimOnAttestorOpts.updateProviderParams(transcript, tlsVersion)`는 같은 TLS 응답을 받은 뒤 가림/ZK 생성 전에 실행된다. 이 callback에서 private 전체 응답의 경로·중복·같은 row를 검사하고, 이후 같은 transcript의 최소 공개 필드를 attestor 서명 결과와 비교하는 방식을 본부에 검토 요청했다. 이는 **신뢰 worker의 구조 검증 + 공증자의 최소 필드 원천/서명 검증**이며 숨긴 구조 전체를 공증자가 서명으로 증명했다는 뜻이 아니다. 기존 in-process lease 신뢰 경계에 이 역할 분담은 2026-10-22 본부가 현재 C2 관리형 CLEAR 검증 서버 경로로 구현·검증하도록 승인했다. 다음 구현은 같은 호출/role/request/owner/선택/최종 signed claim 결합과 provenance를 요구한다. SDK 포크·추가 진단·전체 응답 공개 없이 진행하며, 구현 결정과 실제 성공은 구분한다.
+
+검증은 고정 Node24.21.0/network guard의 새 nested8개와 기존 verifier/collector/managed-source, 합계 **105/105 PASS**다. 기존 prepared-source와 공개 integration-vector 호환11개도 통과했으며, 신규8개 최종 재검증을 별도로 수행했다. invented source와 ephemeral test signer만 사용한 SDK 추출→서명→request-bound candidate 경로이며 실제 공증자/개인 응답/API 수락 성공이 아니다. pending trust는 UNCONFIGURED, 새 실제 proof0/API HOLD다. 원격 결과와 정확 head는 PR 기록을 따른다.
+
+
 현재 우선순위는 [실제 증명 쌍과 정상 흐름 연결](PREPARED_SOURCE_REVIEW.ko.md)이다. 아래 focused 진단의 추가 실행·확장은 멈췄으며 준비 완료만으로 재로그인을 요청하지 않는다. `250946e` 원격4/4 SUCCESS로 해당 작은 단위를 마쳤다.
 
 ## 완료한 작은 단위: 고정 경로 비교의 진단 전용 준비

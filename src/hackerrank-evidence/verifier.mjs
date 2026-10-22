@@ -2,6 +2,7 @@ import {assertValidClaimSignatures,getIdentifierFromClaimInfo,hashProviderParams
 import {check,keys,canonical,freeze,hash,privateHash,isAddress,isId,isHash,isSourceId,epoch,strictJson,EvidenceError} from './values.mjs';
 import {CAPABILITY,CRITERION,verifyParticipant,validateRequest,requestHash} from './request.mjs';
 import {validateRecipe,parametersFor,syntheticRecipe} from './recipes.mjs';
+import {NESTED_RECORD_SHAPE,readNestedCertificateRecords} from './source-records.mjs';
 const GATES=freeze({productEligible:false,paymentAllowed:false,grant:'HOLD',outbox:'HOLD',independentClaim:'NO_GO',productionEnabled:false});
 const blocked=()=>freeze({version:'clear-hackerrank-candidate.1',status:'BLOCKED',code:'TRUST_NOT_CONFIGURED',condition:'UNKNOWN',gates:GATES});
 export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
@@ -16,7 +17,8 @@ export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
  check(epoch(config.notBefore)&&epoch(config.expiresAt)&&config.expiresAt>config.notBefore,'TRUST_WINDOW');
  check(Array.isArray(config.signers)&&config.signers.length>0&&config.signers.length<=16&&config.signers.every(isAddress)&&new Set(config.signers).size===config.signers.length,'TRUST_SIGNERS');
  check(Array.isArray(config.epochs)&&config.epochs.length>0&&config.epochs.every(epoch),'TRUST_EPOCHS');validateRecipe(config.recipe);
- check(synthetic||canonical(config.recipe)!==canonical(syntheticRecipe()),'SYNTHETIC_RECIPE_IN_LIVE_MODE');
+ const example=syntheticRecipe();
+ check(synthetic||['account','certificate'].some(role=>canonical(config.recipe[role])!==canonical(example[role])),'SYNTHETIC_RECIPE_IN_LIVE_MODE');
  check(Buffer.isBuffer(commitmentKey)&&commitmentKey.length===32,'COMMITMENT_KEY');const key=Buffer.from(commitmentKey);
  const configHash=hash('TRUST',config),issued=new WeakMap(),now=()=>{const n=clock?clock():Math.floor(Date.now()/1000);check(epoch(n),'CLOCK');return n;};
  function active(t){check(t>=config.notBefore&&t<config.expiresAt,'TRUST_EXPIRED');}
@@ -50,7 +52,7 @@ export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
    const account=await signedProof(snapshot.proofs.account,'account',r,undefined,acquiredAt);
    const username=account.fields.username;check(isSourceId(username),'SOURCE_USERNAME');
    const certificate=await signedProof(snapshot.proofs.certificate,'certificate',r,username,acquiredAt);
-   const records=strictJson(certificate.fields.records);check(Array.isArray(records)&&records.length<=32,'CERTIFICATE_RECORDS');
+   const records=config.recipe.recordShape===NESTED_RECORD_SHAPE?readNestedCertificateRecords(certificate.fields.records):strictJson(certificate.fields.records);check(Array.isArray(records)&&records.length<=32,'CERTIFICATE_RECORDS');
    const ids=new Set();for(const row of records){
     keys(row,['username','certificate_id','certificate_name','status'],'CERTIFICATE_RECORD_SHAPE');
     check(row.username===username,'ACCOUNT_JOIN');check(isSourceId(row.certificate_id)&&!ids.has(row.certificate_id),'CERTIFICATE_ID');ids.add(row.certificate_id);

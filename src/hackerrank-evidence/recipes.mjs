@@ -1,4 +1,5 @@
 import {canonical,check,keys,isSourceId} from './values.mjs';
+import {NESTED_RECORD_SHAPE} from './source-records.mjs';
 export const ACCOUNT_URL='https://www.hackerrank.com/dashboard';
 export const CERTIFICATE_URL='https://www.hackerrank.com/community/v1/test_results/hacker_certificate';
 export function parametersFor(recipe,role,username){
@@ -8,7 +9,9 @@ export function parametersFor(recipe,role,username){
 }
 export function validateRecipe(recipe){
  keys(recipe,['version','account','certificate','recordShape'],'RECIPE_SHAPE');
- check(recipe.version==='hackerrank-two-proof.1'&&recipe.recordShape==='username-certificate_id-certificate_name-status.1','RECIPE_VERSION');
+ const flat=recipe.version==='hackerrank-two-proof.1'&&recipe.recordShape==='username-certificate_id-certificate_name-status.1';
+ const nested=recipe.version==='hackerrank-two-proof.2'&&recipe.recordShape===NESTED_RECORD_SHAPE;
+ check(flat||nested,'RECIPE_VERSION');
  for(const role of ['account','certificate']){
   const p=recipe[role];check(p&&p.method==='GET'&&p.url===(role==='account'?ACCOUNT_URL:CERTIFICATE_URL),'RECIPE_SOURCE');
   check(Array.isArray(p.responseMatches)&&p.responseMatches.length>0&&Array.isArray(p.responseRedactions),'RECIPE_EXTRACTION');

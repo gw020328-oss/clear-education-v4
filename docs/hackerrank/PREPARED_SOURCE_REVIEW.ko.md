@@ -2,6 +2,8 @@
 
 ## 현재 작업: 새 실제 증명 쌍을 기존 정상 흐름에 연결
 
+2026-10-22 재개: [중첩 인증서의 서명 후 검증](SOURCE_EXTRACTION_REVIEW.ko.md)을 새 recordShape로 구현했다. managed-source/prepared-source 계약은 유지하며 API 소유 파일은 변경하지 않았다. 아직 source-bound HTTP capture recipe가 없으므로 새 로그인/실제 proof 준비 완료는 아니다. 아래 flat 응답만 지원한다는 설명은 이 추가 구현 전의 상태다.
+
 사용자의 전체 정상 흐름 우선 지시에 따라 일반 진단·schema 확장은 중지했다. 과거 Agent도 같은 `createClaimOnAttestor`를 사용하므로 이미 신청/owner/서명/관리형 저장 경계가 있는 현재 수집기를 재사용한다. 아래 과거 로그인 복구·진단 실행 안내는 현재 실행 지시가 아니다.
 
 [`withManagedHackerRankSource`](../../src/hackerrank-evidence/managed-source.mjs)가 공식 client와 동일 route의 새 관리형 Chrome을 열고, 준비 완료 후 `useSource(source, {signal})`에 기존 `pins/collectLease/close` 객체를 넘긴다. API 담당자는 이 callback 안에서 pins로 새 불변 mapping을 만들고 동일 source를 기존 `openLiveContext`에 전달한다. callback 종료 전에 lease 소비를 마쳐야 하며 종료/취소/실패 시 source와 lease를 폐기하고 모든 transport를 닫는다. 바깥 locked worker의 `stopRecordedBrowser → removeSession` 책임은 그대로다. pending/합성/잘못된 trust는 네트워크 전에 거부한다. API·Moodle·AI·금고 파일은 변경하지 않았다.
