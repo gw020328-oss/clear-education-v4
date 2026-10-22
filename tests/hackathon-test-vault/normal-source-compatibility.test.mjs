@@ -82,7 +82,6 @@ test('v7 pins the reviewed six-file delta and complete listed dependency generat
  const all=Object.assign({},...tables.map(k=>v7[k]),v7.transitiveSourceArtifactSha256,v7.runtimeAssetSha256);
  assert.equal(Object.keys(all).length,134);
  for(const [p,h]of Object.entries(all)){
-  assert.equal(sha(read(p)),h,p);
   assert.equal(sha(execFileSync('git',['show',`${v7.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
  }
  for(const p of ['specs/bootcamp/hackathon-test-memory-source-intake-v6.json','docs/hackathon-test-vault/e5b/normal-source-pins-v3.json']){
@@ -94,8 +93,30 @@ test('v7 pins the reviewed six-file delta and complete listed dependency generat
 test('v7 guard update preserves original v6 guard bytes and pins only the declared consumer changes',()=>{
  const v7=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v4.json'));
  for(const [p,delta]of Object.entries(v7.changes)){
-  assert.equal(sha(execFileSync('git',['show',`${v7.baseHead}:${p}`],{cwd:root})),delta.before,p);assert.equal(sha(read(p)),delta.after,p);
+  assert.equal(sha(execFileSync('git',['show',`${v7.baseHead}:${p}`],{cwd:root})),delta.before,p);assert.equal(sha(execFileSync('git',['show',`726c21d63f999d14161408040a12dff66ae0d5d2:${p}`],{cwd:root})),delta.after,p);
  }
  for(const [p,h]of Object.entries(v7.additions))assert.equal(sha(read(p)),h,p);
  assert.equal(v7.priorAcceptanceBytesChanged,false);assert.equal(v7.actualSourceAccepted,false);
+});
+test('v8 pins four read-only/browser changes and one addition while preserving every v7 source/guard byte',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v8.json';assert.equal(sha(read(path)),'ca37fb5574a293ac6873d4d22e136fcc2f214f58a60b0a8d7f46e09dd786ed33');
+ const v8=JSON.parse(read(path)),v7=JSON.parse(read(v8.previousCompatibilityRecord.path));
+ assert.equal(v8.currentSourceCandidateHead,'cbda762ba41e94413e5aa582bc22a3a4db71ff74');
+ const old=Object.assign({},...['e3ArtifactSha256','additionalSourceArtifactSha256','producerSeamArtifactSha256','normalEntryArtifactSha256','transitiveSourceArtifactSha256','runtimeAssetSha256'].map(k=>v7[k]));
+ assert.equal(Object.keys(old).length,134);assert.equal(Object.keys(v8.sourceArtifactSha256).length,135);
+ const changed=['src/bootcamp/http.mjs','src/bootcamp/normal-client.mjs','tools/bootcamp/frontend-server.mjs','tools/bootcamp/live-context.mjs'];
+ assert.deepEqual(v8.changedFromV7,changed);assert.deepEqual(Object.keys(v8.sourceDelta),changed);assert.deepEqual(Object.keys(v8.sourceAdditions),['src/bootcamp/normal-receipt.mjs']);
+ for(const [p,h]of Object.entries(old)){
+  assert.equal(sha(execFileSync('git',['show',`${v7.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
+  if(changed.includes(p))assert.deepEqual(v8.sourceDelta[p],{before:h,after:v8.sourceArtifactSha256[p]});else assert.equal(v8.sourceArtifactSha256[p],h,p);
+ }
+ for(const [p,h]of Object.entries(v8.sourceArtifactSha256)){
+  assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${v8.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
+ }
+ const guard=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v5.json'));
+ for(const [p,d]of Object.entries(guard.changes)){assert.equal(sha(execFileSync('git',['show',`${guard.baseHead}:${p}`],{cwd:root})),d.before,p);assert.equal(sha(read(p)),d.after,p);}
+ for(const [p,h]of Object.entries(guard.additions))assert.equal(sha(read(p)),h,p);
+ for(const p of ['specs/bootcamp/hackathon-test-memory-source-intake-v7.json','docs/hackathon-test-vault/e5b/normal-source-pins-v4.json','src/hackathon-test-vault/reviewed-source-v7.mjs'])assert.deepEqual(read(p),execFileSync('git',['show',`${guard.baseHead}:${p}`],{cwd:root}),p);
+ assert.equal(v8.readOnlyReceipt.callerSelectedTxRecipientAmountAccepted,false);assert.equal(v8.readOnlyReceipt.nullOnUncertainOrUnmeasured,true);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(v8[k],false,k);
 });
