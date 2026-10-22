@@ -43,7 +43,7 @@ PR #60의 확인 기준 `a0620cd39fe5cd44b62a1deb5806883503242227`은 bundler/np
 
 실제 활성화 후 `ACTIVE_LOCAL_TEST`와 생성된 `chainId`(number), `network`(EIP-3085 형식)를 제공한다. `network.chainId`는 hex, `rpcUrls`는 해당 컴퓨터의 새 loopback HTTP RPC, nativeCurrency는 가스용 Local test Ether/ETH/18이다. 지급 토큰은 별도 TEST/6이며 100 TEST=100000000 atoms다. 사전에 chain/RPC 값을 만들거나 C1 431701을 복사하지 않는다. 공개 설정에는 role 주소·키·토큰·원문을 넣지 않는다.
 
-브라우저 모듈은 두 단계 모두 `/bootcamp-normal-client.mjs`에 제공된다. 정적 트리 밖 backend 소스를 복사할 필요가 없다.
+브라우저 모듈은 두 단계 모두 `/bootcamp-normal-client.mjs`에 제공된다. normal-client를 위해 정적 트리 밖 backend 소스를 복사할 필요가 없다. PR60 확인 F0에는 지갑 adapter가 없으므로 최신 frontend의 유무를 확인해야 한다. `src/application/wallet-client.mjs`는 참고 구현이며 서버 제공 module이 아니고 bare ethers import가 있어 정적 페이지에서 그대로 import할 수 없다. frontend 담당이 현재 adapter를 재사용하거나 기존 정적 방식에 맞춰 최소 EIP1193 인증 adapter를 구현한다. 서버·수집기를 web으로 복사하지 않는다.
 
 ```js
 import {createNormalBootcampClient} from '/bootcamp-normal-client.mjs';
@@ -56,6 +56,8 @@ const bootstrap = await api.session();
 ```
 
 `GET /bootcamp/v4/session`은 기존 HTTPS 인증·지갑·역할 경계 안에서만 읽는다. query/body로 앱이나 역할을 지정하지 않는다. 참여자가 기존 `POST /bootcamp/v1/applications` 빈 본문/사용자별 멱등 키로 생성한 응답의 `record.applicationId`를 사용해 `bindSourceSession(app)`를 1회 호출한다. 결합 전 bootstrap.app=null이고, 결합 뒤 두 역할은 같은 bootstrap.app를 읽는다. 운영자는 별도 신청을 만들지 않는다. host 공개 config의 app=null은 세션 bootstrap을 대체하지 않는다.
+
+Bootcamp 오류 본문은 `{error:CODE}`이며 기존 `src/application/api-client.mjs`는 `{code:CODE}`/자체 allowlist를 기대한다. 이를 그대로 사용하면 BC 오류가 `API_REQUEST_FAILED`로 소실된다. frontend transport는 같은 출처·쿠키·CSRF·redirect 거부·취소·시간제한을 유지하면서 Bootcamp의 제한된 오류 코드를 보존해야 한다. 참고 walletClient의 wallet 이벤트 invalidate는 메모리만 지우므로 서버 logout/revoke와 진행 요청 정리도 frontend에서 연결하고 실제 transport 검사를 수행한다.
 
 `procedureReady=false` 또는 `BC_NORMAL_PROCEDURE_NOT_READY`일 때 기존 v2 operations로 네 조건을 표시한다. 준비 뒤 기존 view/consent/paymentReceipt를 연결한다. 오류 HTTP401/403은 인증/권한, HTTP409는 만료·충돌·오래된 target 등 응답 error를 유지한다. 자동 POST 재시도·자동 서명·자동 동의는 없다. 상세한 원천 서명·양측 같은 판정 동의·미측정 null·INCLUDED/finalized=false 의미는 [C3 계약](BOOTCAMP_C3_FRONTEND.ko.md)과 [조회 갱신](BOOTCAMP_C3_REFRESH.ko.md)을 따른다.
 
