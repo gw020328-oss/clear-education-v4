@@ -3,7 +3,7 @@
   "date": "2026-10-22",
   "status": "REVIEWED_EXPLICIT_COMPATIBILITY_NOT_ACTUAL_SOURCE_ACCEPTANCE",
   "purpose": "MANAGED_HR_WORKER_V3_EXTERNAL_UI_SIGNATURE_AND_EXPLICIT_NORMAL_CONSENTS",
-  "currentSourceCandidateHead": "ef5d7e000407a54b469bfab70c00fd878b17e29a",
+  "currentSourceCandidateHead": "b07be3c928e476a2b6f1414bc8287a63bac28a7a",
   "producerHead": "e658b4026b44f800b607d2d7db64e14f3fd81666",
   "previousCompatibilityRecord": {
     "path": "specs/bootcamp/hackathon-test-memory-source-intake-v6.json",
@@ -47,7 +47,7 @@
     "src/bootcamp/model.mjs": "92aad7b638597573b96da1c5ecc1b5560ef8388e86ca0c3f3bcd77a59037195e",
     "src/bootcamp/r2-ledger.mjs": "dcde4df3e456d4b97101250ccc591d12c0f0bd84263cccd81c950cd358e01e2a",
     "src/bootcamp/moodle-live-consumer.mjs": "a4ab5e1ae3f46fcd2c3000fe4dd379bdcd11f898c08358d7ad21d895c37d8bbf",
-    "src/bootcamp/reclaim-live-consumer.mjs": "0adab8214c1c4c2606bd908dc0d53d9f2e0fbd1c5e198a08ac62713a85dd1d9a"
+    "src/bootcamp/reclaim-live-consumer.mjs": "1ff2bb45526698bdb6252ca65ea2e2e03ce1c445e861e43805fa364017564c10"
   },
   "producerSeamArtifactSha256": {
     "tests/ai-review-precheck/first-normal-reflection-entry.mjs": "453298f74c500c754834e998d6811a6260ae8629e083a9eb2ce47862d9332848",
@@ -77,7 +77,7 @@
     },
     "src/bootcamp/reclaim-live-consumer.mjs": {
       "before": "3eb29f8d0bbc08a075b59c913530ac2d87c4a4dfb564de44978ceaf4f3867e95",
-      "after": "0adab8214c1c4c2606bd908dc0d53d9f2e0fbd1c5e198a08ac62713a85dd1d9a"
+      "after": "1ff2bb45526698bdb6252ca65ea2e2e03ce1c445e861e43805fa364017564c10"
     },
     "src/hackerrank-evidence/collector.mjs": {
       "before": "3486f93fc5b70d7972cb2470e4b3820cb7915c282c726fdab85e0c9232f37c5e",
@@ -320,6 +320,8 @@
     "localRelatedPass": 34,
     "localRelatedFail": 0,
     "localLogSha256": "bcb63ef014845a10c550efe97910a9afc56835d8dead8c2d97cc2d41310a4645",
+    "lastConsumerPreflightPass": 6,
+    "lastConsumerPreflightLogSha256": "1fb3b861ffeceb40af77e7b3f9a3dcc501503090a3f5d0d895d17f3dd7faa2da",
     "newActualApplications": 0,
     "newRealms": 0,
     "actualLogins": 0,

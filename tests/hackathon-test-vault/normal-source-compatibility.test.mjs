@@ -66,9 +66,9 @@ test('v6 guard records preserve every prior owner acceptance byte',()=>{
 });
 test('v7 pins the reviewed six-file delta and complete listed dependency generation without rewriting v6',()=>{
  const path='specs/bootcamp/hackathon-test-memory-source-intake-v7.json';
- assert.equal(sha(read(path)),'10dc1d3a050157b43a655eaa32d022855726d42bbcf4fa1ffc0bb83021c307f5');
+ assert.equal(sha(read(path)),'4b82c1356b95e284d52e166928dc70823548e4ee1e1bb6785c221398c5740107');
  const v7=JSON.parse(read(path)),v6=JSON.parse(read(v7.previousCompatibilityRecord.path));
- assert.equal(v7.currentSourceCandidateHead,'ef5d7e000407a54b469bfab70c00fd878b17e29a');
+ assert.equal(v7.currentSourceCandidateHead,'b07be3c928e476a2b6f1414bc8287a63bac28a7a');
  assert.equal(v7.producerHead,'e658b4026b44f800b607d2d7db64e14f3fd81666');
  const changed=['src/bootcamp/http.mjs','src/bootcamp/reclaim-live-consumer.mjs','src/hackerrank-evidence/collector.mjs','tools/bootcamp/live-context.mjs','tools/bootcamp/normal-chain.mjs','tools/bootcamp/prepare-live-input.mjs'];
  assert.deepEqual(v7.changedFromV6,changed);assert.deepEqual(Object.keys(v7.sourceDelta).sort(),changed);

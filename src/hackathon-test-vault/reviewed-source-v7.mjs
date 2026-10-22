@@ -2,8 +2,8 @@
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 export const V7_PATH='specs/bootcamp/hackathon-test-memory-source-intake-v7.json';
-export const V7_SHA='10dc1d3a050157b43a655eaa32d022855726d42bbcf4fa1ffc0bb83021c307f5';
-export const V7_SOURCE_HEAD='ef5d7e000407a54b469bfab70c00fd878b17e29a';
+export const V7_SHA='4b82c1356b95e284d52e166928dc70823548e4ee1e1bb6785c221398c5740107';
+export const V7_SOURCE_HEAD='b07be3c928e476a2b6f1414bc8287a63bac28a7a';
 const read=p=>readFileSync(new URL('../../'+p,import.meta.url));
 const digest=p=>createHash('sha256').update(read(p)).digest('hex');
 const check=(ok,code)=>{if(!ok)throw Error(code);};

@@ -21,7 +21,7 @@ assert.equal(v7Pins.scope,'EXACT_REVIEWED_V7_HR_WORKER_EXTERNAL_UI_AND_EXPLICIT_
 assert.equal(v7Pins.previousRecord.path,'docs/hackathon-test-vault/e5b/normal-source-pins-v3.json');
 assert.equal(digest(v7Pins.previousRecord.path),v7Pins.previousRecord.sha256);
 assert.equal(v7Pins.reviewedIntake.path,'specs/bootcamp/hackathon-test-memory-source-intake-v7.json');
-assert.equal(v7Pins.reviewedIntake.sha256,'10dc1d3a050157b43a655eaa32d022855726d42bbcf4fa1ffc0bb83021c307f5');
+assert.equal(v7Pins.reviewedIntake.sha256,'4b82c1356b95e284d52e166928dc70823548e4ee1e1bb6785c221398c5740107');
 assert.equal(digest(v7Pins.reviewedIntake.path),v7Pins.reviewedIntake.sha256);
 assert.deepEqual(Object.keys(v7Pins.changes).sort(),Object.keys(v6Pins.changes).sort());
 for(const [path,{before,after}]of Object.entries(v7Pins.changes)){assert.equal(before,v6Pins.changes[path].after,path);assert.equal(digest(path),after,path);}
