@@ -27,3 +27,7 @@
 이제 남은 실행 의존성은 담당자의 최신 프론트 구현·정적 web 경로와 계약 수락, 두 역할 공개 주소/브라우저·CA trust 준비다. 당일 가격 재확인과 exact packet별 새 직접 AI 승인도 실제 실행 시 필요하다. 최신 managed HR `.3` 실제 증명 성공은 미확인이다. 비밀번호 설정·이전 로그인 완료는 사용자 확인 사실로 보존한다. 본부가 나머지 준비 후 한 번에 사용자에게 안내하며 지금 로그인 재시도나 source lease를 시작하지 않는다.
 
 프론트 전달은 [Claude Code 복사 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md)과 GitHub Issue #106 최신 인계 댓글을 따른다. v10은 기존 source135개 중4개 delta 및 실제 host/전이 의존성24개 추가, 총159개를 정확히 기록한다. v9/135개와 이전 snapshot·guard bytes는 보존한다. 인수 범위는 실제 시연 수락이나 메모리 EVM boundary 확대가 아니다.
+
+## 2026-10-23 제품 프론트와 독립된 backend 선시험 준비
+
+사용자 후속 요청으로 `tools/bootcamp/test-client/`의 정적5개 자산을 구현·검사하고 기존 web-root/digest acceptance로 수락했다. [실행 안내](BOOTCAMP_BACKEND_TEST_CLIENT.ko.md)·[정확 자산 지문](BOOTCAMP_TEST_CLIENT_ASSETS.json)·[확인 기록](BOOTCAMP_BACKEND_TEST_CLIENT_VERIFICATION.json)을 따른다. 제품 web/·PR60·API 계약·v10 core159개를 바꾸지 않았고 제품 프론트 완료를 뜻하지 않는다. 이제 backend 선시험의 독립 준비는 제품 프론트 구현을 기다리지 않는다. 공개 두 주소/두 프로필/사용자 CA trust·실제 실행 시 network 설정과 로그인·exact AI 새 승인은 본부가 준비 완료 뒤 한 번에 안내한다. 지금 새 관리Chrome/신청/lease/realm/유료호출은 시작하지 않았다.

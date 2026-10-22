@@ -1,0 +1,61 @@
+{
+  "version": "clear-bootcamp-backend-test-client-verification.1",
+  "date": "2026-10-23",
+  "scope": "ONE_BACKEND_NORMAL_INTEGRATION_TEST_NOT_PRODUCT_FRONTEND",
+  "relatedOfflineTests": {
+    "pass": 12,
+    "total": 12,
+    "realHttpsAuthAndStore": true,
+    "inventedWalletsAndSourcesOnly": true
+  },
+  "initialFailuresPreserved": {
+    "firstRun": {
+      "pass": 1,
+      "total": 5
+    },
+    "secondRun": {
+      "pass": 4,
+      "total": 5
+    },
+    "causes": [
+      "test-client failed to forward create idempotency key; corrected",
+      "test fixture queried participant-only policy for operator; corrected to fixed policy hash",
+      "test cookie jar retained expired preauth cookie; corrected to browser deletion semantics",
+      "test asset root URL pathname was encoded; corrected to fileURLToPath"
+    ]
+  },
+  "assetManifestPath": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS.json",
+  "assetManifestSha256": "6e3f89fa45b3e22d84cfdcee11617c7cf4e75c4bbdf1d2bfec0eeabd30111e89",
+  "coreV10Sources": 159,
+  "coreSourceBytesChanged": false,
+  "webTreeChanged": false,
+  "apiContractsChanged": false,
+  "localPreparedHttps": {
+    "origin": "https://127.0.0.1:9445",
+    "caVerified": true,
+    "indexAndFourAssetsMatch": true,
+    "normalClientModuleServed": true,
+    "authAndApi503": true,
+    "chainId": null,
+    "applicationId": null,
+    "listenerClosedAfterCheck": true
+  },
+  "productFrontendAccepted": false,
+  "actualBrowserWalletVerified": false,
+  "newActualActivity": {
+    "managedBrowsers": 0,
+    "applications": 0,
+    "sourceLeases": 0,
+    "realms": 0,
+    "paidCalls": 0,
+    "transactions": 0
+  },
+  "remainingUserPreparation": [
+    "TWO_DISTINCT_EXTERNAL_TEST_WALLET_PUBLIC_ADDRESSES",
+    "TWO_BROWSER_PROFILES_WITH_WALLET_EXTENSION",
+    "USER_CA_TRUST_AND_ACTUAL_RUN_NETWORK_SELECTION",
+    "SELF_HR_LOGIN_DURING_COORDINATED_RUN",
+    "FRESH_EXACT_AI_PACKET_DIRECT_APPROVAL_DURING_RUN"
+  ],
+  "ciEvidenceLocation": "GitHub current head of existing Draft PR #102 / #78; no prior head result reused"
+}
