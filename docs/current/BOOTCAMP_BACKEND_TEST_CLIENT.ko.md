@@ -14,6 +14,12 @@
 
 이 후보는 v10에 고정된 `tools/bootcamp/live-context.mjs`를 변경한다. 아래의 core159 불변 및 기존 CI 성공 설명은 수정 전 시험 클라이언트 후보의 이력이다. 기존 intake/자산 manifest/guard 지문을 덮어쓰거나 새 후보의 통과로 재사용하지 않는다. 새 후보의 지문·검증·실제 실행 준비는 별도 후속이며, 이번 범위는 최소 수정과 해당 회귀검사까지다.
 
+## 승인된 v11 실행 기준 갱신
+
+사용자가 수정 커밋·CI·실행 기준 지문 갱신과 재시험 준비를 후속 승인했다. 수정 소스 후보는 `34d3661d558e4b07ed68e9cc26aa59eb499fe386`이며, 새 [v11 확인 기록](BOOTCAMP_V11_VERIFICATION.json)을 따른다. v11 intake SHA-256은 `55c2986611b5ed0b3df69cc2e5294e3932715a847649ca5adc36f4f52146b65d`다. core159개 중 `tools/bootcamp/live-context.mjs` 한 파일만 변경하고 추가는 없다. 이전 v10 intake/helper/guard와 159개 소스 원본은 `944afaf`의 Git snapshot으로 검증·보존한다. 새 reviewed-source-v11, memory consumer와 E5 A/B pin의 명시적 갱신은 이 delta만 소비하며 기존 자금/서명/만료 경계를 넓히지 않는다.
+
+[시험 자산 v3](BOOTCAMP_TEST_CLIENT_ASSETS_V3.json)는 v2 정적5개·normal-client·public snapshot bytes를 그대로 유지하고 v11 core와의 연결만 갱신한다. 신규 source 회귀21/21은 같은 소스 후보에서 통과했으며 지문 변경 때문에 반복하지 않았다. 지문 변조/보존35/35, 시험 자산 연결2/2, E5 A/B 보존은 새 기준으로 통과했다. 원격 CI는 각 기존 PR의 최종 head에서 별도로 확인하며 이전18/18을 재사용하지 않는다. 실제 로그인 창/유료 호출/실제 시험은 준비 안내와 해당 단계의 사용자 확인을 따른다.
+
 ## 무엇을 준비했는가
 
 빌드나 새 패키지 설치 없이 이 폴더의 index.html/main.js/driver.js/session.js/style.css만 같은 HTTPS에 제공한다. 페이지는 기존 `/bootcamp-normal-client.mjs`의 createNormalBootcampClient를 소비한다. 인증은 이 한 시험에 필요한 EIP1193 메시지 서명과 기존 nonce→verify·HttpOnly 쿠키·CSRF만 연결한다. 개인키·쿠키 토큰·CSRF·서명은 화면/로그/저장소에 보관하지 않는다. 지갑과 서버 세션 상태는 메모리에만 두고, 계정/체인 변경·disconnect/종료 때 이전 세션 헤더로 서버 logout을 시도하고 페이지를 끝낸다. 폐기 결과가 불명확하면 새 로그인으로 자동 복구하지 않는다.
