@@ -1,0 +1,127 @@
+# 첫 정상 100 TEST 경로의 회고 consumer 최소 인계
+
+2026-10-19 우선순위 변경을 적용한다. 추가 모델 품질 평가·8건 확대·프롬프트 실험·Vision/RAG·복구 확장은 보류한다. 이번 범위는 **한 application의 현재 원문으로 3topic 회고를 읽고 같은 신청의 정상 consumer에 넘기는 접점**이다. AI가 전체 AND 판정·재원 배정·동의·서명·accept/claim을 대신하지 않는다. P0/R3·필수 guard를 바꾸지 않는다. 최신 핵심 완료 기준은 실제 Moodle·HackerRank/Reclaim 자료→AI→같은 신청의 실제100TEST 수령이다. 아래 합성 명령은 접점 확인용이며 실제 자료 시연을 대체하지 않는다.
+
+## 연결된 단계와 정확한 공백
+
+| 단계 | 확인한 현재 연결 | 이번 인계에서 남은 것 |
+| --- | --- | --- |
+| Moodle 게시물→원문/receipt | producer의 정확 selectedPost/author/course/forum·두 번 읽기·request/pin/현재성 검사와 원문 보존 lease | 정상 run의 실제 선택 application/participant/게시물 pin 및 현재 source/권한 lease를 API/원천 소유자가 확정 |
+| 원문→3topic | 기존 E6 borrowed-lease/core가 원본 UTF-8 hash·UTF-16 span/quoteHash·context/current를 검사 | AI 소유 core/E6에 고정 단1회 transport가 발급한 ACTUAL adapter만 추가 준비. 범용 ACTUAL/저장된 평가 재생은 거부하고 기존 MOCK 경로는 그대로 유지 |
+| 3topic→동일 신청의 Evidence | 공통 createMoodleConsumer의 observationAdapter(context)→receipt→candidate.facts→recheck/reference 경로 존재 | 현행 consumer는 fixtureOnly·OFFLINE_SYNTHETIC_FIXTURE·mock 모델을 고정. ACTUAL fresh 결과의 전용 수신/출처·deadline 접점은 공통 소유자가 연결해야 함 |
+| 같은 신청의4조건→current decision | API 소유 테스트에4개 producer의 합성 입력을 같은 ledger decision으로 결합하는 정상 경로 존재 | AI는 새 DB/API/판정 코드를 만들지 않음. 같은 participant/wallet/policy/evidence/decision의 현재성 수락은 API 소유 |
+| 100TEST 배정→양측동의→제한승인→accept→claim | E5/계약·실행 소유 범위 | 이 AI 단위의 tx/receipt/100TEST 수령은 **미실행·N/A**. 호출/서명/하드코딩 verified로 실제 성공을 만들지 않음 |
+
+현재 이 담당에게 특정 정상 application/participant/wallet·현재 decision·원문 lease가 전달되지 않았다. 임의 example ID나 과거 평가의 본문/결과를 현재 신청으로 꾸미지 않는다. 정상 run의 단일 worker·새 격리 TEST chain·양측 조기 동의 경로를 통합/실행 소유자가 정하며, AI는 아래 인계만 맞춘다.
+
+## 읽기 전용으로 확인한 소유 접점
+
+- API snapshot `4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0`, `src/bootcamp/moodle-consumer.mjs` SHA256 `b7be51ce477fc4937c8354637a82d1494b9a8906bf3a88430494e7885ab96712`.
+- 같은 snapshot `src/bootcamp/model.mjs` SHA256 `899f1b2bf423ca478027d15825dea8a2ba6ce5f607ff611c2b1e4d6d72481231`.
+- Moodle snapshot `22640db091d5d3ac5d8a3535280b393d6f618d65`, `src/review-evidence/moodle/bootcamp.mjs` SHA256 `0e77c68c856163c9f50a5d7b3e5ab0c159ae1a2bd1dbf6262c771d9d34bc2e98`.
+
+공통 API 작업본의 다른 파일은 진행 중 변경이 있었으며 위 consumer/model은 읽기 시점 변경 없음으로 확인했다. 스냅샷 인계이며 작업 중인 소유 파일을 복사/편집/merge하거나 API 소유 테스트를 실행하지 않았다. 위 파일이 바뀌면 통합이 이 접점을 최신 코드와 대조한다.
+
+producer의 `OBSERVED_LOCAL_API`/LOCAL_API_TOKEN·HOST_FIXTURE_PIN_ONLY·usableForAcceptance=false를 source 서명/실명 인증으로 승격하지 않는다. AI의 `OBSERVED_TARGET`도 별도 host context 상태이지 source 진위 인증이 아니다. producer `h('REFLECTION-BODY', body)`와 AI의 원본 UTF-8 SHA256 inputHash는 별개의 지문이며 같은 값으로 치환하지 않는다.
+
+## API가 한 번에 공급할 최소 입력
+
+원문과 credential은 이 인계 문서/로그에 넣지 않는다. API의 인증된 in-process owner가 다음을 묶어 제공한다.
+
+1. **신청·권한:** applicationId/participantId/수령 wallet의 같은 신청 결합, 선택 policy의 version/hash, criterion=`reflection-topics`, capability=`REFLECTION_REQUIRED_TOPICS.1`. wallet/actor·역할·원문 권한 검증은 API 소유이며 모델에 주소나 계정 식별자를 보내지 않는다.
+2. **현재 수락 대상:** bound request version/hash·nonce와 예정 evidenceId/evidenceRevision·runtimeMappingHash·현재 decisionRef(id/revision/hash). policy/evidence/decision version은 공통 소유 envelope에서 검증하고 기존 exact-key reflection context에 새 필드를 몰래 추가하지 않는다.
+3. **동일 원천:** sourceId/version/hash/receiptHash, 선택 게시물·author/course/forum pin, messageFormat(1=원본 HTML,2=plain), 원본 inputHash. normalizer가 있으면 version/normalizedHash를 별도 유지하고 원문 span으로 오인하지 않는다.
+4. **수명:** 실제 owner의 read/isCurrent와 auth/raw/query/request/source freshness의 최소 만료, current context resolver·nowMs·취소 signal. sourceStatus/rawAvailable/current는 owner의 현재 권한·원천을 반영해야 하며 상수 true나 평가 JSON으로 구성하지 않는다.
+5. **이번 관찰:** 새 runId/attempt·현재 profile/model/prompt 버전. 이전 사례의 response hash/평가 점수는 현재 관찰의 출처가 아니다.
+
+`candidate.originalBody`는 owner lease getter를 유지한다. AI borrowed handle의 release는 참조만 놓고 공유 owner.dispose를 대신 호출하지 않는다. 시작·읽기 전후·dispatch·응답 완료·소비/공통 수락 직전에 같은 context/source/pin/lease/current를 다시 검사한다. 원문·quote는 메모리에서만 사용하고 저장 수락에는 topic state와 원본 `{sourceId,start,end,quoteHash}`·원본 body hash·관찰 run/profile·출처 결합만 넘긴다. API는 기존 candidate identity/recheck와 DB/CAS·nonce·중복/원자 수락을 유지한다.
+
+UNCERTAIN/CONFLICT는 UNKNOWN/HOLD, MISSING은 보완/미충족으로 남긴다. PRESENT도 원본 span/hash 검증 없이는 근거가 아니다. AI의 CHECKED가 source 인증이나 전체 MET를 뜻하지 않는다. 현재 공통 predicate가 허용한 합성 수락과 실제 원천 인수를 구분한다. 부족한 source/권한/current를 모델의 긍정 답변으로 대체하지 않는다.
+
+## 현재 쓸 수 있는 실행과 쓸 수 없는 실행
+
+AI 소유의 **합성·네트워크 차단 접점 확인** 명령(실제 모델/신청 인수/TEST 지급 아님):
+
+```sh
+PATH=/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-education-v4/.toolchain/node-v24.21.0-darwin-arm64/bin:$PATH ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/ai-review-precheck/e6-leased-reflection.test.mjs
+```
+
+API 소유자가 현재 작업을 검증 가능한 지점에 마친 뒤 참고할 기존 **단일 신청·4조건 합성 ledger 연결** 테스트는 `tests/bootcamp-store/consumers.test.mjs`의 `all four real producer implementations compose synthetic inputs into the same ledger ALL decision`이다. 이름의 real producer implementations는 실제 모듈을 쓴다는 뜻이며 입력은 synthetic이고 회고는 명시적 MOCK이다. 이 테스트를 실제 Moodle/실제 모델/온체인100TEST 수령으로 보고하지 않는다. API 작업본에서 소유자가 실행할 때의 명령:
+
+```sh
+./tools/node --import ./tests/ybm-collector/network-guard.mjs --test --test-name-pattern='all four real producer implementations compose synthetic inputs' tests/bootcamp-store/consumers.test.mjs
+```
+
+AI 소유의 fresh 단1건 **in-process 실행 entry 구현을 준비했다.** 실제 API 신청·승인·source 입력은 아직 미연결/미발급이다. 기존8건 `run-e6-paid-wire-v3.mjs`를 재실행하거나 저장 평가를 observationAdapter로 반환하지 않는다. 기존 core의 MOCK 경로/모델과 consumer의 fixtureOnly/producer provenance를 실제처럼 위장하지 않는다. core는 private identity로 확인된 고정 ACTUAL adapter만 별도로 허용하며 v1 context/observation·prompt/profile·schema·원문 grounding과 최대30초/남은 lease 검사는 유지한다. API가 새 live consumer와 실제 binding/current/CAS를 소유하고 AI가 아래 entry를 제공한다. 공통 코드는 수정하지 않았다.
+
+## 확정한 AI 소유 entry와 source callback
+
+`tests/ai-review-precheck/first-normal-reflection-entry.mjs`의 두 export를 같은 모듈 트리에서 사용한다. 기존 v1 context/관측·E6 view를 그대로 사용하며 새 제품 protocol 버전을 만들지 않았다.
+
+- `prepareFirstNormalReflectionPacket({context,decisionRef,messageFormat,text,leaseExpiresAtMs})`: 승인된 owner의 현재 원문 read에서 UTF8 inputHash를 계산한 context와 같은 본문을 받아 model/prompt/schema/wire3/body/context/decision hash·deadline·최대1/count0 조건부 packet만 반환한다. 본문은 packet에 남기지 않는다. 기존 modelVersion은 `gemini-3.5-flash-lite`로 정확히 설정한다.
+- `runFirstNormalReflection({packet,approval,codeState,day,currentCodeState,currentDay,currentApprovalHash,resolveCurrent,context,decisionRef,messageFormat,lease,signal,timeoutMs,nowMs})`: 새 직접 인간 단1회 승인이 정확 code/packet/context/날짜/가격에 맞아야 한다. 미구성 승인은 원문·키 읽기/실제 journal 생성 전에 차단한다. 같은 기존 v3 store 구현을 별도 `artifacts/e6-first-normal-reflection-run/`에 사용하고 단회 grant는 source 실패에도 반환하지 않는다. 원문 read 전 RESERVE와 model dispatch 전 영속 예약을 구분한다. import/준비만으로 실제 실행하지 않는다.
+- 반환 `{view,report,isCurrent,consume,close}`: `view.observation.execution=ACTUAL`은 이 fixed transport의 새 요청 경로만 나타낸다. source dataScope·assurance는 유지하고 source 진위나 evidence MET를 선언하지 않는다. host는 `consume()`/`isCurrent()`를 자신의 source recheck/CAS 직전에 다시 호출하고 마지막에 `close()`로 borrowed AI session만 닫는다. 원문 owner의 폐기는 API/source 소유다.
+
+lease의 `readBody({signal})`는 API owner가 `const raw=await sourceHandle.getRaw({signal}); return raw.body;`로 제공하되, 같은 read의 messageFormat/inputHash와 현재 request/pin/권한을 먼저 대조해야 한다. sourceHandle.isCurrent는 로컬 상태만 검사하므로 **모델 이후 DB/CAS 전 외부 source 현재성은 owner의 getRaw fresh probe/기존 receiptHash 대조로 확인**해야 한다. AI의 sync `isCurrent()`를 외부 재조회 성공으로 부르지 않는다. subscribeCurrent/authorityChanged는 API의 signal/refresh로 연결한다. 과거 metadata의 acquiredAt/expiry를 늘리지 않는다.
+
+정상 source 소유자에게서 받은 연결은 env e6-20261018-run1/18768, 생성 계정 user3, course2/forum3/selectedPost1, 원본 HTML format1이다. 실제 로컬 Moodle API 자료이며 실학생/실명 주장이 아니다. `openMoodleSourceSession({request,collect,resolveCurrent,subscribeCurrent,signal,now})`와 private `withReader`를 source 소유자가 주입한다. token/private runtime은 복사하지 않는다. 실제 API app/participant/wallet binding은 아직 없으므로 fixture `application-e6-one`을 실신청으로 쓰지 않는다.
+
+`fixed-normal-reflection.mjs`는 기존 Developer transport로 고정 generateContent1회만 호출한다. reader는 기존 wire3를 사용하고 usage 불명이어도 유효한 현재 topic 본문은 grounding에 넘기며 비용을 N/A로 남긴다. fake ACTUAL 객체·clone·소진된8건 승인/다른 body/context/model·checkpoint 실패는 차단한다. 단1회라 후속 모델 요청은 없다. 원문/응답 본문은 journal/report에 저장하지 않는다. 실제키 대신 injected fake fetch/reader를 쓴 단위 시험은 실제 모델 성공으로 보고하지 않는다.
+
+## 실제 모델이 필요한 경우의 최소 행동·예산
+
+최근 v3 승인은 최대8회를8회 사용해 종료됐고 정상 신청의 **승인 잔여 생성0건**이다. US$0.004858의 낮은 조건부 비용이 새 호출 권한을 만들지 않는다. v1/v2/v3 승인·spent/journal은 보존한다. 이번 실제 Gemini/count/키 읽기0이며 아직 새 실행 승인 질문을 제시하지 않는다.
+
+정상 입력과 위 접점이 고정되면 한 번에 검토할 최소안은 **새 현재 회고1건·generateContent최대1/count0·retry/continuation/대체0**, 기존 `gemini-3.5-flash-lite`/MINIMAL·현재 topic schema/prompt·원문 literal grounding이다. 모델에는 불필요한 계정·wallet·credential·gold·과거 정답을 보내지 않는다. sourceId/body/format과3topic만 포함하고 owner의 전송 권한·자료 범위를 먼저 확인한다. raw/auth/current는 전송과 수락 양쪽에서 유효해야 한다.
+
+본문≤2048/전체≤8192 UTF-8바이트·요청 maxOutputTokens1024의 기존 최소 범위를 사용한다. timeout은 사용할 승인된 port의 상한과 남은 lease 이하로 고정한다. 기존 mock의30초 상한을 평가용45초 설정으로 조용히 바꾸지 않는다. 입력3000·결합 생성1024 토큰을 가정하면 2026-10-19 확인한 [Standard 단가](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite) 기준 **US$0.00346**의 조건부1건 시나리오다. 토큰·thinking 결합 상한/청구/확정 cash cap은 미검증이고 진행 중 호출은 가정을 넘을 수 있다. 실제 실행 전 날짜·정확 code/input/policy/권한·가격·한도를 결합한 최소 새 승인이 필요하다. 키 값이나 새 프로젝트를 요구하지 않는다.
+
+## 통합이 다음에 읽을 인계
+
+가장 먼저 필요한 것은 **정상 신청1개의 식별/현재 pin·lease를 가진 소유 입력과, 실제/합성 출처를 명시한 consumer 수신 접점**이다. 그 전에는 임의 participant의 fresh AI 성공이나 tx를 보고하지 않는다. AI 인계 이후의4조건 current decision→100TEST 전액배정→같은 decision 양측 동의→제한승인→accept→claim→canonical receipt/정확 수령·중복 거부는 API/실행 소유가 같은 application으로 이어 확인한다. 예산 선확보를 최종 decision 배정으로 부르지 않는다.
+
+이번에는 전용 인계와 AI 소유 core/E6의 async 원문·fixed ACTUAL 단1회 수신/실행 접점만 준비한다. 새 플랫폼/registry/lease 구현·공통 API/DB/HTTP/schema/web·정책/R3·계약/지급·모델/gold/prompt는 변경하지 않는다. 최신 직접 사용자 허용에 따라 기존 API·Moodle 담당 세션에 정상 신청/현재 원문 lease·실제 모델 수신 접점만 협업 요청했다. 원문/쿠키/키는 채팅이나 공개 파일로 요청하지 않았다. 새 에이전트/채팅·자동 merge·상용 배포·추가 모델평가·새 Mac/Windows 조사/재실행은 없다. 기존 Mac 최초 실패는 이 경로의 AI 성공이나 새 CI 성공으로 해결 처리하지 않는다.
+
+## 현재 준비 검증과 호출 금지 상태
+
+고정 transport/async getter의 fake-network 시험8개와 기존 관련 회귀를 포함해333/333 통과했다. MOCK 기존 관측 hash·HTML 원본 span·불확실 HOLD·source getter 도중 철회/취소·승인 변경·사전 checkpoint 실패·timeout/늦은 응답 무시·소진 grant 재사용 차단을 확인했다. 이 숫자는 실제 모델/실제 source/tx 성공이 아니다. E6 과거8건 결과/원장과636 실행 소스 이력은 변경하지 않았다.
+
+API는 준비된 `createLiveMoodleConsumer` 안에서 같은 모듈 트리/검토된 codeHead의 entry를 주입해야 한다. 별도 checkout의 adapter 객체만 옛 MOCK 전용 core로 복사하거나 직렬화하지 않는다. packet은 현재 body/context/decision/expiry를 고정하므로 만료나 변경 뒤에는 되살려 실행하지 않는다. transportInvocations·providerResponsesReceived와 generationCalls(사전 예약)는 서로 다른 숫자다. 현재 이 정상 entry의 승인0·키 읽기0·실제 모델0·active approval 작성0이며 root의 코드/입력 검토 및 최소 새 승인 전 실행하지 않는다.
+
+
+## 호출 직전 경계 보정 (2026-10-20)
+
+마지막 await 후와 실제 keyReader 진입 직전에 code/clean/day/승인 hash/expiry/current를 동기로 다시 검사한다. currentCodeState/currentDay/currentApprovalHash/assertCurrent는 이 마지막 검사에서 동기 snapshot을 반환해야 하며 Promise를 반환하면 차단한다. beforeDispatch에서 철회되거나 마지막 host await 중 코드가 변경되는 경우 키0/fetch0이다. 이전 await 순서가 철회 후 dispatch하는 제어반례도 오프라인 시험으로 보존했다.
+
+실제 `runFirstNormalReflection`과 `createFixedNormalReflectionAdapter`는 transportOptions override를 거부한다. 실제 entry는 fixture store도 거부하고 기존 별도 durable store와 native Developer transport/GEMINI_API_KEY 경로만 사용한다. 명시적인 `runFirstNormalReflectionOfflineFixture`/`createOfflineNormalReflectionFixtureAdapter`는 offline DI 전용이고 report.provenance=OFFLINE_FIXTURE이며 제품 live 결과 identity를 받지 않는다. 이 시험의 ACTUAL core 분기 실행은 실제 모델 호출의 증거가 아니다.
+
+API는 같은 모듈 트리에서 `isFirstNormalReflectionResult(result)`와 `consumeFirstNormalReflection(result)`를 import한다. 실제 entry 반환만 private WeakSet identity를 받고, 복제/JSON/fixture 반환은 차단한다. consume 반환의 current/observation과 API 소유 외부 fresh probe/CAS 검사는 계속 필요하다. transport 성공 문자열만으로 source/evidence/지급 권한을 만들지 않는다.
+
+API가 새 TEST 신청/지갑 결합 metadata 준비를 알렸지만 아직 source 수집·짧은 lease·AI packet·새승인은 발급되지 않았다. 이전 날짜/lease를 현재 것으로 재사용하지 않는다. 이번 변경의 키조회/유료호출/tx는0이다.
+
+
+## 다음 세션용 현재 소작업 인계 (2026-10-20)
+
+1. 실제 성공/차단점: 정상 회고 단회 접점과 호출·출처 경계는 준비됐고 root가 1276b91의 좁은 경계 검토를 완료했다. 정상 경로의 새 모델/키조회/tx는0이다. API 통합 head·새 동일신청의 현재 source/packet·당일 가격 확인/직접 단회 승인이 남았다. 이전 신청의 접수1800초 창은 만료됐으며 연장/재사용하지 않는다. API가 기존 TEST 환경을 보존한 새 신청과 마지막 단계240초 lease를 발급한다.
+2. 작업본/이력: `workspaces/clear-ai-review-precheck`, branch `codex/ai-first-normal-handoff`, 구현 head `1276b91a9fc161683fe8965ba678cbf46e14c31c`, [Draft PR101](https://github.com/gw020328-oss/clear-education-v4/pull/101). 중앙 입구는 root ec0c7df의 `docs/current/HACKATHON_TEST_SESSION_HANDOFF.ko.md`다. 이 문서 추가 커밋은 구현/실행 head를 바꾸지 않는다.
+3. 미커밋/보존: 인계 작성 직전 추적 파일의 미커밋 변경은 없었다. AI 소유 경로 밖은 수정하지 않는다. 과거 평가·spent·journal·Mac 최초 실패는 보존한다. 비공개 키/쿠키/raw/token을 열거나 복사하지 않으며 이전8건 승인 잔여는0이다.
+4. 재현/환경/pin: 저장소 고정 `./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/ai-review-precheck/first-normal-reflection.test.mjs`로 오프라인 경계를 재현한다. API/Moodle 소유 환경·공개 binding/pin은 새 신청 발급 뒤 해당 소유자의 참조를 사용한다. 만료 metadata나 fixture application을 실제 현재 입력으로 재사용하지 않는다.
+5. 검증/출처: 관련 오프라인336/336 및 root의 경계11/11 확인은 실제 모델/원천/지급 완료가 아니다. 이전 v3 합성8건 결과는 [기존 실제 호출 보고](REVIEW_PRECHECK_E6_WIRE_V3_ACTUAL_20261019.ko.md)에 별도 보존한다. API가 보고한 합성 원천100TEST 수령도 실제 원천 전체 연결 성공과 구분한다.
+6. 다음 한 작업/소유: API가 발급한 새 동일신청 context와 Moodle current raw lease를 기존 AI entry에 연결하고 정확 packet·전송 범위를 root에 전달한다. AI는 `src/document-precheck/review/`, `tests/ai-review-precheck/`, 이 전용 문서만 소유한다. API는 private result identity/외부 fresh probe/current-CAS를 유지하고, root 한곳에서 당일 새 단회 승인 질문을 준비한다. 승인 전 호출0을 유지한다.
+7. 재개 금지: 끝난 PR21/PR36·추가평가·Vision/RAG·Mac/Windows 과거 재시험·독립 고도화를 재개하지 않는다. 현재 정상 시연 연결은 계속하며, 본부 인계 확인 전 새 세션/에이전트·기존 채팅 archive·자동 merge/배포를 하지 않는다.
+
+
+## 새 담당의 최신 API 접점·단회 준비 (2026-10-20)
+
+AI `84a33d5`와 Moodle `dd3c04d`의 clean 작업본을 인수했다. API `ff07743bd599456686346326236dff3847d63264`의 실제 consumer와 entry를 읽었고, `first-normal-reflection-entry.mjs`/`fixed-normal-reflection.mjs`/`e6-leased-reflection.mjs`는 AI 작업본과 바이트가 같다. Moodle producer3개도 소유 작업본과 같다. 위의 `4dec3bd` MOCK 전용 공백은 과거 상태이며 최신 `createLiveMoodleConsumer`는 private live result identity/ACTUAL/context와 모델 이후 fresh `getRaw`를 검사한다. 새 AI adapter 수정이나 전체 테스트 반복은 필요하지 않았다. 실제 호출·수락 검증은 아니다.
+
+통합의 `reviewReflection(args)` 연결 순서는 다음과 같다. 같은 API 모듈 트리의 entry에서 함수를 import해 WeakSet identity를 보존한다. `args.lease.readBody({signal:args.signal})`로 권한 있는 현재 body를 읽고 `prepareFirstNormalReflectionPacket({...args,text,leaseExpiresAtMs:args.resolveCurrent().leaseExpiresAtMs})`를 호출한다. 원문은 메모리에서만 유지하고 본부에는 packet의 hash/상한/현재 신청 context 참조만 전달한다. 이 단계는 generate/count/key/journal 발급0이다. 직접 인간의 새 exact packet/code/day/가격 승인 뒤에만 `runFirstNormalReflection({...args,packet,approval,codeState,day,currentCodeState,currentDay,currentApprovalHash})`를 실행한다. `codeState`는 실행 모듈 트리의 clean HEAD이며 현재 callbacks는 마지막 key 진입 전 동기 snapshot이어야 한다. 별도 checkout의 결과/fixture/clone을 반환하지 않는다.
+
+현재 consumer의 `decisionRef=null`은 판정 전 증거 수집 단계와 맞으며 최종 decision을 지어내지 않는다. lease는 원래 source/auth/query의 최소값이며30초/남은 lease 제한을 유지한다. packet 승인 대기 중 만료되면 실행하지 않고 본부·통합에 차단을 알린다. 이전 승인/packet·시각을 바꿔 재사용하지 않는다. 통합이 HR 준비를 알리기 전 fresh source/packet/240초 창 발급0이다.
+
+2026-10-20 [공식 Standard 가격](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite)을 다시 확인했다. 기존 `gemini-3.5-flash-lite` 입력 US$0.30/백만 토큰, 출력(thinking 포함) US$2.50/백만 토큰으로 현재 clearance의300/2500 nanoUSD/토큰과 같다. 새 회고1건·generateContent최대1/count0·retry/continuation/fallback0·본문2048/전체8192 UTF-8바이트·maxOutputTokens1024·MINIMAL 범위를 유지한다. 입력3000+결합생성1024 가정의 조건부 비용은 **US$0.00346**이며 실제 token/count/invoice나 provider hard cash cap을 검증한 수치는 아니다. 기존 acknowledgment의 진행중 US$0.05 초과 가능성을 숨기거나 확정 상한으로 보고하지 않는다.
+
+정확한 실제 inputHash/bodySha/contextHash/planHash는 HR와 실행 신청 준비 전에는 발급할 수 없다. 현재는 예산 준비만 완료했으며 새 active approval·키조회·source·모델·tx는0이다. 통합 담당 `01a158a8-96c6-7d31-bf99-1468c9768992`가 새 packet을 본부에 모아 승인 요청하고 동일 신청 실행 순서를 조율한다. 새 모델 평가·공통 API/DB/web 변경은 없다.
+
+
+추가 실행 차단: 위 callback 계약은 데이터 호환 설명이며 현재 상태의 전체 실행 가능 순서를 뜻하지 않는다. 통합과 대조한 결과 `collectBridge` 전체30초 안에 사람의 새 exact packet 승인을 기다리게 된다. 기존 clearance는 packet의 context/plan/expiry/code/day 정확 결합을 요구하므로 사전 원문·프로필 검토를 새 런타임 packet의 자동 승인으로 치환할 기존 방식이 없다. 승인 구조를 느슨하게 하거나30초를 조용히 늘리지 않는다. 통합에 **같은 현재 request/source handle의 packet 준비·직접 승인 gate를 producer30초 밖으로 분리하고, 원래240초 만료를 유지한 채 승인 뒤 AI/검증30초를 시작하는 최소 소유 API 접점**을 검토 요청했다. 이 API 접점은 아직 구현·인수되지 않았고 실제 packet 발급도0이다. 사전 검토 입력/가격 준비는 가능하지만 새 exact packet 승인 없이 key/model dispatch는 계속 차단한다.

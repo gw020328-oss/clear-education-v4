@@ -1,0 +1,188 @@
+{
+  "version": "clear-e6-paid-usage-v2-actual-result.2",
+  "occurredOn": "2026-10-19",
+  "recordedAt": "2026-10-19T07:32:44.204Z",
+  "execution": "ACTUAL",
+  "status": "UNKNOWN_STOPPED",
+  "executedCodeHead": "cafbf3bd087104a34b3c3000885fdcd4674c4e21",
+  "pins": {
+    "codeHead": "cafbf3bd087104a34b3c3000885fdcd4674c4e21",
+    "planHash": "0x640a78767508987d92abab8defe0c102bcdaf05644ecec3ea715d614c3d604b6",
+    "corpusSha256": "1a304a596a15fedcda846ed721b87d0a6daa418fa019ecebe2f55443e7a8b951",
+    "goldSha256": "4f13f00b884d9360e6526fac2e80147466bfd17c8410509a18f6f72cd825e83a",
+    "requestsSha256": "951157661753d38e05b9401616cf819caf7782683e9cef53df1c6242349f6f51",
+    "usagePolicyHash": "0x92d273c9c9c8b9aa21d79f44d74eb8b906bd8ceef680d64eaf8dda99c19b4e8c"
+  },
+  "approvalHash": "d9fd9f7b25e12a5ff9bc68d1b0fc0ee219d8b1252a68f6cfb6d4c04e273f7c3a",
+  "keySourceId": "clear-e6-existing-server-gemini-env.1",
+  "summarySha256": "32ad261ab8ea3d910f5c31f2deadf2bd61954248ffea7bc6ee158d680dc77c5c",
+  "fetchObservationSha256": "d934985907fa8564598720da5aeb77bbcee08c92810702a226540cc97c5c065d",
+  "callCounts": {
+    "preDispatchGenerationReservations": 1,
+    "actualFetchInvocations": 1,
+    "http2xxResponses": 1,
+    "httpNon2xxResponses": 0,
+    "networkErrors": 0,
+    "pendingRequests": 0,
+    "unapprovedFetchBlocked": 0,
+    "countTokensCalls": 0,
+    "modelListCalls": 0,
+    "retries": 0,
+    "fallbacks": 0,
+    "cliExecutions": 1
+  },
+  "stop": {
+    "caseId": "PY01",
+    "code": "E6_UV2_SERVICE_TIER",
+    "beforeContentParse": true,
+    "expectedServiceTierLiteral": "STANDARD",
+    "actualServiceTierRetained": false
+  },
+  "diagnosis": {
+    "officialServiceTierSource": "https://ai.google.dev/api/generate-content#ServiceTier",
+    "officialStandardLiteral": "standard",
+    "officialDefaultLiteral": "unspecified",
+    "implementationLiteralMismatchConfirmed": true,
+    "actualReturnedLiteralUnknown": true,
+    "actualReturnedTierNotInferred": true,
+    "providerBillingTierVerified": false
+  },
+  "attempts": [
+    {
+      "caseId": "PY01",
+      "status": "UNKNOWN_STOPPED",
+      "dispatchReserved": true,
+      "code": "E6_UV2_SERVICE_TIER",
+      "tokens": {
+        "promptTokenCount": 314,
+        "candidatesTokenCount": 135,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 449
+      },
+      "tokenMeasurement": "N/A_INCOMPLETE_USAGE"
+    },
+    {
+      "caseId": "PY02",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY03",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY04",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY05",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY06",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY07",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY08",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    }
+  ],
+  "cost": {
+    "inputUsdPerMillion": "0.30",
+    "outputIncludingThinkingUsdPerMillion": "2.50",
+    "pricingSource": "https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite",
+    "priceReviewedOn": "2026-10-19",
+    "knownPromptAndCandidatePortionNanoUsd": "431700",
+    "knownPromptAndCandidatePortionUsd": "0.0004317",
+    "completeIncludingThinkingEstimateNanoUsd": null,
+    "actualInvoiceUsd": null,
+    "invoiceVerified": false,
+    "providerHardCashCapVerified": false,
+    "reason": "SERVICE_TIER_GUARD_STOPPED_BEFORE_DERIVATION",
+    "preRunEightCaseScenarioUsd": "0.02768"
+  },
+  "quality": {
+    "httpSuccessIsQualityPass": false,
+    "scorableCases": 0,
+    "plannedCases": 8,
+    "scoredTopics": 0,
+    "plannedTopics": 24,
+    "groundingAssessed": 0,
+    "plannedPresentEvidenceTopics": 21,
+    "assessedNormalControls": 0,
+    "plannedNormalControls": 5,
+    "falseHolds": null,
+    "falseHoldRate": null,
+    "topicAccuracy": null,
+    "modelQuality": "N/A_NOT_SCORED_SERVICE_TIER_GUARD_STOPPED"
+  },
+  "notRunCaseIds": [
+    "PY02",
+    "PY03",
+    "PY04",
+    "PY05",
+    "PY06",
+    "PY07",
+    "PY08"
+  ],
+  "earlierSeparateRun": {
+    "resultFile": "e6-paid-eight-actual-20261019.json",
+    "actualFetchInvocations": 1,
+    "scorableCases": 0,
+    "preserved": true
+  },
+  "cumulativeObservedRuns": {
+    "actualFetchInvocations": 2,
+    "http2xxResponses": 2,
+    "countTokensCalls": 0,
+    "retries": 0,
+    "fallbacks": 0,
+    "scorableCases": 0,
+    "knownPromptAndCandidatePortionNanoUsd": "863400",
+    "completeIncludingThinkingEstimateNanoUsd": null,
+    "actualInvoiceUsd": null
+  },
+  "privacy": {
+    "publicSyntheticPythonTextOnly": true,
+    "actualMoodleRecords": 0,
+    "actualHackerRankRecords": 0,
+    "rawResponseRetained": false,
+    "sourceOrGoldSentInReport": false,
+    "keyOrProjectIdRetained": false,
+    "httpRawRetained": false
+  },
+  "usableForAcceptance": false,
+  "paymentAuthority": false,
+  "paymentAllowed": false
+}
