@@ -4,9 +4,16 @@ import {freeze,exactKeys,requireRule as check} from '../policy/values.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {requestHash as p1RequestHash} from '../hackerrank-evidence/request.mjs';
 import {hash as p1Hash} from '../hackerrank-evidence/values.mjs';
+import {WORKER_RECIPE_VERSION,workerRecipe} from '../hackerrank-evidence/recipes.mjs';
 import {readHackerRankCollectorLease} from '../hackerrank-evidence/collector.mjs';
 import {BRIDGE_VERSION} from './reclaim-consumer.mjs';
 import {hash,id} from './model.mjs';
+export const LIVE_WORKER_RECIPE_HASH=p1Hash('RECIPE',workerRecipe());
+export function assertLiveWorkerReceipt(receipt,pins){
+ check(pins.recipeHash===LIVE_WORKER_RECIPE_HASH&&receipt.sourceVersion===WORKER_RECIPE_VERSION&&receipt.recipeHash===LIVE_WORKER_RECIPE_HASH
+  &&receipt.verification?.structureValidation==='TRUSTED_WORKER'&&receipt.verification?.disclosedFieldValidation==='ATTESTOR'
+  &&receipt.verification?.independentStructureProof===false,'BC_LIVE_HR_WORKER_REQUIRED');
+}
 const consumers=new WeakSet();
 export const isLiveReclaimConsumer=value=>consumers.has(value);
 export function translateLiveReclaimRequest(r,p){
@@ -31,7 +38,7 @@ export function createLiveReclaimConsumer({pins=()=>null,collectLease,resolveLea
  function checked(candidate,r){const e=issued.get(candidate);check(e&&!closed&&e.requestHash===r.requestHash,'BC_LIVE_HR_CANDIDATE');const {p}=guard(r);
   check(e.isAuthorized()===true&&e.pinsHash===p0Hash('P1-PINS',p),'BC_LIVE_HR_AUTHORITY');
   const {candidate:receipt,binding}=readHackerRankCollectorLease(e.lease);
-  check(receipt===e.receipt&&receipt.dataMode==='RECLAIM_SIGNED_RECORD'&&receipt.status==='VERIFIED_CANDIDATE','BC_LIVE_HR_RESULT_IDENTITY');
+  check(receipt===e.receipt&&receipt.dataMode==='RECLAIM_SIGNED_RECORD'&&receipt.status==='VERIFIED_CANDIDATE','BC_LIVE_HR_RESULT_IDENTITY');assertLiveWorkerReceipt(receipt,p);
   check(binding.requestHash===p1RequestHash(e.expected)&&binding.nonceHash===p1Hash('NONCE',r.nonceHash)&&binding.trustConfigHash===p.trustConfigHash
    &&binding.applicationId===r.applicationId&&binding.participantId===r.participantId&&binding.participantWallet===r.participantWallet
    &&binding.proofBundleHash===candidate.proofBundleHash&&binding.receiptHash===receipt.receiptHash&&binding.durableConsumptionPerformed===false&&now()<binding.validUntilExclusive,'BC_LIVE_HR_BINDING');
@@ -43,7 +50,7 @@ export function createLiveReclaimConsumer({pins=()=>null,collectLease,resolveLea
    const {p,l}=guard(r);check(typeof collectLease==='function'&&isAuthorized()===true,'BC_LIVE_HR_UNCONFIGURED');const expected=translateLiveReclaimRequest(r,p);let lease;
    try{
     lease=await collectLease(expected,{signal,isAuthorized});check(!signal?.aborted&&isAuthorized()===true,'BC_LIVE_HR_AUTHORITY');
-    const {candidate:receipt}=readHackerRankCollectorLease(lease);check(receipt.dataMode==='RECLAIM_SIGNED_RECORD'&&receipt.status==='VERIFIED_CANDIDATE','BC_LIVE_HR_SOURCE_REJECTED');
+    const {candidate:receipt}=readHackerRankCollectorLease(lease);check(receipt.dataMode==='RECLAIM_SIGNED_RECORD'&&receipt.status==='VERIFIED_CANDIDATE','BC_LIVE_HR_SOURCE_REJECTED');assertLiveWorkerReceipt(receipt,p);
     check(receipt.binding.requestHash===p1RequestHash(expected)&&receipt.binding.nonceHash===p1Hash('NONCE',r.nonceHash),'BC_LIVE_HR_BINDING');
     for(const h of owned)try{readHackerRankCollectorLease(h);}catch{owned.delete(h);}check(owned.size<32,'BC_RAW_CAPACITY');owned.add(lease);
     const expiresAt=Math.min(r.expiresAt,l.authExpiresAt,l.rawExpiresAt,l.queryExpiresAt,receipt.validUntilExclusive,receipt.acquiredAt+1800);

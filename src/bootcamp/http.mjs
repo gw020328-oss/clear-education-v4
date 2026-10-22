@@ -1,8 +1,8 @@
 import {isIP} from 'node:net';
-import {RuleError,requireRule as check} from '../policy/values.mjs';
+import {RuleError,exactKeys,requireRule as check} from '../policy/values.mjs';
 
 // Opt-in handler only; no listener, auth deployment or existing route changes.
-export function createBootcampHandler(store,{allowLoopbackHttpForTests=false}={}){
+export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,normalUi=null}={}){
   const expected=new URL(store.origin);check(expected.protocol==='https:','BC_HTTP_ORIGIN');let pending=0;
   return async(req,res)=>{
     res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json; charset=utf-8');
@@ -22,8 +22,8 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false}={}
         chainId:typeof chain==='string'&&/^[1-9][0-9]{0,15}$/.test(chain)?Number(chain):null,csrf:req.headers['x-csrf-token']??null};
       // Reject unauthorized uploads before reading their bytes. All bodies here
       // are bounded commands; there is no proof/text/verified receipt endpoint.
-      const v2=req.url.startsWith('/bootcamp/v2/'),v3=req.url.startsWith('/bootcamp/v3/');
-      if(v2||v3)store.authorizeOperations(context,req.method==='POST');else store.policy(context);
+      const v2=req.url.startsWith('/bootcamp/v2/'),v3=req.url.startsWith('/bootcamp/v3/'),v4=req.url.startsWith('/bootcamp/v4/');
+      if(v2||v3||v4)store.authorizeOperations(context,req.method==='POST');else store.policy(context);
       let body;
       if(req.method==='POST'){
         check(req.headers['content-type']==='application/json','BC_HTTP_CONTENT_TYPE');const chunks=[];let size=0;
@@ -31,7 +31,15 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false}={}
         try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));}catch{throw new RuleError('BC_HTTP_JSON');}
       }
       const path=req.url,key=req.headers['idempotency-key'];let result;
-      if(v3){
+      if(v4){
+        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature)$/.exec(path);
+        check(normalUi&&m,'BC_NOT_FOUND');const [,a,resource]=m;
+        if(req.method==='GET'&&resource==='source-signature')result=normalUi.pendingSignature(context,a);
+        else if(req.method==='POST'&&resource==='source-signature')result=normalUi.submitSignature(context,a,body);
+        else if(req.method==='POST'&&resource==='source-session'){exactKeys(body,[],'BC_UI_SESSION_BODY');result=normalUi.bindParticipant(context,a);}
+        else check(false,'BC_NOT_FOUND');
+      }
+      else if(v3){
         const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
         check(m,'BC_NOT_FOUND');const [,a,resource,target]=m;
         if(req.method==='GET'){

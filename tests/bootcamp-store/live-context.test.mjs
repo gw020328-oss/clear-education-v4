@@ -15,3 +15,15 @@ test('unconfigured prepared mapping stops before TEST keys, chain start, source 
  await assert.rejects(openLiveContext({preparationPath:join(directory,'preparation.json'),withReader(){source++;},hackerRank:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'}),collectLease(){collect++;}},reviewReflection(){ai++;}}),/BC_LIVE_HR_TRUST_REQUIRED/);
  assert.deepEqual({source,collect,ai},{source:0,collect:0,ai:0});assert.deepEqual(readdirSync(directory).sort(),['mapping.json','preparation.json']);
 });
+
+test('historical server TEST identities cannot open a reviewed actual source context or touch keys/runtime',async t=>{
+ const root=fileURLToPath(new URL('../../private/bootcamp-normal-live/',import.meta.url));mkdirSync(root,{recursive:true,mode:0o700});
+ const directory=mkdtempSync(join(root,'normal-live-test-'));t.after(()=>rmSync(directory,{recursive:true,force:true}));
+ const pins={dataMode:'RECLAIM_SIGNED_RECORD',trustConfigHash:'pinned-trust',recipeHash:'legacy-recipe',expectedClaimOwner:'owner'};
+ const mapping={hackerRank:{trustStatus:'REVIEWED',...pins}},runtimeMappingHash=p0Hash('NORMAL-REGISTERED-MAPPING',mapping);
+ writeFileSync(join(directory,'preparation.json'),JSON.stringify({version:'clear-bootcamp-normal-live-input.1',directory,runtimeMappingHash}),{mode:0o600});
+ writeFileSync(join(directory,'mapping.json'),JSON.stringify({mapping,runtimeMappingHash}),{mode:0o600});
+ // No keys or runtime exist: a fallback would fail with a different error or leave run artifacts.
+ await assert.rejects(openLiveContext({preparationPath:join(directory,'preparation.json'),withReader(){assert.fail('source');},hackerRank:{pins:()=>pins,collectLease(){assert.fail('collector');}},reviewReflection(){assert.fail('AI');}}),/BC_LIVE_EXTERNAL_UI_REQUIRED/);
+ assert.deepEqual(readdirSync(directory).sort(),['mapping.json','preparation.json']);
+});

@@ -6,21 +6,23 @@ import {P0_POLICY,p0PolicyHash} from '../../specs/bootcamp/p0-contract.mjs';
 import {NORMAL_HOST_VERSION} from '../../src/bootcamp/normal-client.mjs';
 
 // Mount the existing two handlers on one existing HTTPS server; no RPC, collector or signer is installed.
-export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot}){
+export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot,normalUi=null}){
+ if(normalUi&&sourceMode!=='REGISTERED_TEST_SOURCE')throw Error('BC_FRONTEND_CONFIG');
  if(authentication.origin!==store.origin||authentication.chainId!==chainId||!tls||!['SYNTHETIC_TEST_SOURCE','REGISTERED_TEST_SOURCE'].includes(sourceMode))throw Error('BC_FRONTEND_CONFIG');
- const server=createApplicationServer(authentication,{tls}),auth=server.listeners('request')[0],bootcamp=createBootcampHandler(store);
+ const server=createApplicationServer(authentication,{tls}),auth=server.listeners('request')[0],bootcamp=createBootcampHandler(store,{normalUi});
  const expected=new URL(store.origin),assets=webRoot&&existsSync(webRoot)?loadPublicAssets(webRoot):new Map();
  const config=Object.freeze({version:NORMAL_HOST_VERSION,origin:store.origin,chainId,sourceMode,policyHash:p0PolicyHash(P0_POLICY),
   procedureHttpVersion:'clear-bootcamp-review-procedure.1',operationsHttpVersion:'clear-bootcamp-operations-projection.2',
   reviewConsentHttpImplemented:true,originalEvidenceHttpImplemented:false,executionReceiptHttpImplemented:false,
-  sourceCollectionConfigured:false,signerInstalled:false,actualSourceVerification:null,productionEnabled:false});
+  sourceCollectionConfigured:normalUi!==null,sourceSignatureHttpImplemented:normalUi!==null,signerInstalled:false,actualSourceVerification:null,productionEnabled:false});
  server.removeListener('request',auth);const pending=new Set();
  const handle=async(req,res)=>{
   if(/^\/bootcamp(?:\/|\?|$)/.test(req.url)){
    const allowed=req.method==='GET'&&(/^\/bootcamp\/v[23]\/applications\/[a-z][a-z0-9.-]{0,63}\/(operations|procedure)$/.test(req.url)
     ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure-operations\/[a-z][a-z0-9.-]{0,63}$/.test(req.url))
     ||req.method==='POST'&&(/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/review-consents$/.test(req.url)||req.url==='/bootcamp/v1/applications');
-   if(allowed)return bootcamp(req,res);
+   if(allowed||normalUi&&((req.method==='GET'||req.method==='POST')&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-signature$/.test(req.url)
+    ||req.method==='POST'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-session$/.test(req.url)))return bootcamp(req,res);
    res.writeHead(404,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end('{"error":"BC_NOT_FOUND"}');return;
   }
   if(/^\/auth(?:\/|\?|$)/.test(req.url))return auth(req,res);

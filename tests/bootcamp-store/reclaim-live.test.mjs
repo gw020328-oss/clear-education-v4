@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createLiveReclaimConsumer,translateLiveReclaimRequest} from '../../src/bootcamp/reclaim-live-consumer.mjs';
+import {createLiveReclaimConsumer,translateLiveReclaimRequest,assertLiveWorkerReceipt,LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {createHackerRankCollector} from '../../src/hackerrank-evidence/collector.mjs';
 import {fixture as hrFixture,NOW} from '../hackerrank-evidence/fixture.mjs';
 import {BRIDGE_VERSION} from '../../src/bootcamp/reclaim-consumer.mjs';
@@ -28,4 +28,14 @@ test('genuine private collector lease with synthetic source cannot be promoted t
  const client={isOpen:true,isInitialised:true,metadata:{}};let lease;
  await collector.collect({expectedRequest:f.request,envelope:f.input.envelope,client,routeClient:client,readCookies:async()=> 'session=INVENTED',createClaim:async input=>{const p=f.input.proofs[input.context.clearSourceRole];return {claim:p.claim,signatures:{claimSignature:Buffer.from(p.signature.slice(2),'hex'),attestorAddress:p.attestor}};},submit:async r=>{lease=r.lease;}});
  const p=createLiveReclaimConsumer({pins:()=>pins,collectLease:async()=>lease,resolveLease:()=>state,now:()=>NOW});await assert.rejects(p.verify(request,{signal:new AbortController().signal,isAuthorized:()=>true}),/BC_LIVE_HR_SOURCE_REJECTED/);assert.equal(lease.isCurrent(),false);
+});
+
+test('live consumer requires the reviewed worker generation and exact responsibility disclosure',()=>{
+ const p={...pins,recipeHash:LIVE_WORKER_RECIPE_HASH},r={sourceVersion:'hackerrank-two-proof.3',recipeHash:LIVE_WORKER_RECIPE_HASH,
+  verification:{structureValidation:'TRUSTED_WORKER',disclosedFieldValidation:'ATTESTOR',independentStructureProof:false}};
+ assert.doesNotThrow(()=>assertLiveWorkerReceipt(r,p));
+ for(const bad of [{...r,sourceVersion:'hackerrank-two-proof.1'},{...r,sourceVersion:'hackerrank-two-proof.2'},
+  {...r,verification:{...r.verification,independentStructureProof:true}},{...r,verification:null},
+  {...r,recipeHash:H('unapproved recipe')}])assert.throws(()=>assertLiveWorkerReceipt(bad,p),/BC_LIVE_HR_WORKER_REQUIRED/);
+ assert.throws(()=>assertLiveWorkerReceipt(r,pins),/BC_LIVE_HR_WORKER_REQUIRED/);
 });
