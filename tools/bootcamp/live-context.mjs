@@ -71,10 +71,12 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
    store.getOperationsProjection(c,a);requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
    await connection.refresh(a);store.getOperationsProjection(c,a);
   };
-  const normalUi=Object.freeze({refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,pendingSignature(c,a){ensure(a===app,'BC_LIVE_CONTEXT');return ui.pendingSignature(c);},submitSignature(c,a,b){ensure(a===app,'BC_LIVE_CONTEXT');return ui.submitSignature(c,b);}});
+  const getSession=context=>{const actor=ui.authorize(context,false);if(app)store.getOperationsProjection(context,app);return Object.freeze({
+   version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true});};
+  const normalUi=Object.freeze({getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,pendingSignature(c,a){ensure(a===app,'BC_LIVE_CONTEXT');return ui.pendingSignature(c);},submitSignature(c,a,b){ensure(a===app,'BC_LIVE_CONTEXT');return ui.submitSignature(c,b);}});
   stage('AWAITING_EXTERNAL_UI_AUTHENTICATION');
   return Object.freeze({metadataPath:join(directory,'context.json'),
-   createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi});return mounted;},
+   createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
     ui.participant();ensure(!closed&&!collecting&&(!collectionStarted||pendingReflection&&!resumed&&!prepareReflection),'BC_LIVE_SINGLE_COLLECTION');
     if(prepareReflection)ensure(typeof reflectionHost?.codeState==='function'&&typeof reflectionHost?.day==='function','BC_LIVE_AI_PREPARATION_HOST');

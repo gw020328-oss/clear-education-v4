@@ -17,7 +17,8 @@ async function fixture(t,{withReceipt=false,refreshProcedure=null}={}){
  const f=await procedureFixture(t),a=f.create(),v=f.store.getApplication(f.aliceContext,a),H=x=>p0Hash('OFFLINE-UI-HTTP',x);
  const pins={audience:'offline-ui-http',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
  const ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time});
- const normalUi={bindParticipant(c,id){ui.bindParticipant(c,id,pins);return {applicationId:id,paymentAuthorization:false};},
+ let boundApp=null;
+ const normalUi={getSession(c){const actor=ui.authorize(c);if(boundApp)f.store.getOperationsProjection(c,boundApp);const app=boundApp;return {version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app,policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},bindParticipant(c,id){ui.bindParticipant(c,id,pins);boundApp=id;return {applicationId:id,paymentAuthorization:false};},
   pendingSignature(c,id){assert.equal(id,a);return ui.pendingSignature(c);},submitSignature(c,id,b){assert.equal(id,a);return ui.submitSignature(c,b);}};
  if(withReceipt)normalUi.getPaymentReceipt=createNormalReceiptReader({authorize:(c,id)=>f.store.getOperationsProjection(c,id),readReport:()=>({applicationId:a,recipient:f.alice.address.toLowerCase(),runtimeMappingHash:v.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false,stages:[],completed:false}),readCanonicalClaim:async()=>assert.fail('no tx should be read'),runtimeHash:H('runtime'),runtimeMappingHash:v.runtimeMappingHash,policyHash:v.policyHash,recipient:f.alice.address.toLowerCase(),token:'0x'+'12'.repeat(20)});
  if(refreshProcedure)normalUi.refreshProcedure=(...args)=>refreshProcedure({f,a},...args);
@@ -112,4 +113,20 @@ test('awaited procedure refresh rechecks logout and a cancelled write cannot rec
   else{release();assert.equal((await pending).status,401);}
   assert.equal(x.f.store.getProcedure(x.f.operatorContext,x.a).consent.records.length,0);
  }
+});
+
+test('session bootstrap uses authenticated role without caller-selected app or wallet',async t=>{
+ const x=await fixture(t);
+ for(const [context,role]of [[x.f.aliceContext,'PARTICIPANT'],[x.f.operatorContext,'OPERATOR']]){
+  const r=await x.raw('/bootcamp/v4/session',{context});assert.equal(r.status,200);assert.equal(r.body.role,role);assert.equal(r.body.applicationId,null);
+  assert.equal(JSON.stringify(r.body).includes(context.token),false);
+  const client=createNormalBootcampClient({request:async()=>r.body});assert.equal((await client.session()).role,role);
+ }
+ await x.raw('source-session',{method:'POST',body:{}});
+ assert.equal((await x.raw('/bootcamp/v4/session',{context:x.f.operatorContext})).body.applicationId,x.a);
+ assert.equal((await x.raw('/bootcamp/v4/session',{context:x.f.bobContext})).status,403);
+ assert.equal((await x.raw('/bootcamp/v4/session?applicationId=other')).status,404);
+ assert.equal((await x.raw('/bootcamp/v4/session',{method:'POST',body:{}})).status,404);
+ assert.equal((await x.raw('/bootcamp/v4/session',{headers:{cookie:''}})).status,401);
+ assert.equal((await x.raw('/bootcamp/v4/session',{headers:{origin:'https://other.invalid'}})).status,403);
 });

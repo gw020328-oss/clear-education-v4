@@ -45,6 +45,8 @@ export function createNormalBootcampClient({request}){
   &&r.purpose==='HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION'
   &&typeof r.message==='string'&&r.message.startsWith('CLEAR HackerRank evidence observation approval; not a payment authorization.\n'),'BC_NORMAL_SOURCE_APPROVAL');return {...r,applicationId:a};};
  return Object.freeze({
+  async session({signal}={}){const r=await request('/bootcamp/v4/session',{signal});check(r?.version==='clear-bootcamp-normal-session.1'&&['PARTICIPANT','OPERATOR'].includes(r.role)
+   &&(r.applicationId===null||id(r.applicationId))&&/^0x[0-9a-f]{64}$/.test(r.policyHash)&&/^0x[0-9a-f]{64}$/.test(r.runtimeMappingHash)&&r.sourceMode==='REGISTERED_TEST_SOURCE'&&r.receiptRequired===true,'BC_NORMAL_SESSION');return r;},
   async bindSourceSession(applicationId,{signal}={}){
    const r=await request(sourceBase(applicationId)+'/source-session',{method:'POST',body:{},signal});
    check(r?.applicationId===applicationId&&r.paymentAuthorization===false,'BC_NORMAL_SOURCE_SESSION');return r;

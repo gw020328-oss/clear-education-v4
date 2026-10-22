@@ -34,7 +34,10 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));}catch{throw new RuleError('BC_HTTP_JSON');}
       }
       const path=req.url,key=req.headers['idempotency-key'];let result;
-      if(v4){
+      if(v4&&path==='/bootcamp/v4/session'){
+        check(req.method==='GET'&&typeof normalUi?.getSession==='function','BC_NOT_FOUND');result=normalUi.getSession(context);
+      }
+      else if(v4){
         const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt)$/.exec(path);
         check(normalUi&&m,'BC_NOT_FOUND');const [,a,resource]=m;
         if(req.method==='GET'&&resource==='payment-receipt'){check(typeof normalUi.getPaymentReceipt==='function','BC_NOT_FOUND');result=await normalUi.getPaymentReceipt(context,a);}

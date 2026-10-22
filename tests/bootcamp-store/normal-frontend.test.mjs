@@ -99,3 +99,14 @@ test('mounted existing authentication challenge and login retain Secure HttpOnly
  assert.equal(logged.status,200);assert.ok(logged.headers['set-cookie'].some(c=>c.startsWith('__Host-clear-session=')&&c.includes('Secure')&&c.includes('HttpOnly')));
  assert.equal(logged.body.token,undefined);
 });
+
+test('active wallet network is explicit loopback only and never inherited by the display host',async t=>{
+ const x=await fixture(t);assert.equal(x.mounted.config.network,null);assert.equal(x.mounted.config.phase,'DISPLAY_ONLY');
+ const dir=join(x.f.directory,'network-tls');mkdirSync(dir,{mode:0o700});const fp=createCertificates(dir);
+ const options={authentication:x.f.service,store:x.f.store,tls:loadTls(dir,fp),sourceMode:'REGISTERED_TEST_SOURCE',chainId:x.f.config.chainId,normalUi:{}};
+ const server=createBootcampFrontendServer({...options,network:{chainId:x.f.config.chainId,rpcUrl:'http://127.0.0.1:19999'}});
+ assert.equal(server.config.phase,'ACTIVE_LOCAL_TEST');assert.deepEqual(server.config.network.rpcUrls,['http://127.0.0.1:19999']);
+ assert.equal(server.config.network.chainId,'0x'+BigInt(x.f.config.chainId).toString(16));assert.equal(server.config.network.nativeCurrency.decimals,18);
+ for(const network of [{chainId:x.f.config.chainId+1,rpcUrl:'http://127.0.0.1:19999'},{chainId:x.f.config.chainId,rpcUrl:'https://public.invalid'},
+  {chainId:x.f.config.chainId,rpcUrl:'http://user:pass@127.0.0.1:19999'}])assert.throws(()=>createBootcampFrontendServer({...options,network}),/BC_FRONTEND_NETWORK/);
+});
