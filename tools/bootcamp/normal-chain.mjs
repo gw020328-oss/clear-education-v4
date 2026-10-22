@@ -12,11 +12,14 @@ import {createApplicationService} from '../../src/application/service.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {syntheticAuthority} from '../../tests/bootcamp-store/fixture.mjs';
+import {explicitReviewTarget,assertExplicitConsents} from './explicit-consents.mjs';
 import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(condition,code)=>{if(!condition)throw Error(code);};
-export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage}){
+export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,signal}){
+ const automatic=connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'&&waitForConsents===undefined;
+ ensure(automatic||typeof waitForConsents==='function','BC_NORMAL_EXPLICIT_CONSENTS_REQUIRED');
  const m=connection.runtime.manifest,id=m.environmentId,reader=new ExecutionReader(m),bridge=store.execution.connectBridge(serviceContext);
   let view=store.getApplication(user,app);ensure(view.decision.record.conditionsStatus==='MET','BC_NORMAL_NOT_MET');
   connection.registerApplication({applicationId:app,wallet:recipient.toLowerCase(),decisionId:view.decision.record.decisionId});await connection.refresh(app);
@@ -45,7 +48,16 @@ export async function executeNormalPayment({store,connection,serviceContext,user
   ensure(publishedNotBefore-now()<=30,'BC_NORMAL_CHAIN_CLOCK_AHEAD');
   if(now()<publishedNotBefore)await new Promise(resolve=>setTimeout(resolve,publishedNotBefore*1000-Date.now()+20));
   await connection.refresh(app);store.publishReview(user,app,body(),key());
-  await execute('START_REVIEW');await connection.refresh(app);store.recordReviewConsent(user,app,body(user,{value:'AGREE'}),key());store.recordReviewConsent(op,app,body(op,{value:'AGREE'}),key());
+  await execute('START_REVIEW');await connection.refresh(app);
+  if(automatic){
+   store.recordReviewConsent(user,app,body(user,{value:'AGREE'}),key());store.recordReviewConsent(op,app,body(op,{value:'AGREE'}),key());
+   report.consentOrigin='SYNTHETIC_AUTOMATIC_TEST_ROLES';
+  }else{
+   const target=explicitReviewTarget(store.getProcedure(user,app));report.reviewTarget=target;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');
+   await waitForConsents({target,read:()=>store.getProcedure(user,app),heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal});
+   assertExplicitConsents(store.getProcedure(user,app),target);report.consentOrigin='AUTHENTICATED_APP_CONSENT_RECORDS';
+  }
+
   await execute('BIND_CONSENTS');await connection.refresh(app);const preparation=store.prepareReviewAuthorization(user,app,body(),key()).record.target.preparationId;
   await execute('PREPARE',preparation);const accepted=await execute('ACCEPT',preparation);ensure(accepted.claimJob,'BC_NORMAL_CLAIM_JOB_REQUIRED');
   stage('SEPARATE_CLAIM');const before=await token.balanceOf(recipient),claim=await vault.connect(ownedTestWallet(id,'anycaller').connect(provider)).claim(chainApp);await waitSetupReceipt(provider,claim.hash);
