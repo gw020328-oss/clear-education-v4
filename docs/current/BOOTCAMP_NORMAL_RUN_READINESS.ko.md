@@ -17,3 +17,5 @@
 권장 순서는 모든 설정/두 지갑·프론트/비용 안내 준비→HR 독립 신뢰 고정/관리형 로그인·ready→같은 owner pins로 마지막 시점 새 `.2` realm/HTTPS 준비→두 역할 로그인/참여자 신청 1회 결합→정확 HR P1 서명·수집→Moodle와 회고 packet 준비→새 exact AI 단1회 승인·동일 packet 재개→같은 현재 판정/전액·검토→양측 명시 동의→기존 accept/claim→정확 receipt/수령 인수다. 순서 중 새 사용자 행동이 필요한 시점은 본부가 일괄 설명하고, 준비되지 않은 단계에서 먼저 로그인을 요구하지 않는다.
 
 현재 실제 실행 readiness는 미완료다. 공개 주소·역할별 브라우저/프론트 연결, host의 audience/privacyKeyId/안전 key source, 실행 당일 AI 가격/새 승인, 첫 실제 HR 형식/proof 성공은 미확인이다. 이 문서가 이를 성공으로 바꾸지 않는다. Moodle/AI 담당은 이번에 정적 읽기만 했고 compose 재기동·추가 진단·원문·token·key·model 호출0이었다.
+
+후속 정적 점검의 canonical5초 snapshot 갱신 누락은 [C3 refresh](BOOTCAMP_C3_REFRESH.ko.md)의 소유 async read/HTTP 앞 refresh로 보완했다. TTL이나 원천/검토 cap은 늘리지 않았다. actual host는 API 통합 작업본의 managed-source/prepared-source/collector/openLiveContext/AI entry를 같은 모듈 트리에서 import한다. 코드 bytes가 같아도 다른 HR 작업본에서 만든 private lease나 다른 AI 모듈의 branded 결과를 전달하지 않는다. 별도 원천 담당의 withReader 포트와 private brand의 발급/소비 모듈 트리를 구분한다. 이 연결 검증도 실제 HR/AI 실행 성공을 대신하지 않는다.

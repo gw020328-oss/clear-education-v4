@@ -1183,7 +1183,15 @@
     "localRelatedPass": 45,
     "localGuardPass": 24,
     "aAndBPreservation": "PASS",
-    "remoteCi": "PENDING_FINAL_PUSH_HEAD",
+    "remoteCi": {
+      "head": "f84b6f78dbcccd32da289d3190db0207bf727afd",
+      "latestSuccess": 18,
+      "total": 18,
+      "macFirstAttemptFailurePreserved": true,
+      "approvedSameHeadSingleJobRetry": 1,
+      "retryPass": 113,
+      "unresolvedReviewThreads": 0
+    },
     "frontendHandoff": "docs/current/BOOTCAMP_C3_FRONTEND.ko.md",
     "combinedReadiness": "docs/current/BOOTCAMP_NORMAL_RUN_READINESS.ko.md",
     "verification": "docs/current/BOOTCAMP_V8_VERIFICATION.json",
@@ -1195,5 +1203,25 @@
     "registryCalls": 0,
     "paidCalls": 0,
     "chainTransactions": 0
+  },
+  "normalC3RefreshV9": {
+    "sourceCandidateHead": "26d451701186632ba7a37729b9937f28ce3a1f83",
+    "guardCommit": "6294cf0b82a5f092e1973aeb92efb769a1f7dd77",
+    "intakeSha256": "19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2870fc",
+    "memoryConsumerSha256": "dc60cc5d30cd3e101e7f2c6b43ab4ce7fb694324deae25c92d3147cc3c19ca5c",
+    "currentSourcesAndAssets": 135,
+    "explicitSourceChanges": 4,
+    "snapshotTtlSeconds": 5,
+    "snapshotTtlChanged": false,
+    "sourceOrReviewCapExtended": false,
+    "asyncReadAndHttpRefresh": true,
+    "postAwaitCancellationAndAuthorityChecked": true,
+    "localRelatedPass": 39,
+    "localGuardPass": 26,
+    "aAndBPreservation": "PASS",
+    "remoteCi": "PENDING_FINAL_PUSH_HEAD",
+    "handoff": "docs/current/BOOTCAMP_C3_REFRESH.ko.md",
+    "verification": "docs/current/BOOTCAMP_V9_VERIFICATION.json",
+    "actualSourceOrUiDemoComplete": false
   }
 }

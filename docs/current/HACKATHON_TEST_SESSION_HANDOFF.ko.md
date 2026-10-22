@@ -1,6 +1,8 @@
 # 현재 정상 시연 작업의 인계 입구
 
-최신 C3 일반 연결: source `cbda762` + v8 guard `dd4a79a`의 [프론트 계약](BOOTCAMP_C3_FRONTEND.ko.md), [정확 v8 인수](BOOTCAMP_V8_INTAKE.ko.md), [본부 일괄 준비표](BOOTCAMP_NORMAL_RUN_READINESS.ko.md)가 현재 기준이다. 외부 원천 서명/명시 동의와 권한 있는 canonical receipt 조회를 API·브라우저 모듈에 연결했다. 실제 web 화면·두 역할 공개 주소/브라우저·host 안전 설정·AI 새 승인/첫 HR 실제 형식은 아직 미확인이고 실제 전체 시연은 미완료다. 직전 v7 `3e2f355`의 CI18/18 SUCCESS는 새 v8 head CI와 구분한다.
+최신 C3 갱신 보완: source `26d4517` + v9 guard `6294cf0`의 [사람 동의 대기 갱신](BOOTCAMP_C3_REFRESH.ko.md)을 적용했다. 실제5초 canonical cache를 소유 readonly async read와 procedure GET/동의 앞에서 갱신하며 TTL·원래 source/reviewcap을 유지한다. 관련39/39·v9 보존26/26·A/B 보존 PASS. 직전f84 CI는 최초Mac1회실패를보존한뒤 승인된같은head 단일job1회재시험으로최신18/18SUCCESS였다. 새 v9 head CI와 구분한다. 실제 readiness/시연은 여전히 미완료다.
+
+직전 C3 일반 연결: source `cbda762` + v8 guard `dd4a79a`의 [프론트 계약](BOOTCAMP_C3_FRONTEND.ko.md), [정확 v8 인수](BOOTCAMP_V8_INTAKE.ko.md), [본부 일괄 준비표](BOOTCAMP_NORMAL_RUN_READINESS.ko.md)가 현재 기준이다. 외부 원천 서명/명시 동의와 권한 있는 canonical receipt 조회를 API·브라우저 모듈에 연결했다. 실제 web 화면·두 역할 공개 주소/브라우저·host 안전 설정·AI 새 승인/첫 HR 실제 형식은 아직 미확인이고 실제 전체 시연은 미완료다. 직전 v7 `3e2f355`의 CI18/18 SUCCESS는 새 v8 head CI와 구분한다.
 
 2026-10-22 직전 경계 인수: source `b07be3c` + v7 guard `726c21d`가 HR e658을 정상 이력으로 결합했다. [v7 인수](BOOTCAMP_V7_INTAKE.ko.md)와 [외부 지갑 경계](BOOTCAMP_C2_UI_BOUNDARY.ko.md)가 현재 기준이다. 기존 v6/36개는 원래 snapshot으로 보존한다. 실제 입력 `.2`는 외부 참여자·운영자 주소만 고정하며, 브라우저의 원래 인증 세션과 정확한 원천 승인 서명이 필수다. 서버 TEST 참여자 키 fallback은 차단했다. 실제 source/로그인/realm/AI/거래는 이번 단위 0이며 canonical 지급 receipt HTTP와 화면 연결은 남아 있다. 아래 과거 날짜별 CI·차단 기록은 당시 사실로 보존한다.
 

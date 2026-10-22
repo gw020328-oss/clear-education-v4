@@ -46,3 +46,5 @@ const payment = await api.paymentReceipt(applicationId);
 원천 승인 메시지는 P1 관찰용이며 양측 정책 동의/금고 지급 서명과 별개다. 운영자는 참여자의 원천 승인 메시지를 읽거나 대신 서명할 수 없다. 120초 경과는 상대 동의를 대체하지 않는다. 브라우저 시계로 source/review cap을 재시작하지 않는다. 자동 consent/sign/POST retry, synthetic 성공 fallback, C4~C6 진행률·복구·pagination은 추가하지 않는다.
 
 관련 네트워크 차단 검증45/45 PASS. canonical/잔액/null 분리, 소유자/운영자/타 참여자 접근, await 중 로그아웃, 원천 만료 뒤 별도 수락 대상 보존, browser adapter 및 HTTPS GET/POST·Origin/CSRF·임의 tx 거부를 포함한다. 실제 지갑 브라우저 화면 자체와 전체 실제 지급은 아직 실행하지 않았다.
+
+후속 [사람 동의 대기 조회 갱신](BOOTCAMP_C3_REFRESH.ko.md)이 실제 canonical5초 cache에 적용된다. host가 아직 chain application을 결합하지 않았다면 v3 조회/동의는 `BC_NORMAL_PROCEDURE_NOT_READY`이며 그 단계의 조건 표시는 기존 v2 operations로 읽는다. 검토 준비 후 procedure GET/명시 동의 앞과 동의 대기의 read는 소유 readonly refresh를 거친다. TTL/source/reviewcap·자동 POST 재시도 정책은 바뀌지 않는다.
