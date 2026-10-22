@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { recoveryStep } from './recovery-diagnostics.mjs';
 export const chromePath='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // Chrome cannot execute until its process-group record has been closed on disk.
 // If the parent dies first, EOF makes this gate exit without launching Chrome.
@@ -18,6 +19,7 @@ export function usesProfile(command,path) {
   return at>=0 && (at===0 || /\s/.test(command[at-1])) && (at+flag.length===command.length || /^ --[a-zA-Z]/.test(command.slice(at+flag.length)));
 }
 export function browserRecovery({readProcesses,signalGroup,wait,uid}) {
+  const processes=()=>recoveryStep('BROWSER_PROCESS_QUERY','PROCESS_TABLE',readProcesses);
   const validate=(path,members)=>{
     for(const m of members) {
       check(m.uid===uid,'BROWSER_OWNER_MISMATCH');
@@ -25,7 +27,7 @@ export function browserRecovery({readProcesses,signalGroup,wait,uid}) {
       check(usesProfile(m.command,path),'BROWSER_PROFILE_MISMATCH');
     }
   };
-  const group=async pid=>(await readProcesses()).filter(p=>p.pgid===pid);
+  const group=async pid=>(await processes()).filter(p=>p.pgid===pid);
   const verified=async(path,pid)=>{
     for(let i=0;i<20;i++){
       const members=await group(pid);
@@ -39,7 +41,7 @@ export function browserRecovery({readProcesses,signalGroup,wait,uid}) {
     for(const signal of ['SIGTERM','SIGKILL']){
       // Revalidate before every signal, including escalation after PID reuse.
       if(!(await verified(path,pid)).length)return;
-      try{await signalGroup(pid,signal);}catch(e){if(e.code!=='ESRCH')throw e;}
+      try{await recoveryStep(signal==='SIGTERM'?'BROWSER_SIGNAL_TERM':'BROWSER_SIGNAL_KILL','BROWSER_GROUP',()=>signalGroup(pid,signal));}catch(e){if(e.code!=='ESRCH')throw e;}
       for(let i=0;i<40;i++){if(!(await group(pid)).length)return;await wait(50);}
     }
     throw new Error('BROWSER_STILL_RUNNING');
@@ -49,7 +51,7 @@ export function browserRecovery({readProcesses,signalGroup,wait,uid}) {
     // Old builds could launch Chrome before writing any record. Search only for
     // this exact session profile; validate the whole group before signalling.
     for(let i=0;i<20;i++){
-      const matches=(await readProcesses()).filter(p=>usesProfile(p.command,path));
+      const matches=(await processes()).filter(p=>usesProfile(p.command,path));
       if(!matches.length)return;
       for(const pid of new Set(matches.map(p=>p.pgid)))await stopGroup(path,pid);
     }

@@ -5,10 +5,28 @@ const mkdir=fs.mkdir.bind(fs),open=fs.open.bind(fs),writeFile=fs.writeFile.bind(
 const pause=()=>new Promise(r=>setTimeout(r,300));
 const mode=process.env.CLEAR_FAULT;
 const readdir=fs.readdir.bind(fs);
+const rm=fs.rm.bind(fs),readFile=fs.readFile.bind(fs),kill=process.kill.bind(process);
+const denied=syscall=>Object.assign(new Error('SYNTHETIC_PRIVATE_DETAIL_DO_NOT_LOG'),{
+  code:'EPERM',syscall,path:process.env.CLEAR_TEST_ROOT,stack:'SYNTHETIC_PRIVATE_STACK_DO_NOT_LOG',
+});
+fs.rm=async function(path,...args){
+  if(mode==='stale-delete-EPERM'&&String(path).startsWith(process.env.CLEAR_TEST_ROOT+'/session-'))throw denied('rmdir');
+  return rm(path,...args);
+};
+fs.readFile=async function(path,...args){
+  if(mode==='stale-browser-metadata-EPERM'&&String(path).endsWith('/browser.json'))throw denied('open');
+  return readFile(path,...args);
+};
+process.kill=function(pid,signal){
+  // Never signal a real target for this controlled inaccessible-owner probe.
+  if(mode==='stale-owner-EPERM'&&pid===2147483647&&signal===0)throw denied('kill');
+  return kill(pid,signal);
+};
 fs.readdir=async function(path,...args){
   if(path===process.env.CLEAR_TEST_ROOT && mode?.startsWith('recovery-')){
     const error=new Error('SYNTHETIC_PRIVATE_DETAIL_DO_NOT_LOG');
     error.code=mode.slice('recovery-'.length);
+    error.syscall='scandir';error.path=path;
     throw error;
   }
   return readdir(path,...args);

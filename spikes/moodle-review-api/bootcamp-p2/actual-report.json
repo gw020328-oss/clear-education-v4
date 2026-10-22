@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-17",
+  "kind": "ACTUAL_ISOLATED_MOODLE_SYNTHETIC_ACCOUNTS",
+  "environmentRef": "bc-p2-20261017-run3",
+  "runRef": "run3",
+  "fixtureReportHash": "0x703e993fb5c231e09db19eee25397d257d9920a42f5acefbe5a69339c33f8986",
+  "cases": [
+    {
+      "name": "actual_fixture_course_targets_participant_and_source_version",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "initialize_source_new_records_before_bound_acquisition",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "activity_incomplete_with_api_automatic_rule",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "read_token_cannot_mark_view_or_write",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "page_view_write_causes_system_automatic_complete",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "manual_completion_configuration_is_not_auto_verified",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "assignment_no_submission_is_not_submitted",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "save_online_text_is_draft_not_submitted",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "submit_for_grading_is_submitted_without_grade",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "other_account_has_no_submission",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "other_reader_cannot_satisfy_bound_participant",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "standard_api_other_student_submission_is_denied",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "standard_api_other_student_completion_is_denied",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "wrong_course_target_is_not_reused",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "outsider_course_access_denied",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "create_two_reflections_and_select_exact_own_post",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "other_author_selected_post_is_rejected",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "edit_reflection_changes_source_hash",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "hidden_reflection_unavailable_not_missing",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "repeat_read_same_request_is_not_new_durable_acceptance",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "delete_selected_reflection_has_no_success_receipt",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "delete_assignment_has_no_success_receipt",
+      "result": "PASS",
+      "kind": "ACTUAL_LOCAL_API_OR_OWN_FIXTURE"
+    },
+    {
+      "name": "old_source_version_is_rejected",
+      "result": "PASS",
+      "kind": "OFFLINE_GUARD_IN_LIVE_HARNESS"
+    },
+    {
+      "name": "expired_request_has_no_success_receipt",
+      "result": "PASS",
+      "kind": "OFFLINE_GUARD_IN_LIVE_HARNESS"
+    }
+  ],
+  "complete": true,
+  "failedStage": null,
+  "apiWritesBySeparateFixtureHarness": true,
+  "productAcceptance": false,
+  "paymentAllowed": false,
+  "actualLocalApiOrFixtureCases": 22,
+  "offlineGuardCases": 2,
+  "additionalActualApiRunAfterCleanup": false
+}

@@ -1,0 +1,102 @@
+{
+  "version": "clear-hackathon-test-memory-source-intake.4",
+  "date": "2026-10-19",
+  "status": "REVIEWED_FOR_SCOPED_MEMORY_COMPATIBILITY_TESTS_ONLY",
+  "purpose": "CONTINUE_HISTORICAL_MEMORY_BOUNDARY_WITH_REVIEWED_GLOBAL_RUNTIME_AUTHORITY_EXTENSION",
+  "commonRecordBase": "725506f8261fea38c855297ba603904c61be4007",
+  "normativeBoundary": {
+    "head": "085878860d604095b0a6152329f8d82a445574b7",
+    "path": "specs/bootcamp/hackathon-test-boundary-intake-v1.json",
+    "sha256": "cfb42a8f559a54b94188df6f94cb7d67d9a7085b32990ce55968be62904c3fa0"
+  },
+  "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "acceptedE3StageHead": "c3b71c710f558529680e255222857f0e81fe1dcb",
+  "currentSourceCandidateHead": "4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0",
+  "e3ArtifactSha256": {
+    "src/bootcamp/procedure.mjs": "91ec8afd7e6aa001bb25ff8e716d168eb37f0e39e6fd09824b535889848d764f",
+    "src/bootcamp/procedure-ledger.mjs": "db6d5a0273bb135c120828fc6ed32a4f1b6e2bb46182337908410948ada9035f",
+    "src/bootcamp/procedure-ports.mjs": "f6e51f4f23ccaf5d55f5754cd3308df13e3894dc282256556feae1613137bbfc",
+    "src/bootcamp/store.mjs": "f7842a2fcbb70ec1319b002c02e72737d5c399247ce96a8d3200bf50b1d0c21d",
+    "src/bootcamp/operations.mjs": "7228821abd7d8f1157e889a0bb9173e465afd7fa662e9c139d4eecff99b2e37d",
+    "src/bootcamp/http.mjs": "06c7b249e6cc0a876bda8de0ea99b42f3f1cc8fb53f4edec2a1efb7f36c5d7a9",
+    "docs/bootcamp-procedure/e4-port-proposal.json": "74f5472788fd3c807a931033e8e6383b8793f8b8f02be283d746e23bbab12f7e",
+    "docs/bootcamp-procedure/synthetic-intake-example.json": "309072d4eea6e3e8f7d233f13e9160621f89861a3099038987668b49d684b494"
+  },
+  "changedFromAcceptedE3": [
+    "src/bootcamp/store.mjs"
+  ],
+  "e2ConsumerInput": {
+    "path": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
+    "sha256": "7b7b63427e98e232a483af41418b551df854195bd083ef430b52df809af2d52d"
+  },
+  "review": {
+    "scope": "GLOBAL_RUNTIME_WORKER_LEASE_MONOTONIC_FENCE_INCARNATION_SERIAL_INTENT_SLOT_EXTERNAL_WITNESS_PREFLIGHT_AND_ATOMIC_MIGRATION",
+    "existingE5CurrentAndE1E3Tests": 238,
+    "newAuthorityTests": 29,
+    "newProcessRecoveryTests": 8,
+    "ownerReportedPass": 275,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "actualNewSigkillCases": 7,
+    "independentTwoProcessRaceCases": 1,
+    "testLogSha256": "665d8cc0dba5b7bd96d92729f5cf2ca17623297ede4be3cd26262ea59d0a8e49",
+    "rootSourceReview": "AUTHORITY_FULL_154_LINES_STORE_OPERATIONS_HANDSHAKE_DIFFS_AND_AUTHORITY_RECOVERY_TESTS_READ",
+    "requestedSensitiveReviewSetting": "gpt-6-astra/high",
+    "runtimeModelIndependentlyVerified": false,
+    "preservation": "191_SOURCE_REFERENCE_FILES_AND_DEPENDENCY_GRAPH_REPORTED_PASS",
+    "externalWitness": "CONSTRUCTOR_CAPTURED_OFFLINE_FIXTURE_ONLY_ACTUAL_E4_NOT_CONNECTED",
+    "snapshotRollbackDetection": "REQUIRES_INDEPENDENT_E4_WITNESS_BEFORE_ACQUIRE_NO_COUNTER_REPAIR",
+    "newServiceDefault": "UNCONFIGURED_THEN_CURRENT_ADAPTER_ONLY",
+    "executionAuthorized": false,
+    "dispatchAuthorized": false,
+    "payoutOrChainExecution": false,
+    "finalCombinedCi": "PENDING_EXPLICIT_CONSUMER_PIN_AND_OWNER_HISTORY_INTEGRATION",
+    "fullProcedureAndClaim": "NOT_IMPLEMENTED_BY_THIS_CANDIDATE"
+  },
+  "allowedRuntimeKinds": [
+    "FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS"
+  ],
+  "persistentRuntimeAllowedByThisIntake": false,
+  "fullRuntimeAccepted": false,
+  "existingV1GatesChanged": false,
+  "productionEnabled": false,
+  "consumerUpdateRequired": [
+    "KEEP_NORMATIVE_BOUNDARY_V1_FILE_AND_POLICY_UNCHANGED",
+    "PIN_THIS_V4_FILE_HASH_EXPLICITLY_AND_VERIFY_SCOPE_PROFILE_AND_BASE_BOUNDARY",
+    "VERIFY_CURRENT_E3_FILES_AGAINST_V4_SOURCE_SHA_TABLE_NOT_OLD_SOURCE_BYTES",
+    "RECORD_CURRENT_COMPATIBLE_SOURCE_HEAD_SEPARATELY_FROM_ACCEPTED_E3_STAGE_HEAD",
+    "KEEP_E2_AND_E4_PREPARATION_PIN_CHECKS_AND_DEFAULT_BLOCKED_ADAPTER",
+    "RUN_EXISTING_MEMORY_TESTS_WITH_CURRENT_SOURCE_AND_NEW_METADATA_TESTS_BEFORE_ACCEPTANCE",
+    "VERIFY_NINE_EXECUTION_IMPORTS_AGAINST_ADDITIONAL_SOURCE_SHA_TABLE",
+    "KEEP_V1_V2_V3_RECORD_BYTES_IMMUTABLE",
+    "MERGE_REVIEWED_4DEC_OWNER_HISTORY_WITHOUT_REPLACING_E3_POLICY_ACCEPTANCE"
+  ],
+  "additionalSourceArtifactSha256": {
+    "src/bootcamp/execution-current.mjs": "ec33fb532d470c0cc85eb29ec37268263ecef5547ae97a4ec5d663e61106cbbb",
+    "src/bootcamp/execution-e4-ports.mjs": "2a42aa71a57c9d7a6a93121d5c3f7fe48fa3e7bd7492205753a1763f2aa939ca",
+    "src/bootcamp/execution-handshake.mjs": "d70700377bb36489cd63f5f204a43fdb2a556b70c9ae7cbf25e02c6d7351bda0",
+    "src/bootcamp/execution-ledger.mjs": "2da2ecf181a408af00f817a18fe5516c4c6775e9ed081794878e0db514d74f41",
+    "src/bootcamp/execution-operations.mjs": "365447d6da4cc26244cdedf90d644fbf9860ba5babdd089541b2eaa6fe62b09e",
+    "src/bootcamp/execution-ports.mjs": "4dae489da512de8b1d287dc3351992d67a2cf1928eb83637c34ec1cb8fde5270",
+    "src/bootcamp/execution-readback.mjs": "a285e68128cd813039a5b1da5c23ebdd6873d0cbf4bf4a67d6558bf26801519c",
+    "src/bootcamp/execution-worker.mjs": "1e838e7c199390f23e2d392639d1db1f30551e000c12cadf33342dfb2deac4a8",
+    "src/bootcamp/execution-authority.mjs": "4bec2a0eda1076d9a5c9ff0552f0d09ac18ca3613c355ab0218b2586593ceccf"
+  },
+  "sourcePublicationAtReview": "LOCAL_COMMIT_PENDING_OWNER_INTEGRATION",
+  "previousCompatibilityRecord": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v3.json",
+    "sha256": "df577fa3e54bad4502ac14e2237831134c6d3534fbe790031410dcdaedac2542",
+    "candidateHead": "97f6413da80f8c9075baf344b5e2bf3f8c221360",
+    "consumptionClaimed": true,
+    "consumptionScope": "E4_B_OWNER_LOCAL_MEMORY_AND_API_COMPATIBILITY_128_CASES_REPORTED_NOT_FINAL_CI"
+  },
+  "unimplementedConnectionBoundaries": [
+    "E4_FINAL_SECRETLESS_READER_ISSUER_AND_ENVELOPE_FACADES",
+    "ACTUAL_E4_DURABLE_HIGHEST_FENCE_WITNESS_CONSUMER",
+    "SEALED_ENVELOPE_ADOPTION_AND_EXISTING_REQUEST_LOOKUP",
+    "ACTUAL_UNSIGNED_PREPARATION_AND_FULL_COMMAND_ORCHESTRATION",
+    "COMMIT_DISPATCH_AND_CANONICAL_RECEIPT_ACCEPTANCE",
+    "AUTOMATIC_SETTLEMENT_AND_BACKEND_STOP_DIRECT_CLAIM"
+  ]
+}

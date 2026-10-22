@@ -4,6 +4,7 @@ import { defaultRoot, clearAbandoned, createSession, removeSession, TTL, require
 import { stopRecordedBrowser, startChrome } from './chrome.mjs';
 import { syntheticBrowserCheck } from './synthetic.mjs';
 import { parseOptions } from './options.mjs';
+import { recoveryDiagnostic } from './recovery-diagnostics.mjs';
 process.umask(0o077);
 requireValue(process.env.CLEAR_LOCKED==='1','LOCKED_LAUNCHER_REQUIRED');
 const root=process.env.CLEAR_TEST_ROOT || defaultRoot();
@@ -51,6 +52,8 @@ try{
     const fsCodes=new Set(['ENOENT','ENOTEMPTY','EACCES','EPERM','EBUSY']);
     const code=codes.has(error.message)?error.message:fsCodes.has(error.code)?error.code:'UNEXPECTED_ERROR';
     console.error('진단 코드: '+phase+':'+code);
+    const recovery=recoveryDiagnostic(error);
+    if(recovery)console.error('복구 진단: '+JSON.stringify(recovery));
     console.error('CLEAR: 실행을 중단했습니다. 진단 보고서에 개인정보는 기록하지 않았습니다.');exitCode=1;
   }
 }finally{

@@ -1,0 +1,153 @@
+{
+  "version": "clear-bootcamp-test-payment-authorization.3",
+  "encodingRevision": 1,
+  "status": "E2_PROPOSAL_REQUIRES_COMMON_CONSUMER_ACCEPTANCE",
+  "profileId": "clear-hackathon-test-operations.1",
+  "profileCommit": "67b6a0731f97df98fda7820ab24ed85a57796a83",
+  "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "primaryType": "BootcampTestPaymentAuthorizationV3",
+  "domainFields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "version",
+      "type": "string"
+    },
+    {
+      "name": "chainId",
+      "type": "uint256"
+    },
+    {
+      "name": "verifyingContract",
+      "type": "address"
+    },
+    {
+      "name": "salt",
+      "type": "bytes32"
+    }
+  ],
+  "messageFields": [
+    {
+      "name": "applicationId",
+      "type": "bytes32"
+    },
+    {
+      "name": "policyHash",
+      "type": "bytes32"
+    },
+    {
+      "name": "runtimeMappingHash",
+      "type": "bytes32"
+    },
+    {
+      "name": "decisionId",
+      "type": "bytes32"
+    },
+    {
+      "name": "decisionRevision",
+      "type": "uint64"
+    },
+    {
+      "name": "decisionHash",
+      "type": "bytes32"
+    },
+    {
+      "name": "recipient",
+      "type": "address"
+    },
+    {
+      "name": "token",
+      "type": "address"
+    },
+    {
+      "name": "amountAtoms",
+      "type": "uint256"
+    },
+    {
+      "name": "allocationId",
+      "type": "bytes32"
+    },
+    {
+      "name": "consentSetHash",
+      "type": "bytes32"
+    },
+    {
+      "name": "deadlinePolicyHash",
+      "type": "bytes32"
+    },
+    {
+      "name": "eligibilityRoute",
+      "type": "uint8"
+    },
+    {
+      "name": "nonce",
+      "type": "bytes32"
+    },
+    {
+      "name": "issuedAt",
+      "type": "uint64"
+    },
+    {
+      "name": "expiresAt",
+      "type": "uint64"
+    },
+    {
+      "name": "signerKeyId",
+      "type": "bytes32"
+    },
+    {
+      "name": "authorizationEpoch",
+      "type": "uint64"
+    },
+    {
+      "name": "operationsPolicyHash",
+      "type": "bytes32"
+    },
+    {
+      "name": "procedureId",
+      "type": "bytes32"
+    },
+    {
+      "name": "firstReviewStartedAt",
+      "type": "uint64"
+    },
+    {
+      "name": "decisionPublishedAt",
+      "type": "uint64"
+    },
+    {
+      "name": "sourceValidUntilExclusive",
+      "type": "uint64"
+    },
+    {
+      "name": "revalidationCount",
+      "type": "uint8"
+    }
+  ],
+  "domainName": "ClearBootcampTestPayment",
+  "domainVersion": "3",
+  "instanceIdEncoding": "DOMAIN_SALT",
+  "deadlineRecordVersion": "clear-bootcamp-test-first-accept-window.3",
+  "routes": {
+    "1": "CURRENT_MUTUAL_APP_CONSENT",
+    "2": "CURRENT_DECISION_FULL_120_SECONDS"
+  },
+  "confirmationSeconds": "120",
+  "maxRevalidations": "1",
+  "totalReviewSeconds": "600",
+  "fixedAmountAtoms": "100000000",
+  "tokenDecimals": "6",
+  "acceptedRightClaimExpiry": null,
+  "acceptedRightRequiresCurrentSigner": false,
+  "authorizationEpochScope": "APPLICATION",
+  "gates": {
+    "usableForIssuance": false,
+    "paymentAllowed": false,
+    "productionEnabled": false,
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "independentClaim": "NO_GO"
+  }
+}

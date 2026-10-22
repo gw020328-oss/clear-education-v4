@@ -1,0 +1,79 @@
+{
+  "version": "clear-bootcamp-reflection-preparation-verification.1",
+  "date": "2026-10-20",
+  "sourceHead": "92387a49a7808af0f7b240021aafcd01edc17253",
+  "status": "LOCAL_SOURCE_AND_EXPLICIT_V6_GUARD_VERIFIED_REMOTE_CI_PENDING",
+  "scope": "SAME_REQUEST_SOURCE_PACKET_PREPARATION_HUMAN_WAIT_SINGLE_RESUME",
+  "changedProductFiles": [
+    "src/bootcamp/store.mjs",
+    "src/bootcamp/moodle-live-consumer.mjs",
+    "tools/bootcamp/live-context.mjs"
+  ],
+  "sourceMaxSeconds": 240,
+  "prepareNetworkTimeoutMaxMs": 30000,
+  "executionTimeoutMaxMs": 30000,
+  "packetRegeneratedAfterApproval": false,
+  "priorSourceExpiryExtended": false,
+  "existingDirectConsumerPathPreserved": true,
+  "sameTrustedHostReceiverPreserved": true,
+  "existingLiveResultIdentityAndFinalCasPreserved": true,
+  "runs": [
+    {
+      "scope": "INITIAL_RELATED_TESTS_BEFORE_FIXTURE_CORRECTION",
+      "pass": 102,
+      "fail": 1,
+      "logSha256": "7963801242b87859dcd74b7f87e717944fe93eed9077bcbda61ab8714a50fe33",
+      "failure": "MISSING_APPROVAL_CODE_HEAD_REFUSED_AS_NORMAL_CODE_BEFORE_EXPECTED_NORMAL_APPROVAL_REQUIRED",
+      "fix": "FIXTURE_HAS_CURRENT_CODE_HEAD_BUT_NO_APPROVAL_SCOPE_PRODUCT_GUARDS_UNCHANGED"
+    },
+    {
+      "sourceHead": "5cc2c3660789cb19b721deb151c2e058cf506ee6",
+      "scope": "RELATED_SOURCE_PREPARATION_LEASE_AI_CLEARANCE_AND_STORE_AUTHORITY",
+      "pass": 103,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "includesNewPreparationCases": 20,
+      "logSha256": "cc6965e2b28611f68b1333a4f3fdc319198f97da5c6e97c6f698105141cc4ac8"
+    },
+    {
+      "sourceHead": "92387a49a7808af0f7b240021aafcd01edc17253",
+      "scope": "PREPARATION_CASES_WITH_RECEIVER_USING_HOST_AND_CURRENT_CALLBACK_CHECKS",
+      "pass": 20,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logSha256": "9bcbefbb92966d0721e7c39da4644b40690de61cd6c4383c99ff0458bde1b6cc"
+    }
+  ],
+  "actualSourceCollections": 0,
+  "paidCalls": 0,
+  "realKeyReads": 0,
+  "chainTransactions": 0,
+  "newActualApplicationsOrRealms": 0,
+  "syntheticNormalRun3Repeated": false,
+  "positiveActualAiAcceptanceVerified": false,
+  "actualSourceDemoCompleted": false,
+  "recommendedSensitiveSetting": "GPT-6 Astra / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "nextGeneralApiRecommendedSetting": "GPT-6.1 Sol / High",
+  "remainingBlockers": [
+    "HR_REVIEWED_TRUST_RECIPE_SIGNER_HOSTED_CONTEXT_AND_SAFE_AUTHENTICATED_COLLECTOR",
+    "REQUIRED_REMOTE_CI_AT_FINAL_COMBINED_HEAD",
+    "FRESH_EXACT_PACKET_SINGLE_CALL_USER_APPROVAL_AFTER_INPUTS_READY"
+  ],
+  "ownerGuard": {
+    "commit": "7b35bb3dc47d5604f305cc4e063e003dbb1a79a8",
+    "memoryConsumerSha256": "7b80e10bd887179c2fce338570ed31eadca9980cd7b7978e8076896c82cb1b5f",
+    "ownerSensitiveReview": "NO_BLOCKING_FINDINGS_REPORTED_SOURCE_DIFF_READ_BY_INTEGRATOR",
+    "ownerNetworkBlockedPass": 39,
+    "ownerNetworkBlockedLogSha256": "9f65170a2313a11ee95737b80fe7c6c1e6afe489a0d0ceecd029b6c138fedd69",
+    "apiCombinedHead": "2ad4fdf52158a30ca36f22d9e8b80c37e464a902",
+    "apiCombinedGatePass": 11,
+    "apiCombinedGateLogSha256": "07afaf19f2fe8b21696fc89846c09936239d95217b5a5da806e2a1647a0ad8dd",
+    "aAndBPreservation": "PASS",
+    "originalV5AndCurrentV6SourcesEach": 36,
+    "immutableInputs": 8,
+    "actualSourceOrRuntimeActivationAccepted": false
+  }
+}
