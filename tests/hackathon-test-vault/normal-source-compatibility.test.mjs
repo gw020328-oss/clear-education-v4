@@ -111,12 +111,31 @@ test('v8 pins four read-only/browser changes and one addition while preserving e
   if(changed.includes(p))assert.deepEqual(v8.sourceDelta[p],{before:h,after:v8.sourceArtifactSha256[p]});else assert.equal(v8.sourceArtifactSha256[p],h,p);
  }
  for(const [p,h]of Object.entries(v8.sourceArtifactSha256)){
-  assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${v8.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
+  assert.equal(sha(execFileSync('git',['show',`${v8.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
  }
  const guard=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v5.json'));
- for(const [p,d]of Object.entries(guard.changes)){assert.equal(sha(execFileSync('git',['show',`${guard.baseHead}:${p}`],{cwd:root})),d.before,p);assert.equal(sha(read(p)),d.after,p);}
+ for(const [p,d]of Object.entries(guard.changes)){assert.equal(sha(execFileSync('git',['show',`${guard.baseHead}:${p}`],{cwd:root})),d.before,p);assert.equal(sha(execFileSync('git',['show',`dd4a79ac048fa572396b6cedd0553b042545b856:${p}`],{cwd:root})),d.after,p);}
  for(const [p,h]of Object.entries(guard.additions))assert.equal(sha(read(p)),h,p);
  for(const p of ['specs/bootcamp/hackathon-test-memory-source-intake-v7.json','docs/hackathon-test-vault/e5b/normal-source-pins-v4.json','src/hackathon-test-vault/reviewed-source-v7.mjs'])assert.deepEqual(read(p),execFileSync('git',['show',`${guard.baseHead}:${p}`],{cwd:root}),p);
  assert.equal(v8.readOnlyReceipt.callerSelectedTxRecipientAmountAccepted,false);assert.equal(v8.readOnlyReceipt.nullOnUncertainOrUnmeasured,true);
  for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(v8[k],false,k);
+});
+test('v9 pins only owned canonical refresh and preserves v8 sources, TTL, source and review windows',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v9.json';assert.equal(sha(read(path)),'19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2870fc');
+ const v9=JSON.parse(read(path)),v8=JSON.parse(read(v9.previousCompatibilityRecord.path));
+ assert.equal(v9.currentSourceCandidateHead,'26d451701186632ba7a37729b9937f28ce3a1f83');
+ const changed=['src/bootcamp/http.mjs','tools/bootcamp/explicit-consents.mjs','tools/bootcamp/live-context.mjs','tools/bootcamp/normal-chain.mjs'];
+ assert.deepEqual(v9.changedFromV8,changed);assert.deepEqual(Object.keys(v9.sourceDelta),changed);assert.deepEqual(v9.sourceAdditions,{});
+ assert.equal(Object.keys(v9.sourceArtifactSha256).length,135);assert.deepEqual(Object.keys(v9.sourceArtifactSha256),Object.keys(v8.sourceArtifactSha256));
+ for(const [p,h]of Object.entries(v8.sourceArtifactSha256)){
+  assert.equal(sha(execFileSync('git',['show',`${v8.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
+  if(changed.includes(p))assert.deepEqual(v9.sourceDelta[p],{before:h,after:v9.sourceArtifactSha256[p]});else assert.equal(v9.sourceArtifactSha256[p],h,p);
+ }
+ for(const [p,h]of Object.entries(v9.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${v9.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ const guard=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v6.json'));
+ for(const [p,d]of Object.entries(guard.changes)){assert.equal(sha(execFileSync('git',['show',`${guard.baseHead}:${p}`],{cwd:root})),d.before,p);assert.equal(sha(read(p)),d.after,p);}
+ for(const [p,h]of Object.entries(guard.additions))assert.equal(sha(read(p)),h,p);
+ for(const p of ['specs/bootcamp/hackathon-test-memory-source-intake-v8.json','docs/hackathon-test-vault/e5b/normal-source-pins-v5.json','src/hackathon-test-vault/reviewed-source-v8.mjs'])assert.deepEqual(read(p),execFileSync('git',['show',`${guard.baseHead}:${p}`],{cwd:root}),p);
+ assert.equal(v9.humanWait.canonicalSnapshotTtlSeconds,5);for(const k of ['snapshotTtlChanged','originalSourceExpiryExtended','originalReviewCapExtended'])assert.equal(v9.humanWait[k],false,k);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(v9[k],false,k);
 });

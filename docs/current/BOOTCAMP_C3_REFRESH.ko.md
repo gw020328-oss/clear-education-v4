@@ -13,3 +13,5 @@
 네트워크 차단 관련39/39 PASS. 모델링한5초 cache를6초·12초에 실제 만료시키고 readonly 갱신 후 양측 별도 동의가 완료되며 원래 source/review cap이 같음을 확인했다. async read 중 취소/로그아웃·원래 source 만료·대상 변경, HTTPS GET/동의 앞 refresh와 서버 관측 취소 뒤 미기록을 포함한다. 이는 합성 소유 port/HTTPS 검증이며 실제 지갑/HR/AI/시연 지급이 아니다.
 
 첫 local23/24는 async 첫 read 전 heartbeat를 이미 수행했다고 가정한 기존 시험 예상1건을 발견했다. 첫 신규16/17의 취소 시험은 client abort가 서버에 관측되기 전에 gate를 해제한 순서 문제였다. 두 원본 로그를 보존하고 서버 취소 관측과 동의 권한을 구분하도록 시험 순서만 바로잡았다. 제품 권한·cap은 낮추지 않았다. 실제 행동/새realm0, HR producer·금고/서명 정책·5초 TTL·web변경0이다.
+
+정확 source candidate는 `26d451701186632ba7a37729b9937f28ce3a1f83`다. 새 v9 intake SHA는 `19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2870fc`이며 현재135개 source/자산 중 HTTP/explicit-consents/live-context/normal-chain4개 변경만 인수한다. v8의135개·intake·helper/guard 원본과 이전 v7/v6은 원래 Git snapshot으로 보존한다. guard는 새 reviewed-source-v9 및 normal-source-pins-v6로 exact delta만 소비한다. 변조/세대/원본 보존26/26 및 A/B 보존 PASS이며 새 head CI는 별도로 확인한다. 실제 원천/지갑/AI 시연 완료로 해석하지 않는다.
