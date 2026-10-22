@@ -118,7 +118,7 @@ test('network button only offers the supplied loopback TEST chain and rejected w
 test('exact test-client asset generation preserves every existing v10 core source and contract input',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const manifest=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS.json',import.meta.url)));
- assert.equal(manifest.version,'clear-bootcamp-backend-test-client-assets.1');assert.equal(manifest.productFrontendAccepted,false);assert.equal(manifest.actualExecutionApprovedByThisRecord,false);assert.equal(manifest.apiContractsChanged,false);
+ assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS.json'),'6e3f89fa45b3e22d84cfdcee11617c7cf4e75c4bbdf1d2bfec0eeabd30111e89');assert.equal(manifest.version,'clear-bootcamp-backend-test-client-assets.1');assert.equal(manifest.productFrontendAccepted,false);assert.equal(manifest.actualExecutionApprovedByThisRecord,false);assert.equal(manifest.apiContractsChanged,false);
  assert.equal(Object.keys(manifest.sourceArtifacts).length,5);for(const [path,h]of Object.entries(manifest.sourceArtifacts))assert.equal(sha(path),h,path);
  assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),manifest.publicAssetSnapshotSha256);assert.equal(sha(manifest.normalClient.path),manifest.normalClient.sha256);
  assert.equal(sha(manifest.existingCoreIntake.path),'823761592e8178e682ad2f2c39dd6d95423dcbcebad9ffdd15bb2ccfb4424ba8');
