@@ -1,5 +1,7 @@
 # 현재 정상 시연 작업의 인계 입구
 
+최신 2026-10-22 경계 인수: source `b07be3c` + v7 guard `726c21d`가 HR e658을 정상 이력으로 결합했다. [v7 인수](BOOTCAMP_V7_INTAKE.ko.md)와 [외부 지갑 경계](BOOTCAMP_C2_UI_BOUNDARY.ko.md)가 현재 기준이다. 기존 v6/36개는 원래 snapshot으로 보존한다. 실제 입력 `.2`는 외부 참여자·운영자 주소만 고정하며, 브라우저의 원래 인증 세션과 정확한 원천 승인 서명이 필수다. 서버 TEST 참여자 키 fallback은 차단했다. 실제 source/로그인/realm/AI/거래는 이번 단위 0이며 canonical 지급 receipt HTTP와 화면 연결은 남아 있다. 아래 과거 날짜별 CI·차단 기록은 당시 사실로 보존한다.
+
 2026-10-20. 현재 단위를 중단하거나 새 세션을 만든 기록이 아니다. 사용자는 현재 작업을 마친 뒤 새 개발 세션으로 나누어 인계하도록 요청했다. 생성·최종 분배는 본부가 인계 확인 후 진행하며 기존 채팅은 아직 보관하지 않는다.
 
 최신 인수: API `ff07743bd599456686346326236dff3847d63264`는 원격8/8 SUCCESS·미해결 검토 대화0이며 Draft/BEHIND다. 이 결과는 실제 원천 시연 완료나 develop 병합 승인이 아니다. 현재 HR 차단점은 로그인 계정 유무가 아니라 **기존 로그인 Chrome 화면과 요청 결합 암호학적 proof를 연결할 안전 수집 경로**다. 본부가 기존 탭을 읽는 범위만 확인하며 Google 재시도·자체 비밀번호 설정 요청은 보류한다. 쿠키/프로필 복사나 새 extension·아키텍처 발주로 확대하지 않는다.
@@ -45,3 +47,5 @@ HackerRank [비수락 형식 진단 안내](https://github.com/gw020328-oss/clea
 C1 소유 source `47972c12fa57d4a92b861f5917be2acae4e80bd6`는 [짧은 프론트 인계](BOOTCAMP_C1_FRONTEND.ko.md)의 기존 인증/bootcamp handler 배선·브라우저 표시 모듈·소량 fixture를 제공한다. v1/R2/R3, source pin36개·AI 준비/승인/실행은 변경하지 않았다. 관련 HTTPS15/15·source 보존4/4 PASS이며 새 head의 필수 CI는 push 후 확인한다. 개발 호스트는 init/start 시 신청·원천·체인·signer를 만들지 않는 C1 표시/인증 전용이다. 실제 C2 런타임·개별 source 검증·claim receipt/정확 수령 HTTP·web 화면 완주는 미연결이며 이를 null/불가로 표시한다.
 
 HR 담당은 `01a158ea-cad1-7452-8fc0-8f027e49afa4`, 입력 담당은 기존 `01a158a8-900a-7662-bccc-557f553d21ea`다. PR103 관리형 `useSource(source)` callback 안에서 같은 owner의 pins→mapping/신청→openLiveContext 수집·지급·close를 마쳐야 한다. callback 밖으로 private lease를 직렬화하지 않는다. 구조관계는 관리형 worker 검사, 원천 바이트/서명은 Reclaim, API는 같은 호출/request의 genuine lease 수락으로 구분하며 숨긴 구조의 attestor 단독/독립 검증이라 표시하지 않는다. 미확정 recipe/trust는 계속 비활성이고 실제 검증 인수 전 source 수집0이다. Moodle/AI는 user3 생성 계정·같은 API 모듈의 private 결과·기존 prepare/resume을 재사용한다. 실제 원천용 새 신청/lease·HR 로그인·유료 호출은 아직0이다.
+
+2026-10-22 v7 경계 단위: 본부 소유 지정에 따라 guard 세 파일의 정확 변경과 helper 추가를 새 `normal-source-pins-v4`로 소비했다. v6 source36/이전 guard는 당시 Git snapshot으로 검사하고 현재36+전이85+자산13개를 v7 candidate에 대조한다. 로컬 UI/HTTP/동의34, 최종 recipe 수집 전 차단6, guard21, stage/AI68, A/B 보존 PASS. 새 head CI는 별도 확인한다. HR PR103은 파일 복사·기존 실패 재실행 대신 통합 인수 이력을 stacked base에 병합한다. 보안 경계 단위 이후 일반 연결 추천은 Sol / High이며 실제 모델 설정과 구분한다.
