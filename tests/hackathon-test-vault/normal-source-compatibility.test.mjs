@@ -147,9 +147,26 @@ test('v10 owns exact host preparation/session delta and preserves v9 original so
  assert.equal(Object.keys(v10.sourceAdditions).length,24);assert.deepEqual(v10.changedFromV9,['src/bootcamp/http.mjs','src/bootcamp/normal-client.mjs','tools/bootcamp/frontend-server.mjs','tools/bootcamp/live-context.mjs']);
  for(const [p,h]of Object.entries(v9.sourceArtifactSha256)){assert.equal(sha(execFileSync('git',['show',`${v9.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
   assert.equal(v10.sourceArtifactSha256[p],v10.sourceDelta[p]?.after??h,p);if(v10.sourceDelta[p])assert.equal(v10.sourceDelta[p].before,h,p);}
- for(const [p,h]of Object.entries(v10.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${v10.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const [p,h]of Object.entries(v10.sourceArtifactSha256)){assert.equal(sha(execFileSync('git',['show',`944afafda1543cff70cb257915ccd7d7a0fa8cf3:${p}`],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',`${v10.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
  for(const p of ['specs/bootcamp/hackathon-test-memory-source-intake-v9.json','docs/hackathon-test-vault/e5b/normal-source-pins-v6.json','src/hackathon-test-vault/reviewed-source-v9.mjs'])assert.deepEqual(read(p),execFileSync('git',['show',`14125ad12502b858cefd2ffc5c23c6ba6d7836a6:${p}`],{cwd:root}),p);
  const host=v10.normalHost;assert.equal(host.explicitActivationRequired,true);assert.equal(host.exactFreshAiApprovalRequired,true);
  for(const k of ['prepareCreatesApplication','prepareCreatesRealm','prepareIssuesSourceLease','registryOpensBrowser','existingSourceReviewExpiryExtended','frontendOwnedTreeEdited'])assert.equal(host[k],false,k);
  for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(v10[k],false,k);
+});
+
+test('v11 accepts exactly the source lease resolver fix and preserves the complete v10 source/guard generation',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v11.json';assert.equal(sha(read(path)),'55c2986611b5ed0b3df69cc2e5294e3932715a847649ca5adc36f4f52146b65d');
+ const current=JSON.parse(read(path)),old=JSON.parse(read(current.previousCompatibilityRecord.path));
+ assert.equal(current.currentSourceCandidateHead,'34d3661d558e4b07ed68e9cc26aa59eb499fe386');assert.equal(current.previousCompatibilityRecord.guardHead,'944afafda1543cff70cb257915ccd7d7a0fa8cf3');
+ assert.deepEqual(current.changedFromV10,['tools/bootcamp/live-context.mjs']);assert.deepEqual(Object.keys(current.sourceDelta),current.changedFromV10);assert.deepEqual(current.sourceAdditions,{});
+ assert.equal(Object.keys(current.sourceArtifactSha256).length,159);assert.deepEqual(Object.keys(current.sourceArtifactSha256),Object.keys(old.sourceArtifactSha256));
+ for(const [p,h]of Object.entries(old.sourceArtifactSha256)){
+  assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
+  const delta=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],delta?.after??h,p);if(delta){assert.equal(delta.before,h,p);assert.notEqual(delta.before,delta.after,p);}
+ }
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v10.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v7.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
+ assert.deepEqual(current.normalHost,old.normalHost);assert.deepEqual(current.normativeBoundary,old.normativeBoundary);assert.deepEqual(current.allowedRuntimeKinds,old.allowedRuntimeKinds);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
+ const fix=current.sourceLeaseFix;for(const k of ['sourceExpiryExtended','signaturePolicyChanged','paymentPolicyChanged'])assert.equal(fix[k],false,k);
 });
