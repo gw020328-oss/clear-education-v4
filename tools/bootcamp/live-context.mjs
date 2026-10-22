@@ -13,6 +13,7 @@ import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {createLiveMoodleConsumer} from '../../src/bootcamp/moodle-live-consumer.mjs';
 import {createLiveReclaimConsumer} from '../../src/bootcamp/reclaim-live-consumer.mjs';
+import {requireRule as requireUiRule} from '../../src/policy/values.mjs';
 import {createNormalReceiptReader} from '../../src/bootcamp/normal-receipt.mjs';
 import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {createBootcampFrontendServer} from './frontend-server.mjs';
@@ -66,7 +67,11 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
   };
   const paymentReceipt=createNormalReceiptReader({authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,
    readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash,policyHash:m.policyHash,recipient:prepared.participantWallet,token:m.tokenAddress});
-  const normalUi=Object.freeze({getPaymentReceipt:paymentReceipt,bindParticipant,pendingSignature(c,a){ensure(a===app,'BC_LIVE_CONTEXT');return ui.pendingSignature(c);},submitSignature(c,a,b){ensure(a===app,'BC_LIVE_CONTEXT');return ui.submitSignature(c,b);}});
+  const refreshProcedure=async(c,a)=>{
+   store.getOperationsProjection(c,a);requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
+   await connection.refresh(a);store.getOperationsProjection(c,a);
+  };
+  const normalUi=Object.freeze({refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,pendingSignature(c,a){ensure(a===app,'BC_LIVE_CONTEXT');return ui.pendingSignature(c);},submitSignature(c,a,b){ensure(a===app,'BC_LIVE_CONTEXT');return ui.submitSignature(c,b);}});
   stage('AWAITING_EXTERNAL_UI_AUTHENTICATION');
   return Object.freeze({metadataPath:join(directory,'context.json'),
    createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi});return mounted;},

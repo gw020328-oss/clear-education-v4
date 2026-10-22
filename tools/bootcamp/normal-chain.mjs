@@ -54,7 +54,7 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    report.consentOrigin='SYNTHETIC_AUTOMATIC_TEST_ROLES';
   }else{
    const target=explicitReviewTarget(store.getProcedure(user,app));report.reviewTarget=target;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');
-   await waitForConsents({target,read:()=>store.getProcedure(user,app),heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal});
+   await waitForConsents({target,read:async()=>{store.getOperationsProjection(user,app);await connection.refresh(app);return store.getProcedure(user,app);},heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal});
    assertExplicitConsents(store.getProcedure(user,app),target);report.consentOrigin='AUTHENTICATED_APP_CONSENT_RECORDS';
   }
 

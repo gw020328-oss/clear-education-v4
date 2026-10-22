@@ -26,6 +26,7 @@ test('expiry and unresolved objection stop the wait without manufacturing a cons
  for(const kind of ['expiry','objection']){
   const x=await fixture(t),controller=new AbortController();let beats=0;t.after(()=>controller.abort());
   const pending=waitForExplicitConsents({...x,heartbeat:()=>beats++,signal:controller.signal,pollMs:1});
+  await new Promise(r=>setImmediate(r));
   if(kind==='expiry')x.f.setTime(START+301);
   else x.f.store.submitReviewObjection(x.f.aliceContext,x.app,x.f.body(x.app,{reason:'SOURCE_MISMATCH',evidenceId:x.f.store.getApplication(x.f.aliceContext,x.app).evidence[0].record.evidenceId}),x.f.key());
   await assert.rejects(pending,/BC_NORMAL_REVIEW_REQUIRED|BC_NORMAL_REVIEW_BLOCKED/);assert.equal(x.read().consent.records.length,0);assert.equal(beats,1);
@@ -43,4 +44,35 @@ test('cancelled wait does not read or consent, and in-flight cancellation stops 
  await assert.rejects(waitForExplicitConsents({target:{},read:()=>reads++,heartbeat(){},signal:early.signal}),/BC_NORMAL_CONSENT_WAIT_STOPPED/);assert.equal(reads,0);
  const x=await fixture(t),controller=new AbortController(),pending=waitForExplicitConsents({...x,heartbeat(){},signal:controller.signal,pollMs:1});
  controller.abort();await assert.rejects(pending,/BC_NORMAL_CONSENT_WAIT_STOPPED/);assert.equal(x.read().consent.records.length,0);
+});
+test('async owner refresh survives human waits beyond the five-second snapshot without extending business windows',async t=>{
+ const x=await fixture(t);let until=START+5,refreshes=0;
+ x.f.setHook(()=>{if(x.f.time>=until)throw Error('BC_E3_REGISTERED_SNAPSHOT_EXPIRED');});
+ const read=async()=>{x.f.store.getOperationsProjection(x.f.aliceContext,x.app);await new Promise(r=>setImmediate(r));until=x.f.time+5;refreshes++;return x.read();};
+ const controller=new AbortController();t.after(()=>controller.abort());const pending=waitForExplicitConsents({target:x.target,read,heartbeat(){},signal:controller.signal,pollMs:1});
+ await new Promise(r=>setImmediate(r));x.f.setTime(START+6);assert.throws(x.read,/BC_E3_REGISTERED_SNAPSHOT_EXPIRED/);
+ await read();x.f.consent(x.app);x.f.setTime(START+12);assert.throws(x.read,/BC_E3_REGISTERED_SNAPSHOT_EXPIRED/);
+ await read();x.f.consent(x.app,x.f.operatorContext);await pending;
+ assert.ok(refreshes>=3);assert.equal(assertExplicitConsents(x.read(),x.target),true);
+ assert.equal(x.read().procedure.reviewCapAt,x.target.reviewCapAt);assert.equal(x.read().evidence.validUntilExclusive,x.target.sourceValidUntilExclusive);
+});
+test('async refreshed views still reject original source expiry or a changed target',async t=>{
+ for(const kind of ['expiry','target']){
+  const x=await fixture(t);let calls=0;
+  const read=async()=>{await new Promise(r=>setImmediate(r));if(++calls===2&&kind==='expiry')x.f.setTime(START+301);const v=structuredClone(x.read());if(calls===2&&kind==='target')v.consent.scopeHash='different-scope';return v;};
+  await assert.rejects(waitForExplicitConsents({target:x.target,read,heartbeat(){},pollMs:1}),/BC_NORMAL_REVIEW_REQUIRED|BC_NORMAL_REVIEW_BLOCKED|BC_NORMAL_REVIEW_TARGET_CHANGED/);
+  assert.equal(x.read().consent.records.length,0);
+ }
+});
+test('cancelling an in-flight owner read stops immediately and ignores its later result',async t=>{
+ const x=await fixture(t),controller=new AbortController();let finish,entered;
+ const started=new Promise(r=>entered=r),read=()=>new Promise(r=>{finish=r;entered();});
+ const pending=waitForExplicitConsents({target:x.target,read,heartbeat(){assert.fail('no heartbeat after abort');},signal:controller.signal,pollMs:1});
+ await started;controller.abort();await assert.rejects(pending,/BC_NORMAL_CONSENT_WAIT_STOPPED/);
+ finish(x.read());await new Promise(r=>setImmediate(r));assert.equal(x.read().consent.records.length,0);
+});
+test('revocation discovered after an awaited refresh cannot become consent authority',async t=>{
+ const x=await fixture(t),read=async()=>{await new Promise(r=>setImmediate(r));x.f.service.logout(x.f.aliceContext);return x.read();};
+ await assert.rejects(waitForExplicitConsents({target:x.target,read,heartbeat(){assert.fail('revoked');},pollMs:1}),/AUTH_REQUIRED/);
+ assert.equal(x.f.store.getProcedure(x.f.operatorContext,x.app).consent.records.length,0);
 });

@@ -19,14 +19,23 @@ export function assertExplicitConsents(v,target,{requireBoth=true}={}){
 }
 export async function waitForExplicitConsents({target,read,heartbeat,signal,pollMs=250}){
  check(typeof read==='function'&&typeof heartbeat==='function'&&Number.isInteger(pollMs)&&pollMs>=1&&pollMs<=1000,'BC_NORMAL_CONSENT_HOST');
- check(!signal?.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');const first=read();assertExplicitConsents(first,target,{requireBoth:false});
+ const observe=scope=>new Promise((resolve,reject)=>{
+  let settled=false;
+  const finish=(fn,value)=>{if(settled)return;settled=true;scope?.removeEventListener('abort',abort);fn(value);};
+  const abort=()=>finish(reject,Error('BC_NORMAL_CONSENT_WAIT_STOPPED'));
+  scope?.addEventListener('abort',abort,{once:true});
+  if(scope?.aborted){abort();return;}
+  Promise.resolve().then(()=>{check(!scope?.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');return read({signal:scope});})
+   .then(value=>finish(resolve,value),error=>finish(reject,error));
+ });
+ check(!signal?.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');const first=await observe(signal);check(!signal?.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');assertExplicitConsents(first,target,{requireBoth:false});
  // A wall timeout complements the existing source/review clocks; neither can renew this wait.
  const controller=new AbortController(),combined=signal?AbortSignal.any([signal,controller.signal]):controller.signal;
  const limit=Math.min(target.reviewCapAt,target.sourceValidUntilExclusive)-first.asOf;
  const timer=setTimeout(()=>controller.abort(),Math.max(1,limit*1000));let nextHeartbeat=first.asOf;
  try{
   for(;;){
-   check(!combined.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');const v=read();assertExplicitConsents(v,target,{requireBoth:false});
+   check(!combined.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');const v=await observe(combined);check(!combined.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');assertExplicitConsents(v,target,{requireBoth:false});
    if(v.consent.bothCurrent){assertExplicitConsents(v,target);return;}
    if(v.asOf>=nextHeartbeat){heartbeat();nextHeartbeat=v.asOf+20;}
    await new Promise((resolve,reject)=>{
