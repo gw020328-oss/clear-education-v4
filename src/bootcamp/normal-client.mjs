@@ -34,13 +34,37 @@ export function normalView({procedure:p,operations:o,host}){
   procedure:copy(p.procedure),consent:copy(p.consent),objection:{blocked:p.objection.blocked},
   payment:{acceptedRight:copy(p.chain.acceptedRight),transactionState:p.chain.transactionState,transactionHash:p.chain.transactionHash,
    blockRef:p.chain.blockRef,claimState:p.chain.acceptedRight?.claimState??null,receivedAtoms:null,canonicalTransferVerified:null,
-   receiptHttpAvailable:false},sourceMode:host.sourceMode};
+   receiptHttpAvailable:host.executionReceiptHttpImplemented===true},sourceMode:host.sourceMode};
 }
 export function createNormalBootcampClient({request}){
  check(typeof request==='function','BC_NORMAL_CONFIG');
  const base=a=>'/bootcamp/v3/applications/'+id(a);
  const operation=(v,a)=>{check(v?.version==='clear-bootcamp-procedure-operation.1'&&v.record?.applicationId===a&&typeof v.current==='boolean'&&v.usableForPayment===false);return v;};
+ const sourceBase=a=>'/bootcamp/v4/applications/'+id(a);
+ const approval=(r,a)=>{check(r&&id(r.approvalId)&&/^0x[0-9a-f]{64}$/.test(r.requestHash)&&Number.isSafeInteger(r.expiresAt)
+  &&r.purpose==='HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION'
+  &&typeof r.message==='string'&&r.message.startsWith('CLEAR HackerRank evidence observation approval; not a payment authorization.\n'),'BC_NORMAL_SOURCE_APPROVAL');return {...r,applicationId:a};};
  return Object.freeze({
+  async bindSourceSession(applicationId,{signal}={}){
+   const r=await request(sourceBase(applicationId)+'/source-session',{method:'POST',body:{},signal});
+   check(r?.applicationId===applicationId&&r.paymentAuthorization===false,'BC_NORMAL_SOURCE_SESSION');return r;
+  },
+  async pendingSourceSignature(applicationId,{signal}={}){return approval(await request(sourceBase(applicationId)+'/source-signature',{signal}),applicationId);},
+  async submitSourceSignature(applicationId,requestView,signature,{signal}={}){
+   check(requestView?.applicationId===applicationId&&typeof signature==='string'&&/^0x[0-9a-fA-F]{130}$/.test(signature),'BC_NORMAL_SOURCE_APPROVAL');approval(requestView,applicationId);
+   const r=await request(sourceBase(applicationId)+'/source-signature',{method:'POST',body:{approvalId:requestView.approvalId,signature},signal});
+   check(r?.approvalId===requestView.approvalId&&r.requestHash===requestView.requestHash&&r.status==='PARTICIPANT_SIGNATURE_ACCEPTED'&&r.paymentAuthorization===false,'BC_NORMAL_SOURCE_APPROVAL');return r;
+  },
+  async paymentReceipt(applicationId,{signal}={}){
+   const r=await request(sourceBase(applicationId)+'/payment-receipt',{signal});
+   check(r?.version==='clear-bootcamp-normal-payment-receipt.1'&&r.applicationId===applicationId&&['PARTICIPANT','OPERATOR'].includes(r.role)
+    &&r.expectedPayment?.amountAtoms==='100000000'&&r.expectedPayment?.symbol==='TEST'&&r.expectedPayment?.decimals===6
+    &&['NOT_OBSERVED','READBACK_UNAVAILABLE','INCLUDED'].includes(r.claim?.state),'BC_NORMAL_RECEIPT');
+   if(r.claim.state==='INCLUDED')check(r.claim.canonical===true&&r.claim.finalized===false
+    &&r.claim.transferAmountAtoms==='100000000'&&r.balance.receivedAtoms==='100000000'&&r.balance.exactExpectedAmountVerified===true,'BC_NORMAL_RECEIPT');
+   else check(r.claim.canonical===null&&r.claim.finalized===null&&r.claim.transferAmountAtoms===null&&r.balance?.receivedAtoms===null&&r.balance?.exactExpectedAmountVerified===null,'BC_NORMAL_RECEIPT');
+   return r;
+  },
   async view(applicationId,{signal}={}){
    const host=await request('/__dev/config',{signal});
    const before=await request(base(applicationId)+'/procedure',{signal});

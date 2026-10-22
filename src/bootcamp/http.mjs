@@ -13,7 +13,10 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
       const remote=req.socket.remoteAddress,loopback=remote==='127.0.0.1'||remote==='::1'||remote==='::ffff:127.0.0.1';
       check(isIP(remote??'')&&loopback,'TRANSPORT');
       check(req.socket.encrypted===true||allowLoopbackHttpForTests,'TRANSPORT');
-      check(req.headers.host===expected.host&&req.headers.origin===expected.origin,'ORIGIN');
+      check(req.headers.host===expected.host,'ORIGIN');
+      const origin=req.headers.origin;
+      check(origin===expected.origin||req.method==='GET'&&origin===undefined&&req.headers['sec-fetch-site']==='same-origin','ORIGIN');
+      check(!req.headers['sec-fetch-site']||req.headers['sec-fetch-site']==='same-origin','ORIGIN');
       check(['GET','POST'].includes(req.method),'BC_HTTP_METHOD');
       const cookies=(req.headers.cookie??'').split(';').map(s=>s.trim()).filter(s=>s.startsWith('__Host-clear-session='));
       check(cookies.length===1&&/^__Host-clear-session=[0-9a-f]{64}$/.test(cookies[0]),'AUTH_REQUIRED');
@@ -32,9 +35,10 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
       }
       const path=req.url,key=req.headers['idempotency-key'];let result;
       if(v4){
-        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature)$/.exec(path);
+        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt)$/.exec(path);
         check(normalUi&&m,'BC_NOT_FOUND');const [,a,resource]=m;
-        if(req.method==='GET'&&resource==='source-signature')result=normalUi.pendingSignature(context,a);
+        if(req.method==='GET'&&resource==='payment-receipt'){check(typeof normalUi.getPaymentReceipt==='function','BC_NOT_FOUND');result=await normalUi.getPaymentReceipt(context,a);}
+        else if(req.method==='GET'&&resource==='source-signature')result=normalUi.pendingSignature(context,a);
         else if(req.method==='POST'&&resource==='source-signature')result=normalUi.submitSignature(context,a,body);
         else if(req.method==='POST'&&resource==='source-session'){exactKeys(body,[],'BC_UI_SESSION_BODY');result=normalUi.bindParticipant(context,a);}
         else check(false,'BC_NOT_FOUND');
