@@ -30,7 +30,7 @@ test('v5 preserves all 36 original source snapshots and historical v1-v4/compone
  const v4=JSON.parse(read(v5.previousCompatibilityRecord.path));
  for(const [p,h]of Object.entries({...v4.e3ArtifactSha256,...v4.additionalSourceArtifactSha256}))assert.equal(sha(execFileSync('git',['show',`${v4.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
 });
-test('v6 admits exactly three reviewed deltas and pins all 36 current sources to the candidate snapshot',()=>{
+test('v6 preserves exactly three reviewed deltas and all 36 historical sources to the candidate snapshot',()=>{
  const path='specs/bootcamp/hackathon-test-memory-source-intake-v6.json';
  assert.equal(sha(read(path)),'247326385d1514c57383553a9f7290a3a59f9ba1182f91600443f35027d32f22');
  const v6=JSON.parse(read(path)),v5=JSON.parse(read('specs/bootcamp/hackathon-test-memory-source-intake-v5.json'));
@@ -43,7 +43,6 @@ test('v6 admits exactly three reviewed deltas and pins all 36 current sources to
  for(const table of tables){
   assert.deepEqual(Object.keys(v6[table]).sort(),Object.keys(v5[table]).sort());
   for(const [p,h]of Object.entries(v6[table])){
-   assert.equal(sha(read(p)),h,p);
    assert.equal(sha(execFileSync('git',['show',`${v6.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
    if(h!==v5[table][p]){actual.push(p);assert.deepEqual(v6.sourceDelta[p],{before:v5[table][p],after:h});}
   }
@@ -61,7 +60,42 @@ test('v6 guard records preserve every prior owner acceptance byte',()=>{
  }
  for(const [p,delta]of Object.entries(next.changes)){
   assert.equal(sha(execFileSync('git',['show',`${next.baseHead}:${p}`],{cwd:root})),delta.before,p);
-  assert.equal(sha(read(p)),delta.after,p);
+  assert.equal(sha(execFileSync('git',['show',`7b35bb3dc47d5604f305cc4e063e003dbb1a79a8:${p}`],{cwd:root})),delta.after,p);
  }
  assert.equal(next.priorAcceptanceBytesChanged,false);assert.equal(next.actualSourceAccepted,false);
+});
+test('v7 pins the reviewed six-file delta and complete listed dependency generation without rewriting v6',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v7.json';
+ assert.equal(sha(read(path)),'10dc1d3a050157b43a655eaa32d022855726d42bbcf4fa1ffc0bb83021c307f5');
+ const v7=JSON.parse(read(path)),v6=JSON.parse(read(v7.previousCompatibilityRecord.path));
+ assert.equal(v7.currentSourceCandidateHead,'ef5d7e000407a54b469bfab70c00fd878b17e29a');
+ assert.equal(v7.producerHead,'e658b4026b44f800b607d2d7db64e14f3fd81666');
+ const changed=['src/bootcamp/http.mjs','src/bootcamp/reclaim-live-consumer.mjs','src/hackerrank-evidence/collector.mjs','tools/bootcamp/live-context.mjs','tools/bootcamp/normal-chain.mjs','tools/bootcamp/prepare-live-input.mjs'];
+ assert.deepEqual(v7.changedFromV6,changed);assert.deepEqual(Object.keys(v7.sourceDelta).sort(),changed);
+ const tables=['e3ArtifactSha256','additionalSourceArtifactSha256','producerSeamArtifactSha256','normalEntryArtifactSha256'];
+ for(const table of tables){
+  assert.deepEqual(Object.keys(v7[table]),Object.keys(v6[table]));
+  for(const [p,h]of Object.entries(v7[table])){
+   if(changed.includes(p))assert.deepEqual(v7.sourceDelta[p],{before:v6[table][p],after:h});else assert.equal(h,v6[table][p]);
+  }
+ }
+ const all=Object.assign({},...tables.map(k=>v7[k]),v7.transitiveSourceArtifactSha256,v7.runtimeAssetSha256);
+ assert.equal(Object.keys(all).length,134);
+ for(const [p,h]of Object.entries(all)){
+  assert.equal(sha(read(p)),h,p);
+  assert.equal(sha(execFileSync('git',['show',`${v7.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);
+ }
+ for(const p of ['specs/bootcamp/hackathon-test-memory-source-intake-v6.json','docs/hackathon-test-vault/e5b/normal-source-pins-v3.json']){
+  assert.deepEqual(read(p),execFileSync('git',['show',`3f3c33f1c0130b6e85bf4eab0bfa282bf88cff6a:${p}`],{cwd:root}),p);
+ }
+ assert.equal(v7.uiBoundary.serverParticipantKeyFallback,false);assert.equal(v7.sourceResponsibility.independentStructureProof,false);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(v7[k],false,k);
+});
+test('v7 guard update preserves original v6 guard bytes and pins only the declared consumer changes',()=>{
+ const v7=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v4.json'));
+ for(const [p,delta]of Object.entries(v7.changes)){
+  assert.equal(sha(execFileSync('git',['show',`${v7.baseHead}:${p}`],{cwd:root})),delta.before,p);assert.equal(sha(read(p)),delta.after,p);
+ }
+ for(const [p,h]of Object.entries(v7.additions))assert.equal(sha(read(p)),h,p);
+ assert.equal(v7.priorAcceptanceBytesChanged,false);assert.equal(v7.actualSourceAccepted,false);
 });
