@@ -2,6 +2,18 @@
 
 2026-10-23. 사용자 요청에 따라 제품 프론트를 기다리지 않고 기존 정상 backend 한 건을 시험할 준비를 한다. `tools/bootcamp/test-client/`의 정적 시험 페이지는 제품 `web/`·PR60과 별개이며, 제품 프론트 완료나 실제 통합 시험 성공을 뜻하지 않는다. 기존 API/호스트/원천/금고/지급·서명 규칙은 바꾸지 않는다. 팀원 프론트에 추가 계약 수정은 없다.
 
+## 2026-10-23 r2 원천 서명 전 실패 진단과 수정 후보
+
+실제 r2 실행은 두 역할 SIWE와 신청 결합 뒤 `SOURCE_python-basic-certificate`에서 `COLLECTION_FAILED`로 종료됐다. 보존 DB를 읽기 전용으로 집계한 결과 ACTIVE 신청 1건/revision 1, create 명령 1건, 원천 요청·증거·이벤트 0건이었다. 사용자 원천 서명, AI 승인 요청/호출, TEST 지급에 도달하지 않았다. 일회성 실행 표시와 기존 journal/report를 보존했고 관리형 세션 디렉터리 0건을 확인했다. 아래 준비/실행 예시의 과거 호스트 이름으로 재실행하지 않는다.
+
+실제 하위 예외 원문은 남아 있지 않다. 같은 인증 서비스·SQLite store·원천 소비자·UI 서명 broker를 사용한 합성 재현에서 첫 실패 경로를 확인했다. `issueBridgeRequest`의 DB 트랜잭션 안에서 원천 lease resolver가 `ui.participant()`를 호출하고, 이것이 `store.getApplication()`으로 동일 DB 트랜잭션을 다시 열었다. 내부 `ERR_SQLITE_ERROR`가 lease 불가로 바뀌어 `BC_SOURCE_UNKNOWN`, 최외곽에서는 `COLLECTION_FAILED`로 표시된다. 재현 역시 request 0건/revision 1에서 멈춘다.
+
+이 중첩 조회를 제거한 뒤에는 인증 서비스가 반환하는 체크섬 주소와 준비 설정의 소문자 주소를 그대로 비교하는 두 번째 결함을 재현했다. 수정 후보는 `live-context.mjs`의 resolver를 검증 가능한 함수로 분리하고, 동일 store 재진입을 제거하며 인증된 주소를 소문자로 정규화한다. 인증 서비스의 현재 세션/CSRF·역할 검사, 신청/참여자/지갑/mapping 결합, store의 현재 신청/요청 검사와 UI의 서명 전 결합 검사는 유지한다. HR 900초 원천 창, Moodle/AI 240초 원천 창 및 기존 수집 제한을 변경하지 않는다.
+
+외부 네트워크 차단 상태에서 신규 `normal-source-session.test.mjs` 6건과 관련 UI/HR consumer/context 검사 15건, 합계 **21/21 PASS**. 수정 전 동일 pending 경로는 `BC_SOURCE_UNKNOWN`으로 실패했고, 수정 후 요청 발급→원천 승인 메시지 대기에 도달했다. 명시적 fixture 서명 전에는 진행하지 않으며, 로그아웃·신청 취소·다른 역할/결합·만료·재사용 차단과 증거 0건을 확인했다. 합성 fixture 서명 이후도 proof를 만들기 전에 의도적으로 멈춘다. 실제 Chrome/원천/모델/체인 재실행은 없다.
+
+이 후보는 v10에 고정된 `tools/bootcamp/live-context.mjs`를 변경한다. 아래의 core159 불변 및 기존 CI 성공 설명은 수정 전 시험 클라이언트 후보의 이력이다. 기존 intake/자산 manifest/guard 지문을 덮어쓰거나 새 후보의 통과로 재사용하지 않는다. 새 후보의 지문·검증·실제 실행 준비는 별도 후속이며, 이번 범위는 최소 수정과 해당 회귀검사까지다.
+
 ## 무엇을 준비했는가
 
 빌드나 새 패키지 설치 없이 이 폴더의 index.html/main.js/driver.js/session.js/style.css만 같은 HTTPS에 제공한다. 페이지는 기존 `/bootcamp-normal-client.mjs`의 createNormalBootcampClient를 소비한다. 인증은 이 한 시험에 필요한 EIP1193 메시지 서명과 기존 nonce→verify·HttpOnly 쿠키·CSRF만 연결한다. 개인키·쿠키 토큰·CSRF·서명은 화면/로그/저장소에 보관하지 않는다. 지갑과 서버 세션 상태는 메모리에만 두고, 계정/체인 변경·disconnect/종료 때 이전 세션 헤더로 서버 logout을 시도하고 페이지를 끝낸다. 폐기 결과가 불명확하면 새 로그인으로 자동 복구하지 않는다.

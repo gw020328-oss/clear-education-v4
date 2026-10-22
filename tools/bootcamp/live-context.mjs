@@ -22,6 +22,16 @@ import {LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.
 import {executeNormalPayment} from './normal-chain.mjs';
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
+// Called from inside the store transaction: authenticate against the separate
+// session service, but never re-enter getApplication through ui.participant().
+// The calling store owns current application/request checks; UI signing also
+// checks the bound participant outside the transaction before publishing.
+export function resolveNormalSourceLease(r,{authentication,context,closed,participantWallet,applicationId,participantId,runtimeMappingHash,sourceWindows,startedAt,time}){
+ try{const actor=authentication.authorizeWorkflow(context,true);
+  ensure(!closed&&actor.wallet.toLowerCase()===participantWallet&&actor.role==='participant'&&r.applicationId===applicationId&&r.participantId===participantId&&r.participantWallet===participantWallet&&r.runtimeMappingHash===runtimeMappingHash,'BC_LIVE_CONTEXT');
+  return {available:sourceWindows.has(r.criterionId)&&time<sourceWindows.get(r.criterionId),authExpiresAt:Math.min(startedAt+3600,sourceWindows.get(r.criterionId)??0),rawExpiresAt:sourceWindows.get(r.criterionId)??0,queryExpiresAt:sourceWindows.get(r.criterionId)??0};
+ }catch{return null;}
+}
 export async function openLiveContext({preparationPath,withReader,hackerRank,reviewReflection,reflectionHost=null}){
  ensure(typeof withReader==='function'&&typeof hackerRank?.pins==='function'&&typeof hackerRank.collectLease==='function'&&typeof reviewReflection==='function','BC_LIVE_PORTS_REQUIRED');
  preparationPath=resolve(preparationPath);const base=privateDirectory(dirname(preparationPath));
@@ -49,7 +59,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
   provider=new JsonRpcProvider(m.endpoint,undefined,{cacheTimeout:-1,batchMaxCount:1});provider.pollingInterval=50;
   auth=createApplicationService({directory:join(directory,'authentication'),origin:prepared.origin,chainId:Number(m.chainId),instanceId:m.instanceId,participants:[participant.address],operators:[operator.address],now});
   const serviceContext=Object.freeze({});
-  const resolveLease=r=>{try{ui.participant();const actor=auth.authorizeWorkflow(user,true);ensure(!closed&&actor.wallet===prepared.participantWallet&&actor.role==='participant'&&r.applicationId===app&&r.participantId===participantId&&r.participantWallet===prepared.participantWallet&&r.runtimeMappingHash===runtimeMappingHash,'BC_LIVE_CONTEXT');return {available:sourceWindows.has(r.criterionId)&&now()<sourceWindows.get(r.criterionId),authExpiresAt:Math.min(startedAt+3600,sourceWindows.get(r.criterionId)??0),rawExpiresAt:sourceWindows.get(r.criterionId)??0,queryExpiresAt:sourceWindows.get(r.criterionId)??0};}catch{return null;}};
+  const resolveLease=r=>resolveNormalSourceLease(r,{authentication:auth,context:user,closed,participantWallet:prepared.participantWallet,applicationId:app,participantId,runtimeMappingHash,sourceWindows,startedAt,time:now()});
   const resolvePin=r=>{if(r.applicationId!==app||r.participantId!==participantId||r.runtimeMappingHash!==runtimeMappingHash)return null;const c=r.criterionId;
    const t=c==='activity-complete'?{...mapping.targets.activity,module:'page',selectedPostId:null}:c==='assignment-submitted'?{...mapping.targets.assignment,module:'assign',selectedPostId:null}:{cmId:mapping.targets.reflection.cmId,instanceId:mapping.targets.reflection.forumId,module:'forum',selectedPostId:mapping.targets.reflection.selectedPostId};
    return {environmentRef:mapping.environmentRef,runRef:mapping.runRef,sourceVersion:mapping.sourceVersion,apiVersion:mapping.apiVersion,fixtureReportHash:mapping.fixtureReportHash,courseId:mapping.courseId,participantMapping:{participantId,applicationId:app,moodleUserId:mapping.moodleUserId,accountBindingRef:mapping.accountBindingRef,revision:mapping.revision},target:{targetLogicalId:c==='activity-complete'?'python-intro-activity':c==='assignment-submitted'?'python-practice-task':'python-reflection',...t},completionSetupReceiptHash:c==='activity-complete'?mapping.completionSetupReceiptHash:null};};
