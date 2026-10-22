@@ -1,0 +1,41 @@
+name: HackerRank bounded layout diagnostics
+
+on:
+  pull_request:
+    paths:
+      - 'src/hackerrank-evidence/**'
+      - 'tests/hackerrank-evidence/layout*.test.mjs'
+      - 'docs/hackerrank/**'
+      - '.github/workflows/hackerrank-layout.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hr-layout-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  layout:
+    name: HR bounded schema diagnostics (offline)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      LOG_LEVEL: silent
+      CI: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '24.21.0'
+      - name: Install pinned diagnostic dependencies without lifecycle scripts
+        run: |
+          ./tools/npm ci --ignore-scripts
+          ./tools/npm --prefix src/ybm-collector ci --ignore-scripts
+          ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts
+      - name: Bounded parser, schema privacy and managed diagnostic transport counterexamples
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/layout*.test.mjs
