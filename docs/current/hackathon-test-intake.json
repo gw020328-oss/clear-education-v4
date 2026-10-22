@@ -1,6 +1,6 @@
 {
   "version": "clear-hackathon-test-intake.1",
-  "date": "2026-10-20",
+  "date": "2026-10-22",
   "repositoryPlanRevision": 24,
   "profileVersion": "clear-hackathon-test-operations.1",
   "decisionRevision": 1,
@@ -892,7 +892,7 @@
     "webSourceOwnerPreserved": true,
     "newSessionsOrSubagents": 0,
     "automaticMergeOrDeploy": false,
-    "resumedOn": "2026-10-20",
+    "resumedOn": "2026-10-22",
     "usageInterruptionIsCodeFailure": false
   },
   "syntheticNormalChainVerification": {
@@ -1095,5 +1095,41 @@
     "apiCombinedGateLogSha256": "07afaf19f2fe8b21696fc89846c09936239d95217b5a5da806e2a1647a0ad8dd",
     "aAndBPreservation": "PASS",
     "v5CandidateRecordRewritten": false
+  },
+  "normalFrontendC1": {
+    "sourceHead": "47972c12fa57d4a92b861f5917be2acae4e80bd6",
+    "baseHead": "6962c1394b82aac633a686e1d197475d1803aacb",
+    "status": "LOCAL_MINIMAL_HTTP_CONTRACT_IMPLEMENTED_UI_AND_ACTUAL_RUNTIME_PENDING",
+    "handoff": "docs/current/BOOTCAMP_C1_FRONTEND.ko.md",
+    "verification": "docs/current/BOOTCAMP_C1_VERIFICATION.json",
+    "fixtures": {
+      "path": "specs/bootcamp/normal-frontend-fixtures-v1.json",
+      "sha256": "edf763f76cf21d6040462d8ca638820b2b5ab33d0652350af3746515ff62cb02",
+      "cases": 2,
+      "rolesPerCase": 2,
+      "actualSourceEvidence": false
+    },
+    "existingPinned36SourcesChanged": false,
+    "existingV1R2R3Changed": false,
+    "newPinGenerationRequired": false,
+    "localRelatedPass": 15,
+    "sourcePreservationPass": 4,
+    "hostCreatesActualSourceApplicationOrLease": false,
+    "actualSourceDemoCompleted": false,
+    "remoteCi": "PENDING_FINAL_PUSH_HEAD",
+    "c4ThroughC6ImplementedByThisUnit": false
+  },
+  "hrManagedSourceC2Intake": {
+    "ownerReportedHead": "043abb4f1bcc396a2fb631c80c94bc71576c7381",
+    "pullRequest": 103,
+    "ownerThread": "01a158ea-cad1-7452-8fc0-8f027e49afa4",
+    "contract": "USE_SOURCE_CALLBACK_SAME_OWNER_PINS_AND_PRIVATE_LEASE_LIFETIME",
+    "status": "HOST_LIFETIME_CONTRACT_REPORTED_ACTUAL_RECIPE_TRUST_NOT_ACTIVATED",
+    "structureAssurance": "MANAGED_WORKER_SAME_TLS_TRANSCRIPT_CHECK_NOT_ATTESTOR_ONLY_HIDDEN_STRUCTURE_PROOF",
+    "sourceBytesAndSignature": "RECLAIM",
+    "apiAcceptance": "GENUINE_LEASE_BOUND_TO_SAME_INVOCATION_AND_REQUEST",
+    "bareProofOrBrowserStructureAssertionAccepted": false,
+    "actualValidationAccepted": false,
+    "freshActualApplicationOrLeaseIssued": false
   }
 }
