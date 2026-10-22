@@ -19,3 +19,11 @@
 현재 실제 실행 readiness는 미완료다. 공개 주소·역할별 브라우저/프론트 연결, host의 audience/privacyKeyId/안전 key source, 실행 당일 AI 가격/새 승인, 첫 실제 HR 형식/proof 성공은 미확인이다. 이 문서가 이를 성공으로 바꾸지 않는다. Moodle/AI 담당은 이번에 정적 읽기만 했고 compose 재기동·추가 진단·원문·token·key·model 호출0이었다.
 
 후속 정적 점검의 canonical5초 snapshot 갱신 누락은 [C3 refresh](BOOTCAMP_C3_REFRESH.ko.md)의 소유 async read/HTTP 앞 refresh로 보완했다. TTL이나 원천/검토 cap은 늘리지 않았다. actual host는 API 통합 작업본의 managed-source/prepared-source/collector/openLiveContext/AI entry를 같은 모듈 트리에서 import한다. 코드 bytes가 같아도 다른 HR 작업본에서 만든 private lease나 다른 AI 모듈의 branded 결과를 전달하지 않는다. 별도 원천 담당의 withReader 포트와 private brand의 발급/소비 모듈 트리를 구분한다. 이 연결 검증도 실제 HR/AI 실행 성공을 대신하지 않는다.
+
+## 2026-10-22 실제 호스트 준비 후속
+
+이전 표의 host/key/registry 미준비 항목은 [실제 호스트 준비 문서](BOOTCAMP_NORMAL_HOST.ko.md)의 최신 관측으로 갱신한다. `normal-host.mjs prepare/check/serve-prepared/run --activate`를 추가했고, 실제 lockf 경계 registry1회(3 signers)·로컬 Docker/Geth/Moodle·기존 Gemini env 존재·CA 검증 HTTPS를 확인했다. 새 실제 소스/브라우저/앱/realm/유료 호출은0이다. 준비 HTTPS는 점검 후 닫았다. public origin은 `https://127.0.0.1:9445`이며 chain/RPC/app는 아직 null이다.
+
+이제 남은 실행 의존성은 담당자의 최신 프론트 구현·정적 web 경로와 계약 수락, 두 역할 공개 주소/브라우저·CA trust 준비다. 당일 가격 재확인과 exact packet별 새 직접 AI 승인도 실제 실행 시 필요하다. 최신 managed HR `.3` 실제 증명 성공은 미확인이다. 비밀번호 설정·이전 로그인 완료는 사용자 확인 사실로 보존한다. 본부가 나머지 준비 후 한 번에 사용자에게 안내하며 지금 로그인 재시도나 source lease를 시작하지 않는다.
+
+프론트 전달은 [Claude Code 복사 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md)과 GitHub Issue #106 최신 인계 댓글을 따른다. v10은 기존 source135개 중4개 delta 및 실제 host/전이 의존성24개 추가, 총159개를 정확히 기록한다. v9/135개와 이전 snapshot·guard bytes는 보존한다. 인수 범위는 실제 시연 수락이나 메모리 EVM boundary 확대가 아니다.
