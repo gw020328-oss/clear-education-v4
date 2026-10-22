@@ -6,7 +6,7 @@ import {fixture as hrFixture,NOW} from '../hackerrank-evidence/fixture.mjs';
 import {BRIDGE_VERSION} from '../../src/bootcamp/reclaim-consumer.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 const H=v=>p0Hash('LIVE-HR-TEST',v);
-const pins={audience:'live-test-only',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
+const pins={audience:'live-test-only',trustConfigHash:H('trust'),recipeHash:LIVE_WORKER_RECIPE_HASH,expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
 const request={version:'clear-bootcamp-bound-request.2',producerVersion:BRIDGE_VERSION,dataMode:'RECLAIM_SIGNED_RECORD',producerTrustHash:pins.trustConfigHash,
  participantId:'participant-test',participantWallet:'0x'+'22'.repeat(20),applicationId:'application-test',criterionId:'python-basic-certificate',policyHash:H('policy'),runtimeMappingHash:H('mapping'),requestHash:H('request'),nonceHash:H('nonce'),issuedAt:NOW-10,expiresAt:NOW+100};
 const state={available:true,authExpiresAt:NOW+100,rawExpiresAt:NOW+100,queryExpiresAt:NOW+100};
@@ -37,5 +37,11 @@ test('live consumer requires the reviewed worker generation and exact responsibi
  for(const bad of [{...r,sourceVersion:'hackerrank-two-proof.1'},{...r,sourceVersion:'hackerrank-two-proof.2'},
   {...r,verification:{...r.verification,independentStructureProof:true}},{...r,verification:null},
   {...r,recipeHash:H('unapproved recipe')}])assert.throws(()=>assertLiveWorkerReceipt(bad,p),/BC_LIVE_HR_WORKER_REQUIRED/);
- assert.throws(()=>assertLiveWorkerReceipt(r,pins),/BC_LIVE_HR_WORKER_REQUIRED/);
+ assert.throws(()=>assertLiveWorkerReceipt(r,{...pins,recipeHash:H('legacy-recipe')}),/BC_LIVE_HR_WORKER_REQUIRED/);
+});
+
+test('unapproved historical recipe is unavailable before any live collection can begin',async()=>{
+ let calls=0;const p=createLiveReclaimConsumer({pins:()=>({...pins,recipeHash:H('legacy-recipe')}),collectLease(){calls++;},resolveLease:()=>state,now:()=>NOW});
+ assert.equal(p.status(),'UNCONFIGURED_BLOCKED');assert.equal(p.resolveSource(request),null);
+ await assert.rejects(p.verify(request,{isAuthorized:()=>true}),/BC_LIVE_HR_AUTHORITY/);assert.equal(calls,0);
 });

@@ -26,7 +26,7 @@ export function translateLiveReclaimRequest(r,p){
 }
 export function createLiveReclaimConsumer({pins=()=>null,collectLease,resolveLease=()=>null,now=()=>Math.floor(Date.now()/1000)}={}){
  const issued=new WeakMap(),published=new Map(),owned=new Set(),generation='lease-'+randomUUID();let closed=false;
- const currentPins=()=>{const p=pins();return p?.dataMode==='RECLAIM_SIGNED_RECORD'?structuredClone(p):null;};
+ const currentPins=()=>{const p=pins();return p?.dataMode==='RECLAIM_SIGNED_RECORD'&&p.recipeHash===LIVE_WORKER_RECIPE_HASH?structuredClone(p):null;};
  function guard(r){const p=currentPins(),l=resolveLease(r);check(!closed&&p&&l?.available===true&&now()<Math.min(l.authExpiresAt,l.rawExpiresAt,l.queryExpiresAt),'BC_LIVE_HR_AUTHORITY');return {p,l};}
  function resolveSource(r){let e=published.get(r.applicationId);let p,l;
   try{({p,l}=guard(r));if(e){readHackerRankCollectorLease(e.lease);check(e.isAuthorized()===true&&p0Hash('P1-PINS',p)===e.pinsHash,'BC_LIVE_HR_AUTHORITY');}}
