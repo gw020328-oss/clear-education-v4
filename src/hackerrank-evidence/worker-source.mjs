@@ -2,6 +2,7 @@ import {createRequire} from 'node:module';
 import {types} from 'node:util';
 import {observeClaimRpc} from '../ybm-collector/claim-rpc-observer.mjs';
 import {observeSource,SOURCE_DIAGNOSTIC_SDK_CODES} from './diagnostics.mjs';
+import {claimReturnDiagnostics} from './claim-return-diagnostics.mjs';
 import {createClaimOnAttestor,hashProviderParams,PROVIDER_CTX,makeLogger,AttestorError,proto} from '@reclaimprotocol/attestor-core';
 import {inspectWorkerTranscript} from './worker-response.mjs';
 import {parametersFor,usesWorkerSource} from './recipes.mjs';
@@ -17,7 +18,7 @@ let TransportAttestorError;
 try{({AttestorError:TransportAttestorError}=await import(createRequire(new URL('../ybm-collector/client.mjs',import.meta.url)).resolve('@reclaimprotocol/attestor-core')));}catch{}
 let boundedSendFailure=()=>null,boundedSendDetails=()=>null;
 try{({boundedSendFailure,boundedSendDetails}=await import('../ybm-collector/socket.mjs'));}catch{}
-const own=(value,key)=>Object.getOwnPropertyDescriptor(value,key)?.value;
+const own=(value,key)=>types.isProxy(value)?undefined:Object.getOwnPropertyDescriptor(value,key)?.value;
 const typedArrayLength=Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype),'length').get;
 const sdkCode=code=>typeof code==='string'&&SOURCE_DIAGNOSTIC_SDK_CODES.includes(code)&&proto.ErrorCode[code]===SOURCE_DIAGNOSTIC_SDK_CODES.indexOf(code)+1?code:null;
 function rejectionDetails(error){
@@ -31,17 +32,17 @@ function rejectionDetails(error){
  }catch{return {errorKind:'UNKNOWN',ownCodeKind:'UNKNOWN'};}
 }
 function returnDetails(result){
- // Observation only: no getters, error conversion, message/data access, clone
+ // Observation only: no getters, error conversion, payload serialization, clone
  // or signature validation. Existing signedProof/verification retains authority.
  try{
-  if(!result||typeof result!=='object'||Array.isArray(result))return {resultKind:'MALFORMED'};
+  if(!result||typeof result!=='object'||types.isProxy(result)||Array.isArray(result))return {resultKind:'MALFORMED'};
   const error=own(result,'error');
   if(error){const code=own(error,'code');return {resultKind:'ERROR',sdkCode:Number.isInteger(code)&&code>=1&&code<=12?sdkCode(SOURCE_DIAGNOSTIC_SDK_CODES[code-1]):null};}
   if(!own(result,'claim')||typeof own(result,'claim')!=='object')return {resultKind:'MALFORMED'};
   const signatures=own(result,'signatures'),signature=signatures&&own(signatures,'claimSignature');
   if(!signature)return {resultKind:'MISSING_SIGNATURE'};
   // Intrinsic length reads no caller getter or signature bytes; shape only.
-  return {resultKind:signature instanceof Uint8Array&&typedArrayLength.call(signature)===65?'SIGNED_CLAIM':'MALFORMED'};
+  return {resultKind:types.isUint8Array(signature)&&typedArrayLength.call(signature)===65?'SIGNED_CLAIM':'MALFORMED'};
  }catch{return {resultKind:'UNKNOWN'};}
 }
 const steps=Object.freeze({'connecting':'SDK_CONNECTING','sending-request-data':'SDK_SENDING_REQUEST',
@@ -111,7 +112,7 @@ export async function collectWorkerSource({config,request,role,params,username,c
     }catch(error){if(!sealed)observeSource(diagnostics,responseStage,'FAILED',error);failed=true;fields=undefined;throw new EvidenceError(error instanceof EvidenceError?error.code:'WORKER_TRANSCRIPT_REJECTED');}
    },
   });
-  observe('SDK_CALL','COMPLETED');observe('SDK_RETURN','OBSERVED',undefined,returnDetails(result));
+  observe('SDK_CALL','COMPLETED');observe('SDK_RETURN','OBSERVED',undefined,{...returnDetails(result),claimReturn:claimReturnDiagnostics(result)});
   }catch(error){observe('SDK_CALL','FAILED',error instanceof EvidenceError?error:undefined,rejectionDetails(error));throw error;}
   finally{sdkActive=false;sealed=true;stopRpcObservation?.();try{signal?.removeEventListener('abort',onAbort);}catch{}}
   validationStarted=true;observe('RETURN_VALIDATION','STARTED');

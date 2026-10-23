@@ -290,6 +290,30 @@ test('resolved protobuf errors have their own namespace and do not imply a rejec
  assert.equal(reads,0);
 });
 
+test('returned invalid claims expose only fixed hints and never mint authority even with signature fields',async()=>{
+ const cases=[
+  ['REQUEST_SIGNATURE','Invalid signature on claim request'],
+  ['TIMESTAMP_WINDOW','Timestamp provided 1800000000 is too far off. Current time is 1700000000'],
+  ['TLS_HANDSHAKE','No provider certificates received'],
+  ['ZK_PROOF','error in handling packet at idx 7: Error: invalid proof (ZK proof 2, startIdx 80, record 3)'],
+  ['TRANSCRIPT_PACKET','error in handling packet at idx 7: Error: '+PRIVATE],
+  ['HTTP_PROVIDER_RECEIPT','Invalid receipt. Response does not contain "'+PRIVATE+'"'],
+  ['UNKNOWN',PRIVATE],
+ ];
+ for(const [expected,message]of cases){
+  let stored;const diagnostics=createSourceDiagnostics({persist:v=>{stored=v;}});
+  const x=await setup({diagnostics,transformResult:r=>({...r,error:{code:5,message,data:COOKIE},signatures:{...r.signatures,resultSignature:Buffer.alloc(65)}})});
+  await assert.rejects(x.collector.collect(x.options),/COLLECTOR_SIGNED_CLAIM/);
+  const returned=stored.events.find(e=>e.stage==='ACCOUNT_SDK_RETURN');
+  assert.equal(returned.code,'ERROR_INVALID_CLAIM');assert.equal(returned.resultKind,'ERROR');
+  assert.deepEqual(returned.claimReturn,{basis:'REMOTE_ERROR_HINT',reasonHint:expected,errorPresent:true,claimPresent:true,claimSignaturePresent:true,resultSignaturePresent:true});
+  assert.equal(stored.stages.ACCOUNT_SDK_CALL.state,'COMPLETED');assert.equal(stored.firstFailure.code,'COLLECTOR_SIGNED_CLAIM');
+  assert.equal(stored.stages.ACCOUNT_OFFICIAL_VERIFY.state,'NOT_OBSERVED');assert.equal(stored.stages.CERTIFICATE_CLAIM_CALL.state,'NOT_OBSERVED');
+  assert.equal(stored.stages.CANDIDATE_LEASE.state,'NOT_OBSERVED');assert.equal(x.lease,undefined);assert.deepEqual(x.calls,['account']);
+  for(const value of [PRIVATE,COOKIE,message])assert.equal(JSON.stringify(stored).includes(value),false);
+ }
+});
+
 test('malformed, missing-signature, and post-return failures remain distinct from SDK rejection',async()=>{
  const cases=[
   [()=>null,'MALFORMED','COLLECTOR_SIGNED_CLAIM'],

@@ -1,5 +1,7 @@
 // Observer only. No request, identity, raw input, message, stack or transport
 // object is serialized. These fixed vocabularies require explicit source review.
+import {types} from 'node:util';
+import {CLAIM_RETURN_REASON_HINTS} from './claim-return-diagnostics.mjs';
 export const SOURCE_DIAGNOSTIC_STAGES=Object.freeze([
  'NORMAL_FLOW','MANAGED_SOURCE','HR_COLLECTION','PREPARED_SOURCE',
  'SIGNATURE_WAIT','SIGNATURE_ACCEPTANCE','PARTICIPANT_ENVELOPE_VERIFY','COLLECTOR_SETUP',
@@ -50,6 +52,7 @@ WORKER_TRANSCRIPT_REJECTED DUPLICATE_OR_UNSAFE_JSON_KEY
 `.trim().split(/\s+/));
 export function sourceDiagnosticCode(error){
  // Do not invoke getters, stringify errors, walk causes or read a stack.
+ if(types.isProxy(error))return 'UNKNOWN_ERROR';
  try{for(const key of ['code','message']){
   const value=Object.getOwnPropertyDescriptor(error,key)?.value;
   if(typeof value==='string'&&codes.has(value))return value;
@@ -57,7 +60,16 @@ export function sourceDiagnosticCode(error){
  return 'UNKNOWN_ERROR';
 }
 const owned=new WeakSet();
-const own=(value,key)=>{try{return Object.getOwnPropertyDescriptor(value,key)?.value;}catch{return undefined;}};
+const own=(value,key)=>{try{return types.isProxy(value)?undefined:Object.getOwnPropertyDescriptor(value,key)?.value;}catch{return undefined;}};
+function claimReturnDetails(value,invalidClaim){
+ if(!value||typeof value!=='object'||types.isProxy(value))return null;
+ const hint=own(value,'reasonHint');
+ const result={basis:'REMOTE_ERROR_HINT',reasonHint:invalidClaim&&CLAIM_RETURN_REASON_HINTS.includes(hint)?hint:'UNKNOWN'};
+ for(const key of ['errorPresent','claimPresent','claimSignaturePresent','resultSignaturePresent']){
+  const flag=own(value,key);result[key]=typeof flag==='boolean'?flag:null;
+ }
+ return Object.freeze(result);
+}
 const systemCodes=new Set(['ECONNREFUSED','ECONNRESET','ENOTFOUND','ERR_PACKAGE_PATH_NOT_EXPORTED','ERR_MODULE_NOT_FOUND','ERR_SQLITE_ERROR','ETIMEDOUT']);
 const transportCodes=['ATTESTOR_BACKPRESSURE_LIMIT','ATTESTOR_MESSAGE_LIMIT','ATTESTOR_QUEUE_LIMIT','ATTESTOR_QUEUE_TIMEOUT','ATTESTOR_SEND_TIMEOUT','ATTESTOR_SEND_FAILED','ATTESTOR_SEND_ABORTED','ATTESTOR_SEND_CLOSED'];
 function sendDetails(value){
@@ -84,7 +96,7 @@ export function createSourceDiagnostics({persist,monotonicNow=()=>performance.no
   }catch{timing='INCOMPLETE';return null;}
  };
  elapsed();
- const snapshot=()=>structuredClone({version:'clear-normal-source-diagnostics.4',persistence,timing,truncated,
+ const snapshot=()=>structuredClone({version:'clear-normal-source-diagnostics.5',persistence,timing,truncated,
   signatureAcceptance:stages.SIGNATURE_ACCEPTANCE.completedObserved?'ACCEPTED':'UNKNOWN',stages,firstFailure,events});
  const save=()=>{try{if(typeof persist!=='function')throw null;persist(snapshot());}catch{persistence='INCOMPLETE';}};
  const diagnostics=Object.freeze({snapshot,record(stage,state,error,details){
@@ -112,7 +124,10 @@ export function createSourceDiagnostics({persist,monotonicNow=()=>performance.no
   const errorKind=sdkCall&&state==='FAILED'&&['OWNED_BOUNDED_SEND','HR_ATTESTOR_ERROR','TRANSPORT_ATTESTOR_ERROR','NATIVE_TYPE_ERROR','NATIVE_RANGE_ERROR','NATIVE_ERROR','NON_ERROR','UNKNOWN'].includes(kindValue)?kindValue:null;
   const ownCodeKind=sdkCall&&state==='FAILED'&&['ABSENT','ACCESSOR','STRING','NUMBER','OTHER','UNKNOWN'].includes(codeKindValue)?codeKindValue:null;
   const transport=send||(sdkCall&&codeBasis==='OWNED_BOUNDED_SEND')?sendDetails(own(details,'transport')):null;
-  const event=Object.freeze({sequence:events.length+1,stage,state,code,codeNamespace,codeBasis,offsetMs,durationMs,aborted,resultKind,errorKind,ownCodeKind,transport});
+  // A remote text classification is only a hint. It never changes the SDK code,
+  // firstFailure, validation outcome, or signature/claim authority.
+  const claimReturn=sdkReturn&&state==='OBSERVED'?claimReturnDetails(own(details,'claimReturn'),code==='ERROR_INVALID_CLAIM'):null;
+  const event=Object.freeze({sequence:events.length+1,stage,state,code,codeNamespace,codeBasis,offsetMs,durationMs,aborted,resultKind,errorKind,ownCodeKind,transport,claimReturn});
   events.push(event);stages[stage]={state,completedObserved:stages[stage].completedObserved||state==='COMPLETED'};
   if(state==='FAILED'&&!firstFailure)firstFailure=event;
   save();

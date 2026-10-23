@@ -1,5 +1,7 @@
 # 정상 시험 원천 단계 진단
 
+2026-10-24 현행 스키마는 clear-normal-source-diagnostics.5다. [r8 조사](BOOTCAMP_R8_INVALID_CLAIM_REVIEW.ko.md)와 아래 v5 규칙을 우선하며, 이전 세대의 기록·수집 경계를 소급 변경하지 않는다.
+
 2026-10-23 최신: r5 이후 SDK 분류·상대 시간 보완은 아래 v2 절과 [좁은 검토](BOOTCAMP_SDK_DIAGNOSTICS_REVIEW.ko.md)를 따른다. 이번 작업은 로그인 없는 검증까지이며 r6 환경·CA·실제 실행을 만들지 않는다.
 
 과거 v1 기록: r3 실행은 HR 요청 생성 후 약 63.5초에 `COLLECTION_FAILED`로 종료됐다. 사용자의 지갑 서명 완료 및 UI 무오류 관찰은 있으나 서버 서명 수락 응답/영속 감사 기록은 없었다. HR evidence, AI 호출 및 지급은 0이었다. 보존 기록만으로 HR 응답 취득·증명 생성·공식 검증 중 실패 지점을 특정할 수 없다. 이 문서의 진단 보완은 과거 r3의 원인을 확정하거나 실제 증명 성공을 주장하지 않는다.
@@ -101,3 +103,11 @@ r6의 원래 객체는 소급 복원할 수 없다. 재현한 분류/타이머 �
 `transport`는 고정 phase, frameBytes/socketQueuedBytes/retainedBytes/pendingCount, 각각의 제한, timeoutMs/waitMs/sendMs, terminalReason과 terminal 시점의 같은 숫자만 가진다. 모든 필드는 허용한 own 값만 읽고 getter·객체·배열·원문은 버린다. 송신 시작 전 숫자와 실패 숫자를 함께 읽어 단일 메시지 초과와 대기열 초과를 구분한다. r7 개별 크기는 여전히 UNKNOWN이며 새 값으로 과거 기록을 채우지 않는다.
 
 128개 이벤트·0600 저장·observer 실패 격리·동일 client·요청/서명/nonce/lease·총 시도1회 경계는 유지한다. 상세 수치 근거와 합성 시험 범위는 [r7 전송 검토](BOOTCAMP_R7_TRANSPORT_REVIEW.ko.md)를 따른다.
+
+## r8 후속 v5: 반환 오류의 제한된 힌트
+
+SDK_RETURN/OBSERVED의 claimReturn은 basis=REMOTE_ERROR_HINT, 고정 reasonHint 7종, errorPresent/claimPresent/claimSignaturePresent/resultSignaturePresent 4개 boolean만 포함한다. 서명 필드는 nonempty Uint8Array 구조의 존재만 뜻한다. 기존 firstFailure는 실제 거부 경계에 남으며 오류 응답을 검증 성공으로 승격하지 않는다.
+
+reasonHint는 UNKNOWN / REQUEST_SIGNATURE / TIMESTAMP_WINDOW / TLS_HANDSHAKE / ZK_PROOF / TRANSCRIPT_PACKET / HTTP_PROVIDER_RECEIPT다. code=5인 own 오류의 primitive message를 최대2048자, 제어문자 없는 전체 literal/template 일치로 일시 분류한다. 원문은 저장하지 않는다. 객체 변환·getter/Proxy trap·data/stack/cause 접근은 금지하며, 알 수 없는 값은 UNKNOWN이다. 이 규칙이 이전 v2의 message 비접근 원칙에 대한 유일한 제한적 추가다. 다른 오류 코드나 SDK reject/transport에는 이 분류를 확장하지 않는다.
+
+실제 고정 protobuf 왕복과 synthetic worker 반환으로 검증한다. 고정 hint가 있어도 배포 서버 버전·오류 원인의 신뢰성을 보증하지 않는다. r8 당시에는 message/presence를 남기지 않았으므로 현재 값으로 채우지 않는다. 기존 stage 시간, 128개 상한, private 저장, 공식 검증·요청/지갑 결합·단회 소비·lease·전송 정책은 유지한다.

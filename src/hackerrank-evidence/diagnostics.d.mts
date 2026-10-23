@@ -11,6 +11,10 @@ export interface SourceTransportDetails {
  terminalFrameBytes:number|null;terminalSocketQueuedBytes:number|null;terminalRetainedBytes:number|null;terminalPendingCount:number|null;
 }
 export interface SourceDiagnosticDetails {
+ claimReturn?:{
+  reasonHint:'UNKNOWN'|'REQUEST_SIGNATURE'|'TIMESTAMP_WINDOW'|'TLS_HANDSHAKE'|'ZK_PROOF'|'TRANSCRIPT_PACKET'|'HTTP_PROVIDER_RECEIPT';
+  errorPresent:boolean;claimPresent:boolean;claimSignaturePresent:boolean;resultSignaturePresent:boolean;
+ }|null;
  sdkCode?:string|null;boundedSendCode?:SourceTransportCode|null;transport?:SourceTransportDetails|null;
  resultKind?:'ERROR'|'MISSING_SIGNATURE'|'MALFORMED'|'SIGNED_CLAIM'|'UNKNOWN';aborted?:boolean|null;
  errorKind?:'OWNED_BOUNDED_SEND'|'HR_ATTESTOR_ERROR'|'TRANSPORT_ATTESTOR_ERROR'|'NATIVE_TYPE_ERROR'|'NATIVE_RANGE_ERROR'|'NATIVE_ERROR'|'NON_ERROR'|'UNKNOWN';

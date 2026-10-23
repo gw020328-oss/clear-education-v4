@@ -12,7 +12,7 @@ test('relative monotonic time pairs only observed boundaries and never uses a pr
  observeSource(d,'SIGNATURE_WAIT','STARTED');now+=20;observeSource(d,'SIGNATURE_ACCEPTANCE','COMPLETED');
  now+=30;observeSource(d,'SIGNATURE_WAIT','FAILED',Error('AUTH_REQUIRED'));
  now+=10;observeSource(d,'SIGNATURE_WAIT','STARTED');now+=5;observeSource(d,'SIGNATURE_WAIT','COMPLETED');
- const v=d.snapshot();assert.equal(v.version,'clear-normal-source-diagnostics.4');assert.equal(v.timing,'COMPLETE');
+ const v=d.snapshot();assert.equal(v.version,'clear-normal-source-diagnostics.5');assert.equal(v.timing,'COMPLETE');
  assert.deepEqual(v.events.map(e=>e.offsetMs),[0,20,50,60,65]);
  assert.deepEqual(v.events.map(e=>e.durationMs),[null,null,50,null,5]);
  assert.equal(JSON.stringify(v).includes('12345'),false);
@@ -115,4 +115,29 @@ test('transport measurements allow only bounded scalar shape and fixed terminati
  const v=d.snapshot();assert.equal(v.events[0].transport.frameBytes,104857600);assert.equal(v.events[0].transport.terminalReason,'ATTESTOR_QUEUE_LIMIT');
  assert.equal(v.firstFailure.code,'ATTESTOR_QUEUE_TIMEOUT');assert.equal(v.firstFailure.transport.frameBytes,null);assert.equal(v.firstFailure.transport.socketQueuedBytes,null);assert.equal(v.firstFailure.transport.waitMs,null);assert.equal(v.firstFailure.transport.terminalReason,null);assert.equal(v.firstFailure.transport.sendMs,null);
  assert.equal(v.events[2].transport,null);assert.equal(getters,0);assert.equal(JSON.stringify(v).includes(secret),false);
+});
+
+test('claim-return hints persist only fixed vocabulary and structural presence at SDK return',()=>{
+ const d=createSourceDiagnostics({persist(){}}),claimReturn={reasonHint:'REQUEST_SIGNATURE',errorPresent:true,claimPresent:false,claimSignaturePresent:false,resultSignaturePresent:true,message:secret,data:secret};
+ observeSource(d,'ACCOUNT_SDK_RETURN','OBSERVED',undefined,{resultKind:'ERROR',sdkCode:'ERROR_INVALID_CLAIM',claimReturn});
+ observeSource(d,'CERTIFICATE_SDK_RETURN','OBSERVED',undefined,{resultKind:'ERROR',sdkCode:'ERROR_TIMEOUT',claimReturn});
+ observeSource(d,'ACCOUNT_SDK_CALL','FAILED',Error(secret),{claimReturn});
+ const events=d.snapshot().events;
+ assert.deepEqual(events[0].claimReturn,{basis:'REMOTE_ERROR_HINT',reasonHint:'REQUEST_SIGNATURE',errorPresent:true,claimPresent:false,claimSignaturePresent:false,resultSignaturePresent:true});
+ assert.equal(events[0].codeBasis,'PROTO_ERROR_CODE');assert.equal(events[1].claimReturn.reasonHint,'UNKNOWN');assert.equal(events[2].claimReturn,null);
+ assert.equal(d.snapshot().firstFailure.stage,'ACCOUNT_SDK_CALL');assert.equal(JSON.stringify(d.snapshot()).includes(secret),false);
+});
+
+test('claim-return sink does not call accessors or Proxy traps and cannot leak arbitrary fields',()=>{
+ let reads=0;const trap=()=>{reads++;throw Error(secret);},proxy=new Proxy({},{get:trap,getOwnPropertyDescriptor:trap,getPrototypeOf:trap,ownKeys:trap});
+ const d=createSourceDiagnostics({persist(){}});
+ for(const claimReturn of [proxy,{reasonHint:secret,errorPresent:secret,claimPresent:1,claimSignaturePresent:{raw:secret},get resultSignaturePresent(){return trap();}},
+  {get reasonHint(){return trap();},data:proxy,stack:secret}]){
+  observeSource(d,'ACCOUNT_SDK_RETURN','OBSERVED',undefined,{resultKind:'ERROR',sdkCode:'ERROR_INVALID_CLAIM',claimReturn});
+ }
+ observeSource(d,'ACCOUNT_SDK_RETURN','OBSERVED',undefined,proxy);
+ assert.equal(sourceDiagnosticCode(proxy),'UNKNOWN_ERROR');
+ const events=d.snapshot().events;assert.equal(events[0].claimReturn,null);assert.equal(events[3].claimReturn,null);
+ assert.deepEqual(events[1].claimReturn,{basis:'REMOTE_ERROR_HINT',reasonHint:'UNKNOWN',errorPresent:null,claimPresent:null,claimSignaturePresent:null,resultSignaturePresent:null});
+ assert.equal(events[2].claimReturn.reasonHint,'UNKNOWN');assert.equal(reads,0);assert.equal(JSON.stringify(d.snapshot()).includes(secret),false);
 });
