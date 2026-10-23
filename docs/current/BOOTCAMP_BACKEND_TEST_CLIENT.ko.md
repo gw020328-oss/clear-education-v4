@@ -70,3 +70,7 @@ receipt는 기존 클라이언트의 canonical/고정100 TEST 검사를 재사�
 외부 네트워크를 차단한 synthetic 지갑·원천 fixture에서 실제 HTTPS auth/store와 이 페이지의 transport/controller를 함께 검증한다. 키/서명은 fixture에서만 생성하며 실제 지갑·원천·모델·realm을 사용하지 않는다. 실제 지갑 브라우저 버튼·CA 신뢰 설치·최신 managed HR .3 로그인/proof·AI 호출·전체100 TEST 지급은 사용자 시점에 수행할 항목으로 남는다. 제품 프론트 완주는 별도다.
 
 v2는 초기 연결의 같은 계정/체인 중복 알림과 실제 변경을 구별하는 session.js 한 파일 delta다. v1 manifest 원본과 b83e482 소스 snapshot을 보존하며 새 manifest bytes도 검사의 고정 SHA로 잠근다. 기존 v10 core159개와 API 계약은 그대로다.
+
+## 2026-10-23 원천 진단 v12
+
+[단계별 진단 명세](BOOTCAMP_SOURCE_DIAGNOSTICS.ko.md)와 [검증 기록](BOOTCAMP_V12_VERIFICATION.json)을 따른다. 기존 원천 159개 중 7개에 수동적 관측을 연결하고 진단 모듈 1개를 더한 정확한 160개 지문을 v12로 고정했다. 이전 v11 intake/guard는 보존했다. 브라우저/API 바이트는 V3와 같으며 [V4 자산 기록](BOOTCAMP_TEST_CLIENT_ASSETS_V4.json)은 v12 실행 지문만 연결한다. r3 원인은 미확정이고 새 실제 수집·로그인·AI·서명·지급은 미실행이다. 이 기록은 새 시험 실행 승인이 아니다.

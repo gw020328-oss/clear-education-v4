@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 // Invented wallets/source only. Existing HTTPS auth/store and the actual browser transport/controller run together.
 import test from 'node:test';import assert from 'node:assert/strict';import {EventEmitter,once} from 'node:events';
 import {request} from 'node:https';import {mkdirSync,readFileSync} from 'node:fs';import {join} from 'node:path';import {fileURLToPath} from 'node:url';
@@ -144,5 +145,18 @@ test('v3 preserves v2 browser bytes and consumes only the exact reviewed v11 hos
  assert.equal(manifest.apiContractsChanged,false);assert.equal(manifest.productFrontendAccepted,false);assert.equal(manifest.actualExecutionApprovedByThisRecord,false);
  assert.equal(sha(manifest.existingCoreIntake.path),'55c2986611b5ed0b3df69cc2e5294e3932715a847649ca5adc36f4f52146b65d');
  const intake=JSON.parse(readFileSync(new URL('../../'+manifest.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(intake.sourceArtifactSha256).length,159);
- assert.deepEqual(intake.changedFromV10,['tools/bootcamp/live-context.mjs']);for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(sha(p),h,p);
+ assert.deepEqual(intake.changedFromV10,['tools/bootcamp/live-context.mjs']);for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(createHash('sha256').update(execFileSync('git',['show','85212551fd8e86b22b2c0c0b3525100e9579f2f7:'+p])).digest('hex'),h,p);
+});
+
+test('v4 keeps all browser/API bytes and consumes exact v12 diagnostics sources',async()=>{
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V4.json';assert.equal(sha(path),'526d276b5a587698235c759190a65f6e373d1a92676ee3b65de38891a6d452e8');
+ const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
+ assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.4');assert.equal(sha(m.previousRecord.path),'6ad8e4de3ea7dcfad2527f4738a6ab16c284feb2b0087f95d0f060e9f21552a2');
+ assert.deepEqual(m.changedFromV3,[]);assert.deepEqual(m.sourceDelta,{});assert.deepEqual(m.sourceArtifacts,old.sourceArtifacts);assert.deepEqual(m.normalClient,old.normalClient);assert.equal(m.publicAssetSnapshotSha256,old.publicAssetSnapshotSha256);
+ for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ for(const k of ['apiContractsChanged','productFrontendAccepted','actualExecutionApprovedByThisRecord'])assert.equal(m[k],false);
+ assert.equal(sha(m.existingCoreIntake.path),'ed279c819aab1bc91b8cb15b3c1f974e9a42df5feaf038e4270e89a7b1d49bcd');
+ const intake=JSON.parse(readFileSync(new URL('../../'+m.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(intake.sourceArtifactSha256).length,160);
+ for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(sha(p),h,p);
 });

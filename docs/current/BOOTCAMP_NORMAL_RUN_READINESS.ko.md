@@ -33,3 +33,7 @@
 ## 2026-10-23 제품 프론트와 독립된 backend 선시험 준비
 
 사용자 후속 요청으로 `tools/bootcamp/test-client/`의 정적5개 자산을 구현·검사하고 기존 web-root/digest acceptance로 수락했다. [실행 안내](BOOTCAMP_BACKEND_TEST_CLIENT.ko.md)·[정확 자산 지문](BOOTCAMP_TEST_CLIENT_ASSETS_V2.json)·[확인 기록](BOOTCAMP_BACKEND_TEST_CLIENT_VERIFICATION.json)을 따른다. 제품 web/·PR60·API 계약·v10 core159개를 바꾸지 않았고 제품 프론트 완료를 뜻하지 않는다. 이제 backend 선시험의 독립 준비는 제품 프론트 구현을 기다리지 않는다. 공개 두 주소/두 프로필/사용자 CA trust·실제 실행 시 network 설정과 로그인·exact AI 새 승인은 본부가 준비 완료 뒤 한 번에 안내한다. 지금 새 관리Chrome/신청/lease/realm/유료호출은 시작하지 않았다.
+
+## 2026-10-23 원천 진단 v12
+
+[단계별 진단 명세](BOOTCAMP_SOURCE_DIAGNOSTICS.ko.md)와 [검증 기록](BOOTCAMP_V12_VERIFICATION.json)을 따른다. 기존 원천 159개 중 7개에 수동적 관측을 연결하고 진단 모듈 1개를 더한 정확한 160개 지문을 v12로 고정했다. 이전 v11 intake/guard는 보존했다. 브라우저/API 바이트는 V3와 같으며 [V4 자산 기록](BOOTCAMP_TEST_CLIENT_ASSETS_V4.json)은 v12 실행 지문만 연결한다. r3 원인은 미확정이고 새 실제 수집·로그인·AI·서명·지급은 미실행이다. 이 기록은 새 시험 실행 승인이 아니다.
