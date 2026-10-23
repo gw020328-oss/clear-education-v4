@@ -425,8 +425,222 @@ export const YBM_POLICY = Object.freeze({
   }),
 });
 
+// ── 메타코드 데이터 엔지니어 부트캠프 ─────────────────────────────────────
+//
+// 어학원을 접고 소규모 환급형 부트캠프로 타겟을 옮겼다(docs/pivot 참조).
+// ㈜메타코드에이치 — 직원 10명, 기수당 15~22명, 비국비 자비 부담.
+//
+// 앞의 두 반과 구조가 다르다.
+//
+//   환급률 구간이 하나다.      전액환급 하나뿐. 50%/100%/200% 같은 구간이 없다.
+//   경로가 하나다.             OR 이 없고 조건 전부가 AND 다.
+//   조건이 열 개다.            안내문이 "위 환급 기준 미달 시 환급가능
+//                              대상자에서 제외됩니다" 라고 못박았다.
+//
+// 그래서 tier 하나 · path 하나 · items 열 개가 된다. 구조를 단순하게 쓰는
+// 것이 아니라 이 상품이 실제로 그렇다.
+//
+// 안내문에 없는 값은 가정하고 주석에 적는다. 가정한 것과 안내문에 있는 것을
+// 섞으면 나중에 무엇이 근거였는지 알 수 없다.
+//
+//   PG사 수수료율   안내문에 "PG사 수수료 공제 후" 라고만 있고 요율이 없다.
+//                   3% 로 가정한다. F3 운영자 화면에서는 HELD 로 비워 두고
+//                   운영자에게 묻는다 — 같은 값의 두 단계다.
+//   판정 주차        배너는 "15주 집중 과정" 인데 출석 조건은 "1~10주차" 다.
+//                   수강 완료 조건은 주차 수가 아예 없다. 10주차로 가정하고,
+//                   이 어긋남도 F3 에서 묻는다.
+//   횟수            Live 스터디·퀴즈·작업형 과제·플랫폼 후기의 횟수가
+//                   안내문에 없다. 데모 가정값이며 각 조건 detail 에 적었다.
+//
+// examType·minScore 는 어학원 전용 필드다. 이 반에는 시험이 없어 의미가
+// 없지만 어댑터가 요구해서 남겨 둔다(스키마 변경 요청 목록에 올렸다).
+
+// 2026-09-18 09:00 KST 개강 · 10주차 종료 2026-11-27 · 수료 후 신청
+const MC_START = 1789689600;        // 2026-09-18 09:00 KST
+const MC_WEEK10_END = 1795737600;   // 2026-11-27 09:00 KST
+const MC_SUBMIT_AT = 1798761600;    // 2027-01-01 09:00 KST
+
+/**
+ * 메타코드 환급액.
+ *
+ *   안내문 — "환급 대상 금액은 실결제금액에서 PG사 수수료 공제 후,
+ *             제세공과금 22% 공제한 금액이 환불되며"
+ *
+ * 시원스쿨과 식의 모양이 같다. 다만 가산(응시료)이 없고 환급률도 하나다.
+ * PG 수수료는 요율이 안내문에 없어 uncertain 으로 둔다 — 시원스쿨의
+ * '약 3%' 와 같은 처리다.
+ *
+ * 환급이 "최초 결제 시 사용한 동일한 결제 수단으로 처리" 되므로 실제로는
+ * 카드 결제 취소다. 그래서 PG 수수료가 공제된다. CLEAR 는 이것을 지갑
+ * 즉시 송금으로 바꾼다.
+ */
+const MC_PAY = 2490000;
+const MC_PG_BPS = 300;                                  // 3% — 가정
+const MC_PG_FEE = MC_PAY * MC_PG_BPS / 10000;           // 74,700
+const MC_BASE = MC_PAY - MC_PG_FEE;                     // 2,415,300
+const MC_TAX = Math.floor(MC_BASE * 22 / 100);          // 531,366
+const MC_NET = MC_BASE - MC_TAX;                        // 1,883,934
+
+export const METACODE_POLICY = Object.freeze({
+  compilerVersion: 'course-policy-synthetic.1',
+  policyHash: hash('d4'),
+  requiredLectureIdsHash: hash('8e'),
+  publishable: false,
+  policy: Object.freeze({
+    schemaVersion: 4,
+    cohortId: 'metacode-de-2609',
+    productName: '메타코드 데이터 엔지니어 부트캠프',
+    policyVersion: '1',
+    dataMode: 'SYNTHETIC',
+    // 이 반에는 시험이 없다. 어학원 전용 레거시 필드를 어댑터가 요구해서
+    // 남겨 둘 뿐, 조건 어디에도 쓰이지 않는다.
+    examType: 'TOEIC_LR',
+    minScore: 0,
+    minCompletionBps: 10000,
+
+    examDateStart: '2026-09-18',
+    examDateEnd: '2026-11-27',
+
+    learningStart: String(MC_START),
+    learningEnd: String(MC_WEEK10_END),
+    // 주차별 강의. 조건 5 가 "해당 주차 내 100% 수강 완료" 를 요구하므로
+    // 강의 목록이 아니라 주차가 판정 단위다.
+    requiredLectureIds: Object.freeze([
+      'mc-w01', 'mc-w02', 'mc-w03', 'mc-w04', 'mc-w05',
+      'mc-w06', 'mc-w07', 'mc-w08', 'mc-w09', 'mc-w10',
+    ]),
+    completionRuleVersion: 'seed-required-completed-in-period.1',
+
+    enrollmentStart: '1788220800',
+    enrollmentUntil: String(MC_START),
+    normalSubmitFrom: String(MC_WEEK10_END),
+    normalSubmitAt: String(MC_SUBMIT_AT),
+    supplementEndAt: String(MC_SUBMIT_AT + 259200),
+    claimUntil: String(MC_SUBMIT_AT + 864000),
+
+    // 실수령 1,883,934원 = 1,883,934 TEST (1 TEST = 1원)
+    amount: '1883934000000',
+    tokenDecimals: 6,
+    sourcePolicySetHash: hash('2c'),
+    privacyNoticeVersion: 'privacy-notice-1',
+
+    // 구간 하나 · 경로 하나 · 조건 열 개가 전부 AND.
+    // 안내문: "위 환급 기준 미달 시 환급가능 대상자에서 제외됩니다."
+    conditionTiers: Object.freeze([
+      tier('full', '전액', [
+        path(null, [
+          cond('liveStudy', 'LEARNING', '현직자 Live 스터디', '3회', '전부 참석',
+            '열리는 세션에 모두 참석해야 합니다 · 안내문에 횟수가 없어 3회로 가정했습니다.'),
+          cond('liveTask', 'LEARNING', '스터디 과제', '전부', '제출',
+            'Live 스터디에 딸린 과제 · 제출률 100%'),
+          cond('quiz', 'MOCK_TEST', '퀴즈', '10회 전부 제출', '정답률 80% 이상',
+            '제출률과 정답률을 둘 다 넘겨야 합니다 · 점수는 학원 채점 결과를 그대로 '
+            + '가져옵니다 · 안내문에 횟수가 없어 10회로 가정했습니다.'),
+          // 학원이 이미 채점한 과제다. CLEAR 가 LLM 으로 다시 채점하면 학원 기준과
+          // 다른 지급 기준이 생긴다 — 89점이 학원에서는 미달인데 우리 쪽에서 통과하는
+          // 일이 벌어진다. 원천 점수를 읽어 임계값과 비교할 뿐이다.
+          cond('practical', 'MOCK_TEST', '작업형 과제', '5회 전부 제출', '정답률 90% 이상',
+            '퀴즈보다 기준이 높습니다 · 점수는 **학원이 매긴 채점 결과**를 그대로 '
+            + '가져옵니다. CLEAR 가 다시 채점하지 않습니다 · 퀴즈와 통틀어 점수 미달 '
+            + '1회는 면제됩니다 · 안내문에 횟수가 없어 5회로 가정했습니다.'),
+          // 열 개 중 유일하게 기한이 붙은 조건이다. 그 주에 열린 강의를
+          // 그 주 안에 끝내야 하고, 다음 주에 몰아 들으면 인정되지 않는다.
+          cond('weekly', 'LEARNING', '주차별 수강', '10주차', '해당 주차 내 완료',
+            '그 주에 열린 강의를 그 주 안에 끝내야 합니다. 밀려서 나중에 몰아 들으면 '
+            + '인정되지 않습니다 · 과정은 15주인데 안내문이 판정 주차를 밝히지 않아 '
+            + '출석과 같은 10주차로 가정했습니다.'),
+          cond('platformReview', 'REVIEW', '플랫폼 후기', '3회', '작성',
+            '과정 중 메타코드 사이트에 씁니다 · 안내문은 "지정된 횟수" 라고만 적어 '
+            + '3회로 가정했습니다.'),
+          cond('attendance', 'LEARNING', '출석', '9회', '이상 (10회 중)',
+            '주 1회 출석체크 · 금요일 21시 또는 토요일 9시 30분 중 하나에 참여하면 '
+            + '인정됩니다 · 1회까지 빠질 수 있고, 천재지변은 서류를 내면 인정됩니다.'),
+          cond('survey', 'REVIEW', '만족도 조사', '수료 후', '제출', null),
+          cond('boardReview', 'REVIEW', '메타코드 게시판 후기', '수료 후', '작성',
+            '환급 후기를 메타코드 후기 게시판에 씁니다.'),
+          // 외부 플랫폼이라 학원도 API 로 못 가져온다. 참가자가 본인 계정으로
+          // 로그인해 공증한다(zkTLS). 서류를 내는 것이 아니다.
+          //
+          // 공증이 증명하는 것과 증명하지 못하는 것을 섞으면 안 된다.
+          // zkTLS 는 '이 응답이 그 서버에서 왔다' 를 증명한다. 그것이 곧
+          // '이 사람이 썼다' 나 '이 시각에 썼다' 는 아니다 —
+          // 작성자는 계정을 빌릴 수 있고, 게시 시각은 플랫폼이 적은 값이다.
+          cond('blogReview', 'BLOG', '개인 블로그 후기', '수료 후', '작성',
+            '본인 계정으로 로그인해 글이 게시된 것을 확인합니다. 파일을 내지 않습니다 · '
+            + '확인되는 것은 「그 글이 그 주소에 있다」와 「로그인한 계정으로 그 글이 '
+            + '보인다」 두 가지입니다. 누가 썼는지와 실제 작성 시각은 이 방법으로 '
+            + '증명되지 않습니다.',
+            'SELF_LOGIN'),
+        ]),
+      ], won(
+        { label: '수강료 전액 환급 (실결제금액 2,490,000원)', amount: MC_PAY },
+        [],
+        [
+          // 안내문에 요율이 없다. 3% 는 시연용 가정이며 확정값이 아니다.
+          { label: 'PG사 수수료 3%', amount: MC_PG_FEE, uncertain: true, demoAssumption: true },
+          { label: '제세공과금 22%', amount: MC_TAX },
+        ],
+        MC_NET,
+        '안내문 — 실결제금액에서 PG사 수수료 공제 후, 제세공과금 22% 공제한 금액이 '
+          + '환불됩니다. PG 요율은 안내문에 없어 3%로 가정한 값입니다.',
+      )),
+    ]),
+  }),
+});
+
+/**
+ * 안내문에 없어 우리가 정한 값.
+ *
+ * 조건 detail 에 자연어로만 적어 두면 사람은 읽어도 기계는 구분하지 못한다.
+ * 어느 숫자가 안내문에서 온 것이고 어느 숫자가 시연 가정인지 섞이면, 나중에
+ * 실제 정책을 만들 때 가정값이 그대로 상용 상수가 된다.
+ *
+ * 서버가 실제 정책을 주게 되면 이 목록은 비어야 한다. 비어 있지 않다는 것은
+ * 아직 확인하지 못한 값이 남아 있다는 뜻이다.
+ */
+export const METACODE_DEMO_ASSUMPTIONS = Object.freeze([
+  Object.freeze({
+    id: 'pgFeeRate', target: 'payout.deductions[0]',
+    label: 'PG사 수수료율', value: '3%',
+    why: '안내문은 "PG사 수수료 공제 후" 라고만 적고 요율을 밝히지 않았습니다.',
+  }),
+  Object.freeze({
+    id: 'judgeWeeks', target: 'conditions.weekly',
+    label: '수강 완료 판정 주차', value: '1~10주차',
+    why: '과정은 15주인데 출석 조건만 1~10주차로 적혀 있고, 수강 완료는 주차 범위가 '
+      + '없습니다. 출석과 같은 범위로 맞췄습니다.',
+  }),
+  Object.freeze({
+    id: 'liveStudyCount', target: 'conditions.liveStudy',
+    label: 'Live 스터디 횟수', value: '3회',
+    why: '안내문에 횟수가 없습니다. 참석률 100% 를 요구할 만한 규모로 잡았습니다.',
+  }),
+  Object.freeze({
+    id: 'quizCount', target: 'conditions.quiz',
+    label: '퀴즈 횟수', value: '10회',
+    why: '안내문에 횟수가 없습니다. 주 1회로 잡았습니다.',
+  }),
+  Object.freeze({
+    id: 'practicalCount', target: 'conditions.practical',
+    label: '작업형 과제 횟수', value: '5회',
+    why: '안내문에 횟수가 없습니다.',
+  }),
+  Object.freeze({
+    id: 'platformReviewCount', target: 'conditions.platformReview',
+    label: '플랫폼 후기 횟수', value: '3회',
+    why: '안내문이 "지정된 횟수" 라고만 적었습니다.',
+  }),
+  Object.freeze({
+    id: 'waiverScope', target: 'conditions.practical',
+    label: '점수 미달 면제 범위', value: '퀴즈·작업형 과제 통틀어 1회',
+    why: '안내문의 "과제 점수 미달 1회 면제" 가 각 조건마다인지 통틀어인지 '
+      + '밝히지 않았습니다.',
+  }),
+]);
+
 export const POLICIES = Object.freeze({
   [SYNTHETIC_POLICY.policyHash]: SYNTHETIC_POLICY,
   [ALTERNATIVE_POLICY.policyHash]: ALTERNATIVE_POLICY,
   [YBM_POLICY.policyHash]: YBM_POLICY,
+  [METACODE_POLICY.policyHash]: METACODE_POLICY,
 });

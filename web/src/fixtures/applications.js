@@ -19,6 +19,8 @@ const POLICY_HASH = hash('a1');
 const ALT_POLICY_HASH = hash('b2');
 /** YBM 750+ 환급코스. fixtures/policy.js 의 YBM_POLICY 와 같은 값 */
 const YBM_POLICY_HASH = hash('c3');
+/** 메타코드 데이터 엔지니어 부트캠프. fixtures/policy.js 의 METACODE_POLICY 와 같은 값 */
+const MC_POLICY_HASH = hash('d4');
 
 /** APPLICATION_ONLY 단계 공통 */
 const base = (state, extra = {}) => ({
@@ -129,6 +131,40 @@ const ALT_PROGRESS = Object.freeze({
   }),
 });
 
+// 메타코드 — 10주차 중 7주차. 조건 열 개가 서로 다른 속도로 쌓인다.
+//
+// 조건 5(주차별 수강)만 **되돌릴 수 없다.** 다른 조건은 끝날 때까지 채우면
+// 되지만, 그 주에 못 끝낸 강의는 다음 주에 들어도 인정되지 않는다. 화면이
+// 이 차이를 보여주지 않으면 참가자는 3주차를 놓친 줄도 모르고 계속 간다.
+const MC_PROGRESS = Object.freeze({
+  liveStudy: Object.freeze({ state: 'MET', value: '3회 / 3회', at: '1793404800' }),
+  liveTask: Object.freeze({ state: 'MET', value: '전부 제출', at: '1793404800' }),
+  quiz: Object.freeze({
+    state: 'IN_PROGRESS', value: '6회 / 10회 · 정답률 84%',
+    note: '남은 4회를 모두 내고 정답률 80%를 유지해야 합니다.',
+  }),
+  practical: Object.freeze({
+    state: 'IN_PROGRESS', value: '3회 / 5회 · 정답률 92%',
+    note: '기준 90%를 넘기고 있습니다. 점수 미달은 퀴즈와 통틀어 1회까지 면제됩니다.',
+  }),
+  // 3주차를 그 주 안에 못 끝냈다. 열 개 중 유일하게 복구가 안 되는 조건이다.
+  weekly: Object.freeze({
+    state: 'UNMET', value: '6주차 / 7주차 완료',
+    note: '3주차 강의를 그 주 안에 끝내지 못했습니다. 지금 들어도 인정되지 않습니다.',
+  }),
+  platformReview: Object.freeze({ state: 'IN_PROGRESS', value: '1회 / 3회' }),
+  attendance: Object.freeze({
+    state: 'IN_PROGRESS', value: '6회 / 7주차',
+    note: '10회 중 9회 이상이면 됩니다. 1주차에 한 번 빠져서 남은 여유가 없습니다.',
+  }),
+  survey: Object.freeze({ state: 'WAITING', note: '수료 후에 제출합니다.' }),
+  boardReview: Object.freeze({ state: 'WAITING', note: '수료 후에 작성합니다.' }),
+  blogReview: Object.freeze({
+    state: 'WAITING',
+    note: '수료 후에 본인 블로그에 쓰고, 본인 계정 로그인으로 확인합니다.',
+  }),
+});
+
 /** 다섯 단계를 한 번에 보고 싶을 때만 쓰는 검토용 묶음 */
 export const SYNTHETIC_APPLICATIONS = Object.freeze([
   AT_DRAFT, AT_TERMS, AT_CONSENTED, AT_FUNDING, AT_ENROLLED,
@@ -173,6 +209,22 @@ export const SCENARIOS = Object.freeze({
   altProgress: {
     label: '시원스쿨 시작이반 750점반 — 성적 확인됨',
     items: [{ ...AT_ENROLLED, policyHash: ALT_POLICY_HASH, conditionProgress: ALT_PROGRESS }],
+    delayMs: 200,
+    runtimeReady: true,
+  },
+  // 메타코드 — 조건이 열 개고 전부 AND 다. 구간도 경로도 하나뿐이라
+  // 앞의 두 반과 구조가 다르다. 화면 코드는 그대로고 정책만 바뀐다.
+  metacode: {
+    label: '메타코드 데이터 엔지니어 부트캠프',
+    items: [{ ...AT_CONSENTED, policyHash: MC_POLICY_HASH }],
+    delayMs: 200,
+    runtimeReady: true,
+  },
+  // 10주차 중 7주차. 3주차를 놓쳐서 조건 5 가 이미 깨졌다 —
+  // 되돌릴 수 없는 조건이 하나 있다는 것이 이 반의 특징이다.
+  metacodeProgress: {
+    label: '메타코드 데이터 엔지니어 부트캠프 — 7주차',
+    items: [{ ...AT_ENROLLED, policyHash: MC_POLICY_HASH, conditionProgress: MC_PROGRESS }],
     delayMs: 200,
     runtimeReady: true,
   },
