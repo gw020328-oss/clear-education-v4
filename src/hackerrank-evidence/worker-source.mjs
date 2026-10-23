@@ -1,4 +1,6 @@
 import {createRequire} from 'node:module';
+import {types} from 'node:util';
+import {observeClaimRpc} from '../ybm-collector/claim-rpc-observer.mjs';
 import {observeSource,SOURCE_DIAGNOSTIC_SDK_CODES} from './diagnostics.mjs';
 import {createClaimOnAttestor,hashProviderParams,PROVIDER_CTX,makeLogger,AttestorError,proto} from '@reclaimprotocol/attestor-core';
 import {inspectWorkerTranscript} from './worker-response.mjs';
@@ -13,11 +15,20 @@ const quiet={trace(){},debug(){},info(){},warn(){},error(){},fatal(){},child(){r
 // cannot make that existing use fail; an unavailable type remains UNKNOWN.
 let TransportAttestorError;
 try{({AttestorError:TransportAttestorError}=await import(createRequire(new URL('../ybm-collector/client.mjs',import.meta.url)).resolve('@reclaimprotocol/attestor-core')));}catch{}
+let boundedSendFailure=()=>null;
+try{({boundedSendFailure}=await import('../ybm-collector/socket.mjs'));}catch{}
 const own=(value,key)=>Object.getOwnPropertyDescriptor(value,key)?.value;
 const typedArrayLength=Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype),'length').get;
 const sdkCode=code=>typeof code==='string'&&SOURCE_DIAGNOSTIC_SDK_CODES.includes(code)&&proto.ErrorCode[code]===SOURCE_DIAGNOSTIC_SDK_CODES.indexOf(code)+1?code:null;
-function rejectionCode(error){
- try{return error instanceof AttestorError||(typeof TransportAttestorError==='function'&&error instanceof TransportAttestorError)?sdkCode(own(error,'code')):null;}catch{return null;}
+function rejectionDetails(error){
+ // Fixed structural categories only. Never consult names, messages or causes.
+ try{
+  const boundedSendCode=boundedSendFailure(error),descriptor=error!=null?Object.getOwnPropertyDescriptor(Object(error),'code'):undefined;
+  const ownCodeKind=!descriptor?'ABSENT':!Object.hasOwn(descriptor,'value')?'ACCESSOR':typeof descriptor.value==='string'?'STRING':typeof descriptor.value==='number'?'NUMBER':'OTHER';
+  const hr=error instanceof AttestorError,transport=typeof TransportAttestorError==='function'&&error instanceof TransportAttestorError;
+  const errorKind=boundedSendCode?'OWNED_BOUNDED_SEND':hr?'HR_ATTESTOR_ERROR':transport?'TRANSPORT_ATTESTOR_ERROR':types.isNativeError(error)?error instanceof TypeError?'NATIVE_TYPE_ERROR':error instanceof RangeError?'NATIVE_RANGE_ERROR':'NATIVE_ERROR':'NON_ERROR';
+  return {sdkCode:hr||transport?sdkCode(descriptor?.value):null,boundedSendCode,errorKind,ownCodeKind};
+ }catch{return {errorKind:'UNKNOWN',ownCodeKind:'UNKNOWN'};}
 }
 function returnDetails(result){
  // Observation only: no getters, error conversion, message/data access, clone
@@ -49,7 +60,7 @@ export async function collectWorkerSource({config,request,role,params,username,c
  const responseStage=role==='account'?'ACCOUNT_RESPONSE_INSPECTION':'CERTIFICATE_RESPONSE_INSPECTION';
  const proofStage=role==='account'?'ACCOUNT_PROOF_RETURN':'CERTIFICATE_PROOF_RETURN';
  const prefix=role==='account'?'ACCOUNT':'CERTIFICATE';
- let proofStarted=false,sdkActive=false,validationStarted=false;
+ let proofStarted=false,sdkActive=false,validationStarted=false,stopRpcObservation;
  const seenSteps=new Set();
  const abortState=()=>{try{return typeof signal?.aborted==='boolean'?signal.aborted:null;}catch{return null;}};
  const observe=(stage,state,error,details)=>observeSource(diagnostics,`${prefix}_${stage}`,state,error,{...details,aborted:abortState()});
@@ -70,6 +81,10 @@ export async function collectWorkerSource({config,request,role,params,username,c
   check(canonical(params)===canonical(expectedParams),'SOURCE_RECIPE');
   proofStarted=true;observeSource(diagnostics,proofStage,'STARTED');
   observe('SDK_CALL','STARTED');sdkActive=true;
+  stopRpcObservation=observeClaimRpc(client,(state,error)=>{
+   if(sdkActive)observe('SDK_CLAIM_RPC',state,error instanceof EvidenceError?error:undefined,state==='FAILED'?rejectionDetails(error):undefined);
+  });
+  if(stopRpcObservation)observe('SDK_CLAIM_RPC_OBSERVER','OBSERVED');
   try{signal?.addEventListener('abort',onAbort,{once:true});}catch{}
   try{
   result=await (createClaim??createClaimOnAttestor)({name:'http',params:structuredClone(expectedParams),context:structuredClone(context),
@@ -93,8 +108,8 @@ export async function collectWorkerSource({config,request,role,params,username,c
    },
   });
   observe('SDK_CALL','COMPLETED');observe('SDK_RETURN','OBSERVED',undefined,returnDetails(result));
-  }catch(error){observe('SDK_CALL','FAILED',error instanceof EvidenceError?error:undefined,{sdkCode:rejectionCode(error)});throw error;}
-  finally{sdkActive=false;sealed=true;try{signal?.removeEventListener('abort',onAbort);}catch{}}
+  }catch(error){observe('SDK_CALL','FAILED',error instanceof EvidenceError?error:undefined,rejectionDetails(error));throw error;}
+  finally{sdkActive=false;sealed=true;stopRpcObservation?.();try{signal?.removeEventListener('abort',onAbort);}catch{}}
   validationStarted=true;observe('RETURN_VALIDATION','STARTED');
   guard();sealed=true;check(started&&completed&&!failed&&fields,'WORKER_HOOK_REQUIRED');
   const proof=signedProof(result),p=strictJson(proof.claim.parameters),contextResult=strictJson(proof.claim.context);

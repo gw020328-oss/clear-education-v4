@@ -1,4 +1,6 @@
 import {createSourceDiagnostics} from '../../src/hackerrank-evidence/diagnostics.mjs';
+import {installClaimRpcObserver} from '../../src/ybm-collector/claim-rpc-observer.mjs';
+import {installBoundedSender,PROOF_SEND_LIMIT} from '../../src/ybm-collector/socket.mjs';
 // Entirely invented responses and ephemeral signatures; network is forbidden.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -40,12 +42,13 @@ async function proofFor(input,wire,change){
  const proof=await signProof(claim);
  return {proof,result:{claim:proof.claim,signatures:{claimSignature:Buffer.from(proof.signature.slice(2),'hex'),attestorAddress:proof.attestor}}};
 }
-async function setup({bodies={},selection=null,wireOptions={},hook,afterHook,transformResult,changeClaim,diagnostics,claimFailure,corruptCertificate=false,clock=()=>NOW}={}){
+async function setup({bodies={},selection=null,wireOptions={},hook,afterHook,transformResult,changeClaim,diagnostics,claimFailure,rpc,corruptCertificate=false,clock=()=>NOW}={}){
  const f=await fixture(),config={...f.config,recipe:workerRecipe()};
  const collector=createHackerRankCollector({trustConfig:config,commitmentKey:f.key,clock,diagnostics});
  const request={...f.request,selectedCertificateId:selection,expectedClaimOwner:collector.claimOwner,recipeHash:hash('RECIPE',config.recipe),trustConfigHash:hash('TRUST',config)};
  const envelope={request,signature:await actors.participant.signMessage(requestMessage(request))},proofs={},calls=[],inputs=[];
  const client={isOpen:true,isInitialised:true,metadata:{clientVersion:sdk.PROVIDER_CTX.version},async terminateConnection(){this.isOpen=false;}};
+ if(rpc){client.rpc=rpc;installClaimRpcObserver(client);}
  let lease;
  const options={envelope,expectedRequest:request,client,routeClient:client,async readCookies({role}){calls.push(role);return COOKIE;},
   async createClaim(input){
@@ -71,6 +74,31 @@ test('same TLS response yields a private lease with explicit worker/attestor res
   const naked=await createHackerRankVerifier({trustConfig:x.config,commitmentKey:x.key,clock:()=>NOW}).verify({envelope:x.envelope,proofs:x.proofs},x.request);
   assert.equal(naked.code,'WORKER_SOURCE_REQUIRED');x.lease.dispose();
  }
+});
+test('owned bounded-send failures cross the claim RPC and SDK boundary without inspecting messages',async()=>{
+ for(const code of ['ATTESTOR_BACKPRESSURE_LIMIT','ATTESTOR_SEND_FAILED']){
+  const d=createSourceDiagnostics({persist(){}}),socket=installBoundedSender({bufferedAmount:code==='ATTESTOR_BACKPRESSURE_LIMIT'?PROOF_SEND_LIMIT:0,terminate(){},send(_b,cb){cb(Error(PRIVATE));}},{proofMode:true});
+  const x=await setup({diagnostics:d,rpc:()=>socket.sendPromise(Buffer.alloc(1)),afterHook:async i=>{i.onStep({name:'waiting-for-verification'});await i.client.rpc('claimTunnel',{});}});
+  await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
+  const v=d.snapshot();assert.equal(v.firstFailure.stage,'ACCOUNT_SDK_CLAIM_RPC');assert.equal(v.firstFailure.code,code);
+  assert.equal(v.firstFailure.codeNamespace,'CLEAR_TRANSPORT');assert.equal(v.firstFailure.codeBasis,'OWNED_BOUNDED_SEND');
+  assert.equal(v.firstFailure.errorKind,'OWNED_BOUNDED_SEND');assert.equal(v.firstFailure.ownCodeKind,'ABSENT');
+  assert.equal(v.stages.ACCOUNT_SDK_CLAIM_RPC_OBSERVER.state,'OBSERVED');assert.equal(v.stages.ACCOUNT_SDK_RETURN.state,'NOT_OBSERVED');
+  assert.equal(v.events.find(e=>e.stage==='ACCOUNT_SDK_CALL'&&e.state==='FAILED').code,code);
+  assert.equal(JSON.stringify(v).includes(PRIVATE),false);assert.deepEqual(x.calls,['account']);assert.equal(x.lease,undefined);
+ }
+});
+test('unknown rejections retain fixed native and own-code shapes while message and cause stay private',async()=>{
+ let getters=0;
+ const accessor=Error(PRIVATE);Object.defineProperty(accessor,'code',{get(){getters++;throw Error(PRIVATE);}});
+ for(const [error,kind,codeKind] of [[Error('ATTESTOR_SEND_FAILED'),'NATIVE_ERROR','ABSENT'],[new TypeError(PRIVATE),'NATIVE_TYPE_ERROR','ABSENT'],[new RangeError(PRIVATE),'NATIVE_RANGE_ERROR','ABSENT'],[accessor,'NATIVE_ERROR','ACCESSOR'],[{name:'AttestorError',code:'ERROR_TIMEOUT',cause:PRIVATE},'NON_ERROR','STRING'],[new sdk.AttestorError('UNKNOWN_FUTURE_CODE',PRIVATE),'HR_ATTESTOR_ERROR','STRING']]){
+  const d=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics:d,rpc:async()=>{},afterHook(i){i.onStep({name:'waiting-for-verification'});throw error;}});
+  await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
+  const v=d.snapshot();assert.equal(v.firstFailure.stage,'ACCOUNT_SDK_CALL');assert.equal(v.firstFailure.code,'UNKNOWN_ERROR');
+  assert.equal(v.firstFailure.errorKind,kind);assert.equal(v.firstFailure.ownCodeKind,codeKind);
+  assert.equal(v.stages.ACCOUNT_SDK_CLAIM_RPC_OBSERVER.state,'OBSERVED');assert.equal(v.stages.ACCOUNT_SDK_CLAIM_RPC.state,'NOT_OBSERVED');
+  assert.equal(JSON.stringify(v).includes(PRIVATE),false);assert.equal(JSON.stringify(v).includes('UNKNOWN_FUTURE_CODE'),false);
+ }assert.equal(getters,0);
 });
 
 test('SDK rejection after a valid hook retains both pinned AttestorError types and relative duration',async()=>{

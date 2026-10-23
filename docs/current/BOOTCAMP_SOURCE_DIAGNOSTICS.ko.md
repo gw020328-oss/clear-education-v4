@@ -59,7 +59,7 @@ r4는 대기 시작 약 45.7초 뒤 `SIGNATURE_WAIT / BC_UI_CONTEXT_UNAVAILABLE`
 
 r5는 서버 원천 서명을 수락하고 계정 응답 검사를 완료한 뒤 `ACCOUNT_PROOF_RETURN / UNKNOWN_ERROR`로 실패했다. 당시 스키마에 SDK 코드와 단계별 시간이 없어 최초 원인을 복원할 수 없다. 전체 HR 시도 165.982초는 사람의 서명 대기를 포함한다. 이를 ZK 계산 시간이나 특정 타임아웃으로 해석하지 않는다. r5 사용 표시·진단·보고서·DB와 이전 실행 기록은 보존한다.
 
-현행 스키마 `clear-normal-source-diagnostics.2`는 기존 필드에 고정 `codeNamespace`, `codeBasis`, `resultKind`, `aborted`, `offsetMs`, `durationMs`와 전체 `timing` 상태를 추가한다. 모든 이벤트의 offset은 관측기 생성 시점부터 동일한 단조 시계의 상대 밀리초다. 완료/실패 duration은 같은 단계의 최근 STARTED와 짝이 있을 때만 기록한다. 절대 시각은 기록하지 않고 보안 만료 시계는 바꾸지 않는다. 시계 오류·역행·비유한 값은 이후 `timing: INCOMPLETE`, 시간 null로 고정한다. 시간·abort의 null은 미관측/불명확이다.
+당시 v2 스키마 `clear-normal-source-diagnostics.2`는 기존 필드에 고정 `codeNamespace`, `codeBasis`, `resultKind`, `aborted`, `offsetMs`, `durationMs`와 전체 `timing` 상태를 추가한다. 모든 이벤트의 offset은 관측기 생성 시점부터 동일한 단조 시계의 상대 밀리초다. 완료/실패 duration은 같은 단계의 최근 STARTED와 짝이 있을 때만 기록한다. 절대 시각은 기록하지 않고 보안 만료 시계는 바꾸지 않는다. 시계 오류·역행·비유한 값은 이후 `timing: INCOMPLETE`, 시간 null로 고정한다. 시간·abort의 null은 미관측/불명확이다.
 
 아래 `ROLE`은 ACCOUNT 또는 CERTIFICATE다. OBSERVED는 완료나 성공을 뜻하지 않는다.
 
@@ -80,3 +80,14 @@ SDK reject 분류는 HR와 실제 transport가 사용하는 두 고정 5.1.4 모
 원문 message/stack/data/cause는 읽거나 변환하지 않는다. 기존 일반 CLEAR/SYSTEM 코드 경계는 own 고정 코드의 정확 일치 규칙을 유지한다. onStep 객체를 저장하지 않으며 done/total/예상 잔여 시간도 보관하지 않는다. 지원하는 다섯 콜백은 역할·호출당 최초 1회만 관측하고, 종료 뒤 콜백/늦은 hook/abort는 과거 관측을 추가하지 않는다. 128개 상한·0600 atomic 저장·sticky persistence INCOMPLETE·기존 정리는 유지한다.
 
 SDK `maxRetries: 1`은 고정 SDK 구현상 총 1회 시도다. 재시도, 타임아웃 연장, auth/서명/nonce/만료 완화는 없다. BC_VIEW_STALE 보류와 실제 권한 상실 차단도 그대로다. 합성 검증 성공은 실제 proof 성공이 아니며, 새 오류가 plain Error인 경우 다음에도 코드 UNKNOWN이 가능하다. 다만 관측 경계·시간·abort·반환 형태를 함께 읽어 다음 조사 범위를 좁힐 수 있다. 새 실제 시험은 최종 CI 결과 보고 뒤 사용자의 별도 확인을 기다린다.
+
+
+## r6 후속 v3: 생성 출처와 실제 RPC 경계
+
+현행 `clear-normal-source-diagnostics.3`은 v2를 보존하며 `ROLE_SDK_CLAIM_RPC_OBSERVER`와 `ROLE_SDK_CLAIM_RPC`를 추가한다. 설치 관측 후 실제 동일 client의 claimTunnel 메서드 진입/완료/실패를 기록한다. 진입은 RPC envelope 송신 전이며 완료는 claim 유효성 판정이 아니다. 설치 미관측 시 RPC 미관측을 진입 전 실패로 추정하지 않는다. 내부 관측 callback은 동기 전용이며 반환값/원래 오류를 유지하고 해지 뒤 이벤트를 버린다.
+
+SDK_CALL 또는 SDK_CLAIM_RPC 실패의 고정 errorKind는 OWNED_BOUNDED_SEND / HR_ATTESTOR_ERROR / TRANSPORT_ATTESTOR_ERROR / NATIVE_TYPE_ERROR / NATIVE_RANGE_ERROR / NATIVE_ERROR / NON_ERROR / UNKNOWN이다. ownCodeKind는 ABSENT / ACCESSOR / STRING / NUMBER / OTHER / UNKNOWN이다. own descriptor만 보고 getter를 호출하거나 실제 값을 기록하지 않는다. 나머지 이벤트의 두 필드는 null이다.
+
+CLEAR sender 내부 WeakMap으로 생성 출처가 확인된 ATTESTOR_BACKPRESSURE_LIMIT / ATTESTOR_SEND_TIMEOUT / ATTESTOR_SEND_FAILED만 CLEAR_TRANSPORT / OWNED_BOUNDED_SEND로 분류한다. 일반 Error의 같은 message/code는 계속 UNKNOWN이다. 메시지·stack·data·cause·proof·실제 크기는 저장하지 않는다. 이전 128개 상한·타이밍·0600 저장·관측 실패 독립성·공식 검증 경계는 유지한다.
+
+r6의 원래 객체는 소급 복원할 수 없다. 재현한 분류/타이머 결함, 과거 성공 경로 대조, 남은 가설은 [r6 조사 보고서](BOOTCAMP_R6_FAILURE_REVIEW.ko.md)를 따른다. 이번 작업은 새 실제 실행 준비가 아니다.

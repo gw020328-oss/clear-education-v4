@@ -1,5 +1,6 @@
 import { ATTESTOR_URL } from './route.mjs';
 import { setMaxListeners } from 'node:events';
+import {installClaimRpcObserver} from './claim-rpc-observer.mjs';
 
 export const quiet = {trace(){}, debug(){}, info(){}, warn(){}, error(){}, fatal(){}, child(){return this;}};
 let opened = false;
@@ -20,6 +21,7 @@ export async function openOfficialClient({signal, socketFactory, proofMode=false
   // 5.1.4 exposes only its pool factory. One worker owns exactly one session,
   // calls this factory once, and exits instead of replacing a closed client.
   const client = getAttestorClientFromPool(ATTESTOR_URL, () => ({logger: quiet, makeWebSocket: socketFactory ?? (url=>makeSocket(url,{proofMode}))}));
+  installClaimRpcObserver(client);
   // SDK 5.1.4 creates its response Promise before awaiting the send. A send
   // failure skips awaiting that Promise; observe its rejection without changing
   // the original Promise/rejection seen by successful RPC sends.

@@ -12,7 +12,7 @@ test('relative monotonic time pairs only observed boundaries and never uses a pr
  observeSource(d,'SIGNATURE_WAIT','STARTED');now+=20;observeSource(d,'SIGNATURE_ACCEPTANCE','COMPLETED');
  now+=30;observeSource(d,'SIGNATURE_WAIT','FAILED',Error('AUTH_REQUIRED'));
  now+=10;observeSource(d,'SIGNATURE_WAIT','STARTED');now+=5;observeSource(d,'SIGNATURE_WAIT','COMPLETED');
- const v=d.snapshot();assert.equal(v.version,'clear-normal-source-diagnostics.2');assert.equal(v.timing,'COMPLETE');
+ const v=d.snapshot();assert.equal(v.version,'clear-normal-source-diagnostics.3');assert.equal(v.timing,'COMPLETE');
  assert.deepEqual(v.events.map(e=>e.offsetMs),[0,20,50,60,65]);
  assert.deepEqual(v.events.map(e=>e.durationMs),[null,null,50,null,5]);
  assert.equal(JSON.stringify(v).includes('12345'),false);

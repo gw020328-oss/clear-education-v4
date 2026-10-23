@@ -20,3 +20,9 @@
 수정 전 핵심 회귀 2개가 기존 스키마·경계 부족으로 실패했고 수정 후 통과했다. 후속 검사는 두 타입의 12 enum, 정상 hook 이후 실패, resolved error/서명 누락/잘못된 형태/반환 후 JSON·binding 예외, 콜백 중복/지연/알 수 없는 이름, abort 전·중·후, 시계 역행/실패와 writer 실패, 비밀값·getter 비기록 및 certificate 경계를 포함한다. 실제 호출 없이 합성 자료와 가짜 단조 시계만 사용했다.
 
 r5 최초 원인은 미확정이다. 새 진단은 SDK 내부 ZK 세부 함수나 원격 장애까지 항상 특정하지 못하며, SDK의 고정 network/timeout 코드도 원격 endpoint/근본 원인을 증명하지 않는다. 실패한 실제 원천 이후 AI/지급으로 진행하지 않는 기존 경계를 유지한다.
+# r6 후속 v15 검토 추가 — 2026-10-23
+
+현재 변경의 근거와 한계는 [r6 조사](BOOTCAMP_R6_FAILURE_REVIEW.ko.md)를 따른다. 기존 하위 검토 에이전트를 재사용해 sender의 private WeakMap 출처, 동기 send 예외의 타이머 해제, 종료 예외 격리, 동일 client/route 보존, claim RPC 원래 반환/오류 보존, 동기 observer 실패 격리·해지 후 이벤트 차단, 고정 오류 형태, HR-only optional import를 읽기 전용 검토했다. 추가 차단 지적은 없다. 검토 계약은 내부 동기 observer이며 임의 비동기 plugin callback 지원을 주장하지 않는다.
+
+실제 SDK RPC/socket 경계와 설치 SDK의 post-verification 구간 시험을 구분한다. 둘 다 합성 메모리 입력이며 전체 TLS/ZK·실제 r6 원인·실제 proof 성공 검증이 아니다. 의존성/엔진/한도/timeout/총 시도1회/서명·nonce·만료·공식 검증은 변경하지 않는다. 같은 HEAD CI와 source pin은 v15 기록을 따른다. 아래 v14 검토는 당시 결과로 보존한다.
+
