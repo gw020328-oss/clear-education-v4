@@ -7,6 +7,17 @@ export const SOURCE_DIAGNOSTIC_STAGES=Object.freeze([
  'ACCOUNT_COOKIE_READ','ACCOUNT_CLAIM_CALL','ACCOUNT_RESPONSE_INSPECTION','ACCOUNT_PROOF_RETURN','ACCOUNT_OFFICIAL_VERIFY',
  'CERTIFICATE_COOKIE_READ','CERTIFICATE_CLAIM_CALL','CERTIFICATE_RESPONSE_INSPECTION','CERTIFICATE_PROOF_RETURN',
  'PAIR_OFFICIAL_VERIFY','CANDIDATE_LEASE',
+ ...['ACCOUNT','CERTIFICATE'].flatMap(role=>[
+  'SDK_CALL','SDK_RETURN','RETURN_VALIDATION','SDK_ABORT_OBSERVED','SDK_CONNECTING',
+  'SDK_SENDING_REQUEST','SDK_WAITING_RESPONSE','SDK_ZK_PROGRESS_OBSERVED','SDK_VERIFICATION_PHASE_OBSERVED',
+ ].map(stage=>`${role}_${stage}`)),
+]);
+// Ordered by the pinned 5.1.4 protobuf failure enum. Zero and UNRECOGNIZED
+// are deliberately absent. Classification of an SDK object belongs to its caller.
+export const SOURCE_DIAGNOSTIC_SDK_CODES=Object.freeze([
+ 'ERROR_INTERNAL','ERROR_BAD_REQUEST','ERROR_NOT_FOUND','ERROR_PROXY_ERROR','ERROR_INVALID_CLAIM',
+ 'ERROR_NETWORK_ERROR','ERROR_PAYMENT_REFUSED','ERROR_BGP_ANNOUNCEMENT_OVERLAP',
+ 'ERROR_AUTHENTICATION_FAILED','ERROR_TIMEOUT','ERROR_TOPRF_OUT_OF_BOUNDS','ERROR_CERTIFICATE_FETCH_FAILED',
 ]);
 const codes=new Set(`
 ACCOUNT_JOIN AMBIGUOUS_CERTIFICATE AUTH_REQUIRED BC_CANCELLED BC_CLOCK_REVERSED BC_COMMIT_AUTHORITY BC_LIVE_CONTEXT BC_VIEW_STALE
@@ -45,25 +56,51 @@ export function sourceDiagnosticCode(error){
  return 'UNKNOWN_ERROR';
 }
 const owned=new WeakSet();
-export function createSourceDiagnostics({persist}={}){
+const own=(value,key)=>{try{return Object.getOwnPropertyDescriptor(value,key)?.value;}catch{return undefined;}};
+const systemCodes=new Set(['ECONNREFUSED','ECONNRESET','ENOTFOUND','ERR_PACKAGE_PATH_NOT_EXPORTED','ERR_MODULE_NOT_FOUND','ERR_SQLITE_ERROR','ETIMEDOUT']);
+export function createSourceDiagnostics({persist,monotonicNow=()=>performance.now()}={}){
  const stages=Object.fromEntries(SOURCE_DIAGNOSTIC_STAGES.map(stage=>[stage,{state:'NOT_OBSERVED',completedObserved:false}]));
- const events=[];let persistence='COMPLETE',firstFailure=null,truncated=false;
- const snapshot=()=>structuredClone({version:'clear-normal-source-diagnostics.1',persistence,truncated,
+ const events=[],starts=new Map();let persistence='COMPLETE',timing='COMPLETE',firstFailure=null,truncated=false,origin,last;
+ const elapsed=()=>{
+  if(timing==='INCOMPLETE')return null;
+  try{
+   const at=monotonicNow();
+   if(typeof at!=='number'||!Number.isFinite(at)||at<0||(last!==undefined&&at<last))throw null;
+   origin??=at;last=at;const relative=at-origin;if(!Number.isFinite(relative))throw null;return relative;
+  }catch{timing='INCOMPLETE';return null;}
+ };
+ elapsed();
+ const snapshot=()=>structuredClone({version:'clear-normal-source-diagnostics.2',persistence,timing,truncated,
   signatureAcceptance:stages.SIGNATURE_ACCEPTANCE.completedObserved?'ACCEPTED':'UNKNOWN',stages,firstFailure,events});
  const save=()=>{try{if(typeof persist!=='function')throw null;persist(snapshot());}catch{persistence='INCOMPLETE';}};
- const diagnostics=Object.freeze({snapshot,record(stage,state,error){
-  if(!SOURCE_DIAGNOSTIC_STAGES.includes(stage)||!['STARTED','COMPLETED','FAILED','DEFERRED'].includes(state))return;
+ const diagnostics=Object.freeze({snapshot,record(stage,state,error,details){
+  if(!SOURCE_DIAGNOSTIC_STAGES.includes(stage)||!['STARTED','COMPLETED','FAILED','DEFERRED','OBSERVED'].includes(state))return;
   if(state==='DEFERRED'&&(stage!=='UI_APPLICATION_PROJECTION'||sourceDiagnosticCode(error)!=='BC_VIEW_STALE'))return;
+  const sdkReturn=stage.endsWith('_SDK_RETURN'),sdkCall=stage.endsWith('_SDK_CALL');
+  if(state==='OBSERVED'&&!(sdkReturn||stage.includes('_SDK_')&&!sdkCall))return;
   if(events.length>=128){if(!truncated){truncated=true;save();}return;}
-  const event=Object.freeze({sequence:events.length+1,stage,state,code:state==='FAILED'||state==='DEFERRED'?sourceDiagnosticCode(error):null});
+  const offsetMs=elapsed(),start=starts.get(stage);
+  const durationMs=(state==='COMPLETED'||state==='FAILED')&&typeof start==='number'&&offsetMs!==null?offsetMs-start:null;
+  if(state==='STARTED')starts.set(stage,offsetMs);else if(state==='COMPLETED'||state==='FAILED')starts.delete(stage);
+  const kind=own(details,'resultKind'),resultKind=sdkReturn&&['ERROR','MISSING_SIGNATURE','MALFORMED','SIGNED_CLAIM','UNKNOWN'].includes(kind)?kind:null;
+  let code=state==='FAILED'||state==='DEFERRED'?sourceDiagnosticCode(error):null;
+  let codeNamespace=code===null?null:code==='UNKNOWN_ERROR'?'UNKNOWN':systemCodes.has(code)?'SYSTEM':'CLEAR';
+  let codeBasis=code===null?null:code==='UNKNOWN_ERROR'?'UNKNOWN':'FIXED_CODE_OR_MESSAGE';
+  if((sdkCall&&state==='FAILED')||(sdkReturn&&resultKind==='ERROR')){
+   const sdkCode=own(details,'sdkCode');
+   if(SOURCE_DIAGNOSTIC_SDK_CODES.includes(sdkCode)){code=sdkCode;codeNamespace='ATTESTOR_SDK';codeBasis=sdkCall?'ATTESTOR_ERROR_OWN_CODE':'PROTO_ERROR_CODE';}
+   else if(sdkReturn){code='UNKNOWN_ERROR';codeNamespace=codeBasis='UNKNOWN';}
+  }
+  const abort=own(details,'aborted'),aborted=typeof abort==='boolean'?abort:null;
+  const event=Object.freeze({sequence:events.length+1,stage,state,code,codeNamespace,codeBasis,offsetMs,durationMs,aborted,resultKind});
   events.push(event);stages[stage]={state,completedObserved:stages[stage].completedObserved||state==='COMPLETED'};
   if(state==='FAILED'&&!firstFailure)firstFailure=event;
   save();
  }});
  owned.add(diagnostics);save();return diagnostics;
 }
-export function observeSource(diagnostics,stage,state,error){
+export function observeSource(diagnostics,stage,state,error,details){
  // Never change an original result/exception, trigger an async retry, or call
  // an untrusted duck-typed observer. Persistence is synchronous, best effort.
- try{if(owned.has(diagnostics))diagnostics.record(stage,state,error);}catch{}
+ try{if(owned.has(diagnostics))diagnostics.record(stage,state,error,details);}catch{}
 }

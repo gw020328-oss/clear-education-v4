@@ -1,11 +1,40 @@
-import {observeSource} from './diagnostics.mjs';
-import {createClaimOnAttestor,hashProviderParams,PROVIDER_CTX,makeLogger} from '@reclaimprotocol/attestor-core';
+import {createRequire} from 'node:module';
+import {observeSource,SOURCE_DIAGNOSTIC_SDK_CODES} from './diagnostics.mjs';
+import {createClaimOnAttestor,hashProviderParams,PROVIDER_CTX,makeLogger,AttestorError,proto} from '@reclaimprotocol/attestor-core';
 import {inspectWorkerTranscript} from './worker-response.mjs';
 import {parametersFor,usesWorkerSource} from './recipes.mjs';
 import {requestHash,validateRequest} from './request.mjs';
 import {check,canonical,freeze,hash,keys,strictJson,EvidenceError} from './values.mjs';
 const issued=new WeakMap();
 const quiet={trace(){},debug(){},info(){},warn(){},error(){},fatal(){},child(){return this;}};
+// The live RPC client belongs to the separately pinned YBM SDK instance.
+// Its genuine AttestorError is not instanceof this prefix's constructor.
+// Some offline API consumers install only the HR prefix. A diagnostic lookup
+// cannot make that existing use fail; an unavailable type remains UNKNOWN.
+let TransportAttestorError;
+try{({AttestorError:TransportAttestorError}=await import(createRequire(new URL('../ybm-collector/client.mjs',import.meta.url)).resolve('@reclaimprotocol/attestor-core')));}catch{}
+const own=(value,key)=>Object.getOwnPropertyDescriptor(value,key)?.value;
+const typedArrayLength=Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype),'length').get;
+const sdkCode=code=>typeof code==='string'&&SOURCE_DIAGNOSTIC_SDK_CODES.includes(code)&&proto.ErrorCode[code]===SOURCE_DIAGNOSTIC_SDK_CODES.indexOf(code)+1?code:null;
+function rejectionCode(error){
+ try{return error instanceof AttestorError||(typeof TransportAttestorError==='function'&&error instanceof TransportAttestorError)?sdkCode(own(error,'code')):null;}catch{return null;}
+}
+function returnDetails(result){
+ // Observation only: no getters, error conversion, message/data access, clone
+ // or signature validation. Existing signedProof/verification retains authority.
+ try{
+  if(!result||typeof result!=='object'||Array.isArray(result))return {resultKind:'MALFORMED'};
+  const error=own(result,'error');
+  if(error){const code=own(error,'code');return {resultKind:'ERROR',sdkCode:Number.isInteger(code)&&code>=1&&code<=12?sdkCode(SOURCE_DIAGNOSTIC_SDK_CODES[code-1]):null};}
+  if(!own(result,'claim')||typeof own(result,'claim')!=='object')return {resultKind:'MALFORMED'};
+  const signatures=own(result,'signatures'),signature=signatures&&own(signatures,'claimSignature');
+  if(!signature)return {resultKind:'MISSING_SIGNATURE'};
+  // Intrinsic length reads no caller getter or signature bytes; shape only.
+  return {resultKind:signature instanceof Uint8Array&&typedArrayLength.call(signature)===65?'SIGNED_CLAIM':'MALFORMED'};
+ }catch{return {resultKind:'UNKNOWN'};}
+}
+const steps=Object.freeze({'connecting':'SDK_CONNECTING','sending-request-data':'SDK_SENDING_REQUEST',
+ 'waiting-for-response':'SDK_WAITING_RESPONSE','generating-zk-proofs':'SDK_ZK_PROGRESS_OBSERVED','waiting-for-verification':'SDK_VERIFICATION_PHASE_OBSERVED'});
 const contextFor=(request,role)=>({clearSchema:'clear-hackerrank-context.1',clearRequestHash:requestHash(request),clearSourceRole:role,clearRecipeHash:request.recipeHash});
 function signedProof(result){
  check(!result?.error&&result?.claim&&result.signatures?.claimSignature?.length===65,'COLLECTOR_SIGNED_CLAIM');
@@ -19,7 +48,12 @@ function signedProof(result){
 export async function collectWorkerSource({config,request,role,params,username,client,routeClient,secretParams,ownerPrivateKey,signal,clock,createClaim,diagnostics}){
  const responseStage=role==='account'?'ACCOUNT_RESPONSE_INSPECTION':'CERTIFICATE_RESPONSE_INSPECTION';
  const proofStage=role==='account'?'ACCOUNT_PROOF_RETURN':'CERTIFICATE_PROOF_RETURN';
- let proofStarted=false;
+ const prefix=role==='account'?'ACCOUNT':'CERTIFICATE';
+ let proofStarted=false,sdkActive=false,validationStarted=false;
+ const seenSteps=new Set();
+ const abortState=()=>{try{return typeof signal?.aborted==='boolean'?signal.aborted:null;}catch{return null;}};
+ const observe=(stage,state,error,details)=>observeSource(diagnostics,`${prefix}_${stage}`,state,error,{...details,aborted:abortState()});
+ const onAbort=()=>{if(sdkActive)observe('SDK_ABORT_OBSERVED','OBSERVED');};
  let fields,result,started=false,completed=false,failed=false,sealed=false;
  const synthetic=config.dataMode==='SYNTHETIC_FIXTURE',now=()=>clock?clock():Math.floor(Date.now()/1000);
  const guard=()=>{
@@ -35,9 +69,18 @@ export async function collectWorkerSource({config,request,role,params,username,c
   const expectedParams=freeze(parametersFor(config.recipe,role,username,request.selectedCertificateId)),context=contextFor(request,role);
   check(canonical(params)===canonical(expectedParams),'SOURCE_RECIPE');
   proofStarted=true;observeSource(diagnostics,proofStage,'STARTED');
+  observe('SDK_CALL','STARTED');sdkActive=true;
+  try{signal?.addEventListener('abort',onAbort,{once:true});}catch{}
+  try{
   result=await (createClaim??createClaimOnAttestor)({name:'http',params:structuredClone(expectedParams),context:structuredClone(context),
    secretParams,ownerPrivateKey,client,zkEngine:'stwo',zkProofConcurrency:1,maxRetries:1,updateParametersFromOprfData:false,logger:quiet,
+   onStep(step){
+    try{const name=own(step,'name'),stage=typeof name==='string'&&Object.hasOwn(steps,name)?steps[name]:null;
+     if(sdkActive&&stage&&!seenSteps.has(stage)){seenSteps.add(stage);observe(stage,'OBSERVED');}
+    }catch{} // Never serialize progress objects or let diagnostics affect SDK work.
+   },
    async updateProviderParams(transcript,tlsVersion){
+    check(!sealed,'WORKER_HOOK_REUSED');
     try{
      observeSource(diagnostics,responseStage,'STARTED');
      check(!started&&!sealed,'WORKER_HOOK_REUSED');started=true;guard();
@@ -46,9 +89,13 @@ export async function collectWorkerSource({config,request,role,params,username,c
      guard();check(!sealed&&!failed,'WORKER_HOOK_REUSED');completed=true;observeSource(diagnostics,responseStage,'COMPLETED');
      // No request/extraction/context changes are permitted by this hook.
      return freeze({params:{},secretParams:{}});
-    }catch(error){observeSource(diagnostics,responseStage,'FAILED',error);failed=true;fields=undefined;throw new EvidenceError(error instanceof EvidenceError?error.code:'WORKER_TRANSCRIPT_REJECTED');}
+    }catch(error){if(!sealed)observeSource(diagnostics,responseStage,'FAILED',error);failed=true;fields=undefined;throw new EvidenceError(error instanceof EvidenceError?error.code:'WORKER_TRANSCRIPT_REJECTED');}
    },
   });
+  observe('SDK_CALL','COMPLETED');observe('SDK_RETURN','OBSERVED',undefined,returnDetails(result));
+  }catch(error){observe('SDK_CALL','FAILED',error instanceof EvidenceError?error:undefined,{sdkCode:rejectionCode(error)});throw error;}
+  finally{sdkActive=false;sealed=true;try{signal?.removeEventListener('abort',onAbort);}catch{}}
+  validationStarted=true;observe('RETURN_VALIDATION','STARTED');
   guard();sealed=true;check(started&&completed&&!failed&&fields,'WORKER_HOOK_REQUIRED');
   const proof=signedProof(result),p=strictJson(proof.claim.parameters),contextResult=strictJson(proof.claim.context);
   check(proof.claim.owner===request.expectedClaimOwner&&canonical(p)===canonical(expectedParams),'WORKER_SIGNED_CLAIM');
@@ -57,9 +104,9 @@ export async function collectWorkerSource({config,request,role,params,username,c
   check(contextResult.providerHash===hashProviderParams(p)&&canonical(contextResult.extractedParameters)===canonical(fields),'WORKER_SIGNED_FIELDS');
   const record={role,requestHash:requestHash(request),configHash:hash('TRUST',config),proofHash:hash('WORKER_PROOF',proof),fields,mode:config.dataMode};
   const source=freeze({dispose(){record.fields=undefined;issued.delete(source);}});
-  issued.set(source,record);observeSource(diagnostics,proofStage,'COMPLETED');
+  issued.set(source,record);observe('RETURN_VALIDATION','COMPLETED');validationStarted=false;observeSource(diagnostics,proofStage,'COMPLETED');
   return {proof,source};
- }catch(error){if(proofStarted)observeSource(diagnostics,proofStage,'FAILED',error);throw new EvidenceError(error instanceof EvidenceError?error.code:signal?.aborted?'COLLECTOR_CANCELLED':'WORKER_COLLECTION_FAILED');}
+ }catch(error){if(validationStarted)observe('RETURN_VALIDATION','FAILED',error);if(proofStarted)observeSource(diagnostics,proofStage,'FAILED',error);throw new EvidenceError(error instanceof EvidenceError?error.code:signal?.aborted?'COLLECTOR_CANCELLED':'WORKER_COLLECTION_FAILED');}
  finally{sealed=true;fields=undefined;result=undefined;secretParams=undefined;ownerPrivateKey=undefined;}
 }
 

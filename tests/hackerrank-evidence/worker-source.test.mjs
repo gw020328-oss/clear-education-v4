@@ -3,6 +3,7 @@ import {createSourceDiagnostics} from '../../src/hackerrank-evidence/diagnostics
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Wallet} from 'ethers';
+import {createRequire} from 'node:module';
 import {fixture,NOW,USERNAME,actors,sdk,signProof} from './fixture.mjs';
 import {createHackerRankCollector,readHackerRankCollectorLease} from '../../src/hackerrank-evidence/collector.mjs';
 import {createHackerRankVerifier} from '../../src/hackerrank-evidence/verifier.mjs';
@@ -13,6 +14,7 @@ import {inspectWorkerTranscript} from '../../src/hackerrank-evidence/worker-resp
 import {collectWorkerSource,readWorkerSource} from '../../src/hackerrank-evidence/worker-source.mjs';
 const quiet={trace(){},debug(){},info(){},warn(){},error(){},fatal(){},child(){return this;}};
 const COOKIE='session=SYNTHETIC_PRIVATE_COOKIE',PRIVATE='synthetic-private-email@example.invalid';
+const transportSdk=await import(createRequire(new URL('../../src/ybm-collector/package.json',import.meta.url)).resolve('@reclaimprotocol/attestor-core'));
 function account(username=USERNAME){return '<!doctype html><html><body><script id="__NEXT_DATA__" type="application/json">'+JSON.stringify({props:{pageProps:{prefetchedData:{profile:{username,email:PRIVATE,unused:0.5}},dehydrateState:{queries:[{queryKey:['prefetchData'],state:{data:{profile:{username,email:PRIVATE}}}}]}}}})+'</script></body></html>';}
 function row(id='synthetic-python-rose',status='test_passed'){return {id,attributes:{username:USERNAME,status,test_unique_id:'synthetic-test-python',certificate:{label:'Python',level:'Basic',track_slug:'python_basic',unique_id:'different-metadata-id'},unused:0.75,private:PRIVATE}};}
 function response(body,role,{chunked=false,headers='',status='200 OK'}={}){
@@ -38,7 +40,7 @@ async function proofFor(input,wire,change){
  const proof=await signProof(claim);
  return {proof,result:{claim:proof.claim,signatures:{claimSignature:Buffer.from(proof.signature.slice(2),'hex'),attestorAddress:proof.attestor}}};
 }
-async function setup({bodies={},selection=null,wireOptions={},hook,changeClaim,diagnostics,claimFailure,corruptCertificate=false,clock=()=>NOW}={}){
+async function setup({bodies={},selection=null,wireOptions={},hook,afterHook,transformResult,changeClaim,diagnostics,claimFailure,corruptCertificate=false,clock=()=>NOW}={}){
  const f=await fixture(),config={...f.config,recipe:workerRecipe()};
  const collector=createHackerRankCollector({trustConfig:config,commitmentKey:f.key,clock,diagnostics});
  const request={...f.request,selectedCertificateId:selection,expectedClaimOwner:collector.claimOwner,recipeHash:hash('RECIPE',config.recipe),trustConfigHash:hash('TRUST',config)};
@@ -53,7 +55,8 @@ async function setup({bodies={},selection=null,wireOptions={},hook,changeClaim,d
    const before=wire.transcript.map(b=>Buffer.from(b.message.plaintext));
    if(hook)await hook(input,wire);else assert.deepEqual(await input.updateProviderParams(wire.transcript,wire.tlsVersion),{params:{},secretParams:{}});
    for(let i=0;i<before.length;i++)assert.deepEqual(wire.transcript[i].message.plaintext,before[i]);
-   const signed=await proofFor(input,wire,changeClaim);proofs[role]=signed.proof;if(corruptCertificate&&role==='certificate')signed.result.signatures.claimSignature=Buffer.alloc(65);return signed.result;
+   if(afterHook)await afterHook(input);
+   const signed=await proofFor(input,wire,changeClaim);proofs[role]=signed.proof;if(corruptCertificate&&role==='certificate')signed.result.signatures.claimSignature=Buffer.alloc(65);return transformResult?transformResult(signed.result):signed.result;
   },async submit(value){lease=value.lease;value.recheck();},
  };
  return {config,key:f.key,collector,request,envelope,proofs,calls,inputs,options,get lease(){return lease;}};
@@ -67,6 +70,23 @@ test('same TLS response yields a private lease with explicit worker/attestor res
   for(const secret of [PRIVATE,COOKIE,USERNAME,'synthetic-python-rose'])assert.equal(JSON.stringify(candidate).includes(secret),false);
   const naked=await createHackerRankVerifier({trustConfig:x.config,commitmentKey:x.key,clock:()=>NOW}).verify({envelope:x.envelope,proofs:x.proofs},x.request);
   assert.equal(naked.code,'WORKER_SOURCE_REQUIRED');x.lease.dispose();
+ }
+});
+
+test('SDK rejection after a valid hook retains both pinned AttestorError types and relative duration',async()=>{
+ assert.notEqual(sdk.AttestorError,transportSdk.AttestorError);
+ for(const SdkError of [sdk.AttestorError,transportSdk.AttestorError])for(const code of Object.keys(sdk.proto.ErrorCode).filter(k=>k.startsWith('ERROR_')&&k!=='ERROR_NO_ERROR')){
+  let mono=1000;
+  const diagnostics=createSourceDiagnostics({persist(){},monotonicNow:()=>mono});
+  const x=await setup({diagnostics,afterHook(input){assert.equal(input.maxRetries,1);mono+=250;throw new SdkError(code,PRIVATE,{secret:COOKIE});}});
+  await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
+  const d=diagnostics.snapshot();assert.equal(d.stages.ACCOUNT_RESPONSE_INSPECTION.state,'COMPLETED');
+  assert.equal(d.firstFailure.stage,'ACCOUNT_SDK_CALL');assert.equal(d.firstFailure.code,code);
+  assert.equal(d.firstFailure.codeNamespace,'ATTESTOR_SDK');assert.equal(d.firstFailure.codeBasis,'ATTESTOR_ERROR_OWN_CODE');
+  assert.equal(d.firstFailure.offsetMs,250);assert.equal(d.firstFailure.durationMs,250);assert.equal(d.firstFailure.aborted,false);
+  assert.equal(d.stages.ACCOUNT_SDK_RETURN.state,'NOT_OBSERVED');assert.equal(d.stages.ACCOUNT_OFFICIAL_VERIFY.state,'NOT_OBSERVED');
+  assert.deepEqual(x.calls,['account']);assert.equal(x.inputs.length,1);assert.equal(x.lease,undefined);
+  for(const value of [PRIVATE,COOKIE,USERNAME])assert.equal(JSON.stringify(d).includes(value),false);
  }
 });
 test('explicit selection binds all disclosed fields to one row; failed certificate is NOT_MET',async()=>{
@@ -170,12 +190,12 @@ test('live mode rejects a substituted claim driver before cookie or network acce
  await assert.rejects(collector.collect({envelope,expectedRequest:request,client,routeClient:client,readCookies(){assert.fail('cookies');},submit(){assert.fail('submit');},createClaim(){assert.fail('driver');}}),/COLLECTOR_TEST_DRIVER/);
 });
 
-test('diagnostics distinguish unobserved response from SDK failure and preserve safe lower codes',async()=>{
+test('SDK boundary keeps untyped failures unknown even when a system code is present',async()=>{
  for(const error of [Object.assign(Error(PRIVATE),{code:'ECONNRESET'}),Error(PRIVATE)]){
   const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,claimFailure:error});
   await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
-  const d=diagnostics.snapshot();assert.equal(d.firstFailure.stage,'ACCOUNT_PROOF_RETURN');
-  assert.equal(d.firstFailure.code,error.code??'UNKNOWN_ERROR');
+  const d=diagnostics.snapshot();assert.equal(d.firstFailure.stage,'ACCOUNT_SDK_CALL');
+  assert.equal(d.firstFailure.code,'UNKNOWN_ERROR');
   assert.equal(d.stages.ACCOUNT_RESPONSE_INSPECTION.state,'NOT_OBSERVED');assert.equal(d.stages.PAIR_OFFICIAL_VERIFY.state,'NOT_OBSERVED');
   assert.equal(x.lease,undefined);for(const privateValue of [PRIVATE,COOKIE,USERNAME])assert.equal(JSON.stringify(d).includes(privateValue),false);
  }
@@ -203,4 +223,119 @@ test('successful synthetic pair has observed boundaries but no invented HTTP sig
  const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics});await x.collector.collect(x.options);
  const d=diagnostics.snapshot();for(const stage of ['PARTICIPANT_ENVELOPE_VERIFY','ACCOUNT_RESPONSE_INSPECTION','ACCOUNT_PROOF_RETURN','ACCOUNT_OFFICIAL_VERIFY','CERTIFICATE_RESPONSE_INSPECTION','CERTIFICATE_PROOF_RETURN','PAIR_OFFICIAL_VERIFY','CANDIDATE_LEASE'])assert.equal(d.stages[stage].state,'COMPLETED');
  assert.equal(d.signatureAcceptance,'UNKNOWN');assert.equal(d.firstFailure,null);x.lease.dispose();
+});
+
+test('SDK diagnostics reject spoofed and unknown codes without reading error payloads or getters',async()=>{
+ let reads=0;
+ const getterError=new sdk.AttestorError('ERROR_TIMEOUT',PRIVATE);
+ Object.defineProperty(getterError,'code',{get(){reads++;throw Error(PRIVATE);}});
+ const inheritedError=new transportSdk.AttestorError('ERROR_TIMEOUT',PRIVATE);delete inheritedError.code;
+ const errors=[Error('ERROR_TIMEOUT'),new TypeError(PRIVATE),Object.assign(Error('CLAIM_SIGNATURE'),{code:'ERROR_NETWORK_ERROR',name:'AttestorError'}),
+  new sdk.AttestorError('ERROR_FUTURE',PRIVATE),new sdk.AttestorError('ERROR_NO_ERROR',PRIVATE),new sdk.AttestorError(10,PRIVATE),getterError,inheritedError];
+ for(const error of errors){
+  Object.defineProperty(error,'data',{get(){reads++;throw Error(PRIVATE);}});
+  const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,afterHook(){throw error;}});
+  await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
+  const d=diagnostics.snapshot();assert.equal(d.firstFailure.stage,'ACCOUNT_SDK_CALL');assert.equal(d.firstFailure.code,'UNKNOWN_ERROR');
+  assert.equal(d.firstFailure.codeNamespace,'UNKNOWN');assert.equal(d.stages.ACCOUNT_RESPONSE_INSPECTION.state,'COMPLETED');
+  assert.equal(d.stages.ACCOUNT_RETURN_VALIDATION.state,'NOT_OBSERVED');assert.equal(x.inputs.length,1);assert.equal(x.lease,undefined);
+  assert.equal(JSON.stringify(d).includes(PRIVATE),false);
+ }
+ assert.equal(reads,0);
+});
+
+test('resolved protobuf errors have their own namespace and do not imply a rejected SDK await',async()=>{
+ let reads=0;
+ for(const code of [...Array.from({length:12},(_,i)=>i+1),0,-1,13,'10',null]){
+  const diagnostics=createSourceDiagnostics({persist(){}}),error={code,get message(){reads++;throw Error(PRIVATE);},get data(){reads++;throw Error(COOKIE);}};
+  const x=await setup({diagnostics,transformResult:()=>({error})});
+  await assert.rejects(x.collector.collect(x.options),/COLLECTOR_SIGNED_CLAIM/);
+  const d=diagnostics.snapshot(),returned=d.events.find(e=>e.stage==='ACCOUNT_SDK_RETURN');
+  assert.equal(d.stages.ACCOUNT_SDK_CALL.state,'COMPLETED');assert.equal(returned.state,'OBSERVED');assert.equal(returned.resultKind,'ERROR');
+  const known=Number.isInteger(code)&&code>=1&&code<=12;
+  assert.equal(returned.code,known?Object.entries(sdk.proto.ErrorCode).find(([,value])=>value===code)[0]:'UNKNOWN_ERROR');
+  assert.equal(returned.codeNamespace,known?'ATTESTOR_SDK':'UNKNOWN');assert.equal(returned.codeBasis,known?'PROTO_ERROR_CODE':'UNKNOWN');
+  assert.equal(d.firstFailure.stage,'ACCOUNT_RETURN_VALIDATION');assert.equal(d.firstFailure.code,'COLLECTOR_SIGNED_CLAIM');
+  assert.equal(d.stages.ACCOUNT_OFFICIAL_VERIFY.state,'NOT_OBSERVED');assert.deepEqual(x.calls,['account']);assert.equal(x.lease,undefined);
+  for(const secret of [PRIVATE,COOKIE])assert.equal(JSON.stringify(d).includes(secret),false);
+ }
+ assert.equal(reads,0);
+});
+
+test('malformed, missing-signature, and post-return failures remain distinct from SDK rejection',async()=>{
+ const cases=[
+  [()=>null,'MALFORMED','COLLECTOR_SIGNED_CLAIM'],
+  [()=>({}),'MALFORMED','COLLECTOR_SIGNED_CLAIM'],
+  [r=>({claim:r.claim}),'MISSING_SIGNATURE','COLLECTOR_SIGNED_CLAIM'],
+  [r=>({...r,signatures:{...r.signatures,claimSignature:Buffer.alloc(64)}}),'MALFORMED','COLLECTOR_SIGNED_CLAIM'],
+  [r=>({...r,claim:{...r.claim,parameters:'{bad'}}),'SIGNED_CLAIM','SIGNED_JSON'],
+  [r=>({...r,claim:{...r.claim,owner:actors.other.address.toLowerCase()}}),'SIGNED_CLAIM','WORKER_SIGNED_CLAIM'],
+  [r=>({...r,get claim(){throw new TypeError(PRIVATE);}}),'MALFORMED','UNKNOWN_ERROR'],
+ ];
+ for(const [transformResult,resultKind,code]of cases){
+  const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,transformResult});
+  await assert.rejects(x.collector.collect(x.options));const d=diagnostics.snapshot();
+  assert.equal(d.stages.ACCOUNT_SDK_CALL.state,'COMPLETED');assert.equal(d.events.find(e=>e.stage==='ACCOUNT_SDK_RETURN').resultKind,resultKind);
+  assert.equal(d.firstFailure.stage,'ACCOUNT_RETURN_VALIDATION');assert.equal(d.firstFailure.code,code);
+  assert.equal(d.stages.ACCOUNT_OFFICIAL_VERIFY.state,'NOT_OBSERVED');assert.deepEqual(x.calls,['account']);assert.equal(x.lease,undefined);
+  assert.equal(JSON.stringify(d).includes(PRIVATE),false);
+ }
+});
+
+test('supported SDK steps are first observations only, with ordered relative offsets and no inferred completion',async()=>{
+ let mono=500,reads=0;
+ const diagnostics=createSourceDiagnostics({persist(){},monotonicNow:()=>mono});
+ const x=await setup({diagnostics,hook:async(input,wire)=>{
+  assert.equal(input.maxRetries,1);assert.equal(input.zkEngine,'stwo');assert.equal(input.zkProofConcurrency,1);
+  for(const name of ['connecting','sending-request-data','waiting-for-response']){mono+=10;input.onStep({name,get private(){reads++;return PRIVATE;}});}
+  await input.updateProviderParams(wire.transcript,wire.tlsVersion);
+  mono+=20;for(let i=0;i<200;i++)input.onStep({name:'generating-zk-proofs',proofsDone:0,proofsTotal:0,approxTimeLeftS:Infinity,private:COOKIE});
+  input.onStep({name:'unknown',private:PRIVATE});input.onStep({get name(){reads++;throw Error(PRIVATE);}});
+  input.onStep({name:{toString(){reads++;throw Error(PRIVATE);}}});
+  mono+=40;input.onStep({name:'waiting-for-verification'});
+ }});
+ await x.collector.collect(x.options);const d=diagnostics.snapshot();
+ const observed=d.events.filter(e=>e.stage.startsWith('ACCOUNT_SDK_')&&e.state==='OBSERVED');
+ assert.deepEqual(observed.map(e=>e.stage),['ACCOUNT_SDK_CONNECTING','ACCOUNT_SDK_SENDING_REQUEST','ACCOUNT_SDK_WAITING_RESPONSE','ACCOUNT_SDK_ZK_PROGRESS_OBSERVED','ACCOUNT_SDK_VERIFICATION_PHASE_OBSERVED','ACCOUNT_SDK_RETURN']);
+ assert.deepEqual(observed.map(e=>e.offsetMs),[10,20,30,50,90,90]);assert.equal(d.events.find(e=>e.stage==='ACCOUNT_SDK_CALL'&&e.state==='COMPLETED').durationMs,90);
+ assert.equal(d.stages.ACCOUNT_SDK_ZK_PROGRESS_OBSERVED.completedObserved,false);assert.equal(d.truncated,false);assert.equal(reads,0);
+ const before=JSON.stringify(d);x.inputs[0].onStep({name:'connecting'});await assert.rejects(x.inputs[0].updateProviderParams([],'TLS1_3'),/WORKER_HOOK_REUSED/);
+ assert.equal(JSON.stringify(diagnostics.snapshot()),before);assert.equal(before.includes('approxTimeLeftS'),false);
+ for(const secret of [PRIVATE,COOKIE,USERNAME])assert.equal(before.includes(secret),false);x.lease.dispose();
+});
+
+test('abort observation is explicit during await, separate from SDK timeout, and removed at terminal exit',async()=>{
+ for(const reject of [true,false]){
+  const controller=new AbortController(),diagnostics=createSourceDiagnostics({persist(){}});
+  const x=await setup({diagnostics,afterHook(input){controller.abort(PRIVATE);input.onStep({name:'generating-zk-proofs'});if(reject)throw new transportSdk.AttestorError('ERROR_TIMEOUT',PRIVATE);}});
+  x.options.signal=controller.signal;await assert.rejects(x.collector.collect(x.options),/COLLECTOR_CANCELLED/);
+  const d=diagnostics.snapshot(),abort=d.events.find(e=>e.stage==='ACCOUNT_SDK_ABORT_OBSERVED');assert.equal(abort.aborted,true);
+  const terminal=d.events.find(e=>e.stage==='ACCOUNT_SDK_CALL'&&e.state!=='STARTED');assert.equal(terminal.aborted,true);
+  assert.equal(terminal.code,reject?'ERROR_TIMEOUT':null);assert.equal(d.firstFailure.stage,reject?'ACCOUNT_SDK_CALL':'ACCOUNT_RETURN_VALIDATION');
+  assert.equal(d.stages.ACCOUNT_OFFICIAL_VERIFY.state,'NOT_OBSERVED');assert.equal(x.lease,undefined);assert.equal(JSON.stringify(d).includes(PRIVATE),false);
+  const before=JSON.stringify(d);x.inputs[0].onStep({name:'waiting-for-verification'});assert.equal(JSON.stringify(diagnostics.snapshot()),before);
+ }
+ const controller=new AbortController(),diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics});x.options.signal=controller.signal;
+ await x.collector.collect(x.options);const before=JSON.stringify(diagnostics.snapshot());controller.abort(PRIVATE);assert.equal(JSON.stringify(diagnostics.snapshot()),before);x.lease.dispose();
+ const stopped=new AbortController();stopped.abort();const early=createSourceDiagnostics({persist(){}}),y=await setup({diagnostics:early});y.options.signal=stopped.signal;
+ await assert.rejects(y.collector.collect(y.options),/COLLECTOR_CANCELLED/);assert.equal(y.inputs.length,0);assert.equal(early.snapshot().stages.ACCOUNT_SDK_CALL.state,'NOT_OBSERVED');
+});
+
+test('failed persistence and unavailable timing preserve collection success and original failure',async()=>{
+ for(const fail of [true,false]){
+  const diagnostics=createSourceDiagnostics({persist(){throw Error(PRIVATE);},monotonicNow(){throw Error(COOKIE);}});
+  const x=await setup({diagnostics,afterHook:fail?()=>{throw new sdk.AttestorError('ERROR_TIMEOUT',PRIVATE);}:undefined});
+  if(fail)await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);else{await x.collector.collect(x.options);x.lease.dispose();}
+  const d=diagnostics.snapshot();assert.equal(d.persistence,'INCOMPLETE');assert.equal(d.timing,'INCOMPLETE');assert.equal(d.firstFailure?.code,fail?'ERROR_TIMEOUT':undefined);
+  assert.ok(d.events.every(e=>e.offsetMs===null&&e.durationMs===null));for(const secret of [PRIVATE,COOKIE])assert.equal(JSON.stringify(d).includes(secret),false);
+ }
+});
+
+test('certificate SDK rejection follows account verification and blocks pair/lease after one call per role',async()=>{
+ const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,afterHook(input){if(input.context.clearSourceRole==='certificate')throw new transportSdk.AttestorError('ERROR_NETWORK_ERROR',PRIVATE);}});
+ await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
+ const d=diagnostics.snapshot();assert.equal(d.stages.ACCOUNT_OFFICIAL_VERIFY.state,'COMPLETED');assert.equal(d.stages.CERTIFICATE_RESPONSE_INSPECTION.state,'COMPLETED');
+ assert.equal(d.firstFailure.stage,'CERTIFICATE_SDK_CALL');assert.equal(d.firstFailure.code,'ERROR_NETWORK_ERROR');
+ assert.equal(d.stages.PAIR_OFFICIAL_VERIFY.state,'NOT_OBSERVED');assert.equal(d.stages.CANDIDATE_LEASE.state,'NOT_OBSERVED');
+ assert.deepEqual(x.calls,['account','certificate']);assert.equal(x.inputs.length,2);assert.equal(x.lease,undefined);
 });
