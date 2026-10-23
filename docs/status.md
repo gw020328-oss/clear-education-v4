@@ -1,5 +1,27 @@
 # 개발 현황
 
+## 2026-10-23 시험 클라이언트·원천 실패 현황
+
+원격 확인 **2026-10-23 11:17 KST**. develop은 [7609921](https://github.com/gw020328-oss/clear-education-v4/commit/7609921095b0144b70181fe12e0fcd826f88b36c), main은 [99221a5](https://github.com/gw020328-oss/clear-education-v4/commit/99221a521b7496e78c4c1f16febe2e74a92b97a5)다. 10월 21일 문서 PR #105/#104 이후 두 기준 브랜치의 새 기능 병합은 없다. 아래는 공개 PR·보고서의 저장된 결과이며 이번 자동화에서 실행한 결과가 아니다.
+
+[#103](https://github.com/gw020328-oss/clear-education-v4/pull/103)은 10월 22일 [3321891](https://github.com/gw020328-oss/clear-education-v4/commit/33218918c785288c6ab78358737503c97d47ef99)로 **codex/bootcamp-e5-api-bridge 작업 브랜치에만 병합**됐다. develop/main 병합이 아니다. [고정 head의 원천 검토](https://github.com/gw020328-oss/clear-education-v4/blob/e658b4026b44f800b607d2d7db64e14f3fd81666/docs/hackerrank/WORKER_SOURCE_REVIEW.ko.md)는 hackerrank-two-proof.3의 같은 TLS 응답 구조를 신뢰하는 CLEAR worker가 검사하고 최소 공개 필드를 공증 서명이 검증하는 책임을 구분한다. independentStructureProof=false이며 숨긴 JSON 전체 구조의 독립 증명이나 실제 새 proof·수락 성공을 뜻하지 않는다. 저장된 135/135는 합성 로컬 검증이고 실제 로그인/새 proof/API 수락/registry 조회/AI/체인/지급은 해당 PR에서 0건이다.
+
+[#78](https://github.com/gw020328-oss/clear-education-v4/pull/78)·[#102](https://github.com/gw020328-oss/clear-education-v4/pull/102)의 [backend 시험 클라이언트 보고](https://github.com/gw020328-oss/clear-education-v4/blob/85212551fd8e86b22b2c0c0b3525100e9579f2f7/docs/current/BOOTCAMP_BACKEND_TEST_CLIENT.ko.md)에는 제품 web/·프론트 PR #60과 별개인 최소 정적 시험 페이지와 두 외부 테스트 지갑의 명시적 인증·원천 메시지 서명·동의·receipt 조회 준비가 추가됐다. **develop 작업 브랜치 기준, main 미반영이며 develop에도 아직 미병합**이다. 제품 프론트 완료·배포·실제 통합 시험 성공으로 설명하지 않는다.
+
+공개 보고서의 실제 r2 실행은 두 역할 SIWE·신청 결합 뒤 원천 요청 단계에서 COLLECTION_FAILED로 종료됐다. 원천 요청·증거·이벤트 0건으로, 원천 서명·AI 호출·TEST 지급에 도달하지 않았다. 실제 하위 예외는 미보존이다. 동일 구성의 합성 재현에서 SQLite 트랜잭션 중첩 진입과 체크섬/소문자 지갑 비교 결함을 재현했고, source 후보 34d3661을 새 v11 intake에 명시 인수했다. [v11 검증 기록](https://github.com/gw020328-oss/clear-education-v4/blob/85212551fd8e86b22b2c0c0b3525100e9579f2f7/docs/current/BOOTCAMP_V11_VERIFICATION.json)은 기존 core159개 중 live-context.mjs 한 파일 변경, 정적 브라우저 5개 자산 불변, 이전 intake/guard·r2 기록 보존을 보고한다. 원천 세션 회귀21/21·지문 변조/보존35/35·자산 연결2/2는 각각 별도 검사다. **수정 후 실제 재시험·새 로그인·새 원천 lease·유료 AI 호출은 없으며** 기존 source 만료·서명·지급 정책도 연장/변경하지 않았다. 과거 합성 원천 run3의 100 TEST 성공을 이 실제 시험의 성공으로 재사용하지 않는다.
+
+### 이번에 변경된 PR의 정확한 head CI
+
+| PR / 상태 | 확인 head SHA | 완료 SUCCESS / 표시 검사 | 실행 근거 |
+| --- | --- | --- | --- |
+| [#78](https://github.com/gw020328-oss/clear-education-v4/pull/78) / OPEN | cd9b80cbf3c44fe15d0bc3944bbb80e2a699fae5 | 9/9 | [run 39822069109](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39822069109) · [run 39822069143](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39822069143) · [run 39822069112](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39822069112) · [run 39822069114](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39822069114) · [run 39822520961](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39822520961) |
+| [#102](https://github.com/gw020328-oss/clear-education-v4/pull/102) / OPEN | 85212551fd8e86b22b2c0c0b3525100e9579f2f7 | 9/9 | [run 39821952947](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39821952947) · [run 39821952769](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39821952769) · [run 39821952848](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39821952848) · [run 39821952710](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39821952710) · [run 39822185212](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39822185212) |
+| [#103](https://github.com/gw020328-oss/clear-education-v4/pull/103) / MERGED | e658b4026b44f800b607d2d7db64e14f3fd81666 | 3/4 | [run 39773494117](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39773494117) · [run 39773487345](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39773487345) |
+
+#103의 Public synthetic tests는 FAILURE(STAGE_SOURCE_PIN)이며 전체 성공으로 처리하지 않는다. #78/#102의 새 head는 각각 표시 검사9개가 모두 SUCCESS지만, 본문의 과거 head944afaf 18/18을 최신 head 결과로 재사용하지 않는다. 검사 개수는 테스트 사례 수가 아니며 후속 head 성공이 #103 당시 실패를 소급 성공으로 바꾸지 않는다. 이 자동화는 기능/CI를 수정하거나 해당 기능 PR을 병합하지 않았다.
+
+이전 날짜별 열린 PR·준비·미실행 표기는 당시 기록이다. 현재 상태는 이 절을 우선한다. 실제 자료 전체 연결·새 증명·100 TEST 수령의 전체 시연과 제품 인수는 여전히 미완료이며, 기존 합성/실제 AI 평가·Mac 원인 미확정 기록은 보존한다. 이번 작업은 공개 근거만 대조했고 새 로그인·원문/키 접근·유료 호출·서명·거래·배포를 하지 않았다.
+
 ## 2026-10-21 미병합 연결·평가 현황
 
 원격 확인 **2026-10-21 11:04 KST**. develop은 [028e69e](https://github.com/gw020328-oss/clear-education-v4/commit/028e69ed8af878bfdef741d58f6ac32c8be3baf2), main은 [84e0d51](https://github.com/gw020328-oss/clear-education-v4/commit/84e0d51685c5c6f29b5d3ba10f39009032748a26)다. 마지막 문서 병합 이후 새 기능 병합은 없다. 아래는 열린 PR과 공개 보고서의 저장된 결과이며 이번 자동화의 재실행 결과가 아니다. 모든 신규 구현은 **develop 작업 브랜치 기준, develop/main 미병합**이다.
