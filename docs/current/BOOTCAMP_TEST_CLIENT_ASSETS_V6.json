@@ -1,0 +1,35 @@
+{
+  "version": "clear-bootcamp-backend-test-client-assets.6",
+  "date": "2026-10-23",
+  "scope": "ONE_BACKEND_NORMAL_INTEGRATION_TEST_NOT_PRODUCT_FRONTEND",
+  "status": "REVIEWED_TEST_CLIENT_ASSET_BYTES_NOT_EXECUTION_APPROVAL",
+  "sourceArtifacts": {
+    "tools/bootcamp/test-client/driver.js": "33bd606d7094ecf6722756e5ef799844ed299dabd867c7a8aa889dd532fae81e",
+    "tools/bootcamp/test-client/index.html": "2d1242526b43e1b791acd61eb3965fa047536fbb41df4cc79953ddf1283389f4",
+    "tools/bootcamp/test-client/main.js": "c91c1cac995382224f9b7335c2c1864d16c043057458112a3fe418199d583227",
+    "tools/bootcamp/test-client/session.js": "31834a3082b55459022b75203e3b0d528d10ed17bcea76119344309408f66cb4",
+    "tools/bootcamp/test-client/style.css": "0efc9810d8e1145567e3d21579fdccdb29c94159bc913405822eb3468aa228da"
+  },
+  "publicAssetSnapshotSha256": "ff510d4c35ef151c3dbfe6e8074b4173a1f6e4e646fca40d03deedaa6d8d7964",
+  "normalClient": {
+    "path": "src/bootcamp/normal-client.mjs",
+    "sha256": "2ac20fa5860ffd8f2cbade607bd219808d4eba4fde319f5b992242e7b699f867"
+  },
+  "existingCoreIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v14.json",
+    "sha256": "7f558777c3550522db9880359054f387d38460f4d487bceb708d2bfb1b3411de",
+    "sources": 160,
+    "bytesChanged": true
+  },
+  "apiContractsChanged": false,
+  "productFrontendAccepted": false,
+  "actualExecutionApprovedByThisRecord": false,
+  "previousRecord": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V5.json",
+    "sha256": "eae6cc99de3382036e62da9ff6a9de530e8da5ea4dc5528a419c8e66b5cb4f8b",
+    "sourceHead": "d678464fec400b01767aaaf2cbc7130e805c27be",
+    "preserveOriginalBytes": true
+  },
+  "sourceDelta": {},
+  "changedFromV5": []
+}

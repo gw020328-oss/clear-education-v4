@@ -1,5 +1,7 @@
 # 실제 한 건 실행 전 본부 일괄 준비표
 
+2026-10-23 현행: r5 후속 SDK 진단 v14의 [검증 기록](BOOTCAMP_V14_VERIFICATION.json)과 아래 마지막 절이 최신이다. 앞선 r4/r5 준비 문구는 과거 기록이다. 이번 작업에서 r6 환경·CA·브라우저·READY·실제 수집·서명·AI·지급을 시작하지 않는다.
+
 2026-10-23 최신: r2의 원천 서명 전 실패를 재현·수정한 후보는 [v11 실행 기준 기록](BOOTCAMP_V11_VERIFICATION.json)과 [시험 자산 v3](BOOTCAMP_TEST_CLIENT_ASSETS_V3.json)를 따른다. 아래 v10 불변/완료 설명은 과거 후보 기록이다. 실제 재시험은 새 미사용 호스트·새 CA 준비 후 사용자에게 안내하며 r2 실패 기록을 보존한다.
 
 2026-10-22. 이번 기록은 준비 확인과 사용자 행동의 취합이며 실제 실행 허가/완료가 아니다. 새 로그인·registry·source·AI·신청/realm·실제 거래는 시작하지 않았다. 각 담당은 본부 한 곳에서 아래 준비를 끝낸 뒤 한 번에 안내한다. 과거 run3 성공을 반복하지 않고 만료된 `.1` 신청/DB/키/realm도 시간을 고쳐 재사용하지 않는다.
@@ -45,3 +47,13 @@
 v13은 브로커·진단 모듈·테스트 fixture의 정확한 세 변경을 160개 소스 지문에 반영한다. [V5 자산 기록](BOOTCAMP_TEST_CLIENT_ASSETS_V5.json)은 v13을 연결하며 브라우저 5개 자산과 normal client 바이트는 V4와 같다. v12 intake/guard/V4 manifest 및 r3/r4 실제 기록은 보존한다. 로그인 없는 회귀·보존 검사 323개가 통과했으며, 최종 커밋의 CI는 푸시 후 별도로 확인한다.
 
 r4의 실제 최초 내부 오류는 미확정이다. 새 r5는 최종 CI 통과 뒤 별도 미사용 환경으로 준비하며, 실제 실행은 이후 사용자 준비 확인이 필요하다. 기존 prepare 도구는 환경별 CA를 생성하고 재사용 옵션이 없다. 이번 권한 수정에 별도 인증서 공유 기능을 추가하지 않으며, 현행 도구로 준비할 경우 새 CA의 수동 신뢰가 필요하다. 준비 시 브라우저·로그인·READY·신청·체인·서명·증명·AI 호출·지급은 실행하지 않는다.
+
+## 2026-10-23 r5 이후 SDK 진단 v14: 로그인 없는 준비
+
+r5는 서버 원천 서명 수락과 계정 응답 검사 완료를 관측한 후 `ACCOUNT_PROOF_RETURN / UNKNOWN_ERROR`로 실패했다. SDK 세부 원인과 단계 시간은 당시 기록에 없으며 소급 확정할 수 없다. r5는 사용된 실패 실행이며 재사용하지 않는다. 이번 변경은 두 고정 SDK 타입의 오류, resolved error, 반환 형태와 반환 후 검사를 구분하고 단조 상대 시간·abort·제한된 onStep 관측을 추가한다. [다음 단회 시험 관측표](BOOTCAMP_SOURCE_DIAGNOSTICS.ko.md#r5-후속-v2-sdk-경계와-상대-시간)와 [좁은 검토](BOOTCAMP_SDK_DIAGNOSTICS_REVIEW.ko.md)를 따른다.
+
+[소스 v14](../../specs/bootcamp/hackathon-test-memory-source-intake-v14.json)는 160개 중 diagnostics/worker-source 두 runtime 바이트 변경만 허용한다. [V6 자산 기록](BOOTCAMP_TEST_CLIENT_ASSETS_V6.json)은 동일한 브라우저 5개와 normal client 바이트를 유지하고 새 실행 지문을 연결한다. 이전 intake/helper/guard/manifest 37개와 r5 사용 표시·진단·보고서·두 DB의 지문은 보존했다. 관측기 스키마 선언과 회귀 검사도 함께 갱신했다.
+
+로그인 없는 로컬 검사는 HR 211개, API/실행 417개, pin/세대 보존·메모리 진입 차단 46개로 서로 겹치지 않는 674개 통과다. 정확 소스·원본/워크스페이스·의존성 및 선언 문법 검사도 통과했다. 최종 HEAD의 GitHub CI 확인은 커밋·푸시 후 PR102에 같은 HEAD 기준으로 남긴다. 기존 CI나 source candidate의 검사 결과를 최종 HEAD 성공으로 대체하지 않는다.
+
+r6 환경/CA는 만들지 않았다. 실제 재시험 여부는 위 관측표·한계·최종 CI 결과를 보고 사용자에게 별도 확인받는다. 새 시도에서 SDK 내부 plain Error는 UNKNOWN일 수 있으며 ZK 시작·RPC 송신·증명 성공을 콜백으로 추정하지 않는다. 준비 범위는 코드와 읽기 전용 상태 확인이다. 기존 요청 만료·총 시도 1회·민감자료 정리·실패 후 AI/지급 0 경계를 유지한다.
