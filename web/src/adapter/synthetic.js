@@ -1,0 +1,123 @@
+// 합성 신청 어댑터
+//
+// contract.js 의 인터페이스를 합성 fixture 로 구현한다.
+// 후속 F1 의 HTTP 어댑터는 같은 인터페이스를 createSameOriginApi 위에 구현하며,
+// 그때 화면 코드는 고치지 않는다.
+//
+// 이 어댑터는 네트워크·쿠키·지갑을 전혀 쓰지 않는다. 그래서 인증·Secure cookie·
+// origin 검증을 '우회'하는 것이 아니라 아직 '연결하지 않은' 상태다.
+
+import {
+  AdapterError, checkApplicationView, checkPolicyView, checkReviewView,
+} from './contract.js';
+import { SCENARIOS, DEFAULT_SCENARIO } from '../fixtures/applications.js';
+import { POLICIES } from '../fixtures/policy.js';
+import { REVIEWS } from '../fixtures/review.js';
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * @param {object} [options]
+ * @param {string} [options.scenario]  SCENARIOS 의 키
+ * @param {boolean} [options.validate] view 계약 검사를 켤지 (기본 true)
+ */
+export function createSyntheticAdapter({ scenario = DEFAULT_SCENARIO, validate = true } = {}) {
+  const chosen = SCENARIOS[scenario] ?? SCENARIOS[DEFAULT_SCENARIO];
+  const name = SCENARIOS[scenario] ? scenario : DEFAULT_SCENARIO;
+
+  function guard(items) {
+    if (!validate) return items;
+    for (const view of items) {
+      const problems = checkApplicationView(view);
+      if (problems.length > 0) {
+        // fixture 가 계약을 어기면 화면에 그리지 않고 먼저 깨뜨린다.
+        throw new Error(`fixture 가 API 계약과 다르다: ${problems.join(' / ')}`);
+      }
+    }
+    return items;
+  }
+
+  async function settle() {
+    await wait(chosen.delayMs ?? 0);
+    if (chosen.failWith) throw new AdapterError(chosen.failWith);
+  }
+
+  return {
+    describe() {
+      return {
+        mode: 'SYNTHETIC',
+        label: chosen.label,
+        scenario: name,
+        note: '합성 fixture 입니다. 실행 중인 서버에 연결되어 있지 않습니다.',
+      };
+    },
+
+    /**
+     * 금고(runtime)가 연결되었는지. GET /runtimes/:policyHash 의 성공 여부에
+     * 해당한다. 2단계에서 최종 동의를 누가 할 차례인지가 여기서 갈린다.
+     * 실제 어댑터는 404 를 '아직 연결 안 됨' 으로 읽는다.
+     */
+    async isRuntimeReady() {
+      await settle();
+      return chosen.runtimeReady === true;
+    },
+
+    async listApplications() {
+      await settle();
+      return guard(chosen.items.map((view) => ({ ...view })));
+    },
+
+    async getApplication(id) {
+      await settle();
+      const found = chosen.items.find((view) => view.applicationId === id);
+      if (!found) throw new AdapterError('API_REQUEST_FAILED');
+      return guard([{ ...found }])[0];
+    },
+
+    // GET /policies/:policyHash 에 해당한다. 조건 '내용'만 돌려주며
+    // 참가자가 그 조건을 충족했는지는 말하지 않는다 — 그 판정은 아직 제품에 없다.
+    async getPolicy(policyHash) {
+      await settle();
+      // 반마다 정책이 다르다. 신청이 가리키는 해시로 찾는다 — 화면이 반을
+      // 고르는 것이 아니라, 그 신청에 묶인 정책을 그대로 보여준다.
+      const policy = POLICIES[policyHash];
+      if (!policy) throw new AdapterError('API_REQUEST_FAILED');
+      if (validate) {
+        const problems = checkPolicyView(policy);
+        if (problems.length > 0) throw new Error(`정책 fixture 가 계약과 다르다: ${problems.join(' / ')}`);
+      }
+      return policy;
+    },
+
+    // 운영자 검토(F3). 안내문에서 AI 가 뽑은 결과를 사람이 확인하는 자리다.
+    // 서버 쪽은 PR #59(운영자 원문 검토 HTTPS)에서 온다.
+    async listReviews() {
+      await settle();
+      return Object.values(REVIEWS).map((review) => guardReview(review));
+    },
+
+    async getReview(reviewId) {
+      await settle();
+      const review = REVIEWS[reviewId];
+      if (!review) throw new AdapterError('API_REQUEST_FAILED');
+      return guardReview(review);
+    },
+  };
+
+  /**
+   * 보류된 값이 채워진 채로 오면 화면에 그리기 전에 깨뜨린다.
+   *
+   * 운영자가 확인 없이 승인하게 되고, 그러면 조건을 사실과 다르게 고정한다.
+   * 이 제품이 없애려는 문제라 조용히 넘기지 않는다.
+   */
+  function guardReview(review) {
+    if (!validate) return review;
+    const problems = checkReviewView(review);
+    if (problems.length > 0) {
+      throw new Error(`검토 fixture 가 계약과 다르다: ${problems.join(' / ')}`);
+    }
+    return review;
+  }
+}
+
+export const SCENARIO_KEYS = Object.keys(SCENARIOS);
