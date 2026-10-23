@@ -73,3 +73,11 @@ test('synthetic source is rejected before realm; bounded waits stop and error te
  await assert.rejects(waitUntil(()=>false,{timeoutMs:5,pollMs:1}),/NORMAL_HOST_WAIT_EXPIRED/);
  assert.equal(safeCode(Error('private text must stay private')),'NORMAL_HOST_STOPPED');
 });
+
+test('source failure stops before exact AI preparation/approval, resume or any payment',async()=>{
+ const f=flowFixture(),open=f.ports.open;
+ f.ports.open=async()=>({...await open(),async collectSources(){throw Error('BC_PRODUCER_FAILED');}});
+ await assert.rejects(composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports}),/BC_PRODUCER_FAILED/);
+ assert.equal(f.resumed,0);assert.equal(f.paid,0);assert.equal(f.events.includes('approval'),false);assert.equal(f.events.includes('AWAITING_EXACT_AI_APPROVAL'),false);
+ assert.equal(f.events.at(-1),'drain');
+});

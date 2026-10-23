@@ -1,14 +1,15 @@
+import {createSourceDiagnostics} from '../../src/hackerrank-evidence/diagnostics.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {storeFixture,START} from './fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {requestMessage} from '../../src/hackerrank-evidence/request.mjs';
 import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
-async function fixture(t){
+async function fixture(t,diagnostics){
  const f=await storeFixture(t),applicationId=f.create(),v=f.view(applicationId),H=x=>p0Hash('OFFLINE-UI-APPROVAL',x);
  const pins={audience:'offline-ui-only',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
  const ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),
-  getApplication:(context,a)=>f.store.getApplication(context,a),now:()=>f.time});t.after(()=>ui.close());
+  getApplication:(context,a)=>f.store.getApplication(context,a),now:()=>f.time,diagnostics});t.after(()=>ui.close());
  ui.bindParticipant(f.aliceContext,applicationId,pins);
  const expected={version:'clear-hackerrank-request.1',...pins,applicationId,participantId:v.participantId,participantWallet:f.alice.address.toLowerCase(),
   criterionId:'python-basic-certificate',policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,nonce:H('nonce'),issuedAt:START,expiresAt:START+240};delete expected.dataMode;
@@ -63,4 +64,21 @@ test('revoking the source session cancels signing even when no browser request f
  const x=await fixture(t),pending=x.start();pending.catch(()=>{});x.f.service.logout(x.f.aliceContext);
  await assert.rejects(pending,/BC_UI_CONTEXT_UNAVAILABLE/);
  assert.throws(()=>x.ui.pendingSignature(x.f.aliceContext),/AUTH_REQUIRED/);
+});
+
+test('server signature acceptance is observed only after exact verification, independently of wallet completion',async t=>{
+ const d=createSourceDiagnostics({persist(){}}),x=await fixture(t,d),pending=x.start(),q=x.ui.pendingSignature(x.f.aliceContext);
+ assert.equal(d.snapshot().signatureAcceptance,'UNKNOWN');
+ const wrong=await x.f.bob.signMessage(q.message);
+ assert.throws(()=>x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature:wrong}),/BC_UI_SIGNATURE/);
+ assert.equal(d.snapshot().signatureAcceptance,'UNKNOWN');
+ const signature=await x.f.alice.signMessage(q.message);x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature});assert.equal(await pending,signature);
+ assert.equal(d.snapshot().signatureAcceptance,'ACCEPTED');
+ const output=JSON.stringify(d.snapshot());for(const secret of [signature,q.message,x.f.aliceContext.token,x.f.alice.privateKey])assert.equal(output.includes(secret),false);
+});
+test('diagnostic write failure preserves the broker result and does not sign twice',async t=>{
+ const d=createSourceDiagnostics({persist(){throw Error('SYNTHETIC_DISK_FAILURE');}}),x=await fixture(t,d),pending=x.start(),q=x.ui.pendingSignature(x.f.aliceContext);
+ const signature=await x.f.alice.signMessage(q.message),receipt=x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature});
+ assert.equal(receipt.status,'PARTICIPANT_SIGNATURE_ACCEPTED');assert.equal(await pending,signature);assert.equal(d.snapshot().persistence,'INCOMPLETE');
+ assert.throws(()=>x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature}),/BC_UI_SIGNATURE_NOT_PENDING/);
 });

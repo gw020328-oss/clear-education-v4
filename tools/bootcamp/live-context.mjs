@@ -1,4 +1,5 @@
 // Constructor-only owner context. Opening is deferred until all source ports are ready.
+import {observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
 import {mkdirSync} from 'node:fs';
 import {join,dirname,resolve} from 'node:path';
 import {randomUUID} from 'node:crypto';
@@ -32,7 +33,7 @@ export function resolveNormalSourceLease(r,{authentication,context,closed,partic
   return {available:sourceWindows.has(r.criterionId)&&time<sourceWindows.get(r.criterionId),authExpiresAt:Math.min(startedAt+3600,sourceWindows.get(r.criterionId)??0),rawExpiresAt:sourceWindows.get(r.criterionId)??0,queryExpiresAt:sourceWindows.get(r.criterionId)??0};
  }catch{return null;}
 }
-export async function openLiveContext({preparationPath,withReader,hackerRank,reviewReflection,reflectionHost=null}){
+export async function openLiveContext({preparationPath,withReader,hackerRank,reviewReflection,reflectionHost=null,diagnostics}){
  ensure(typeof withReader==='function'&&typeof hackerRank?.pins==='function'&&typeof hackerRank.collectLease==='function'&&typeof reviewReflection==='function','BC_LIVE_PORTS_REQUIRED');
  preparationPath=resolve(preparationPath);const base=privateDirectory(dirname(preparationPath));
  const root=fileURLToPath(new URL('../../private/bootcamp-normal-live/',import.meta.url));ensure(base.startsWith(root)&&preparationPath===join(base,'preparation.json'),'BC_LIVE_OWNER_DIRECTORY');
@@ -68,7 +69,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
   const services={version:'clear-bootcamp-test-execution-port.1',runtimeId:m.environmentId,runtimePinHash:prepared.runtimeHash,authorizeService(c){ensure(c===serviceContext&&!closed&&now()<startedAt+1800,'BC_LIVE_SERVICE');return {serviceId:'normal-worker',runtimeId:m.environmentId,expiresAt:startedAt+1800};},reader:{async snapshot(){throw Error('BC_NORMAL_LEGACY_READER_DISABLED');}},envelope:{async lookup(){throw Error('BC_NORMAL_LEGACY_ENVELOPE_DISABLED');}}};
   connection=openDevelopmentConnection({environmentId:m.environmentId,sourceMode:'REGISTERED_TEST_SOURCE'});
   store=createBootcampStore({directory:join(directory,'store'),authentication:auth,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
-  ui=createNormalUiSession({authentication:auth,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,getApplication:(c,a)=>store.getApplication(c,a),now});
+  ui=createNormalUiSession({authentication:auth,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,getApplication:(c,a)=>store.getApplication(c,a),now,diagnostics});
   const bindParticipant=(context,applicationId)=>{
    ensure(!closed&&!app,'BC_LIVE_SINGLE_APPLICATION');ui.bindParticipant(context,applicationId,pins);user=ui.participant();app=applicationId;participantId=store.getApplication(user,app).participantId;
    Object.assign(report,{applicationId:app,participantId,recipient:prepared.participantWallet,sourceStatus:'NOT_COLLECTED',allocationAtoms:'0'});stage('AUTHENTICATED_EXTERNAL_UI_APPLICATION');
@@ -95,6 +96,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
     // HR identity/collector preparation happens before opening this short window.
     for(const criterionId of (resuming?['reflection-topics']:['python-basic-certificate','activity-complete','assignment-submitted','reflection-topics'])){
      stage('SOURCE_'+criterionId);let request;
+     if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','STARTED');
      if(resuming){ensure(pendingReflection.preparation.isCurrent(),'BC_LIVE_AI_PREPARATION_STALE');resumed=true;request=pendingReflection.request;}
      else{sourceWindows.set(criterionId,Math.min(now()+(criterionId==='python-basic-certificate'?900:240),startedAt+1800));request=store.issueBridgeRequest(user,app,{criterionId,expectedRevision:store.getApplication(user,app).revision},key());}
      const body={requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision};
@@ -102,9 +104,10 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
       const preparation=await store.prepareBridgeReflection(user,app,body,{signal:controller.signal,timeoutMs:30000});pendingReflection={request,preparation};stage('AWAITING_EXACT_REFLECTION_APPROVAL');return preparation;
      }
      await store.collectBridge(user,app,body,key(),{signal:controller.signal,timeoutMs:criterionId==='python-basic-certificate'?300000:30000});
+     if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','COMPLETED');
     }
     const v=store.getApplication(user,app);ensure(v.decision.record.conditionsStatus==='MET'&&v.evidence.length===4&&v.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return v;
-    }finally{collecting=false;}
+    }catch(error){if(report.stage==='SOURCE_python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','FAILED',error);throw error;}finally{collecting=false;}
    },
    async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;return executeNormalPayment({store,connection,serviceContext,user,app,waitForConsents:waitForExplicitConsents,signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});},
    report:()=>structuredClone(report),close,

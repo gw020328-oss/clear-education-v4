@@ -1,3 +1,4 @@
+import {observeSource} from './diagnostics.mjs';
 import {createClaimOnAttestor,hashProviderParams,PROVIDER_CTX,makeLogger} from '@reclaimprotocol/attestor-core';
 import {inspectWorkerTranscript} from './worker-response.mjs';
 import {parametersFor,usesWorkerSource} from './recipes.mjs';
@@ -15,7 +16,10 @@ function signedProof(result){
 // The only minting path owns the SDK call and its hook. There is no API for
 // accepting a caller's "structure checked" flag or an unsigned observation.
 // A substituted claim driver is possible only in explicit offline fixture mode.
-export async function collectWorkerSource({config,request,role,params,username,client,routeClient,secretParams,ownerPrivateKey,signal,clock,createClaim}){
+export async function collectWorkerSource({config,request,role,params,username,client,routeClient,secretParams,ownerPrivateKey,signal,clock,createClaim,diagnostics}){
+ const responseStage=role==='account'?'ACCOUNT_RESPONSE_INSPECTION':'CERTIFICATE_RESPONSE_INSPECTION';
+ const proofStage=role==='account'?'ACCOUNT_PROOF_RETURN':'CERTIFICATE_PROOF_RETURN';
+ let proofStarted=false;
  let fields,result,started=false,completed=false,failed=false,sealed=false;
  const synthetic=config.dataMode==='SYNTHETIC_FIXTURE',now=()=>clock?clock():Math.floor(Date.now()/1000);
  const guard=()=>{
@@ -30,17 +34,19 @@ export async function collectWorkerSource({config,request,role,params,username,c
   guard();makeLogger(true,'silent');
   const expectedParams=freeze(parametersFor(config.recipe,role,username,request.selectedCertificateId)),context=contextFor(request,role);
   check(canonical(params)===canonical(expectedParams),'SOURCE_RECIPE');
+  proofStarted=true;observeSource(diagnostics,proofStage,'STARTED');
   result=await (createClaim??createClaimOnAttestor)({name:'http',params:structuredClone(expectedParams),context:structuredClone(context),
    secretParams,ownerPrivateKey,client,zkEngine:'stwo',zkProofConcurrency:1,maxRetries:1,updateParametersFromOprfData:false,logger:quiet,
    async updateProviderParams(transcript,tlsVersion){
     try{
+     observeSource(diagnostics,responseStage,'STARTED');
      check(!started&&!sealed,'WORKER_HOOK_REUSED');started=true;guard();
      fields=await inspectWorkerTranscript({transcript,tlsVersion,role,params:expectedParams,secretParams,username,
       selectedCertificateId:request.selectedCertificateId,clientVersion:client.metadata.clientVersion});
-     guard();check(!sealed&&!failed,'WORKER_HOOK_REUSED');completed=true;
+     guard();check(!sealed&&!failed,'WORKER_HOOK_REUSED');completed=true;observeSource(diagnostics,responseStage,'COMPLETED');
      // No request/extraction/context changes are permitted by this hook.
      return freeze({params:{},secretParams:{}});
-    }catch(error){failed=true;fields=undefined;throw new EvidenceError(error instanceof EvidenceError?error.code:'WORKER_TRANSCRIPT_REJECTED');}
+    }catch(error){observeSource(diagnostics,responseStage,'FAILED',error);failed=true;fields=undefined;throw new EvidenceError(error instanceof EvidenceError?error.code:'WORKER_TRANSCRIPT_REJECTED');}
    },
   });
   guard();sealed=true;check(started&&completed&&!failed&&fields,'WORKER_HOOK_REQUIRED');
@@ -51,9 +57,9 @@ export async function collectWorkerSource({config,request,role,params,username,c
   check(contextResult.providerHash===hashProviderParams(p)&&canonical(contextResult.extractedParameters)===canonical(fields),'WORKER_SIGNED_FIELDS');
   const record={role,requestHash:requestHash(request),configHash:hash('TRUST',config),proofHash:hash('WORKER_PROOF',proof),fields,mode:config.dataMode};
   const source=freeze({dispose(){record.fields=undefined;issued.delete(source);}});
-  issued.set(source,record);
+  issued.set(source,record);observeSource(diagnostics,proofStage,'COMPLETED');
   return {proof,source};
- }catch(error){throw new EvidenceError(error instanceof EvidenceError?error.code:signal?.aborted?'COLLECTOR_CANCELLED':'WORKER_COLLECTION_FAILED');}
+ }catch(error){if(proofStarted)observeSource(diagnostics,proofStage,'FAILED',error);throw new EvidenceError(error instanceof EvidenceError?error.code:signal?.aborted?'COLLECTOR_CANCELLED':'WORKER_COLLECTION_FAILED');}
  finally{sealed=true;fields=undefined;result=undefined;secretParams=undefined;ownerPrivateKey=undefined;}
 }
 

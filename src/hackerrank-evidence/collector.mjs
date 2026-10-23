@@ -1,5 +1,6 @@
 // Trusted in-process host entry. Never accepts a key, cookie, recipe or expected
 // request from the browser body; the managed host supplies the narrow ports.
+import {observeSource} from './diagnostics.mjs';
 import {Wallet} from 'ethers';
 import {assertValidClaimSignatures,getIdentifierFromClaimInfo,hashProviderParams} from '@reclaimprotocol/attestor-core';
 import {createHackerRankVerifier} from './verifier.mjs';
@@ -46,7 +47,7 @@ async function accountUsername(proof,config,request,now){
  check(ctx.providerHash===hashProviderParams(params),'PROVIDER_HASH');keys(ctx.extractedParameters,['username'],'EXTRACTED_FIELDS');
  check(isSourceId(ctx.extractedParameters.username),'SOURCE_USERNAME');return ctx.extractedParameters.username;
 }
-export function createHackerRankCollector({trustConfig,commitmentKey,clock}={}){
+export function createHackerRankCollector({trustConfig,commitmentKey,clock,diagnostics}={}){
  // Pending trust cannot create an owner, read cookies, open a connection or
  // manufacture a request. The host must review real source semantics first.
  if(trustConfig?.status!=='REVIEWED')return freeze({status:'BLOCKED',code:'TRUST_NOT_CONFIGURED',claimOwner:null});
@@ -59,10 +60,13 @@ export function createHackerRankCollector({trustConfig,commitmentKey,clock}={}){
    check(!closed&&!used&&owner,'COLLECTOR_CLOSED');used=true;
    let proofPair={},workerSources={},snapshot,expected,username,stopPromise,lease;
    const stop=()=>{stopPromise??=Promise.resolve().then(()=>client?.terminateConnection());stopPromise.catch(()=>{});};
-   let scope;
+   let scope,diagnosticStage='PARTICIPANT_ENVELOPE_VERIFY';
+   const stage=value=>{diagnosticStage=value;observeSource(diagnostics,value,'STARTED');};
+   const complete=()=>observeSource(diagnostics,diagnosticStage,'COMPLETED');
    try{
+    stage('PARTICIPANT_ENVELOPE_VERIFY');
     snapshot=freeze(structuredClone(envelope));expected=freeze(structuredClone(expectedRequest));
-    const request=verifyParticipant(snapshot,expected,config,now());check(request.expectedClaimOwner===claimOwner,'COLLECTOR_OWNER');
+    const request=verifyParticipant(snapshot,expected,config,now());check(request.expectedClaimOwner===claimOwner,'COLLECTOR_OWNER');complete();stage('COLLECTOR_SETUP');
     check(client===routeClient&&client?.isOpen&&client.isInitialised&&client.metadata,'COLLECTOR_SAME_CLIENT');
     check(typeof readCookies==='function'&&typeof submit==='function','COLLECTOR_PORT');
     check(!createClaim||config.dataMode==='SYNTHETIC_FIXTURE','COLLECTOR_TEST_DRIVER');
@@ -78,34 +82,39 @@ export function createHackerRankCollector({trustConfig,commitmentKey,clock}={}){
      const {webcryptoCrypto}=await import('@reclaimprotocol/tls/webcrypto');setCryptoImplementation(webcryptoCrypto);
      ({createClaimOnAttestor:createClaim}=await import('@reclaimprotocol/attestor-core'));
     }
+    complete();
     for(const role of ['account','certificate']){
      guard();const params=parametersFor(config.recipe,role,username,request.selectedCertificateId);let cookieStr,result;
      try{
+      stage(role==='account'?'ACCOUNT_COOKIE_READ':'CERTIFICATE_COOKIE_READ');
       cookieStr=await readCookies({role,url:params.url,signal:scope});guard();
-      check(typeof cookieStr==='string'&&cookieStr.length>0&&cookieStr.length<=16384&&!/[\r\n\0]/.test(cookieStr),'COLLECTOR_COOKIES');
+      check(typeof cookieStr==='string'&&cookieStr.length>0&&cookieStr.length<=16384&&!/[\r\n\0]/.test(cookieStr),'COLLECTOR_COOKIES');complete();stage(role==='account'?'ACCOUNT_CLAIM_CALL':'CERTIFICATE_CLAIM_CALL');
       if(usesWorkerSource(config.recipe)){
        const collected=await collectWorkerSource({config,request,role,params,username,client,routeClient,secretParams:{cookieStr},
-        ownerPrivateKey:owner.privateKey,signal:scope,clock,createClaim:config.dataMode==='SYNTHETIC_FIXTURE'?createClaim:undefined});
+        ownerPrivateKey:owner.privateKey,signal:scope,clock,diagnostics,createClaim:config.dataMode==='SYNTHETIC_FIXTURE'?createClaim:undefined});
        workerSources[role]=collected.source;proofPair[role]=collected.proof;guard();
       }else{
        result=await createClaim({name:'http',params,context:contextFor(request,role),secretParams:{cookieStr},ownerPrivateKey:owner.privateKey,client,zkEngine:'stwo',zkProofConcurrency:1,maxRetries:1,updateParametersFromOprfData:false,logger:quiet});
        guard();proofPair[role]=minimal(result);
       }
+      complete();
      }finally{cookieStr=undefined;result=undefined;}
      if(role==='account'){
-      username=await accountUsername(proofPair.account,config,request,now());guard();
-      if(usesWorkerSource(config.recipe))check(readWorkerSource(workerSources.account,{config,request,role,proof:proofPair.account}).username===username,'WORKER_SIGNED_FIELDS');
+      stage('ACCOUNT_OFFICIAL_VERIFY');username=await accountUsername(proofPair.account,config,request,now());guard();
+      if(usesWorkerSource(config.recipe))check(readWorkerSource(workerSources.account,{config,request,role,proof:proofPair.account}).username===username,'WORKER_SIGNED_FIELDS');complete();
      }
     }
+    stage('PAIR_OFFICIAL_VERIFY');
     const candidate=await verifier.verify({envelope:snapshot,proofs:proofPair},expected,{workerSources});guard();
-    check(candidate.status==='VERIFIED_CANDIDATE','COLLECTOR_PAIR_REJECTED');
+    if(candidate.status!=='VERIFIED_CANDIDATE')observeSource(diagnostics,diagnosticStage,'FAILED',{code:candidate.code});
+    check(candidate.status==='VERIFIED_CANDIDATE','COLLECTOR_PAIR_REJECTED');complete();stage('CANDIDATE_LEASE');
     // No raw proof/context/cookie or owner key crosses the submit port.
     lease=candidateLease(verifier,candidate,expected);
     // After success the API may retain this candidate-only lease. Its original
     // expiry/provenance survives browser cleanup; transport or owner keys do not.
     lease.recheck();await submit({candidate,recheck:lease.recheck,lease,signal:scope});guard();
-    return candidate;
-   }catch(error){lease?.dispose();throw new EvidenceError(error instanceof EvidenceError?error.code:scope?.aborted?'COLLECTOR_CANCELLED':'COLLECTION_FAILED');}
+    complete();return candidate;
+   }catch(error){observeSource(diagnostics,diagnosticStage,'FAILED',error);lease?.dispose();throw new EvidenceError(error instanceof EvidenceError?error.code:scope?.aborted?'COLLECTOR_CANCELLED':'COLLECTION_FAILED');}
    finally{scope?.removeEventListener('abort',stop);closed=true;owner=null;for(const source of Object.values(workerSources))source.dispose();workerSources={};proofPair={};snapshot=expected=username=undefined;if(stopPromise)await stopPromise.catch(()=>{});}
   },
  });

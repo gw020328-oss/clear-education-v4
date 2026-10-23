@@ -1,3 +1,4 @@
+import {createSourceDiagnostics,observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
 // Offline only: invented identities, isolated SQLite and the real UI signature broker.
 // No browser, source cookies, proof collector, chain or model is opened.
 import test from 'node:test';
@@ -10,7 +11,7 @@ import {resolveNormalSourceLease} from '../../tools/bootcamp/live-context.mjs';
 import {requestMessage} from '../../src/hackerrank-evidence/request.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 
-async function fixture(t,{legacy=false}={}){
+async function fixture(t,{legacy=false,diagnostics}={}){
  let f,ui,applicationId,participantId,closed=false,entered,signatures=0,nestedTransaction=false;
  const sourceWindows=new Map(),pins={audience:'offline-normal-source',trustConfigHash:p0Hash('OFFLINE','trust'),recipeHash:LIVE_WORKER_RECIPE_HASH,
   expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
@@ -26,11 +27,11 @@ async function fixture(t,{legacy=false}={}){
  };
  const producer=createLiveReclaimConsumer({pins:()=>pins,resolveLease,now:()=>f.time,async collectLease(expected,{signal}){
   const pending=ui.requestSignature(expected,requestMessage(expected),{signal});entered();
-  await pending;signatures++;throw Error('OFFLINE_STOP_BEFORE_PROOF');
+  await pending;signatures++;observeSource(diagnostics,'ACCOUNT_COOKIE_READ','FAILED',Error('COLLECTOR_COOKIES'));throw Error('OFFLINE_STOP_BEFORE_PROOF');
  }});
  f=await storeFixture(t,{store:{mode:'ISOLATED_LIVE_TEST',producers:{'python-basic-certificate':producer},resolveSource:r=>producer.resolveSource(r)}});
  ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),
-  getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time});t.after(()=>ui.close());
+  getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time,diagnostics});t.after(()=>ui.close());
  applicationId=f.create();participantId=f.view(applicationId).participantId;ui.bindParticipant(f.aliceContext,applicationId,pins);
  const issue=()=>{sourceWindows.set('python-basic-certificate',START+900);return f.store.issueBridgeRequest(f.aliceContext,applicationId,
   {criterionId:'python-basic-certificate',expectedRevision:f.view(applicationId).revision},f.key());};
@@ -96,4 +97,13 @@ test('only an explicit fixture signature advances past pending; no proof is fabr
  x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature});await stopped;
  assert.equal(x.signatures,1);assert.equal(x.f.counts().evidence,0);
  assert.throws(()=>x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature}),/BC_UI_SIGNATURE_NOT_PENDING/);
+});
+
+test('lower source failure survives store normalization with signature accepted and evidence/payment absent',async t=>{
+ let saved;const diagnostics=createSourceDiagnostics({persist:v=>{saved=v;}}),x=await fixture(t,{diagnostics}),r=x.issue();
+ const collection=x.f.store.collectBridge(x.f.aliceContext,x.applicationId,{requestId:r.record.target.requestId,expectedRevision:r.record.applicationRevision},x.f.key(),{timeoutMs:30000});
+ const stopped=assert.rejects(collection,/BC_PRODUCER_FAILED/);await x.reached;
+ const q=x.ui.pendingSignature(x.f.aliceContext);x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature:await x.f.alice.signMessage(q.message)});await stopped;
+ assert.equal(saved.signatureAcceptance,'ACCEPTED');assert.equal(saved.firstFailure.stage,'ACCOUNT_COOKIE_READ');assert.equal(saved.firstFailure.code,'COLLECTOR_COOKIES');
+ assert.equal(saved.stages.PAIR_OFFICIAL_VERIFY.state,'NOT_OBSERVED');assert.equal(x.f.counts().evidence,0);assert.equal(x.signatures,1);
 });

@@ -1,4 +1,5 @@
 // Enter only through normal-host-launch's real lockf/ulimit boundary.
+import {createSourceDiagnostics,observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
 import {randomBytes} from 'node:crypto';
 import {join} from 'node:path';
 import {createInterface} from 'node:readline';
@@ -8,7 +9,7 @@ import {loadHostConfig,hostReadiness,sha,fail,readPriceReview} from './normal-ho
 import {atomicPrivate} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {safeCode,composeNormalFlow,reflectionHostOptions,awaitExactReflectionApproval} from './normal-host-flow.mjs';
 process.umask(0o077);
-const controller=new AbortController(),{signal}=controller;let unexpected=false;
+const controller=new AbortController(),{signal}=controller;let unexpected=false,diagnostics;
 for(const s of ['uncaughtException','unhandledRejection'])process.once(s,()=>{unexpected=true;process.exitCode=1;controller.abort();});
 for(const s of ['SIGINT','SIGTERM','SIGHUP'])process.once(s,()=>controller.abort());
 const notify=v=>process.stdout.write(JSON.stringify(v)+'\n');
@@ -37,6 +38,7 @@ try{
   const readiness=hostReadiness({directory,config});fail(readiness.readyForActivation,'NORMAL_HOST_ACTIVATION_NOT_READY');readPriceReview(directory);
   fail(!existsSync(join(directory,'prepared-listener.lock')),'NORMAL_HOST_STOP_PREPARED_LISTENER_FIRST');
   atomicPrivate(join(directory,'run.used.json'),{version:'clear-bootcamp-normal-host-one-run.1',startedAt:Date.now(),code:readiness.code},{exclusive:true});
+  diagnostics=createSourceDiagnostics({persist:value=>atomicPrivate(join(directory,'source-diagnostics.json'),value)});
   const trust=await loadManagedHackerRankTrust({audience:config.audience,privacyKeyId:config.privacyKeyId,signal});
   const {defaultRoot,clearAbandoned,createSession,removeSession}=await import('../../src/mac-collector/storage.mjs');
   const {stopRecordedBrowser}=await import('../../src/mac-collector/chrome.mjs');
@@ -50,12 +52,12 @@ try{
   let session,complete,key;const root=defaultRoot();
   try{
    await clearAbandoned(root,stopRecordedBrowser);signal.throwIfAborted();session=await createSession(root,Date.now(),process.pid);key=randomBytes(32);
-   complete=await withManagedHackerRankSource(session,{trustConfig:trust,commitmentKey:key,selectedCertificateId:config.selectedCertificateId,signal,
+   complete=await withManagedHackerRankSource(session,{trustConfig:trust,commitmentKey:key,selectedCertificateId:config.selectedCertificateId,signal,diagnostics,
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
-     open:opts=>openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection}),tls:loadTls(directory,config.tlsFingerprint),listen:listenNormalServer,
+     open:opts=>openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics}),tls:loadTls(directory,config.tlsFingerprint),listen:listenNormalServer,
      notify,awaitApproval:awaitExactReflectionApproval,finish:async({signal})=>{notify({event:'BOTH_ROLE_RECEIPT_REVIEW_THEN_FINISH',command:'FINISH'});await waitForCommand('FINISH',{signal});}}})});
   }finally{key?.fill(0);if(session){await stopRecordedBrowser(session.path);await removeSession(root,session.path);}}
   fail(!signal.aborted&&!unexpected,'NORMAL_HOST_CANCELLED');notify({event:'NORMAL_RUN_FINISHED',...complete,profilesDeleted:true});
  }
-}catch(error){notify({event:'NORMAL_HOST_STOPPED',code:safeCode(error),actualCompletionClaimed:false});process.exitCode=1;}
+}catch(error){observeSource(diagnostics,'NORMAL_FLOW','FAILED',error);notify({event:'NORMAL_HOST_STOPPED',code:safeCode(error),actualCompletionClaimed:false,diagnosticPersistence:diagnostics?.snapshot().persistence??'NOT_STARTED'});process.exitCode=1;}

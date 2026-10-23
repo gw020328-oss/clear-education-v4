@@ -1,3 +1,4 @@
+import type {SourceDiagnostics} from './diagnostics.mjs';
 import type {Buffer} from 'node:buffer';
 export interface HackerRankRequest {
  readonly version:'clear-hackerrank-request.1';
@@ -66,6 +67,7 @@ export interface CollectionInput {
 export declare function createHackerRankCollector(input?:{
  trustConfig?:Readonly<Record<string,unknown>>;
  commitmentKey?:Buffer;
+ diagnostics?:SourceDiagnostics;
  clock?:()=>number;
 }):Readonly<{status:'BLOCKED';code:'TRUST_NOT_CONFIGURED';claimOwner:null}>|Readonly<{
  status:'PREPARED';claimOwner:string;close():void;collect(input:CollectionInput):Promise<Candidate>;

@@ -1,3 +1,4 @@
+import {createSourceDiagnostics} from '../../src/hackerrank-evidence/diagnostics.mjs';
 // Entirely invented responses and ephemeral signatures; network is forbidden.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -37,21 +38,22 @@ async function proofFor(input,wire,change){
  const proof=await signProof(claim);
  return {proof,result:{claim:proof.claim,signatures:{claimSignature:Buffer.from(proof.signature.slice(2),'hex'),attestorAddress:proof.attestor}}};
 }
-async function setup({bodies={},selection=null,wireOptions={},hook,changeClaim,clock=()=>NOW}={}){
+async function setup({bodies={},selection=null,wireOptions={},hook,changeClaim,diagnostics,claimFailure,corruptCertificate=false,clock=()=>NOW}={}){
  const f=await fixture(),config={...f.config,recipe:workerRecipe()};
- const collector=createHackerRankCollector({trustConfig:config,commitmentKey:f.key,clock});
+ const collector=createHackerRankCollector({trustConfig:config,commitmentKey:f.key,clock,diagnostics});
  const request={...f.request,selectedCertificateId:selection,expectedClaimOwner:collector.claimOwner,recipeHash:hash('RECIPE',config.recipe),trustConfigHash:hash('TRUST',config)};
  const envelope={request,signature:await actors.participant.signMessage(requestMessage(request))},proofs={},calls=[],inputs=[];
  const client={isOpen:true,isInitialised:true,metadata:{clientVersion:sdk.PROVIDER_CTX.version},async terminateConnection(){this.isOpen=false;}};
  let lease;
  const options={envelope,expectedRequest:request,client,routeClient:client,async readCookies({role}){calls.push(role);return COOKIE;},
   async createClaim(input){
+   if(claimFailure)throw claimFailure;
    inputs.push(input);const role=input.context.clearSourceRole;
    const wire=transcriptFor(input,bodies[role]??(role==='account'?account():JSON.stringify({data:[row()]})),wireOptions);
    const before=wire.transcript.map(b=>Buffer.from(b.message.plaintext));
    if(hook)await hook(input,wire);else assert.deepEqual(await input.updateProviderParams(wire.transcript,wire.tlsVersion),{params:{},secretParams:{}});
    for(let i=0;i<before.length;i++)assert.deepEqual(wire.transcript[i].message.plaintext,before[i]);
-   const signed=await proofFor(input,wire,changeClaim);proofs[role]=signed.proof;return signed.result;
+   const signed=await proofFor(input,wire,changeClaim);proofs[role]=signed.proof;if(corruptCertificate&&role==='certificate')signed.result.signatures.claimSignature=Buffer.alloc(65);return signed.result;
   },async submit(value){lease=value.lease;value.recheck();},
  };
  return {config,key:f.key,collector,request,envelope,proofs,calls,inputs,options,get lease(){return lease;}};
@@ -166,4 +168,39 @@ test('live mode rejects a substituted claim driver before cookie or network acce
  const collector=createHackerRankCollector({trustConfig:config,commitmentKey:f.key}),request={...f.request,expectedClaimOwner:collector.claimOwner,issuedAt:now,expiresAt:now+800,recipeHash:hash('RECIPE',config.recipe),trustConfigHash:hash('TRUST',config)};
  const envelope={request,signature:await actors.participant.signMessage(requestMessage(request))},client={isOpen:true,isInitialised:true,metadata:{clientVersion:sdk.PROVIDER_CTX.version}};
  await assert.rejects(collector.collect({envelope,expectedRequest:request,client,routeClient:client,readCookies(){assert.fail('cookies');},submit(){assert.fail('submit');},createClaim(){assert.fail('driver');}}),/COLLECTOR_TEST_DRIVER/);
+});
+
+test('diagnostics distinguish unobserved response from SDK failure and preserve safe lower codes',async()=>{
+ for(const error of [Object.assign(Error(PRIVATE),{code:'ECONNRESET'}),Error(PRIVATE)]){
+  const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,claimFailure:error});
+  await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
+  const d=diagnostics.snapshot();assert.equal(d.firstFailure.stage,'ACCOUNT_PROOF_RETURN');
+  assert.equal(d.firstFailure.code,error.code??'UNKNOWN_ERROR');
+  assert.equal(d.stages.ACCOUNT_RESPONSE_INSPECTION.state,'NOT_OBSERVED');assert.equal(d.stages.PAIR_OFFICIAL_VERIFY.state,'NOT_OBSERVED');
+  assert.equal(x.lease,undefined);for(const privateValue of [PRIVATE,COOKIE,USERNAME])assert.equal(JSON.stringify(d).includes(privateValue),false);
+ }
+});
+test('response hook failure remains the first failure after the outer layers normalize it',async()=>{
+ const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,hook:async input=>input.updateProviderParams([],'TLS1_3')});
+ await assert.rejects(x.collector.collect(x.options),/WORKER_TRANSCRIPT/);
+ const d=diagnostics.snapshot();assert.equal(d.firstFailure.stage,'ACCOUNT_RESPONSE_INSPECTION');assert.equal(d.firstFailure.code,'WORKER_TRANSCRIPT');
+ assert.equal(d.stages.ACCOUNT_PROOF_RETURN.completedObserved,false);assert.equal(d.stages.ACCOUNT_OFFICIAL_VERIFY.state,'NOT_OBSERVED');
+});
+test('proof-return success is separate from official account signature verification',async()=>{
+ const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,changeClaim:c=>{c.epoch=2;}});
+ await assert.rejects(x.collector.collect(x.options),/UNTRUSTED_SIGNER/);
+ const d=diagnostics.snapshot();assert.equal(d.stages.ACCOUNT_RESPONSE_INSPECTION.state,'COMPLETED');assert.equal(d.stages.ACCOUNT_PROOF_RETURN.state,'COMPLETED');
+ assert.equal(d.firstFailure.stage,'ACCOUNT_OFFICIAL_VERIFY');assert.equal(d.firstFailure.code,'UNTRUSTED_SIGNER');
+ assert.equal(d.stages.CERTIFICATE_CLAIM_CALL.state,'NOT_OBSERVED');
+});
+test('official pair rejection code survives COLLECTOR_PAIR_REJECTED',async()=>{
+ const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics,corruptCertificate:true});
+ await assert.rejects(x.collector.collect(x.options),/COLLECTOR_PAIR_REJECTED/);
+ const d=diagnostics.snapshot();assert.equal(d.firstFailure.stage,'PAIR_OFFICIAL_VERIFY');assert.equal(d.firstFailure.code,'CLAIM_SIGNATURE');
+ assert.equal(d.stages.CERTIFICATE_PROOF_RETURN.state,'COMPLETED');assert.equal(d.stages.CANDIDATE_LEASE.state,'NOT_OBSERVED');assert.equal(x.lease,undefined);
+});
+test('successful synthetic pair has observed boundaries but no invented HTTP signature acceptance',async()=>{
+ const diagnostics=createSourceDiagnostics({persist(){}}),x=await setup({diagnostics});await x.collector.collect(x.options);
+ const d=diagnostics.snapshot();for(const stage of ['PARTICIPANT_ENVELOPE_VERIFY','ACCOUNT_RESPONSE_INSPECTION','ACCOUNT_PROOF_RETURN','ACCOUNT_OFFICIAL_VERIFY','CERTIFICATE_RESPONSE_INSPECTION','CERTIFICATE_PROOF_RETURN','PAIR_OFFICIAL_VERIFY','CANDIDATE_LEASE'])assert.equal(d.stages[stage].state,'COMPLETED');
+ assert.equal(d.signatureAcceptance,'UNKNOWN');assert.equal(d.firstFailure,null);x.lease.dispose();
 });

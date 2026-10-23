@@ -1,3 +1,4 @@
+import {observeSource} from './diagnostics.mjs';
 import {openOfficialClient} from '../ybm-collector/client.mjs';
 import {createRoute} from '../ybm-collector/route.mjs';
 import {startChrome} from '../mac-collector/chrome.mjs';
@@ -12,7 +13,7 @@ import {check,freeze,isSourceId,EvidenceError} from './values.mjs';
 // context. It must finish consuming the lease before returning. The outer
 // worker still owns stopRecordedBrowser + removeSession after this settles.
 export async function withManagedHackerRankSource(session,{
- trustConfig,commitmentKey,selectedCertificateId=null,waitForReady,useSource,signal,
+ trustConfig,commitmentKey,selectedCertificateId=null,waitForReady,useSource,signal,diagnostics,
  openClient=openOfficialClient,openRoute=createRoute,launchBrowser=startChrome,
 }={}){
  if(trustConfig?.status!=='REVIEWED')return freeze({status:'BLOCKED',code:'TRUST_NOT_CONFIGURED',proofVerified:false,paymentAllowed:false});
@@ -40,7 +41,7 @@ export async function withManagedHackerRankSource(session,{
   browser.closed.then(()=>browserEnded.abort(),()=>browserEnded.abort());live.throwIfAborted();
   const {targetInfos}=await browser.send('Target.getTargets'),page=targetInfos.find(t=>t.type==='page');check(page,'COLLECTOR_BROWSER_PAGE');
   const {sessionId}=await browser.send('Target.attachToTarget',{targetId:page.targetId,flatten:true});live.throwIfAborted();
-  source=prepareHackerRankSource({trustConfig:config,commitmentKey:key,selectedCertificateId,
+  source=prepareHackerRankSource({trustConfig:config,commitmentKey:key,selectedCertificateId,diagnostics,
    client:connection.client,routeClient:route.client,readCookies:browserCookieReader(browser,sessionId)});
   onAbort=()=>source.close();live.addEventListener('abort',onAbort,{once:true});live.throwIfAborted();
   const navigation=await browser.send('Page.navigate',{url:ACCOUNT_URL},sessionId);check(!navigation.errorText,'COLLECTOR_NAVIGATION');
@@ -50,6 +51,7 @@ export async function withManagedHackerRankSource(session,{
   const result=await useSource(source,{signal:live});live.throwIfAborted();
   return result;
  }catch(error){
+  observeSource(diagnostics,'MANAGED_SOURCE','FAILED',error);
   throw new EvidenceError(error instanceof EvidenceError?error.code:signal?.aborted||live?.aborted?'COLLECTOR_CANCELLED':'COLLECTION_FAILED');
  }finally{
   if(onAbort)live.removeEventListener('abort',onAbort);

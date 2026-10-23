@@ -1,3 +1,4 @@
+import type {SourceDiagnostics} from './diagnostics.mjs';
 import type {Buffer} from 'node:buffer';
 import type {HackerRankRequest,CandidateLease,CollectionInput,CollectionClient} from './collector.mjs';
 export interface HackerRankSourcePins {
@@ -26,6 +27,7 @@ export interface PreparedHackerRankSource {
 export declare function prepareHackerRankSource(input?:{
  trustConfig?:Readonly<Record<string,unknown>>;
  commitmentKey?:Buffer;
+ diagnostics?:SourceDiagnostics;
  selectedCertificateId?:string|null;
  client?:CollectionClient;
  routeClient?:CollectionClient;
