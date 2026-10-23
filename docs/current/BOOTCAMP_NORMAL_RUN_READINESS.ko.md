@@ -1,6 +1,8 @@
 # 실제 한 건 실행 전 본부 일괄 준비표
 
-2026-10-24 현행 v17: r8는 송신/RPC 완료 뒤 ERROR_INVALID_CLAIM 반환과 COLLECTOR_SIGNED_CLAIM 거부로 종료됐다. 세부 서버 검증 원인은 미확정이다. [r8 조사](BOOTCAMP_R8_INVALID_CLAIM_REVIEW.ko.md)와 [v17 검증](BOOTCAMP_V17_VERIFICATION.json)을 우선한다. 원문을 보관하지 않는 고정 hint/presence 진단을 추가하고 이전 실패·지문을 보존한다. 최종 HEAD CI 완료 후 본부 재시험 지시를 기다리며 새 실제 실행·호스트·CA·로그인·READY·AI·지급은 시작하지 않는다.
+2026-10-24 현행 v18: r9의 `ZK_PROOF` 단서로 공식 STWO 5.1.6/5.1.7의 상호 불호환을 합성 재현했다. 공식 보안 수정을 포함한 crypto5.1.7을 두 prefix에 exact 고정하고 SDK5.1.4/TLS0.1.4/STWO와 기존 검증·전송·개인정보·지급 경계를 유지한다. [r9 호환성 조사](BOOTCAMP_R9_ZK_COMPATIBILITY_REVIEW.ko.md)와 [실행 지문](BOOTCAMP_ZK_EXECUTION_FINGERPRINTS_V1.json)을 우선한다. r9 원격 배포 버전과 실제 원인은 미확정이다. 최종 HEAD CI 확인 후 본부의 단회 재시험 지시를 기다리며 지금 새 호스트·CA·로그인·증명·AI·지급을 시작하지 않는다.
+
+2026-10-24 이전 v17: r8는 송신/RPC 완료 뒤 ERROR_INVALID_CLAIM 반환과 COLLECTOR_SIGNED_CLAIM 거부로 종료됐다. 세부 서버 검증 원인은 미확정이다. [r8 조사](BOOTCAMP_R8_INVALID_CLAIM_REVIEW.ko.md)와 [v17 검증](BOOTCAMP_V17_VERIFICATION.json)을 우선한다. 원문을 보관하지 않는 고정 hint/presence 진단을 추가하고 이전 실패·지문을 보존한다. 최종 HEAD CI 완료 후 본부 재시험 지시를 기다리며 새 실제 실행·호스트·CA·로그인·READY·AI·지급은 시작하지 않는다.
 
 2026-10-24 현행: r7의 최초 원인은 로컬 combined32MiB 송신 제한 초과이며 frame/queue 개별 크기는 미확정이다. [r7 전송 검토](BOOTCAMP_R7_TRANSPORT_REVIEW.ko.md)와 [v16 검증](BOOTCAMP_V16_VERIFICATION.json)을 우선한다. 단일 메시지100MiB·active+waiting132MiB·FIFO1개 및 기존보다 길어지지 않는 RPC deadline을 적용했다. 새 실제 실행·호스트·CA·로그인·READY·AI·지급을 시작하지 않고, 최종 HEAD CI까지 완료 후 본부 재시험 지시를 기다린다. r5/r6/r7 기록은 보존한다.
 

@@ -1,0 +1,111 @@
+{
+  "scope": "PUBLIC_SYNTHETIC_OFFLINE",
+  "cases": [
+    {
+      "algorithm": "aes-128-ctr",
+      "generator": "5.1.6",
+      "verifier": "5.1.6",
+      "valid": true,
+      "errorPresent": false,
+      "proofBytes": 1097313
+    },
+    {
+      "algorithm": "aes-128-ctr",
+      "generator": "5.1.6",
+      "verifier": "5.1.7",
+      "valid": false,
+      "errorPresent": true,
+      "proofBytes": 1097313
+    },
+    {
+      "algorithm": "aes-128-ctr",
+      "generator": "5.1.7",
+      "verifier": "5.1.6",
+      "valid": false,
+      "errorPresent": true,
+      "proofBytes": 1099341
+    },
+    {
+      "algorithm": "aes-128-ctr",
+      "generator": "5.1.7",
+      "verifier": "5.1.7",
+      "valid": true,
+      "errorPresent": false,
+      "proofBytes": 1099341
+    },
+    {
+      "algorithm": "aes-256-ctr",
+      "generator": "5.1.6",
+      "verifier": "5.1.6",
+      "valid": true,
+      "errorPresent": false,
+      "proofBytes": 1556673
+    },
+    {
+      "algorithm": "aes-256-ctr",
+      "generator": "5.1.6",
+      "verifier": "5.1.7",
+      "valid": false,
+      "errorPresent": true,
+      "proofBytes": 1556673
+    },
+    {
+      "algorithm": "aes-256-ctr",
+      "generator": "5.1.7",
+      "verifier": "5.1.6",
+      "valid": false,
+      "errorPresent": true,
+      "proofBytes": 1558765
+    },
+    {
+      "algorithm": "aes-256-ctr",
+      "generator": "5.1.7",
+      "verifier": "5.1.7",
+      "valid": true,
+      "errorPresent": false,
+      "proofBytes": 1558765
+    },
+    {
+      "algorithm": "chacha20",
+      "generator": "5.1.6",
+      "verifier": "5.1.6",
+      "valid": true,
+      "errorPresent": false,
+      "proofBytes": 1466129
+    },
+    {
+      "algorithm": "chacha20",
+      "generator": "5.1.6",
+      "verifier": "5.1.7",
+      "valid": false,
+      "errorPresent": true,
+      "proofBytes": 1466129
+    },
+    {
+      "algorithm": "chacha20",
+      "generator": "5.1.7",
+      "verifier": "5.1.6",
+      "valid": false,
+      "errorPresent": true,
+      "proofBytes": 1473373
+    },
+    {
+      "algorithm": "chacha20",
+      "generator": "5.1.7",
+      "verifier": "5.1.7",
+      "valid": true,
+      "errorPresent": false,
+      "proofBytes": 1473373
+    }
+  ],
+  "node": "24.21.0",
+  "platform": "darwin-arm64",
+  "newProofGenerations": 6,
+  "verificationCalls": 12,
+  "networkCalls": 0,
+  "rawProofSaved": false,
+  "remoteDeploymentVersionConfirmed": false,
+  "source": "compare.mjs",
+  "note": "Same-version success and cross-version rejection; error text omitted. Proof byte lengths are this synthetic run only.",
+  "sourceSha256": "645beef675837f0a1709b6840633177e095ad324c8d2fae97d8114b17be4b62c"
+}

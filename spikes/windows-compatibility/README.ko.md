@@ -29,7 +29,7 @@ bootstrap 실패 시 `BOOTSTRAP_FAIL [코드]`와 해결 안내를 확인한다.
 tools/node spikes/windows-compatibility/crypto-probe.mjs
 ```
 
-고정 `@reclaimprotocol/zk-symmetric-crypto` 5.1.6 STWO WASM으로 AES128, AES256, ChaCha20를 각각 증명/검증하고 plaintext, ciphertext, nonce, counter, proof 변조를 거부한다. Node 네트워크 API tripwire가 켜져 있으며 합성 입력/출력만 사용한다. 이 tripwire는 자식 Chrome을 포함한 OS 방화벽이 아니다. Chrome은 about:blank만 열고 DNS·background-networking을 제한하나 모든 OS 수준 송신 부재를 증명한 것은 아니다.
+고정 `@reclaimprotocol/zk-symmetric-crypto` 5.1.7 STWO WASM으로 AES128, AES256, ChaCha20를 각각 증명/검증하고 plaintext, ciphertext, nonce, counter, proof 변조를 거부한다. 이전 5.1.6의 Windows 성공 기록은 5.1.7의 Windows 성공을 뜻하지 않는다. Node 네트워크 API tripwire가 켜져 있으며 합성 입력/출력만 사용한다. 이 tripwire는 자식 Chrome을 포함한 OS 방화벽이 아니다. Chrome은 about:blank만 열고 DNS·background-networking을 제한하나 모든 OS 수준 송신 부재를 증명한 것은 아니다.
 
 ## ZIP 구조 / CI
 
