@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'src/hackerrank-evidence/**'
-      - 'tests/hackerrank-evidence/layout*.test.mjs'
+      - 'tests/hackerrank-evidence/**'
       - 'docs/hackerrank/**'
       - '.github/workflows/hackerrank-layout.yml'
 
@@ -37,5 +37,5 @@ jobs:
           ./tools/npm ci --ignore-scripts
           ./tools/npm --prefix src/ybm-collector ci --ignore-scripts
           ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts
-      - name: Bounded parser, schema privacy and managed diagnostic transport counterexamples
-        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/layout*.test.mjs
+      - name: Offline source, signature, diagnostic privacy and bounded layout regression
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/*.test.mjs
