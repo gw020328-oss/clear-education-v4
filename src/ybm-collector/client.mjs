@@ -20,7 +20,7 @@ export async function openOfficialClient({signal, socketFactory, proofMode=false
   signal?.throwIfAborted();
   // 5.1.4 exposes only its pool factory. One worker owns exactly one session,
   // calls this factory once, and exits instead of replacing a closed client.
-  const client = getAttestorClientFromPool(ATTESTOR_URL, () => ({logger: quiet, makeWebSocket: socketFactory ?? (url=>makeSocket(url,{proofMode}))}));
+  const client = getAttestorClientFromPool(ATTESTOR_URL, () => ({logger: quiet, makeWebSocket: socketFactory ?? (url=>makeSocket(url,{proofMode,signal}))}));
   installClaimRpcObserver(client);
   // SDK 5.1.4 creates its response Promise before awaiting the send. A send
   // failure skips awaiting that Promise; observe its rejection without changing

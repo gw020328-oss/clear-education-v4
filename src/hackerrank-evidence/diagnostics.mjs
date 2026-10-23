@@ -10,7 +10,7 @@ export const SOURCE_DIAGNOSTIC_STAGES=Object.freeze([
  ...['ACCOUNT','CERTIFICATE'].flatMap(role=>[
   'SDK_CALL','SDK_RETURN','RETURN_VALIDATION','SDK_ABORT_OBSERVED','SDK_CONNECTING',
   'SDK_SENDING_REQUEST','SDK_WAITING_RESPONSE','SDK_ZK_PROGRESS_OBSERVED','SDK_VERIFICATION_PHASE_OBSERVED',
-  'SDK_CLAIM_RPC_OBSERVER','SDK_CLAIM_RPC',
+  'SDK_CLAIM_RPC_OBSERVER','SDK_CLAIM_RPC','SDK_RPC_SEND',
  ].map(stage=>`${role}_${stage}`)),
 ]);
 // Ordered by the pinned 5.1.4 protobuf failure enum. Zero and UNRECOGNIZED
@@ -59,6 +59,19 @@ export function sourceDiagnosticCode(error){
 const owned=new WeakSet();
 const own=(value,key)=>{try{return Object.getOwnPropertyDescriptor(value,key)?.value;}catch{return undefined;}};
 const systemCodes=new Set(['ECONNREFUSED','ECONNRESET','ENOTFOUND','ERR_PACKAGE_PATH_NOT_EXPORTED','ERR_MODULE_NOT_FOUND','ERR_SQLITE_ERROR','ETIMEDOUT']);
+const transportCodes=['ATTESTOR_BACKPRESSURE_LIMIT','ATTESTOR_MESSAGE_LIMIT','ATTESTOR_QUEUE_LIMIT','ATTESTOR_QUEUE_TIMEOUT','ATTESTOR_SEND_TIMEOUT','ATTESTOR_SEND_FAILED','ATTESTOR_SEND_ABORTED','ATTESTOR_SEND_CLOSED'];
+function sendDetails(value){
+ const phase=own(value,'phase');
+ if(!['ADMISSION','QUEUED','DRAIN_WAIT','SENDING','COMPLETE'].includes(phase))return null;
+ const reason=own(value,'terminalReason'),result={phase,terminalReason:transportCodes.includes(reason)?reason:null};
+ for(const key of ['frameBytes','socketQueuedBytes','retainedBytes','pendingCount','frameLimitBytes','retainedLimitBytes','pendingCountLimit','terminalFrameBytes','terminalSocketQueuedBytes','terminalRetainedBytes','terminalPendingCount']){
+  const n=own(value,key);result[key]=Number.isSafeInteger(n)&&n>=0?n:null;
+ }
+ for(const key of ['timeoutMs','waitMs','sendMs']){
+  const n=own(value,key);result[key]=typeof n==='number'&&Number.isFinite(n)&&n>=0?n:null;
+ }
+ return Object.freeze(result);
+}
 export function createSourceDiagnostics({persist,monotonicNow=()=>performance.now()}={}){
  const stages=Object.fromEntries(SOURCE_DIAGNOSTIC_STAGES.map(stage=>[stage,{state:'NOT_OBSERVED',completedObserved:false}]));
  const events=[],starts=new Map();let persistence='COMPLETE',timing='COMPLETE',firstFailure=null,truncated=false,origin,last;
@@ -71,14 +84,14 @@ export function createSourceDiagnostics({persist,monotonicNow=()=>performance.no
   }catch{timing='INCOMPLETE';return null;}
  };
  elapsed();
- const snapshot=()=>structuredClone({version:'clear-normal-source-diagnostics.3',persistence,timing,truncated,
+ const snapshot=()=>structuredClone({version:'clear-normal-source-diagnostics.4',persistence,timing,truncated,
   signatureAcceptance:stages.SIGNATURE_ACCEPTANCE.completedObserved?'ACCEPTED':'UNKNOWN',stages,firstFailure,events});
  const save=()=>{try{if(typeof persist!=='function')throw null;persist(snapshot());}catch{persistence='INCOMPLETE';}};
  const diagnostics=Object.freeze({snapshot,record(stage,state,error,details){
   if(!SOURCE_DIAGNOSTIC_STAGES.includes(stage)||!['STARTED','COMPLETED','FAILED','DEFERRED','OBSERVED'].includes(state))return;
   if(state==='DEFERRED'&&(stage!=='UI_APPLICATION_PROJECTION'||sourceDiagnosticCode(error)!=='BC_VIEW_STALE'))return;
-  const sdkReturn=stage.endsWith('_SDK_RETURN'),sdkCall=stage.endsWith('_SDK_CALL')||stage.endsWith('_SDK_CLAIM_RPC');
-  if(state==='OBSERVED'&&!(sdkReturn||stage.includes('_SDK_')&&!sdkCall))return;
+  const sdkReturn=stage.endsWith('_SDK_RETURN'),send=stage.endsWith('_SDK_RPC_SEND'),sdkCall=stage.endsWith('_SDK_CALL')||stage.endsWith('_SDK_CLAIM_RPC')||send;
+  if(state==='OBSERVED'&&!(sdkReturn||send||stage.includes('_SDK_')&&!sdkCall))return;
   if(events.length>=128){if(!truncated){truncated=true;save();}return;}
   const offsetMs=elapsed(),start=starts.get(stage);
   const durationMs=(state==='COMPLETED'||state==='FAILED')&&typeof start==='number'&&offsetMs!==null?offsetMs-start:null;
@@ -92,13 +105,14 @@ export function createSourceDiagnostics({persist,monotonicNow=()=>performance.no
    if(SOURCE_DIAGNOSTIC_SDK_CODES.includes(sdkCode)){code=sdkCode;codeNamespace='ATTESTOR_SDK';codeBasis=sdkCall?'ATTESTOR_ERROR_OWN_CODE':'PROTO_ERROR_CODE';}
    else if(sdkReturn){code='UNKNOWN_ERROR';codeNamespace=codeBasis='UNKNOWN';}
    const bounded=own(details,'boundedSendCode');
-   if(sdkCall&&['ATTESTOR_BACKPRESSURE_LIMIT','ATTESTOR_SEND_TIMEOUT','ATTESTOR_SEND_FAILED'].includes(bounded)){code=bounded;codeNamespace='CLEAR_TRANSPORT';codeBasis='OWNED_BOUNDED_SEND';}
+   if(sdkCall&&transportCodes.includes(bounded)){code=bounded;codeNamespace='CLEAR_TRANSPORT';codeBasis='OWNED_BOUNDED_SEND';}
   }
   const abort=own(details,'aborted'),aborted=typeof abort==='boolean'?abort:null;
   const kindValue=own(details,'errorKind'),codeKindValue=own(details,'ownCodeKind');
   const errorKind=sdkCall&&state==='FAILED'&&['OWNED_BOUNDED_SEND','HR_ATTESTOR_ERROR','TRANSPORT_ATTESTOR_ERROR','NATIVE_TYPE_ERROR','NATIVE_RANGE_ERROR','NATIVE_ERROR','NON_ERROR','UNKNOWN'].includes(kindValue)?kindValue:null;
   const ownCodeKind=sdkCall&&state==='FAILED'&&['ABSENT','ACCESSOR','STRING','NUMBER','OTHER','UNKNOWN'].includes(codeKindValue)?codeKindValue:null;
-  const event=Object.freeze({sequence:events.length+1,stage,state,code,codeNamespace,codeBasis,offsetMs,durationMs,aborted,resultKind,errorKind,ownCodeKind});
+  const transport=send||(sdkCall&&codeBasis==='OWNED_BOUNDED_SEND')?sendDetails(own(details,'transport')):null;
+  const event=Object.freeze({sequence:events.length+1,stage,state,code,codeNamespace,codeBasis,offsetMs,durationMs,aborted,resultKind,errorKind,ownCodeKind,transport});
   events.push(event);stages[stage]={state,completedObserved:stages[stage].completedObserved||state==='COMPLETED'};
   if(state==='FAILED'&&!firstFailure)firstFailure=event;
   save();

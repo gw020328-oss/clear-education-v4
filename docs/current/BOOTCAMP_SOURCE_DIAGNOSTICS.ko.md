@@ -91,3 +91,13 @@ SDK_CALL 또는 SDK_CLAIM_RPC 실패의 고정 errorKind는 OWNED_BOUNDED_SEND /
 CLEAR sender 내부 WeakMap으로 생성 출처가 확인된 ATTESTOR_BACKPRESSURE_LIMIT / ATTESTOR_SEND_TIMEOUT / ATTESTOR_SEND_FAILED만 CLEAR_TRANSPORT / OWNED_BOUNDED_SEND로 분류한다. 일반 Error의 같은 message/code는 계속 UNKNOWN이다. 메시지·stack·data·cause·proof·실제 크기는 저장하지 않는다. 이전 128개 상한·타이밍·0600 저장·관측 실패 독립성·공식 검증 경계는 유지한다.
 
 r6의 원래 객체는 소급 복원할 수 없다. 재현한 분류/타이머 결함, 과거 성공 경로 대조, 남은 가설은 [r6 조사 보고서](BOOTCAMP_R6_FAILURE_REVIEW.ko.md)를 따른다. 이번 작업은 새 실제 실행 준비가 아니다.
+
+## r7 후속 v4: 메시지·대기열·송신 경계
+
+2026-10-24 현행 스키마는 `clear-normal-source-diagnostics.4`다. 이전 v3/r7 기록을 고치지 않는다. `ROLE_SDK_RPC_SEND`에 QUEUED/DRAIN_WAIT 관측, 송신 STARTED, 로컬 write COMPLETED 또는 FAILED를 기록한다. 관측은 실제 claim RPC의 AsyncLocalStorage에 속하며 다른 RPC가 같은 socket을 쓰더라도 각 entry의 관측자와 deadline을 입장 때 고정한다. onStep 또는 write 완료는 원격 공식 검증 성공이 아니다.
+
+송신 오류는 정확한 sender WeakMap 출처로 MESSAGE_LIMIT / QUEUE_LIMIT / QUEUE_TIMEOUT / SEND_TIMEOUT / SEND_FAILED / SEND_ABORTED / SEND_CLOSED의 ATTESTOR_ 고정 코드를 구분한다. 이전 BACKPRESSURE_LIMIT 분류는 역사적 호환용이다. 미전송 QUEUE_TIMEOUT은 항목만 버리고 송신 후 SEND_TIMEOUT은 연결을 종료한다. 다른 RPC가 공유 연결을 종료하면 이 claim의 SEND_CLOSED와 실제 terminalReason을 함께 기록한다.
+
+`transport`는 고정 phase, frameBytes/socketQueuedBytes/retainedBytes/pendingCount, 각각의 제한, timeoutMs/waitMs/sendMs, terminalReason과 terminal 시점의 같은 숫자만 가진다. 모든 필드는 허용한 own 값만 읽고 getter·객체·배열·원문은 버린다. 송신 시작 전 숫자와 실패 숫자를 함께 읽어 단일 메시지 초과와 대기열 초과를 구분한다. r7 개별 크기는 여전히 UNKNOWN이며 새 값으로 과거 기록을 채우지 않는다.
+
+128개 이벤트·0600 저장·observer 실패 격리·동일 client·요청/서명/nonce/lease·총 시도1회 경계는 유지한다. 상세 수치 근거와 합성 시험 범위는 [r7 전송 검토](BOOTCAMP_R7_TRANSPORT_REVIEW.ko.md)를 따른다.

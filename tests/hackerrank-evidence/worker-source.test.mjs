@@ -76,11 +76,11 @@ test('same TLS response yields a private lease with explicit worker/attestor res
  }
 });
 test('owned bounded-send failures cross the claim RPC and SDK boundary without inspecting messages',async()=>{
- for(const code of ['ATTESTOR_BACKPRESSURE_LIMIT','ATTESTOR_SEND_FAILED']){
-  const d=createSourceDiagnostics({persist(){}}),socket=installBoundedSender({bufferedAmount:code==='ATTESTOR_BACKPRESSURE_LIMIT'?PROOF_SEND_LIMIT:0,terminate(){},send(_b,cb){cb(Error(PRIVATE));}},{proofMode:true});
-  const x=await setup({diagnostics:d,rpc:()=>socket.sendPromise(Buffer.alloc(1)),afterHook:async i=>{i.onStep({name:'waiting-for-verification'});await i.client.rpc('claimTunnel',{});}});
+ for(const code of ['ATTESTOR_MESSAGE_LIMIT','ATTESTOR_SEND_FAILED']){
+  const d=createSourceDiagnostics({persist(){}}),socket=installBoundedSender({readyState:1,bufferedAmount:0,terminate(){},send(_b,cb){cb(Error(PRIVATE));}},{proofMode:true});
+  const x=await setup({diagnostics:d,rpc:()=>socket.sendPromise(Buffer.alloc(code==='ATTESTOR_MESSAGE_LIMIT'?PROOF_SEND_LIMIT+1:1)),afterHook:async i=>{i.onStep({name:'waiting-for-verification'});await i.client.rpc('claimTunnel',{});}});
   await assert.rejects(x.collector.collect(x.options),/WORKER_COLLECTION_FAILED/);
-  const v=d.snapshot();assert.equal(v.firstFailure.stage,'ACCOUNT_SDK_CLAIM_RPC');assert.equal(v.firstFailure.code,code);
+  const v=d.snapshot();assert.equal(v.firstFailure.stage,'ACCOUNT_SDK_RPC_SEND');assert.equal(v.firstFailure.code,code);
   assert.equal(v.firstFailure.codeNamespace,'CLEAR_TRANSPORT');assert.equal(v.firstFailure.codeBasis,'OWNED_BOUNDED_SEND');
   assert.equal(v.firstFailure.errorKind,'OWNED_BOUNDED_SEND');assert.equal(v.firstFailure.ownCodeKind,'ABSENT');
   assert.equal(v.stages.ACCOUNT_SDK_CLAIM_RPC_OBSERVER.state,'OBSERVED');assert.equal(v.stages.ACCOUNT_SDK_RETURN.state,'NOT_OBSERVED');

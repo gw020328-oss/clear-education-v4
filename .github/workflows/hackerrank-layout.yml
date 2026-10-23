@@ -5,6 +5,10 @@ on:
     paths:
       - 'src/hackerrank-evidence/**'
       - 'tests/hackerrank-evidence/**'
+      - 'src/ybm-collector/**'
+      - 'tests/ybm-collector/socket.test.mjs'
+      - 'tests/ybm-collector/claim-rpc-boundary.test.mjs'
+      - 'tests/ybm-collector/large-message.test.mjs'
       - 'docs/hackerrank/**'
       - '.github/workflows/hackerrank-layout.yml'
 
@@ -38,4 +42,4 @@ jobs:
           ./tools/npm --prefix src/ybm-collector ci --ignore-scripts
           ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts
       - name: Offline source, signature, diagnostic privacy and bounded layout regression
-        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/*.test.mjs
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/hackerrank-evidence/*.test.mjs tests/ybm-collector/socket.test.mjs tests/ybm-collector/claim-rpc-boundary.test.mjs tests/ybm-collector/large-message.test.mjs

@@ -1,0 +1,52 @@
+{
+  "version": "clear-transport-limit-evidence.1",
+  "date": "2026-10-24",
+  "sourceSdkVersion": "5.1.4",
+  "officialSourceCommit": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+  "wsVersion": "8.22.0",
+  "officialServerSource": "https://github.com/reclaimprotocol/attestor-core/blob/bc36dac3657fc46b79b4ecd545262c32440b05a6/src/server/create-server.ts#L47",
+  "wsDefaultDocumentation": "https://github.com/websockets/ws/blob/8.22.0/doc/ws.md",
+  "serverDefaultMessageLimitBytes": 104857600,
+  "sdk512MiBConstantWiredToServer": false,
+  "deployedServerLimitConfirmed": false,
+  "r7IndividualSizesRecovered": false,
+  "originalSenderReproduction": {
+    "baselineHead": "0b9091f299f7ab56a622a8b3db7a976c529f6eca",
+    "scope": "SYNTHETIC_ORIGINAL_SENDER_CODE_NOT_R7_REPLAY",
+    "rows": [
+      {
+        "name": "SINGLE_FRAME",
+        "frameBytes": 41943040,
+        "queuedBytes": 0,
+        "oldCode": "ATTESTOR_BACKPRESSURE_LIMIT",
+        "oldSent": 0,
+        "currentSent": 1
+      },
+      {
+        "name": "BACKLOG",
+        "frameBytes": 1,
+        "queuedBytes": 33554432,
+        "oldCode": "ATTESTOR_BACKPRESSURE_LIMIT",
+        "oldSent": 0,
+        "currentSent": 1
+      }
+    ]
+  },
+  "local100MiBMeasurement": {
+    "scope": "SYNTHETIC_ENCODE_SIGN_LOOPBACK_NOT_ZK_OR_REMOTE",
+    "frameBytes": 104857600,
+    "unsignedBytes": 104857519,
+    "unsignedEncodeMs": 43.65420799999998,
+    "signMs": 2441.627583,
+    "rpcEncodeMs": 44.84950000000026,
+    "writeMs": 114.28004099999998,
+    "loopbackMs": 179.92833299999984,
+    "rssBefore": 126959616,
+    "rssAfter": 916373504,
+    "processPeakRssBytes": 916373504
+  },
+  "measurementIncludesLocalSenderAndReceiver": true,
+  "actualZkGenerationMeasured": false,
+  "actualRemoteAccepted": false,
+  "sourcePolicyChanged": false
+}

@@ -12,7 +12,7 @@ test('relative monotonic time pairs only observed boundaries and never uses a pr
  observeSource(d,'SIGNATURE_WAIT','STARTED');now+=20;observeSource(d,'SIGNATURE_ACCEPTANCE','COMPLETED');
  now+=30;observeSource(d,'SIGNATURE_WAIT','FAILED',Error('AUTH_REQUIRED'));
  now+=10;observeSource(d,'SIGNATURE_WAIT','STARTED');now+=5;observeSource(d,'SIGNATURE_WAIT','COMPLETED');
- const v=d.snapshot();assert.equal(v.version,'clear-normal-source-diagnostics.3');assert.equal(v.timing,'COMPLETE');
+ const v=d.snapshot();assert.equal(v.version,'clear-normal-source-diagnostics.4');assert.equal(v.timing,'COMPLETE');
  assert.deepEqual(v.events.map(e=>e.offsetMs),[0,20,50,60,65]);
  assert.deepEqual(v.events.map(e=>e.durationMs),[null,null,50,null,5]);
  assert.equal(JSON.stringify(v).includes('12345'),false);
@@ -105,4 +105,14 @@ test('diagnostic transport lookup cannot break existing HR-only offline consumer
  if(typeof collectWorkerSource!=='function'||!blocked)throw Error('IMPORT_NOT_EXERCISED');
  `;
  assert.doesNotThrow(()=>execFileSync(process.execPath,['--import','./tests/ybm-collector/network-guard.mjs','--input-type=module','-e',script],{cwd:new URL('../../',import.meta.url),env:{...process.env,LOG_LEVEL:'silent'},stdio:'pipe'}));
+});
+
+test('transport measurements allow only bounded scalar shape and fixed termination reasons',()=>{
+ let getters=0;const d=createSourceDiagnostics({persist(){}}),transport={phase:'DRAIN_WAIT',frameBytes:104857600,socketQueuedBytes:11,retainedBytes:104857600,pendingCount:1,frameLimitBytes:104857600,retainedLimitBytes:138412032,pendingCountLimit:64,timeoutMs:60000,waitMs:12.5,sendMs:null,terminalReason:'ATTESTOR_QUEUE_LIMIT',terminalFrameBytes:7,terminalSocketQueuedBytes:11,terminalRetainedBytes:138412032,terminalPendingCount:64,body:secret,signature:secret};
+ observeSource(d,'ACCOUNT_SDK_RPC_SEND','OBSERVED',undefined,{transport});
+ observeSource(d,'ACCOUNT_SDK_RPC_SEND','FAILED',undefined,{boundedSendCode:'ATTESTOR_QUEUE_TIMEOUT',transport:{...transport,frameBytes:-1,socketQueuedBytes:Infinity,waitMs:NaN,terminalReason:secret,get sendMs(){getters++;throw Error(secret);}}});
+ observeSource(d,'ACCOUNT_SDK_RPC_SEND','OBSERVED',undefined,{transport:{get phase(){getters++;throw Error(secret);}}});
+ const v=d.snapshot();assert.equal(v.events[0].transport.frameBytes,104857600);assert.equal(v.events[0].transport.terminalReason,'ATTESTOR_QUEUE_LIMIT');
+ assert.equal(v.firstFailure.code,'ATTESTOR_QUEUE_TIMEOUT');assert.equal(v.firstFailure.transport.frameBytes,null);assert.equal(v.firstFailure.transport.socketQueuedBytes,null);assert.equal(v.firstFailure.transport.waitMs,null);assert.equal(v.firstFailure.transport.terminalReason,null);assert.equal(v.firstFailure.transport.sendMs,null);
+ assert.equal(v.events[2].transport,null);assert.equal(getters,0);assert.equal(JSON.stringify(v).includes(secret),false);
 });

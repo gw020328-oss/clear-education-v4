@@ -1,6 +1,8 @@
 # 실제 한 건 실행 전 본부 일괄 준비표
 
-2026-10-23 현행: r6는 계정 SDK await reject로 실패 종료했고 원래 내부 오류는 미확정이다. [r6 조사](BOOTCAMP_R6_FAILURE_REVIEW.ko.md)와 [v15 검증](BOOTCAMP_V15_VERIFICATION.json)이 최신이다. 확인된 전송 오류 분류/타이머 결함을 오프라인으로 수정했으며 새 실제 실행 준비는 하지 않는다. 기존 r6/r5와 아래 과거 준비 기록을 보존한다. 현재 사용자 로그인/CA/지갑 행동은 필요 없다.
+2026-10-24 현행: r7의 최초 원인은 로컬 combined32MiB 송신 제한 초과이며 frame/queue 개별 크기는 미확정이다. [r7 전송 검토](BOOTCAMP_R7_TRANSPORT_REVIEW.ko.md)와 [v16 검증](BOOTCAMP_V16_VERIFICATION.json)을 우선한다. 단일 메시지100MiB·active+waiting132MiB·FIFO1개 및 기존보다 길어지지 않는 RPC deadline을 적용했다. 새 실제 실행·호스트·CA·로그인·READY·AI·지급을 시작하지 않고, 최종 HEAD CI까지 완료 후 본부 재시험 지시를 기다린다. r5/r6/r7 기록은 보존한다.
+
+2026-10-23 이전: r6는 계정 SDK await reject로 실패 종료했고 원래 내부 오류는 미확정이다. [r6 조사](BOOTCAMP_R6_FAILURE_REVIEW.ko.md)와 [v15 검증](BOOTCAMP_V15_VERIFICATION.json)이 최신이다. 확인된 전송 오류 분류/타이머 결함을 오프라인으로 수정했으며 새 실제 실행 준비는 하지 않는다. 기존 r6/r5와 아래 과거 준비 기록을 보존한다. 현재 사용자 로그인/CA/지갑 행동은 필요 없다.
 
 2026-10-23 이전: r5 후속 SDK 진단 v14의 [검증 기록](BOOTCAMP_V14_VERIFICATION.json)과 아래 마지막 절이 최신이다. 앞선 r4/r5 준비 문구는 과거 기록이다. 이번 작업에서 r6 환경·CA·브라우저·READY·실제 수집·서명·AI·지급을 시작하지 않는다.
 

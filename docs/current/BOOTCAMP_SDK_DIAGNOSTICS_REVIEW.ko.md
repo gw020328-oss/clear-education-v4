@@ -1,5 +1,7 @@
 # SDK 오류·상대 시간 진단 좁은 검토
 
+2026-10-24 최신 검토는 [r7 전송 수정](BOOTCAMP_R7_TRANSPORT_REVIEW.ko.md)과 v16 검증을 따른다. 아래 v14/v15 내용은 각 당시 범위다. 기존 검토 담당자를 재사용해 FIFO 예약량·RPC deadline·종료/취소·observer 재진입·개인정보 경계를 확인했다. DRAIN_WAIT 관측 중 취소 후 timer 재생성, 다른 RPC의 종료 원인 소실, Node timeout 범위 초과, 미전송 만료가 다른 proof를 중단시키는 경우를 수정하고 회귀를 추가했다.
+
 2026-10-23. 사용자 지정 작업 설정은 GPT-6 Astra / Ultra다. 이 기록은 설정 변경 도구를 통해 현재 턴의 모델을 독립 검증했다는 주장이 아니다. 수정 범위는 원천 관측 모듈·선언, worker SDK 경계, 오프라인 회귀 및 정확 세대 지문이다. PR102를 Draft로 유지하고 r6 환경·CA·로그인·READY·실제 proof·AI·서명·지급·merge/deploy는 실행하지 않는다.
 
 ## 확인한 SDK 근거

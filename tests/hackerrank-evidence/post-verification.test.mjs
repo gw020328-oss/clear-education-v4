@@ -7,7 +7,7 @@ import {createRequire} from 'node:module';
 import {Wallet} from 'ethers';
 import {sdk} from './fixture.mjs';
 import {installClaimRpcObserver,observeClaimRpc} from '../../src/ybm-collector/claim-rpc-observer.mjs';
-import {installBoundedSender,boundedSendFailure,PROOF_SEND_LIMIT} from '../../src/ybm-collector/socket.mjs';
+import {installBoundedSender,boundedSendFailure} from '../../src/ybm-collector/socket.mjs';
 const require=createRequire(new URL('../../src/hackerrank-evidence/worker-source.mjs',import.meta.url));
 const source=readFileSync(require.resolve('@reclaimprotocol/attestor-core'),'utf8');
 const start='  onStep?.({ name: "waiting-for-verification" });',end='  async function fetchCertificateBytesFromAttestor';
@@ -37,12 +37,12 @@ test('actual encoder and signer failures occur after WFV but before the observed
   assert.deepEqual(order,['WFV']);stop();
  }
 });
-test('post-verification signed RPC envelope hits the production bounded sender without network',async()=>{
- const owner=Wallet.createRandom(),order=[],socket=installBoundedSender({bufferedAmount:PROOF_SEND_LIMIT,sent:0,terminate(){},send(){this.sent++;}},{proofMode:true});
+test('post-verification signed RPC envelope preserves a production sender failure without network',async()=>{
+ const owner=Wallet.createRandom(),order=[],socket=installBoundedSender({readyState:1,bufferedAmount:0,sent:0,terminate(){},send(){this.sent++;throw Error('SYNTHETIC_PRIVATE');}},{proofMode:true});
  const client={async rpc(type,req){const bytes=sdk.proto.RPCMessages.encode(sdk.proto.RPCMessages.create({messages:[{id:1,claimTunnelRequest:req}]})).finish();await socket.sendPromise(bytes);}};
  installClaimRpcObserver(client);const stop=observeClaimRpc(client,(state,error)=>order.push([state,boundedSendFailure(error)]));
- await assert.rejects(run(()=>order.push(['WFV',null]),sdk.proto.ClaimTunnelRequest,request(),signer,owner.privateKey,client,quiet),error=>boundedSendFailure(error)==='ATTESTOR_BACKPRESSURE_LIMIT');
- assert.deepEqual(order,[['WFV',null],['STARTED',null],['FAILED','ATTESTOR_BACKPRESSURE_LIMIT']]);assert.equal(socket.sent,0);stop();
+ await assert.rejects(run(()=>order.push(['WFV',null]),sdk.proto.ClaimTunnelRequest,request(),signer,owner.privateKey,client,quiet),error=>boundedSendFailure(error)==='ATTESTOR_SEND_FAILED');
+ assert.deepEqual(order,[['WFV',null],['STARTED',null],['SEND_OBSERVED',null],['SEND_STARTED',null],['SEND_FAILED','ATTESTOR_SEND_FAILED'],['FAILED','ATTESTOR_SEND_FAILED']]);assert.equal(socket.sent,1);stop();
 });
 test('an invalid resolved RPC response throws inside the SDK after RPC completion and before return',async()=>{
  const order=[],client={async rpc(){return null;}},owner=Wallet.createRandom();
