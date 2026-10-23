@@ -256,11 +256,30 @@ test('v16 admits exact bounded sender policy and preserves the complete v15 gene
   assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
   const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
  }
- for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(execFileSync('git',['show','253f94ff1461e3521dd787395c71b40a4da214b6:'+p],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
  for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v15.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v12.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V7.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
  for(const k of ['normalHost','normativeBoundary','allowedRuntimeKinds','signatureWait','sdkDiagnostics'])assert.deepEqual(current[k],old[k],k);
  assert.deepEqual(current.sourceDiagnostics,{...old.sourceDiagnostics,schema:'clear-normal-source-diagnostics.4'});
  assert.deepEqual(current.transportDiagnostics,{...old.transportDiagnostics,ownedBoundedSendFailureCodes:7,limitsOrTimeoutsChanged:true});
  for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
  assert.deepEqual(current.boundedSendPolicy,{"proofMessageBytes":104857600,"proofActiveAndWaitingBytes":138412032,"transportMessageAndRetainedBytes":2097152,"maximumActiveAndWaitingSends":64,"simultaneousSocketSends":1,"socketDrainPollMs":10,"proofTotalSendTimeoutMs":60000,"transportTotalSendTimeoutMs":10000,"rpcDeadlineCarriedFromInvocation":true,"expiredUnsentItemDiscardedAlone":true,"expiredReservationsSweptBeforeAdmission":true,"startedWriteTimeoutTerminatesSocket":true,"abortReachesRawSocket":true,"callbackAndPublicQueueDrainRequired":true,"wholeEncodedRpcMessage":true,"maxPayloadBasis":"PUBLISHED_SERVER_WS_DEFAULT_NOT_DEPLOYED_CONFIGURATION","deployedServerLimitConfirmed":false,"r7IndividualSizesKnown":false,"scalarTransportMeasurementsOnly":true,"otherRpcTerminalReasonPreserved":true,"automaticRetry":false,"messageSplitting":false,"sdkOrEngineChanged":false,"sourceExpiryExtended":false,"signaturePolicyChanged":false,"paymentPolicyChanged":false});
+});
+
+
+test('v17 admits only safe claim-return hints and preserves the complete v16 generation',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v17.json';assert.equal(sha(read(path)),'24c2808e5521ceac304efa167d00167f35f1e425cd29850add4bd7db22ce5361');
+ const current=JSON.parse(read(path)),old=JSON.parse(read(current.previousCompatibilityRecord.path));
+ assert.equal(current.currentSourceCandidateHead,'3e1508d3f181662023268fb62a7803e0a483f5c9');assert.equal(current.previousCompatibilityRecord.guardHead,'253f94ff1461e3521dd787395c71b40a4da214b6');
+ assert.deepEqual(current.changedFromV16,["src/hackerrank-evidence/diagnostics.mjs", "src/hackerrank-evidence/worker-source.mjs"]);assert.deepEqual(Object.keys(current.sourceDelta),current.changedFromV16);assert.deepEqual(current.sourceAdditions,{"src/hackerrank-evidence/claim-return-diagnostics.mjs": "2046246cf391c3d02eb7743cd3029d1a2281b98c41d5924506dd7fc74b424653"});
+ assert.equal(Object.keys(current.sourceArtifactSha256).length,163);assert.deepEqual(Object.keys(current.sourceArtifactSha256),[...Object.keys(old.sourceArtifactSha256),...Object.keys(current.sourceAdditions)].sort());
+ for(const [p,h]of Object.entries(old.sourceArtifactSha256)){
+  assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
+  const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
+ }
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v16.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v13.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V8.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
+ for(const k of ['normalHost','normativeBoundary','allowedRuntimeKinds','signatureWait','sdkDiagnostics','transportDiagnostics','boundedSendPolicy'])assert.deepEqual(current[k],old[k],k);
+ assert.deepEqual(current.sourceDiagnostics,{...old.sourceDiagnostics,schema:'clear-normal-source-diagnostics.5'});
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
+ assert.deepEqual(current.claimReturnDiagnostics,{"basis":"REMOTE_ERROR_HINT","reasonHints":["UNKNOWN","REQUEST_SIGNATURE","TIMESTAMP_WINDOW","TLS_HANDSHAKE","ZK_PROOF","TRANSCRIPT_PACKET","HTTP_PROVIDER_RECEIPT"],"presenceFields":["errorPresent","claimPresent","claimSignaturePresent","resultSignaturePresent"],"numericErrorCode":5,"maximumTransientMessageCharacters":2048,"fullAuditedPatternOnly":true,"controlCharactersRejected":true,"proxyOrAccessorInvocation":false,"rawMessageOrDataOrStackRecorded":false,"signatureBytesRead":false,"hintGrantsAuthority":false,"r8RootCauseConfirmed":false,"publishedServerCommit":"bc36dac3657fc46b79b4ecd545262c32440b05a6","deployedServerVersionConfirmed":false,"sdkOrEngineChanged":false,"sendPolicyChanged":false,"sourceExpiryExtended":false,"signaturePolicyChanged":false,"paymentPolicyChanged":false});
 });
