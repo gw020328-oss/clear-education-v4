@@ -276,10 +276,33 @@ test('v17 admits only safe claim-return hints and preserves the complete v16 gen
   assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
   const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
  }
- for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(execFileSync('git',['show','36c9aed6370623a915e8eff858d96078da09f26b:'+p],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
  for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v16.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v13.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V8.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
  for(const k of ['normalHost','normativeBoundary','allowedRuntimeKinds','signatureWait','sdkDiagnostics','transportDiagnostics','boundedSendPolicy'])assert.deepEqual(current[k],old[k],k);
  assert.deepEqual(current.sourceDiagnostics,{...old.sourceDiagnostics,schema:'clear-normal-source-diagnostics.5'});
  for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
  assert.deepEqual(current.claimReturnDiagnostics,{"basis":"REMOTE_ERROR_HINT","reasonHints":["UNKNOWN","REQUEST_SIGNATURE","TIMESTAMP_WINDOW","TLS_HANDSHAKE","ZK_PROOF","TRANSCRIPT_PACKET","HTTP_PROVIDER_RECEIPT"],"presenceFields":["errorPresent","claimPresent","claimSignaturePresent","resultSignaturePresent"],"numericErrorCode":5,"maximumTransientMessageCharacters":2048,"fullAuditedPatternOnly":true,"controlCharactersRejected":true,"proxyOrAccessorInvocation":false,"rawMessageOrDataOrStackRecorded":false,"signatureBytesRead":false,"hintGrantsAuthority":false,"r8RootCauseConfirmed":false,"publishedServerCommit":"bc36dac3657fc46b79b4ecd545262c32440b05a6","deployedServerVersionConfirmed":false,"sdkOrEngineChanged":false,"sendPolicyChanged":false,"sourceExpiryExtended":false,"signaturePolicyChanged":false,"paymentPolicyChanged":false});
+});
+
+
+test('v18 adopts only exact crypto binding fix and preserves the complete v17 generation',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v18.json';assert.equal(sha(read(path)),'12ddc5d166d8b3f090aa8e4211e4bd335938365e068757259df5244174c70b13');
+ const current=JSON.parse(read(path)),old=JSON.parse(read(current.previousCompatibilityRecord.path));
+ assert.equal(current.currentSourceCandidateHead,'7d9db33924be50ae79f90385c3ac7f37b58d0a82');assert.equal(current.previousCompatibilityRecord.guardHead,'36c9aed6370623a915e8eff858d96078da09f26b');
+ assert.deepEqual(current.changedFromV17,["src/hackerrank-evidence/package-lock.json", "src/hackerrank-evidence/package.json", "src/ybm-collector/package-lock.json", "src/ybm-collector/package.json"]);assert.deepEqual(Object.keys(current.sourceDelta),current.changedFromV17);assert.deepEqual(current.sourceAdditions,{"docs/current/BOOTCAMP_ZK_EXECUTION_FINGERPRINTS_V1.json": "67f5f4ba9c38f19c0c568099fee1f9f15693a19d78a3c5ee4bcda6390aaf1579"});
+ assert.equal(Object.keys(current.sourceArtifactSha256).length,164);assert.deepEqual(Object.keys(current.sourceArtifactSha256),[...Object.keys(old.sourceArtifactSha256),...Object.keys(current.sourceAdditions)].sort());
+ for(const [p,h]of Object.entries(old.sourceArtifactSha256)){
+  assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
+  const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
+ }
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v17.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v14.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V9.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
+ for(const k of ["normativeBoundary", "allowedRuntimeKinds", "normalHost", "signatureWait", "sdkDiagnostics", "transportDiagnostics", "boundedSendPolicy", "sourceDiagnostics", "claimReturnDiagnostics"])assert.deepEqual(current[k],old[k],k);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
+ assert.deepEqual(current.zkCompatibility,{"sdk":"5.1.4","tls":"0.1.4","engine":"stwo","engineProto":2,"cryptoBefore":"5.1.6","cryptoAfter":"5.1.7","exactDirectDependencyBothPrefixes":true,"officialSecurityFix":"ec3974348444ad85adfe5e21c5152f69c7b93722","fingerprints":{"path":"docs/current/BOOTCAMP_ZK_EXECUTION_FINGERPRINTS_V1.json","sha256":"67f5f4ba9c38f19c0c568099fee1f9f15693a19d78a3c5ee4bcda6390aaf1579"},"sameVersionSyntheticPass":true,"crossVersionSyntheticRejected":true,"cipherAlgorithms":3,"tlsPacketConfigurations":6,"sdkAndTlsUnchanged":true,"deployedServerVersionConfirmed":false,"r9RootCauseConfirmed":false,"automaticFallback":false,"attempts":1,"zkProofConcurrency":1,"rawProofPersisted":false,"signaturePolicyChanged":false,"sendPolicyChanged":false,"sourceExpiryExtended":false,"paymentPolicyChanged":false});
+ for(const prefix of ['hackerrank-evidence','ybm-collector']){
+  const pkg=JSON.parse(read(`src/${prefix}/package.json`)),lock=JSON.parse(read(`src/${prefix}/package-lock.json`));
+  assert.equal(pkg.dependencies['@reclaimprotocol/zk-symmetric-crypto'],'5.1.7');assert.equal(lock.packages['node_modules/@reclaimprotocol/zk-symmetric-crypto'].version,'5.1.7');
+  assert.equal(pkg.dependencies['@reclaimprotocol/attestor-core'],'5.1.4');assert.equal(pkg.dependencies['@reclaimprotocol/tls'],'0.1.4');
+ }
 });

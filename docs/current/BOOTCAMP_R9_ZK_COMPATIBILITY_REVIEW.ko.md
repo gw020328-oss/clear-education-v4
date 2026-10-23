@@ -38,3 +38,5 @@ r9는 참가자 서명 수락과 계정 응답 검사를 통과했다. 66,901,44
 정상 TLS1.3 handshake→application counter reset과 SessionTicket 처리는 대응 source에서 일치했다. 실제 KeyUpdate를 걸치는 ZK packet은 TLS 측의 key/IV/counter reset과 server 측 단일 마지막 fixedIV·누적 counter가 어긋날 후보가 남는다. r9에서 KeyUpdate가 있었다는 증거는 없고 이를 고치기 위한 임의 TLS/검증 정책 변경도 하지 않았다.
 
 최종 HEAD CI가 통과하면 본부 지시 하에 새로운 실제 1건을 시험할 수 있다. 수락 시에는 기존 독립 공식 서명·owner·요청 결합·최신성·pair·lease 검증을 모두 통과해야 한다. 다시 `ZK_PROOF`면 원격 WASM 형식/배포 지문 또는 key epoch/packet mapping을 확인해야 하며 같은 로그인을 반복하지 않는다. 원격이 새 형식이라는 확인 없이 실패를 다른 이유로 확정하지 않는다. 실행 승인이나 성공 기록은 이번 호환성 인수에 포함되지 않는다.
+
+[최종 로컬 검증 기록](BOOTCAMP_V18_VERIFICATION.json): 서로 다른 Node 시험958개 통과(수집473, API/실행421, pin/gate64), 공식 버전행렬12개 예상 결과 확인, E5/E5B 보존·workspace·의존성 검사 통과. 최종 HEAD CI는 PR102의 같은 HEAD 결과와 run 링크를 확인한다.
