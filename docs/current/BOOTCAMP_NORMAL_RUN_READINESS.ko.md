@@ -37,3 +37,11 @@
 ## 2026-10-23 원천 진단 v12
 
 [단계별 진단 명세](BOOTCAMP_SOURCE_DIAGNOSTICS.ko.md)와 [검증 기록](BOOTCAMP_V12_VERIFICATION.json)을 따른다. 기존 원천 159개 중 7개에 수동적 관측을 연결하고 진단 모듈 1개를 더한 정확한 160개 지문을 v12로 고정했다. 이전 v11 intake/guard는 보존했다. 브라우저/API 바이트는 V3와 같으며 [V4 자산 기록](BOOTCAMP_TEST_CLIENT_ASSETS_V4.json)은 v12 실행 지문만 연결한다. r3 원인은 미확정이고 새 실제 수집·로그인·AI·서명·지급은 미실행이다. 이 기록은 새 시험 실행 승인이 아니다.
+
+## 2026-10-23 r4 이후 조회 충돌 수정과 v13
+
+[좁은 보안 검토](BOOTCAMP_SIGNATURE_WAIT_REVIEW.ko.md)와 [오프라인 검증 기록](BOOTCAMP_V13_VERIFICATION.json)을 따른다. 실제 auth/store/UI에서 초 경계 `BC_VIEW_STALE`이 정상 서명 대기를 취소하는 결함을 red→green으로 확인했다. 현재 pending의 정확한 store 조회 충돌만 보류하며 호출자에게 예외는 그대로 반환한다. 실제 제출은 성공한 최신 조회와 권한·바인딩·기한·서명을 다시 검사한다. 기존 250ms 검사와 최대 300초, store 전역 검사 및 원천/AI/지급 정책은 유지한다.
+
+v13은 브로커·진단 모듈·테스트 fixture의 정확한 세 변경을 160개 소스 지문에 반영한다. [V5 자산 기록](BOOTCAMP_TEST_CLIENT_ASSETS_V5.json)은 v13을 연결하며 브라우저 5개 자산과 normal client 바이트는 V4와 같다. v12 intake/guard/V4 manifest 및 r3/r4 실제 기록은 보존한다. 로그인 없는 회귀·보존 검사 323개가 통과했으며, 최종 커밋의 CI는 푸시 후 별도로 확인한다.
+
+r4의 실제 최초 내부 오류는 미확정이다. 새 r5는 최종 CI 통과 뒤 별도 미사용 환경으로 준비하며, 실제 실행은 이후 사용자 준비 확인이 필요하다. 기존 prepare 도구는 환경별 CA를 생성하고 재사용 옵션이 없다. 이번 권한 수정에 별도 인증서 공유 기능을 추가하지 않으며, 현행 도구로 준비할 경우 새 CA의 수동 신뢰가 필요하다. 준비 시 브라우저·로그인·READY·신청·체인·서명·증명·AI 호출·지급은 실행하지 않는다.

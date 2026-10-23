@@ -1,0 +1,31 @@
+{
+  "version": "clear-bootcamp-v13-verification.1",
+  "date": "2026-10-23",
+  "baselineHead": "18bbb2455de6971558077b4ab9a77c27008b5ba4",
+  "sourceCandidateHead": "cad308fa7552fc73d08a63bdb575334fdf791e05",
+  "scope": "OFFLINE_SIGNATURE_WAIT_PROJECTION_CONFLICT_FIX_NOT_ACTUAL_SOURCE_ACCEPTANCE",
+  "confirmedDefect": "Typed store BC_VIEW_STALE permanently cancelled pending signature despite still-valid authority",
+  "actualR4InitialError": "UNCONFIRMED_ORIGINAL_INNER_ERROR_NOT_RECORDED",
+  "redBeforeFix": {"selectedTests": 3, "passed": 0, "failed": 3, "reason": "pending settled after real store read conflict"},
+  "finalLocalChecks": {
+    "sourceUiFlowAndReturnBoundary": {"passed": 265, "failed": 0, "externalNetworkBlocked": true},
+    "sourcePinsCompatibilityAndBrowserAssets": {"passed": 58, "failed": 0, "externalNetworkBlocked": true},
+    "uniqueTestsAcrossTheseTwoCommands": 323,
+    "e5Preservation": "PASS",
+    "e5bExactSourcePins": "PASS",
+    "portableWorkspacePreservation": "PASS",
+    "frozenDependencyValidation": "PASS",
+    "declarationValidation": "SYNTAX_ONLY_NOT_FULL_TSC"
+  },
+  "sourceIntake": {"path": "specs/bootcamp/hackathon-test-memory-source-intake-v13.json", "sha256": "611a62d521854c8bd89a4eb7584c6deae71a7346d7b62c2409580f622d9d7880", "sources": 160},
+  "guardPins": {"path": "docs/hackathon-test-vault/e5b/normal-source-pins-v10.json", "sha256": "5b2fde2cedbab5184acd8ce6e134eaac5b8787e5147f945c4d65edee2473a19d"},
+  "testClientManifest": {"path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V5.json", "sha256": "eae6cc99de3382036e62da9ff6a9de530e8da5ea4dc5528a419c8e66b5cb4f8b", "browserBytesChanged": false},
+  "securityReview": {"path": "docs/current/BOOTCAMP_SIGNATURE_WAIT_REVIEW.ko.md", "blockingFindingsRemaining": 0, "independentAgentReviewClaimed": false},
+  "finalHeadCi": "VERIFY_AFTER_COMMIT_AND_PUSH_DO_NOT_REUSE_OLD_HEAD_RESULTS",
+  "actualLoginPerformed": false,
+  "actualSignaturePerformed": false,
+  "actualProofPerformed": false,
+  "actualAiCallPerformed": false,
+  "actualPaymentPerformed": false,
+  "mergeOrDeploymentPerformed": false
+}

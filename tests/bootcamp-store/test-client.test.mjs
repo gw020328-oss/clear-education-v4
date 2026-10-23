@@ -158,5 +158,18 @@ test('v4 keeps all browser/API bytes and consumes exact v12 diagnostics sources'
  for(const k of ['apiContractsChanged','productFrontendAccepted','actualExecutionApprovedByThisRecord'])assert.equal(m[k],false);
  assert.equal(sha(m.existingCoreIntake.path),'ed279c819aab1bc91b8cb15b3c1f974e9a42df5feaf038e4270e89a7b1d49bcd');
  const intake=JSON.parse(readFileSync(new URL('../../'+m.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(intake.sourceArtifactSha256).length,160);
+ for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(createHash('sha256').update(execFileSync('git',['show','18bbb2455de6971558077b4ab9a77c27008b5ba4:'+p])).digest('hex'),h,p);
+});
+
+test('v5 preserves browser/API bytes and consumes only the exact v13 signature wait fix',async()=>{
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V5.json';assert.equal(sha(path),'eae6cc99de3382036e62da9ff6a9de530e8da5ea4dc5528a419c8e66b5cb4f8b');
+ const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
+ assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.5');assert.equal(sha(m.previousRecord.path),'526d276b5a587698235c759190a65f6e373d1a92676ee3b65de38891a6d452e8');
+ assert.deepEqual(m.changedFromV4,[]);assert.deepEqual(m.sourceDelta,{});assert.deepEqual(m.sourceArtifacts,old.sourceArtifacts);assert.deepEqual(m.normalClient,old.normalClient);assert.equal(m.publicAssetSnapshotSha256,old.publicAssetSnapshotSha256);
+ for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ for(const k of ['apiContractsChanged','productFrontendAccepted','actualExecutionApprovedByThisRecord'])assert.equal(m[k],false);
+ assert.equal(sha(m.existingCoreIntake.path),'611a62d521854c8bd89a4eb7584c6deae71a7346d7b62c2409580f622d9d7880');
+ const intake=JSON.parse(readFileSync(new URL('../../'+m.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(intake.sourceArtifactSha256).length,160);
  for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(sha(p),h,p);
 });
