@@ -768,3 +768,102 @@ body::before {
 .alt-name { display: block; font-size: 13.5px; font-weight: 800; }
 .alt-items { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
 .alt .note { margin-top: 9px; }
+
+/* ── 부트캠프 화면 (이슈 #106) ─────────────────────────────────────────
+   기존 토큰만 쓴다. 새 색을 만들면 같은 뜻이 화면마다 달라 보인다. */
+
+.bc > section { margin-block: 20px; }
+
+.bc-notice {
+  border: 1px solid var(--warn-line);
+  background: var(--warn-bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.bc-notice strong { display: block; margin-bottom: 4px; }
+.bc-notice p { margin: 0; color: var(--muted); }
+
+.bc-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* 확인되지 않은 값. 0 과 섞이면 안 되므로 숫자처럼 보이지 않게 둔다 */
+.bc-unknown { color: var(--muted); font-style: italic; }
+
+.bc-warn {
+  border-left: 3px solid var(--warn-line);
+  padding-left: 10px;
+  color: var(--warn-tag-fg);
+  background: var(--warn-bg);
+  border-radius: 0 6px 6px 0;
+  padding-block: 8px;
+  padding-right: 10px;
+}
+.bc-ok { color: var(--ok); }
+
+.bc-action {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 10px;
+  padding: 14px;
+}
+.bc-action h4 { margin: 0 0 8px; }
+.bc-action p { margin: 0 0 8px; }
+
+/* 왜 못 하는지 — 버튼을 숨기지 않고 이유를 적는다 */
+.bc-blocked {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  color: var(--muted);
+}
+.bc-blocked-tag {
+  background: var(--line-soft);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.86em;
+  white-space: nowrap;
+}
+
+/* 서버가 보낸 서명 문구. 그대로 보여야 하므로 줄바꿈을 지킨다 */
+.bc-message {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--line-soft);
+}
+.bc-message-tag { font-weight: 600; margin-bottom: 6px; }
+.bc-message-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0 0 6px;
+  font-size: 0.92em;
+}
+
+.bc-btn {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+.bc-btn[disabled] { opacity: 0.55; cursor: default; }
+
+.bc-roles { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bc-roles li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.bc-roles li[data-done="yes"] { border-color: var(--ok); background: var(--ok-soft); }
+.bc-rolestate { color: var(--muted); }
+.bc-roles li[data-done="yes"] .bc-rolestate { color: var(--ok); }
+
+.bc-foot { color: var(--muted); }

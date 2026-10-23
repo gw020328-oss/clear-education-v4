@@ -21,6 +21,8 @@ import { reviewSection } from './ui/review-view.js';
 import { REVIEWS } from './fixtures/review.js';
 import { brandHeader } from './ui/brand.js';
 import { STEP_ORDER } from './ui/state-labels.js';
+import { bootcampSection } from './bootcamp/bootcamp-view.js';
+import { bootcampView, BOOTCAMP_CASES } from './fixtures/bootcamp.js';
 
 const chrome = document.querySelector('#chrome');
 const main = document.querySelector('#main');
@@ -37,6 +39,10 @@ function parseRoute() {
   const hash = window.location.hash.replace(/^#/, '');
   const parts = hash.split('/').filter(Boolean);
   if (parts[0] === 'reviews') return { name: 'review', id: parts[1] ?? null };
+  // 부트캠프 — 이슈 #106. 아직 fixture 만 보므로 case/role 을 주소에서 고른다.
+  if (parts[0] === 'bootcamp') {
+    return { name: 'bootcamp', caseId: parts[1] ?? 'missing', role: parts[2] ?? 'participant' };
+  }
   if (parts[0] !== 'applications' || !parts[1]) return { name: 'list' };
   if (parts[2] === 'steps' && parts[3]) return { name: 'step', id: parts[1], step: Number(parts[3]) };
   return { name: 'dashboard', id: parts[1] };
@@ -167,6 +173,40 @@ async function renderStep(id, step) {
  * 참가자 화면과 같은 어댑터를 쓴다. 서버가 생기면 어댑터만 바뀌고 이
  * 화면은 그대로다.
  */
+/**
+ * 부트캠프 화면 (이슈 #106).
+ *
+ * 아직 서버에 붙지 않았다. 백엔드가 준 공개 합성 예시를 그린다 —
+ * 그 사실을 화면 위에 적는다. fixture 를 연동 완료로 보이게 하지 않는다.
+ */
+function renderBootcamp(caseId, role) {
+  const cases = Object.keys(BOOTCAMP_CASES);
+  const pickedCase = cases.includes(caseId) ? caseId : cases[0];
+  const pickedRole = role === 'operator' ? 'operator' : 'participant';
+  const view = bootcampView(pickedCase, pickedRole);
+
+  const other = cases.find((k) => k !== pickedCase) ?? pickedCase;
+  const otherRole = pickedRole === 'participant' ? 'operator' : 'participant';
+
+  shell(el('div', {}, [
+    el('p.scenario-note', {}, [
+      el('span.scenario-tag', { text: '백엔드 합성 예시' }),
+      el('span', { text: ` ${BOOTCAMP_CASES[pickedCase]} · ${pickedRole === 'participant' ? '참가자' : '운영자'} 화면` }),
+      el('button.scenario-swap', {
+        type: 'button',
+        onClick: () => { window.location.hash = `#/bootcamp/${other}/${pickedRole}`; },
+      }, [el('span', { text: '다른 상황' })]),
+      el('button.scenario-swap', {
+        type: 'button',
+        onClick: () => { window.location.hash = `#/bootcamp/${pickedCase}/${otherRole}`; },
+      }, [el('span', { text: otherRole === 'operator' ? '운영자로 보기' : '참가자로 보기' })]),
+    ]),
+    bootcampSection({ view, phase: 'PREPARED_NOT_ACTIVATED', procedureReady: Boolean(view.procedure?.id) }),
+  ]));
+  focusMain();
+  return undefined;
+}
+
 async function renderReview(id) {
   shell(loadingView('검토'));
   try {
@@ -205,6 +245,7 @@ function render() {
   const route = parseRoute();
   // 참가자/운영자를 오가면 머리말도 바뀌어야 한다.
   renderChrome();
+  if (route.name === 'bootcamp') return renderBootcamp(route.caseId, route.role);
   if (route.name === 'review') return renderReview(route.id);
   if (route.name === 'step') return renderStep(route.id, route.step);
   if (route.name === 'dashboard') return renderDashboard(route.id);

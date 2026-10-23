@@ -215,12 +215,22 @@ function payoutItem(payout) {
  *
  * 다른 경로는 막지 않는다. 아래에 따로 적고 눌러서 옮겨 간다.
  */
-function conditionBody(view, shownGroupId) {
+/**
+ * 한 경로의 조건 목록.
+ *
+ * 부트캠프 화면(src/bootcamp/)도 이 목록만 떼어 쓴다. 그쪽은 금액·기한·식별자
+ * 구성이 달라서 policySection 전체를 쓸 수 없지만, 조건을 그리는 규칙은 같아야
+ * 한다 — 같은 상태 이름이 반마다 다르게 보이면 안 된다.
+ */
+export function conditionBody(view, shownGroupId, { withPayout = true } = {}) {
   const perPath = hasPathPayouts(view);
   const shown = view.groups.find((g) => g.id === shownGroupId) ?? view.groups[0];
   const body = [conditionGroup(shown, { withPayout: false })];
 
-  const payout = perPath ? shown.payout : view.payout;
+  // 부트캠프는 지급을 따로 그린다. 약정·배정·거래 제출·실제 수령이 서로 다른
+  // 값이라 한 줄로 못 적고, 여기 '확인 전' 이라고 적으면 바로 아래 재원 구역이
+  // 보여주는 실제 배정액과 어긋난다.
+  const payout = withPayout ? (perPath ? shown.payout : view.payout) : null;
   if (payout) {
     body.push(el('p.cond-and', { text: '충족 시' }));
     body.push(payoutItem(payout));
