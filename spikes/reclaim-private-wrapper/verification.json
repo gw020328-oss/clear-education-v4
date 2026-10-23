@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-16",
+  "baseCommit": "4756589659a40c8f8fe45452a698b8a56487628c",
+  "scope": "ISOLATED_PUBLIC_SYNTHETIC_ONLY",
+  "offlineTests": {
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0,
+    "negativeCircuitTests": "ACVM_CONSTRAINT_EXECUTION"
+  },
+  "localProof": {
+    "scope": "PUBLIC_SYNTHETIC_SIGNATURE_REAL_LOCAL_ZK",
+    "backend": "UltraPlonk 0.82.2",
+    "noir": "1.0.0-beta.3",
+    "compileMs": 651,
+    "witnessMs": 49,
+    "proveMs": 43173,
+    "verifyMs": 20789,
+    "proofBytes": 2144,
+    "publicInputCount": 56,
+    "publicInputBytes": 1792,
+    "maxRssKiB": 1945488,
+    "hardware": {
+      "arch": "arm64",
+      "logicalCpuCount": 10,
+      "memoryBytes": 17179869184
+    },
+    "verified": true,
+    "tamperedProofRejected": true,
+    "changedPublicInputRejected": true,
+    "programBytecodeSha256": "516ffa23bfedebe2619c5dd036ffdc2fa365ef5c0430934471b0de2d8e5ff6d1",
+    "verifyingKeySha256": "dcd881a85fe67cc7679ae986692a26d78011f4dfddb520fcbdcc1c8832f93224",
+    "soliditySha256": "e1c5f37f6c998fa62e6202d909b0d88fe319a900d12cd3a748f7c47a6a2f1825",
+    "crsG1Sha256": "8f5cd75519c2e995fa47aa7ecd7b213b9ae13824bc4b0f15025a63acd8c139eb",
+    "crsG2Sha256": "01797bfc4de5a96f0e516a9ea4537d18786dc30cb991aca4274c95822b69c32f",
+    "officialAttestorProof": false,
+    "realYbm": false,
+    "sourceNullifier": "BLOCKED",
+    "independentClaim": "NO_GO",
+    "paymentAllowed": false
+  },
+  "localEvm": {
+    "scope": "FRESH_IN_MEMORY_EVM_NO_PUBLIC_RPC",
+    "chainId": 431798,
+    "hardfork": "shanghai",
+    "solc": "0.8.30+commit.73712a01.Emscripten.clang",
+    "validProof": true,
+    "tamperedProofRejected": true,
+    "registrationPolicyOwnerTimeSubstitutionsRejected": true,
+    "truncatedInputsRejected": true,
+    "verifierCodeReplacementRejected": true,
+    "verifierRuntimeBytes": 11050,
+    "verificationGas": "464508",
+    "soliditySha256": "e1c5f37f6c998fa62e6202d909b0d88fe319a900d12cd3a748f7c47a6a2f1825",
+    "amoyDeployed": false,
+    "amoyCompatibility": "NOT_RUN",
+    "sourceNullifier": "BLOCKED",
+    "paymentAllowed": false
+  },
+  "privacy": {
+    "privateInputs": [
+      "whole table bytes",
+      "exam date",
+      "score",
+      "registration number",
+      "claim identifier",
+      "attestor signature",
+      "timestamp"
+    ],
+    "publicInputs": [
+      "public registration digest",
+      "owner address",
+      "threshold",
+      "period from/until",
+      "verifier time"
+    ],
+    "witnessPersisted": false,
+    "privateDataRead": false,
+    "remoteProver": false,
+    "networkGuard": true
+  },
+  "preservedActualEvidence": [
+    "W02 fresh official proof pair",
+    "PR32 official whole-table proof with 3 rows",
+    "H2 official signature and durable intake"
+  ],
+  "remaining": {
+    "actualYbmWrapper": "NOT_RUN",
+    "genericHtmlParser": "NOT_IMPLEMENTED",
+    "officialRegistryEpochAdapter": "NOT_IMPLEMENTED",
+    "crossWalletSourceNullifier": "BLOCKED",
+    "realIndependentAcquisition": "NOT_RUN",
+    "onchainProductionRegistry": "NOT_IMPLEMENTED"
+  },
+  "product": {
+    "independentClaim": "NO_GO",
+    "funding": "OPEN",
+    "tier400": "PRECHECK_ONLY",
+    "tier500": "EXCLUDED",
+    "grant": "HOLD",
+    "outbox": "HOLD",
+    "paymentAllowed": false
+  },
+  "sourceFiles": {
+    "model.mjs": "ba9339af77cc422f1762b4acdabc4b03f23a9709350b1d3697adb940da83282a",
+    "build-circuit.mjs": "68305fce5f2e0da24e3104d70c8377a5593234085457d9506794188d71363a8f",
+    "circuit/src/main.nr": "7d4e1e6cd62970f7272c8248dc34b1d082d659e3d02e3daf19c51c8e26dadd9f",
+    "prove.mjs": "4987492f0b9f3425827fd0c82fb23e3098b4af01877369caba9bd8491e24ff85",
+    "evm-check.mjs": "2dbd855f54ca415b5e73fc156161e7c6c07d35da0389196fab40c6463a9df5a1",
+    "PinnedPredicateHarness.sol": "105f63370d972bd3b23163b85e48fe8c9344d8660cbc8398f669c917bde84d4e",
+    "package-lock.json": "b596d22d50781caca0077522025f763cffd133115605ea6ba0a79c44220cdcaf"
+  }
+}
