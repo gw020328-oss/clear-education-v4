@@ -11,7 +11,7 @@ import {resolveNormalSourceLease} from '../../tools/bootcamp/live-context.mjs';
 import {requestMessage} from '../../src/hackerrank-evidence/request.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 
-async function fixture(t,{legacy=false,diagnostics}={}){
+async function fixture(t,{legacy=false,diagnostics,storeNow}={}){
  let f,ui,applicationId,participantId,closed=false,entered,signatures=0,nestedTransaction=false;
  const sourceWindows=new Map(),pins={audience:'offline-normal-source',trustConfigHash:p0Hash('OFFLINE','trust'),recipeHash:LIVE_WORKER_RECIPE_HASH,
   expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
@@ -29,7 +29,7 @@ async function fixture(t,{legacy=false,diagnostics}={}){
   const pending=ui.requestSignature(expected,requestMessage(expected),{signal});entered();
   await pending;signatures++;observeSource(diagnostics,'ACCOUNT_COOKIE_READ','FAILED',Error('COLLECTOR_COOKIES'));throw Error('OFFLINE_STOP_BEFORE_PROOF');
  }});
- f=await storeFixture(t,{store:{mode:'ISOLATED_LIVE_TEST',producers:{'python-basic-certificate':producer},resolveSource:r=>producer.resolveSource(r)}});
+ f=await storeFixture(t,{store:{mode:'ISOLATED_LIVE_TEST',producers:{'python-basic-certificate':producer},resolveSource:r=>producer.resolveSource(r),...(storeNow?{now:storeNow}:{})}});
  ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),
   getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time,diagnostics});t.after(()=>ui.close());
  applicationId=f.create();participantId=f.view(applicationId).participantId;ui.bindParticipant(f.aliceContext,applicationId,pins);
@@ -106,4 +106,21 @@ test('lower source failure survives store normalization with signature accepted 
  const q=x.ui.pendingSignature(x.f.aliceContext);x.ui.submitSignature(x.f.aliceContext,{approvalId:q.approvalId,signature:await x.f.alice.signMessage(q.message)});await stopped;
  assert.equal(saved.signatureAcceptance,'ACCEPTED');assert.equal(saved.firstFailure.stage,'ACCOUNT_COOKIE_READ');assert.equal(saved.firstFailure.code,'COLLECTOR_COOKIES');
  assert.equal(saved.stages.PAIR_OFFICIAL_VERIFY.state,'NOT_OBSERVED');assert.equal(x.f.counts().evidence,0);assert.equal(x.signatures,1);
+});
+
+
+test('real source collection remains pending across a store read conflict and human delay, then consumes only an explicit fresh signature',async t=>{
+ t.mock.timers.enable({apis:['setInterval','setTimeout']});
+ const diagnostics=createSourceDiagnostics({persist(){}});let x,armed=false,ticks=0;
+ x=await fixture(t,{diagnostics,storeNow:()=>{if(armed&&++ticks===2){x.f.setTime(x.f.time+1);armed=false;}return x?x.f.time:START;}});
+ const r=x.issue(),collection=x.f.store.collectBridge(x.f.aliceContext,x.applicationId,
+  {requestId:r.record.target.requestId,expectedRevision:r.record.applicationRevision},x.f.key(),{timeoutMs:300000});
+ let finished=false;const stopped=assert.rejects(collection,/BC_PRODUCER_FAILED/).then(()=>{finished=true;});await x.reached;
+ const approval=x.ui.pendingSignature(x.f.aliceContext);x.f.setTime(START+46);armed=true;
+ assert.throws(()=>x.ui.participant(),/BC_VIEW_STALE/);await Promise.resolve();await Promise.resolve();assert.equal(finished,false);
+ x.f.setTime(START+166);t.mock.timers.tick(120000);assert.equal(x.signatures,0);assert.equal(x.f.counts().evidence,0);
+ assert.equal(diagnostics.snapshot().signatureAcceptance,'UNKNOWN');assert.equal(x.ui.pendingSignature(x.f.aliceContext).approvalId,approval.approvalId);
+ x.ui.submitSignature(x.f.aliceContext,{approvalId:approval.approvalId,signature:await x.f.alice.signMessage(approval.message)});await stopped;
+ assert.equal(x.signatures,1);assert.equal(x.f.counts().evidence,0);assert.equal(diagnostics.snapshot().signatureAcceptance,'ACCEPTED');
+ assert.equal(diagnostics.snapshot().stages.PAIR_OFFICIAL_VERIFY.state,'NOT_OBSERVED');
 });

@@ -49,3 +49,15 @@ test('a failed snapshot is marked incomplete on subsequent successful persistenc
  observeSource(d,'SIGNATURE_ACCEPTANCE','FAILED',Error('BC_UI_SIGNATURE_NOT_PENDING'));
  assert.equal(stored.signatureAcceptance,'ACCEPTED');
 });
+
+test('only a projection stale deferral is representable and a later real failure remains firstFailure',()=>{
+ const d=createSourceDiagnostics({persist(){}});
+ observeSource(d,'UI_SESSION_AUTHORITY','DEFERRED',Error('AUTH_REQUIRED'));
+ observeSource(d,'UI_APPLICATION_PROJECTION','DEFERRED',Error('ERR_SQLITE_ERROR'));
+ assert.equal(d.snapshot().events.length,0);
+ observeSource(d,'UI_APPLICATION_PROJECTION','DEFERRED',Error('BC_VIEW_STALE'));
+ assert.equal(d.snapshot().firstFailure,null);assert.equal(d.snapshot().signatureAcceptance,'UNKNOWN');
+ observeSource(d,'UI_SESSION_AUTHORITY','FAILED',Error('AUTH_REQUIRED'));
+ observeSource(d,'SIGNATURE_WAIT','FAILED',Error('BC_UI_CONTEXT_UNAVAILABLE'));
+ assert.equal(d.snapshot().firstFailure.stage,'UI_SESSION_AUTHORITY');assert.equal(d.snapshot().firstFailure.code,'AUTH_REQUIRED');
+});

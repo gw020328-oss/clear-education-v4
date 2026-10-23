@@ -6,10 +6,11 @@
 
 새 실제 실행은 단회 `run.used.json` 생성 뒤 해당 실행 디렉터리에 `source-diagnostics.json`을 만든다. 준비 명령은 진단 파일·브라우저·신청·체인·증명·AI 호출을 생성하지 않는다. r3의 report/DB/사용 표시는 그대로 보존한다.
 
-고정 버전 `clear-normal-source-diagnostics.1`은 순번, 단계 enum, `STARTED`/`COMPLETED`/`FAILED`, 명시적 allowlist 오류 코드, 최초 관측 실패와 최대 128개 이벤트만 보존한다. 관측하지 못한 단계는 `NOT_OBSERVED`, 서버 서명 수락을 관측하지 못했으면 `UNKNOWN`이다. 후속 단계 도달로 앞 단계를 추정하지 않는다. `completedObserved`는 해당 경계의 완료를 실제 관측했는지만 나타낸다.
+고정 버전 `clear-normal-source-diagnostics.1`은 순번, 단계 enum, `STARTED`/`COMPLETED`/`FAILED` 및 제한된 `DEFERRED`, 명시적 allowlist 오류 코드, 최초 관측 실패와 최대 128개 이벤트만 보존한다. 관측하지 못한 단계는 `NOT_OBSERVED`, 서버 서명 수락을 관측하지 못했으면 `UNKNOWN`이다. 후속 단계 도달로 앞 단계를 추정하지 않는다. `completedObserved`는 해당 경계의 완료를 실제 관측했는지만 나타낸다.
 
 | 단계 | 관측 가능한 의미 |
 | --- | --- |
+| `UI_SESSION_AUTHORITY`, `UI_APPLICATION_PROJECTION`, `UI_APPLICATION_BINDING` | 대기 취소로 일반화하기 전 인증·신청 조회·신청 결합의 최초 고정 오류 코드. 조회 충돌 보류는 아래 규칙을 따름 |
 | `SIGNATURE_WAIT` | 실제 UI 브로커가 원천 서명을 기다리거나 대기를 종료함 |
 | `SIGNATURE_ACCEPTANCE` | 서버가 exact 신청/세션/지갑/메시지/유효기간 및 서명을 검사하는 구간. `COMPLETED`는 검사 후 promise를 해제하기 직전의 서버 수락이며, 지급 동의가 아님 |
 | `PARTICIPANT_ENVELOPE_VERIFY` | 수집기에서 원천 요청 봉투와 서명을 재검증함. 이것만으로 HTTP 브로커 수락을 추정하지 않음 |
@@ -38,3 +39,16 @@
 최종 소스/pin/CI 확인 후 별도 r4 준비 환경만 만든다. 새 CA가 생성되므로 사용자는 재시험 전에 해당 CA를 신뢰해야 한다. 실제 실행은 별도 사용자 준비 확인 뒤 한 번만 시작하며, 새 HR 로그인→READY→새 네트워크의 두 역할 SIWE→신청/연결→원천 사용자 서명→정확한 새 AI packet 승인→두 역할 동의→양쪽 영수증 확인 순서를 따른다. 이번 준비 단계에는 어느 실제 수집/서명/유료 호출/지급도 포함하지 않는다.
 
 기존 HR 오프라인 CI job은 layout 시험을 포함한 `tests/hackerrank-evidence/*.test.mjs` 전체를 실행하도록 확장했다. 외부 네트워크 차단과 고정 의존성/실행시간을 유지하며, bootcamp 서명·flow 회귀는 기존 E5B CI에서 실행한다.
+
+
+## r4 후속: 조회 충돌과 권한 상실 구분
+
+r4는 대기 시작 약 45.7초 뒤 `SIGNATURE_WAIT / BC_UI_CONTEXT_UNAVAILABLE`가 먼저 기록되고, 외곽에서 `BC_REVISION_CONFLICT`와 `COLLECTION_FAILED`로 종료됐다. 당시 보존된 두 세션은 만료 전이며 취소되지 않았다. 최초 내부 조회 오류가 기록되지 않아 실제 r4의 최초 원인은 미확정이다. 지갑 서명 완료라는 사용자 관찰과 서버 수락 `UNKNOWN`을 구분한다.
+
+별도 합성 회귀에서는 실제 인증 서비스·SQLite store·UI 브로커를 연결해 조회가 초 경계를 넘을 때 store가 `BC_VIEW_STALE`을 던지고 기존 브로커가 정상 대기를 영구 취소하는 결함을 재현했다. 수정 전 3개 핵심 검사가 같은 이유로 실패했다.
+
+기존 pending이 있고 신청 **조회 호출**에서 store의 `RuleError` 및 정확한 `BC_VIEW_STALE`이 반환된 경우만 보류한다. 이때도 현재 세션·역할·CSRF·지갑 및 기존 마감 시간을 다시 검사한다. 원래 예외를 호출자에게 던지며, 오래된 조회값이나 권한 context를 반환하지 않는다. 기존 250ms 검사가 원래 마감 전 다시 읽을 수 있을 뿐 새 반복 루프·쓰기·서명·외부 호출 자동 재시도를 만들지 않는다. 서명 제출 중 이 오류가 발생하면 그 제출은 수락하지 않는다.
+
+`UI_APPLICATION_PROJECTION / DEFERRED / BC_VIEW_STALE`은 pending당 최초 1회만 보존한다. 이 상태는 실제 실패나 조회 성공을 뜻하지 않으며 `firstFailure`를 차지하지 않는다. 반복 충돌 때문에 진단 상한을 소모하지 않는다. 진짜 권한 상실·만료·신청/정책/매핑 변경·알 수 없는 오류는 최초 고정 코드와 단계를 기록한 뒤 대기를 취소한다. 진단 코드 allowlist 자체를 일시 오류 목록으로 사용하지 않는다.
+
+수락에는 성공한 새 신청 조회, 현재 역할/세션/CSRF/지갑/chain, 정확한 신청·참가자·policy·mapping·메시지·nonce가 결합된 기존 approval, 원래 exclusive 만료, 실제 서명 검증을 계속 요구한다. store의 전역 `BC_VIEW_STALE` 검사와 TTL·단회성·원천/AI/지급 정책은 변경하지 않는다. 새 r5 준비와 실제 실행의 승인 경계는 분리하며 r3/r4 기록을 재사용하지 않는다.

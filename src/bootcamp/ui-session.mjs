@@ -1,8 +1,13 @@
 import {observeSource} from '../hackerrank-evidence/diagnostics.mjs';
 import {randomUUID} from 'node:crypto';
 import {verifyMessage} from 'ethers';
-import {exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
+import {exactKeys,freeze,RuleError,requireRule as check} from '../policy/values.mjs';
 import {requestMessage,requestHash} from '../hackerrank-evidence/request.mjs';
+
+function projectionConflict(error){
+ try{return Object.getPrototypeOf(error)===RuleError.prototype&&Object.getOwnPropertyDescriptor(error,'message')?.value==='BC_VIEW_STALE';}
+ catch{return false;}
+}
 
 // Constructor-owned public identities. No wallet key, auto-login or server signing fallback.
 export function createNormalUiSession({authentication,participantWallet,operatorWallet,getApplication,now=()=>Math.floor(Date.now()/1000),diagnostics}){
@@ -15,10 +20,30 @@ export function createNormalUiSession({authentication,participantWallet,operator
   return s;
  };
  const cancel=code=>{if(!pending)return;observeSource(diagnostics,'SIGNATURE_WAIT','FAILED',{code});const p=pending;pending=null;clearTimeout(p.timer);clearInterval(p.authorityTimer);p.signal?.removeEventListener('abort',p.abort);p.message=null;p.reject(Error(code));};
+ const failContext=(stage,error)=>{observeSource(diagnostics,stage,'FAILED',error);cancel('BC_UI_CONTEXT_UNAVAILABLE');throw error;};
+ const deadline=()=>{if(pending){const n=now();if(!Number.isSafeInteger(n)||n>=pending.expiresAt){cancel('BC_UI_SIGNATURE_EXPIRED');check(false,'BC_UI_SIGNATURE_EXPIRED');}}};
+ const boundAuthority=()=>{
+  try{check(bound,'BC_UI_PARTICIPANT_REQUIRED');const s=actor(bound.context,true);check(s.role==='participant'&&s.wallet.toLowerCase()===participantWallet,'FORBIDDEN');}
+  catch(error){failContext('UI_SESSION_AUTHORITY',error);}
+ };
  function participant(){
-  try{check(bound,'BC_UI_PARTICIPANT_REQUIRED');const s=actor(bound.context,true);check(s.role==='participant'&&s.wallet.toLowerCase()===participantWallet,'FORBIDDEN');
-   const v=getApplication(bound.context,bound.applicationId);check(v.participantId===bound.participantId&&v.policyHash===bound.policyHash&&v.runtimeMappingHash===bound.runtimeMappingHash&&v.status==='ACTIVE','BC_UI_APPLICATION_CHANGED');return bound.context;
-  }catch(e){cancel('BC_UI_CONTEXT_UNAVAILABLE');throw e;}
+  deadline();boundAuthority();let v;
+  try{v=getApplication(bound.context,bound.applicationId);}
+  catch(error){
+   // Only the store's typed read conflict may leave an existing approval pending.
+   // Never return cached authority: callers (including submission) still fail this
+   // read. The existing periodic check may try again within the original deadline.
+   if(pending&&projectionConflict(error)){
+    boundAuthority();deadline();
+    if(!pending.projectionDeferred){pending.projectionDeferred=true;observeSource(diagnostics,'UI_APPLICATION_PROJECTION','DEFERRED',error);}
+    throw error;
+   }
+   failContext('UI_APPLICATION_PROJECTION',error);
+  }
+  boundAuthority();deadline();
+  try{check(v.applicationId===bound.applicationId&&v.participantId===bound.participantId&&v.policyHash===bound.policyHash&&v.runtimeMappingHash===bound.runtimeMappingHash&&v.status==='ACTIVE','BC_UI_APPLICATION_CHANGED');}
+  catch(error){failContext('UI_APPLICATION_BINDING',error);}
+  return bound.context;
  }
  const own=(context,write)=>{participant();const s=actor(context,write);check(s.role==='participant','FORBIDDEN');
   check(context.token===bound.context.token&&context.wallet.toLowerCase()===participantWallet&&context.chainId===bound.context.chainId,'BC_UI_CONTEXT_CHANGED');};

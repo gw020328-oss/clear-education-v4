@@ -42,7 +42,7 @@ export async function storeFixture(t,options={}){
     ...authority,now:()=>time,...options.store};
   const open=()=>createBootcampStore(configuration);store=open();t.after(()=>store.close());
   let n=0;const key=()=>`command-${++n}`;
-  return {...f,...authority,directory,configuration,key,open,get store(){return store;},get time(){return time;},setTime:v=>{time=v;},
+  return {...f,...authority,directory,configuration,key,open,get store(){return store;},get time(){return time;},setTime:v=>{time=v;},setAuthenticationTime:f.setTime,restartAuthentication:f.restart,get service(){return f.service;},
     restart(){store.close();store=open();},
     create(context=f.aliceContext){return store.createApplication(context,{},key()).record.applicationId;},
     view(applicationId,context=f.aliceContext){return store.getApplication(context,applicationId);},
