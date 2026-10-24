@@ -336,9 +336,27 @@ test('v20 admits only managed AI run binding and preserves the complete v19 gene
   assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
   const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
  }
- for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(execFileSync('git',['show','ffb999f5e1af802619c265908ab3b4fbeab72012:'+p],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
  for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v19.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v16.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V11.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
  for(const k of ["normativeBoundary", "allowedRuntimeKinds", "normalHost", "signatureWait", "sdkDiagnostics", "transportDiagnostics", "boundedSendPolicy", "sourceDiagnostics", "claimReturnDiagnostics", "zkCompatibility", "registrationCurrentness"])assert.deepEqual(current[k],old[k],k);
  for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
  assert.deepEqual(current.managedReflectionRun,{"managedHostRunIdRequired":true,"privateCapabilityRequired":true,"fixedHostJournalOnly":true,"exactRunApplicationWalletInputModelApprovalBinding":true,"oneBindingPerHost":true,"globalApplicationAndApprovalConsumption":true,"legacySpentApprovalRejected":true,"durableReservationBeforeDispatch":true,"partialFailureOrUnknownRemainsSpent":true,"finalRunGuardBeforeKeyRead":true,"liveFixtureAndStoreOverridesRejected":true,"maximumGenerationCalls":1,"countCalls":0,"automaticRetries":0,"fallbacks":0,"sourceExpiryExtended":false,"sdkOrEngineChanged":false,"paymentPolicyChanged":false});
+});
+
+
+test('v21 admits only consent read currentness and preserves the complete v20 generation',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v21.json';assert.equal(sha(read(path)),'2edf76879b3b45562b71a65b38fea8aa6b8ef9732c11ea616a0c8d6036f5565b');
+ const current=JSON.parse(read(path)),old=JSON.parse(read(current.previousCompatibilityRecord.path));
+ assert.equal(current.currentSourceCandidateHead,'990db37a3d7b27d19d4fe43fe0cb64a7d155f050');assert.equal(current.previousCompatibilityRecord.guardHead,'ffb999f5e1af802619c265908ab3b4fbeab72012');
+ assert.deepEqual(current.changedFromV20,["tools/bootcamp/explicit-consents.mjs", "tools/bootcamp/normal-chain.mjs"]);assert.deepEqual(Object.keys(current.sourceDelta),current.changedFromV20);assert.deepEqual(current.sourceAdditions,{});
+ assert.equal(Object.keys(current.sourceArtifactSha256).length,166);assert.deepEqual(Object.keys(current.sourceArtifactSha256),Object.keys(old.sourceArtifactSha256));
+ for(const [p,h]of Object.entries(old.sourceArtifactSha256)){
+  assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
+  const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
+ }
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v20.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v17.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V12.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
+ for(const k of ["normativeBoundary", "allowedRuntimeKinds", "normalHost", "signatureWait", "sdkDiagnostics", "transportDiagnostics", "boundedSendPolicy", "sourceDiagnostics", "claimReturnDiagnostics", "zkCompatibility", "registrationCurrentness", "managedReflectionRun"])assert.deepEqual(current[k],old[k],k);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
+ assert.deepEqual(current.consentReadCurrentness,{"stage":"AFTER_START_REVIEW_EXPLICIT_CONSENT_WAIT","exactStoreRuleErrorRequired":true,"failedViewDiscarded":true,"maximumFreshReadRetries":1,"initialCollectedTargetBound":true,"fixedReviewTargetRetained":true,"beforeAndAfterRefreshAuthorityChecks":true,"finalBothConsentsRechecked":true,"secondConflictPropagates":true,"chainRefreshRetried":false,"consentCommandRetried":false,"automaticHumanConsent":false,"paymentOperationRetried":false,"sourceExpiryExtended":false,"reviewDeadlineExtended":false,"sdkOrEngineChanged":false,"paymentPolicyChanged":false});
 });

@@ -4,13 +4,14 @@ import assert from 'node:assert/strict';
 const root=new URL('../../../',import.meta.url);
 const intake=JSON.parse(readFileSync(new URL('specs/bootcamp/hackathon-test-e5-development-intake-v1.json',root)));
 const digest=p=>createHash('sha256').update(readFileSync(new URL(p,root))).digest('hex');
-// B explicitly consumes exact owner-reviewed memory compatibility v20. The exact normal-source intake additionally permits the E2 label delta. The original
+// B explicitly consumes exact owner-reviewed memory compatibility v21. The exact normal-source intake additionally permits the E2 label delta. The original
 // intake and eight other E4 artifacts remain frozen; this is no wildcard waiver.
 const consumer='src/hackathon-test-vault/memory-stage-harness.mjs';
 const compatibility='specs/bootcamp/hackathon-test-memory-source-intake-v4.json';
-const consumerV20='58ade1ff778ba9cb305d0a53cd7e52f25dd0445ca6eadb40b3d1f44145004484';
+const consumerV21='31a7ebef1875a28e8cc28ec6d75e2df6fb4f1b99ec24182cd9d87235955c0ac8';
 assert.equal(digest(compatibility),'2cf7aba578d1ac5ed712a00288edcdff88d58e2152acdfd709c1228078f078a6');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v5.json'),'7b89a6c9f73797f0a6faff890f8a097f18dd3f91730eddc7f2cc56730c0f17ff');
+assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v21.json'),'2edf76879b3b45562b71a65b38fea8aa6b8ef9732c11ea616a0c8d6036f5565b');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v20.json'),'25a66433edefd19bbdb98e57a7699748440b347cec95b145a491385813c9ef77');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v19.json'),'51c1b01c643b6f11d05fbb6a85a89c66eb86a426db3cc4d947e1df7bb09e1d72');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v18.json'),'12ddc5d166d8b3f090aa8e4211e4bd335938365e068757259df5244174c70b13');
@@ -28,7 +29,7 @@ assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v7.json'
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v6.json'),'247326385d1514c57383553a9f7290a3a59f9ba1182f91600443f35027d32f22');
 assert.equal(digest('specs/bootcamp/hackathon-test-normal-source-intake-v1.json'),'410ec5bab91a365cee6909328b0c1a2f847283738b27f66aaf911e2300f47dc9');
 assert.equal(intake.e4.artifactSha256AtAcceptedHead[consumer],'b053742d1d3f0e8e9a751ac9c440146e5763157a1d8773f6b587334f61252fb9');
-for(const [path,expected]of Object.entries(intake.e4.artifactSha256AtAcceptedHead))assert.equal(digest(path),path===consumer?consumerV20:expected,path);
+for(const [path,expected]of Object.entries(intake.e4.artifactSha256AtAcceptedHead))assert.equal(digest(path),path===consumer?consumerV21:expected,path);
 const service=JSON.parse(readFileSync(new URL('specs/bootcamp/hackathon-test-e5-service-intake-v1.json',root)));
 const preserved=Object.entries(service.sourceArtifacts).filter(([path])=>path!=='tests/hackathon-test-vault/e5/preservation.mjs');
 // Explicit normal-path fixes requested by the API owner; original intake remains unchanged.
@@ -49,4 +50,4 @@ for(const [path,before,after]of ciChanges){assert.equal(service.sourceArtifacts[
 for(const [path,before,after]of normalPathChanges){assert.equal(service.sourceArtifacts[path],before,path);assert.equal(digest(path),after,path);}
 for(const [path,expected]of preserved)assert.equal(digest(path),[...normalPathChanges,...ciChanges].find(([p])=>p===path)?.[2]??expected,path);
 assert.equal(digest(intake.frozenInputs.memoryBoundary),intake.frozenInputs.memoryBoundarySha256);
-console.log(JSON.stringify({frozenE4Files:8,explicitV20MemoryConsumer:consumerV20,frozenE5Artifacts:preserved.length-normalPathChanges.length-ciChanges.length,explicitNormalPathChanges:normalPathChanges.length,explicitCiDependencyChanges:ciChanges.length,explicitPreservationTestUpdate:true,memoryBoundaryV1:'UNCHANGED'}));
+console.log(JSON.stringify({frozenE4Files:8,explicitV21MemoryConsumer:consumerV21,frozenE5Artifacts:preserved.length-normalPathChanges.length-ciChanges.length,explicitNormalPathChanges:normalPathChanges.length,explicitCiDependencyChanges:ciChanges.length,explicitPreservationTestUpdate:true,memoryBoundaryV1:'UNCHANGED'}));
