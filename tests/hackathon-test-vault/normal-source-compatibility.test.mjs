@@ -48,7 +48,7 @@ test('v6 preserves exactly three reviewed deltas and all 36 historical sources t
   }
  }
  assert.deepEqual(actual.sort(),[...changed].sort());
- assert.equal(sha(read(v6.reflectionPreparation.testPath)),v6.reflectionPreparation.testSha256);
+ assert.equal(sha(execFileSync('git',['show','1e923495380c81abf2eab13b21ec918ef2915495:'+v6.reflectionPreparation.testPath],{cwd:root})),v6.reflectionPreparation.testSha256);
  assert.deepEqual(v6.allowedRuntimeKinds,['FRESH_ISOLATED_MEMORY_EVM_STAGE_HARNESS']);
  for(const flag of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled'])assert.equal(v6[flag],false,flag);
 });
@@ -318,9 +318,27 @@ test('v19 admits only clock-boundary registration changes and preserves the comp
   assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
   const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
  }
- for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(execFileSync('git',['show','1e923495380c81abf2eab13b21ec918ef2915495:'+p],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
  for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v18.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v15.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V10.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
  for(const k of ["normativeBoundary", "allowedRuntimeKinds", "normalHost", "signatureWait", "sdkDiagnostics", "transportDiagnostics", "boundedSendPolicy", "sourceDiagnostics", "claimReturnDiagnostics", "zkCompatibility"])assert.deepEqual(current[k],old[k],k);
  for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
  assert.deepEqual(current.registrationCurrentness,{"registrationOnly":true,"maximumAdditionalLocalAttempts":1,"clockForwardOnly":true,"unchangedRevisionAndLedgerRequired":true,"rolledBackBeforeRetry":true,"originalBodyAndIdempotencyKeyRetained":true,"freshAuthenticationAndPortObservations":true,"finalChecksRetained":true,"normalReadMaximumAdditionalAttempts":1,"exactTypedReadErrorRequired":true,"collectedDecisionTargetBound":true,"humanConsentAutomaticallyRetried":false,"sourceCollectionRetried":false,"aiRetried":false,"chainDispatchRetried":false,"sourceExpiryExtended":false,"oldViewAccepted":false,"sdkOrEngineChanged":false,"signaturePolicyChanged":false,"paymentPolicyChanged":false});
+});
+
+
+test('v20 admits only managed AI run binding and preserves the complete v19 generation',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v20.json';assert.equal(sha(read(path)),'25a66433edefd19bbdb98e57a7699748440b347cec95b145a491385813c9ef77');
+ const current=JSON.parse(read(path)),old=JSON.parse(read(current.previousCompatibilityRecord.path));
+ assert.equal(current.currentSourceCandidateHead,'f11d6a71aef3f1ef8f4483127ec22a9759303ec3');assert.equal(current.previousCompatibilityRecord.guardHead,'1e923495380c81abf2eab13b21ec918ef2915495');
+ assert.deepEqual(current.changedFromV19,["src/bootcamp/moodle-live-consumer.mjs", "tests/ai-review-precheck/first-normal-reflection-entry.mjs", "tools/bootcamp/normal-host-config.mjs", "tools/bootcamp/normal-host-flow.mjs", "tools/bootcamp/normal-host-worker.mjs"]);assert.deepEqual(Object.keys(current.sourceDelta),current.changedFromV19);assert.deepEqual(current.sourceAdditions,{"tools/bootcamp/normal-reflection-run.mjs": "e7ed93ee68943264056f9ff368be9a06ad3d2c31749b43a9c7b1dfdae6d24096"});
+ assert.equal(Object.keys(current.sourceArtifactSha256).length,166);assert.deepEqual(Object.keys(current.sourceArtifactSha256),[...Object.keys(old.sourceArtifactSha256),...Object.keys(current.sourceAdditions)].sort());
+ for(const [p,h]of Object.entries(old.sourceArtifactSha256)){
+  assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
+  const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
+ }
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v19.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v16.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V11.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
+ for(const k of ["normativeBoundary", "allowedRuntimeKinds", "normalHost", "signatureWait", "sdkDiagnostics", "transportDiagnostics", "boundedSendPolicy", "sourceDiagnostics", "claimReturnDiagnostics", "zkCompatibility", "registrationCurrentness"])assert.deepEqual(current[k],old[k],k);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
+ assert.deepEqual(current.managedReflectionRun,{"managedHostRunIdRequired":true,"privateCapabilityRequired":true,"fixedHostJournalOnly":true,"exactRunApplicationWalletInputModelApprovalBinding":true,"oneBindingPerHost":true,"globalApplicationAndApprovalConsumption":true,"legacySpentApprovalRejected":true,"durableReservationBeforeDispatch":true,"partialFailureOrUnknownRemainsSpent":true,"finalRunGuardBeforeKeyRead":true,"liveFixtureAndStoreOverridesRejected":true,"maximumGenerationCalls":1,"countCalls":0,"automaticRetries":0,"fallbacks":0,"sourceExpiryExtended":false,"sdkOrEngineChanged":false,"paymentPolicyChanged":false});
 });
