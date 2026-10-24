@@ -8,6 +8,8 @@ import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server
 import {P0_POLICY,p0PolicyHash} from '../../specs/bootcamp/p0-contract.mjs';
 import {createNormalBootcampClient} from '../../src/bootcamp/normal-client.mjs';import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {createTestWalletSession} from '../../tools/bootcamp/test-client/session.js';import {createTestDriver,createTestAutoReader} from '../../tools/bootcamp/test-client/driver.js';
+const historicalAsset=p=>execFileSync('git',['show','1421c5ff2105694461f6d470d6b0127d4fd11ce2:'+p]);
+const historicalRuntime=p=>p.startsWith('tools/bootcamp/test-client/')||p==='src/bootcamp/normal-client.mjs';
 const root=new URL('../../tools/bootcamp/test-client/',import.meta.url);
 async function fixture(t){
  const f=await procedureFixture(t),H=x=>p0Hash('TEST-CLIENT-OFFLINE',x),pins={dataMode:'RECLAIM_SIGNED_RECORD',audience:'test-client',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:f.alice.address.toLowerCase(),selectedCertificateId:null};let bound=null;
@@ -118,14 +120,16 @@ test('network button only offers the supplied loopback TEST chain and rejected w
  await assert.rejects(session.network(config),/TEST_WALLET_REJECTED/);assert.equal(calls.length,1);assert.equal(calls[0].method,'wallet_addEthereumChain');assert.deepEqual(calls[0].params[0].nativeCurrency,{name:'Local test Ether',symbol:'ETH',decimals:18});
 });
 test('exact test-client asset generation preserves every existing v10 core source and contract input',async()=>{
- const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const manifest=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V2.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V2.json'),'6ca6c41575def55fe59a58e328cde2dc793551f95757add9eb6342127bf0422b');assert.equal(manifest.version,'clear-bootcamp-backend-test-client-assets.2');assert.equal(manifest.productFrontendAccepted,false);assert.equal(manifest.actualExecutionApprovedByThisRecord,false);assert.equal(manifest.apiContractsChanged,false);
  const previous=JSON.parse(readFileSync(new URL('../../'+manifest.previousRecord.path,import.meta.url)));assert.equal(sha(manifest.previousRecord.path),'6e3f89fa45b3e22d84cfdcee11617c7cf4e75c4bbdf1d2bfec0eeabd30111e89');
  const {execFileSync}=await import('node:child_process');for(const [p,h]of Object.entries(previous.sourceArtifacts))assert.equal(createHash('sha256').update(execFileSync('git',['show',manifest.previousRecord.sourceHead+':'+p])).digest('hex'),h,p);
  assert.deepEqual(manifest.changedFromV1,['tools/bootcamp/test-client/session.js']);for(const [p,h]of Object.entries(previous.sourceArtifacts)){assert.equal(manifest.sourceArtifacts[p],manifest.sourceDelta[p]?.after??h,p);if(manifest.sourceDelta[p])assert.equal(manifest.sourceDelta[p].before,h,p);}
  assert.equal(Object.keys(manifest.sourceArtifacts).length,5);for(const [path,h]of Object.entries(manifest.sourceArtifacts))assert.equal(sha(path),h,path);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),manifest.publicAssetSnapshotSha256);assert.equal(sha(manifest.normalClient.path),manifest.normalClient.sha256);
+ const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};
+ const oldSnapshot=Buffer.concat([Buffer.from('/\ntext/html; charset=utf-8\n'),historicalAsset('tools/bootcamp/test-client/index.html'),...Object.keys(manifest.sourceArtifacts).sort().flatMap(p=>{const name='/'+p.split('/').at(-1);return [Buffer.from(name+'\n'+types[p.split('.').at(-1)]+'\n'),historicalAsset(p)];})]);
+ assert.equal(createHash('sha256').update(oldSnapshot).digest('hex'),manifest.publicAssetSnapshotSha256);assert.equal(sha(manifest.normalClient.path),manifest.normalClient.sha256);
  assert.equal(sha(manifest.existingCoreIntake.path),'823761592e8178e682ad2f2c39dd6d95423dcbcebad9ffdd15bb2ccfb4424ba8');
  const v10=JSON.parse(readFileSync(new URL('../../'+manifest.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(v10.sourceArtifactSha256).length,159);for(const [path,h]of Object.entries(v10.sourceArtifactSha256))assert.equal(createHash('sha256').update(execFileSync('git',['show','944afafda1543cff70cb257915ccd7d7a0fa8cf3:'+path])).digest('hex'),h,path);
 });
@@ -137,7 +141,7 @@ test('duplicate wallet notifications from initial connection keep the same autho
 });
 
 test('v3 preserves v2 browser bytes and consumes only the exact reviewed v11 host source delta',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V3.json';assert.equal(sha(path),'6ad8e4de3ea7dcfad2527f4738a6ab16c284feb2b0087f95d0f060e9f21552a2');
  const manifest=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),previous=JSON.parse(readFileSync(new URL('../../'+manifest.previousRecord.path,import.meta.url)));
  assert.equal(manifest.version,'clear-bootcamp-backend-test-client-assets.3');assert.equal(sha(manifest.previousRecord.path),'6ca6c41575def55fe59a58e328cde2dc793551f95757add9eb6342127bf0422b');
@@ -150,7 +154,7 @@ test('v3 preserves v2 browser bytes and consumes only the exact reviewed v11 hos
 });
 
 test('v4 keeps all browser/API bytes and consumes exact v12 diagnostics sources',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V4.json';assert.equal(sha(path),'526d276b5a587698235c759190a65f6e373d1a92676ee3b65de38891a6d452e8');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.4');assert.equal(sha(m.previousRecord.path),'6ad8e4de3ea7dcfad2527f4738a6ab16c284feb2b0087f95d0f060e9f21552a2');
@@ -163,7 +167,7 @@ test('v4 keeps all browser/API bytes and consumes exact v12 diagnostics sources'
 });
 
 test('v5 preserves browser/API bytes and consumes only the exact v13 signature wait fix',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V5.json';assert.equal(sha(path),'eae6cc99de3382036e62da9ff6a9de530e8da5ea4dc5528a419c8e66b5cb4f8b');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.5');assert.equal(sha(m.previousRecord.path),'526d276b5a587698235c759190a65f6e373d1a92676ee3b65de38891a6d452e8');
@@ -176,7 +180,7 @@ test('v5 preserves browser/API bytes and consumes only the exact v13 signature w
 });
 
 test('v6 preserves browser/API bytes and consumes only exact v14 SDK diagnostics',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V6.json';assert.equal(sha(path),'f7e16794b7e9963fdcc18428cf619de4bce4c836cbaddb66f76bb9b0cf41ffa9');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.6');assert.equal(sha(m.previousRecord.path),'eae6cc99de3382036e62da9ff6a9de530e8da5ea4dc5528a419c8e66b5cb4f8b');
@@ -189,7 +193,7 @@ test('v6 preserves browser/API bytes and consumes only exact v14 SDK diagnostics
 });
 
 test('v7 preserves browser/API bytes and consumes exact v15 transport boundaries',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V7.json';assert.equal(sha(path),'98775a866470b75cde59e154fd476cd25be9a1c6e7630d24702ef87e37c3ea5b');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.7');assert.equal(sha(m.previousRecord.path),'f7e16794b7e9963fdcc18428cf619de4bce4c836cbaddb66f76bb9b0cf41ffa9');
@@ -202,7 +206,7 @@ test('v7 preserves browser/API bytes and consumes exact v15 transport boundaries
 });
 
 test('v8 preserves browser/API bytes and consumes exact v16 bounded send policy',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V8.json';assert.equal(sha(path),'fce4314fcbd18bec54ac69717e59f1f009e2ceaf8d99ca8a7db7c224e1702e0d');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.8');assert.equal(sha(m.previousRecord.path),'98775a866470b75cde59e154fd476cd25be9a1c6e7630d24702ef87e37c3ea5b');
@@ -215,7 +219,7 @@ test('v8 preserves browser/API bytes and consumes exact v16 bounded send policy'
 });
 
 test('v9 preserves browser/API bytes and consumes exact v17 claim-return diagnostics',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V9.json';assert.equal(sha(path),'776e9c7cda92f245e740c060448f9e51e3fbebb9bf81e8712695fea4bcd845c4');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.9');assert.equal(sha(m.previousRecord.path),'fce4314fcbd18bec54ac69717e59f1f009e2ceaf8d99ca8a7db7c224e1702e0d');
@@ -228,7 +232,7 @@ test('v9 preserves browser/API bytes and consumes exact v17 claim-return diagnos
 });
 
 test('v10 preserves browser/API bytes and consumes exact v18 STWO compatibility',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V10.json';assert.equal(sha(path),'16bcbcacec12d6808775b38b6a75e6f4f8b3897a519780061f7829725f84cf04');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.10');assert.equal(sha(m.previousRecord.path),'776e9c7cda92f245e740c060448f9e51e3fbebb9bf81e8712695fea4bcd845c4');
@@ -241,7 +245,7 @@ test('v10 preserves browser/API bytes and consumes exact v18 STWO compatibility'
 });
 
 test('v11 preserves browser/API bytes and consumes exact v19 registration currentness',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V11.json';assert.equal(sha(path),'0ada61dfc01abbb62b65fb4ed00865e9a6c102510f7983438d07a68308dae7b3');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.11');assert.equal(sha(m.previousRecord.path),'16bcbcacec12d6808775b38b6a75e6f4f8b3897a519780061f7829725f84cf04');
@@ -254,7 +258,7 @@ test('v11 preserves browser/API bytes and consumes exact v19 registration curren
 });
 
 test('v12 preserves browser/API bytes and consumes exact v20 managed AI run binding',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V12.json';assert.equal(sha(path),'39aa5aac54571dee6c5db0d231c7b5db4d3b6d6eb47e07ac239b12fa10ae4ad3');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.12');assert.equal(sha(m.previousRecord.path),'0ada61dfc01abbb62b65fb4ed00865e9a6c102510f7983438d07a68308dae7b3');
@@ -267,7 +271,7 @@ test('v12 preserves browser/API bytes and consumes exact v20 managed AI run bind
 });
 
 test('v13 preserves browser/API bytes and consumes exact v21 consent read currentness',async()=>{
- const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const {createHash}=await import('node:crypto'),sha=p=>createHash('sha256').update(historicalRuntime(p)?historicalAsset(p):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const path='docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V13.json';assert.equal(sha(path),'f0c8dbd6092af20f24b1b6ba4a88b23902c5276c2fa8678b27802ca827e8dcc2');
  const m=JSON.parse(readFileSync(new URL('../../'+path,import.meta.url))),old=JSON.parse(readFileSync(new URL('../../'+m.previousRecord.path,import.meta.url)));
  assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.13');assert.equal(sha(m.previousRecord.path),'39aa5aac54571dee6c5db0d231c7b5db4d3b6d6eb47e07ac239b12fa10ae4ad3');
@@ -276,7 +280,7 @@ test('v13 preserves browser/API bytes and consumes exact v21 consent read curren
  for(const k of ['apiContractsChanged','productFrontendAccepted','actualExecutionApprovedByThisRecord'])assert.equal(m[k],false);
  assert.equal(sha(m.existingCoreIntake.path),'2edf76879b3b45562b71a65b38fea8aa6b8ef9732c11ea616a0c8d6036f5565b');
  const intake=JSON.parse(readFileSync(new URL('../../'+m.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(intake.sourceArtifactSha256).length,166);
- for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(sha(p),h,p);
+ for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(createHash('sha256').update(execFileSync('git',['show','1421c5ff2105694461f6d470d6b0127d4fd11ce2:'+p])).digest('hex'),h,p);
 });
 
 function scheduledReader(driver){
@@ -337,4 +341,17 @@ test('a pending unknown consent never starts an automatic replay or replaces its
  const live=scheduledReader(a.driver);t.after(()=>live.reader.close());a.loseNext('/bootcamp/v3/applications/'+app+'/review-consents');
  await assert.rejects(a.driver.consent('AGREE'),e=>e.outcome==='UNKNOWN');const posts=a.counts.posts;live.reader.sync();assert.equal(live.scheduled,false);
  assert.equal(a.driver.snapshot().consentReplayPending,true);assert.equal(a.counts.posts,posts);assert.equal(x.f.view(app).consent.records.length,1);
+});
+
+
+test('v14 pins six current browser assets and the reviewed v22 human review window',async()=>{
+ const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
+ const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V14.json',import.meta.url)));
+ assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V14.json'),'8b423a94d31c7482388835201d89e5af20a6fcbc1fde9ec271eb2e36448cdd40');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.14');
+ assert.equal(sha(m.previousRecord.path),'f0c8dbd6092af20f24b1b6ba4a88b23902c5276c2fa8678b27802ca827e8dcc2');assert.equal(Object.keys(m.sourceArtifacts).length,6);
+ for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
+ assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ assert.equal(sha(m.existingCoreIntake.path),'3072f09076cd07b1db2efbb4001ee2c5ee7d48fabb15649082abff5f8534ca97');assert.equal(m.existingCoreIntake.sources,170);
+ assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });

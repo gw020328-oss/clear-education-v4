@@ -1,12 +1,15 @@
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {consumeReviewedV21Sources} from '../../../src/hackathon-test-vault/reviewed-source-v21.mjs';
+import {consumeReviewedV22Sources} from '../../../src/hackathon-test-vault/reviewed-source-v22.mjs';
 import {stripTypeScriptTypes} from 'node:module';
 import assert from 'node:assert/strict';
 const root=new URL('../../../',import.meta.url);
 const read=p=>readFileSync(new URL(p,root));
-const digest=p=>createHash('sha256').update(read(p)).digest('hex');
+const currentDigest=p=>createHash('sha256').update(read(p)).digest('hex');
+// Prior generation assertions retain their original baseline bytes; v22 is checked separately below.
+const v22ChangedPaths=["src/bootcamp/http.mjs", "src/bootcamp/normal-client.mjs", "src/bootcamp/procedure.mjs", "src/hackerrank-evidence/diagnostics.mjs", "tools/bootcamp/explicit-consents.mjs", "tools/bootcamp/frontend-server.mjs", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs", "tools/bootcamp/normal-host-config.mjs", "tools/bootcamp/normal-host-flow.mjs", "tools/bootcamp/normal-host.mjs"];
+const digest=p=>(v22ChangedPaths.includes(p)||['src/hackathon-test-vault/memory-stage-harness.mjs','tests/hackathon-test-vault/e5/preservation.mjs','tests/hackathon-test-vault/e5b/source-pins.mjs'].includes(p))?createHash('sha256').update(execFileSync('git',['show','1421c5ff2105694461f6d470d6b0127d4fd11ce2:'+p],{cwd:root})).digest('hex'):currentDigest(p);
 const pins=JSON.parse(read('docs/hackathon-test-vault/e5b/source-pins-v2.json'));
 assert.equal(pins.version,'clear-e5b-component-source-pins.2');
 assert.equal(pins.actualApiConnected,false);assert.equal(pins.fullE5Accepted,false);
@@ -179,6 +182,12 @@ for(const table of ['e3ArtifactSha256','additionalSourceArtifactSha256','produce
   assert.equal(createHash('sha256').update(execFileSync('git',['show',`${v6.currentSourceCandidateHead}:${path}`],{cwd:root})).digest('hex'),expected,path);
  }
 }
-const v21=consumeReviewedV21Sources(v6);assert.equal(Object.keys(v21.sources).length,166);
+const v22=consumeReviewedV22Sources(v6);assert.equal(Object.keys(v22.sources).length,170);
+const windowPins=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v19.json'));assert.equal(windowPins.version,'clear-e5-normal-path-source-pins.19');
+assert.equal(windowPins.baseHead,'1421c5ff2105694461f6d470d6b0127d4fd11ce2');assert.equal(windowPins.reviewedApiHead,'f0548e3f77d1c19c348713fef2a2b389ca291c67');assert.equal(windowPins.scope,'EXACT_V22_HUMAN_REVIEW_WINDOW');
+assert.equal(currentDigest(windowPins.previousRecord.path),windowPins.previousRecord.sha256);
+assert.equal(currentDigest(windowPins.reviewedIntake.path),'3072f09076cd07b1db2efbb4001ee2c5ee7d48fabb15649082abff5f8534ca97');
+for(const [p,d]of Object.entries(windowPins.changes)){assert.equal(createHash('sha256').update(execFileSync('git',['show','1421c5ff2105694461f6d470d6b0127d4fd11ce2:'+p],{cwd:root})).digest('hex'),d.before,p);assert.equal(currentDigest(p),d.after,p);}
+assert.deepEqual(Object.keys(windowPins.additions),["tools/bootcamp/normal-reflection-approval.mjs", "tools/bootcamp/normal-review-window.mjs", "tools/bootcamp/normal-source-sequence.mjs", "tools/bootcamp/test-client/review-window.js", "src/hackathon-test-vault/reviewed-source-v22.mjs"]);for(const [p,h]of Object.entries(windowPins.additions))assert.equal(currentDigest(p),h,p);
 stripTypeScriptTypes(read('src/hackathon-test-vault/e5b/bridge.d.mts').toString());
-console.log(JSON.stringify({componentArtifacts:Object.keys(pins.sourceArtifactSha256).length,immutableInputs:Object.keys(pins.immutableInputs).length,preservedV5Sources:36,preservedV6Sources:36,preservedV7Sources:134,preservedV8Sources:135,preservedV9Sources:135,preservedV10Sources:159,preservedV11Sources:159,preservedV12Sources:160,preservedV13Sources:160,preservedV14Sources:160,preservedV15Sources:161,preservedV16Sources:162,preservedV17Sources:163,preservedV18Sources:164,preservedV19Sources:165,preservedV20Sources:166,reviewedV21Sources:166,reviewedV7TransitiveSources:85,reviewedV7Assets:13,explicitV6SourceDeltas:3,declarationSyntax:'PASS_NOT_FULL_TSC',actualApiConnected:false}));
+console.log(JSON.stringify({componentArtifacts:Object.keys(pins.sourceArtifactSha256).length,immutableInputs:Object.keys(pins.immutableInputs).length,preservedV5Sources:36,preservedV6Sources:36,preservedV7Sources:134,preservedV8Sources:135,preservedV9Sources:135,preservedV10Sources:159,preservedV11Sources:159,preservedV12Sources:160,preservedV13Sources:160,preservedV14Sources:160,preservedV15Sources:161,preservedV16Sources:162,preservedV17Sources:163,preservedV18Sources:164,preservedV19Sources:165,preservedV20Sources:166,preservedV21Sources:166,reviewedV22Sources:170,reviewedV7TransitiveSources:85,reviewedV7Assets:13,explicitV6SourceDeltas:3,declarationSyntax:'PASS_NOT_FULL_TSC',actualApiConnected:false}));
