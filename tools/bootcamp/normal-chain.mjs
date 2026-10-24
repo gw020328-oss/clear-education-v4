@@ -12,7 +12,7 @@ import {createApplicationService} from '../../src/application/service.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {syntheticAuthority} from '../../tests/bootcamp-store/fixture.mjs';
-import {explicitReviewTarget,assertExplicitConsents} from './explicit-consents.mjs';
+import {waitForNormalReviewConsents} from './explicit-consents.mjs';
 import {registerNormalSourceTarget,normalProcedureBody} from './normal-current-view.mjs';
 import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
@@ -53,9 +53,10 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    store.recordReviewConsent(user,app,body(user,{value:'AGREE'}),key());store.recordReviewConsent(op,app,body(op,{value:'AGREE'}),key());
    report.consentOrigin='SYNTHETIC_AUTOMATIC_TEST_ROLES';
   }else{
-   const target=explicitReviewTarget(store.getProcedure(user,app));report.reviewTarget=target;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');
-   await waitForConsents({target,read:async()=>{store.getOperationsProjection(user,app);await connection.refresh(app);return store.getProcedure(user,app);},heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal});
-   assertExplicitConsents(store.getProcedure(user,app),target);report.consentOrigin='AUTHENTICATED_APP_CONSENT_RECORDS';
+   await waitForNormalReviewConsents({store,connection,context:user,applicationId:app,sourceTarget,waitForConsents,
+    heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal,
+    onTarget:target=>{report.reviewTarget=target;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');}});
+   report.consentOrigin='AUTHENTICATED_APP_CONSENT_RECORDS';
   }
 
   await execute('BIND_CONSENTS');await connection.refresh(app);const preparation=store.prepareReviewAuthorization(user,app,body(),key()).record.target.preparationId;

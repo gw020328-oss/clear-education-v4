@@ -1,5 +1,21 @@
 // Server-owned read callbacks only. Does not publish, consent, sign, allocate or dispatch.
+import {readNormalView,assertNormalSourceTarget} from './normal-current-view.mjs';
 const check=(ok,code)=>{if(!ok)throw Error(code);};
+// The START_REVIEW handoff and each poll may cross a wall-clock second.
+// Discard only a failed synchronous store view and reacquire it once. Never
+// repeat the awaited chain refresh, a consent command or a payment operation.
+export async function waitForNormalReviewConsents({store,connection,context,applicationId,sourceTarget,
+ waitForConsents,heartbeat,signal,onTarget}){
+ const active=()=>check(!signal?.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');
+ const view=()=>{active();return readNormalView(()=>store.getProcedure(context,applicationId));};
+ const initial=view();assertNormalSourceTarget(initial,sourceTarget);
+ const target=explicitReviewTarget(initial);onTarget(target);
+ await waitForConsents({target,heartbeat,signal,read:async()=>{
+  active();readNormalView(()=>store.getOperationsProjection(context,applicationId));
+  await connection.refresh(applicationId);return view();
+ }});
+ assertExplicitConsents(view(),target);return target;
+}
 export function explicitReviewTarget(v){
  check(v?.version==='clear-bootcamp-review-procedure.1'&&v.evidence.current&&v.evidence.conditionsStatus==='MET'
   &&v.funding.matchesCurrentDecision&&v.funding.status==='FULLY_ALLOCATED'&&v.consent.scopeHash
