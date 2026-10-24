@@ -346,12 +346,24 @@ test('a pending unknown consent never starts an automatic replay or replaces its
 
 test('v14 pins six current browser assets and the reviewed v22 human review window',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show','dd10cb27dda05c320530a15305f4b464d2361780:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V14.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V14.json'),'8b423a94d31c7482388835201d89e5af20a6fcbc1fde9ec271eb2e36448cdd40');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.14');
  assert.equal(sha(m.previousRecord.path),'f0c8dbd6092af20f24b1b6ba4a88b23902c5276c2fa8678b27802ca827e8dcc2');assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','dd10cb27dda05c320530a15305f4b464d2361780:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),'3072f09076cd07b1db2efbb4001ee2c5ee7d48fabb15649082abff5f8534ca97');assert.equal(m.existingCoreIntake.sources,170);
+ assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
+});
+
+test('v15 pins the rebalanced budget and current action explanations',async()=>{
+ const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
+ const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V15.json',import.meta.url)));
+ assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V15.json'),'bd5ef7fbb97b7f7b18c415d400c30635452ec45751ee934d5e77459f3f6452d8');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.15');
+ assert.equal(sha(m.previousRecord.path),'8b423a94d31c7482388835201d89e5af20a6fcbc1fde9ec271eb2e36448cdd40');assert.equal(Object.keys(m.sourceArtifacts).length,6);
+ for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
+ assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ assert.equal(sha(m.existingCoreIntake.path),'a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c');assert.equal(m.existingCoreIntake.sources,170);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
