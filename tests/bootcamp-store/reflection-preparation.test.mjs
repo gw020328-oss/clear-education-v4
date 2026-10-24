@@ -7,7 +7,7 @@ import {runFirstNormalReflection} from '../ai-review-precheck/first-normal-refle
 import {reflectionContextHash} from '../../src/document-precheck/review/bootcamp-reflection.mjs';
 
 // All source responses are invented. No network, model/key/journal or real identity is used.
-async function fixture(t){
+async function fixture(t,{bindManagedRun}={}){
  const f=await storeFixture(t,{store:{mode:'ISOLATED_LIVE_TEST',producers:{},resolveSource:()=>null}});
  const state={available:true,authExpiresAt:START+240,rawExpiresAt:START+240,queryExpiresAt:START+240};
  let review=async()=>{throw Error('OFFLINE_CALLBACK_STOP');};
@@ -22,7 +22,7 @@ async function fixture(t){
     timecreated:START-50,timemodified:START-10,capabilities:{view:true},isdeleted:false,isprivatereply:false},warnings:[]}};
   assert.ok(method in responses,'unexpected network method');return structuredClone(responses[method]);}});
  const consumer=createLiveMoodleConsumer({criterionId:'reflection-topics',withReader,resolvePin:pin,resolveLease:()=>state,modelVersion:'gemini-3.5-flash-lite',now:()=>f.time,
-  reflectionHost:{codeState(){assert.equal(this.marker,true);return code;},day(){assert.equal(this.marker,true);return day;},marker:true},reviewReflection:async args=>{aiCalls++;seen=args;return review(args);}});
+  reflectionHost:{bindManagedRun,codeState(){assert.equal(this.marker,true);return code;},day(){assert.equal(this.marker,true);return day;},marker:true},reviewReflection:async args=>{aiCalls++;seen=args;return review(args);}});
  f.configuration.producers={'reflection-topics':consumer};f.configuration.resolveSource=consumer.resolveSource;f.restart();
  const app=f.create(),issue=()=>f.store.issueBridgeRequest(f.aliceContext,app,{criterionId:'reflection-topics',expectedRevision:f.view(app).revision},f.key());
  const request=issue(),requestBody={requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision};
@@ -102,4 +102,12 @@ test('preparation network deadline disposes even when the source callback return
  const pending=x.prepare({timeoutMs:5});await ready;await assert.rejects(pending,/BC_PRODUCER_TIMEOUT/);
  release();await new Promise(r=>setImmediate(r));x.setHook(async()=>{});
  await assert.rejects(x.collect());assert.equal(x.aiCalls,0);assert.equal(x.f.counts().evidence,0);
+});
+
+
+test('managed run binding receives the exact prepared source context before any AI call',async t=>{
+ let seen;const binding={version:'clear-normal-reflection-run.1',bindingHash:'b'.repeat(64)};
+ const x=await fixture(t,{bindManagedRun(value){seen=value;return binding;}}),p=await x.prepare();
+ assert.equal(p.managedRun,binding);assert.equal(seen.packet,p.packet);assert.equal(seen.context.applicationId,x.app);
+ assert.equal(reflectionContextHash(seen.context),p.packet.contextHash);assert.equal(x.aiCalls,0);assert.equal(x.status(),'PENDING');
 });

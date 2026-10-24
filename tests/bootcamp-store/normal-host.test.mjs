@@ -8,8 +8,8 @@ import {once} from 'node:events';
 import {request} from 'node:https';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
 import {createPreparedNormalServer} from '../../tools/bootcamp/normal-host-prepared-server.mjs';
-import {composeNormalFlow,waitUntil,safeCode} from '../../tools/bootcamp/normal-host-flow.mjs';
-import {validateHostConfig,HOST_CONFIG_VERSION,API_ROOT,KEY_SOURCE,MOODLE_READER,MOODLE_OWNER_HEAD,assetSnapshot} from '../../tools/bootcamp/normal-host-config.mjs';
+import {composeNormalFlow,waitUntil,safeCode,awaitExactReflectionApproval} from '../../tools/bootcamp/normal-host-flow.mjs';
+import {validateHostConfig,HOST_CONFIG_VERSION,API_ROOT,KEY_SOURCE,MOODLE_READER,MOODLE_OWNER_HEAD,assetSnapshot,localDay,PRICING_SOURCE} from '../../tools/bootcamp/normal-host-config.mjs';
 import {normalHostCli} from '../../tools/bootcamp/normal-host.mjs';
 const config=()=>({version:HOST_CONFIG_VERSION,apiRoot:API_ROOT,keySourceId:KEY_SOURCE,moodleReader:MOODLE_READER,moodleOwnerHead:MOODLE_OWNER_HEAD,
  moodleReaderSha256:'a'.repeat(64),privacyKeyId:'hr-run.00000000-0000-0000-0000-000000000000',audience:'clear-python-normal-local',origin:'https://127.0.0.1:9445',
@@ -80,4 +80,15 @@ test('source failure stops before exact AI preparation/approval, resume or any p
  await assert.rejects(composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports}),/BC_PRODUCER_FAILED/);
  assert.equal(f.resumed,0);assert.equal(f.paid,0);assert.equal(f.events.includes('approval'),false);assert.equal(f.events.includes('AWAITING_EXACT_AI_APPROVAL'),false);
  assert.equal(f.events.at(-1),'drain');
+});
+
+
+test('approval template exposes and binds the managed run without authorizing a call',async t=>{
+ const directory=realpathSync(mkdtempSync(join(tmpdir(),'normal-approval-offline-')));t.after(()=>rmSync(directory,{recursive:true,force:true}));
+ writeFileSync(join(directory,'price-review.json'),JSON.stringify({officialSource:PRICING_SOURCE,reviewedOn:localDay(),inputNanoUsdPerToken:'300',outputIncludingThinkingNanoUsdPerToken:'2500',basis:'PUBLIC_PRICE_REVIEW_NOT_BILLING_AUTHENTICATION'}),{mode:0o600});
+ const managedRun={version:'clear-normal-reflection-run.1',bindingHash:'b'.repeat(64)},prepared={managedRun,day:localDay(),codeState:{head:'a'.repeat(40),clean:true},packet:{planHash:'offline-plan',contextHash:'offline-context'}};
+ await assert.rejects(awaitExactReflectionApproval({directory,prepared,onPrepared(){throw Error('OFFLINE_STOP_BEFORE_WAIT');}}),/OFFLINE_STOP_BEFORE_WAIT/);
+ const template=JSON.parse(readFileSync(join(directory,'approval-template.json'))),request=JSON.parse(readFileSync(join(directory,'approval-request.json')));
+ assert.equal(template.runBindingHash,managedRun.bindingHash);assert.equal(template.authorization.kind,'PENDING_DIRECT_HUMAN_CONFIRMATION');assert.deepEqual(request.managedRun,managedRun);
+ await assert.rejects(awaitExactReflectionApproval({directory,prepared:{...prepared,managedRun:null}}),/NORMAL_HOST_RUN_BINDING_REQUIRED/);
 });

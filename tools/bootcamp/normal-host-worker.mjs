@@ -1,6 +1,7 @@
 // Enter only through normal-host-launch's real lockf/ulimit boundary.
 import {createSourceDiagnostics,observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
-import {randomBytes} from 'node:crypto';
+import {randomBytes,randomUUID} from 'node:crypto';
+import {openManagedNormalReflectionRun} from './normal-reflection-run.mjs';
 import {join} from 'node:path';
 import {createInterface} from 'node:readline';
 import {existsSync,readFileSync} from 'node:fs';
@@ -37,7 +38,8 @@ try{
  }else{
   const readiness=hostReadiness({directory,config});fail(readiness.readyForActivation,'NORMAL_HOST_ACTIVATION_NOT_READY');readPriceReview(directory);
   fail(!existsSync(join(directory,'prepared-listener.lock')),'NORMAL_HOST_STOP_PREPARED_LISTENER_FIRST');
-  atomicPrivate(join(directory,'run.used.json'),{version:'clear-bootcamp-normal-host-one-run.1',startedAt:Date.now(),code:readiness.code},{exclusive:true});
+  atomicPrivate(join(directory,'run.used.json'),{version:'clear-bootcamp-normal-host-one-run.2',hostName:name,runId:'normal-run-'+randomUUID(),startedAt:Date.now(),code:readiness.code},{exclusive:true});
+  const managedRun=openManagedNormalReflectionRun(name);
   diagnostics=createSourceDiagnostics({persist:value=>atomicPrivate(join(directory,'source-diagnostics.json'),value)});
   const trust=await loadManagedHackerRankTrust({audience:config.audience,privacyKeyId:config.privacyKeyId,signal});
   const {defaultRoot,clearAbandoned,createSession,removeSession}=await import('../../src/mac-collector/storage.mjs');
@@ -45,10 +47,10 @@ try{
   const {withManagedHackerRankSource}=await import('../../src/hackerrank-evidence/managed-source.mjs');
   const {prepareLiveInput}=await import('./prepare-live-input.mjs');const {openLiveContext}=await import('./live-context.mjs');
   const {loadTls}=await import('../../src/dev/tls.mjs');const {listenNormalServer}=await import('./normal-host-prepared-server.mjs');
-  const {runFirstNormalReflection}=await import('../../tests/ai-review-precheck/first-normal-reflection-entry.mjs');
+  const {runManagedNormalReflection}=await import('../../tests/ai-review-precheck/first-normal-reflection-entry.mjs');
   fail(sha(readFileSync(config.moodleReader))===config.moodleReaderSha256,'NORMAL_HOST_MOODLE_READER_CHANGED');
   const {withReader}=await import(pathToFileURL(config.moodleReader));fail(typeof withReader==='function','NORMAL_HOST_MOODLE_READER');
-  const host=reflectionHostOptions(directory),reviewReflection=args=>runFirstNormalReflection({...args,approval:host.readApproval(),currentApprovalHash:host.currentApprovalHash});
+  const host=reflectionHostOptions(directory,managedRun),reviewReflection=args=>runManagedNormalReflection(managedRun,{...args,approval:host.readApproval(),currentApprovalHash:host.currentApprovalHash});
   let session,complete,key;const root=defaultRoot();
   try{
    await clearAbandoned(root,stopRecordedBrowser);signal.throwIfAborted();session=await createSession(root,Date.now(),process.pid);key=randomBytes(32);

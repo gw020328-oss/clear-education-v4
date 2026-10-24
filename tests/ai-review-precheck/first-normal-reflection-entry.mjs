@@ -5,6 +5,7 @@ import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {sha} from './e6-quality-plan.mjs';
 import {receivedTextV3,deriveUsageV3,safeRawUsage,WIRE_V3_POLICY_HASH} from './e6-wire-v3.mjs';
 import {withE6PaidWireV3Store} from './e6-paid-wire-v3-runner.mjs';
+import {withManagedNormalReflectionStore} from '../../tools/bootcamp/normal-reflection-run.mjs';
 import {createE6LeasedReflectionSession} from '../../src/document-precheck/review/e6-leased-reflection.mjs';
 import {validateReflectionContext,reflectionContextHash,REFLECTION_INSTRUCTION,REFLECTION_TOPICS,REFLECTION_CAPABILITY} from '../../src/document-precheck/review/bootcamp-reflection.mjs';
 import {prepareNormalReflectionPacket,createFixedNormalReflectionAdapter,createOfflineNormalReflectionFixtureAdapter,validateNormalReflectionClearance} from '../../src/document-precheck/review/fixed-normal-reflection.mjs';
@@ -61,4 +62,16 @@ export function runFirstNormalReflection(options={}){
 export function runFirstNormalReflectionOfflineFixture(options={}){
  if(!options.store||!options.transportOptions)throw Error('NORMAL_OFFLINE_FIXTURE_REQUIRED');
  return runReflection(options,true);
+}
+export function runManagedNormalReflection(capability,options={}){
+ if(Object.hasOwn(options,'transportOptions')||Object.hasOwn(options,'store'))throw Error('NORMAL_LIVE_OVERRIDE_FORBIDDEN');
+ validateNormalReflectionClearance(options);
+ return withManagedNormalReflectionStore(capability,options,store=>runReflection({...options,store,
+  currentApprovalHash:()=>{capability.assertCurrent();return options.currentApprovalHash();}}));
+}
+export function runManagedNormalReflectionOfflineFixture(capability,options={}){
+ if(Object.hasOwn(options,'store')||!options.transportOptions)throw Error('NORMAL_OFFLINE_FIXTURE_REQUIRED');
+ validateNormalReflectionClearance(options);
+ return withManagedNormalReflectionStore(capability,options,store=>runReflection({...options,store,
+  currentApprovalHash:()=>{capability.assertCurrent();return options.currentApprovalHash();}},true),{offline:true});
 }

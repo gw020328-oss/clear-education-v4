@@ -13,18 +13,20 @@ export async function waitUntil(check,{signal,timeoutMs,pollMs=250}){
    const t=setTimeout(()=>{signal?.removeEventListener('abort',abort);resolve();},pollMs);signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort();});
  }
 }
-export function reflectionHostOptions(directory){
+export function reflectionHostOptions(directory,managedRun=null){
  const approvalPath=join(directory,'approval.json');
  const readApproval=()=>JSON.parse(readPrivate(approvalPath));
  const currentApprovalHash=()=>{try{return hash(readApproval());}catch{return null;}};
- return {reflectionHost:{codeState,day:localDay},readApproval,currentApprovalHash};
+ return {reflectionHost:{codeState,day:localDay,...(managedRun?{bindManagedRun:input=>managedRun.bind(input)}:{})},readApproval,currentApprovalHash};
 }
 export async function awaitExactReflectionApproval({directory,prepared,signal,onPrepared}){
+ fail(prepared.managedRun?.version==='clear-normal-reflection-run.1'&&/^[a-f0-9]{64}$/.test(prepared.managedRun.bindingHash??''),'NORMAL_HOST_RUN_BINDING_REQUIRED');
  const price=readPriceReview(directory),template={version:'clear-e6-paid-wire-v3-user-approval.3',scope:'FIRST_NORMAL_REFLECTION_ONE',approvedOn:prepared.day,codeHead:prepared.codeState.head,
-  planHash:prepared.packet.planHash,contextHash:prepared.packet.contextHash,maxGenerationCalls:1,maxCountCalls:0,automaticRetries:0,continuations:0,keySourceFallbacks:0,modelFallbacks:0,freeFallbacks:0,
+  planHash:prepared.packet.planHash,contextHash:prepared.packet.contextHash,runBindingHash:prepared.managedRun.bindingHash,maxGenerationCalls:1,maxCountCalls:0,automaticRetries:0,continuations:0,keySourceFallbacks:0,modelFallbacks:0,freeFallbacks:0,
   keySourceId:'clear-e6-existing-server-gemini-env.1',costAcknowledgment:NORMAL_REFLECTION_COST_ACK,pricingReview:price,
   authorization:{kind:'PENDING_DIRECT_HUMAN_CONFIRMATION',evidenceSha256:null}};
  atomicPrivate(join(directory,'approval-request.json'),{version:'clear-bootcamp-normal-approval-request.1',packet:prepared.packet,codeState:prepared.codeState,day:prepared.day,
+  managedRun:prepared.managedRun,
   sourceScope:'ONE_GENERATED_LOCAL_MOODLE_DEMO_REFLECTION_BODY_MAX_2048_UTF8_BYTES_THREE_REQUIRED_TOPICS',pricingReview:price,scenarioUsd:'0.00346',hardCashCapVerified:false,
   approvalTemplatePath:join(directory,'approval-template.json')});
  atomicPrivate(join(directory,'approval-template.json'),template);onPrepared?.();
@@ -33,6 +35,7 @@ export async function awaitExactReflectionApproval({directory,prepared,signal,on
   fail(prepared.isCurrent(),'NORMAL_HOST_PREPARED_SOURCE_EXPIRED');let a;
   try{a=host.readApproval();}catch(e){if(e.code==='ENOENT')return false;throw e;}
   validateNormalReflectionClearance({packet:prepared.packet,approval:a,codeState:codeState(),day:localDay()});
+  fail(a.runBindingHash===prepared.managedRun.bindingHash,'NORMAL_HOST_RUN_APPROVAL_CHANGED');
   fail(a.pricingReview.evidenceSha256===price.evidenceSha256,'NORMAL_HOST_PRICE_EVIDENCE_CHANGED');return true;
  },{signal,timeoutMs:Math.max(1,prepared.packet.leaseExpiresAtMs-Date.now())});
 }

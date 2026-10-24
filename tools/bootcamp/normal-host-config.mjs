@@ -76,7 +76,7 @@ export function hostReadiness({directory,config:c}){
  if(!ownerMatches)blockers.push('MOODLE_OWNER_SOURCE_CHANGED');
  const readerMatches=existsSync(c.moodleReader)&&sha(readFileSync(c.moodleReader))===c.moodleReaderSha256;if(!readerMatches)blockers.push('MOODLE_READER_CODE_CHANGED');
  let priceReview;try{priceReview=readPriceReview(directory);}catch{blockers.push('TODAY_PRICE_REVIEW_REQUIRED');}
- const aiSpent=existsSync(join(API_ROOT,'artifacts/e6-first-normal-reflection-run/spent.paid-wire.v3.lock'));if(aiSpent)blockers.push('FIRST_NORMAL_AI_JOURNAL_ALREADY_SPENT');
+ const aiSpent=existsSync(join(directory,'ai-reflection/spent.paid-wire.v3.lock'));if(aiSpent)blockers.push('NORMAL_RUN_AI_JOURNAL_ALREADY_SPENT');
  const used=existsSync(join(directory,'run.used.json'));if(used)blockers.push('NORMAL_HOST_ALREADY_USED');
  const code=codeState();if(!code.clean)blockers.push('CLEAN_CODE_REQUIRED_FOR_ACTIVATION');
  loadTls(directory,c.tlsFingerprint);

@@ -79,9 +79,10 @@ export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,reso
     const step=await iterator.next();check(!step.done&&!combined.aborted&&entry.state==='PREPARING','BC_LIVE_AI_PREPARATION_STALE');entry.args=step.value;
     const text=await entry.args.lease.readBody({signal:combined}),v=entry.args.resolveCurrent();
     entry.packet=prepareFirstNormalReflectionPacket({...entry.args,text,leaseExpiresAtMs:v.leaseExpiresAtMs});entry.state='WAITING';
+    const managedRun=reflectionHost.bindManagedRun?.({packet:entry.packet,context:entry.args.context})??null;
     check(current(),'BC_LIVE_AI_PREPARATION_STALE');
     entry.timer=setTimeout(dispose,Math.max(1,entry.packet.leaseExpiresAtMs-now()*1000));entry.timer.unref?.();
-    return Object.freeze({packet:entry.packet,codeState:fixed.codeState,day:fixed.day,isCurrent:current,dispose});
+    return Object.freeze({packet:entry.packet,codeState:fixed.codeState,day:fixed.day,managedRun,isCurrent:current,dispose});
    }catch(e){dispose();throw e;}
   },
   async verify(r,{signal,isAuthorized=()=>false}){
