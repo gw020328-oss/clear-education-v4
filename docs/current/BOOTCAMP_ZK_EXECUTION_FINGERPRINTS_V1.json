@@ -1,0 +1,60 @@
+{
+  "schema": "clear-zk-execution-fingerprints.1",
+  "scope": "OFFLINE_SYNTHETIC_COMPATIBILITY",
+  "baselineHead": "36c9aed6370623a915e8eff858d96078da09f26b",
+  "sourceIntakeVersion": 18,
+  "engine": "stwo",
+  "engineProto": 2,
+  "prefixes": [
+    "hackerrank-evidence",
+    "ybm-collector"
+  ],
+  "node": "24.21.0",
+  "packages": {
+    "@reclaimprotocol/attestor-core": {
+      "version": "5.1.4",
+      "officialGitHead": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+      "files": {
+        "lib/index.js": "3f898e87fab790d4a9acd42da905b166652edf27e29b1ee4066e7648a19fa2e9"
+      }
+    },
+    "@reclaimprotocol/zk-symmetric-crypto": {
+      "version": "5.1.7",
+      "officialGitHead": "11ab427ab8382227f1b18b2a9caa876253c38784",
+      "files": {
+        "lib/index.js": "f63960b0c640ae4fec0379b084c7c59b6c4b6aa59f5144b7a8ed10ac6619d497",
+        "lib/config.js": "0e20e2afe564da6f526850fbd2164b6e965e7e7cc32302c3f060ce6f4a56833f",
+        "lib/zk.js": "d97891cf2b737fb2177ba19e18ec68bdeb7e333e5bcdf307e4c2b98a6664477c",
+        "lib/utils.js": "9b49764260a35ad12fd2d4fb53a8253715c5fb8e609186b8ac1e35e7ac858b7a",
+        "lib/stwo/operator.js": "c43075d0262135011a33a1f00c4554b866a2a5f996e16ee981655c33c855237f",
+        "lib/stwo/s2circuits-wrapper.js": "5f79e79872235ddc015231b1f672ab88ed3ee39329161e29b2f08916dfde80aa",
+        "lib/stwo/s2circuits.cjs": "41b6cb62989798e8fcd9262562488f5a467db6cf60de1d22751ca497cb8d7265",
+        "lib/stwo/s2circuits_bg.wasm": "8c4baf48a68956a87ccd6e7f737cbf549a2cdc722b80776068d9ee33f9347df1"
+      },
+      "embeddedResourceGitCommit": "7e9026fd556fb68e5268e0237b8d3d6c8ea9f4b1",
+      "npmIntegrity": "sha512-jGvolBL5zRp9jp2Yhl+et6jRpYG7M/G9uoFrHChCuRkceCjzhnQwAyeNMAiEmUOTNWc4Am8mrXNMA4BJWvV52g=="
+    },
+    "@reclaimprotocol/tls": {
+      "version": "0.1.4",
+      "officialGitHead": "03cd5c22a6688123da1d84427815f8740ea5f5d9",
+      "files": {
+        "lib/index.js": "a729d96f48826a83414dc0c70c8f12362f85214c89da5ffd279f666866bbdc1d",
+        "lib/make-tls-client.js": "6203af15f12e36409d0778d7f2d9da0f1d2a666eac178efc818315a3749bb5d1",
+        "lib/crypto/webcrypto.js": "b29380ed5775b00af7fd3f4a1148a40c94f4de079f474ae4dfe794c1f318b05f",
+        "lib/utils/wrapped-record.js": "baaa50b5dd866bb9df7949bc5f1014c9124a4f1c27599a2fc4bca4c6d125ce58",
+        "lib/utils/generics.js": "59cc806384b1dbd7c53cbf7b254b11bebf6d7939440faa9634c31bf1a568c12e",
+        "lib/utils/constants.js": "3dad2147d3a39c401e1892e1f1c6201413a2cbd4e461a9d4dcb8ebbcd6f1b714"
+      }
+    }
+  },
+  "remoteDeploymentVersionConfirmed": false,
+  "historicalSuccessRuntimeConfirmed": false,
+  "engineOrDependencyChanged": true,
+  "engineChanged": false,
+  "sdkChanged": false,
+  "tlsChanged": false,
+  "cryptoDependencyChanged": {
+    "from": "5.1.6",
+    "to": "5.1.7"
+  }
+}

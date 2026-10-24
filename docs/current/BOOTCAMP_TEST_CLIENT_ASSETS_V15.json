@@ -1,0 +1,60 @@
+{
+  "version": "clear-bootcamp-backend-test-client-assets.15",
+  "date": "2026-10-24",
+  "scope": "ONE_BACKEND_NORMAL_INTEGRATION_TEST_NOT_PRODUCT_FRONTEND",
+  "status": "REVIEWED_TEST_CLIENT_ASSET_BYTES_NOT_EXECUTION_APPROVAL",
+  "sourceArtifacts": {
+    "tools/bootcamp/test-client/driver.js": "ced3491d432e4aa31e6e5d578a18de856d1dfa1d7bf5c0fb00f955986370e8bf",
+    "tools/bootcamp/test-client/index.html": "ed489118a2ac2dc82f3c7de04b380378e052ac5748ef76597a34bd350483cc8b",
+    "tools/bootcamp/test-client/main.js": "e945527c09c592b7817bb797926fca4dd4d7a45c3b121163cdc7b5f64d632b85",
+    "tools/bootcamp/test-client/review-window.js": "c852be52294854c3073e46acb556645aa89a7d2bc15e55d15f05e63b5a0b7708",
+    "tools/bootcamp/test-client/session.js": "7ec877bafaf5d0b0ab8cb211c6d556380952afeb561c9d8d214151e3008f1677",
+    "tools/bootcamp/test-client/style.css": "0efc9810d8e1145567e3d21579fdccdb29c94159bc913405822eb3468aa228da"
+  },
+  "publicAssetSnapshotSha256": "bda4175b4b7454e44d1a504e2d2e2ce203b16305be305fbb69f1465b2c082caa",
+  "normalClient": {
+    "path": "src/bootcamp/normal-client.mjs",
+    "sha256": "b4ad85572a57ed04c24ced710242d39669bb1eb46dfeea88f503097784a9350a"
+  },
+  "existingCoreIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v23.json",
+    "sha256": "a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c",
+    "sources": 170,
+    "bytesChanged": true
+  },
+  "apiContractsChanged": false,
+  "productFrontendAccepted": false,
+  "actualExecutionApprovedByThisRecord": false,
+  "previousRecord": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V14.json",
+    "sha256": "8b423a94d31c7482388835201d89e5af20a6fcbc1fde9ec271eb2e36448cdd40",
+    "sourceHead": "dd10cb27dda05c320530a15305f4b464d2361780",
+    "preserveOriginalBytes": true
+  },
+  "sourceDelta": {
+    "tools/bootcamp/test-client/driver.js": {
+      "before": "8af70035a0b2c598966bf235ba5503111879ed4f56c24eb7fd81b6e2480aa6bb",
+      "after": "ced3491d432e4aa31e6e5d578a18de856d1dfa1d7bf5c0fb00f955986370e8bf"
+    },
+    "tools/bootcamp/test-client/index.html": {
+      "before": "ce54e86fa973b9c555895c4fece04ad2a03507586d81d3ea4f9622a31ae50efc",
+      "after": "ed489118a2ac2dc82f3c7de04b380378e052ac5748ef76597a34bd350483cc8b"
+    },
+    "tools/bootcamp/test-client/main.js": {
+      "before": "37609d02991efbddf9305aab90cc5c79a6da89bbdf2bc381b28332dba5eb4891",
+      "after": "e945527c09c592b7817bb797926fca4dd4d7a45c3b121163cdc7b5f64d632b85"
+    },
+    "tools/bootcamp/test-client/review-window.js": {
+      "before": "b8524af41e643a19b37493b6f46a23161ef68f9429134579743c3c6e9570fa06",
+      "after": "c852be52294854c3073e46acb556645aa89a7d2bc15e55d15f05e63b5a0b7708"
+    }
+  },
+  "sourceAdditions": {},
+  "existingApiContractsRetained": true,
+  "changedFromV14": [
+    "tools/bootcamp/test-client/driver.js",
+    "tools/bootcamp/test-client/index.html",
+    "tools/bootcamp/test-client/main.js",
+    "tools/bootcamp/test-client/review-window.js"
+  ]
+}

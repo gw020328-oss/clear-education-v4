@@ -1,0 +1,57 @@
+{
+  "version": "clear-e5b-ci-repair-verification.1",
+  "date": "2026-10-19",
+  "unchangedRuntimeImplementationHead": "9607f4762842c520bbb6b08d9359483adcc0a7b4",
+  "previousPacketHead": "b70c87cafe83befa82e23903125f2a7a18d5c8a6",
+  "priorRemote": [
+    {
+      "run": "39224912351",
+      "head": "b70c87cafe83befa82e23903125f2a7a18d5c8a6",
+      "result": "FAILURE",
+      "bridgePass": 20,
+      "bridgeFail": 0,
+      "apiRegisteredPass": 251,
+      "apiModuleLoadFail": 1,
+      "apiNotRegisteredCases": 24,
+      "reason": "PINNED_HACKERRANK_GRAPH_NOT_INSTALLED_ERR_MODULE_NOT_FOUND_ATTESTOR_CORE",
+      "logSha256": "39770d3f240dcbcbc76929e82af8de8baa0a6dcf929b86d816e9f0a02a9c0cdf"
+    },
+    {
+      "run": "39224877608",
+      "head": "b70c87cafe83befa82e23903125f2a7a18d5c8a6",
+      "result": "FAILURE",
+      "bridgePass": 20,
+      "bridgeFail": 0,
+      "apiRegisteredPass": 251,
+      "apiModuleLoadFail": 1,
+      "apiNotRegisteredCases": 24,
+      "reason": "PINNED_HACKERRANK_GRAPH_NOT_INSTALLED_ERR_MODULE_NOT_FOUND_ATTESTOR_CORE",
+      "logSha256": "1ae9d2cb56eb5e3fa2731fa68dbf6f4d088eb423ee867bc90ffb2f94a951df3b"
+    }
+  ],
+  "fix": "INSTALL_EXISTING_LOCKED_HACKERRANK_GRAPH_WITH_IGNORE_SCRIPTS_IN_OWN_B_WORKFLOW",
+  "apiSourceChanged": false,
+  "dependencyVersionsChanged": false,
+  "checksRemovedOrWeakened": false,
+  "oldPinV1Preserved": true,
+  "newPins": "docs/hackathon-test-vault/e5b/source-pins-v2.json",
+  "cleanDependencyReproduction": {
+    "publicSourceArchive": "b70c87cafe83befa82e23903125f2a7a18d5c8a6",
+    "newDirectoryAndNodeModules": true,
+    "rootAndHackerRankNpmCiExitCodes": [
+      0,
+      0
+    ],
+    "pass": 275,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 6344.320875,
+    "logSha256": "ee8de6b0456543eaba749e4fb709b453086855ade085fb2667647e24b4952b90"
+  },
+  "finalExactHeadRemote": "PENDING_NEW_HEAD_CHECKS",
+  "actualApiConnected": false,
+  "fullE5Accepted": false,
+  "productionEnabled": false,
+  "mergeOrDeployment": false
+}

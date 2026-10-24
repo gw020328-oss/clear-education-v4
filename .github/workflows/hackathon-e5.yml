@@ -1,0 +1,50 @@
+name: E5 isolated persistent execution
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'src/hackathon-test-vault/**'
+      - 'tests/hackathon-test-vault/**'
+      - 'docs/hackathon-test-vault/e5/**'
+      - '.github/workflows/hackathon-e5.yml'
+  push:
+    branches: [codex/hackathon-e5-execution-service]
+permissions:
+  contents: read
+concurrency:
+  group: e5-persistent-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+jobs:
+  e5:
+    name: E5 owned Geth reader and durable envelopes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      LOG_LEVEL: silent
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Install frozen graph without scripts
+        run: |
+          ./tools/npm ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts --no-audit --no-fund
+      - name: Pull pinned official free Geth runtime
+        run: docker pull ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd
+      - name: Actual EIP1898 negative control and private service tests
+        run: |
+          ./tools/node tests/hackathon-test-vault/e5/ganache-probe.mjs
+          ./tools/node --test --test-concurrency=1 tests/hackathon-test-vault/e5/*.test.mjs
+      - name: Frozen E4 and default blocked regression
+        run: ./tools/node --test tests/hackathon-test-vault/artifact.test.mjs tests/hackathon-test-vault/components.test.mjs tests/hackathon-test-vault/reader.test.mjs tests/hackathon-test-vault/execution-compile.test.mjs tests/hackathon-test-vault/execution-signer.test.mjs tests/hackathon-test-vault/stage-execution.test.mjs
+      - name: Preserve original files and dependency graph
+        run: |
+          ./tools/node tools/verify-workspace.mjs
+          ./tools/node tools/verify-dependencies.mjs
+          ./tools/node tests/hackathon-test-vault/e5/preservation.mjs
+      - name: Public history without values
+        run: ./tools/node tools/check-public-content.mjs HEAD

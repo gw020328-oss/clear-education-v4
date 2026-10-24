@@ -1,0 +1,48 @@
+{
+  "version": "clear-bootcamp-source-diagnostics-verification.1",
+  "date": "2026-10-23",
+  "sourceCandidateHead": "829451dd2d930f5e9cdb094e1e90ce89f982560c",
+  "intakePath": "specs/bootcamp/hackathon-test-memory-source-intake-v12.json",
+  "intakeSha256": "ed279c819aab1bc91b8cb15b3c1f974e9a42df5feaf038e4270e89a7b1d49bcd",
+  "coreSourceCount": 160,
+  "changedSourceCount": 7,
+  "coreAdditions": [
+    "src/hackerrank-evidence/diagnostics.mjs"
+  ],
+  "sourceDiagnosticsAndRegression": {
+    "passed": 232,
+    "total": 232,
+    "externalNetworkBlocked": true,
+    "initialTestOnlyMacPathAliasFailureFixed": true
+  },
+  "sourceMutationCompatibilityAndBrowserRegression": {
+    "passed": 54,
+    "total": 54,
+    "evmCreated": false
+  },
+  "e5Preservation": "PASS",
+  "e5bExactPins": "PASS",
+  "narrowReview": {
+    "scope": "stage attribution, safe error vocabulary, passive persistence, unchanged authorization/timers/retry/payment",
+    "sourceProtocolSemanticsChanged": false,
+    "rawSecretsRecorded": false,
+    "persistenceFailureChangesOriginalOutcome": false
+  },
+  "browserAssetManifest": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V4.json",
+  "browserAssetManifestSha256": "526d276b5a587698235c759190a65f6e373d1a92676ee3b65de38891a6d452e8",
+  "browserAssetsChanged": false,
+  "historicalIntakeAndGuardBytesPreserved": true,
+  "r3ReportDbAndUsedMarkerPreserved": true,
+  "r3RootCauseDetermined": false,
+  "newActualRun": false,
+  "newLogin": false,
+  "newSourceLease": false,
+  "newPaidAiCall": false,
+  "newSignature": false,
+  "newTestPayment": false,
+  "sourceExpiryExtended": false,
+  "paymentOrSignaturePolicyChanged": false,
+  "ciEvidenceLocation": "GitHub PR #102 exact final-head checks; earlier-head CI is historical only",
+  "commonBranchMerged": false,
+  "productionEnabled": false
+}

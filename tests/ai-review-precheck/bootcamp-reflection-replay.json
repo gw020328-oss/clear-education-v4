@@ -1,0 +1,9 @@
+{
+  "execution":"MOCK_RECORDED_NOT_ACTUAL_MODEL",
+  "source":"specs/bootcamp/reflection-example.json",
+  "response":{"topics":[
+    {"topicId":"work-performed","state":"PRESENT","evidence":{"sourceId":"bootcamp-reflection-original","quote":"for 반복문으로 목록의 합계를 구하는 코드를 작성했습니다."}},
+    {"topicId":"problem-solving-process","state":"PRESENT","evidence":{"sourceId":"bootcamp-reflection-original","quote":"빈 목록에서 결과가 달라져 초기값을 0으로 두고 다시 확인했습니다."}},
+    {"topicId":"learning-takeaway","state":"PRESENT","evidence":{"sourceId":"bootcamp-reflection-original","quote":"초기값과 경계 입력을 함께 점검해야 한다는 점을 배웠습니다."}}
+  ]}
+}

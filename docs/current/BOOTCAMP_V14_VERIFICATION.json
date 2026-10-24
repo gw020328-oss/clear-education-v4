@@ -1,0 +1,81 @@
+{
+  "version": "clear-bootcamp-v14-verification.1",
+  "date": "2026-10-23",
+  "baselineHead": "d678464fec400b01767aaaf2cbc7130e805c27be",
+  "sourceCandidateHead": "105b1a33fc37cacf24179aff08a96a510d952383",
+  "scope": "OFFLINE_SDK_CLASSIFICATION_AND_MONOTONIC_OBSERVATIONS_NOT_ACTUAL_SOURCE_ACCEPTANCE",
+  "actualR5InitialError": "UNCONFIRMED_ORIGINAL_SDK_ERROR_AND_STAGE_TIMINGS_NOT_RECORDED",
+  "redBeforeFix": {
+    "selectedTests": 2,
+    "passed": 0,
+    "failed": 2,
+    "reason": "SDK rejection boundary collapsed into proof-return and no monotonic schema"
+  },
+  "finalLocalChecks": {
+    "hackerRankOffline": {
+      "passed": 211,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "apiAndExecutionOffline": {
+      "passed": 417,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "pinCompatibilityAndMemoryGate": {
+      "passed": 46,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "uniqueTestsAcrossTheseThreeCommands": 674,
+    "e5Preservation": "PASS",
+    "e5bExactSourcePins": "PASS",
+    "portableWorkspacePreservation": "PASS",
+    "frozenDependencyValidation": "PASS",
+    "declarationValidation": "SYNTAX_ONLY_NOT_FULL_TSC"
+  },
+  "sourceIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v14.json",
+    "sha256": "7f558777c3550522db9880359054f387d38460f4d487bceb708d2bfb1b3411de",
+    "sources": 160,
+    "runtimeDeltas": [
+      "src/hackerrank-evidence/diagnostics.mjs",
+      "src/hackerrank-evidence/worker-source.mjs"
+    ]
+  },
+  "reviewedHelper": {
+    "path": "src/hackathon-test-vault/reviewed-source-v14.mjs",
+    "sha256": "9f0d66087e6276bbd3d2833c056e2a16c4c16205063fc39cac07ee801117ae4e"
+  },
+  "guardPins": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v11.json",
+    "sha256": "47d300e3aee74188d910b6412a772e61a9524a59d950943aa1c2c393f743d2f8"
+  },
+  "testClientManifest": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V6.json",
+    "sha256": "f7e16794b7e9963fdcc18428cf619de4bce4c836cbaddb66f76bb9b0cf41ffa9",
+    "browserBytesChanged": false
+  },
+  "securityReview": {
+    "path": "docs/current/BOOTCAMP_SDK_DIAGNOSTICS_REVIEW.ko.md",
+    "blockingFindingsRemaining": 0,
+    "independentReadOnlyAgentReview": true
+  },
+  "preservation": {
+    "priorImmutableIntakeHelperGuardManifestFiles": 37,
+    "r5PrivateFilesUnchanged": 5,
+    "r5DiagnosticsSha256": "1b267582f672aca56ed8a660937ac98cff887d1d96f86a7c98cdf9c2937a2be2",
+    "r5UsedSha256": "b3dc9de3bcc12fa327b536390ec9c5aa5b8fd3f4be91773a1e24320f71c8e2d4",
+    "r5ReportSha256": "8f000b7132615085c1e93a6b0942c71d02776c6b4cd2f12961bc127930ddccdd"
+  },
+  "finalHeadCi": "VERIFY_AFTER_COMMIT_AND_PUSH_DO_NOT_REUSE_OLD_HEAD_RESULTS",
+  "r6EnvironmentCreated": false,
+  "r6CertificateCreated": false,
+  "actualLoginPerformed": false,
+  "actualReadyPerformed": false,
+  "actualSignaturePerformed": false,
+  "actualProofPerformed": false,
+  "actualAiCallPerformed": false,
+  "actualPaymentPerformed": false,
+  "mergeOrDeploymentPerformed": false
+}

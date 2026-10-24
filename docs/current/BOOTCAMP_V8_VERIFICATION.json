@@ -1,0 +1,40 @@
+{
+  "version": "clear-bootcamp-c3-v8-verification.1",
+  "date": "2026-10-22",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIndependentlyVerified": false,
+  "sourceCandidateHead": "cbda762ba41e94413e5aa582bc22a3a4db71ff74",
+  "guardCommit": "dd4a79ac048fa572396b6cedd0553b042545b856",
+  "intakeSha256": "ca37fb5574a293ac6873d4d22e136fcc2f214f58a60b0a8d7f46e09dd786ed33",
+  "memoryConsumerSha256": "180eee9e54248e082d943d7c324bff404d2d13fd682f97346191eed1460dfd87",
+  "localRelated": {
+    "pass": 45,
+    "fail": 0,
+    "logSha256": "927f7e997a47acc4c9b160b78868910cd3ee3a29a3d7ccba1bc986a3349a629e"
+  },
+  "localExactGenerationGuard": {
+    "pass": 24,
+    "fail": 0,
+    "logSha256": "aed008c3b5a5997d672c8e707602ea1df4d2496164a8d85b4270bc0f5c00e232"
+  },
+  "aAndBPreservation": "PASS",
+  "priorV7ExactHeadCi": {
+    "head": "3e2f355cc9534c207394a1d3232269e39e6f7893",
+    "success": 18,
+    "total": 18
+  },
+  "newHeadCi": "PENDING_FINAL_PUSH_HEAD",
+  "v7IntakeAndGuardBytesPreserved": true,
+  "existingCanonicalClaimReaderChanged": false,
+  "contractsChanged": false,
+  "hrProducerChanged": false,
+  "webChanged": false,
+  "actualSourceOrUiDemoComplete": false,
+  "actualLogins": 0,
+  "registryCalls": 0,
+  "paidCalls": 0,
+  "newActualApplications": 0,
+  "newRealms": 0,
+  "actualChainTransactions": 0,
+  "remainingReadinessDoc": "docs/current/BOOTCAMP_NORMAL_RUN_READINESS.ko.md"
+}

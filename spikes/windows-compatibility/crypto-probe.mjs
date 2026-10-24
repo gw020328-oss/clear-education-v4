@@ -12,7 +12,7 @@ export async function cryptoProbe() {
   const entry=require.resolve('@reclaimprotocol/zk-symmetric-crypto/stwo');
   const base=dirname(dirname(dirname(entry)));
   const pkg=JSON.parse(await readFile(join(base,'package.json'),'utf8'));
-  record('locked-zk-package',pkg.version==='5.1.6'?'PASS':'FAIL');
+  record('locked-zk-package',pkg.version==='5.1.7'?'PASS':'FAIL');
   const {makeStwoZkOperator}=await import(pathToFileURL(entry).href);
   for(const algorithm of ['aes-128-ctr','aes-256-ctr','chacha20']) {
     const op=makeStwoZkOperator({algorithm});

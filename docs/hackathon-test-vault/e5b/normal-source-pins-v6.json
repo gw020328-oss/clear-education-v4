@@ -1,0 +1,34 @@
+{
+  "version": "clear-e5-normal-path-source-pins.6",
+  "baseHead": "f84b6f78dbcccd32da289d3190db0207bf727afd",
+  "scope": "EXACT_C3_V9_OWNED_CANONICAL_REFRESH_NO_WINDOW_EXTENSION",
+  "previousRecord": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v5.json",
+    "sha256": "33561ecceca412701f59d01c2df1d0584000264715d55177c306143ebcfac28f"
+  },
+  "reviewedIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v9.json",
+    "sha256": "19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2870fc"
+  },
+  "reviewedApiHead": "26d451701186632ba7a37729b9937f28ce3a1f83",
+  "changes": {
+    "src/hackathon-test-vault/memory-stage-harness.mjs": {
+      "before": "180eee9e54248e082d943d7c324bff404d2d13fd682f97346191eed1460dfd87",
+      "after": "dc60cc5d30cd3e101e7f2c6b43ab4ce7fb694324deae25c92d3147cc3c19ca5c"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "37847129248a40874b5f05bf33185706717f2e22662619449678062171fb170a",
+      "after": "605f68d00d20d0b1e51c517d40db0b4a1ac7056cc52ec7163361f1d3f3767b5b"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "b20b52472be30320bb64998d9bca9b3869f1ad0336285ad783973ecedfbf5bbc",
+      "after": "19d77468347f6af4901f93d872c06ae9aaaceb3ce5d71174f294ca4a71999770"
+    }
+  },
+  "additions": {
+    "src/hackathon-test-vault/reviewed-source-v9.mjs": "1373afb09529f2cccf266193126ff2e6ff2f76a1d1be785aecef22bed782ee8d"
+  },
+  "priorAcceptanceBytesChanged": false,
+  "actualSourceAccepted": false,
+  "productionEnabled": false
+}

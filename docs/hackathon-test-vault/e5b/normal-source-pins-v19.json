@@ -1,0 +1,82 @@
+{
+  "version": "clear-e5-normal-path-source-pins.19",
+  "baseHead": "1421c5ff2105694461f6d470d6b0127d4fd11ce2",
+  "scope": "EXACT_V22_HUMAN_REVIEW_WINDOW",
+  "previousRecord": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v18.json",
+    "sha256": "421dc875febb026063f048de0b94045770ea1c7366596a2d799601e063d89af8"
+  },
+  "reviewedIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v22.json",
+    "sha256": "3072f09076cd07b1db2efbb4001ee2c5ee7d48fabb15649082abff5f8534ca97"
+  },
+  "reviewedApiHead": "f0548e3f77d1c19c348713fef2a2b389ca291c67",
+  "changes": {
+    "src/bootcamp/http.mjs": {
+      "before": "7214f09dd9710e8eecaaccafd3ecaa979b73d2c1b8aaf250f7072a2ff48c9be0",
+      "after": "57292697834b24755309aa46df1a1736b3eebb82925fb4cbde15eae44708ec80"
+    },
+    "src/bootcamp/normal-client.mjs": {
+      "before": "2ac20fa5860ffd8f2cbade607bd219808d4eba4fde319f5b992242e7b699f867",
+      "after": "b4ad85572a57ed04c24ced710242d39669bb1eb46dfeea88f503097784a9350a"
+    },
+    "src/bootcamp/procedure.mjs": {
+      "before": "3d652169f24289717f17afb4ffe15e902dbaf24016b61d8ccee52f0083902fa6",
+      "after": "e297241fea3a8478ddf694b002d82d3d25374ef71a5db8599b77f3b64b304b24"
+    },
+    "src/hackathon-test-vault/memory-stage-harness.mjs": {
+      "before": "31a7ebef1875a28e8cc28ec6d75e2df6fb4f1b99ec24182cd9d87235955c0ac8",
+      "after": "360a7ece991c5b07b5e65599e47274867b0a1a4a941b0314ab51cfcf1f45e84d"
+    },
+    "src/hackerrank-evidence/diagnostics.mjs": {
+      "before": "bc750bd60f9c9fcb1fc848f0d53dbce5b7832d782604722a5cb2f213ad9a38de",
+      "after": "21528e02d1048a0e36258bfc05bed77bef0ebac5b72d46086b81210895d335c4"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "7272fd6d8d0cb0f9d30d23cdaa52e9ee09be4d228ea6ce385fe4bce0363bcadf",
+      "after": "7cfaeba00df72f54d73a1fb41e2c4148e58be0d4f266e5efb512d46b53465124"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "66648ffd3e943486a5e8aa85e05860f0682889b48a701259ed337e506a148d5d",
+      "after": "4206f584c1d1ee34d13faa881e8785c76d9ef4e95bee8547c4e1629efe7f192f"
+    },
+    "tools/bootcamp/explicit-consents.mjs": {
+      "before": "e21ba5e4c6a5bbc88a51e5f4ae49212959852c11cdad03a920f565cec9e7ce81",
+      "after": "bc1db05c983506f96249a9d3281ba720d27796e2814df4a43bbdbbcfdb12f4a9"
+    },
+    "tools/bootcamp/frontend-server.mjs": {
+      "before": "5ab2af30438efbf8f8a4a807fb75f45a54f982cd0399068d301e22e290ce8ab6",
+      "after": "d595ff6149f9c2ee4ad133b0c50222340bb6f55cdbea9db8577d54e407657438"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "33d19f4c76fbc31383f74f8cb0def0fced2f2f176cb7ecdf83f3952f1c0b9443",
+      "after": "0feb123532927163fc33dcfd49a0452e6451fafbfb74a5834dff4c8c64d70599"
+    },
+    "tools/bootcamp/normal-chain.mjs": {
+      "before": "d8d0b5fed98a03309bc7a531c6e695642e79ab6ccc32dcf15560381ab5dbb3e3",
+      "after": "c97f33c301525a14e61493116d19ea486e8d32dcfc73a0d3ad074315bc3bbb93"
+    },
+    "tools/bootcamp/normal-host-config.mjs": {
+      "before": "d83926ad8677e4f5902f381100d8a0bc1273c22ff5d73c620fbd78750a150bc9",
+      "after": "15204442309e3c91653f28518ec5d5af8e0f83c637881e73f307c335964c8fc1"
+    },
+    "tools/bootcamp/normal-host-flow.mjs": {
+      "before": "b772310326291d26394d22a2d9de88395561e64878b60db3f04dba638913f68f",
+      "after": "32c4119c2d9c2f41041434c6b5b3ab16f20934b640be8a53b2faf18f18a10ce1"
+    },
+    "tools/bootcamp/normal-host.mjs": {
+      "before": "7cc6b33d6b3b2390a95dd8f654de1dfba318bafec1559b0295b46403f6c5702b",
+      "after": "679a96be27b1123396436622fa974902d0f2e8ba4f7f2ce8818125cfe94cb089"
+    }
+  },
+  "additions": {
+    "tools/bootcamp/normal-reflection-approval.mjs": "435d9f1519f4be26d74c47f2a50bdc9219e9bfd454ec7aae37a0e20ba97aea77",
+    "tools/bootcamp/normal-review-window.mjs": "9232bbe4b66ff96c05223e32e1e5eebfcf806f86ddbc6ceb37803bb4e447a70c",
+    "tools/bootcamp/normal-source-sequence.mjs": "43e6a29dc3d00c60bd2f603a633d4787299059933ac7df2145089a040fe639df",
+    "tools/bootcamp/test-client/review-window.js": "b8524af41e643a19b37493b6f46a23161ef68f9429134579743c3c6e9570fa06",
+    "src/hackathon-test-vault/reviewed-source-v22.mjs": "6653110cd33de6235736b5bd8b806fa245bc7744ec89e4d8ff408a9e971bfa84"
+  },
+  "priorAcceptanceBytesChanged": false,
+  "actualSourceAccepted": false,
+  "productionEnabled": false
+}

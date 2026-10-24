@@ -1,0 +1,130 @@
+{
+  "version": "clear-bootcamp-v17-verification.1",
+  "date": "2026-10-24",
+  "baselineHead": "253f94ff1461e3521dd787395c71b40a4da214b6",
+  "sourceCandidateHead": "3e1508d3f181662023268fb62a7803e0a483f5c9",
+  "scope": "OFFLINE_R8_INVALID_CLAIM_DIAGNOSTIC_REPAIR_NOT_ACTUAL_ACCEPTANCE",
+  "r8ConfirmedBoundary": "SDK_RESOLVED_ERROR_INVALID_CLAIM_THEN_EXISTING_SIGNED_CLAIM_REJECTION",
+  "r8RootCauseConfirmed": false,
+  "remoteDeployedVersionConfirmed": false,
+  "publishedServerCommit": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+  "sourceIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v17.json",
+    "sha256": "24c2808e5521ceac304efa167d00167f35f1e425cd29850add4bd7db22ce5361",
+    "sources": 163,
+    "runtimeDeltas": [
+      "src/hackerrank-evidence/diagnostics.mjs",
+      "src/hackerrank-evidence/worker-source.mjs"
+    ],
+    "runtimeAdditions": [
+      "src/hackerrank-evidence/claim-return-diagnostics.mjs"
+    ]
+  },
+  "reviewedHelper": {
+    "path": "src/hackathon-test-vault/reviewed-source-v17.mjs",
+    "sha256": "ceb76d3173dcb136f46bc516c26ebfdf9d45cf1379ffb50ae580c8c1516334da"
+  },
+  "guardPins": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v14.json",
+    "sha256": "cb9f4d59ecf5fb4e7f318e60d8b37acb714b51c83426a882daa220067555b67c"
+  },
+  "testClientManifest": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V9.json",
+    "sha256": "776e9c7cda92f245e740c060448f9e51e3fbebb9bf81e8712695fea4bcd845c4",
+    "browserBytesChanged": false
+  },
+  "claimReturnDiagnostics": {
+    "basis": "REMOTE_ERROR_HINT",
+    "reasonHints": [
+      "UNKNOWN",
+      "REQUEST_SIGNATURE",
+      "TIMESTAMP_WINDOW",
+      "TLS_HANDSHAKE",
+      "ZK_PROOF",
+      "TRANSCRIPT_PACKET",
+      "HTTP_PROVIDER_RECEIPT"
+    ],
+    "presenceFields": [
+      "errorPresent",
+      "claimPresent",
+      "claimSignaturePresent",
+      "resultSignaturePresent"
+    ],
+    "numericErrorCode": 5,
+    "maximumTransientMessageCharacters": 2048,
+    "fullAuditedPatternOnly": true,
+    "controlCharactersRejected": true,
+    "proxyOrAccessorInvocation": false,
+    "rawMessageOrDataOrStackRecorded": false,
+    "signatureBytesRead": false,
+    "hintGrantsAuthority": false,
+    "r8RootCauseConfirmed": false,
+    "publishedServerCommit": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+    "deployedServerVersionConfirmed": false,
+    "sdkOrEngineChanged": false,
+    "sendPolicyChanged": false,
+    "sourceExpiryExtended": false,
+    "signaturePolicyChanged": false,
+    "paymentPolicyChanged": false
+  },
+  "dependencies": {
+    "changed": false,
+    "prefixes": [
+      "src/hackerrank-evidence",
+      "src/ybm-collector"
+    ],
+    "attestorVersion": "5.1.4",
+    "attestorIndexSha256": "3f898e87fab790d4a9acd42da905b166652edf27e29b1ee4066e7648a19fa2e9",
+    "zkCryptoVersion": "5.1.6",
+    "zkCryptoIndexSha256": "f63960b0c640ae4fec0379b084c7c59b6c4b6aa59f5144b7a8ed10ac6619d497",
+    "tlsVersion": "0.1.4",
+    "tlsIndexSha256": "a729d96f48826a83414dc0c70c8f12362f85214c89da5ffd279f666866bbdc1d",
+    "bothPrefixesMatch": true,
+    "engine": "stwo"
+  },
+  "finalLocalChecks": {
+    "hackerRankAndTransportOffline": {
+      "passed": 466,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "apiAndExecutionOffline": {
+      "passed": 420,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "pinCompatibilityAndMemoryGate": {
+      "passed": 60,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "uniqueTestsAcrossThreeCommands": 946,
+    "targetedTestsNotDoubleCounted": true,
+    "e5Preservation": "PASS",
+    "e5bExactSourcePins": "PASS",
+    "portableWorkspacePreservation": "PASS",
+    "frozenDependencyValidation": "PASS",
+    "declarationValidation": "SYNTAX_ONLY_NOT_FULL_TSC"
+  },
+  "securityReview": {
+    "existingAgentReused": true,
+    "blockingFindingsRemaining": 0,
+    "scope": "FIXED_REMOTE_HINTS_PRIVATE_DATA_LIFETIME_FAIL_CLOSED_AND_EXACT_SOURCE_PINS"
+  },
+  "preservation": {
+    "priorImmutableGenerationFiles": 45,
+    "r5PrivateFilesUnchanged": 5,
+    "r6PrivateFilesUnchanged": 5,
+    "r7PrivateFilesUnchanged": 5,
+    "r8PrivateFilesUnchanged": 5,
+    "r8TerminalVerificationUnchanged": true
+  },
+  "finalHeadCi": "VERIFY_AFTER_COMMIT_AND_PUSH_ON_PR102_DO_NOT_REUSE_OLD_HEAD",
+  "newActualRunPrepared": false,
+  "newLoginOrReadyPerformed": false,
+  "newActualProofPerformed": false,
+  "newChainOrPaymentPerformed": false,
+  "newAiCallPerformed": false,
+  "caTrustChanged": false,
+  "mergePerformed": false
+}

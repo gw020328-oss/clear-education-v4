@@ -1,0 +1,36 @@
+{
+  "status": "BLOCKED_TEMPLATE_NOT_AUTHORIZATION",
+  "approval": {
+    "version": "clear-e6-free-user-approval.1",
+    "scope": "E6_PYTHON_FREE_TEXT_8_ONLY",
+    "approvedOn": null,
+    "codeHead": null,
+    "planHash": "0x9afeecb7fbdf1d7d7df2cf53dc3061fd49996c7277f3ad301dc5286f9e185881",
+    "authorization": {"kind": null, "evidenceSha256": null},
+    "maxGenerationCalls": 8,
+    "maxCountCalls": 0,
+    "automaticRetries": 0,
+    "continuations": 0,
+    "paidFallbacks": 0,
+    "modelFallbacks": 0,
+    "keySourceId": "clear-e6-python-free-only-file.1",
+    "projectScopeSha256": null,
+    "dataUseAcknowledgment": null,
+    "pins": null
+  },
+  "projectConfirmation": {
+    "version": "clear-e6-free-project-confirmation.1",
+    "basis": null,
+    "evidenceSha256": null,
+    "reviewedOn": null,
+    "codeHead": null,
+    "planHash": "0x9afeecb7fbdf1d7d7df2cf53dc3061fd49996c7277f3ad301dc5286f9e185881",
+    "keySourceId": "clear-e6-python-free-only-file.1",
+    "projectScopeSha256": null,
+    "aiStudioBillingTier": null,
+    "billingAccountLinked": null,
+    "googleCloudBillingEnabled": null,
+    "keyBelongsToConfirmedProject": null,
+    "rateLimits": {"model": "gemini-3.5-flash-lite", "rpm": null, "availableRpd": null, "tpm": null}
+  }
+}

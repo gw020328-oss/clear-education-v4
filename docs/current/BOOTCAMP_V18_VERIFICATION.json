@@ -1,0 +1,117 @@
+{
+  "version": "clear-bootcamp-v18-verification.1",
+  "date": "2026-10-24",
+  "baselineHead": "36c9aed6370623a915e8eff858d96078da09f26b",
+  "sourceCandidateHead": "7d9db33924be50ae79f90385c3ac7f37b58d0a82",
+  "scope": "OFFLINE_R9_STWO_COMPATIBILITY_AND_PUBLIC_INPUT_BINDING_FIX",
+  "r9ConfirmedHint": "ZK_PROOF",
+  "r9HintBasis": "REMOTE_ERROR_HINT",
+  "r9RootCauseConfirmed": false,
+  "remoteDeployedVersionConfirmed": false,
+  "sourceIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v18.json",
+    "sha256": "12ddc5d166d8b3f090aa8e4211e4bd335938365e068757259df5244174c70b13",
+    "sources": 164,
+    "runtimeDeltas": [
+      "src/hackerrank-evidence/package-lock.json",
+      "src/hackerrank-evidence/package.json",
+      "src/ybm-collector/package-lock.json",
+      "src/ybm-collector/package.json"
+    ],
+    "executionFingerprintAdditions": {
+      "docs/current/BOOTCAMP_ZK_EXECUTION_FINGERPRINTS_V1.json": "67f5f4ba9c38f19c0c568099fee1f9f15693a19d78a3c5ee4bcda6390aaf1579"
+    }
+  },
+  "reviewedHelper": {
+    "path": "src/hackathon-test-vault/reviewed-source-v18.mjs",
+    "sha256": "d6d0a8318118e8bab06cacff9ed7b1bbf219ca8cff229a655f6195b0a74856cb"
+  },
+  "guardPins": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v15.json",
+    "sha256": "57f6f8047b0d43c2fd4467090f0027b324e5876761a94a68d4a96b5937a8480b"
+  },
+  "testClientManifest": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V10.json",
+    "sha256": "16bcbcacec12d6808775b38b6a75e6f4f8b3897a519780061f7829725f84cf04",
+    "browserBytesChanged": false
+  },
+  "zkCompatibility": {
+    "sdk": "5.1.4",
+    "tls": "0.1.4",
+    "engine": "stwo",
+    "engineProto": 2,
+    "cryptoBefore": "5.1.6",
+    "cryptoAfter": "5.1.7",
+    "exactDirectDependencyBothPrefixes": true,
+    "officialSecurityFix": "ec3974348444ad85adfe5e21c5152f69c7b93722",
+    "fingerprints": {
+      "path": "docs/current/BOOTCAMP_ZK_EXECUTION_FINGERPRINTS_V1.json",
+      "sha256": "67f5f4ba9c38f19c0c568099fee1f9f15693a19d78a3c5ee4bcda6390aaf1579"
+    },
+    "sameVersionSyntheticPass": true,
+    "crossVersionSyntheticRejected": true,
+    "cipherAlgorithms": 3,
+    "tlsPacketConfigurations": 6,
+    "sdkAndTlsUnchanged": true,
+    "deployedServerVersionConfirmed": false,
+    "r9RootCauseConfirmed": false,
+    "automaticFallback": false,
+    "attempts": 1,
+    "zkProofConcurrency": 1,
+    "rawProofPersisted": false,
+    "signaturePolicyChanged": false,
+    "sendPolicyChanged": false,
+    "sourceExpiryExtended": false,
+    "paymentPolicyChanged": false
+  },
+  "finalLocalChecks": {
+    "hackerRankAndTransportOffline": {
+      "passed": 473,
+      "failed": 0,
+      "networkGuard": true
+    },
+    "apiAndExecutionSynthetic": {
+      "passed": 421,
+      "failed": 0
+    },
+    "pinCompatibilityAndMemoryGate": {
+      "passed": 64,
+      "failed": 0
+    },
+    "uniqueNodeTests": 958,
+    "officialVersionMatrix": {
+      "generatedProofs": 6,
+      "verificationCalls": 12,
+      "expectedOutcomes": 12,
+      "networkCalls": 0,
+      "record": "spikes/stwo-compatibility/result.json"
+    },
+    "e5Preservation": "PASS",
+    "e5bSourcePins": "PASS",
+    "workspace": "PASS",
+    "rootDependencies": "PASS",
+    "bothPrefixExecutionFingerprints": "PASS",
+    "declarationSyntax": "PASS_NOT_FULL_TSC"
+  },
+  "preservation": {
+    "runArtifactsR5ThroughR9": 27,
+    "priorImmutableGenerations": 49,
+    "allSha256Unchanged": true
+  },
+  "notPerformed": [
+    "USER_LOGIN",
+    "ACTUAL_SOURCE_PROOF_RETRY",
+    "REMOTE_PUBLIC_CLAIM",
+    "NEW_HOST_OR_CA",
+    "PAID_AI",
+    "PAYMENT",
+    "MERGE"
+  ],
+  "ci": {
+    "statusAtCommit": "VERIFY_FINAL_HEAD_AFTER_PUSH",
+    "pr": 102,
+    "previousHeadCiReused": false,
+    "authoritativeFinalEvidence": "PR102 same-final-head checks and workflow run links"
+  },
+  "retestReadiness": "WAIT_FOR_FINAL_HEAD_CI_THEN_HQ_SINGLE_RUN_INSTRUCTION"
+}

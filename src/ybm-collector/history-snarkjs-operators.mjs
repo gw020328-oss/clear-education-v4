@@ -1,6 +1,6 @@
 import {fork} from 'node:child_process';
 // Official SDK alternative engine. Its resources are fetched at the immutable
-// commit pinned by installed zk-symmetric-crypto 5.1.6, never at branch HEAD.
+// commit pinned by the installed, exactly locked crypto package, never at branch HEAD.
 export function snarkHistoryOperators({signal,forkChild=fork}={}){
  let worker,serial=0,closed=false,releasePromise;
  const pending=new Map();

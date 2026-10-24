@@ -1,0 +1,71 @@
+{
+  "version": "clear-bootcamp-v23-verification.1",
+  "date": "2026-10-24",
+  "baselineHead": "dd10cb27dda05c320530a15305f4b464d2361780",
+  "sourceCandidateHead": "3374c383e585f26ea712911ac6be5b6ac44c0a56",
+  "scope": "OPERATING_BUDGET_AND_DISABLED_BUTTON_EXPLANATIONS_ONLY",
+  "runtimeFiles": [
+    "tools/bootcamp/test-client/review-window.js",
+    "tools/bootcamp/test-client/driver.js",
+    "tools/bootcamp/test-client/main.js",
+    "tools/bootcamp/test-client/index.html"
+  ],
+  "budgetSeconds": {
+    "originalSourceLease": 240,
+    "sourcePreparationAndExactAiApprovalMaximum": 95,
+    "modelAndE3Processing": 30,
+    "firstRead": 5,
+    "humanReview": 80,
+    "settlementReserve": 30,
+    "requiredBeforeModel": 145,
+    "requiredOpening": 115,
+    "requiredFirstDisplay": 110
+  },
+  "budgetBasis": "r13 model dispatch/summary about 3.3 seconds and E3 handoff about 12 seconds; r14 old UI approval opportunity 51.218 seconds; controlled 90 approval + 30 processing + 5 read + 80 dual review leaves 35 seconds on unchanged lease",
+  "latencyGuarantee": false,
+  "slowOrExpiredStops": true,
+  "r14InitialDisabledCause": "UNDETERMINED_ACK_READERS_AND_DISPLAY_STATE_NOT_PERSISTED",
+  "uiChanges": [
+    "same button gates return a human explanation and next action",
+    "new exact packet still resets acknowledgment",
+    "failed observation clears old AI WAITING packet",
+    "successful fresh read clears retryable observation error",
+    "elapsed approval gate displays insufficient review time without stale WAITING"
+  ],
+  "boundaryChanges": {
+    "sourceExpiryExtended": false,
+    "approvalOrConsentAutomated": false,
+    "modelRetryAdded": false,
+    "singleConsumptionChanged": false,
+    "paymentOrDepositPolicyChanged": false,
+    "sdkCryptoTransportWindowsChanged": false
+  },
+  "pins": {
+    "candidate": "3374c383e585f26ea712911ac6be5b6ac44c0a56",
+    "intakeSha256": "a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c",
+    "sourceCount": 170,
+    "changed": [
+      "tools/bootcamp/test-client/review-window.js"
+    ],
+    "helperSha256": "7e14f3cde90b2360407e9f4446463bf6615404b0585e0a49f5289d5ca260f1e4",
+    "guardSha256": "c97e2470ba0c4eaa75883fad3e3d143489fe2c6a8f1242815720daebd1cac8c5",
+    "manifestSha256": "bd5ef7fbb97b7f7b18c415d400c30635452ec45751ee934d5e77459f3f6452d8",
+    "memoryHarnessSha256": "e5580d70a3e77ca9df0121dd3fc71999b64903734d8c8732fb3198be3460ccc5"
+  },
+  "focusedCasesPassed": 51,
+  "requiredRegression": {
+    "apiExecution": 544,
+    "compatibilityMemoryGate": 87,
+    "uniqueTotal": 631,
+    "passed": true,
+    "e5Preservation": "PASS",
+    "e5bSourcePinsDeclarationSyntax": "PASS_NOT_FULL_TSC",
+    "workspace": "PASS",
+    "dependencies": "PASS"
+  },
+  "preservedEvidenceFiles": 209,
+  "actualHostCaLoginProofAiSignaturePaymentStarted": false,
+  "mergePerformed": false,
+  "finalHeadCi": "VERIFY_AFTER_PUSH_AND_RECORD_IN_IGNORED_var/bootcamp-verification/v23-final-ci.json",
+  "nextStep": "REPORT_FINAL_HEAD_CI_THEN_STOP_NO_ACTUAL_RETEST"
+}

@@ -1,0 +1,49 @@
+name: E5 B scoped API bridge
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'src/hackathon-test-vault/**'
+      - 'tests/hackathon-test-vault/**'
+      - 'src/bootcamp/**'
+      - 'specs/bootcamp/hackathon-test-memory-source-intake-*.json'
+      - 'docs/hackathon-test-vault/e5b/**'
+      - '.github/workflows/hackathon-e5b.yml'
+  push:
+    branches: [codex/hackathon-e5-api-bridge]
+permissions:
+  contents: read
+concurrency:
+  group: e5b-bridge-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+jobs:
+  e5b:
+    name: E5 B scoped controller and immutable adoption
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Install frozen graph without scripts
+        run: |
+          ./tools/npm ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts --no-audit --no-fund
+      - name: Pull pinned official free Geth runtime
+        run: docker pull ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd
+      - name: Bridge component and actual child restart tests
+        run: ./tools/node --test --test-concurrency=1 tests/hackathon-test-vault/e5b/*.test.mjs
+      - name: Reviewed v4 API metadata authority and E1 E3 regression
+        run: ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-execution/*.test.mjs tests/bootcamp-store/*.test.mjs
+      - name: Exact reviewed source and frozen artifact preservation
+        run: |
+          ./tools/node tests/hackathon-test-vault/e5/preservation.mjs
+          ./tools/node tests/hackathon-test-vault/e5b/source-pins.mjs
+          ./tools/node tools/verify-workspace.mjs
+          ./tools/node tools/verify-dependencies.mjs
+      - name: Public history without values
+        run: ./tools/node tools/check-public-content.mjs HEAD

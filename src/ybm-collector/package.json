@@ -13,6 +13,7 @@
   "dependencies": {
     "@reclaimprotocol/attestor-core": "5.1.4",
     "@reclaimprotocol/tls": "0.1.4",
+    "@reclaimprotocol/zk-symmetric-crypto": "5.1.7",
     "ethers": "6.17.0",
     "parse5": "8.0.1",
     "ws": "8.22.0"

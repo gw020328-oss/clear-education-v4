@@ -1,0 +1,139 @@
+{
+  "version": "clear-hackathon-test-e5-development-intake.1",
+  "date": "2026-10-19",
+  "status": "AUTHORIZED_STAGE_SCOPED_E5_TEST_DEVELOPMENT_NOT_FULL_RUNTIME_ACCEPTANCE",
+  "operationsProfileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "commonRecordBase": "d4de1d5700e81f48d767e938d614ab3aaf751255",
+  "acceptedBaseHeads": {
+    "e1": "6b4b0cf2d847937aebc6da69f9e7df62e926fa50",
+    "e2": "d9407b06b8a13122a489193119c1899929f83fe4",
+    "e3": "c3b71c710f558529680e255222857f0e81fe1dcb",
+    "e4Memory": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b"
+  },
+  "e4": {
+    "pullRequest": 93,
+    "sourceImplementationHead": "ff3057399571288095ba5021a2db42c3dbd647f6",
+    "remoteCi": "6_OF_6_SUCCESS",
+    "newStageTests": 48,
+    "pushAndPrStageTestsActuallyExecuted": true,
+    "unresolvedReviewThreads": 0,
+    "artifactSha256AtAcceptedHead": {
+      "src/hackathon-test-vault/memory-stage-harness.mjs": "b053742d1d3f0e8e9a751ac9c440146e5763157a1d8773f6b587334f61252fb9",
+      "tests/hackathon-test-vault/stage-execution.test.mjs": "9afeac8cea8699458e99b639b344d2edbaf58df54dea93613e2f044201f543ef",
+      "tests/hackathon-test-vault/StageClaimBoundaryProbe.sol": "0e712d6929121ce1bb46fac877d203d49b034607d40ea8b74cf0a4b0c02cc1be",
+      "tests/hackathon-test-vault/stage-probe-build.mjs": "723ef3c0e44d8ca2e12765ac84d9496f123589c02ee3e68232105cc489ffaca2",
+      "tests/product-workflow/hackathon-test-vault-memory-stage.test.mjs": "94eed77eb6825f71f1045d5c8e29f8798b6cb3bbd1f656f74d484692ac31f298",
+      "src/hackathon-test-vault/HackathonTestVaultExecution.sol": "3720e6cb41ecb7efcad34e3c1d932208c2396e7c93093cef4b3dee924c0e7f29",
+      "src/hackathon-test-vault/StrictECDSA.sol": "d2873eb2ac6205adc268f5eddf4ba89fbd3e046a83785d44f8715616a74fd69a",
+      "src/hackathon-test-vault/execution-signer.mjs": "0e2e1c7a6d80c63c3fb9ad2246b22be7e64e16088328bf872d6ed12f771185ab",
+      "docs/hackathon-test-vault/execution-artifact.json": "a23ada03e91b63954e5e6b2dca65807a47adfde4401a76aa68c886bff3ce5ad1"
+    },
+    "memoryRunMetrics": {
+      "instances": 48,
+      "executionDeployments": 48,
+      "tokenDeployments": 48,
+      "keyProviderCalls": 43,
+      "signaturesGenerated": 42,
+      "signaturesReturned": 31,
+      "signaturesDiscarded": 11,
+      "accepts": 13,
+      "claims": 10,
+      "actualSources": 0,
+      "externalRpc": 0,
+      "persistentChains": 0,
+      "controlledProbes": {
+        "deployments": 3,
+        "codeInjections": 3,
+        "injectedClaims": 1,
+        "contractLevelAccepts": 1,
+        "contractLevelClaims": 1
+      }
+    },
+    "metricsMeaning": {
+      "keyProviderCalls": "Fresh ephemeral TEST signing provider accesses, not existing-key reads.",
+      "accepts": "13 authenticated stage wrapper accept confirmations. One additional explicit contract-level successful accept is in controlledProbes.contractLevelAccepts.",
+      "claims": "10 mined fixed-token stage claim receipts, including one intentionally rejected post-commit readback acknowledgment. One additional normal fixed-token contract-level concurrent claim is in controlledProbes.contractLevelClaims. One injected-code probe settlement is separate and snapshot-reverted.",
+      "signaturesGenerated": "42 total includes 11 subsequently discarded; 31 returned. E1/auth login signatures are outside this payout counter.",
+      "runtimeInstances": "Fresh disposable memory instances only; failed initialization before deployment is not counted.",
+      "reruns": "Counts from final full suite only. Prior/focused/remote runs are separate, not cumulative."
+    },
+    "persistentRuntimeAccepted": false,
+    "canonicalReaderAccepted": false,
+    "durableEnvelopeAccepted": false
+  },
+  "crossVerification": {
+    "composition": "aeb53ee8ffb0b04618fdb854938f61db7234e9ae",
+    "inputs": [
+      "d4de1d5700e81f48d767e938d614ab3aaf751255",
+      "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
+      "22640db091d5d3ac5d8a3535280b393d6f618d65",
+      "e9ea4547d795ee833a8175c02c0cc23b21a7d823"
+    ],
+    "e3Dedicated": 47,
+    "e4MemoryStage": 48,
+    "pass": 95,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 125444.728541,
+    "logSha256": "79e3f5000480bced9acc3cd4ac45e14cceadd8f344d9c7e4281365a6f6cbb0dc",
+    "preservation": "191_SOURCE_FILES_AND_DEPENDENCY_GRAPH_PASS",
+    "publicHistory": "356_COMMITS_1885_BLOBS_FINDINGS_0",
+    "actualE6AdapterAccepted": false
+  },
+  "requestedSettings": {
+    "apiOutboxWorker": "gpt-6.1-sol/high",
+    "readerEnvelopeRecovery": "gpt-6-astra/high"
+  },
+  "authorizedDevelopment": {
+    "separateTestExecutionNamespace": true,
+    "apiOutboxLeaseLineageReadback": true,
+    "canonicalExecutionReader": true,
+    "freshIsolatedPersistentLocalEvmHarness": true,
+    "freshTestRoleKeysInOwnedPrivateStorage": true,
+    "durablePrivateSignedEnvelope": true,
+    "localLoopbackRpc": true,
+    "officialFreeRuntimeImageDownloadIfNeeded": true,
+    "backendStopIndependentFixedClaim": true,
+    "existingUserEnvironmentReset": false,
+    "existingUserKeysOrEnvRead": false,
+    "realInternetSourceCollection": false,
+    "paidModelCalls": false,
+    "publicChainRpcOrTransactions": false,
+    "mainOrDevelopMerge": false,
+    "productionDeployment": false
+  },
+  "requiredBoundaries": [
+    "DEFAULT_V1_AND_PRODUCTION_GATES_UNCHANGED",
+    "NO_CALLER_BOOLEAN_OR_RECEIPT_HASH_AUTHORITY",
+    "E3_SYNC_DB_TRANSACTIONS_NO_ASYNC_RPC",
+    "LATEST_AUTH_SOURCE_CONSENT_OBJECTION_E3_CAS_AND_CHAIN_CHECKPOINT_BEFORE_AND_AFTER_SIGNING",
+    "DURABLE_EXACT_ENVELOPE_BEFORE_SEND_STARTED_AND_BROADCAST",
+    "NO_RAW_SIGNATURE_OR_SIGNED_TRANSACTION_RETURN_TO_API_WORKER",
+    "ROLE_ACCOUNT_TRANSACTION_NONCE_DISTINCT_FROM_AUTHORIZATION_NONCE",
+    "WORKER_FENCE_AND_RUNTIME_LINEAGE_DISTINCT_FROM_CONTRACT_EPOCH",
+    "INCLUDED_NOT_FINALIZED_WITHOUT_SUPPORTED_EVIDENCE",
+    "NO_REORG_REBASE_ON_RPC_ERROR_OR_FINALIZED_CONFLICT",
+    "FIXED_PUBLICATION_AND_120_1_600_NOT_RESET_BY_RECOVERY",
+    "UNRESTORABLE_REGISTRATION_PUBLICATION_ORDER_RECOVERY_BLOCKED",
+    "DB_TERMINATION_INTENT_DOES_NOT_RELEASE_RESERVATION",
+    "CANONICAL_ACCEPT_FIRST_FIXED_RIGHT_NO_NEW_SOURCE_KEY_EPOCH_PAUSE_OR_PAYMENT_SIGNATURE_FOR_CLAIM",
+    "UNKNOWN_ATTEMPT_NO_AUTOMATIC_NEW_OPERATION_REPLACEMENT_OR_FEE_INCREASE",
+    "OWNED_PRIVATE_RETENTION_AND_TOMBSTONES_EXPLICIT_NOT_DERIVED_FROM_RAW_POLICY",
+    "PERSISTENT_BACKEND_STOP_PROOF_NOT_REPLACED_BY_MEMORY_TESTS"
+  ],
+  "frozenInputs": {
+    "memoryBoundary": "specs/bootcamp/hackathon-test-boundary-intake-v1.json",
+    "memoryBoundarySha256": "cfb42a8f559a54b94188df6f94cb7d67d9a7085b32990ce55968be62904c3fa0",
+    "mutateHistoricalMemoryScopeOrPins": false,
+    "newReviewedCompatibleSourceManifestRequiredForE5ApiEdits": true,
+    "currentDocument": "docs/current/HACKATHON_TEST_E5_BOUNDARY_PREPARATION.ko.md"
+  },
+  "activation": {
+    "e5ImplementationAccepted": false,
+    "persistentRuntimeAccepted": false,
+    "realSourceTrustActivated": false,
+    "existingV1GatesChanged": false,
+    "productionEnabled": false
+  }
+}

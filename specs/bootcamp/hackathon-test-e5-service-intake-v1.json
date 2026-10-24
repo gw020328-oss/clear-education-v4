@@ -1,0 +1,123 @@
+{
+  "version": "clear-hackathon-test-e5-service-intake.1",
+  "date": "2026-10-19",
+  "status": "ACCEPTED_COMPONENT_FOR_NEXT_SCOPED_E5_B_TEST_INTEGRATION_NOT_FULL_RUNTIME",
+  "pr": 95,
+  "acceptedHead": "0e6d4225e5b645e57e3988dc426937b08069ead8",
+  "implementationHead": "bbadeff4ce510d02d9a48a2c0e22f0c253aa6cb1",
+  "requestedSetting": "gpt-6-astra/high",
+  "runtimeModelIndependentlyVerified": false,
+  "developmentIntake": "specs/bootcamp/hackathon-test-e5-development-intake-v1.json",
+  "acceptedE3PolicyHead": "c3b71c710f558529680e255222857f0e81fe1dcb",
+  "acceptedE4MemoryHead": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b",
+  "sourceArtifacts": {
+    ".github/workflows/hackathon-e5.yml": "fee28eb517ba2e96495d39f2aade786bf98289c89fab7a8fa20768791dd7a959",
+    "src/hackathon-test-vault/e5/envelope-service.mjs": "cd73c063aff3d75aba9532361f2592299260729565875b7721bfdf515083f87b",
+    "src/hackathon-test-vault/e5/environment.mjs": "a38dc46a8d0c9afd91b68d295c1d4aaaa3a5815ba8fe70338a9fa68e4fb3666e",
+    "src/hackathon-test-vault/e5/host.mjs": "8d4e611c4c8a18a1280223e81180bc38fab4a37a7e647dca399b878ae0413f82",
+    "src/hackathon-test-vault/e5/private-storage.mjs": "7a140d7ea36b0a3917b9ccd0e935558d0cf9272a09f47d50d915cd29b1a6d220",
+    "src/hackathon-test-vault/e5/reader.mjs": "34f0b529dd459881bc82032efb9d7c3eaec6818928c4f23d2e046f649f3eddfd",
+    "src/hackathon-test-vault/e5/rpc.mjs": "cfe996ccfdcf16b9885bde2b1c75ff6ff70887d313aaecf44482a73cc1e5dea5",
+    "tests/hackathon-test-vault/e5/controller-fixture.mjs": "20dc2e1a19cd1f6362ca19e0dd77d8674ae7d066da6e9c499da26dcbd1cab8f5",
+    "tests/hackathon-test-vault/e5/crash-child.mjs": "0eb3b3fb5f39d9df86e4e466030446ba39c2ed7d389032de30f6981555eb9714",
+    "tests/hackathon-test-vault/e5/create-host.mjs": "3456c5e7012b749a8b6fcba7eedc4095289cb5ea7ae7ae3f7b404f4c2ceb74c5",
+    "tests/hackathon-test-vault/e5/fixture.mjs": "acf20f6e615165c80f077b979a76dcbba412c75594082c11583f8edbaf394d19",
+    "tests/hackathon-test-vault/e5/fork-fixture.mjs": "4b302ebabebb74d0d23fb004b3215560eb403d591d3db37fdb5f02433dbdc6bb",
+    "tests/hackathon-test-vault/e5/ganache-probe.mjs": "daf54a791fb5a4e92f7f510a1171c96be7414c5b2ec5dbbcc2f96f88facaf2b9",
+    "tests/hackathon-test-vault/e5/preservation.mjs": "186c565f20d2123ef9c1fe85b8a9294b6b386528b5224a79f9e97dcfaf901ca7",
+    "tests/hackathon-test-vault/e5/reorg.test.mjs": "7f3144f7c654985d3ff936c54de6796b65b62a9ad81e3626a6c6eb2cf452c885",
+    "tests/hackathon-test-vault/e5/service.test.mjs": "5f09cab3956dc6ffcdbb318c73f4cd834e4a489179d089d3c4263293ed864daf",
+    "tests/hackathon-test-vault/e5/setup-failure.test.mjs": "e43251e4611b670c56fe486b92608f6aa11ce5e4d4244c5f1c17553f5acb0d29",
+    "tests/hackathon-test-vault/e5/storage-rpc.test.mjs": "e2ba0ccdad6dab44dc8e5a6bb95327b1038c1872ae1c3bbf5d4ebdfa251b8b27",
+    "src/hackathon-test-vault/e5/setup-receipt.mjs": "b5bba70c88015f3e23027b29c4ff16d118bc5d576da3b0dfcde9644d737a31c9",
+    "tests/hackathon-test-vault/e5/child-diagnostics.mjs": "f90683d1d12668d26eecc1c0acc8297f46eb3a0664e2073b778be674b031702f",
+    "tests/hackathon-test-vault/e5/child-diagnostics.test.mjs": "21b239c369d6a73e6302c8f939dcdd00a88c79d39aeeb60976f234ae9a423111",
+    "tests/hackathon-test-vault/e5/race-fixture.mjs": "ef71ee18aa21770836bb7e9e4af6232a9de1a55f9d0db230b184b7d9c45465ea",
+    "tests/hackathon-test-vault/e5/setup-receipt.test.mjs": "492726178544a9456670dac31561cc9621e8014190649257cad95f9db3099f10"
+  },
+  "verificationArtifact": {
+    "path": "docs/hackathon-test-vault/e5/verification.json",
+    "sha256": "50836d7719df182a8dadda8a6d93d4bd42f8ce2663d452d867254962f8741ee0"
+  },
+  "localFinal": {
+    "sourceHead": "bbadeff4ce510d02d9a48a2c0e22f0c253aa6cb1",
+    "tests": 42,
+    "pass": 42,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 194520.116667,
+    "logSha256": "c630c2b6855f60dae61f3a65e1a899487760f13fc5e5d67b404522337b9c0e37"
+  },
+  "remoteFinal": {
+    "success": 8,
+    "total": 8,
+    "dedicatedE5PerRun": 42,
+    "frozenE4PerRun": 164,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "dedicatedChecks": [
+      {
+        "url": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/39217025497/job/117943154630",
+        "conclusion": "SUCCESS"
+      },
+      {
+        "url": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/39217020516/job/117943139839",
+        "conclusion": "SUCCESS"
+      }
+    ],
+    "unresolvedReviewThreads": 0,
+    "reviewThreadsPaginationComplete": true
+  },
+  "rootReview": {
+    "publicSourceAndLatestDeltasRead": true,
+    "sourcePinsVerified": 23,
+    "sourcePinMismatches": 0,
+    "exactCheckpointIdempotenceAndRealNewBlockRefusal": true,
+    "noKeyOnExpiredOrNonceLosingWorker": true,
+    "sameSubmittedSetupHashReadOnlyIndexingWait": true,
+    "defaultServiceAndSignerBlocked": true,
+    "workerFacadeExcludesRawBytesSignatureKeyAndDb": true,
+    "frozenE4AndE2Preserved": true
+  },
+  "historicalFailure": {
+    "head": "3e11a8eb8f1925aad0d2a93f405f80e4b4ba6835",
+    "run": "39202079577",
+    "job": "117899079948",
+    "pass": 32,
+    "fail": 1,
+    "originalChildRefusalNotRecorded": true,
+    "controlledInterleavingReproduced": true,
+    "originalExactCauseRetroactivelyClaimed": false,
+    "blindWorkflowRerun": false
+  },
+  "scope": {
+    "ownedNewPersistentLocalGethOnly": true,
+    "gethImage": "ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd",
+    "localArchitecture": "linux-arm64",
+    "remoteArchitecture": "linux-amd64",
+    "finality": "LOCAL_INCLUSION_NOT_PUBLIC_POS_FINALIZED",
+    "sourceController": "EXPLICIT_TEST_FIXTURE_NOT_ACTUAL_API_ADAPTER",
+    "serviceTestExistingUserKeyReads": 0,
+    "serviceTestRealSourceReads": 0,
+    "serviceTestPublicTransactions": 0,
+    "serviceTestPaidModelCalls": 0,
+    "scopeOfTheseZeroCounters": "E5_SERVICE_COMPONENT_TESTS_ONLY_NOT_SEPARATE_AI_EVALUATION"
+  },
+  "stillRequired": [
+    "REVIEWED_API_GLOBAL_RUNTIME_LEASE_AND_WIRE_FENCE_ALIGNMENT",
+    "RESTRICTED_CONTROLLER_ISSUER_AND_CANONICAL_WITNESS_PORTS",
+    "EXISTING_REQUEST_LOOKUP_AND_IMMUTABLE_SEALED_ADOPTION",
+    "ACTUAL_COMMAND_AND_NEW_UNSIGNED_PREPARATION_ORCHESTRATION",
+    "AUTHENTICATED_COMMIT_DISPATCH_AND_CANONICAL_RECEIPT_INTAKE",
+    "AUTOMATIC_FIXED_CLAIM_JOB_AND_BACKEND_STOP_DIRECT_CLAIM",
+    "NEW_SOURCE_PINS_EXPLICIT_MEMORY_CONSUMER_AND_NORMAL_OWNER_HISTORY_INTEGRATION"
+  ],
+  "fullE5RuntimeAccepted": false,
+  "actualApiExecutionActivated": false,
+  "defaultSignerActivated": false,
+  "productionEnabled": false,
+  "mainOrDevelopMerge": false,
+  "productionDeployment": false
+}

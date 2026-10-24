@@ -1,0 +1,79 @@
+{
+  "version": "clear-hackathon-test-vault-stage-plan.1",
+  "scope": "E4_PREPARATION_ONLY_E3_INTAKE_PENDING",
+  "e0ConsumerPinsCommit": "67c7bc8450484fb4d5545c6e36a672e497467174",
+  "profileHash": "0x47a18b20a02a8acf89160c50601b8a2625bcae432292d9cf6d4644af0a2fdb98",
+  "unchangedAuthorizationType": "BootcampTestPaymentAuthorizationV3",
+  "implemented": [
+    "ROLE_SEPARATION",
+    "EXACT_FIXED_TEST_TOKEN",
+    "ONE_CANONICAL_APPLICATION_OBLIGATION",
+    "CURRENT_MET_SEQUENCE_FULL_ALLOCATION",
+    "150_PLUS_50_RESERVATION_PROTECTION",
+    "REVIEW_CAP_AND_SOURCE_BOUND",
+    "ATOMIC_STABLE_ALLOCATION_REPLACEMENT",
+    "LATEST_CHECKPOINT_NOT_PUBLICATION_CAS",
+    "UNSIGNED_PREPARATION_INVALIDATION",
+    "AUTHORIZED_CONDITIONED_UNACCEPTED_TERMINATION",
+    "KEY_ID_ADDRESS_TOMBSTONES",
+    "CANONICAL_READER_REORG_AND_RESPONSE_LOSS"
+  ],
+  "deferredNotRun": [
+    "E3_CANONICAL_CONSENT_RECIPE_AND_PORT_ADAPTER_ACCEPTANCE",
+    "VALID_PAYOUT_SIGNATURE_AND_LOW_S_MALLEABILITY_POSITIVE_CONTROL",
+    "FIRST_ACCEPT_SIGNATURE_NONCE_CONSUMPTION",
+    "CANONICAL_ACCEPT_VS_TERMINATE_BOTH_ORDERS",
+    "ACCEPTED_CLAIM_INDEPENDENT_OF_CURRENT_KEY_EPOCH_SOURCE",
+    "FIXED_RECIPIENT_ANY_SUBMITTER_SINGLE_EXACT_PAYMENT",
+    "SETTLED_APP_TERMINAL_TOMBSTONE",
+    "OUTGOING_TOKEN_REENTRANCY_AND_EXACT_TRANSFER",
+    "PERSISTENT_LOCAL_EVM_BACKEND_STOP_DIRECT_CLAIM",
+    "DURABLE_DATABASE_OUTBOX_RESTART_AND_CHAIN_RECONCILIATION",
+    "PUBLIC_FINALIZED_RECEIPT",
+    "ACTUAL_SOURCE_AND_MODEL_ACCEPTANCE"
+  ],
+  "historicalP4AdversarialPlan": {
+    "path": "../bootcamp-authority-review/unsigned-design-vectors.json",
+    "plannedCases": 40,
+    "executedAsPayoutTestsHere": 0
+  },
+  "gates": {
+    "payoutEnabled": false,
+    "authorizationSignatures": 0,
+    "accepts": 0,
+    "claims": 0,
+    "recipientPayments": 0,
+    "actualSources": 0,
+    "models": 0,
+    "externalRpc": 0
+  },
+  "persistentEnvironmentProposal": {
+    "status": "NOT_DEPLOYED",
+    "chainSeparateFromBackend": true,
+    "backendStopMayStopChain": false,
+    "newInstanceRequired": true,
+    "resetExistingChainOrDb": false,
+    "manifestFields": [
+      "chainId",
+      "genesisHash",
+      "instanceId",
+      "vaultAddress",
+      "vaultCodeHash",
+      "tokenAddress",
+      "tokenCodeHash",
+      "domain",
+      "typeHash",
+      "profileHash",
+      "policyHash",
+      "runtimeMappingHash",
+      "roleAddresses",
+      "E1E2E3AcceptedHeads",
+      "sourceMode",
+      "activationRevision"
+    ],
+    "currentReaderSupports": "MEMORY_COMPONENT_HARNESS_ONLY",
+    "newPersistentReaderVersionRequired": true,
+    "operatorWithdrawal": false,
+    "acceptedClaimExpiry": null
+  }
+}
