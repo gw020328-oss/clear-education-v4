@@ -115,7 +115,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
      &&result.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');
     sourceTarget=normalSourceTarget(result);report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return result;
    },
-   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;return executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});},
+   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;try{return await executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});}catch(error){try{report.executionDiagnostics=connection.diagnostics().slice(-8);write();}catch{}throw error;}},
    report:()=>structuredClone(report),close,
   });
  }catch(error){report.failureCode=/^(BC|E5|E5B)_[A-Z0-9_]+$/.test(error?.message)?error.message:'BC_LIVE_OPEN_FAILED';write();close();throw Error(report.failureCode);}

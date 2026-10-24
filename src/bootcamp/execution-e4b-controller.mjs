@@ -1,4 +1,5 @@
-import {canonical,exactKeys,requireRule as check} from '../policy/values.mjs';
+import {types} from 'node:util';
+import {canonical,exactKeys,RuleError,requireRule as check} from '../policy/values.mjs';
 import {hash} from './model.mjs';
 import {e4Hash} from './execution-e4-ports.mjs';
 import {bridgeBusinessHash,commandNonce} from './execution-e4b-ports.mjs';
@@ -43,14 +44,22 @@ export function bridgeControllerFactory({ports,run,inspect}){
     if(o.checkpoint.number===b.anchor.number)check(canonical(o.checkpoint)===canonical(b.anchor),'BC_E5B_READER_PROOF');
    }
    hash(b.e3Commitment);hash(b.commandHash);
-   return run(b,(state,time,authority)=>{
+   let issued;
+   const recheck=()=>run(b,(state,time,authority)=>{
     const before=inspect(state,e,{kind,recovery,time,authority});
-    const result=owner.issue(kind,ticket,p);
-    // E4 issuer work may run arbitrary owner code; local authority must still
-    // be current when the certificate is returned to that same callback.
+    const result=issued??(issued=owner.issue(kind,ticket,p));
+    // A cached, unreturned recovery witness never repeats issuer/key work.
     const after=inspect(state,e,{kind,recovery,time,authority});
     check(canonical(after)===canonical(before),'BC_E5B_POST_ISSUER_CHANGED');return result;
    });
+   try{return recheck();}catch(error){
+    const clockChanged=error&&!types.isProxy(error)&&Object.getPrototypeOf(error)===RuleError.prototype
+     &&Object.getOwnPropertyDescriptor(error,'message')?.value==='BC_E5_CLOCK_CHANGED';
+    if(!clockChanged||!issued||kind!=='current'||!['RECOVER','RECOVER_FINAL_SYNC'].includes(e.phase))throw error;
+    // The failed API transaction rolled back. Revalidate original authority once;
+    // keep the same witness/payload/caps and never repeat seal, dispatch or signing.
+    return recheck();
+   }
   }
   return Object.freeze({authorizeSync:r=>invoke('capability',r),readCurrentSync:r=>invoke('current',r),commitCurrentSync:r=>invoke('commit',r)});
  };
