@@ -7,13 +7,14 @@ import {procedureFixture,START} from './procedure-fixture.mjs';import {createCer
 import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server.mjs';import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {P0_POLICY,p0PolicyHash} from '../../specs/bootcamp/p0-contract.mjs';
 import {createNormalBootcampClient} from '../../src/bootcamp/normal-client.mjs';import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
-import {createTestWalletSession} from '../../tools/bootcamp/test-client/session.js';import {createTestDriver} from '../../tools/bootcamp/test-client/driver.js';
+import {createTestWalletSession} from '../../tools/bootcamp/test-client/session.js';import {createTestDriver,createTestAutoReader} from '../../tools/bootcamp/test-client/driver.js';
 const root=new URL('../../tools/bootcamp/test-client/',import.meta.url);
 async function fixture(t){
  const f=await procedureFixture(t),H=x=>p0Hash('TEST-CLIENT-OFFLINE',x),pins={dataMode:'RECLAIM_SIGNED_RECORD',audience:'test-client',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:f.alice.address.toLowerCase(),selectedCertificateId:null};let bound=null;
  const ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time});
- const normalUi={getSession(c){const a=ui.authorize(c);if(bound)f.store.getOperationsProjection(c,bound);return {version:'clear-bootcamp-normal-session.1',role:a.role.toUpperCase(),applicationId:bound,
-  policyHash:p0PolicyHash(P0_POLICY),runtimeMappingHash:H('unused'),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
+ const normalUi={getSession(c){const a=ui.authorize(c);if(bound)f.store.getOperationsProjection(c,bound);return {version:'clear-bootcamp-normal-session.1',role:a.role.toUpperCase(),applicationId:bound,phase:'AWAITING_AUTHENTICATED_APP_CONSENTS',
+  policyHash:p0PolicyHash(P0_POLICY),runtimeMappingHash:H('unused'),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
+  expectedPayment:{recipient:f.alice.address.toLowerCase(),token:'0x'+'33'.repeat(20),amountAtoms:'100000000',symbol:'TEST',decimals:6}};},
   bindParticipant(c,a){ui.bindParticipant(c,a,pins);bound=a;return {applicationId:a,paymentAuthorization:false};},pendingSignature:c=>ui.pendingSignature(c),submitSignature:(c,a,b)=>ui.submitSignature(c,b)};
  // Resolve genuine per-application metadata after binding, exactly as the host does.
  let receiptOverride=null;normalUi.getPaymentReceipt=(c,a)=>{const o=f.store.getOperationsProjection(c,a);return receiptOverride??{version:'clear-bootcamp-normal-payment-receipt.1',applicationId:a,role:o.role,expectedPayment:{amountAtoms:'100000000',symbol:'TEST',decimals:6},claim:{state:'NOT_OBSERVED',canonical:null,finalized:null,transferAmountAtoms:null},balance:{receivedAtoms:null,exactExpectedAmountVerified:null}};};
@@ -276,4 +277,64 @@ test('v13 preserves browser/API bytes and consumes exact v21 consent read curren
  assert.equal(sha(m.existingCoreIntake.path),'2edf76879b3b45562b71a65b38fea8aa6b8ef9732c11ea616a0c8d6036f5565b');
  const intake=JSON.parse(readFileSync(new URL('../../'+m.existingCoreIntake.path,import.meta.url)));assert.equal(Object.keys(intake.sourceArtifactSha256).length,166);
  for(const [p,h]of Object.entries(intake.sourceArtifactSha256))assert.equal(sha(p),h,p);
+});
+
+function scheduledReader(driver){
+ let next=null,visible=true;
+ const reader=createTestAutoReader({driver,visible:()=>visible,setTimer:fn=>{next=fn;return fn;},clearTimer:()=>{next=null;}});
+ reader.sync();return {reader,get scheduled(){return !!next;},async tick(){const fn=next;assert.equal(typeof fn,'function');next=null;await fn();},
+  visible(value){visible=value;reader.sync();}};
+}
+test('automatic reads preserve the displayed source message and never sign or post',async t=>{
+ const x=await fixture(t),a=x.browser(x.f.alice);await a.driver.config();await a.driver.login();await a.driver.create();await a.driver.bind();
+ const app=a.driver.snapshot().applicationId,v=x.f.store.getApplication(x.f.aliceContext,app),expected={version:'clear-hackerrank-request.1',...x.pins,
+  applicationId:app,participantId:v.participantId,participantWallet:x.f.alice.address.toLowerCase(),criterionId:'python-basic-certificate',policyHash:v.policyHash,
+  runtimeMappingHash:v.runtimeMappingHash,nonce:p0Hash('TEST','auto-reader-source'),issuedAt:START,expiresAt:START+240};delete expected.dataMode;
+ const {requestMessage}=await import('../../src/hackerrank-evidence/request.mjs');const pending=x.ui.requestSignature(expected,requestMessage(expected));pending.catch(()=>{});
+ await a.driver.approval();const message=a.driver.snapshot().approval.message,counts={posts:a.counts.posts,signs:a.counts.signs};
+ const live=scheduledReader(a.driver);t.after(()=>live.reader.close());await live.tick();
+ assert.equal(a.driver.snapshot().approval.message,message);assert.equal(a.counts.posts,counts.posts);assert.equal(a.counts.signs,counts.signs);
+ live.visible(false);assert.equal(live.scheduled,false);live.visible(true);assert.equal(live.scheduled,true);
+ live.reader.close();assert.equal(live.scheduled,false);
+});
+test('automatic views give both real HTTPS users the same recipient/100 TEST and allow only their two explicit consents',async t=>{
+ const x=await fixture(t),a=x.browser(x.f.alice),o=x.browser(x.f.operator);for(const b of [a,o]){await b.driver.config();await b.driver.login();}
+ await a.driver.create();await a.driver.bind();const app=a.driver.snapshot().applicationId;await x.f.complete(app);x.f.publish(app);
+ const ar=scheduledReader(a.driver),or=scheduledReader(o.driver);t.after(()=>{ar.reader.close();or.reader.close();});
+ const before=[a.counts.posts,o.counts.posts];await ar.tick();await or.tick();
+ for(const b of [a,o]){assert.equal(b.driver.snapshot().canAgree,true);assert.equal(b.driver.snapshot().bootstrap.expectedPayment.recipient,x.f.alice.address.toLowerCase());
+  assert.equal(b.driver.snapshot().bootstrap.expectedPayment.amountAtoms,'100000000');}
+ assert.deepEqual(a.driver.snapshot().view.target,o.driver.snapshot().view.target);
+ assert.deepEqual([a.counts.posts,o.counts.posts],before);const expiry=a.driver.snapshot().view.sourceValidUntilExclusive;
+ x.f.setTime(START+60);await ar.tick();await or.tick();await a.driver.consent('AGREE');
+ assert.equal(x.f.view(app).consent.bothCurrent,false);x.f.setTime(START+120);await or.tick();await o.driver.consent('AGREE');
+ assert.equal(x.f.view(app).consent.bothCurrent,true);assert.equal(x.f.view(app).consent.records.length,2);
+ assert.equal(o.driver.snapshot().view,null);await ar.tick();assert.equal(a.driver.snapshot().view.sourceValidUntilExclusive,expiry);
+ assert.equal(a.counts.signs,1);assert.equal(o.counts.signs,1);
+});
+test('minimum review display and the final reserve stop buttons without issuing a consent POST',async t=>{
+ for(const lateFirstDisplay of [true,false]){
+  const x=await fixture(t),a=x.browser(x.f.alice);await a.driver.config();await a.driver.login();await a.driver.create();await a.driver.bind();
+  const app=a.driver.snapshot().applicationId;await x.f.complete(app);x.f.publish(app);
+  if(!lateFirstDisplay)await a.driver.refresh();x.f.setTime(START+(lateFirstDisplay?151:271));
+  await a.driver.readLive();assert.equal(a.driver.snapshot().canAgree,false);
+  const posts=a.counts.posts;await assert.rejects(a.driver.consent('AGREE'),/TEST_REVIEW_WINDOW_REQUIRED/);assert.equal(a.counts.posts,posts);
+  assert.equal(x.f.view(app).consent.records.length,0);
+ }
+});
+test('an automatically displayed new decision cannot inherit an old selection or consent',async t=>{
+ const x=await fixture(t),a=x.browser(x.f.alice);await a.driver.config();await a.driver.login();await a.driver.create();await a.driver.bind();
+ const app=a.driver.snapshot().applicationId;await x.f.complete(app);x.f.publish(app);await a.driver.refresh();const old=a.driver.snapshot().view.target;
+ await a.driver.consent('AGREE');x.f.setTime(START+10);x.f.change(app,'activity-complete',{sourceHash:'0x'+'77'.repeat(32)});await x.f.accept(app,'activity-complete');x.f.publish(app);
+ await a.driver.readLive();assert.notEqual(a.driver.snapshot().view.target.targetDecisionHash,old.targetDecisionHash);
+ assert.equal(a.driver.snapshot().consentTargetChanged,true);assert.equal(a.driver.snapshot().canAgree,false);assert.equal(x.f.view(app).consent.bothCurrent,false);
+ const posts=a.counts.posts;await assert.rejects(a.driver.consent('AGREE'),/TEST_REVIEW_WINDOW_REQUIRED/);assert.equal(a.counts.posts,posts);
+ await a.driver.refresh();assert.equal(a.driver.snapshot().consentTargetChanged,false);assert.equal(a.driver.snapshot().canAgree,true);
+});
+test('a pending unknown consent never starts an automatic replay or replaces its frozen intent',async t=>{
+ const x=await fixture(t),a=x.browser(x.f.alice);await a.driver.config();await a.driver.login();await a.driver.create();await a.driver.bind();
+ const app=a.driver.snapshot().applicationId;await x.f.complete(app);x.f.publish(app);await a.driver.refresh();
+ const live=scheduledReader(a.driver);t.after(()=>live.reader.close());a.loseNext('/bootcamp/v3/applications/'+app+'/review-consents');
+ await assert.rejects(a.driver.consent('AGREE'),e=>e.outcome==='UNKNOWN');const posts=a.counts.posts;live.reader.sync();assert.equal(live.scheduled,false);
+ assert.equal(a.driver.snapshot().consentReplayPending,true);assert.equal(a.counts.posts,posts);assert.equal(x.f.view(app).consent.records.length,1);
 });

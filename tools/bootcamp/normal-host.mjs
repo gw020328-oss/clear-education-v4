@@ -17,13 +17,13 @@ export async function servePreparedNormalHost(name){
  return {config:mounted.config,close(){return closing??=(async()=>{const stopped=new Promise(r=>mounted.server.close(r));mounted.server.closeAllConnections();await stopped;await release();})();}};
 }
 export async function normalHostCli(args){
- const {values:v,positionals:p}=parseArgs({args,allowPositionals:true,options:{name:{type:'string'},origin:{type:'string'},'web-root':{type:'string'},participant:{type:'string'},operator:{type:'string'},certificate:{type:'string'},'frontend-accepted':{type:'boolean'},registry:{type:'boolean'},activate:{type:'boolean'}}});
+ const {values:v,positionals:p}=parseArgs({args,allowPositionals:true,options:{name:{type:'string'},origin:{type:'string'},'web-root':{type:'string'},participant:{type:'string'},operator:{type:'string'},certificate:{type:'string'},'frontend-accepted':{type:'boolean'},'ai-approval-authority':{type:'string'},registry:{type:'boolean'},activate:{type:'boolean'}}});
  fail(p.length===1&&['prepare','configure','check','serve-prepared','run'].includes(p[0]),'NORMAL_HOST_ARGUMENT');
- const allowed={prepare:['name','origin','web-root'],configure:['name','web-root','participant','operator','certificate','frontend-accepted'],check:['name','registry'],'serve-prepared':['name'],run:['name','activate']};
+ const allowed={prepare:['name','origin','web-root'],configure:['name','web-root','participant','operator','certificate','frontend-accepted','ai-approval-authority'],check:['name','registry'],'serve-prepared':['name'],run:['name','activate']};
  fail(Object.keys(v).every(k=>allowed[p[0]].includes(k)),'NORMAL_HOST_ARGUMENT');
  const print=x=>process.stdout.write(JSON.stringify(x)+'\n');
  if(p[0]==='prepare'){const result=initializeHost({name:v.name,origin:v.origin,webRoot:v['web-root']});print({...result,tlsCaPath:join(result.directory,'ca.pem'),roleInputTemplatePath:join(result.directory,'public-input-template.json')});return;}
- if(p[0]==='configure'){print(configureHost({name:v.name,participantWallet:v.participant,operatorWallet:v.operator,webRoot:v['web-root'],frontendAccepted:v['frontend-accepted'],selectedCertificateId:v.certificate}));return;}
+ if(p[0]==='configure'){print(configureHost({name:v.name,participantWallet:v.participant,operatorWallet:v.operator,webRoot:v['web-root'],frontendAccepted:v['frontend-accepted'],selectedCertificateId:v.certificate,aiApprovalAuthorityPath:v['ai-approval-authority']}));return;}
  if(p[0]==='check'){
   print(hostReadiness(loadHostConfig(v.name)));if(v.registry){const result=await launchNormalHostWorker({mode:'registry',name:v.name});process.exitCode=result.exitCode;}return;
  }

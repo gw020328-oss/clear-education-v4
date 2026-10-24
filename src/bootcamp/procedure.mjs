@@ -227,8 +227,13 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    pub.consentScopeHash=p0Hash('E3-APP-CONSENT-SCOPE',scope);pub.consentScope=scope;l.publish(a,pub);fault('e3-after-publication');
    return {procedureId:p.procedureId,publicationId:pub.publicationId};
   });},
-  recordReviewConsent(context,a,body,key){return run(context,a,body,key,'consent',['value'],(st,s,time,observers)=>{
+  recordReviewConsent(context,a,body,key,{beforeNewConsent}={}){return run(context,a,body,key,'consent',['value'],(st,s,time,observers)=>{
    check(['AGREE','WITHDRAW'].includes(body.value),'BC_E3_CONSENT_VALUE');active(st,time);published(st);sourceObservation(st,time,observers);
+   // Owner operating gate runs only for a new authenticated command, after exact replay handling.
+   beforeNewConsent?.(Object.freeze({asOf:time,applicationId:a,applicationRevision:st.a.revision,
+    decisionId:st.d.decisionId,decisionRevision:st.d.decisionRevision,decisionHash:st.d.decisionHash,
+    scopeHash:st.pub.consentScopeHash,validUntilExclusive:st.sourceState.validUntilExclusive,reviewCapAt:st.p.reviewCapAt,
+    fullyAllocated:st.fullCurrent,amountAtoms:st.funding.amountAtoms,reservedAtoms:st.funding.reservedAtoms,objectionBlocked:st.unresolved}));
    const commitment=actorCommitment(st.a,s),prior=records(st.a,'CONSENT').filter(r=>r.scopeHash===st.pub.consentScopeHash&&r.actorCommitment===commitment).at(-1);
    const record=prior?.value===body.value?prior:l.record(a,'CONSENT',p0Hash('E3-CONSENT-COMMAND',{scope:st.pub.consentScopeHash,actor:commitment,value:body.value,prior:prior?.id??null}),{
     version:'clear-bootcamp-review-consent.1',id:procedureId('consent'),procedureId:st.p.procedureId,scopeHash:st.pub.consentScopeHash,

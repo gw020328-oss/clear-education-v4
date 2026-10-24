@@ -22,6 +22,9 @@ import {waitForExplicitConsents} from './explicit-consents.mjs';
 import {LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {executeNormalPayment} from './normal-chain.mjs';
 import {readNormalView,normalSourceTarget} from './normal-current-view.mjs';
+import {createNormalSourceSequence} from './normal-source-sequence.mjs';
+import {createNormalReviewReaders,requireNormalConsentAction,REVIEW_WINDOW} from './normal-review-window.mjs';
+import {waitUntil} from './normal-host-flow.mjs';
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 // Called from inside the store transaction: authenticate against the separate
@@ -49,7 +52,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
  const m=loadRuntime(prepared.environmentId);ensure(m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
- let auth,store,connection,provider,ui,mounted,user,app,participantId,sourceTarget,collectionStarted=false,pendingReflection=null,resumed=false,collecting=false,paymentStarted=false,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
+ let auth,store,connection,provider,ui,mounted,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
@@ -83,34 +86,36 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
    store.getOperationsProjection(c,a);requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
    await connection.refresh(a);store.getOperationsProjection(c,a);
   };
-  const getSession=context=>{const actor=ui.authorize(context,false);if(app)store.getOperationsProjection(context,app);return Object.freeze({
-   version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true});};
-  const normalUi=Object.freeze({getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,pendingSignature(c,a){ensure(a===app,'BC_LIVE_CONTEXT');return ui.pendingSignature(c);},submitSignature(c,a,b){ensure(a===app,'BC_LIVE_CONTEXT');return ui.submitSignature(c,b);}});
+  const readers=createNormalReviewReaders({now});
+  const waitForReaders=async()=>{stage('AWAITING_BOTH_REVIEW_SCREENS');
+   await waitUntil(()=>readers.ready(),{signal:controller.signal,timeoutMs:Math.max(1,(startedAt+1800-now())*1000)});};
+  const reflectionApproval=reflectionHost?.createApprovalControl?.({
+   authorize:(c,w)=>ui.authorize(c,w),getPreparation:()=>sourceSequence?.preparation,getApplicationId:()=>app,
+   requireReaders:()=>readers.require(),nowMs:()=>Date.now()})??null;
+  const getSession=context=>{const actor=ui.authorize(context,false);if(app)readNormalView(()=>store.getOperationsProjection(context,app));
+   readers.observe(actor.role.toUpperCase());return Object.freeze({
+   version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,
+   procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
+   reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
+    amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:reflectionApproval?.brief(context)??null});};
+  const normalUi=Object.freeze({getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
+   beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
+    requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},
+   approveReflection(c,a,b,k){requireUiRule(a===app&&reflectionApproval,'BC_NORMAL_AI_APPROVAL_TARGET');return reflectionApproval.approve(c,a,b,k);},
+   pendingSignature(c,a){ensure(a===app,'BC_LIVE_CONTEXT');return ui.pendingSignature(c);},submitSignature(c,a,b){ensure(a===app,'BC_LIVE_CONTEXT');return ui.submitSignature(c,b);}});
   stage('AWAITING_EXTERNAL_UI_AUTHENTICATION');
   return Object.freeze({metadataPath:join(directory,'context.json'),
    createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
-    ui.participant();ensure(!closed&&!collecting&&(!collectionStarted||pendingReflection&&!resumed&&!prepareReflection),'BC_LIVE_SINGLE_COLLECTION');
-    if(prepareReflection)ensure(typeof reflectionHost?.codeState==='function'&&typeof reflectionHost?.day==='function','BC_LIVE_AI_PREPARATION_HOST');
-    collecting=true;const resuming=collectionStarted;collectionStarted=true;
-    try{
-    // HR identity/collector preparation happens before opening this short window.
-    for(const criterionId of (resuming?['reflection-topics']:['python-basic-certificate','activity-complete','assignment-submitted','reflection-topics'])){
-     stage('SOURCE_'+criterionId);let request;
-     if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','STARTED');
-     if(resuming){ensure(pendingReflection.preparation.isCurrent(),'BC_LIVE_AI_PREPARATION_STALE');resumed=true;request=pendingReflection.request;}
-     else{sourceWindows.set(criterionId,Math.min(now()+(criterionId==='python-basic-certificate'?900:240),startedAt+1800));request=store.issueBridgeRequest(user,app,{criterionId,expectedRevision:store.getApplication(user,app).revision},key());}
-     const body={requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision};
-     if(prepareReflection&&criterionId==='reflection-topics'){
-      const preparation=await store.prepareBridgeReflection(user,app,body,{signal:controller.signal,timeoutMs:30000});pendingReflection={request,preparation};stage('AWAITING_EXACT_REFLECTION_APPROVAL');return preparation;
-     }
-     await store.collectBridge(user,app,body,key(),{signal:controller.signal,timeoutMs:criterionId==='python-basic-certificate'?300000:30000});
-     if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','COMPLETED');
-    }
-    const v=readNormalView(()=>store.getApplication(user,app));ensure(v.decision.record.conditionsStatus==='MET'&&v.evidence.length===4&&v.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');sourceTarget=normalSourceTarget(v);report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return v;
-    }catch(error){if(report.stage==='SOURCE_python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','FAILED',error);throw error;}finally{collecting=false;}
+    ui.participant();ensure(!closed,'BC_LIVE_CONTEXT');
+    sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,
+     sourceWindows,startedAt,now,nowMs:()=>Date.now(),signal:controller.signal,key,stage,diagnostics,waitForReaders,requireReaders:()=>readers.require()});
+    const result=await sourceSequence.collect({prepareReflection});if(prepareReflection)return result;
+    ensure(result.decision.record.conditionsStatus==='MET'&&result.evidence.length===4
+     &&result.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');
+    sourceTarget=normalSourceTarget(result);report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return result;
    },
-   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;return executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,waitForConsents:waitForExplicitConsents,signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});},
+   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;return executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});},
    report:()=>structuredClone(report),close,
   });
  }catch(error){report.failureCode=/^(BC|E5|E5B)_[A-Z0-9_]+$/.test(error?.message)?error.message:'BC_LIVE_OPEN_FAILED';write();close();throw Error(report.failureCode);}

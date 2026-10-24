@@ -7,6 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {privateDirectory,readPrivate,atomicPrivate} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
 import {loadPublicAssets} from '../../src/dev/public-assets.mjs';
+import {configureNormalAiAuthority,readNormalAiAuthority} from './normal-reflection-approval.mjs';
 export const API_ROOT=fileURLToPath(new URL('../../',import.meta.url)).replace(/\/$/,'');
 export const HOST_PARENT=join(API_ROOT,'var/bootcamp-normal-host');
 export const MOODLE_OWNER_ROOT=join(dirname(API_ROOT),'clear-moodle-review-api');
@@ -28,6 +29,8 @@ export function validateHostConfig(c){
  fail(c.participantWallet===null&&c.operatorWallet===null||a(c.participantWallet)&&a(c.operatorWallet)&&c.participantWallet!==c.operatorWallet,'NORMAL_HOST_WALLETS');
  fail(c.webRoot===null||typeof c.webRoot==='string'&&resolve(c.webRoot)===c.webRoot,'NORMAL_HOST_WEB_ROOT');
  fail(typeof c.frontendAccepted==='boolean'&&(c.frontendAssetSha256===null||/^[0-9a-f]{64}$/.test(c.frontendAssetSha256)),'NORMAL_HOST_FRONTEND');
+ const aiWallet=c.aiApprovalWallet??null,aiAuthority=c.aiApprovalAuthoritySha256??null;
+ fail(aiWallet===null&&aiAuthority===null||[c.participantWallet,c.operatorWallet].includes(aiWallet)&&a(aiWallet)&&/^[a-f0-9]{64}$/.test(aiAuthority),'NORMAL_HOST_AI_APPROVAL_AUTHORITY');
  fail(c.selectedCertificateId===null||/^[A-Za-z0-9_-]{1,80}$/.test(c.selectedCertificateId??''),'NORMAL_HOST_SELECTION');return c;
 }
 export function assetSnapshot(webRoot){
@@ -40,17 +43,19 @@ export function initializeHost({name,origin='https://127.0.0.1:9445',webRoot=nul
  const st=lstatSync(MOODLE_READER);fail(st.isFile()&&!st.isSymbolicLink(),'NORMAL_HOST_MOODLE_READER');
  const c=validateHostConfig({version:HOST_CONFIG_VERSION,apiRoot:API_ROOT,origin,audience:'clear-python-normal-local',privacyKeyId:'hr-run.'+randomUUID(),
   participantWallet:null,operatorWallet:null,selectedCertificateId:null,webRoot:webRoot?resolve(webRoot):null,frontendAccepted:false,frontendAssetSha256:null,
+  aiApprovalWallet:null,aiApprovalAuthoritySha256:null,
   moodleReader:MOODLE_READER,moodleOwnerHead:MOODLE_OWNER_HEAD,moodleReaderSha256:sha(readFileSync(MOODLE_READER)),keySourceId:KEY_SOURCE,createdAt:Math.floor(Date.now()/1000)});
  c.tlsFingerprint=createCertificates(directory);atomicPrivate(join(directory,'host.json'),c,{exclusive:true});
  atomicPrivate(join(directory,'public-input-template.json'),{participantWallet:null,operatorWallet:null,selectedCertificateId:null,frontendAccepted:false,webRoot:c.webRoot},{exclusive:true});
  return {directory,origin,sourceMode:'REGISTERED_TEST_SOURCE',phase:'PREPARED_NOT_ACTIVATED',chainId:null,rpcUrl:null,applicationId:null};
 }
-export function configureHost({name,participantWallet,operatorWallet,webRoot,frontendAccepted=false,selectedCertificateId}){
+export function configureHost({name,participantWallet,operatorWallet,webRoot,frontendAccepted=false,selectedCertificateId,aiApprovalAuthorityPath}){
  const {directory,config:c}=loadHostConfig(name);fail(!existsSync(join(directory,'run.used.json')),'NORMAL_HOST_ALREADY_USED');
  if(participantWallet!==undefined||operatorWallet!==undefined){c.participantWallet=participantWallet?.toLowerCase();c.operatorWallet=operatorWallet?.toLowerCase();}
  if(webRoot!==undefined){c.webRoot=resolve(webRoot);c.frontendAccepted=false;c.frontendAssetSha256=null;}
  if(selectedCertificateId!==undefined)c.selectedCertificateId=selectedCertificateId;
  if(frontendAccepted){c.frontendAssetSha256=assetSnapshot(c.webRoot);fail(c.frontendAssetSha256,'NORMAL_HOST_FRONTEND_MISSING');c.frontendAccepted=true;}
+ if(aiApprovalAuthorityPath!==undefined){validateHostConfig(c);const code=codeState();fail(code.clean,'NORMAL_HOST_CLEAN_CODE_REQUIRED_FOR_AI_AUTHORITY');const authority=configureNormalAiAuthority({directory,config:c,sourcePath:aiApprovalAuthorityPath,codeHead:code.head});c.aiApprovalWallet=authority.wallet;c.aiApprovalAuthoritySha256=authority.sha256;}
  validateHostConfig(c);atomicPrivate(join(directory,'host.json'),c);return {origin:c.origin,walletsConfigured:c.participantWallet!==null,frontendAccepted:c.frontendAccepted,chainId:null,applicationId:null};
 }
 export function readPriceReview(directory){
@@ -79,9 +84,11 @@ export function hostReadiness({directory,config:c}){
  const aiSpent=existsSync(join(directory,'ai-reflection/spent.paid-wire.v3.lock'));if(aiSpent)blockers.push('NORMAL_RUN_AI_JOURNAL_ALREADY_SPENT');
  const used=existsSync(join(directory,'run.used.json'));if(used)blockers.push('NORMAL_HOST_ALREADY_USED');
  const code=codeState();if(!code.clean)blockers.push('CLEAN_CODE_REQUIRED_FOR_ACTIVATION');
+ const aiApprovalAuthorityConfigured=!!probe(()=>readNormalAiAuthority({directory,config:c,codeHead:code.head}));
+ if(!aiApprovalAuthorityConfigured)blockers.push('AI_COST_APPROVER_DESIGNATION_REQUIRED');
  loadTls(directory,c.tlsFingerprint);
  return {version:'clear-bootcamp-normal-host-readiness.1',origin:c.origin,sourceMode:'REGISTERED_TEST_SOURCE',readyForActivation:blockers.length===0,blockers,
   dockerAvailable,gethAvailable,chromeAvailable,moodleRunning,keyAvailable,keySourceId:KEY_SOURCE,moodleOwnerSourceMatches:ownerMatches,moodleReaderCodeMatches:readerMatches,frontendAssetsAvailable:!!asset,frontendAccepted:c.frontendAccepted,
   priceReview:priceReview?{reviewedOn:priceReview.reviewedOn,officialSource:PRICING_SOURCE,inputNanoUsdPerToken:'300',outputIncludingThinkingNanoUsdPerToken:'2500',scenarioUsd:'0.00346',hardCashCapVerified:false}:null,
-  code,chainId:null,rpcUrl:null,applicationId:null,actualSourceVerified:false,actualCalls:0};
+  aiApprovalAuthorityConfigured,aiApprovalWallet:c.aiApprovalWallet??null,code,chainId:null,rpcUrl:null,applicationId:null,actualSourceVerified:false,actualCalls:0};
 }

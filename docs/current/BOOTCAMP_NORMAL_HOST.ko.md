@@ -1,5 +1,7 @@
 # 실제 정상 경로 호스트 준비와 활성화
 
+2026-10-24 현행 v22: r13은 AI 승인 전달·기록까지의 왕복이 원천 유효창을 대부분 사용해 두 화면의 실제 동의 전에 만료됐다. [시간 분석과 새 순서](BOOTCAMP_R13_REVIEW_WINDOW_REVIEW.ko.md), [v22 오프라인 검증](BOOTCAMP_V22_VERIFICATION.json)을 우선한다. 정적 준비·사전 비용 승인 지갑 지정·두 화면 준비 후 HR→성찰 exact 승인·AI→활동→과제→E3→각 사용자 동의 순서다. 원래 만료를 유지하며 짧은 검토창은 중단한다. 실제 비용 승인 지갑은 아직 지정하지 않았고, 별도 재시험 지시 전에는 새 실제 호스트·CA·로그인·증명·AI·지급을 시작하지 않는다. 아래 v21과 과거 내용은 이력이다.
+
 2026-10-23 후속: 제품 프론트를 기다리지 않는 [별도 backend 시험 클라이언트](BOOTCAMP_BACKEND_TEST_CLIENT.ko.md)를 구현·검사하고 기존 web-root/digest gate로 수락했다. 아래10월22일의 제품 프론트 미연결은 과거 준비 관측이다. backend 선시험에는 별도 시험 자산을 사용하며 제품 프론트 완료로 간주하지 않는다. 기존 API 계약은 같다.
 
 2026-10-22. PR #102 / #78, 기존 C3에 추가된 실제 실행 진입점이다. C1 표시 서버와 구분한다. `web/`는 프론트 담당 소유다. 이 문서의 명령은 저장소 루트에서 실행한다. 고정 Node 24.21.0 / macOS arm64를 사용한다.
@@ -82,3 +84,32 @@ Bootcamp 오류 본문은 `{error:CODE}`이며 기존 `src/application/api-clien
 ## 검증 한계
 
 새 host/HTTPS/네트워크 bootstrap/인증 session/순서·취소/승인 거부 관련 offline23개 통과. 첫 임시 경로 검사에서 macOS `/var` 별칭을 실제 경로로 정규화하지 않은 test fixture가 실패했고 fixture 수정 후 통과했다. 별도 실제 준비 HTTPS CA검증, registry1회, 로컬 서비스 상태는 확인했다. 최신 managed HR `.3`의 실제 로그인·hosted transcript/proof 성공, 실제 프론트 두 역할·exact AI 새 승인·호출·지급 E2E는 아직 미확인이다. 새 앱/realm/원천lease/Chrome/유료호출/거래는 모두0이다. v10 인수는 소스 변경의 정확한 보존이며 실제 시연 수락이 아니다.
+
+
+## v22: 실제 재시험 전 비용 승인 지갑 사전 지정
+
+다음 절차는 별도 실제 재시험 지시 후에만 수행한다. 지시 전에는 prepare/configure/run을 실행하지 않는다. 기본 설정은 `aiApprovalWallet=null`이며 `AI_COST_APPROVER_DESIGNATION_REQUIRED`로 활성화를 막는다. 기존 native 비용·외부전송 승인자가 이번 호스트와 최종 깨끗한 코드 HEAD에서 사용할 참여자 또는 운영자 지갑을 직접 지정해야 한다. 역할만으로 지정하지 않는다.
+
+직접 지정의 근거를 확인한 소유자가 0600 private 파일을 작성한다. 형식은 다음과 같다. 아래 대문자는 명세 자리표시자이며 실제 지정 증거 없이 값을 만들거나 승인으로 간주하지 않는다.
+
+```json
+{
+  "version": "clear-normal-ai-approval-authority.1",
+  "kind": "DIRECT_HUMAN_NATIVE_COST_APPROVER_WALLET_DESIGNATION",
+  "hostName": "NEW_HOST_NAME",
+  "origin": "https://127.0.0.1:9445",
+  "wallet": "EXPLICITLY_DESIGNATED_LOWERCASE_ROLE_WALLET",
+  "codeHead": "CLEAN_FINAL_HEAD_40_HEX",
+  "scope": "EXACT_GEMINI_ONE_ON_THIS_HOST_NOT_PAYMENT",
+  "authorization": {
+    "kind": "DIRECT_HUMAN_NATIVE_COST_APPROVER_WALLET_DESIGNATION",
+    "evidenceSha256": "SHA256_OF_DIRECT_NATIVE_APPROVER_DESIGNATION_EVIDENCE"
+  }
+}
+```
+
+`configure --name NAME --ai-approval-authority ABSOLUTE_PRIVATE_FILE`은 지정 파일을 검증·고정하고, 현재 HEAD·호스트·origin·역할 지갑과 일치해야 한다. 기존 파일과 다른 지정으로 덮어쓰지 않는다. 코드·지갑·호스트를 바꿨다면 새 준비·지정이 필요하다. 자산 digest 수락 및 당일 공식 가격 검토도 원천 취득 전에 끝낸다. 실제 승인 지갑 지정은 본부가 기존 native 승인자의 직접 지시를 받은 후에만 기록한다.
+
+각 화면에 Gemini 3.5 Flash-Lite, 성찰 2048 UTF-8 bytes·요청 8192 bytes·출력 1024 tokens·MINIMAL, generate 1/count 0/재시도·후속·fallback 0, 시나리오 $0.00346·hard cash cap 미검증·진행 중 비용 $0.05 초과 가능성을 먼저 알린다. exact 입력 hash가 준비되면 지정 지갑의 사람이 직접 체크하고 승인한다. 다른 지급 동의를 포함하지 않는다. 양측 지급 동의는 E3 준비 후 같은 최신 판정에서 각각 직접 클릭한다.
+
+두 화면의 최근 읽기와 185/155/150/30초 운영 예산은 [v22 분석](BOOTCAMP_R13_REVIEW_WINDOW_REVIEW.ko.md)을 따른다. 실패·지연·만료 시 해당 run을 중단하고 원인을 보고한다. 같은 run에서 proof 재수집·packet 재발급·승인 재사용·유료 재시도·TTL 연장을 하지 않는다. r5–r13을 복구하거나 재개하지 않는다.

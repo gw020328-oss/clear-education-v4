@@ -38,12 +38,13 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         check(req.method==='GET'&&typeof normalUi?.getSession==='function','BC_NOT_FOUND');result=normalUi.getSession(context);
       }
       else if(v4){
-        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt)$/.exec(path);
+        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt|reflection-approval)$/.exec(path);
         check(normalUi&&m,'BC_NOT_FOUND');const [,a,resource]=m;
         if(req.method==='GET'&&resource==='payment-receipt'){check(typeof normalUi.getPaymentReceipt==='function','BC_NOT_FOUND');result=await normalUi.getPaymentReceipt(context,a);}
         else if(req.method==='GET'&&resource==='source-signature')result=normalUi.pendingSignature(context,a);
         else if(req.method==='POST'&&resource==='source-signature')result=normalUi.submitSignature(context,a,body);
         else if(req.method==='POST'&&resource==='source-session'){exactKeys(body,[],'BC_UI_SESSION_BODY');result=normalUi.bindParticipant(context,a);}
+        else if(req.method==='POST'&&resource==='reflection-approval'){check(typeof normalUi.approveReflection==='function','BC_NOT_FOUND');result=normalUi.approveReflection(context,a,body,key);}
         else check(false,'BC_NOT_FOUND');
       }
       else if(v3){
@@ -56,7 +57,10 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         }else if(!target){
           const methods={'review-publications':'publishReview','review-consents':'recordReviewConsent','review-objections':'submitReviewObjection',
             'objection-assessments':'assessReviewObjection','review-revalidations':'recordReviewRevalidation','unsigned-preparations':'prepareReviewAuthorization','termination-intents':'requestReviewTermination'};
-          check(methods[resource],'BC_NOT_FOUND');if(resource==='review-consents'&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=store[methods[resource]](context,a,body,key);
+          check(methods[resource],'BC_NOT_FOUND');if(resource==='review-consents'&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');
+          const consentOptions=resource==='review-consents'&&normalUi?.beforeReviewConsent
+            ?{beforeNewConsent:view=>normalUi.beforeReviewConsent(context,a,body,view)}:undefined;
+          result=store[methods[resource]](context,a,body,key,consentOptions);
         }else check(false,'BC_NOT_FOUND');
       }
       else if(v2){

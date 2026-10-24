@@ -4,6 +4,8 @@ import {createHash} from 'node:crypto';
 import {readPrivate,atomicPrivate} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {validateNormalReflectionClearance,NORMAL_REFLECTION_COST_ACK} from '../../src/document-precheck/review/fixed-normal-reflection.mjs';
 import {fail,localDay,codeState,readPriceReview} from './normal-host-config.mjs';
+import {createNormalReflectionApproval,NORMAL_REFLECTION_SOURCE_SCOPE} from './normal-reflection-approval.mjs';
+import {requireNormalModelWindow} from './normal-review-window.mjs';
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
 export const safeCode=e=>/^[A-Z][A-Z0-9_]{0,90}$/.test(e?.code??e?.message??'')?(e.code??e.message):'NORMAL_HOST_STOPPED';
 export async function waitUntil(check,{signal,timeoutMs,pollMs=250}){
@@ -17,7 +19,12 @@ export function reflectionHostOptions(directory,managedRun=null){
  const approvalPath=join(directory,'approval.json');
  const readApproval=()=>JSON.parse(readPrivate(approvalPath));
  const currentApprovalHash=()=>{try{return hash(readApproval());}catch{return null;}};
- return {reflectionHost:{codeState,day:localDay,...(managedRun?{bindManagedRun:input=>managedRun.bind(input)}:{})},readApproval,currentApprovalHash};
+ return {reflectionHost:{codeState,day:localDay,...(managedRun?{bindManagedRun:input=>managedRun.bind(input)}:{}),
+  createApprovalControl({authorize,getPreparation,getApplicationId,requireReaders,nowMs}){
+   managedRun?.assertCurrent();const config=JSON.parse(readPrivate(join(directory,'host.json')));
+   return createNormalReflectionApproval({directory,config,getPreparation,getApplicationId,requireReaders,nowMs,
+    currentCodeState:codeState,currentDay:localDay,authorize(c,w){managedRun?.assertCurrent();return authorize(c,w);}});
+  }},readApproval,currentApprovalHash};
 }
 export async function awaitExactReflectionApproval({directory,prepared,signal,onPrepared}){
  fail(prepared.managedRun?.version==='clear-normal-reflection-run.1'&&/^[a-f0-9]{64}$/.test(prepared.managedRun.bindingHash??''),'NORMAL_HOST_RUN_BINDING_REQUIRED');
@@ -25,14 +32,14 @@ export async function awaitExactReflectionApproval({directory,prepared,signal,on
   planHash:prepared.packet.planHash,contextHash:prepared.packet.contextHash,runBindingHash:prepared.managedRun.bindingHash,maxGenerationCalls:1,maxCountCalls:0,automaticRetries:0,continuations:0,keySourceFallbacks:0,modelFallbacks:0,freeFallbacks:0,
   keySourceId:'clear-e6-existing-server-gemini-env.1',costAcknowledgment:NORMAL_REFLECTION_COST_ACK,pricingReview:price,
   authorization:{kind:'PENDING_DIRECT_HUMAN_CONFIRMATION',evidenceSha256:null}};
- atomicPrivate(join(directory,'approval-request.json'),{version:'clear-bootcamp-normal-approval-request.1',packet:prepared.packet,codeState:prepared.codeState,day:prepared.day,
+ atomicPrivate(join(directory,'approval-request.json'),{version:'clear-bootcamp-normal-approval-request.1',packetPreparedAtMs:Date.now(),packet:prepared.packet,codeState:prepared.codeState,day:prepared.day,
   managedRun:prepared.managedRun,
-  sourceScope:'ONE_GENERATED_LOCAL_MOODLE_DEMO_REFLECTION_BODY_MAX_2048_UTF8_BYTES_THREE_REQUIRED_TOPICS',pricingReview:price,scenarioUsd:'0.00346',hardCashCapVerified:false,
+  sourceScope:NORMAL_REFLECTION_SOURCE_SCOPE,pricingReview:price,scenarioUsd:'0.00346',hardCashCapVerified:false,
   approvalTemplatePath:join(directory,'approval-template.json')});
  atomicPrivate(join(directory,'approval-template.json'),template);onPrepared?.();
  const host=reflectionHostOptions(directory);
  await waitUntil(()=>{
-  fail(prepared.isCurrent(),'NORMAL_HOST_PREPARED_SOURCE_EXPIRED');let a;
+  fail(prepared.isCurrent(),'NORMAL_HOST_PREPARED_SOURCE_EXPIRED');requireNormalModelWindow(prepared);let a;
   try{a=host.readApproval();}catch(e){if(e.code==='ENOENT')return false;throw e;}
   validateNormalReflectionClearance({packet:prepared.packet,approval:a,codeState:codeState(),day:localDay()});
   fail(a.runBindingHash===prepared.managedRun.bindingHash,'NORMAL_HOST_RUN_APPROVAL_CHANGED');

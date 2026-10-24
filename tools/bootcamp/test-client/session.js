@@ -3,6 +3,9 @@ const codes=new Set(['AUTH_REQUIRED','AUTH_CHALLENGE','SIGNATURE','FORBIDDEN','C
  'NORMAL_HOST_NOT_ACTIVATED','BC_NORMAL_PROCEDURE_NOT_READY','BC_VIEW_STALE','BC_DECISION_TARGET','BC_NOT_FOUND','BC_IDEMPOTENCY_CONFLICT',
  'BC_UI_ALREADY_BOUND','BC_LIVE_SINGLE_APPLICATION','BC_UI_CONTEXT_CHANGED','BC_UI_CONTEXT_UNAVAILABLE','BC_UI_SIGNATURE_NOT_PENDING',
  'BC_UI_SIGNATURE_EXPIRED','BC_UI_SIGNATURE_CANCELLED','BC_UI_SIGNATURE_REQUEST_USED','BC_UI_PARTICIPANT_REQUIRED','BC_E3_REGISTERED_SNAPSHOT_EXPIRED','BC_E3_REVIEW_CLOSED']);
+for(const code of ['BC_NORMAL_AI_AUTHORITY_REQUIRED','BC_NORMAL_AI_APPROVAL_BODY','BC_NORMAL_AI_APPROVAL_TARGET',
+ 'BC_NORMAL_AI_APPROVAL_ALREADY_RECORDED','BC_NORMAL_AI_APPROVAL_RECORD_FAILED','BC_NORMAL_REVIEW_WINDOW_REQUIRED',
+ 'BC_NORMAL_REVIEW_SCREENS_REQUIRED','BC_NORMAL_REVIEW_NOT_OPEN','BC_NORMAL_REVIEW_TARGET_CHANGED','BC_LIVE_AI_PREPARATION_STALE'])codes.add(code);
 const fail=(code,outcome='NOT_SENT',status=null)=>Object.assign(Error(code),{code,outcome,status});
 const wallet=x=>typeof x==='string'&&/^0x[0-9a-fA-F]{40}$/.test(x)&&!/^0x0+$/i.test(x);
 const hex=text=>'0x'+Array.from(new TextEncoder().encode(text),b=>b.toString(16).padStart(2,'0')).join('');
@@ -12,7 +15,8 @@ const allowed=(path,method)=>method==='GET'&&(path==='/__dev/config'||path==='/a
  ||/^\/bootcamp\/v[234]\/applications\/[a-z][a-z0-9.-]{0,63}\/(operations|procedure|source-signature|payment-receipt)$/.test(path)
  ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure-operations\/[a-z][a-z0-9.-]{0,63}$/.test(path))
  ||method==='POST'&&(['/auth/nonce','/auth/verify','/auth/logout','/bootcamp/v1/applications'].includes(path)
- ||/^\/bootcamp\/v[34]\/applications\/[a-z][a-z0-9.-]{0,63}\/(source-session|source-signature|review-consents)$/.test(path));
+ ||/^\/bootcamp\/v[34]\/applications\/[a-z][a-z0-9.-]{0,63}\/(source-session|source-signature|review-consents)$/.test(path)
+ ||/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/reflection-approval$/.test(path));
 export function createTestWalletSession({origin,provider,fetchImpl=globalThis.fetch,onEnd=()=>{},timeoutMs=30000,now=()=>Date.now()}){
  const base=new URL(origin);if(base.protocol!=='https:'||base.origin!==origin||typeof fetchImpl!=='function')throw fail('TEST_ORIGIN');
  let connected=null,auth=null,chainId=null,generation=0,ended=false;const lifetime=new AbortController();

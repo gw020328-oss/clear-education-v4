@@ -29,6 +29,7 @@ export function normalView({procedure:p,operations:o,host}){
  check(p.evidence.criteria.length===4&&o.evidence.criteria.length===4);
  return {version:NORMAL_VIEW_VERSION,displayOnly:true,applicationId:p.applicationId,policyHash:p.policyHash,
   runtimeMappingHash:p.runtimeMappingHash,role:p.role,target:target(p),observedAt:p.asOf,
+  sourceValidUntilExclusive:p.evidence.validUntilExclusive,
   decision:{id:p.decisionId,revision:p.decisionRevision,hash:p.decisionHash,current:o.current,evidenceCurrent:p.evidence.current,conditionsStatus:p.evidence.conditionsStatus},
   criteria:rows,agreedPayment:{amountAtoms:'100000000',symbol:'TEST',decimals:6},funding:copy(p.funding),
   procedure:copy(p.procedure),consent:copy(p.consent),objection:{blocked:p.objection.blocked},

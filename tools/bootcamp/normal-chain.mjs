@@ -13,27 +13,31 @@ import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {syntheticAuthority} from '../../tests/bootcamp-store/fixture.mjs';
 import {waitForNormalReviewConsents} from './explicit-consents.mjs';
+import {requireNormalSourceWindow,REVIEW_WINDOW} from './normal-review-window.mjs';
 import {registerNormalSourceTarget,normalProcedureBody} from './normal-current-view.mjs';
 import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(condition,code)=>{if(!condition)throw Error(code);};
-export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,signal,sourceTarget}){
+export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,signal,sourceTarget,requireReviewReaders}){
  const automatic=connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'&&waitForConsents===undefined;
  ensure(automatic||typeof waitForConsents==='function','BC_NORMAL_EXPLICIT_CONSENTS_REQUIRED');
  ensure(connection.configuration.sourceMode!=='REGISTERED_TEST_SOURCE'||sourceTarget,'BC_NORMAL_SOURCE_TARGET_REQUIRED');
  const m=connection.runtime.manifest,id=m.environmentId,reader=new ExecutionReader(m),bridge=store.execution.connectBridge(serviceContext);
   ensure(user.wallet.toLowerCase()===recipient.toLowerCase(),'BC_NORMAL_RECIPIENT');
+  const reviewWindow=()=>{if(!automatic){requireReviewReaders?.();requireNormalSourceWindow({store,context:user,applicationId:app,sourceTarget:target});}};
   const {target,intake}=await registerNormalSourceTarget({store,connection,user,app,key,sourceTarget});
+  reviewWindow();
   const body=(context=user,extra={})=>normalProcedureBody(store,context,app,target,extra);
   const chainApp=intake.record.opaqueTarget.applicationId;report.chainApplicationId=chainApp;
   const token=new Contract(m.tokenAddress,reader.token,ownedTestWallet(id,'depositor').connect(provider));
   const vault=new Contract(m.vaultAddress,reader.vault,ownedTestWallet(id,'depositor').connect(provider));
-  for(const tx of [()=>token.approve(m.vaultAddress,100000000n),()=>vault.fund(hash(),100000000n)]){const sent=await tx();await waitSetupReceipt(provider,sent.hash);}
+  for(const tx of [()=>token.approve(m.vaultAddress,100000000n),()=>vault.fund(hash(),100000000n)]){reviewWindow();const sent=await tx();await waitSetupReceipt(provider,sent.hash);}
   stage(connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'?'SYNTHETIC_CURRENT_MET_AND_RESERVE':'REGISTERED_CURRENT_MET_AND_RESERVE');
   await store.execution.observeRuntimeFence(serviceContext);
   const g=store.execution.acquireRuntime(serviceContext,{owner:'normal-worker',expectedFence:0,generation:1,leaseSeconds:60});
   async function execute(kind,preparationId=null){
+   if(['REGISTER','ALLOCATE','START_REVIEW'].includes(kind))reviewWindow();
    stage(kind);store.execution.heartbeatRuntime(serviceContext,g,60);
    const observation=await connection.refresh(app);
    const plan=store.execution.plan(user,app,{kind,operationId:hash(),expectedChainVersion:observation.business.application.version,preparationId});
@@ -54,8 +58,9 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    report.consentOrigin='SYNTHETIC_AUTOMATIC_TEST_ROLES';
   }else{
    await waitForNormalReviewConsents({store,connection,context:user,applicationId:app,sourceTarget,waitForConsents,
+    minimumWindowSeconds:REVIEW_WINDOW.openingSeconds,
     heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal,
-    onTarget:target=>{report.reviewTarget=target;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');}});
+    onTarget:(target,window)=>{report.reviewTarget=target;report.reviewWindowAtOpen=window;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');}});
    report.consentOrigin='AUTHENTICATED_APP_CONSENT_RECORDS';
   }
 
