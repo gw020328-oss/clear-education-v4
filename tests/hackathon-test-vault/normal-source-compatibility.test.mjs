@@ -295,7 +295,7 @@ test('v18 adopts only exact crypto binding fix and preserves the complete v17 ge
   assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
   const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
  }
- for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(execFileSync('git',['show','03f8d157043fa1b1d004d5ef9d645a5767a26ffe:'+p],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
  for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v17.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v14.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V9.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
  for(const k of ["normativeBoundary", "allowedRuntimeKinds", "normalHost", "signatureWait", "sdkDiagnostics", "transportDiagnostics", "boundedSendPolicy", "sourceDiagnostics", "claimReturnDiagnostics"])assert.deepEqual(current[k],old[k],k);
  for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
@@ -305,4 +305,22 @@ test('v18 adopts only exact crypto binding fix and preserves the complete v17 ge
   assert.equal(pkg.dependencies['@reclaimprotocol/zk-symmetric-crypto'],'5.1.7');assert.equal(lock.packages['node_modules/@reclaimprotocol/zk-symmetric-crypto'].version,'5.1.7');
   assert.equal(pkg.dependencies['@reclaimprotocol/attestor-core'],'5.1.4');assert.equal(pkg.dependencies['@reclaimprotocol/tls'],'0.1.4');
  }
+});
+
+
+test('v19 admits only clock-boundary registration changes and preserves the complete v18 generation',()=>{
+ const path='specs/bootcamp/hackathon-test-memory-source-intake-v19.json';assert.equal(sha(read(path)),'51c1b01c643b6f11d05fbb6a85a89c66eb86a426db3cc4d947e1df7bb09e1d72');
+ const current=JSON.parse(read(path)),old=JSON.parse(read(current.previousCompatibilityRecord.path));
+ assert.equal(current.currentSourceCandidateHead,'b2f11e62546e6bd3ab0a5458993918be6d3265c7');assert.equal(current.previousCompatibilityRecord.guardHead,'03f8d157043fa1b1d004d5ef9d645a5767a26ffe');
+ assert.deepEqual(current.changedFromV18,["src/bootcamp/operations.mjs", "src/bootcamp/procedure.mjs", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs"]);assert.deepEqual(Object.keys(current.sourceDelta),current.changedFromV18);assert.deepEqual(current.sourceAdditions,{"tools/bootcamp/normal-current-view.mjs": "18e4db029d297d34c217e06782b9cf83311f90123fcdf00b1f55e01b083f4e25"});
+ assert.equal(Object.keys(current.sourceArtifactSha256).length,165);assert.deepEqual(Object.keys(current.sourceArtifactSha256),[...Object.keys(old.sourceArtifactSha256),...Object.keys(current.sourceAdditions)].sort());
+ for(const [p,h]of Object.entries(old.sourceArtifactSha256)){
+  assert.equal(sha(execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root})),h,p);
+  const d=current.sourceDelta[p];assert.equal(current.sourceArtifactSha256[p],d?.after??h,p);if(d){assert.equal(d.before,h);assert.notEqual(d.before,d.after);}
+ }
+ for(const [p,h]of Object.entries(current.sourceArtifactSha256)){assert.equal(sha(read(p)),h,p);assert.equal(sha(execFileSync('git',['show',`${current.currentSourceCandidateHead}:${p}`],{cwd:root})),h,p);}
+ for(const p of [current.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v18.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v15.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V10.json'])assert.deepEqual(read(p),execFileSync('git',['show',`${current.previousCompatibilityRecord.guardHead}:${p}`],{cwd:root}),p);
+ for(const k of ["normativeBoundary", "allowedRuntimeKinds", "normalHost", "signatureWait", "sdkDiagnostics", "transportDiagnostics", "boundedSendPolicy", "sourceDiagnostics", "claimReturnDiagnostics", "zkCompatibility"])assert.deepEqual(current[k],old[k],k);
+ for(const k of ['persistentRuntimeAllowedByThisIntake','fullRuntimeAccepted','existingV1GatesChanged','productionEnabled','actualSourceDemoComplete'])assert.equal(current[k],false,k);
+ assert.deepEqual(current.registrationCurrentness,{"registrationOnly":true,"maximumAdditionalLocalAttempts":1,"clockForwardOnly":true,"unchangedRevisionAndLedgerRequired":true,"rolledBackBeforeRetry":true,"originalBodyAndIdempotencyKeyRetained":true,"freshAuthenticationAndPortObservations":true,"finalChecksRetained":true,"normalReadMaximumAdditionalAttempts":1,"exactTypedReadErrorRequired":true,"collectedDecisionTargetBound":true,"humanConsentAutomaticallyRetried":false,"sourceCollectionRetried":false,"aiRetried":false,"chainDispatchRetried":false,"sourceExpiryExtended":false,"oldViewAccepted":false,"sdkOrEngineChanged":false,"signaturePolicyChanged":false,"paymentPolicyChanged":false});
 });

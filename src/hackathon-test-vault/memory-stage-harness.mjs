@@ -1,4 +1,4 @@
-import {consumeReviewedV18Sources} from './reviewed-source-v18.mjs';
+import {consumeReviewedV19Sources} from './reviewed-source-v19.mjs';
 import {normalE2Hash} from './normal-source-compatibility.mjs';
 // Explicit TEST-only integration host. Imports test fixtures intentionally:
 // it creates its own disposable E1/E3/auth stores, synthetic source and memory EVM.
@@ -56,8 +56,8 @@ function intake(){
  }
  check(c.normalSourceDeltaInput.path==='specs/bootcamp/hackathon-test-normal-source-intake-v1.json'&&c.normalSourceDeltaInput.sha256==='410ec5bab91a365cee6909328b0c1a2f847283738b27f66aaf911e2300f47dc9'&&digest(c.normalSourceDeltaInput.path)==='0x'+c.normalSourceDeltaInput.sha256,'STAGE_NORMAL_SOURCE_DELTA');
  check(Object.keys(c.e3ArtifactSha256).length===8&&Object.keys(c.additionalSourceArtifactSha256).length===19&&Object.keys(c.producerSeamArtifactSha256).length===6&&Object.keys(c.normalEntryArtifactSha256).length===3,'STAGE_COMPATIBILITY_SOURCES');
- check(digest('src/hackathon-test-vault/reviewed-source-v18.mjs')==='0xd6d0a8318118e8bab06cacff9ed7b1bbf219ca8cff229a655f6195b0a74856cb','STAGE_SOURCE_PIN');
- const v9=consumeReviewedV18Sources(c);
+ check(digest('src/hackathon-test-vault/reviewed-source-v19.mjs')==='0x2282128347f428e06db497699f32e93d7aed86efa9535f5ffb6b226d5ca783d1','STAGE_SOURCE_PIN');
+ const v9=consumeReviewedV19Sources(c);
  for(const [p,sha]of [...Object.entries(i.e4Preparation.artifactSha256),...Object.entries(e2.artifactSha256)])check(digest(p)==='0x'+normalE2Hash(p,sha),'STAGE_SOURCE_PIN');
  return {...i,currentCompatibleSourceHead:v9.currentSourceCandidateHead};
 }

@@ -1,6 +1,8 @@
 # 실제 한 건 실행 전 본부 일괄 준비표
 
-2026-10-24 현행 v18: r9의 `ZK_PROOF` 단서로 공식 STWO 5.1.6/5.1.7의 상호 불호환을 합성 재현했다. 공식 보안 수정을 포함한 crypto5.1.7을 두 prefix에 exact 고정하고 SDK5.1.4/TLS0.1.4/STWO와 기존 검증·전송·개인정보·지급 경계를 유지한다. [r9 호환성 조사](BOOTCAMP_R9_ZK_COMPATIBILITY_REVIEW.ko.md)와 [실행 지문](BOOTCAMP_ZK_EXECUTION_FINGERPRINTS_V1.json)을 우선한다. r9 원격 배포 버전과 실제 원인은 미확정이다. 최종 HEAD CI 확인 후 본부의 단회 재시험 지시를 기다리며 지금 새 호스트·CA·로그인·증명·AI·지급을 시작하지 않는다.
+2026-10-24 현행 v19: r10은 HR 공식 검증·원천 네 조건·승인 AI 1회까지 성공한 뒤 최초 E3 등록의 초 경계 정합성 검사로 중단됐다. 로그인 없이 원래 실패를 재현하고 같은 대상/CAS/멱등키를 유지한 내부 등록 1회 재검증과 최신 읽기/판정 인계를 보정했다. [r10 원인·권한 검토](BOOTCAMP_R10_CURRENT_VIEW_REVIEW.ko.md), [v19 검증](BOOTCAMP_V19_VERIFICATION.json)을 우선한다. v18 증명 실행 지문·기존 원천 만료·양측 동의·100 TEST·지급 경계와 r5~r10/소비된 AI journal은 보존한다. 최종 HEAD CI 확인 뒤 새 정상 재시험 지시를 기다린다. 이번 단계에는 실제 호스트·CA·로그인·증명·AI·지급을 시작하지 않는다. 다음 실제 시험에는 새 exact AI 승인과 양측 지급 동의가 필요하다.
+
+2026-10-24 이전 v18: r9의 `ZK_PROOF` 단서로 공식 STWO 5.1.6/5.1.7의 상호 불호환을 합성 재현했다. 공식 보안 수정을 포함한 crypto5.1.7을 두 prefix에 exact 고정하고 SDK5.1.4/TLS0.1.4/STWO와 기존 검증·전송·개인정보·지급 경계를 유지한다. [r9 호환성 조사](BOOTCAMP_R9_ZK_COMPATIBILITY_REVIEW.ko.md)와 [실행 지문](BOOTCAMP_ZK_EXECUTION_FINGERPRINTS_V1.json)을 우선한다. r9 원격 배포 버전과 실제 원인은 미확정이다. 최종 HEAD CI 확인 후 본부의 단회 재시험 지시를 기다리며 지금 새 호스트·CA·로그인·증명·AI·지급을 시작하지 않는다.
 
 2026-10-24 이전 v17: r8는 송신/RPC 완료 뒤 ERROR_INVALID_CLAIM 반환과 COLLECTOR_SIGNED_CLAIM 거부로 종료됐다. 세부 서버 검증 원인은 미확정이다. [r8 조사](BOOTCAMP_R8_INVALID_CLAIM_REVIEW.ko.md)와 [v17 검증](BOOTCAMP_V17_VERIFICATION.json)을 우선한다. 원문을 보관하지 않는 고정 hint/presence 진단을 추가하고 이전 실패·지문을 보존한다. 최종 HEAD CI 완료 후 본부 재시험 지시를 기다리며 새 실제 실행·호스트·CA·로그인·READY·AI·지급은 시작하지 않는다.
 
