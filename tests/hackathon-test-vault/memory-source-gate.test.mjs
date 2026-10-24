@@ -9,6 +9,9 @@ import {createFreshMemoryStage,memoryStageTotals} from '../../src/hackathon-test
 // Replace one read in memory, never rewrite a pinned file or start an EVM.
 const root=new URL('../../',import.meta.url);
 for(const [path,code]of [
+ ['specs/bootcamp/hackathon-test-memory-source-intake-v24.json','STAGE_V24_FILE_PIN'],
+ ['src/hackathon-test-vault/reviewed-source-v24.mjs','STAGE_SOURCE_PIN'],
+ ['src/bootcamp/execution-e4b-controller.mjs','STAGE_SOURCE_PIN'],
  ['specs/bootcamp/hackathon-test-memory-source-intake-v23.json','STAGE_V23_FILE_PIN'],
  ['src/hackathon-test-vault/reviewed-source-v23.mjs','STAGE_SOURCE_PIN'],
  ['tools/bootcamp/test-client/review-window.js','STAGE_SOURCE_PIN'],
@@ -86,11 +89,11 @@ for(const [path,code]of [
   assert.deepEqual(memoryStageTotals(),before);
  }finally{fs.readFileSync=original;syncBuiltinESMExports();}
 });
-test('exact v23 bytes pass intake and stop at the injected pre-EVM boundary',async()=>{
+test('exact v24 bytes pass intake and stop at the injected pre-EVM boundary',async()=>{
  const descriptor=Object.getOwnPropertyDescriptor(ganache,'provider'),before=memoryStageTotals();
- Object.defineProperty(ganache,'provider',{configurable:true,value:()=>{throw Error('V23_REVIEW_STOP_BEFORE_EVM');}});
+ Object.defineProperty(ganache,'provider',{configurable:true,value:()=>{throw Error('V24_REVIEW_STOP_BEFORE_EVM');}});
  try{
-  await assert.rejects(()=>createFreshMemoryStage(),/V23_REVIEW_STOP_BEFORE_EVM/);
+  await assert.rejects(()=>createFreshMemoryStage(),/V24_REVIEW_STOP_BEFORE_EVM/);
   assert.deepEqual(memoryStageTotals(),before);
  }finally{Object.defineProperty(ganache,'provider',descriptor);}
 });

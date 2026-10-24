@@ -1,16 +1,17 @@
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {consumeReviewedV23Sources} from '../../../src/hackathon-test-vault/reviewed-source-v23.mjs';
+import {consumeReviewedV24Sources} from '../../../src/hackathon-test-vault/reviewed-source-v24.mjs';
 import {stripTypeScriptTypes} from 'node:module';
 import assert from 'node:assert/strict';
 const root=new URL('../../../',import.meta.url);
 const read=p=>readFileSync(new URL(p,root));
 const currentDigest=p=>createHash('sha256').update(read(p)).digest('hex');
-const v22Digest=p=>["tools/bootcamp/test-client/review-window.js", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?createHash('sha256').update(execFileSync('git',['show','dd10cb27dda05c320530a15305f4b464d2361780:'+p],{cwd:root})).digest('hex'):currentDigest(p);
+const v23Digest=p=>["src/bootcamp/execution-e4b-controller.mjs", "src/hackerrank-evidence/diagnostics.mjs", "tools/bootcamp/live-context.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?createHash('sha256').update(execFileSync('git',['show','d0914a70ade684627ede88a3ed788403dd3437e5:'+p],{cwd:root})).digest('hex'):currentDigest(p);
+const v22Digest=p=>["tools/bootcamp/test-client/review-window.js", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?createHash('sha256').update(execFileSync('git',['show','dd10cb27dda05c320530a15305f4b464d2361780:'+p],{cwd:root})).digest('hex'):v23Digest(p);
 // Prior generation assertions retain their original baseline bytes; v22 is checked separately below.
 const v22ChangedPaths=["src/bootcamp/http.mjs", "src/bootcamp/normal-client.mjs", "src/bootcamp/procedure.mjs", "src/hackerrank-evidence/diagnostics.mjs", "tools/bootcamp/explicit-consents.mjs", "tools/bootcamp/frontend-server.mjs", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs", "tools/bootcamp/normal-host-config.mjs", "tools/bootcamp/normal-host-flow.mjs", "tools/bootcamp/normal-host.mjs"];
-const digest=p=>(v22ChangedPaths.includes(p)||['src/hackathon-test-vault/memory-stage-harness.mjs','tests/hackathon-test-vault/e5/preservation.mjs','tests/hackathon-test-vault/e5b/source-pins.mjs'].includes(p))?createHash('sha256').update(execFileSync('git',['show','1421c5ff2105694461f6d470d6b0127d4fd11ce2:'+p],{cwd:root})).digest('hex'):currentDigest(p);
+const digest=p=>["src/bootcamp/execution-e4b-controller.mjs", "src/hackerrank-evidence/diagnostics.mjs", "tools/bootcamp/live-context.mjs"].includes(p)?createHash('sha256').update(execFileSync('git',['show','d0914a70ade684627ede88a3ed788403dd3437e5:'+p],{cwd:root})).digest('hex'):(v22ChangedPaths.includes(p)||['src/hackathon-test-vault/memory-stage-harness.mjs','tests/hackathon-test-vault/e5/preservation.mjs','tests/hackathon-test-vault/e5b/source-pins.mjs'].includes(p))?createHash('sha256').update(execFileSync('git',['show','1421c5ff2105694461f6d470d6b0127d4fd11ce2:'+p],{cwd:root})).digest('hex'):currentDigest(p);
 const pins=JSON.parse(read('docs/hackathon-test-vault/e5b/source-pins-v2.json'));
 assert.equal(pins.version,'clear-e5b-component-source-pins.2');
 assert.equal(pins.actualApiConnected,false);assert.equal(pins.fullE5Accepted,false);
@@ -183,7 +184,7 @@ for(const table of ['e3ArtifactSha256','additionalSourceArtifactSha256','produce
   assert.equal(createHash('sha256').update(execFileSync('git',['show',`${v6.currentSourceCandidateHead}:${path}`],{cwd:root})).digest('hex'),expected,path);
  }
 }
-const v23=consumeReviewedV23Sources(v6);assert.equal(Object.keys(v23.sources).length,170);
+const v24=consumeReviewedV24Sources(v6);assert.equal(Object.keys(v24.sources).length,170);
 const windowPins=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v19.json'));assert.equal(windowPins.version,'clear-e5-normal-path-source-pins.19');
 assert.equal(windowPins.baseHead,'1421c5ff2105694461f6d470d6b0127d4fd11ce2');assert.equal(windowPins.reviewedApiHead,'f0548e3f77d1c19c348713fef2a2b389ca291c67');assert.equal(windowPins.scope,'EXACT_V22_HUMAN_REVIEW_WINDOW');
 assert.equal(v22Digest(windowPins.previousRecord.path),windowPins.previousRecord.sha256);
@@ -191,9 +192,14 @@ assert.equal(v22Digest(windowPins.reviewedIntake.path),'3072f09076cd07b1db2efbb4
 for(const [p,d]of Object.entries(windowPins.changes)){assert.equal(createHash('sha256').update(execFileSync('git',['show','1421c5ff2105694461f6d470d6b0127d4fd11ce2:'+p],{cwd:root})).digest('hex'),d.before,p);assert.equal(v22Digest(p),d.after,p);}
 assert.deepEqual(Object.keys(windowPins.additions),["tools/bootcamp/normal-reflection-approval.mjs", "tools/bootcamp/normal-review-window.mjs", "tools/bootcamp/normal-source-sequence.mjs", "tools/bootcamp/test-client/review-window.js", "src/hackathon-test-vault/reviewed-source-v22.mjs"]);for(const [p,h]of Object.entries(windowPins.additions))assert.equal(v22Digest(p),h,p);
 stripTypeScriptTypes(read('src/hackathon-test-vault/e5b/bridge.d.mts').toString());
-console.log(JSON.stringify({componentArtifacts:Object.keys(pins.sourceArtifactSha256).length,immutableInputs:Object.keys(pins.immutableInputs).length,preservedV5Sources:36,preservedV6Sources:36,preservedV7Sources:134,preservedV8Sources:135,preservedV9Sources:135,preservedV10Sources:159,preservedV11Sources:159,preservedV12Sources:160,preservedV13Sources:160,preservedV14Sources:160,preservedV15Sources:161,preservedV16Sources:162,preservedV17Sources:163,preservedV18Sources:164,preservedV19Sources:165,preservedV20Sources:166,preservedV21Sources:166,preservedV22Sources:170,reviewedV23Sources:170,reviewedV7TransitiveSources:85,reviewedV7Assets:13,explicitV6SourceDeltas:3,declarationSyntax:'PASS_NOT_FULL_TSC',actualApiConnected:false}));
+console.log(JSON.stringify({componentArtifacts:Object.keys(pins.sourceArtifactSha256).length,immutableInputs:Object.keys(pins.immutableInputs).length,preservedV5Sources:36,preservedV6Sources:36,preservedV7Sources:134,preservedV8Sources:135,preservedV9Sources:135,preservedV10Sources:159,preservedV11Sources:159,preservedV12Sources:160,preservedV13Sources:160,preservedV14Sources:160,preservedV15Sources:161,preservedV16Sources:162,preservedV17Sources:163,preservedV18Sources:164,preservedV19Sources:165,preservedV20Sources:166,preservedV21Sources:166,preservedV22Sources:170,preservedV23Sources:170,reviewedV24Sources:170,reviewedV7TransitiveSources:85,reviewedV7Assets:13,explicitV6SourceDeltas:3,declarationSyntax:'PASS_NOT_FULL_TSC',actualApiConnected:false}));
 
 const budgetPins=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v20.json'));assert.equal(budgetPins.version,'clear-e5-normal-path-source-pins.20');assert.equal(budgetPins.baseHead,'dd10cb27dda05c320530a15305f4b464d2361780');assert.equal(budgetPins.reviewedApiHead,'3374c383e585f26ea712911ac6be5b6ac44c0a56');
-assert.equal(currentDigest(budgetPins.previousRecord.path),budgetPins.previousRecord.sha256);assert.equal(currentDigest(budgetPins.reviewedIntake.path),'a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c');
-for(const [p,d]of Object.entries(budgetPins.changes)){assert.equal(createHash('sha256').update(execFileSync('git',['show','dd10cb27dda05c320530a15305f4b464d2361780:'+p],{cwd:root})).digest('hex'),d.before,p);assert.equal(currentDigest(p),d.after,p);}
-assert.deepEqual(Object.keys(budgetPins.additions),['src/hackathon-test-vault/reviewed-source-v23.mjs']);assert.equal(currentDigest('src/hackathon-test-vault/reviewed-source-v23.mjs'),budgetPins.additions['src/hackathon-test-vault/reviewed-source-v23.mjs']);
+assert.equal(v23Digest(budgetPins.previousRecord.path),budgetPins.previousRecord.sha256);assert.equal(v23Digest(budgetPins.reviewedIntake.path),'a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c');
+for(const [p,d]of Object.entries(budgetPins.changes)){assert.equal(createHash('sha256').update(execFileSync('git',['show','dd10cb27dda05c320530a15305f4b464d2361780:'+p],{cwd:root})).digest('hex'),d.before,p);assert.equal(v23Digest(p),d.after,p);}
+assert.deepEqual(Object.keys(budgetPins.additions),['src/hackathon-test-vault/reviewed-source-v23.mjs']);assert.equal(v23Digest('src/hackathon-test-vault/reviewed-source-v23.mjs'),budgetPins.additions['src/hackathon-test-vault/reviewed-source-v23.mjs']);
+
+const recoveryPins=JSON.parse(read('docs/hackathon-test-vault/e5b/normal-source-pins-v21.json'));assert.equal(recoveryPins.version,'clear-e5-normal-path-source-pins.21');assert.equal(recoveryPins.baseHead,'d0914a70ade684627ede88a3ed788403dd3437e5');assert.equal(recoveryPins.reviewedApiHead,'cce3b9382fcf3309534a8d5fa57d4ddfb8259505');
+assert.equal(currentDigest(recoveryPins.previousRecord.path),recoveryPins.previousRecord.sha256);assert.equal(currentDigest(recoveryPins.reviewedIntake.path),'8ec4832c29f6717b32d47d1266798600994bc17190027b19be604ee6591512fc');
+for(const [p,d]of Object.entries(recoveryPins.changes)){assert.equal(createHash('sha256').update(execFileSync('git',['show','d0914a70ade684627ede88a3ed788403dd3437e5:'+p],{cwd:root})).digest('hex'),d.before,p);assert.equal(currentDigest(p),d.after,p);}
+assert.deepEqual(Object.keys(recoveryPins.additions),['src/hackathon-test-vault/reviewed-source-v24.mjs']);assert.equal(currentDigest('src/hackathon-test-vault/reviewed-source-v24.mjs'),recoveryPins.additions['src/hackathon-test-vault/reviewed-source-v24.mjs']);

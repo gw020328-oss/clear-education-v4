@@ -9,6 +9,7 @@ import {prepareFirstNormalReflectionPacket,runManagedNormalReflectionOfflineFixt
 import {openOfflineNormalReflectionRun} from '../../tools/bootcamp/normal-reflection-run.mjs';
 import {createNormalReflectionApproval,configureNormalAiAuthority} from '../../tools/bootcamp/normal-reflection-approval.mjs';
 import {createNormalReviewReaders} from '../../tools/bootcamp/normal-review-window.mjs';
+import {localDay} from '../../tools/bootcamp/normal-host-config.mjs';
 import {awaitExactReflectionApproval} from '../../tools/bootcamp/normal-host-flow.mjs';
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
 export const put=(path,value)=>writeFileSync(path,JSON.stringify(value),{mode:0o600});
@@ -16,7 +17,7 @@ export async function normalApprovalFixture(t,{approver='operator'}={}){
  const f=await storeFixture(t),app=f.create(),base=join(f.directory,'owner'),directory=join(base,'var/bootcamp-normal-host','normal-offline-window');mkdirSync(directory,{recursive:true,mode:0o700});
  f.configuration.operatorBindings=[{wallet:f.operator.address,courseOperatorRef:'course-operator-demo'}];f.restart();
  mkdirSync(join(base,'artifacts'),{mode:0o700});
- const code={head:'a'.repeat(40),clean:true},day='2026-10-24';
+ const code={head:'a'.repeat(40),clean:true},day=localDay();
  const config={participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),
   privacyKeyId:'hr-run.'+randomUUID(),origin:f.config.origin,aiApprovalWallet:null,aiApprovalAuthoritySha256:null};
  const authority={version:'clear-normal-ai-approval-authority.1',kind:'DIRECT_HUMAN_NATIVE_COST_APPROVER_WALLET_DESIGNATION',

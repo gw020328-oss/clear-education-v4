@@ -367,3 +367,15 @@ test('v15 pins the rebalanced budget and current action explanations',async()=>{
  assert.equal(sha(m.existingCoreIntake.path),'a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c');assert.equal(m.existingCoreIntake.sources,170);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
+
+test('v16 preserves browser assets and consumes exact post-send recovery clock checks',async()=>{
+ const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
+ const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V16.json',import.meta.url)));
+ assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V16.json'),'c5132921fc82cb4879c05a19b6a2c0943de44b88c7258fac5a61cf4adbc3c103');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.16');
+ assert.equal(sha(m.previousRecord.path),'bd5ef7fbb97b7f7b18c415d400c30635452ec45751ee934d5e77459f3f6452d8');assert.equal(Object.keys(m.sourceArtifacts).length,6);
+ for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
+ assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ assert.equal(sha(m.existingCoreIntake.path),'8ec4832c29f6717b32d47d1266798600994bc17190027b19be604ee6591512fc');assert.equal(m.existingCoreIntake.sources,170);
+ assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
+});
