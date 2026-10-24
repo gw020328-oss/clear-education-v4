@@ -87,6 +87,8 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
  function run(context,applicationId,body,key,name,extras,fn){
   exactKeys(body,[...targetKeys,...extras],'BC_E3_COMMAND_BODY');const observers=[];let attempt;
   try{return access(context,applicationId,true,(a,s,time)=>{
+   // A clock-only registration rollback must reacquire every port observation.
+   observers.length=0;
    const route='e3-'+name+':'+a.id,prior=replay(s.wallet,route,key,body);if(prior)return operation(a,prior,time);
    checkTarget(a,body);attempt={applicationId:a.id,decision:decision(a),operationId:'operation-'+p0Hash('E3-OPERATION',{applicationId:a.id,route,key,actor:actorCommitment(a,s)}).slice(2,50),start:ledger.stamp()};
    const st=state(a,time,observers);const target=fn(st,s,time,observers);
@@ -99,7 +101,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    fault('e3-before-command');
    const saved=command(a,s.wallet,route,key,body,{decisionId:st.d.decisionId,...target},time,{...attempt,extraEvent:'AUTO_OPERATION_COMPLETED'});fault('e3-after-command');
    return operation(a,saved,time);
-  },()=>observers.forEach(f=>f()));}catch(error){
+  },()=>observers.forEach(f=>f()),{retryClockBoundary:name==='register-target'});}catch(error){
    if(attempt)transaction(()=>ledger.emit({...attempt,eventType:'OPERATION_FAILED'}));throw error;
   }
  }

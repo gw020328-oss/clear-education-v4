@@ -21,6 +21,7 @@ import {createBootcampFrontendServer} from './frontend-server.mjs';
 import {waitForExplicitConsents} from './explicit-consents.mjs';
 import {LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {executeNormalPayment} from './normal-chain.mjs';
+import {readNormalView,normalSourceTarget} from './normal-current-view.mjs';
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 // Called from inside the store transaction: authenticate against the separate
@@ -48,7 +49,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
  const m=loadRuntime(prepared.environmentId);ensure(m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
- let auth,store,connection,provider,ui,mounted,user,app,participantId,collectionStarted=false,pendingReflection=null,resumed=false,collecting=false,paymentStarted=false,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
+ let auth,store,connection,provider,ui,mounted,user,app,participantId,sourceTarget,collectionStarted=false,pendingReflection=null,resumed=false,collecting=false,paymentStarted=false,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
@@ -106,10 +107,10 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
      await store.collectBridge(user,app,body,key(),{signal:controller.signal,timeoutMs:criterionId==='python-basic-certificate'?300000:30000});
      if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','COMPLETED');
     }
-    const v=store.getApplication(user,app);ensure(v.decision.record.conditionsStatus==='MET'&&v.evidence.length===4&&v.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return v;
+    const v=readNormalView(()=>store.getApplication(user,app));ensure(v.decision.record.conditionsStatus==='MET'&&v.evidence.length===4&&v.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');sourceTarget=normalSourceTarget(v);report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return v;
     }catch(error){if(report.stage==='SOURCE_python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','FAILED',error);throw error;}finally{collecting=false;}
    },
-   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;return executeNormalPayment({store,connection,serviceContext,user,app,waitForConsents:waitForExplicitConsents,signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});},
+   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;return executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,waitForConsents:waitForExplicitConsents,signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});},
    report:()=>structuredClone(report),close,
   });
  }catch(error){report.failureCode=/^(BC|E5|E5B)_[A-Z0-9_]+$/.test(error?.message)?error.message:'BC_LIVE_OPEN_FAILED';write();close();throw Error(report.failureCode);}

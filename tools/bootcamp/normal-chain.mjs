@@ -13,19 +13,19 @@ import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {syntheticAuthority} from '../../tests/bootcamp-store/fixture.mjs';
 import {explicitReviewTarget,assertExplicitConsents} from './explicit-consents.mjs';
+import {registerNormalSourceTarget,normalProcedureBody} from './normal-current-view.mjs';
 import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(condition,code)=>{if(!condition)throw Error(code);};
-export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,signal}){
+export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,signal,sourceTarget}){
  const automatic=connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'&&waitForConsents===undefined;
  ensure(automatic||typeof waitForConsents==='function','BC_NORMAL_EXPLICIT_CONSENTS_REQUIRED');
+ ensure(connection.configuration.sourceMode!=='REGISTERED_TEST_SOURCE'||sourceTarget,'BC_NORMAL_SOURCE_TARGET_REQUIRED');
  const m=connection.runtime.manifest,id=m.environmentId,reader=new ExecutionReader(m),bridge=store.execution.connectBridge(serviceContext);
-  let view=store.getApplication(user,app);ensure(view.decision.record.conditionsStatus==='MET','BC_NORMAL_NOT_MET');
-  connection.registerApplication({applicationId:app,wallet:recipient.toLowerCase(),decisionId:view.decision.record.decisionId});await connection.refresh(app);
-  const body=(context=user,extra={})=>{const v=store.getProcedure(context,app);return {expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,...extra};};
-  const registration=store.registerCurrentMetForE4(user,app,body(),key());
-  const intake=store.inspectRegistrationForE4(user,app,registration.record.target.registrationTargetId);connection.bindOpaque(app,intake.record.opaqueTarget);
+  ensure(user.wallet.toLowerCase()===recipient.toLowerCase(),'BC_NORMAL_RECIPIENT');
+  const {target,intake}=await registerNormalSourceTarget({store,connection,user,app,key,sourceTarget});
+  const body=(context=user,extra={})=>normalProcedureBody(store,context,app,target,extra);
   const chainApp=intake.record.opaqueTarget.applicationId;report.chainApplicationId=chainApp;
   const token=new Contract(m.tokenAddress,reader.token,ownedTestWallet(id,'depositor').connect(provider));
   const vault=new Contract(m.vaultAddress,reader.vault,ownedTestWallet(id,'depositor').connect(provider));

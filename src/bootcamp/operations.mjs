@@ -21,18 +21,29 @@ export function createOperations({db,transaction,authentication,operatorBindings
     for(const a of applications)scope(s,a,bindings);
     if(s.role==='operator')check(bindings.some(b=>b.wallet===s.wallet),'FORBIDDEN');
   }
-  function access(context,applicationId,write,fn,finalCheck=()=>{}){
-    id(applicationId);const result=transaction(()=>{
+  function access(context,applicationId,write,fn,finalCheck=()=>{},{retryClockBoundary=false}={}){
+    id(applicationId);
+    // Only internal registration opts in. Retry one rolled-back transaction,
+    // never a caller's stale CAS/decision, changed source, port or authority.
+    for(let attempt=0;;attempt++){
+    const result=transaction(()=>{
       const s=authenticate(context,write);let a=app(applicationId);scope(s,a);const clock=tick();
       a=refresh(a,clock.time,clock.reversed,s.role==='participant'?sessionHash(context,s.wallet):null);
+      const initialSequence=ledger.sequence();let clockOnly=false;
       db.exec('SAVEPOINT r2_command');
       try{check(!clock.reversed,'BC_CLOCK_REVERSED');const value=fn(a,s,clock.time),sequence=ledger.sequence();
         const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed);finalCheck(latest,s,final.time);const end=tick();
+        clockOnly=!final.reversed&&!end.reversed&&end.time>clock.time&&latest.revision===a.revision&&ledger.sequence()===sequence;
         check(!final.reversed&&!end.reversed&&end.time===clock.time&&latest.revision===a.revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
         finalAuthority(context,write,s,[latest]);
         db.exec('RELEASE r2_command');return {value};}
-      catch(error){db.exec('ROLLBACK TO r2_command; RELEASE r2_command');const c=tick();refresh(app(applicationId),c.time,c.reversed);return {error};}
-    });if(result.error)throw result.error;return result.value;
+      catch(error){db.exec('ROLLBACK TO r2_command; RELEASE r2_command');const c=tick(),latest=refresh(app(applicationId),c.time,c.reversed);
+        return {error,retry:retryClockBoundary&&attempt===0&&clockOnly&&!c.reversed&&c.time>=clock.time
+          &&latest.revision===a.revision&&ledger.sequence()===initialSequence};}
+    });
+    if(result.retry)continue;
+    if(result.error)throw result.error;return result.value;
+    }
   }
   const current=(a,r)=>a.status==='ACTIVE'&&r.targetDecisionId===a.decision_id;
   const actionView=(a,r)=>({record:r,current:current(a,r),usableForAuthorization:false});
