@@ -14,7 +14,7 @@ export function createTestDriver({session,createNormalClient,id=()=>crypto.rando
    &&(reviewWindow()?.remainingMs??0)>REVIEW_WINDOW.settlementReserveSeconds*1000});
  const emit=()=>changed(snapshot());
  async function run(action,{reading=false}={}){check(!state.busy&&!state.ended,'TEST_BUSY_OR_ENDED');state.busy=true;if(!reading)state.error=null;active=new AbortController();emit();
-  try{return await action(active.signal);}catch(e){state.view=null;state.operations=null;if(!reading)state.approval=null;state.error={code:/^(?:(?:TEST_|BC_|AUTH_|WALLET_)[A-Z0-9_]{1,100}|FORBIDDEN|CSRF|ORIGIN|TRANSPORT|SIGNATURE)$/.test(e.code??e.message)?(e.code??e.message):'TEST_ACTION_FAILED',outcome:e.outcome??'NOT_SENT'};throw e;}
+  try{const result=await action(active.signal);state.error=null;return result;}catch(e){state.view=null;state.operations=null;if(state.bootstrap?.aiApproval)state.bootstrap={...state.bootstrap,aiApproval:null};if(!reading)state.approval=null;state.error={code:/^(?:(?:TEST_|BC_|AUTH_|WALLET_)[A-Z0-9_]{1,100}|FORBIDDEN|CSRF|ORIGIN|TRANSPORT|SIGNATURE)$/.test(e.code??e.message)?(e.code??e.message):'TEST_ACTION_FAILED',outcome:e.outcome??'NOT_SENT'};throw e;}
   finally{state.busy=false;active=null;emit();}}
  const app=()=>{check(state.applicationId,'TEST_APPLICATION_REQUIRED');return state.applicationId;};
  const participant=()=>check(state.bootstrap?.role==='PARTICIPANT','TEST_PARTICIPANT_ONLY');

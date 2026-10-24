@@ -60,6 +60,6 @@ test('GET, extra request fields and expired approval cannot become a paid comman
  const path='/bootcamp/v4/applications/'+x.app+'/reflection-approval',body=x.body(),headers={'idempotency-key':'test-ai-reject'};
  assert.equal((await approver.raw(path)).status,404);
  assert.equal((await approver.raw(path,{method:'POST',body:{...body,wallet:x.config.operatorWallet},headers})).status,409);
- x.advance(56);x.touch();const result=await approver.raw(path,{method:'POST',body,headers});assert.equal(result.status,409);assert.match(result.body.error,/REVIEW_WINDOW_REQUIRED/);
+ x.advance(96);x.touch();const result=await approver.raw(path,{method:'POST',body,headers});assert.equal(result.status,409);assert.match(result.body.error,/REVIEW_WINDOW_REQUIRED/);
  assert.equal(existsSync(join(x.directory,'approval.json')),false);assert.deepEqual(x.counts(),{fetches:0,keys:0});
 });

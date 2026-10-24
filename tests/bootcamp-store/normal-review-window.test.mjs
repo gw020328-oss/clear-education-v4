@@ -66,7 +66,7 @@ test('new sequence holds short activity/assignment clocks until the approved exa
  await assert.rejects(x.sequence.collect(),/SINGLE_COLLECTION/);assert.equal(x.models,1);
 });
 
-for(const delay of [56,203,240])test('approval delayed '+delay+' seconds cannot spend a model call or restart source acquisition',async t=>{
+for(const delay of [96,203,240])test('approval delayed '+delay+' seconds cannot spend a model call or restart source acquisition',async t=>{
  const x=await fixture(t);await x.sequence.collect({prepareReflection:true});x.advance(delay);x.touch();x.approve();
  await assert.rejects(x.sequence.collect(),/REVIEW_WINDOW_REQUIRED|PREPARATION_STALE/);assert.equal(x.models,0);
  assert.equal(x.f.counts().evidence,1);assert.equal(x.windows.has('activity-complete'),false);
@@ -75,7 +75,7 @@ for(const delay of [56,203,240])test('approval delayed '+delay+' seconds cannot 
 
 test('two separate store consent commands can spend 120 seconds reviewing the same target within unchanged deadlines',async t=>{
  const x=await fixture(t,{modelDelay:20});await complete(x,{approvalDelay:20});x.advance(8);x.touch();
- assert.ok(requireNormalSourceWindow({store:x.f.store,context:x.f.aliceContext,applicationId:x.app,sourceTarget:x.sourceTarget()})>=155);
+ assert.ok(requireNormalSourceWindow({store:x.f.store,context:x.f.aliceContext,applicationId:x.app,sourceTarget:x.sourceTarget()})>=REVIEW_WINDOW.openingSeconds);
  x.f.publish(x.app);const before=x.f.view(x.app),pending=wait(t,x);await new Promise(r=>setImmediate(r));
  x.advance(60);x.touch();x.f.consent(x.app);assert.equal(x.f.view(x.app).consent.bothCurrent,false);
  x.advance(60);x.touch();x.f.consent(x.app,x.f.operatorContext);await pending;
@@ -85,7 +85,7 @@ test('two separate store consent commands can spend 120 seconds reviewing the sa
 });
 
 test('slow model/E3 preparation can stop review opening instead of advertising a 16-second window',async t=>{
- const x=await fixture(t,{modelDelay:30});await complete(x,{approvalDelay:50});x.advance(4);x.touch();
+ const x=await fixture(t,{modelDelay:30});await complete(x,{approvalDelay:90});x.advance(4);x.touch();
  assert.throws(()=>requireNormalSourceWindow({store:x.f.store,context:x.f.aliceContext,applicationId:x.app,sourceTarget:x.sourceTarget()}),/REVIEW_WINDOW_REQUIRED/);
  assert.equal(x.models,1);assert.equal(x.f.view(x.app).consent.records.length,0);
  assert.equal(x.windows.get('reflection-topics'),START+240);
@@ -108,11 +108,11 @@ test('changed source/decision invalidates a displayed target and never transfers
  await assert.rejects(pending,/REVIEW_TARGET_CHANGED|REVIEW_REQUIRED/);assert.equal(x.models,1);
 });
 
-test('exact opening boundary accepts 155 seconds and rejects 154 without changing the original source cap',async t=>{
- for(const remaining of [155,154]){
+test('exact opening boundary accepts 115 seconds and rejects 114 without changing the original source cap',async t=>{
+ for(const remaining of [115,114]){
   const x=await fixture(t);await complete(x);x.advance(START+240-remaining-x.f.time);x.touch();
   const call=()=>requireNormalSourceWindow({store:x.f.store,context:x.f.aliceContext,applicationId:x.app,sourceTarget:x.sourceTarget()});
-  if(remaining===155)assert.equal(call(),155);else assert.throws(call,/REVIEW_WINDOW_REQUIRED/);
+  if(remaining===115)assert.equal(call(),115);else assert.throws(call,/REVIEW_WINDOW_REQUIRED/);
   assert.equal(x.windows.get('reflection-topics'),START+240);
  }
 });
@@ -127,4 +127,17 @@ test('new-command operating gate cannot invalidate an authenticated exact consen
  assert.throws(()=>f.store.recordReviewConsent(f.aliceContext,app,f.body(app,{value:'AGREE'}),f.key(),
   {beforeNewConsent(){throw Error('OPERATING_WINDOW_CLOSED');}}),/OPERATING_WINDOW_CLOSED/);
  assert.equal(f.view(app).consent.records.length,1);
+});
+
+
+test('90-second AI approval and 30-second processing leave an 80-second dual review plus reserve in the same 240-second lease',async t=>{
+ const x=await fixture(t,{modelDelay:20});await complete(x,{approvalDelay:90});x.advance(8);x.touch();
+ assert.equal(x.f.time,START+120);assert.equal(x.models,1);
+ assert.equal(requireNormalSourceWindow({store:x.f.store,context:x.f.aliceContext,applicationId:x.app,sourceTarget:x.sourceTarget()}),120);
+ x.f.publish(x.app);const pending=wait(t,x);await new Promise(r=>setImmediate(r));
+ x.advance(5);x.touch(); // Charge the first displayed read; no new source observation.
+ x.advance(40);x.f.consent(x.app);x.advance(40);x.f.consent(x.app,x.f.operatorContext);await pending;
+ assert.equal(x.f.view(x.app).consent.bothCurrent,true);assert.equal(x.models,1);assert.equal(x.f.time,START+205);
+ assert.equal(x.f.view(x.app).evidence.validUntilExclusive,START+240);assert.equal(240-(x.f.time-START),35);
+ x.advance(35);assert.throws(()=>x.f.consent(x.app),/SOURCE|CURRENT|EXPIRED/);assert.equal(x.models,1);
 });

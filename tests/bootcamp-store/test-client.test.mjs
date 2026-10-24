@@ -320,7 +320,7 @@ test('minimum review display and the final reserve stop buttons without issuing 
  for(const lateFirstDisplay of [true,false]){
   const x=await fixture(t),a=x.browser(x.f.alice);await a.driver.config();await a.driver.login();await a.driver.create();await a.driver.bind();
   const app=a.driver.snapshot().applicationId;await x.f.complete(app);x.f.publish(app);
-  if(!lateFirstDisplay)await a.driver.refresh();x.f.setTime(START+(lateFirstDisplay?151:271));
+  if(!lateFirstDisplay)await a.driver.refresh();x.f.setTime(START+(lateFirstDisplay?191:271));
   await a.driver.readLive();assert.equal(a.driver.snapshot().canAgree,false);
   const posts=a.counts.posts;await assert.rejects(a.driver.consent('AGREE'),/TEST_REVIEW_WINDOW_REQUIRED/);assert.equal(a.counts.posts,posts);
   assert.equal(x.f.view(app).consent.records.length,0);

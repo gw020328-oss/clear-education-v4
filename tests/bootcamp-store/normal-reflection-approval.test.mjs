@@ -73,9 +73,9 @@ test('a native designation is immutable and is not a reusable role permission',a
  assert.deepEqual(readFileSync(path),before);
 });
 
-for(const seconds of [55,56,240])test('AI approval at '+seconds+' seconds retains the original 240-second source deadline',async t=>{
+for(const seconds of [95,96,240])test('AI approval at '+seconds+' seconds retains the original 240-second source deadline',async t=>{
  const x=await normalApprovalFixture(t),body=x.body();x.advance(seconds);x.touch();
- if(seconds===55){x.control.approve(x.actor,x.app,body,'test-ai-boundary');assert.equal(approved(x),true);}
+ if(seconds===95){x.control.approve(x.actor,x.app,body,'test-ai-boundary');assert.equal(approved(x),true);}
  else{assert.throws(()=>x.control.approve(x.actor,x.app,body,'test-ai-late'),/REVIEW_WINDOW_REQUIRED|PREPARATION_STALE/);assert.equal(approved(x),false);}
  assert.equal(x.packet.leaseExpiresAtMs,(x.source.context.issuedAtMs+240000));assert.deepEqual(x.counts(),{fetches:0,keys:0});
 });
