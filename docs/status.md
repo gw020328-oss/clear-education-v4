@@ -1,5 +1,45 @@
 # 개발 현황
 
+## 2026-10-25 r15 중단·복구 권한 재검사 현황
+
+원격 확인 **2026-10-25 11:03 KST**. develop은 [d6ea734](https://github.com/gw020328-oss/clear-education-v4/commit/d6ea7344ad927318f921f76e77131a5704b5cd57), main은 [6a4b693](https://github.com/gw020328-oss/clear-education-v4/commit/6a4b69388470409ef4c8bb054cf8a833e4450b8a)다. 두 기준 브랜치에 새 기능 병합은 없다. 아래 후속은 **develop 작업 브랜치 기준, main 미반영이며 develop에도 미병합**이다.
+
+[PR #102](https://github.com/gw020328-oss/clear-education-v4/pull/102)의 [고정 head v24 공개 기록](https://github.com/gw020328-oss/clear-education-v4/blob/c1e5ee2ccb3eb1ae6f9107bd3e5618cd1ee7eeeb/docs/current/BOOTCAMP_V24_VERIFICATION.json)은 저장된 실제 r15에서 현재 원천4조건 MET·승인된 AI 생성1회·두 역할 직접 동의 후 BIND_CONSENTS까지 진행했다고 보고한다. REGISTER·ALLOCATE·START_REVIEW 완료는 기록됐으나 BIND는 SEND_STARTED로 남았다. 보존 진단은 MANAGED_SOURCE UNKNOWN_ERROR이고 실제 하위 예외는 미보존이다. prepared·claim job·settlement는0, 잔액 변화는 미측정(null)이다. **실제100 TEST 수령·전체 시연 완료가 아니며**, 이번 문서 작업에서 이 실행/AI를 재시도하거나 기존 realm/DB를 다시 열지 않았다.
+
+**합성 재현과 수정:** 실제 store/evaluator/procedure·소유 bridge에 인공 원천/AI/지갑과 새 격리 TEST 체인을 사용한 별도 재현은 post-send 복구 권한 검사의 1초 경계에서 BC_E5_CLOCK_CHANGED → E5B_CONTROLLER_REJECTED와 같은 BIND/SEND_STARTED 상태를 확인했다. 이 재현 결함과 r15의 관측 패턴 일치를 구분하며 r15 원인이 확정됐다고 쓰지 않는다. #102는 이미 발급한 미반환 witness의 현재 RECOVER/RECOVER_FINAL_SYNC에서 정확한 RuleError일 때만 권한을 최대1회 재검사한다. witness·payload·binding·원래 상한을 유지하고 issuer/키/서명/seal/dispatch/broadcast는 반복하지 않는다. 다른 오류·두 번째 충돌·만료/철회·실행/commit 경계는 계속 거부하며 E4 서명/전송 코드는 불변이라고 보고한다.
+
+같은 경계를 주입한 수정 후 합성 재현은 BIND→PREPARE→ACCEPT→정확100000000 atoms 청구·중복 거부를 확인했다. 이는 실제 r15의 재전송·복구 지급이 아니다. 공개 기록은 고유 로컬646사례(API/실행554·호환/memory gate91·native 합성 통합1)를 보고하며 이전958개·CI횟수·실제 성공과 합산하지 않는다. 날짜 변경 후 fixture38건 실패는 현재 날짜의 인공 fixture로 고치고 영향40건만 재검사했으며 strict today-price 검증은 유지했다. v24 source170개 중 runtime3개 변경, 브라우저6개 자산 불변 및 기존 r15 등 근거242개 지문 보존도 보고됐다.
+
+**미검증과 실행 경계:** 보존되지 않은 r15 원래 예외·새 수정의 실제 원천/지급 재시험은 미확인이다. 이번 오프라인 수정은 새 실제 host/CA/login/proof/유료 AI/사람 서명·동의/지급을 실행하지 않았다. 만료·신선도·CAS·양측 동의·수령인/100 TEST·AI 단회·재사용 차단·예치 정책을 완화한 것으로 설명하지 않는다. 이 문서 자동화는 제품 코드 리뷰·수정·기능 PR 병합 또는 새 실제 실행을 수행한 것이 아니다.
+
+### 정확한 최신 head CI
+
+#102 head **c1e5ee2ccb3eb1ae6f9107bd3e5618cd1ee7eeeb**의 표시된 PR/push 검사 **10/10 COMPLETED·SUCCESS**를 확인했다. 공개 이력·합성 시험·Mac 복구 각2개 및 E5 A·E5 B·HR offline·Windows synthetic 각1개다. 아래6개 workflow 실행의 검사 수이며 테스트 사례 수가 아니다.
+
+[run 40110773621](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40110773621) · [run 40110773623](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40110773623) · [run 40110773600](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40110773600) · [run 40110773526](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40110773526) · [run 40110770311](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40110770311) · [run 40110773552](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40110773552)
+
+이전 날짜별 r2/r9·준비/실패/미실행은 당시 기록이다. 현재 진행은 이 절을 우선하며 과거 합성 run3 지급이나 Python 합성 AI 평가7 PASS/1보완을 r15 또는 새 수정의 실제 성공으로 재사용하지 않는다. 이번 확인은 공개 문서·CI만 대조했고 원문·proof·쿠키·키·민감 로그 접근, 새 유료 호출·서명·거래·배포를 하지 않았다.
+
+## 2026-10-24 r9 중단·STWO 호환성 현황
+
+원격 확인 **2026-10-24 12:14 KST**. develop은 [d6ea734](https://github.com/gw020328-oss/clear-education-v4/commit/d6ea7344ad927318f921f76e77131a5704b5cd57), main은 [44226d2](https://github.com/gw020328-oss/clear-education-v4/commit/44226d209cad07b2550395827f529f4cbef66f4a)다. 직전 문서 PR #107/#108 이후 두 기준 브랜치의 새 기능 병합은 없다.
+
+[PR #102](https://github.com/gw020328-oss/clear-education-v4/pull/102)의 [고정 head 공개 조사](https://github.com/gw020328-oss/clear-education-v4/blob/03f8d157043fa1b1d004d5ef9d645a5767a26ffe/docs/current/BOOTCAMP_R9_ZK_COMPATIBILITY_REVIEW.ko.md)는 저장된 실제 r9가 참가자 서명 수락·계정 응답 검사 후 66,901,446바이트 프레임 송신과 claim RPC까지 진행했으나 ERROR_INVALID_CLAIM / ZK_PROOF로 중단됐다고 보고한다. 유효 claim 수락·공식 계정 검증·인증서 pair·후속 AI·지급은 미도달했다. 외곽 BC_REVISION_CONFLICT를 근본 원인으로 확정하거나 r9의 hint를 과거 r8에 소급하지 않는다. 이번 문서 확인에서 재실행한 결과가 아니다.
+
+**진행 — develop 작업 브랜치 기준, main 미반영이며 develop에도 미병합:** 공식 crypto5.1.6/5.1.7이 AES128·AES256·ChaCha20에서 각각 자기 버전 proof는 검증하고 교차 버전은 거부하는 오프라인 행렬을 재현했다. #102는 upstream public-input binding 보안 수정이 포함된 crypto5.1.7을 두 수집 prefix에 exact 고정하고 실행 지문30개를 확인했다. SDK5.1.4·TLS0.1.4·STWO·동시성1·총1회 정책은 유지하며 자동 fallback·검증 완화·재시도는 추가하지 않았다. 이 자동화는 해당 코드·의존성을 수정하거나 보안 코드 리뷰/실행을 수행한 것이 아니다.
+
+[공개 v18 검증 기록](https://github.com/gw020328-oss/clear-education-v4/blob/03f8d157043fa1b1d004d5ef9d645a5767a26ffe/docs/current/BOOTCAMP_V18_VERIFICATION.json)은 수집/전송473·API/실행421·pin/gate64의 서로 다른 로컬 시험958개 PASS와 합성 proof6개 생성에 대한 공식 버전행렬12개 예상 결과를 별도로 보고한다. 기록의 고유 Node 분모만 인용하며 과거 검사·CI 횟수·실제 증명 성공과 합산하지 않는다. v18 source164개·이전 불변 generation49개·r5~r9 자료27개의 지문 보존과 브라우저/API 자산 불변도 보고됐다.
+
+**미검증:** 원격 배포 verifier 버전과 r9의 정확한 실패 원인은 확인되지 않았다. 구형 verifier도 새 encoding을 거부하므로 로컬5.1.7 성공을 원격 호환 성공으로 표시하지 않는다. 전체 TLS handshake 정확성이나 실제 KeyUpdate 발생도 입증되지 않았다. 새 원격 claim·사용자 재시험·로그인·유료 AI·지급은 이 수정에서 수행하지 않았고 전체 실제 원천→100 TEST 시연·제품 인수는 미완료다. 과거 합성 원천 run3 지급 및 합성 Python AI 평가7 PASS/1보완을 이 경로의 성공으로 재사용하지 않는다.
+
+### 최신 head의 CI
+
+#102 head **03f8d157043fa1b1d004d5ef9d645a5767a26ffe**에서 표시된 PR/push 검사 **10/10 COMPLETED·SUCCESS**를 확인했다. Public content history·Public synthetic tests·Mac synthetic recovery 각2개와 E5 A·E5 B·HR offline·Windows synthetic 각1개다. 아래6개 workflow 실행의 검사 수이며 고유 시험 사례 수가 아니다.
+
+[run 39995345957](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39995345957) · [run 39995346180](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39995346180) · [run 39995346415](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39995346415) · [run 39995345908](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39995345908) · [run 39995338800](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39995338800) · [run 39995346126](https://github.com/gw020328-oss/clear-education-v4/actions/runs/39995346126)
+
+이전 날짜별 준비·중단·미실행 표기는 당시 기록이다. 최신 원격 사실은 이 절을 우선한다. 이번 자동화는 공개 보고서·정확한 head CI만 대조했으며 실제 원문·proof·쿠키·키·민감 로그를 읽거나 새 원격 시험/유료 호출/서명/지급을 실행하지 않았다.
+
 ## 2026-10-23 시험 클라이언트·원천 실패 현황
 
 원격 확인 **2026-10-23 11:17 KST**. develop은 [7609921](https://github.com/gw020328-oss/clear-education-v4/commit/7609921095b0144b70181fe12e0fcd826f88b36c), main은 [99221a5](https://github.com/gw020328-oss/clear-education-v4/commit/99221a521b7496e78c4c1f16febe2e74a92b97a5)다. 10월 21일 문서 PR #105/#104 이후 두 기준 브랜치의 새 기능 병합은 없다. 아래는 공개 PR·보고서의 저장된 결과이며 이번 자동화에서 실행한 결과가 아니다.
