@@ -15,12 +15,12 @@ for(const phase of ['RECOVER','RECOVER_FINAL_SYNC'])test('one '+phase+' clock ro
 });
 for(const phase of ['BEFORE_DISPATCH','BEFORE_KEY_FINAL_SYNC'])test(phase+' clock rollover never repeats an execution witness',async t=>{
  const f=await bridgeFixture(t),r=await f.prepare(),before=f.counts.issued;
- f.setIssueHook(()=>f.setTime(f.time+1));assert.throws(()=>f.invoke('current',r.binding,phase),/BC_E5_CLOCK_CHANGED/);
+ f.setIssueHook(()=>f.setTime(f.time+1));assert.equal(f.invoke('current',r.binding,phase).payload.phase,phase);
  assert.equal(f.counts.issued,before+1);assert.equal(f.counts.dispatches,0);
 });
 test('commit rollover never repeats commit or transaction authority',async t=>{
  const f=await bridgeFixture(t),r=await f.prepare();f.makeEnvelope(r.binding);await f.bridge.lookup(f.g,f.h,r.binding);await f.bridge.adopt(f.g,f.h,r.binding);
- const before=f.counts.issued;f.setIssueHook(()=>f.setTime(f.time+1));assert.throws(()=>f.invoke('commit',r.binding,'COMMIT'),/BC_E5_CLOCK_CHANGED/);
+ const before=f.counts.issued;f.setIssueHook(()=>f.setTime(f.time+1));assert.equal(f.invoke('commit',r.binding,'COMMIT').payload.adoptionHash,f.adoption.adoptionHash);
  assert.equal(f.counts.issued,before+1);assert.equal(f.counts.dispatches,0);
 });
 for(const change of ['expiry','service-revoked','untyped-error'])test('recovery recheck rejects '+change+' without issuing again or sending',async t=>{

@@ -48,15 +48,18 @@ export function bridgeControllerFactory({ports,run,inspect}){
    const recheck=()=>run(b,(state,time,authority)=>{
     const before=inspect(state,e,{kind,recovery,time,authority});
     const result=issued??(issued=owner.issue(kind,ticket,p));
-    // A cached, unreturned recovery witness never repeats issuer/key work.
+    // A cached, unreturned witness never repeats issuer/key work.
     const after=inspect(state,e,{kind,recovery,time,authority});
     check(canonical(after)===canonical(before),'BC_E5B_POST_ISSUER_CHANGED');return result;
    });
    try{return recheck();}catch(error){
     const clockChanged=error&&!types.isProxy(error)&&Object.getPrototypeOf(error)===RuleError.prototype
      &&Object.getOwnPropertyDescriptor(error,'message')?.value==='BC_E5_CLOCK_CHANGED';
-    if(!clockChanged||!issued||kind!=='current'||!['RECOVER','RECOVER_FINAL_SYNC'].includes(e.phase))throw error;
-    // The failed API transaction rolled back. Revalidate original authority once;
+    const recheckable=kind==='current'&&(['RECOVER','RECOVER_FINAL_SYNC'].includes(e.phase)||executionPhases.has(e.phase))
+     ||kind==='commit'&&e.phase==='COMMIT';
+    if(!clockChanged||!issued||!recheckable)throw error;
+    // Only the synchronous witness transaction rolled back, not a native
+    // seal or dispatch. Revalidate original authority and exact business once;
     // keep the same witness/payload/caps and never repeat seal, dispatch or signing.
     return recheck();
    }

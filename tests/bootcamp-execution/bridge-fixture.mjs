@@ -46,14 +46,14 @@ export async function bridgeFixture(t,{kind='PREPARE',configure=true,challenge='
    controller=factory({witnesses:{consume(ticket){const v=tickets.get(ticket);if(!v||active!==v||v.read)throw Error('OFFLINE_UNTRUSTED_TICKET');v.read=true;counts.consumed++;return v.evidence;}},issuer:{capability:issue('capability'),current:issue('current'),commit:issue('commit')}});
   },fenceReader:{version:'clear-bootcamp-runtime-fence-reader.1',async read(query){if(e4Hash(query)!==e4Hash(projection.authorityScope))throw Error('OFFLINE_SCOPE');return {version:'clear-bootcamp-runtime-fence-witness.1',...query,highestFence:floor};}},
  };
- let bridge,g,h,i;
+ let bridge,g,h,i,clockHook=()=>{};const baseNow=f.configuration.now;f.configuration.now=()=>{clockHook();return baseNow();};
  if(configure){f.configuration.executionBridge=config;f.restart();bridge=f.store.execution.connectBridge(f.context);await f.store.execution.observeRuntimeFence(f.context);
   g=f.store.execution.acquireRuntime(f.context,{owner:'worker-one',expectedFence:0,generation:1,leaseSeconds:30});
   i=f.enqueue({kind,preparationId:f.prepared.preparationId,authorizationDigest:f.digest,caller:kind==='ACCEPT'?manifest.roles.relayer:manifest.roles.registrar,payloadHash:e4Hash(f.command)}).receipt.intentId;
   h=f.acquire(i);f.store.execution.bindRuntimeIntent(f.context,g,h);
  }
  return {...f,get store(){return f.store;},get time(){return f.time;},config,projection,counts,bridge,g,h,i,invoke,
-  prepare:()=>bridge.prepare(g,h,bridge.inspect(g,h)),setIssueHook:fn=>{issueHook=fn;},setReadHook:fn=>{readHook=fn;},setLookupHook:fn=>{lookupHook=fn;},
+  prepare:()=>bridge.prepare(g,h,bridge.inspect(g,h)),setIssueHook:fn=>{issueHook=fn;},setClockHook:fn=>{clockHook=fn;},setReadHook:fn=>{readHook=fn;},setLookupHook:fn=>{lookupHook=fn;},
   setReceipt:r=>{receipt=r;},setEnvelope:e=>{envelope=e;},get adoption(){return adoption;},
   makeEnvelope(binding,extra={}){envelope={version:'clear-e5-public-envelope.2',ref:'env-offline',manifestHash:H('manifest'),state:'SEALED',runtimeHash,intentId:i,requestId:i,attemptId:binding.attemptId,lineage:binding.lineage,commandHash:binding.commandHash,originalBindingHash:e4Hash(binding),sender:kind==='ACCEPT'?manifest.roles.relayer:manifest.roles.registrar,transactionNonce:'0',authorizationNonce:m.nonce,to:manifest.vaultAddress,value:'0',chainId:manifest.chainId,dataHash:H('data'),txHash:H('tx'),businessValidUntil:binding.business.businessValidUntil,originalAuthorityUntil:binding.expiresAt,bytesUntil:f.time+3600,...extra};return envelope;},
  };

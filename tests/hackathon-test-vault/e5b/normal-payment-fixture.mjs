@@ -16,8 +16,9 @@ import {normalSourceTarget,readNormalView} from '../../../tools/bootcamp/normal-
 import {executeNormalPayment} from '../../../tools/bootcamp/normal-chain.mjs';
 import {assertExplicitConsents,waitForExplicitConsents} from '../../../tools/bootcamp/explicit-consents.mjs';
 
-export async function normalPaymentFixture(t,{crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{}}={}){
+export async function normalPaymentFixture(t,{crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{}}={}){
  const e=await createEnvironment(),id=e.environmentId,m=e.manifest,{dir}=environmentRecord(id);
+ let serviceLive=true;
  let auth,store,connection,metadata,serial=0,ticks=0,crossed=false,floor=Math.floor(Date.now()/1000),extraSeconds=0,reads=0;const readErrors=[];
  const report={startedAt:Math.floor(Date.now()/1000),stages:[],completed:false};
  const state=()=>metadata?.prepare("SELECT state FROM envelopes WHERE json_extract(record,'$.method')='bindConsents'").get()?.state??null;
@@ -28,7 +29,7 @@ export async function normalPaymentFixture(t,{crossing=false,fault=()=>{},wallCl
   return floor;
  };
  let planFrame=null;
- const storeNow=()=>{if(planFrame)onPlanTick(++planFrame.ticks,{kind:planFrame.kind,store,source,app,user,op,auth,time:now(),advanceClock:seconds=>{floor+=seconds;}});return now();};
+ const storeNow=()=>{onStoreTick({store,report});if(planFrame)onPlanTick(++planFrame.ticks,{kind:planFrame.kind,store,source,app,user,op,auth,time:now(),advanceClock:seconds=>{floor+=seconds;}});return now();};
  const provider=new JsonRpcProvider(m.endpoint,undefined,{cacheTimeout:-1,batchMaxCount:1});provider.pollingInterval=50;
  t.after(()=>{if(report.paymentFailure)t.diagnostic(JSON.stringify({paymentFailure:report.paymentFailure,executionDiagnostics:report.executionDiagnostics}));metadata?.close();store?.close();auth?.close();connection?.close();provider.destroy();stopEnvironment(id);parkEnvironment(id);});
  const participant=ownedTestWallet(id,'recipient'),operator=ownedTestWallet(id,'terminator');
@@ -42,7 +43,7 @@ export async function normalPaymentFixture(t,{crossing=false,fault=()=>{},wallCl
  const source=syntheticAuthority({now}),seen=new WeakSet();
  const resolveSource=r=>{const v=source.resolveSource(r);if(!seen.has(v)){v.authExpiresAt=now()+(sourceSeconds??600);v.rawExpiresAt=now()+(sourceSeconds??300);v.queryExpiresAt=now()+(sourceSeconds??600);seen.add(v);}return v;};
  const executionServices={version:'clear-bootcamp-test-execution-port.1',runtimeId:id,runtimePinHash:connection.runtime.runtimeHash,
-  authorizeService(c){assert.equal(c,serviceContext);return {serviceId:'normal-worker',runtimeId:id,expiresAt:report.startedAt+600};},
+  authorizeService(c){assert.equal(c,serviceContext);if(!serviceLive)throw Error('BC_E5_SERVICE_AUTHORITY');return {serviceId:'normal-worker',runtimeId:id,expiresAt:report.startedAt+600};},
   reader:{async snapshot(){throw Error('OFFLINE_LEGACY_DISABLED');}},envelope:{async lookup(){throw Error('OFFLINE_LEGACY_DISABLED');}}};
  store=createBootcampStore({directory:join(dir,'offline-bind-store'),authentication:auth,instanceId:'offline-'+id,demoStartedAt:report.startedAt,mode:'SYNTHETIC_FIXTURE',runtimeMappingHash:m.runtimeMappingHash,now:storeNow,fault:point=>fault(point,{report,metadata}),
   producers:source.producers,resolveSource,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices,executionBridge:connection.configuration});
@@ -57,5 +58,5 @@ export async function normalPaymentFixture(t,{crossing=false,fault=()=>{},wallCl
  try{return await executeNormalPayment({store:paymentStore,connection,serviceContext,user,op,app,recipient:participant.address.toLowerCase(),provider,key,report,sourceTarget,write:()=>atomicPrivate(reportPath,report),stage:name=>{report.stage=name;atomicPrivate(reportPath,report);},
   waitForConsents:async options=>{let polls=0;await waitForExplicitConsents({...options,pollMs:1,read:async()=>{const v=await options.read();if(++polls===2){directConsent(user);directConsent(op);}return v;}});assertExplicitConsents(await options.read(),options.target);}});
  }finally{clearInterval(timer);}};
- return {run,report,reportPath,connection,concurrentReads:()=>reads,readErrors,advance:seconds=>{extraSeconds+=seconds;floor+=seconds;},readReport:()=>JSON.parse(readFileSync(reportPath)),metadata,store,user,app,get crossed(){return crossed;},nativeState:state,environmentId:id,runtimeHash:connection.runtime.runtimeHash,diagnostics:()=>connection.diagnostics(),metrics:()=>connection.metrics()};
+ return {run,report,reportPath,connection,revokeService:()=>{serviceLive=false;},withdrawSource:()=>source.change(app,'activity-complete',{rawAvailable:false}),concurrentReads:()=>reads,readErrors,advance:seconds=>{extraSeconds+=seconds;floor+=seconds;},readReport:()=>JSON.parse(readFileSync(reportPath)),metadata,store,user,app,get crossed(){return crossed;},nativeState:state,environmentId:id,runtimeHash:connection.runtime.runtimeHash,diagnostics:()=>connection.diagnostics(),metrics:()=>connection.metrics()};
 }
