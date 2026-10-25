@@ -1,0 +1,66 @@
+{
+  "version": "clear-hackathon-test-normal-source-intake.1",
+  "date": "2026-10-20",
+  "status": "REVIEWED_THREE_NECESSARY_SOURCE_DELTAS_FOR_EXISTING_ISOLATED_TEST_SCOPE",
+  "immutableInputs": {
+    "specs/bootcamp/hackathon-test-boundary-intake-v1.json": "cfb42a8f559a54b94188df6f94cb7d67d9a7085b32990ce55968be62904c3fa0",
+    "specs/bootcamp/hackathon-test-consumer-pins-v1.json": "7b7b63427e98e232a483af41418b551df854195bd083ef430b52df809af2d52d",
+    "specs/bootcamp/hackathon-test-e5-service-intake-v1.json": "fb7e5026358d61a52fa0cadf7ebd01054fa468d8b640057f7beb785c1016da42",
+    "specs/bootcamp/hackathon-test-memory-source-intake-v4.json": "2cf7aba578d1ac5ed712a00288edcdff88d58e2152acdfd709c1228078f078a6"
+  },
+  "sourceChanges": {
+    "src/bootcamp-authorization/test-encoding-v3.mjs": {
+      "before": "eb535f3f30e0bee8c1f3e7dff16c202baa72108ae1417f8b0e077870312d3c5a",
+      "after": "e348a687265fd89c9a98e977dc20d213ed87bf4169da2063b8b68279a2ce9d7f",
+      "reviewedOwnerHead": "4d0f0b55614c3ad2e04b63d6946844eca391309b",
+      "scope": "ADD_REGISTERED_TEST_SOURCE_LABEL_ONLY_KEEP_REAL_CLOCK_REQUIRED"
+    },
+    "src/hackathon-test-vault/e5/environment.mjs": {
+      "before": "a38dc46a8d0c9afd91b68d295c1d4aaaa3a5815ba8fe70338a9fa68e4fb3666e",
+      "after": "eb434625f9c4ec54965c9fb1f55db66d37bdf37c85d44d50f704908d5ecc1d26",
+      "reviewedOwnerHead": "2be2737bcdf39173be037ca576313a50cb768e24",
+      "scope": "NEW_ENVIRONMENT_MAPPING_OPTION_ONLY_DEFAULT_AND_EXISTING_ENVIRONMENTS_PRESERVED"
+    },
+    "src/hackathon-test-vault/e5/reader.mjs": {
+      "before": "34f0b529dd459881bc82032efb9d7c3eaec6818928c4f23d2e046f649f3eddfd",
+      "after": "af6c782cd4722e4b3a8c3b32070ff022ef09bd46ef2302956ca451f31ef3b56d",
+      "reviewedOwnerHead": "2be2737bcdf39173be037ca576313a50cb768e24",
+      "scope": "LOWERCASE_ABI_ADDRESS_REPRESENTATION_BEFORE_BUSINESS_HASH_NO_IDENTITY_CHANGE"
+    }
+  },
+  "review": {
+    "sourceDiffsRead": true,
+    "e2OwnerReportedPass": 121,
+    "runtimeMappingAddressOwnerReportedPass": 2,
+    "existingBRegressionReportedPass": 20,
+    "runtimeTestScope": "NEW_OWNED_GETH_ACCEPT_CLAIM_EXACT_100_TEST_NOT_REAL_SOURCE_DEMO",
+    "rootNewAiOfflineReviewPass": 11
+  },
+  "invariants": {
+    "policyAndR3Changed": false,
+    "typedMessageVersion": ".3",
+    "typedMessageFields": 24,
+    "typeHash": "0x0420a07c2295bca1fc66f0033f2afa0c6e430c7d7cccb48fa23a98c84d97fa8f",
+    "amountAtoms": "100000000",
+    "registeredSourceClockInjectionAllowed": false,
+    "provenanceLabelIsSourceAuthority": false,
+    "existingEnvironmentMigration": false,
+    "priorInputBytesChanged": false,
+    "defaultProductionActivation": false
+  },
+  "consumerRequirements": [
+    "VERIFY_OLD_SOURCE_PINS_IN_THE_ORIGINAL_GIT_SNAPSHOT",
+    "VERIFY_ONLY_THE_LISTED_CURRENT_FILES_AGAINST_EXACT_AFTER_HASHES",
+    "EXPLICITLY_PIN_THIS_RECORD_FOR_NEW_NORMAL_SOURCE_COMPATIBILITY",
+    "KEEP_ALL_OTHER_SOURCE_POLICY_DOMAIN_NONCE_CURRENT_AND_ROLE_CHECKS",
+    "DO_NOT_USE_THIS_RECORD_AS_REAL_SOURCE_TRUST_OR_PAID_CALL_APPROVAL"
+  ],
+  "notAcceptedByThisRecord": {
+    "unfinishedApiSourceImplementation": true,
+    "actualHackerRankTrustOrProofPair": true,
+    "freshModelCall": true,
+    "actualSourceEndToEndDemo": true,
+    "productionOrPublicChain": true,
+    "automaticMergeOrDeploy": true
+  }
+}

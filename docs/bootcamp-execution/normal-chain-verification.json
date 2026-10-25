@@ -1,0 +1,85 @@
+{
+  "version": "clear-bootcamp-normal-chain.1",
+  "sourceMode": "SYNTHETIC_TEST_SOURCE",
+  "realSourceVerified": false,
+  "production": false,
+  "applicationId": "application-8c40c035-4fa6-4dce-ab75-6d81159d5fee",
+  "chainApplicationId": "0xae1b8c5530858969cc2da0922456e44e8f610a9cd5a2d85ac086582977e16176",
+  "recipient": "0x813f2d31bc7c65e6151617250627f56b85fbc2e5",
+  "stages": [
+    {
+      "kind": "REGISTER",
+      "txHash": "0x05c39474cf9bd76733c3c370e4d32479935eab2d2a08afe5a338eaf0fba9e2ff",
+      "checkpoint": {
+        "number": "6",
+        "hash": "0xb368e55525d17edf1655f07ba6a1916d2f38f6f2b47b86f379d25300fc818bf3",
+        "time": "1792402209"
+      }
+    },
+    {
+      "kind": "ALLOCATE",
+      "txHash": "0x1b0e5ab65152d37c2bd7d31094fe6cffcfce134f11d113e6f8b4ef137d4fb0a0",
+      "checkpoint": {
+        "number": "7",
+        "hash": "0x33679977440eaeeaf3e749852f06933cd3503c99fbceafbda0560e4bc6a84b77",
+        "time": "1792402210"
+      }
+    },
+    {
+      "kind": "START_REVIEW",
+      "txHash": "0x442e94e4f5988b9313ea31c44f3d90a779181075665810051525ced48d9bce47",
+      "checkpoint": {
+        "number": "8",
+        "hash": "0xe2bc9ccd4442944fd5af634e0e3ab94ce570230f7ad58e05a2d20bb1d7436c33",
+        "time": "1792402211"
+      }
+    },
+    {
+      "kind": "BIND_CONSENTS",
+      "txHash": "0xbc0964dd25c9aed6f90f7586398a61c2a319622fc0e5391797cfaf15321580dd",
+      "checkpoint": {
+        "number": "9",
+        "hash": "0xddd13b7e4faa56d39d58889cd3a5c27244bae928622db846fea96525f2665ad8",
+        "time": "1792402212"
+      }
+    },
+    {
+      "kind": "PREPARE",
+      "txHash": "0x68b1dcf73b5d093dcc576a503af2cecf980f9ecf6df11ef63f509e52b54ac576",
+      "checkpoint": {
+        "number": "10",
+        "hash": "0x6c849cff891bc87f422863bf2c6e842dd301d83c2c9d21854bbcfcdd95049a02",
+        "time": "1792402213"
+      }
+    },
+    {
+      "kind": "ACCEPT",
+      "txHash": "0x76b42f65f9379bf1fef8fb9a77dbd10375d20059ff3d72389fde2a04fb311cfc",
+      "checkpoint": {
+        "number": "11",
+        "hash": "0xf3dd566b13d0589566501070286b58c5c7003c1b39f7cdbbb1a78db0dec86eba",
+        "time": "1792402214"
+      }
+    }
+  ],
+  "claim": {
+    "txHash": "0x0b09396014cd2151946d1c12fb0b553c08bc248bb76b050af34b11827bbbc815",
+    "checkpoint": {
+      "number": "12",
+      "hash": "0x2d062a853ef628ffebaebed586044bcf7c3a99cecf716742942771127c79d3fb",
+      "time": "1792402215"
+    },
+    "amountAtoms": "100000000",
+    "duplicateRejected": true
+  },
+  "completed": true,
+  "executionLog": "/tmp/clear-api-normal-chain-run3.txt",
+  "sourceAtExecution": "API normal-chain implementation before extraction into executeNormalPayment; no whole-chain repetition after successful run",
+  "scope": "SYNTHETIC_SOURCE_REAL_ISOLATED_GETH_PAYMENT_ONLY",
+  "previousFailuresPreserved": [
+    "run1 canonical address presentation",
+    "run2 publishedAt before actual allocatedAt; fixed by waiting for actual UTC without clock injection"
+  ],
+  "preservation": "all owned environments stopped/parked; chain DB and TEST keys retained",
+  "realMoodleHackerRankAiEndToEndCompleted": false
+}

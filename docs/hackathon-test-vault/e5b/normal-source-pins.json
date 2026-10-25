@@ -1,0 +1,32 @@
+{
+  "version": "clear-e5-normal-path-source-pins.1",
+  "baseHead": "a4a05c7aa6a1614760273e78edb5ba6ccb556232",
+  "scope": "NEW_ENVIRONMENT_MAPPING_CANONICAL_ADDRESSES_AND_EXACT_REVIEWED_E2_LABEL_COMPATIBILITY",
+  "changes": {
+    "src/hackathon-test-vault/e5/environment.mjs": {
+      "before": "a38dc46a8d0c9afd91b68d295c1d4aaaa3a5815ba8fe70338a9fa68e4fb3666e",
+      "after": "eb434625f9c4ec54965c9fb1f55db66d37bdf37c85d44d50f704908d5ecc1d26"
+    },
+    "src/hackathon-test-vault/e5/reader.mjs": {
+      "before": "34f0b529dd459881bc82032efb9d7c3eaec6818928c4f23d2e046f649f3eddfd",
+      "after": "af6c782cd4722e4b3a8c3b32070ff022ef09bd46ef2302956ca451f31ef3b56d"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "b34bfb2d48775676fd1d24288dc4292215e8c2f79bfcee3ee3d3bc6acbdc74bd",
+      "after": "5ea439c7eab626b69e0d8b1fde3b4efea00169dac0749eddebc10b07084f44c8"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "6ae5ec81a746b485d257791dd3fa2c0aea31dbe5914031a2a54e029bff9616bb",
+      "after": "0771cf0be46ec5127637b3afc4f085911aca35e621f61eac439fb53afb4167cb"
+    },
+    "src/hackathon-test-vault/memory-stage-harness.mjs": {
+      "before": "59e615aa4eac8797b84f4397c27daa2790c5023ace5d94d13b1913e15e391895",
+      "after": "2979b1182de84fae9cf6e4a811f21d4537318aa826278779a53353e740d8abd2"
+    }
+  },
+  "existingEnvironmentMigration": false,
+  "fullActualSourceDemoCompleted": false,
+  "additions": {
+    "src/hackathon-test-vault/normal-source-compatibility.mjs": "b8e0abaa00fb9d4b66e23db906664edff1f50998777ac77aa9941772cfc75e64"
+  }
+}

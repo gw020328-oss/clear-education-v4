@@ -1,0 +1,115 @@
+{
+  "version": "clear-bootcamp-v22-verification.1",
+  "date": "2026-10-24",
+  "baselineHead": "1421c5ff2105694461f6d470d6b0127d4fd11ce2",
+  "sourceCandidateHead": "f0548e3f77d1c19c348713fef2a2b389ca291c67",
+  "scope": "ORIGINAL_EXPIRY_HUMAN_REVIEW_WINDOW_AND_EXPLICIT_DESIGNATED_AI_APPROVAL",
+  "sourceIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v22.json",
+    "sha256": "3072f09076cd07b1db2efbb4001ee2c5ee7d48fabb15649082abff5f8534ca97",
+    "sources": 170,
+    "runtimeDeltas": [
+      "src/bootcamp/http.mjs",
+      "src/bootcamp/normal-client.mjs",
+      "src/bootcamp/procedure.mjs",
+      "src/hackerrank-evidence/diagnostics.mjs",
+      "tools/bootcamp/explicit-consents.mjs",
+      "tools/bootcamp/frontend-server.mjs",
+      "tools/bootcamp/live-context.mjs",
+      "tools/bootcamp/normal-chain.mjs",
+      "tools/bootcamp/normal-host-config.mjs",
+      "tools/bootcamp/normal-host-flow.mjs",
+      "tools/bootcamp/normal-host.mjs"
+    ],
+    "additions": {
+      "tools/bootcamp/normal-reflection-approval.mjs": "435d9f1519f4be26d74c47f2a50bdc9219e9bfd454ec7aae37a0e20ba97aea77",
+      "tools/bootcamp/normal-review-window.mjs": "9232bbe4b66ff96c05223e32e1e5eebfcf806f86ddbc6ceb37803bb4e447a70c",
+      "tools/bootcamp/normal-source-sequence.mjs": "43e6a29dc3d00c60bd2f603a633d4787299059933ac7df2145089a040fe639df",
+      "tools/bootcamp/test-client/review-window.js": "b8524af41e643a19b37493b6f46a23161ef68f9429134579743c3c6e9570fa06"
+    }
+  },
+  "reviewedHelper": {
+    "path": "src/hackathon-test-vault/reviewed-source-v22.mjs",
+    "sha256": "6653110cd33de6235736b5bd8b806fa245bc7744ec89e4d8ff408a9e971bfa84"
+  },
+  "guardPins": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v19.json",
+    "sha256": "99b14eee0328133dfce5e1213339b53d4c934dfc98606cbcf9777c793f46bf78"
+  },
+  "testClientManifest": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V14.json",
+    "sha256": "8b423a94d31c7482388835201d89e5af20a6fcbc1fde9ec271eb2e36448cdd40",
+    "browserAssets": 6,
+    "browserBytesChanged": true,
+    "productFrontendAccepted": false
+  },
+  "r13SafeTiming": {
+    "zone": "Asia/Seoul",
+    "approvalRequestPrepared": "2026-10-24T14:42:55.037+09:00",
+    "firstSafeApprovalWaitReport": "2026-10-24T14:44:06.929+09:00",
+    "humanEvidenceReceived": "2026-10-24T14:46:17.658+09:00",
+    "formalApprovalRecorded": "2026-10-24T14:46:17.693+09:00",
+    "aiSummaryRecorded": "2026-10-24T14:46:20.987+09:00",
+    "consentReadinessReported": "2026-10-24T14:46:33.274+09:00",
+    "earliestSourceExpiryExclusive": 1792820810,
+    "reflectionPacketLeaseExpiresAtMs": 1792820813000,
+    "remainingSecondsAtConsentReport": 16.726,
+    "approvalPreparationToRecordApproxSeconds": 203,
+    "entireDelayAttributedToUser": false,
+    "exactMessageSubstageTimingsAvailable": false,
+    "exactUnderlyingUnknownErrorAvailable": false,
+    "consents": 0,
+    "paymentCompleted": false
+  },
+  "operatingBudgetsSeconds": {
+    "beforeModel": 185,
+    "reviewOpening": 155,
+    "firstActionableDisplay": 150,
+    "settlementReserve": 30,
+    "authenticatedReadersFresh": 5,
+    "minimumConservativeHumanReview": 120
+  },
+  "budgetsExtendExpiry": false,
+  "budgetsGuaranteeExternalLatencyOrHumanMaximum": false,
+  "nativeAiApprovalAuthority": {
+    "defaultConfigured": false,
+    "roleAloneGrantsAuthority": false,
+    "existingNativeCostAndTransmissionApproverMustExplicitlyDesignateHostHeadWallet": true,
+    "externalBillingIdentityIndependentlyAttested": false,
+    "actualWalletDesignatedDuringThisWork": false,
+    "approvalUiDispatchesModel": false,
+    "approvalIncludesPaymentConsent": false
+  },
+  "localVerification": {
+    "uniqueTestsPassed": 622,
+    "apiExecution": {
+      "tests": 539,
+      "initialPassed": 537,
+      "initialFailedAssetSnapshotAliasAssertions": 2,
+      "targetedCorrectedAssertionsPassed": 2,
+      "entireSuiteRepeatedWithoutCodeNeed": false,
+      "networkGuard": true
+    },
+    "sourceCompatibilityAndMemoryGate": {
+      "tests": 83,
+      "passed": 83
+    },
+    "newFocusedApprovalAndWindowTests": 47,
+    "e5Preservation": "PASS",
+    "e5bSourcePinsAndDeclarationSyntax": "PASS_NOT_FULL_TSC",
+    "workspace": "PASS",
+    "dependencies": "PASS"
+  },
+  "preservedFiles": 183,
+  "preservedEvidence": "r5-r13 and immutable generations, spent approvals/journals/global claims",
+  "sdkCryptoTransportWindowsAndDepositPolicyChanged": false,
+  "paymentPolicyChanged": false,
+  "newActualHostCreated": false,
+  "newCaCreated": false,
+  "actualLoginProofAiSignaturePaymentPerformed": false,
+  "actualSourceDemoComplete": false,
+  "productionEnabled": false,
+  "mergePerformed": false,
+  "finalHeadCi": "MUST_VERIFY_SAME_FINAL_HEAD_AFTER_PUSH; durable ignored evidence var/bootcamp-verification/v22-final-ci.json",
+  "nextStep": "AWAIT_SEPARATE_RETEST_INSTRUCTION_AND_EXPLICIT_NATIVE_COST_APPROVER_WALLET_DESIGNATION"
+}

@@ -1,0 +1,169 @@
+{
+  "version": "clear-mac-stale-recovery-eperm-verification.1",
+  "date": "2026-10-19",
+  "status": "DIAGNOSTIC_COVERAGE_ADDED_ORIGINAL_CAUSE_UNCONFIRMED",
+  "baseHead": "636817f679e009a6ad3194b7c549606cd24d112f",
+  "priorMacHead": "41354e0283709f74dd64a9dc6435703c804853c6",
+  "branch": "codex/mac-stale-recovery-eperm",
+  "model": {
+    "recommended": "GPT-6 Astra / High",
+    "actualIndependentlyVerified": false
+  },
+  "originalFailure": {
+    "run": 39219934005,
+    "attempt": 1,
+    "job": 117952603977,
+    "jobStartedAt": "2026-10-19T08:02:29Z",
+    "jobCompletedAt": "2026-10-19T08:04:15Z",
+    "test": "SIGKILL leaves profile; next launcher stops owned Chrome and deletes old session first (3/5)",
+    "testDurationMs": 1823.223209,
+    "diagnostic": "STALE_RECOVERY:EPERM",
+    "actualExit": 1,
+    "expectedExit": 0,
+    "suitePass": 104,
+    "suiteFail": 1,
+    "suiteTests": 105,
+    "legacyMissingPass": 5,
+    "logSha256": "20a5b4d367f84642ac7c65e683c881745bca1b70f574177d65614bd2cd41be33",
+    "firstSyscall": "UNCONFIRMED",
+    "rootCause": "UNCONFIRMED"
+  },
+  "priorUnjustifiedRerun": {
+    "run": 39219934005,
+    "attempt": 2,
+    "job": 117954326684,
+    "conclusion": "success",
+    "acceptedAsResolutionEvidence": false,
+    "rootAcknowledgedPolicyViolation": true,
+    "performedByThisUnit": false
+  },
+  "verification": {
+    "node": "24.21.0",
+    "controlledCommand": "./tools/node --test tests/mac-collector/storage.test.mjs tests/mac-collector/startup.test.mjs tests/mac-collector/recovery.test.mjs",
+    "controlled": {
+      "pass": 42,
+      "fail": 0,
+      "skipped": 0,
+      "durationMs": 4822.652625,
+      "logSha256": "9123f8d050f64c75692b183ea18f5903572856514dca312e2636c1fdf9654fc1"
+    },
+    "localFull": {
+      "command": "./tools/node --test tests/mac-collector/*.test.mjs",
+      "attempts": 1,
+      "status": "INTERRUPTED_WITHOUT_SUITE_SUMMARY",
+      "exitCode": 137,
+      "cause": "UNCONFIRMED",
+      "logSha256": "38d5bfbc36c6619f23740d8625453433c17655ed4ea88b90d648362e6e318ce4",
+      "passedFirstBeforeRecordTrialOnly": true,
+      "rerunPerformed": false,
+      "ownedSyntheticWorkerCleanup": {
+        "verifiedExactOwnerIdentity": true,
+        "termSent": true,
+        "workerExited": true,
+        "matchedSessionRemoved": true,
+        "count": 1
+      },
+      "terminationEvidence": {
+        "observed": "EXEC_TOOL_EXIT_CODE_137_AND_PARTIAL_TEST_LOG",
+        "signalFieldReturned": false,
+        "toolTimeoutReported": false,
+        "terminationRequestedByThisUnit": false,
+        "resourceOrKernelEvidence": "NOT_AVAILABLE",
+        "senderAndCause": "UNCONFIRMED"
+      }
+    },
+    "workspace": {
+      "result": "PASS",
+      "originalFingerprintsPreserved": true,
+      "sourceReferenceFiles": 191,
+      "pendingManifestsNotClaimable": true
+    },
+    "gitDiffCheck": "PASS",
+    "remoteExactHeadCi": "PENDING_NORMAL_PUSH_PR_NO_RERUN"
+  },
+  "controlledEpermBoundaries": [
+    "ROOT_LIST/scandir",
+    "SESSION_DELETE/rmdir",
+    "BROWSER_METADATA_READ/open",
+    "OWNER_EXISTENCE_PROBE/kill",
+    "BROWSER_PROCESS_QUERY/spawn",
+    "BROWSER_SIGNAL_TERM/kill",
+    "BROWSER_SIGNAL_KILL/kill"
+  ],
+  "changeScope": "REDACTED_DIAGNOSTICS_AND_CONTROLLED_COUNTEREXAMPLES_ONLY_NO_SPECULATIVE_RECOVERY_FIX",
+  "preserved": {
+    "apiHead": "4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0",
+    "oldMacBranch": true,
+    "aiSourceUnchanged": true,
+    "ciWorkflowUnchanged": true,
+    "timeoutsUnchanged": true,
+    "uidPgidIdentityChecksUnchanged": true,
+    "exitExpectationUnchanged": true,
+    "noNewSkip": true,
+    "noBlindFsRetryOrEpermIgnore": true,
+    "existingVaultDbChainKeysUntouched": true
+  },
+  "gates": {
+    "mentorPolicy": "UNRESOLVED",
+    "auto400EligibilityOrPayment": false,
+    "simulation500Included": false,
+    "moodleAndRealSource": "BLOCKED",
+    "grantOutbox": "HOLD",
+    "independentClaimProduct": "NO_GO",
+    "historicalMacFailureExactCause": "UNCONFIRMED"
+  },
+  "changedSourceAndTestSha256": {
+    "src/mac-collector/browser-recovery.mjs": "508c0b97a35104e953bf5da10e8c705f585b78c1da5c107898c8d0f979e874b1",
+    "src/mac-collector/chrome.mjs": "71a53ca7e8614c062c0907731fa502f6482bdff6714d8abd138162551c78a006",
+    "src/mac-collector/process-identity.mjs": "e49628ae07c26c8d4e777bdd3bc4ac95f0f2541c84db0c975e4d05c9b2d68181",
+    "src/mac-collector/storage.mjs": "13e6f50795e85275d551f1190a2c7b9aea5f978a9b65317729ecf892550eb82d",
+    "src/mac-collector/worker.mjs": "7c1b83de96ce77b67408e0f20728a276467eaed22a10df48b93f039bbb9ef374",
+    "tests/mac-collector/fixtures/startup-fault.mjs": "a10aacaa5665d861e48ce68bf0712b3672a4c2091f0fa724fc751e563c3f50a7",
+    "tests/mac-collector/package.test.mjs": "6b0fef3daf521ac6c60a25627eac6147f6fac595493e97673f39685b85731665",
+    "tests/mac-collector/recovery.test.mjs": "e54d13b8427d22742079844171d847d4081455437d64a3b75ee3cbf8b23c48c2",
+    "tests/mac-collector/startup.test.mjs": "1b3a07e1efab921eddc94688ef187c44505a309f6d4809f5fd98bc3b2604d7b9",
+    "tools/package-mac-collector.mjs": "8e4104585c478d65e522819a470c86aa60c7116d092c10fa6a491064debb986f",
+    "src/mac-collector/recovery-diagnostics.mjs": "23743055364e172745120ad91f5b89c4df64b25dd81296bb6591265180f6bd22"
+  },
+  "baselineIdenticalSha256": {
+    ".github/workflows/public-synthetic.yml": "f9962e19a307a19fd3f4a246aed4cea3c0e1020e703b3350c002ef14773954f7",
+    "config/mac-managed-storage.json": "e785042f76177887bc6f2c92a313da47913a00ff7ab9e38a6ba3bc64696c3d94",
+    "config/toolchain.json": "914884cc5dd6a5238503d2d4a98d972a4f23b9b697aaf4b907545fbc5034d06d",
+    "src/mac-collector/browser-recovery.mjs": "e07583959ffbbd4011b4f9916f74d7da8522c4eee302a2c0b381586c5c8ffdf8",
+    "src/mac-collector/chrome.mjs": "ca0b15dd5f36cf63ed03add539ba9c025536b5083784aa0d8e87b3d70401878d",
+    "src/mac-collector/launch.mjs": "3176e584c3034e827151e0013a5c8d8cf1b89623c695c88b65759230c5e81051",
+    "src/mac-collector/options.mjs": "570031c4598431ca2e4eb6f8fa215fbcf1bb3beeab1017b9325588144169b013",
+    "src/mac-collector/process-identity.mjs": "413fad19a5fd8f3d92e0098e636426b1d97d092837c44c9329e82414ba8a46ef",
+    "src/mac-collector/storage.mjs": "b6008a9e556d5605d157b0e733fb411a75ce6285af91cba6d454c527a1e59a60",
+    "src/mac-collector/synthetic.mjs": "2d732e55aba25363850ff761ae304b0a59a475892cac766f3591792048916bbd",
+    "src/mac-collector/worker.mjs": "d11b6938317415113d9b8fd819c2eb82cd51231bc13921dabfa6dd18273d59cf",
+    "tests/mac-collector/fixtures/cookie-interception-diagnosis.mjs": "4420c7bd5253b923238291c38d1c984509795eceafd62b9ddeb8df68b9c77b7d",
+    "tests/mac-collector/fixtures/hard-kill.mjs": "428e6ac804536198b3d614715b72ff6ec788095e6c38abf0fe026f442b499fd4",
+    "tests/mac-collector/fixtures/hardkill-lifecycle-holder.mjs": "d0ff7b60fded5b27543fa003203979b579328a4b5e2a2a0bbba60f8ec7036651",
+    "tests/mac-collector/fixtures/hardkill-lifecycle-observer.mjs": "c58c6b1d4cdfd185904042d9cc5807e81157f8875e697cc561b677afe73e2f0c",
+    "tests/mac-collector/fixtures/hardkill-lifecycle-runner.mjs": "cf0735d87111997413aede6d425861073095c2e2d7f1dd80471f8796f15083d2",
+    "tests/mac-collector/fixtures/hardkill-supervisor.mjs": "196660b3cabace48921f049a61cf6577df3984203d1fdb32da277233f042e4ad",
+    "tests/mac-collector/fixtures/startup-fault.mjs": "b26815ef90b88bdb712c813bd0a51010bb99256019742fdac39a4c294170f998",
+    "tests/mac-collector/fixtures/synthetic-startup-legacy.mjs": "d2d984957ebc62fbc0a47dd3c08e70edc5f7f0f8e04e35d4c6501c2287b4a551",
+    "tests/mac-collector/hard-kill.test.mjs": "3b8abf6f83e1a6d748a03b08a3510e1d29664f2c7470475831ab3a036b4389a2",
+    "tests/mac-collector/lifecycle-harness.test.mjs": "01b88aeda56a135c610e4fff0e055583f9ea7560384f6bed26f2282f26f0f5a5",
+    "tests/mac-collector/lifecycle.test.mjs": "20595bee1403d08e5d3d22ede26367553f7bce7a4b8f3fadb40f0d13b80cf417",
+    "tests/mac-collector/package.test.mjs": "8daaae98a3457f8f814983ad1019b7ac87f9ba909dcc1c23c88609918eaa5f2d",
+    "tests/mac-collector/proxy.test.mjs": "981aa1f263e401b390ac082e0f0f3f1c0a7b557e66ce2d1fbd1f5ebc5f076f81",
+    "tests/mac-collector/recovery.test.mjs": "22620ec948e38a898ebd3098138c309ef590dac0011fbf0cee7015b77fb1b884",
+    "tests/mac-collector/startup.test.mjs": "49844b9ae40c277e6ae0f8372bc614d72a29bfa37ff9e141f2ef1556647631ce",
+    "tests/mac-collector/storage.test.mjs": "e7f28b34e34089ea55ca7442cb0220a89201ab51e52ba30b34fe8de8b0529d5e",
+    "tests/mac-collector/synthetic-chrome.test.mjs": "3d60108784e338ef3d4b221bd28294fe0480cff12ceb5c0796edd9f57d5c9b29",
+    "tests/mac-collector/synthetic.test.mjs": "3e54965a85bebe09c84ff441dd136b07aaaec38594297fdaec030c0ccea10f90",
+    "tools/package-mac-collector.mjs": "8a0cc294a842283d2e3047be968bc5cfdb79e827534784d6711c02e0424c55ce"
+  },
+  "notPerformed": [
+    "ADDITIONAL_ORIGINAL_RUN_RERUN",
+    "REAL_PROFILE_DB_COOKIE_ACCOUNT_KEY_READ",
+    "TIMEOUT_INCREASE",
+    "PROCESS_IDENTITY_RELAXATION",
+    "AI_EVALUATION",
+    "MAIN_DEVELOP_MERGE",
+    "DEPLOY"
+  ]
+}

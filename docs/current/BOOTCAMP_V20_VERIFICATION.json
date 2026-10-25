@@ -1,0 +1,110 @@
+{
+  "version": "clear-bootcamp-v20-verification.1",
+  "date": "2026-10-24",
+  "baselineHead": "1e923495380c81abf2eab13b21ec918ef2915495",
+  "sourceCandidateHead": "f11d6a71aef3f1ef8f4483127ec22a9759303ec3",
+  "scope": "MANAGED_NORMAL_AI_SINGLE_USE_RUN_BINDING",
+  "sourceIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v20.json",
+    "sha256": "25a66433edefd19bbdb98e57a7699748440b347cec95b145a491385813c9ef77",
+    "sources": 166,
+    "runtimeDeltas": [
+      "src/bootcamp/moodle-live-consumer.mjs",
+      "tests/ai-review-precheck/first-normal-reflection-entry.mjs",
+      "tools/bootcamp/normal-host-config.mjs",
+      "tools/bootcamp/normal-host-flow.mjs",
+      "tools/bootcamp/normal-host-worker.mjs"
+    ],
+    "additions": {
+      "tools/bootcamp/normal-reflection-run.mjs": "e7ed93ee68943264056f9ff368be9a06ad3d2c31749b43a9c7b1dfdae6d24096"
+    }
+  },
+  "reviewedHelper": {
+    "path": "src/hackathon-test-vault/reviewed-source-v20.mjs",
+    "sha256": "d5a1d9a92a5d3c43ea0d0b8ed4889a37f966a9650a22e0545a8f752f7ff0de1f"
+  },
+  "guardPins": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v17.json",
+    "sha256": "366140ec6249532a63a59c4396e1ecb194ff5a132646ecda7a53e2f49895e859"
+  },
+  "testClientManifest": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V12.json",
+    "sha256": "39aa5aac54571dee6c5db0d231c7b5db4d3b6d6eb47e07ac239b12fa10ae4ad3",
+    "browserBytesChanged": false
+  },
+  "finalLocalChecks": {
+    "apiAndExecutionSynthetic": {
+      "passed": 461,
+      "failed": 0,
+      "networkGuard": true
+    },
+    "pinCompatibilityAndMemoryGate": {
+      "passed": 75,
+      "failed": 0,
+      "memoryGatePassed": 56,
+      "compatibilityFinalPassed": 19,
+      "initialHistoricalTestReferenceCorrected": true
+    },
+    "normalAiAndSpentJournalOffline": {
+      "passed": 28,
+      "failed": 0,
+      "networkGuard": true
+    },
+    "uniqueNodeTests": 564,
+    "newManagedRunBoundaryTests": 18,
+    "newPreparationIntegrationTests": 2,
+    "e5Preservation": "PASS",
+    "e5bSourcePins": "PASS",
+    "workspace": "PASS",
+    "rootDependencies": "PASS",
+    "declarationSyntax": "PASS_NOT_FULL_TSC"
+  },
+  "boundaryReview": {
+    "method": "DIRECT_CODE_AND_OFFLINE_REGRESSION_REVIEW",
+    "privateNativeRunCapability": true,
+    "fixedHostJournalOnly": true,
+    "exactRunApplicationWalletInputModelApprovalBinding": true,
+    "oneBindingPerHost": true,
+    "globalApplicationAndApprovalConsumption": true,
+    "legacySpentApprovalRejected": true,
+    "durableReservationBeforeDispatch": true,
+    "partialFailureCancellationAndUnknownRemainSpent": true,
+    "finalRunGuardBeforeKeyRead": true,
+    "liveFixtureAndStoreOverridesRejected": true,
+    "generationCallsMaximum": 1,
+    "countCalls": 0,
+    "automaticRetries": 0,
+    "fallbacks": 0,
+    "sdkCryptoTransportChanged": false,
+    "sourceExpiryExtended": false,
+    "chainFundingConsentOrPaymentPolicyChanged": false
+  },
+  "preservation": {
+    "baselineFiles": 116,
+    "result": "PASS",
+    "r5ThroughR10": true,
+    "priorImmutableGenerations": true,
+    "r10ApprovalAndSpentAiJournal": true,
+    "r10SpentApprovalHashMatchesExistingMetadata": true
+  },
+  "ci": {
+    "status": "VERIFY_FINAL_HEAD_AFTER_PUSH",
+    "evidencePath": "var/bootcamp-verification/v20-final-ci.json",
+    "priorHeadResultsReused": false
+  },
+  "newActualExecution": {
+    "hostPreparedAtCommit": false,
+    "login": false,
+    "proof": false,
+    "paidAi": false,
+    "payment": false,
+    "merged": false
+  },
+  "nextStep": {
+    "onlyAfterFinalCi": "PREPARE_ONLY_UNUSED_HOST_HTTPS_CA",
+    "requiresNewRun": true,
+    "requiresFreshExactAiApproval": true,
+    "requiresBothRolePaymentConsents": true,
+    "activationAuthorizedByThisRecord": false
+  }
+}

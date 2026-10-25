@@ -1,0 +1,67 @@
+{
+  "version": "clear-bootcamp-c3-refresh-v9-verification.1",
+  "date": "2026-10-22",
+  "requestedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIndependentlyVerified": false,
+  "sourceCandidateHead": "26d451701186632ba7a37729b9937f28ce3a1f83",
+  "guardCommit": "6294cf0b82a5f092e1973aeb92efb769a1f7dd77",
+  "intakeSha256": "19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2870fc",
+  "memoryConsumerSha256": "dc60cc5d30cd3e101e7f2c6b43ab4ce7fb694324deae25c92d3147cc3c19ca5c",
+  "localRelated": {
+    "pass": 39,
+    "fail": 0,
+    "logSha256": "5f5ffc3138b7d3745368c433ff6f3c07679209ab0ef87a7dba7ec480048a7a71"
+  },
+  "localGuard": {
+    "pass": 26,
+    "fail": 0,
+    "logSha256": "cdccc3145cd03d45f665299cc267e7f4dfe60a11bb291155e0af054fc2959055"
+  },
+  "aAndBPreservation": "PASS",
+  "firstLocalFailuresPreserved": [
+    {
+      "pass": 23,
+      "fail": 1,
+      "logSha256": "ce9beeffd807c065bcee7c3edff353b2f27e181d1b78317a81d87527176ae4b7",
+      "cause": "ASYNC_INITIAL_READ_CHANGES_HEARTBEAT_TEST_SCHEDULING"
+    },
+    {
+      "pass": 16,
+      "fail": 1,
+      "logSha256": "ed2565c72adcd7e1f77174b58c2fbbb9365b1b4cae1c7901f40d20f5384731e2",
+      "cause": "CLIENT_ABORT_NOT_YET_OBSERVED_BY_SERVER_BEFORE_TEST_GATE_RELEASE"
+    }
+  ],
+  "priorV8Ci": {
+    "head": "f84b6f78dbcccd32da289d3190db0207bf727afd",
+    "latestSuccess": 18,
+    "total": 18,
+    "macAttempt1JobId": 119836576754,
+    "macAttempt1Pass": 104,
+    "macAttempt1Fail": 9,
+    "firstFailure": "RECOVERY_EXIT_FAILED",
+    "laterNotRunCases": 8,
+    "originalLogSha256": "9d0569a98698c7452a8ac656f244e51c92be9e22e84326993f8a919702ce918c",
+    "approvedSingleJobAttempt2": 119843535767,
+    "attempt2Pass": 113,
+    "attempt2Fail": 0,
+    "retryLogSha256": "632f766ddad35e9eb8ad3971c9ae843bc6d66a26f9fe4ff23cca3c0e0737b5f0",
+    "firstCauseUnresolved": true,
+    "wholeWorkflowRepeated": false
+  },
+  "newHeadCi": "PENDING_FINAL_PUSH_HEAD",
+  "v8IntakeSourceGuardBytesPreserved": true,
+  "snapshotTtlSeconds": 5,
+  "snapshotTtlChanged": false,
+  "sourceAndReviewCapExtended": false,
+  "newEndpointOrFundOrRightsOrSignaturePolicy": false,
+  "hrProducerChanged": false,
+  "webChanged": false,
+  "actualLogins": 0,
+  "registryCalls": 0,
+  "paidCalls": 0,
+  "newActualApplications": 0,
+  "newRealms": 0,
+  "actualChainTransactions": 0,
+  "actualSourceOrUiDemoComplete": false
+}

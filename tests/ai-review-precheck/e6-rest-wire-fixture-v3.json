@@ -1,0 +1,98 @@
+{
+  "modelVersion": "gemini-3.5-flash-lite",
+  "responseId": "synthetic-not-a-provider-response",
+  "modelStatus": {
+    "modelStage": "STABLE",
+    "message": "synthetic optional status"
+  },
+  "promptFeedback": {
+    "blockReason": "BLOCK_REASON_UNSPECIFIED",
+    "safetyRatings": [
+      {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "probability": "NEGLIGIBLE",
+        "blocked": false
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "index": 0,
+      "finishReason": "STOP",
+      "finishMessage": "synthetic diagnostic",
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "text": "{}",
+            "thought": false,
+            "thoughtSignature": "b2ZmbGluZQ==",
+            "partMetadata": {
+              "syntheticAux": "never persist this annotation"
+            },
+            "speechMetadata": {
+              "speaker": "synthetic",
+              "style": "synthetic"
+            },
+            "mediaProcessing": "AGENTIC",
+            "mediaResolution": {},
+            "audioTranscription": {},
+            "videoMetadata": {}
+          }
+        ]
+      },
+      "safetyRatings": [],
+      "citationMetadata": {
+        "citationSources": [
+          {
+            "startIndex": 0,
+            "endIndex": 2,
+            "uri": "https://example.invalid/synthetic-recitation",
+            "license": "MIT"
+          }
+        ]
+      },
+      "groundingAttributions": [],
+      "groundingMetadata": {
+        "groundingChunks": [],
+        "groundingSupports": [],
+        "webSearchQueries": [],
+        "imageSearchQueries": [],
+        "searchEntryPoint": {
+          "renderedContent": "",
+          "sdkBlob": ""
+        },
+        "retrievalMetadata": {},
+        "googleMapsWidgetContextToken": ""
+      },
+      "urlContextMetadata": {
+        "urlMetadata": []
+      },
+      "avgLogprobs": -0.1,
+      "logprobsResult": {},
+      "continuationToken": ""
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 314,
+    "candidatesTokenCount": 135,
+    "totalTokenCount": 449,
+    "serviceTier": "standard",
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 314
+      }
+    ],
+    "candidatesTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 135
+      }
+    ],
+    "cachedContentTokenCount": 0,
+    "toolUsePromptTokenCount": 0,
+    "cacheTokensDetails": [],
+    "toolUsePromptTokensDetails": []
+  }
+}

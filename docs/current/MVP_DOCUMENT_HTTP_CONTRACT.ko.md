@@ -89,3 +89,6 @@ C2 실행은 새 합성 환경을 명시 생성하는 별도 개발 진입점을
 준비 표시 보완 `f5873062293fef4a4c3a1decb9fd6ada3701a71d`: 정책/원문이 준비되지 않은 이력 응답은 syntheticDocumentSubmissionReady=false이며 summary/current 차단과 일치한다. 최신 코드의 관련309/309를 다시 확인했다. 최종 원격 CI는 정확한 PR63 head의 Checks/본문·이슈55/62를 정본으로 한다.
 
 최종 실질 리뷰 보완: 원본 TTL 만료는 접수 캐시뿐 아니라 같은 submission의 진행 중 worker/observer도 AbortSignal로 중단해 소유 복사본을 정리한다. 인증된 resolver의 접근 시 만료 확인과 타이머 경로가 같은 wipe를 사용한다. 브라우저 연결 지침은 [단계별 복붙 문서](MVP_FRONTEND_CONNECTION_PROMPT.ko.md)를 따른다.
+
+
+2026-10-16 후속 계약 제안: [Moodle 후기→C2 제출・AI 관찰](MOODLE_REVIEW_C2_CONTRACT.ko.md)을 참조한다. 미병합 PR71 LOCAL facts와 PR72 FIXTURE proposal을 그대로 import하지 않는다. sourceBundle/inputHash/기존 DTO는 유지하며 별도 receipt hash·registry/본문 결합·두DB 수락 경쟁/권한·수명은 후속 구현 관문이다. 현재 endpoint·합성-only 업로드·운영 수락 capability는 바꾸지 않았다.

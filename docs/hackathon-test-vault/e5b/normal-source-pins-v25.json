@@ -1,0 +1,46 @@
+{
+  "version": "clear-e5-normal-path-source-pins.25",
+  "baseHead": "7a39f91b0861ea775cc4d1945f81a654b97d4458",
+  "scope": "EXACT_V28_CAPABILITY_AND_CONSENT_COMMIT_CLOCK",
+  "previousRecord": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v24.json",
+    "sha256": "2963af18eb1d4c9e16c349f70642e6b3ed3a60d6bbb060d43615364a6763b7c4"
+  },
+  "reviewedIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v28.json",
+    "sha256": "a0cde4221afa098bd4405fe4a65af94b3ebc91543179360ba2cb951303bb4561"
+  },
+  "reviewedApiHead": "d2a6ffcda125057cebd932536e045b5f204604e8",
+  "changes": {
+    "src/bootcamp/execution-e4b-controller.mjs": {
+      "before": "21bd9adde26bed6d0db417faba116cdc70586c5c6748e159166f74c0683272a0",
+      "after": "e8f4639192a3eb955c76917fe0457019061a46450472843228f0d5f1e615e02c"
+    },
+    "src/bootcamp/operations.mjs": {
+      "before": "22ea3745496a0047a1f10cb2c63c3905714335ac3e621959415c773b30d91986",
+      "after": "968f9d1da70f93bdb980b172012afc3c52506c13396ddd40791652329ce8d4d8"
+    },
+    "src/bootcamp/procedure.mjs": {
+      "before": "e297241fea3a8478ddf694b002d82d3d25374ef71a5db8599b77f3b64b304b24",
+      "after": "3bcdf3cd4bee2362896cdd3a88fa2cf2f384715843e94855390a7af929a2586d"
+    },
+    "src/hackathon-test-vault/memory-stage-harness.mjs": {
+      "before": "3b6872f470035d8015a047d143da7b723be676d167ca8216090e1eef92636815",
+      "after": "a8267810f393d666ce336a3a2bf44e6373574adab7b0bfae3699c76da8aa7cff"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "55101617e52d67869508000b835bfaab5b9131b9582886f07a2abcce4fc08805",
+      "after": "7373d694c5e597b219689b033838ecafb06b4c30f686e9fa0db62fd544c726b8"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "bc67337438db564aef73129085cb611bef56b4c85e12206a8ada144b6340616b",
+      "after": "feb6e12a3f766149d4df9c1cc30178883c87eef6f3faf06e8fec4116a51652a9"
+    }
+  },
+  "additions": {
+    "src/hackathon-test-vault/reviewed-source-v28.mjs": "9d66a539f39ea50d71e5c73f3eca7a4cc2c0353c2478c32cc5b7ae7df97516e0"
+  },
+  "priorAcceptanceBytesChanged": false,
+  "actualSourceAccepted": false,
+  "productionEnabled": false
+}

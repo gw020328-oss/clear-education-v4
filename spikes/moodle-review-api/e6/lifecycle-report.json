@@ -1,0 +1,48 @@
+{
+  "version": "clear-moodle-e6-lifecycle.1",
+  "checkedAtMs": 1792334663067,
+  "environmentRef": "e6-20261018-run1",
+  "runRef": "run1",
+  "mappingRevision": 1,
+  "designatedTargetsAliveAtCheck": true,
+  "ownedContainersRunning": true,
+  "recollectableWithNewShortLivedCredential": true,
+  "tokensRemaining": 0,
+  "rawHandlesRestoredFromDisk": false,
+  "sourceBodiesPublished": false,
+  "oldLabResourcesTouched": false,
+  "productRuntimeReady": false,
+  "metrics": {
+    "restReadCalls": 23,
+    "restWriteCalls": 0
+  },
+  "records": [
+    {
+      "criterion": "activity-complete",
+      "sourceHash": "0x32c64e0f96a145af801a152034d21f330014586c38117b3be6a9924502075b1b",
+      "observed": {
+        "startedAtMs": 1792334661655,
+        "finishedAtMs": 1792334662015
+      },
+      "sourcePredicate": "MET"
+    },
+    {
+      "criterion": "assignment-submitted",
+      "sourceHash": "0x61c6d565eded185c17ad9cca5991f58abebca3973539d5e8e7b404771621da89",
+      "observed": {
+        "startedAtMs": 1792334662346,
+        "finishedAtMs": 1792334662462
+      },
+      "sourcePredicate": "MET"
+    },
+    {
+      "criterion": "reflection-topics",
+      "sourceHash": "0x44193132150d0d04cb86b3b99dbc83d9ce0b787e63d5bc3d6a92202150dacd15",
+      "observed": {
+        "startedAtMs": 1792334662736,
+        "finishedAtMs": 1792334662932
+      },
+      "sourcePredicate": "UNKNOWN"
+    }
+  ]
+}

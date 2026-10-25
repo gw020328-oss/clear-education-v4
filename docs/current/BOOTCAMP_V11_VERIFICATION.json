@@ -1,0 +1,41 @@
+{
+  "version": "clear-bootcamp-source-lease-fix-verification.1",
+  "date": "2026-10-23",
+  "sourceCandidateHead": "34d3661d558e4b07ed68e9cc26aa59eb499fe386",
+  "intakePath": "specs/bootcamp/hackathon-test-memory-source-intake-v11.json",
+  "intakeSha256": "55c2986611b5ed0b3df69cc2e5294e3932715a847649ca5adc36f4f52146b65d",
+  "coreSourceCount": 159,
+  "changedFromV10": [
+    "tools/bootcamp/live-context.mjs"
+  ],
+  "coreAdditions": 0,
+  "sourceLeaseRegression": {
+    "passed": 21,
+    "total": 21,
+    "rerunAfterUnchangedSource": false
+  },
+  "sourceMutationAndCompatibility": {
+    "passed": 35,
+    "total": 35,
+    "evmCreated": false
+  },
+  "testClientManifestChecks": {
+    "passed": 2,
+    "total": 2
+  },
+  "e5Preservation": "PASS",
+  "e5bExactPins": "PASS",
+  "browserAssetManifest": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V3.json",
+  "browserAssetManifestSha256": "6ad8e4de3ea7dcfad2527f4738a6ab16c284feb2b0087f95d0f060e9f21552a2",
+  "browserAssetsChanged": false,
+  "historicalIntakeAndGuardBytesPreserved": true,
+  "r2JournalAndUsedMarkerPreserved": true,
+  "newActualRun": false,
+  "newSourceLease": false,
+  "newLogin": false,
+  "newPaidAiCall": false,
+  "sourceExpiryExtended": false,
+  "paymentOrSignaturePolicyChanged": false,
+  "ciEvidenceLocation": "GitHub PR #102 and #78 exact final-head checks; earlier-head CI is historical only",
+  "productionEnabled": false
+}

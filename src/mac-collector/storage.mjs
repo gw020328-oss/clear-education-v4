@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { processIdentity, sameProcess, legacyWorker } from './process-identity.mjs';
+import { recoveryStep } from './recovery-diagnostics.mjs';
 const exec = promisify(execFile);
 export const TTL = 86_400_000;
 export const requireValue = (ok, code) => { if (!ok) throw new Error(code); };
@@ -73,12 +74,12 @@ export async function removeSession(root, path) {
   await fs.rm(path, { recursive:true, force:true });
 }
 export async function clearAbandoned(root, stopBrowser) {
-  await secureDirectory(root);
+  await recoveryStep('ROOT_VALIDATE','ROOT_DIRECTORY_CHAIN',()=>secureDirectory(root));
   let removed = 0;
-  for(const name of await fs.readdir(root)) {
+  for(const name of await recoveryStep('ROOT_LIST','ROOT_DIRECTORY_CHAIN',()=>fs.readdir(root))) {
     if (!sessionName.test(name)) continue;
     const path=join(root,name);
-    await secureDirectory(path);
+    await recoveryStep('SESSION_VALIDATE','SESSION_DIRECTORY',()=>secureDirectory(path));
     let record;
     try {
       const metadata = await fs.open(join(path,'session.json'), constants.O_RDONLY | constants.O_NOFOLLOW);
@@ -86,13 +87,13 @@ export async function clearAbandoned(root, stopBrowser) {
       finally { await metadata.close(); }
     } catch(e) {
       // An interrupted initialization cannot have launched Chrome before this file was complete.
-      const browserRecord=await fs.lstat(join(path,'browser.json')).catch(err=>{if(err.code==='ENOENT')return null;throw err;});
+      const browserRecord=await recoveryStep('SESSION_METADATA','BROWSER_METADATA',()=>fs.lstat(join(path,'browser.json')).catch(err=>{if(err.code==='ENOENT')return null;throw err;}));
       requireValue(!browserRecord&&(e.code==='ENOENT'||e instanceof SyntaxError),'INVALID_SESSION_METADATA');
       record={};
     }
     if(record.ownerPid !== null && record.ownerPid !== undefined) {
       requireValue(Number.isSafeInteger(record.ownerPid)&&record.ownerPid>1,'INVALID_SESSION_OWNER');
-      const current = await processIdentity(record.ownerPid);
+      const current = await recoveryStep('SESSION_OWNER_IDENTITY','OWNER_PROCESS',()=>processIdentity(record.ownerPid));
       if (record.ownerIdentity) {
         requireValue(typeof record.ownerIdentity.start === 'string' && record.ownerIdentity.start.length>0 && typeof record.ownerIdentity.boot === 'string' && record.ownerIdentity.boot.length>0 && typeof record.ownerIdentity.command === 'string' && Number.isInteger(record.ownerIdentity.uid), 'INVALID_SESSION_OWNER');
         requireValue(!sameProcess(record.ownerIdentity,current),'ACTIVE_SESSION_OWNER');
@@ -102,8 +103,8 @@ export async function clearAbandoned(root, stopBrowser) {
         requireValue(!legacyWorker(current),'ACTIVE_SESSION_OWNER');
       }
     }
-    await stopBrowser(path); // Must terminate verified owned browser before deleting an active profile.
-    await removeSession(root,path); removed++;
+    await recoveryStep('BROWSER_RECOVER','BROWSER_GROUP',()=>stopBrowser(path)); // Verified exit before deletion.
+    await recoveryStep('SESSION_DELETE','SESSION_TREE',()=>removeSession(root,path)); removed++;
   }
   return removed;
 }

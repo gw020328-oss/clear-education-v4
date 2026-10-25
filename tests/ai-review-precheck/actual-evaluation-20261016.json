@@ -1,0 +1,778 @@
+{
+  "version": "clear-review-actual-evaluation.1",
+  "execution": "ACTUAL",
+  "syntheticOnly": true,
+  "startedAt": "2026-10-16T08:18:53.778Z",
+  "finishedAt": "2026-10-16T08:19:08.836Z",
+  "approval": {
+    "approvedByUser": true,
+    "approvedAt": "2026-10-16",
+    "existingSecureKeyConfigurationConfirmed": true,
+    "maxGenerationCalls": 8,
+    "maxCountCalls": 8,
+    "budgetUsd": "0.05",
+    "automaticRetries": 0
+  },
+  "pins": {
+    "corpus": "72c15f9e18b0f21238c27648dcd428d8b4c98d722ddd6a22dd79d34998f531a1",
+    "fixtures": "1146c0427a6589d39a301529ece0a0730ee72fbfdfd57d7ee6c60e6a3477968f",
+    "requests": "354abe24645e265849e59d26ab56cd08d1497826b9a8e3f52c2bc682c5c62701",
+    "gold": "90af106344e8ffb0055af5c18719997f20ea148ddcc8e05a2d4353ee83cb81b2"
+  },
+  "pricing": {
+    "checkedAt": "2026-10-16",
+    "inputUsdPerMillion": "0.30",
+    "outputUsdPerMillion": "2.50",
+    "source": "https://ai.google.dev/gemini-api/docs/pricing",
+    "countCostConservativelyReservedAsInput": true
+  },
+  "usage": {
+    "execution": "ACTUAL",
+    "countCalls": 8,
+    "generationCalls": 8,
+    "reservedNanoUsd": "32480000",
+    "actualModelCalls": 8
+  },
+  "knownGenerationNanoUsd": "3525700",
+  "tokenUsageComplete": true,
+  "billingInvoiceVerified": false,
+  "attempts": [
+    {
+      "caseId": "RT01",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 231,
+      "tokens": {
+        "promptTokenCount": 231,
+        "candidatesTokenCount": 89,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 320
+      },
+      "rawObservation": {
+        "caseId": "RT01",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "SYNTHETIC REVIEW. Course: ALPHA. Review: Clear explanations and useful practice."
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RT01",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "SYNTHETIC REVIEW. Course: ALPHA. Review: Clear explanations and useful practice."
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "SYNTHETIC REVIEW. Course: ALPHA. Review: Clear explanations and useful practice.",
+            "state": "OBSERVED",
+            "reasons": []
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": "ALPHA",
+            "location": "SYNTHETIC REVIEW. Course: ALPHA. Review: Clear explanations and useful practice."
+          }
+        ],
+        "status": "OBSERVED_ONLY",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": null,
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [],
+        "falseHold": false,
+        "locationStatus": "LOCATION_NOT_GROUNDED",
+        "sourceConflictMatches": true,
+        "status": "NEEDS_IMPROVEMENT"
+      }
+    },
+    {
+      "caseId": "RT02",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 233,
+      "tokens": {
+        "promptTokenCount": 233,
+        "candidatesTokenCount": 109,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 342
+      },
+      "rawObservation": {
+        "caseId": "RT02",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "line 2"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RT02",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "line 2"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "line 2",
+            "state": "OBSERVED",
+            "reasons": []
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": "ALPHA",
+            "location": "line 2"
+          }
+        ],
+        "status": "OBSERVED_ONLY",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": null,
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [],
+        "falseHold": false,
+        "locationStatus": "MATCHED_SYNTHETIC_LAYOUT",
+        "sourceConflictMatches": true,
+        "status": "PASS"
+      }
+    },
+    {
+      "caseId": "RT03",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 230,
+      "tokens": {
+        "promptTokenCount": 230,
+        "candidatesTokenCount": 57,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 287
+      },
+      "rawObservation": {
+        "caseId": "RT03",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": null
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RT03",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": null
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": null,
+            "state": "UNOBSERVED",
+            "reasons": [
+              "NO_VALUE"
+            ]
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": null,
+            "location": null
+          }
+        ],
+        "status": "NEEDS_REVIEW",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": null,
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [
+          "MISSING"
+        ],
+        "falseHold": false,
+        "locationStatus": "NOT_APPLICABLE",
+        "sourceConflictMatches": true,
+        "status": "NEEDS_IMPROVEMENT"
+      }
+    },
+    {
+      "caseId": "RT04",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 242,
+      "tokens": {
+        "promptTokenCount": 242,
+        "candidatesTokenCount": 75,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 317
+      },
+      "rawObservation": {
+        "caseId": "RT04",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "sourceText"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RT04",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "sourceText"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "sourceText",
+            "state": "OBSERVED",
+            "reasons": []
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": "ALPHA",
+            "location": "sourceText"
+          }
+        ],
+        "status": "OBSERVED_ONLY",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": null,
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [],
+        "falseHold": false,
+        "locationStatus": "LOCATION_NOT_GROUNDED",
+        "sourceConflictMatches": true,
+        "status": "NEEDS_IMPROVEMENT"
+      }
+    },
+    {
+      "caseId": "RV01",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 1277,
+      "tokens": {
+        "promptTokenCount": 1277,
+        "candidatesTokenCount": 77,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 1354
+      },
+      "rawObservation": {
+        "caseId": "RV01",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "image row 3"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RV01",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "image row 3"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "ALPHA",
+            "location": "image row 3",
+            "state": "OBSERVED",
+            "reasons": []
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": "ALPHA",
+            "location": "image row 3"
+          }
+        ],
+        "status": "OBSERVED_ONLY",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": null,
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [],
+        "falseHold": false,
+        "locationStatus": "LOCATION_NOT_GROUNDED",
+        "sourceConflictMatches": true,
+        "status": "NEEDS_IMPROVEMENT"
+      }
+    },
+    {
+      "caseId": "RV02",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 1277,
+      "tokens": {
+        "promptTokenCount": 1277,
+        "candidatesTokenCount": 109,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 1386
+      },
+      "rawObservation": {
+        "caseId": "RV02",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": "image row 3"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RV02",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": "image row 3"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": "image row 3",
+            "state": "UNOBSERVED",
+            "reasons": [
+              "NO_VALUE"
+            ]
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": null,
+            "location": "image row 3"
+          }
+        ],
+        "status": "NEEDS_REVIEW",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": null,
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [
+          "UNREADABLE"
+        ],
+        "falseHold": false,
+        "locationStatus": "LOCATION_NOT_GROUNDED",
+        "sourceConflictMatches": true,
+        "status": "NEEDS_IMPROVEMENT"
+      }
+    },
+    {
+      "caseId": "RV03",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 1277,
+      "tokens": {
+        "promptTokenCount": 1277,
+        "candidatesTokenCount": 109,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 1386
+      },
+      "rawObservation": {
+        "caseId": "RV03",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": "image row 2"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RV03",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": "image row 2"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": null,
+            "location": "image row 2",
+            "state": "UNOBSERVED",
+            "reasons": [
+              "NO_VALUE"
+            ]
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": null,
+            "location": "image row 2"
+          }
+        ],
+        "status": "NEEDS_REVIEW",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": null,
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [
+          "UNREADABLE"
+        ],
+        "falseHold": false,
+        "locationStatus": "MATCHED_SYNTHETIC_LAYOUT",
+        "sourceConflictMatches": true,
+        "status": "NEEDS_IMPROVEMENT"
+      }
+    },
+    {
+      "caseId": "RV04",
+      "execution": "ACTUAL",
+      "model": "gemini-3.5-flash-lite",
+      "promptVersion": "clear-review-evaluation-prompt.1",
+      "resolvedModel": "gemini-3.5-flash-lite",
+      "countedTokens": 1277,
+      "tokens": {
+        "promptTokenCount": 1277,
+        "candidatesTokenCount": 60,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 1337
+      },
+      "rawObservation": {
+        "caseId": "RV04",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "BETA",
+            "location": "row 2"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "result": {
+        "caseId": "RV04",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "BETA",
+            "location": "row 2"
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "authenticity": "UNVERIFIED",
+        "completeness": "UNVERIFIED",
+        "author": "UNVERIFIED",
+        "paymentAllowed": false
+      },
+      "fieldReview": {
+        "version": "clear-field-review.1",
+        "fields": [
+          {
+            "fieldId": "course-label",
+            "value": "BETA",
+            "location": "row 2",
+            "state": "OBSERVED",
+            "reasons": []
+          }
+        ],
+        "questions": [],
+        "flags": [],
+        "provenance": [
+          {
+            "fieldId": "course-label",
+            "observedValue": "BETA",
+            "location": "row 2"
+          }
+        ],
+        "status": "OBSERVED_ONLY",
+        "publishable": false,
+        "automaticEligibility": false,
+        "paymentAllowed": false
+      },
+      "paymentAllowed": false,
+      "rawAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "reviewedAssessment": {
+        "status": "PASS",
+        "errors": []
+      },
+      "sourceComparison": {
+        "execution": "FIXTURE",
+        "expected": "CONFLICT",
+        "raw": "CONFLICT",
+        "reviewed": "CONFLICT"
+      },
+      "offlineQuality": {
+        "literalMatches": true,
+        "missingReasonCodes": [],
+        "falseHold": false,
+        "locationStatus": "MATCHED_SYNTHETIC_LAYOUT",
+        "sourceConflictMatches": true,
+        "status": "PASS"
+      }
+    }
+  ],
+  "paymentAllowed": false,
+  "limitations": [
+    "DEVELOPMENT_CORPUS_ONLY",
+    "MOODLE_API_NOT_TESTED",
+    "PRODUCT_C2_NOT_CONNECTED",
+    "IMAGE_NOT_DECODED",
+    "LITERAL_ASSESSMENT_NOT_FULL_QUALITY_PASS"
+  ]
+}

@@ -187,6 +187,8 @@
 
 아래 날짜별 Draft·후속·열린 PR·차단 표기는 당시 스냅샷이다. 현재 병합 여부와 구현 범위는 위 확인 절을 우선하고 실제 기능 사용은 각 최신 계약의 한계를 확인한다.
 
+2026-10-16 후기 연결 계약 Draft: [Moodle 후기→C2/AI 공통 계약](current/MOODLE_REVIEW_C2_CONTRACT.ko.md)은 develop4756589와 미병합 PR71/72를 대조한 제안이다. registry·별도 사실 receipt/본문 지문·C2 revision/run 결합·원자 수락/원문 수명 후속을 정의한다. 제품 HTTP/DB 연결·LOCAL 수락·합성-only 제한 해제는 없으며 신규400/500 제외·grant/outbox HOLD·독립청구 NO_GO를 유지한다.
+
 2026-10-15 C2 최종 수명 보완24e75f2: pending upload도logout/C1기준변경에서중단, 동일ACK재생은보존. 관련309/309(C2 HTTP21/TLS2·공통DELETE1 포함)·기존dev33·TLS/의존성/191개보존 PASS. PR63 Draft최종headCI는후속기록정본, 자동병합금지.
 
 2026-10-15 C2 최신: PR63 Draft, 구현0a9945b·시작정리/fixture04efb92. 합성문서 exact C1/C2확인·서버Binding/실bytes·검토/보완·GET/재시작·메모리수명 연결. 관련306·기존dev33·추가시작정리1·TLS데모/의존성/191개보존 PASS, 최종headCI는PR63. PR61 추가pushMac은cancelled/원인UNKNOWN, 재실행0. full decode/실동의/운영개인자료·Evidence/M2/재원/실화면 미완료. [단일 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md). 아래는 이전 상태 기록이다.

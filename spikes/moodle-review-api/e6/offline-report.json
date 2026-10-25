@@ -1,0 +1,16 @@
+{
+  "date":"2026-10-18",
+  "kind":"OFFLINE_SYNTHETIC_SOURCE_LEASE_AND_CONTRACT_TESTS",
+  "fixedE0Commit":"67b6a0731f97df98fda7820ab24ed85a57796a83",
+  "e0MergeCommit":"8fe2418",
+  "newSourceSessionTests":27,
+  "previousRelatedTests":211,
+  "e0ContractTests":12,
+  "total":250,
+  "passed":250,
+  "externalNetworkTripwire":true,
+  "rawRestoreFromMetadataSupported":false,
+  "e1SensitiveConsumerAccepted":false,
+  "testActivationImplemented":false,
+  "productionEnabled":false
+}

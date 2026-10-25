@@ -1,0 +1,160 @@
+{
+  "version": "clear-e6-paid-eight-actual-result.1",
+  "occurredOn": "2026-10-19",
+  "recordedAt": "2026-10-19T05:07:27.231Z",
+  "execution": "ACTUAL",
+  "status": "UNKNOWN_STOPPED",
+  "executedCodeHead": "9aa155ce5c23a9bc4e8c81a191b57491362f0a05",
+  "pins": {
+    "codeHead": "9aa155ce5c23a9bc4e8c81a191b57491362f0a05",
+    "planHash": "0xf1d965041da451b13252e3e7b9b3d1255e12a8d7e10170361bbe3eea7ba879d9",
+    "corpusSha256": "1a304a596a15fedcda846ed721b87d0a6daa418fa019ecebe2f55443e7a8b951",
+    "goldSha256": "4f13f00b884d9360e6526fac2e80147466bfd17c8410509a18f6f72cd825e83a",
+    "requestsSha256": "9cf184cbecacebf7e3fd8aef52b6b0fb172eb728da96b1c0631cd944692d9685"
+  },
+  "approvalHash": "0d93ca978c697c079eab842ca68e2d35f16b05d28c36db1848e36be258d9b2a9",
+  "keySourceId": "clear-e6-existing-server-gemini-env.1",
+  "summarySha256": "a5d7958978799bb4b41d7f497bc53a3ffec73a6c326084e21402c605ec8b1572",
+  "fetchObservationSha256": "b9529ad497905a2ac5d7177bb4544a6f406cd2c6cef044e683265d979d30d257",
+  "callCounts": {
+    "preDispatchGenerationReservations": 1,
+    "actualFetchInvocations": 1,
+    "http2xxResponses": 1,
+    "httpNon2xxResponses": 0,
+    "networkErrors": 0,
+    "pendingRequests": 0,
+    "unapprovedFetchBlocked": 0,
+    "countTokensCalls": 0,
+    "modelListCalls": 0,
+    "retries": 0,
+    "fallbacks": 0
+  },
+  "stop": {
+    "caseId": "PY01",
+    "code": "E6_PAID8_USAGE_UNKNOWN",
+    "missingUsageFields": [
+      "thoughtsTokenCount"
+    ]
+  },
+  "attempts": [
+    {
+      "caseId": "PY01",
+      "status": "UNKNOWN_STOPPED",
+      "dispatchReserved": true,
+      "code": "E6_PAID8_USAGE_UNKNOWN",
+      "tokens": {
+        "promptTokenCount": 314,
+        "candidatesTokenCount": 135,
+        "thoughtsTokenCount": null,
+        "totalTokenCount": 449
+      },
+      "tokenMeasurement": "N/A_INCOMPLETE_USAGE"
+    },
+    {
+      "caseId": "PY02",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY03",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY04",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY05",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY06",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY07",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    },
+    {
+      "caseId": "PY08",
+      "status": "NOT_RUN",
+      "dispatchReserved": false,
+      "code": null,
+      "tokens": null,
+      "tokenMeasurement": null
+    }
+  ],
+  "cost": {
+    "inputUsdPerMillion": "0.30",
+    "outputIncludingThinkingUsdPerMillion": "2.50",
+    "pricingSource": "https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite",
+    "priceReviewedOn": "2026-10-19",
+    "knownPromptAndCandidatePortionNanoUsd": "431700",
+    "knownPromptAndCandidatePortionUsd": "0.0004317",
+    "completeIncludingThinkingEstimateNanoUsd": null,
+    "actualInvoiceUsd": null,
+    "invoiceVerified": false,
+    "reason": "MISSING_THOUGHTS_TOKEN_COUNT_NOT_ASSUMED_ZERO",
+    "preRunEightCaseScenarioUsd": "0.02768",
+    "providerHardCashCapVerified": false
+  },
+  "quality": {
+    "httpSuccessIsQualityPass": false,
+    "scorableCases": 0,
+    "plannedCases": 8,
+    "scoredTopics": 0,
+    "plannedTopics": 24,
+    "groundingAssessed": 0,
+    "plannedPresentEvidenceTopics": 21,
+    "assessedNormalControls": 0,
+    "plannedNormalControls": 5,
+    "falseHolds": null,
+    "falseHoldRate": null,
+    "topicAccuracy": null,
+    "modelQuality": "N/A_NOT_SCORED_USAGE_GUARD_STOPPED_BEFORE_CONTENT_PARSE"
+  },
+  "notRunCaseIds": [
+    "PY02",
+    "PY03",
+    "PY04",
+    "PY05",
+    "PY06",
+    "PY07",
+    "PY08"
+  ],
+  "privacy": {
+    "publicSyntheticPythonTextOnly": true,
+    "actualMoodleRecords": 0,
+    "actualHackerRankRecords": 0,
+    "rawResponseRetained": false,
+    "sourceOrGoldSentInReport": false,
+    "keyOrProjectIdRetained": false,
+    "httpRawRetained": false
+  },
+  "usableForAcceptance": false,
+  "paymentAuthority": false,
+  "paymentAllowed": false
+}

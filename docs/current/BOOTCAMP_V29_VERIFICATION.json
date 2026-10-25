@@ -1,0 +1,191 @@
+{
+  "version": "clear-bootcamp-v29-verification.1",
+  "date": "2026-10-25",
+  "baselineHead": "cc9452a21aebe91fbf0b966341b11f9f5a0029dd",
+  "sourceCandidateHead": "2730dcc43321facd9c58c0cfbf142dd34b87a1e6",
+  "scope": "ATOMIC_EXECUTION_METADATA_AND_ORIGINAL_DEADLINE_CANONICAL_CLOCK_READINESS",
+  "baselineCi": {
+    "success": 9,
+    "failure": 1,
+    "e5bTests": 41,
+    "passed": 38,
+    "failed": 3,
+    "run": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/40169488871"
+  },
+  "causes": [
+    {
+      "kind": "PRODUCT_METADATA_ATOMICITY",
+      "actions": [
+        "B_PREPARE",
+        "B_AUTHORIZE_COMMIT",
+        "B_ADOPT_COMMIT"
+      ],
+      "failure": "BC_E5_CLOCK_CHANGED",
+      "reason": "A single provisional metadata write crossed a wall-clock second while original caps and authority were valid. Each affected savepoint needs current final validation, not another write or native operation."
+    },
+    {
+      "kind": "FRESH_TEST_ENVIRONMENT_CLOCK_POLICY",
+      "failure": [
+        "AUTHORIZATION_TIME",
+        "PUBLICATION"
+      ],
+      "reason": "Default dev.period=0 mines only pending transactions; canonical head time can lag original wall-clock publication/issuedAt indefinitely during reads. The same environment constructor serves the normal runner, so a fixture-only wait cannot fix it. Fresh normal environments now explicitly use one-second empty-block mining and wait by canonical reads within original caps."
+    }
+  ],
+  "freshNumericEvidence": {
+    "authorizationTime": {
+      "wallTime": 1792912014,
+      "blockTime": 1792912013,
+      "issuedAt": 1792912014,
+      "publishedAt": 1792912010,
+      "expiresAt": 1792912600,
+      "sourceUntil": 1792915606,
+      "reviewUntil": 1792912610,
+      "rpcCode": 3,
+      "reason": "AUTHORIZATION_TIME"
+    },
+    "publication": {
+      "wallTime": 1792912018,
+      "blockTime": 1792912017,
+      "publishedAt": 1792912018,
+      "allocatedAt": 1792912017,
+      "targetRecordedAt": 1792912016,
+      "sourceUntil": 1792912254,
+      "rpcCode": 3,
+      "reason": "PUBLICATION"
+    },
+    "adoptionRed": {
+      "beforeUnixMs": 1792912014154,
+      "afterUnixMs": 1792912015006,
+      "failureAtUnixMs": 1792912015009,
+      "authorityUntil": 1792912073,
+      "businessUntil": 1792912132,
+      "sourceUntil": 1792912247,
+      "reviewUntil": 1792912611,
+      "messageUntil": 1792912132,
+      "error": "BC_E5_CLOCK_CHANGED",
+      "included": 5,
+      "sealedUnsent": 1,
+      "broadcasts": 5,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1
+    },
+    "historicalCiNumericTupleRetained": false,
+    "periodicTime": {
+      "beforeTime": 1792912313,
+      "afterTime": 1792912315,
+      "extraTransactions": 0,
+      "runtimeHashUnchangedAfterRestart": true
+    }
+  },
+  "changes": {
+    "metadataWriteExecutions": 1,
+    "maximumReadOnlyFinalValidationRechecks": 1,
+    "sameSavepointAndOriginalTargetBindingCaps": true,
+    "finalCurrentSourceCasServiceLeaseAndFenceRequired": true,
+    "singleTicketConsumptionAndIssuerAndNativeAdoption": true,
+    "secondClockConflictRollsBack": true,
+    "freshNormalEnvironmentBlockPeriodSeconds": 1,
+    "controlledLogicalFixturePeriodSeconds": 0,
+    "existingEnvironmentsMigrated": false,
+    "miningPolicyBoundToOwnerRecordContainerAndRuntimeHash": true,
+    "canonicalWaitMethods": [
+      "startReview",
+      "prepareUnsigned"
+    ],
+    "canonicalWaitUsesOriginalAuthoritySourceReviewMessageExpiry": true,
+    "canonicalWaitRechecksOriginalExpectedCasAfterWaiting": true,
+    "stalledRpcBoundedByOriginalExpiry": true,
+    "clockFrozenOrBackdated": false,
+    "ttlExtended": false,
+    "hiddenTransactionOrResignOrResendOrReconsent": false,
+    "frontendApiDtoOrBrowserBytesChanged": false
+  },
+  "redGreen": {
+    "focusedBoundaryAndWaitPassed": 26,
+    "apiStoreExecutionPassed": 633,
+    "browserManifestPassed": 1,
+    "compatibilityUniquePassed": 114,
+    "compatibilityNote": "Initial historical v27 assertion used live changed bytes; corrected it to exact preserved baseline and reran that single assertion successfully. Other 113 passed.",
+    "e5Native": 46,
+    "e5bWallClock": 10,
+    "e5bOther": 33
+  },
+  "wallClock": {
+    "source": "fresh isolated Geth; synthetic actors/source/model; actual Date.now and asynchronous RPC",
+    "sourceSeconds": 240,
+    "positiveScenarios": [
+      "ordinary asynchronous RPC",
+      "ACCEPT BEFORE_DISPATCH rollover",
+      "ACCEPT COMMIT rollover",
+      "lost ACCEPT response",
+      "PREPARE AUTHORIZE rollover",
+      "both explicit synthetic consent rollovers",
+      "ACCEPT adoption metadata rollover"
+    ],
+    "eachPositive": {
+      "nativeIncluded": 6,
+      "broadcasts": 6,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1,
+      "canonicalClaimAmountAtoms": "100000000",
+      "symbol": "TEST",
+      "duplicateRejected": true
+    },
+    "negativeScenarios": [
+      "original expiry with actual elapsed time",
+      "service revocation before ACCEPT send",
+      "source change before ACCEPT send"
+    ],
+    "eachNegative": {
+      "targetReached": true,
+      "included": 5,
+      "sealedUnsent": 1,
+      "broadcasts": 5,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1
+    }
+  },
+  "review": {
+    "method": "Local substantive review of metadata savepoints, original immutable caps, service/lease/fence CAS, canonical read waiting and container/runtime ownership; no new reviewer session.",
+    "contractGuardsAndNonceAndDuplicateGuardsChanged": false,
+    "originalSourceReviewAndAuthorityCapsRevalidated": true,
+    "expiryRevocationSourceChangeAndReversalCounterexamples": true
+  },
+  "preservation": {
+    "existingFilesMatched": 648,
+    "priorVersionedPinsAndReportsChanged": false,
+    "unacceptedInvestigationArchiveChanged": false,
+    "oldActualRunDbUsedSpentApprovalReusedOrReset": false
+  },
+  "intake": "specs/bootcamp/hackathon-test-memory-source-intake-v29.json",
+  "browserAssets": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V21.json",
+  "actualHistoricalRun": {
+    "run": "r20",
+    "head": "f38ae8bd44c9da2e27f6a56650ced0f7bffe9aba",
+    "claimAmountAtoms": "100000000",
+    "status": "INCLUDED",
+    "finalized": false,
+    "finishedAndStopped": true,
+    "reexecutedByV29": false
+  },
+  "limits": {
+    "newActualLoginProofPaidAiUserSignatureOrConsent": false,
+    "normalHostOrCaStarted": false,
+    "remoteMoodle": false,
+    "windowsActual": false,
+    "productFrontendComplete": false,
+    "productionDepositPolicyFinal": false
+  },
+  "integration": "Final guard HEAD all-CI result and merge SHA are recorded separately on PR102 and Issue106; this candidate record does not claim pending CI or merge completed.",
+  "references": [
+    "https://geth.ethereum.org/docs/developers/dapp-developer/dev-mode",
+    "https://geth.ethereum.org/docs/fundamentals/command-line-options"
+  ],
+  "checks": {
+    "frozenE4E5Preservation": "PASS",
+    "v29ExactSourcePins": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS"
+  }
+}

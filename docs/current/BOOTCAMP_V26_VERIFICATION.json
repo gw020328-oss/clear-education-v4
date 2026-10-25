@@ -1,0 +1,182 @@
+{
+  "version": "clear-bootcamp-v26-verification.1",
+  "date": "2026-10-25",
+  "baselineHead": "851c9e12a139295d337f347d49d1f4aac90c6ce7",
+  "sourceCandidateHead": "b49c9485894a50c21ae10a5a8997b1993f4a0c51",
+  "scope": "CLOCK_ONLY_EXECUTION_PLAN_READ_RECHECK",
+  "cause": {
+    "confirmedThrowSite": "src/bootcamp/execution-operations.mjs:withUser final view check (baseline line 45); PLAN has no other BC_VIEW_STALE throw in its call path",
+    "confirmedDefect": "An authenticated read-only plan spanning an ordinary forward second rejects even when application revision, decision, source, ledger and command inputs remain unchanged. normal-chain invokes plan directly, unlike existing readNormalView projection reads.",
+    "r19SafeEvidence": {
+      "operation": "ALLOCATE",
+      "step": "PLAN",
+      "code": "BC_VIEW_STALE",
+      "atUnixMs": 1792899820008,
+      "databaseClockFloor": 1792899820,
+      "applicationRevision": 9,
+      "decisionRevision": 9,
+      "conditionsStatus": "MET",
+      "validEvidenceHeads": 4,
+      "registrationTargetRevision": 9,
+      "registrationSourceCutoff": 1792900014,
+      "remainingSourceMs": 193992,
+      "includedStages": [
+        "REGISTER"
+      ],
+      "allocateEnvelopePresent": false,
+      "consents": 0,
+      "claims": 0
+    },
+    "historicalInference": "A forward wall-clock boundary is consistent with all retained r19 evidence and reproduced the exact stop pattern. The failed transaction start/final tick values were not retained; transient clock reversal cannot be retrospectively excluded. Do not claim the historical comparison tuple or a shared r15/r17/r18 root was proven.",
+    "userDelayOrExpiredLeaseEstablished": false,
+    "concurrentReadAnalysis": "Store transactions and plan/command/refresh callbacks are synchronous; SQLite writer transaction excludes another DB writer. Async UI reads interleave at network awaits, not inside the synchronous plan transaction. Source invalidations commit after rollback; r19 still has four valid heads and original MET revision."
+  },
+  "change": {
+    "runtimeFiles": [
+      "src/bootcamp/execution-operations.mjs"
+    ],
+    "maximumClockOnlyRechecks": 1,
+    "optIn": "execution.plan only",
+    "checks": [
+      "forward clock without reversal",
+      "same application revision and decision ID",
+      "unchanged ledger sequence before and after projection and rollback",
+      "same original authenticated wallet and role across attempts",
+      "same original operationId/expectedChainVersion/preparationId",
+      "fresh authentication, scope, source window and command reconstruction on second attempt",
+      "second conflict throws",
+      "enqueue retains its original CAS and no retry"
+    ],
+    "additionalPlanCheck": "Current MET and currentSourceWindow are checked before returning a plan; enqueue and native validation remain independently required.",
+    "ttlCapsCasSigningSealingSendingAndPaidAiChanged": false
+  },
+  "reproduction": {
+    "baselineNativeRed": "Real wall-clock crosses the second at ALLOCATE plan second store tick; actual normal payment/store/native modules stop after REGISTER with BC_VIEW_STALE, broadcasts1/transactionSignatures1/paymentSignatures0.",
+    "wallClockGreen": "Same real-clock injection, 240s source grants, no test-only block clock alignment, concurrent participant/application and operator/procedure reads. One fresh read succeeds with original chain version1; test deliberately stops before ALLOCATE enqueue.",
+    "controlledFullPayment": "Separate deterministic canonical-block clock with a one-time +1 plan rollover (not a persistent clock offset), 240s source grants, real module paths and two explicit synthetic authenticated consent records.",
+    "completedStages": [
+      "REGISTER",
+      "ALLOCATE",
+      "START_REVIEW",
+      "BIND_CONSENTS",
+      "PREPARE",
+      "ACCEPT",
+      "CLAIM"
+    ],
+    "canonicalClaimSettlement": true,
+    "recipientIncreaseAtoms": "100000000",
+    "duplicateClaimRejected": true,
+    "bridgeBroadcasts": 6,
+    "transactionSignatures": 6,
+    "paymentSignatures": 1,
+    "includedNativeEnvelopes": 6,
+    "syntheticSourceAndModelOnly": true,
+    "actualExternalLoginProofPaidProviderOrUserWalletUsed": false
+  },
+  "negativeCoverage": [
+    "second clock conflict",
+    "source changed during plan",
+    "source expiry during plan",
+    "expiry during rollback",
+    "exact source cutoff",
+    "clock reversal",
+    "logout",
+    "wallet context change",
+    "enqueue stale revision",
+    "enqueue changed decision hash",
+    "enqueue clock conflict not retried",
+    "native ALLOCATE source-change/expiry/logout retain only REGISTER and no additional signature/send"
+  ],
+  "unresolvedObservations": [
+    {
+      "attempt": "uncontrolled full wall-clock after PLAN fix",
+      "failure": "ACCEPT / DISPATCH / BEFORE_DISPATCH BC_E5_CLOCK_CHANGED -> E5B_CONTROLLER_REJECTED",
+      "metrics": {
+        "broadcasts": 5,
+        "transactionSignatures": 6,
+        "paymentSignatures": 1
+      },
+      "native": "5 INCLUDED + 1 SEALED",
+      "action": "Preserved as limitation; no retry or relaxation of pre-send currentness. Full wall-clock end-to-end readiness is not established."
+    },
+    {
+      "attempt": "initial controlled full-payment fixture",
+      "failure": "START_REVIEW / SEAL / AFTER_SIGN E5_RPC_REJECTED",
+      "action": "The injection initially kept an extra +1 offset on every later canonical-block refresh, beyond the requested single rollover. Changed test-only injection to a one-time clock advance; original logical clock catches up from later canonical blocks. Underlying RPC rejection reason was not captured; no production change or send retry."
+    }
+  ],
+  "focusedVerification": {
+    "unit": 10,
+    "native": 5,
+    "passed": 15
+  },
+  "requiredRegression": {
+    "apiAndStore": {
+      "cases": 570,
+      "passed": 570,
+      "networkGuard": true
+    },
+    "compatibilityMemoryGate": {
+      "cases": 101,
+      "passed": 101
+    },
+    "nativeE5B": {
+      "cases": 32,
+      "passed": 32
+    },
+    "uniqueTotalPassed": 703,
+    "e5Preservation": "PASS",
+    "e5bPinsAndDeclarationSyntax": "PASS_NOT_FULL_TSC",
+    "workspace": "PASS",
+    "dependencies": "PASS"
+  },
+  "pins": {
+    "candidate": "b49c9485894a50c21ae10a5a8997b1993f4a0c51",
+    "intakeSha256": "f6bcbc3700bd6b7d8172da5afeb3786e3343a465c810df11f59d9ce3b700deb8",
+    "sourceCount": 171,
+    "changed": [
+      "src/bootcamp/execution-operations.mjs"
+    ],
+    "additions": {},
+    "helperSha256": "d43dad4591f79a3653c80c170779f1f594601fb82d57c2257ec5a13c5d8796f6",
+    "guardSha256": "c20da984120cb5be9c38d6166e07cb57e9ecc34352737b5a28902f99e721ec96",
+    "manifestSha256": "b809c8ff51cc22031e02cf6d6768e31053820cbc3faf01e4458e4de207baeb8e",
+    "memoryHarnessSha256": "a5f1328e789a93552f140340156de1b5a53cd59c7a57f76bb0607281ea012518"
+  },
+  "preservation": {
+    "files": 328,
+    "manifest": "/tmp/clear-r19-preservation-after.json",
+    "oldUsedSpentApprovalJournalSourceAndDatabasesReopenedForExecution": false,
+    "oldBytesChanged": false
+  },
+  "boundaries": {
+    "newActualHostOrCaOrLoginOrProofOrPaidAiOrUserConsentOrPayment": false,
+    "depositPolicy": "UNRESOLVED_UNCHANGED",
+    "pr": 102,
+    "draft": true,
+    "merge": false
+  },
+  "nextActualTestRequirements": [
+    "HQ reviews remaining pre-dispatch wall-clock failure before scheduling another paid run.",
+    "New separately authorized host/run and fresh exact approvals; never reuse r19 spent inputs.",
+    "CA trust, own login, source/MetaMask signatures, exact paid AI approval and both payment consents remain direct human actions."
+  ],
+  "finalHeadCi": "VERIFY_AFTER_PUSH; safe local var/bootcamp-verification/v26-final-ci.json",
+  "testFingerprints": {
+    "tests/bootcamp-execution/plan-clock.test.mjs": "4fb0e4ffa39c145f1224a41437e329210d8c2ce0dc05650483d8bd110fae204a",
+    "tests/hackathon-test-vault/e5b/normal-plan-clock.test.mjs": "17d892e0ffe2d86bec5b555cbff6166ad79c88f38000e25e249cc7b05cb02690",
+    "tests/hackathon-test-vault/e5b/normal-payment-fixture.mjs": "f2616be71b11d7cfe603cb1c688b45595f12c3fbea943749c55147e126479ad8"
+  },
+  "localEvidenceSha256": {
+    "clear-v26-red.tap": "60c089bffd08cd3dde8a6ebe6db4bbb96fac207d4b71124fe841f7d1a2f7adae",
+    "clear-v26-unit-red.tap": "2df54a19893f72e92fa0786fe03ed6a48fd1e62ff7dfb6969b5eea6423ee1a18",
+    "clear-v26-unit-final.tap": "3a5bb66e93ceba309939f0fde75ae3af329f119b2f4f0f2a1313fc4f17d20078",
+    "clear-v26-green.tap": "f3808b45ac8e0a53527b92426d3ae90294b4540734a926de7a5c8fe008a3e14e",
+    "clear-v26-focused-native.tap": "4e6d0a44a6c51ec72b6853060a416f8256b5c5ca3a24e4a6ef4d9328f9a5210a",
+    "clear-v26-focused-native-final.tap": "054aa918b6de8f007ce4bfc7306a7dc39fc31951658d69e30a1bac5fe38358db",
+    "clear-v26-api.tap": "5d923ac3eec6fa9f53b23e0b713e3b41ed2f7a2f6cafcc4d02979402a92596bd",
+    "clear-v26-compat.tap": "eea37f36b551604c48bb84b63194ae9a10f9a0584c4eb4b35b86953ab208d462",
+    "clear-v26-native.tap": "9f607d35acb03965cf98dbb4cb0451122144083608a0356bf25fe4c0f5994b1e",
+    "clear-v26-pins.log": "dd851402581eab509110bfce9447839a4d1c10762622f371a571c34bf18adc0d"
+  }
+}

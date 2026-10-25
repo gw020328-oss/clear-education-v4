@@ -1,0 +1,236 @@
+{
+  "version": "clear-bootcamp-v25-verification.1",
+  "date": "2026-10-25",
+  "baselineHead": "c1e5ee2ccb3eb1ae6f9107bd3e5618cd1ee7eeeb",
+  "sourceCandidateHead": "c48ec5b08e821ffaa08034c8dafe56c2b214df60",
+  "scope": "BOUNDED_FIRST_INTERNAL_PAYMENT_FAILURE_DIAGNOSTICS",
+  "confirmedDefect": {
+    "symptom": "r18 report.executionDiagnostics was empty",
+    "cause": "The old connection logged only authorizeSync/readCurrentSync/commitCurrentSync callbacks. API transactions outside them and native/normal-path failures bypassed that log; source normalization retained only UNKNOWN_ERROR/COLLECTION_FAILED.",
+    "redGreen": "Three controlled REGISTER-adoption, ALLOCATE-binding and post-send BIND failures did not persist paymentFailure on baseline; new report preserves first safe internal phase/code/kind/cause and original failure state.",
+    "actualR15R17R18CommonRootCauseProven": false
+  },
+  "actualStoppedEvidence": {
+    "r15": {
+      "stage": "BIND_CONSENTS",
+      "native": "SEND_STARTED",
+      "twoConsents": true,
+      "preciseOriginalExceptionRetained": false
+    },
+    "r17": {
+      "stage": "ALLOCATE",
+      "included": [
+        "REGISTER"
+      ],
+      "allocateEnvelope": "ABSENT",
+      "twoConsents": false,
+      "preciseOriginalExceptionRetained": false
+    },
+    "r18": {
+      "stage": "REGISTER",
+      "native": "SEALED",
+      "included": [],
+      "twoConsents": false,
+      "preciseOriginalExceptionRetained": false
+    },
+    "reopenedResentOrMutated": false,
+    "balanceMeasured": false
+  },
+  "changes": {
+    "runtimeFiles": [
+      "src/bootcamp/execution-api-bridge.mjs",
+      "src/bootcamp/execution-development.mjs",
+      "src/bootcamp/execution-e4b-ports.mjs",
+      "src/hackathon-test-vault/e5/envelope-service.mjs",
+      "src/hackathon-test-vault/e5b/bridge.mjs",
+      "src/hackathon-test-vault/e5b/service.mjs",
+      "tools/bootcamp/live-context.mjs",
+      "tools/bootcamp/normal-chain.mjs",
+      "src/bootcamp/execution-diagnostics.mjs"
+    ],
+    "normalOperations": [
+      "REGISTER",
+      "ALLOCATE",
+      "START_REVIEW",
+      "BIND_CONSENTS",
+      "PREPARE",
+      "ACCEPT",
+      "CLAIM"
+    ],
+    "diagnostics": [
+      "fixed operation and step",
+      "fixed native or API phase and callback subphase",
+      "exact allowlisted code and native error kind",
+      "up to three own-property sanitized causes",
+      "wall and monotonic timing",
+      "send outcome UNKNOWN for broadcast error",
+      "numeric counters and aggregate envelope states"
+    ],
+    "maximumFirstEvents": 16,
+    "arbitraryMessagesStacksGettersRequestsCalldataKeysNoncesSignaturesRecorded": false,
+    "originalThrownObjectPreservedByNewCatches": true,
+    "existingNativeSanitizationRetained": true,
+    "diagnosticWriteFailureCannotReplaceOriginal": true,
+    "internalReadbackFailureBeforeUnknownRecorded": true,
+    "successfulSendFollowedByRecoveryUsesRecoveryPhase": true
+  },
+  "offlineReproduction": {
+    "newOwnedIsolatedGeth": true,
+    "inventedActorsEvidenceAndModelFactsOnly": true,
+    "realStoreEvaluatorProcedureNativeBridgeAndPrivateBrands": true,
+    "realNormalPaymentEntry": "tools/bootcamp/normal-chain.mjs:executeNormalPayment",
+    "syntheticSourceMode": "SYNTHETIC_TEST_SOURCE",
+    "explicitConsentCallback": "waitForNormalReviewConsents -> waitForExplicitConsents -> two authenticated synthetic recordReviewConsent commands",
+    "automaticConsentBranchUsed": false,
+    "completedOperations": [
+      "REGISTER",
+      "ALLOCATE",
+      "START_REVIEW",
+      "BIND_CONSENTS",
+      "PREPARE",
+      "ACCEPT",
+      "CLAIM"
+    ],
+    "balanceIncreaseAtoms": "100000000",
+    "duplicateClaimRejected": true,
+    "bridgeBroadcasts": 6,
+    "transactionSignatures": 6,
+    "paymentSignatures": 1,
+    "includedEnvelopes": 6,
+    "faults": [
+      {
+        "point": "ALLOCATE / e5b-after-binding",
+        "firstPhase": "B_PREPARE",
+        "originalIdentityPreserved": true,
+        "currentEnvelope": "ABSENT",
+        "priorBroadcasts": 1
+      },
+      {
+        "point": "REGISTER / e5b-after-adoption",
+        "firstPhase": "B_ADOPT_COMMIT",
+        "originalIdentityPreserved": true,
+        "envelope": "SEALED",
+        "broadcasts": 0
+      },
+      {
+        "point": "BIND / RECOVER after send",
+        "originalKind": "TYPE_ERROR",
+        "arbitraryTextRedacted": true,
+        "safeCause": "E5_LEASE_EXPIRED",
+        "envelope": "SEND_STARTED",
+        "broadcasts": 4
+      },
+      {
+        "point": "RPC response lost after actual synthetic broadcast",
+        "firstPhase": "BROADCAST",
+        "code": "ECONNRESET",
+        "outcome": "UNKNOWN",
+        "canonicalReadbackResolved": true,
+        "additionalBroadcast": false,
+        "paymentCompleted": true
+      },
+      {
+        "point": "awaited BEFORE_DISPATCH read with clock advanced 61 seconds",
+        "code": "BC_E5_FENCED",
+        "envelope": "SEALED",
+        "broadcasts": 0,
+        "paymentSignatures": 0
+      },
+      {
+        "point": "canonical receipt read inside existing native UNKNOWN fallback",
+        "firstPhase": "RECOVER_READBACK",
+        "code": "E5_NONCANONICAL",
+        "injectedFailures": 1,
+        "existingLaterCanonicalReadbackResolved": true,
+        "additionalBroadcast": false,
+        "paymentCompleted": true
+      }
+    ],
+    "concurrentReads": "Authenticated participant application and operator procedure reads interleave with awaits every 250 ms. Unavailable cached canonical snapshots fail closed. No production TTL or refresh/retry policy changes.",
+    "remainingDifferences": [
+      "Actual managed source host, HTTPS/browser lifecycle, official proof producer and paid AI are not invoked; their existing offline orchestration/approval tests run under the network guard.",
+      "Synthetic source grants use auth/query 600 seconds and raw 300 seconds; they do not establish actual 240-second source timing.",
+      "The final fault fixture advances a monotonic logical clock from canonical block timestamps and explicit injections, with one test-only block read before the real connection.refresh. It does not advance authority time merely because CI scheduling is slow. Real wall-clock crossings, idle-chain time alignment and source/network delays remain unproven.",
+      "Fault injection establishes diagnostic coverage and fail-closed behavior, not the cause of historical actual failures."
+    ],
+    "fixtureSha256": "5f5ecc6fc39361e81a2cf1a87ddc3bd9c7398b2701fcc763f04d4feabcc0f20a"
+  },
+  "unchanged": [
+    "v24 exact one-recheck RECOVER/RECOVER_FINAL_SYNC rule",
+    "issuer and signing/sealing/dispatch behavior",
+    "source expiry/freshness/CAS/caps",
+    "exact AI approval and single consumption",
+    "two current consents",
+    "recipient and 100 TEST",
+    "duplicate/reuse prevention and deposit policy",
+    "SDK/crypto/transport/Windows/frontend assets"
+  ],
+  "focusedVerification": {
+    "cases": 11,
+    "passed": 11,
+    "baselineDiagnosticGapFailures": 3
+  },
+  "requiredRegression": {
+    "apiAndStore": {
+      "cases": 559,
+      "passed": 559,
+      "networkGuard": true
+    },
+    "compatibilityMemoryGate": {
+      "cases": 97,
+      "passed": 97
+    },
+    "nativeE5B": {
+      "cases": 27,
+      "passed": 27
+    },
+    "e5Preservation": "PASS",
+    "e5bPinsAndDeclarationSyntax": "PASS_NOT_FULL_TSC",
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "uniqueTotalPassed": 683
+  },
+  "pins": {
+    "candidate": "c48ec5b08e821ffaa08034c8dafe56c2b214df60",
+    "intakeSha256": "8c4b1dcca74ca3a350a08268d705e0c8332e849bfbb014c997a926d192398a16",
+    "sourceCount": 171,
+    "changed": [
+      "src/bootcamp/execution-api-bridge.mjs",
+      "src/bootcamp/execution-development.mjs",
+      "src/bootcamp/execution-e4b-ports.mjs",
+      "src/hackathon-test-vault/e5/envelope-service.mjs",
+      "src/hackathon-test-vault/e5b/bridge.mjs",
+      "src/hackathon-test-vault/e5b/service.mjs",
+      "tools/bootcamp/live-context.mjs",
+      "tools/bootcamp/normal-chain.mjs"
+    ],
+    "additions": {
+      "src/bootcamp/execution-diagnostics.mjs": "a5e27acd0ff8e87bdd3e93b2d4251b29ec1e8a14736ad88f74f00e46bb09d311"
+    },
+    "helperSha256": "bf036774d2b655b133d8c9857744a123297779d6ee7cc060e4629da676fb6f53",
+    "guardSha256": "5d2378f839616737bf084c8bf45910b99e38ac6767ca82bc9240fddf12d53557",
+    "manifestSha256": "0d6dfc4e3aac5311e42428c11a7262f09026f6c4361bca427567ee8146b25e6d",
+    "memoryHarnessSha256": "e4469c92d6e5f12b87b1e9bf269ccb0d40e9ee76ae21f35f44037a73ada14da9"
+  },
+  "preservedEvidenceFiles": 294,
+  "newActualHostCaLoginProofPaidAiRealWalletSignatureOrPayment": false,
+  "mergePerformed": false,
+  "finalHeadCi": "VERIFY_AFTER_PUSH; ignored var/bootcamp-verification/v25-final-ci.json",
+  "nextStep": "REPORT_FINAL_CI_AND_STOP_NO_NEW_ACTUAL_RETEST",
+  "ciPredecessorFailures": {
+    "head": "c08b8f473478f6945b90c6c7bd54a170ced78760",
+    "nativeRun": 40156043033,
+    "observedBeforeIntendedFaults": [
+      "E5_RPC_REJECTED at START_REVIEW seal",
+      "BC_E3_REGISTERED_SNAPSHOT_EXPIRED"
+    ],
+    "actualCauseOfRpcRejectionProven": false,
+    "testFixtureCorrection": "Use a canonical-block logical clock for deterministic fault scenarios and pace concurrent synthetic reads at 250 ms instead of 5 ms; emit only already-sanitized report diagnostics to CI. Production code remains identical.",
+    "macRun": 40156040796,
+    "macFailure": "BROWSER_SIGNAL_TERM / STALE_RECOVERY:EPERM",
+    "sameHeadIndependentPrMacPassed": true,
+    "macSafetyChecksChanged": false,
+    "oldHeadRerunExecuted": false,
+    "nextHeadAllChecksRequired": true
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "version": "clear-bootcamp-v24-verification.1",
+  "date": "2026-10-25",
+  "baselineHead": "d0914a70ade684627ede88a3ed788403dd3437e5",
+  "sourceCandidateHead": "cce3b9382fcf3309534a8d5fa57d4ddfb8259505",
+  "scope": "POST_SEND_RECOVERY_AUTHORITY_CLOCK_RECHECK_ONLY",
+  "confirmedReproduction": {
+    "beforeFix": "BIND_CONSENTS / SEND_STARTED / readCurrentSync BC_E5_CLOCK_CHANGED / E5B_CONTROLLER_REJECTED",
+    "controlledForwardClockBoundaryInsideApiCallback": true,
+    "actualStoreEvaluatorProcedureAndOwnedBridge": true,
+    "inventedSourceAiAndWalletsOnly": true,
+    "noHumanLoginOrExternalProofOrPaidModel": true,
+    "baselineWithoutInjectedBoundary": "NORMAL_PAYMENT_AND_DUPLICATE_REJECTION_PASSED",
+    "afterFix": "BIND_PREPARE_ACCEPT_CLAIM_100000000_ATOMS_AND_DUPLICATE_REJECTION_PASSED",
+    "bindEnvelopes": 1,
+    "bridgeBroadcasts": 6,
+    "transactionSignatures": 6,
+    "paymentSignatures": 1,
+    "issuerReinvokedDuringRecheck": false
+  },
+  "actualR15Evidence": {
+    "twoDirectConsents": true,
+    "sourceFourCurrentMet": true,
+    "aiGenerationCalls": 1,
+    "aiCountCalls": 0,
+    "includedCompletions": [
+      "REGISTER",
+      "ALLOCATE",
+      "START_REVIEW"
+    ],
+    "bindEnvelopeState": "SEND_STARTED",
+    "bindCompletionRecorded": false,
+    "firstFailure": "MANAGED_SOURCE UNKNOWN_ERROR",
+    "preciseUnderlyingExceptionRecorded": false,
+    "actualRootCauseProven": false,
+    "sameObservedFailurePatternReproduced": true,
+    "claimJobs": 0,
+    "claimSettlements": 0,
+    "prepared": 0,
+    "balanceChangeAtoms": null,
+    "balanceMeasured": false,
+    "originalRealmReopenedOrResent": false
+  },
+  "minimalChanges": {
+    "runtimeFiles": [
+      "src/bootcamp/execution-e4b-controller.mjs",
+      "src/hackerrank-evidence/diagnostics.mjs",
+      "tools/bootcamp/live-context.mjs"
+    ],
+    "onlyRetriedError": "EXACT_RULE_ERROR_BC_E5_CLOCK_CHANGED",
+    "onlyPhases": [
+      "RECOVER",
+      "RECOVER_FINAL_SYNC"
+    ],
+    "maximumFreshAuthorityRechecks": 1,
+    "sameUnreturnedWitnessPayloadBindingAndCaps": true,
+    "newIssuerKeySigningSealDispatchOrBroadcastWork": false,
+    "secondConflictAndOtherErrorsPropagate": true,
+    "failureReportDiagnosticEnumLimit": 8,
+    "originalErrorSurvivesDiagnosticWriteFailure": true,
+    "fixedSourceDiagnosticAdded": "E5B_CONTROLLER_REJECTED"
+  },
+  "unchanged": [
+    "source expiry and freshness",
+    "two actual consents",
+    "CAS and signatures",
+    "recipient and 100 TEST",
+    "single AI consumption",
+    "duplicate/reuse prevention",
+    "deposit policy",
+    "pre-send and commit clock conflicts still fail closed",
+    "E4 issuer/signing/transport code",
+    "SDK and Windows"
+  ],
+  "focusedVerification": {
+    "nativeFullPaymentReproduction": 1,
+    "apiControllerPositiveAndNegativeCases": 9,
+    "passed": true
+  },
+  "requiredRegression": {
+    "apiExecution": {
+      "cases": 554,
+      "initialPassed": 516,
+      "initialDateFixtureFailures": 38,
+      "affectedSuiteRetestPassed": 40,
+      "runtimeRegressionFailures": 0,
+      "wholeSuiteRepeated": false,
+      "networkGuard": true
+    },
+    "compatibilityMemoryGate": {
+      "cases": 91,
+      "passed": 91
+    },
+    "nativeBindToPaymentIntegration": {
+      "cases": 1,
+      "passed": 1
+    },
+    "uniqueTotalPassed": 646,
+    "e5Preservation": "PASS",
+    "e5bExactPinsAndDeclarationSyntax": "PASS_NOT_FULL_TSC",
+    "workspace": "PASS",
+    "dependencies": "PASS"
+  },
+  "testFixtureDateCorrection": "Invented approval fixture uses current KST day; strict native today-price review unchanged",
+  "pins": {
+    "candidate": "cce3b9382fcf3309534a8d5fa57d4ddfb8259505",
+    "intakeSha256": "8ec4832c29f6717b32d47d1266798600994bc17190027b19be604ee6591512fc",
+    "sourceCount": 170,
+    "changed": [
+      "src/bootcamp/execution-e4b-controller.mjs",
+      "src/hackerrank-evidence/diagnostics.mjs",
+      "tools/bootcamp/live-context.mjs"
+    ],
+    "helperSha256": "e5f4c11f73354e3f12a0d31a3f3efd624277132994b813de2080cfc126e9632a",
+    "guardSha256": "bc5253543262645167a72dec076c482ce45b3ad30c5e197fc529702dc119d551",
+    "manifestSha256": "c5132921fc82cb4879c05a19b6a2c0943de44b88c7258fac5a61cf4adbc3c103",
+    "memoryHarnessSha256": "708d80521db6c1b493a8110928e509b5bfa01d0918441faaeb7bac10403ec9eb"
+  },
+  "preservedEvidenceFiles": 242,
+  "newActualHostCaLoginProofAiSignatureOrPayment": false,
+  "mergePerformed": false,
+  "finalHeadCi": "VERIFY_AFTER_PUSH; ignored var/bootcamp-verification/v24-final-ci.json",
+  "nextStep": "REPORT_FINAL_CI_AND_STOP_NO_NEW_ACTUAL_RETEST"
+}
