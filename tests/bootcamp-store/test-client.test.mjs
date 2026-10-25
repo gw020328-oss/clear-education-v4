@@ -427,3 +427,15 @@ test('v20 preserves browser assets and binds single-write consent and capability
  assert.equal(sha(m.existingCoreIntake.path),m.existingCoreIntake.sha256);assert.equal(m.existingCoreIntake.sources,171);
  assert.deepEqual(m.changedFromV19,[]);assert.equal(m.apiContractsChanged,false);assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);
 });
+
+test('v21 preserves browser assets and binds atomic metadata and canonical clock readiness',async()=>{
+ const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
+ const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V21.json',import.meta.url)));
+ assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V21.json'),'4f29daafc472b1f5706fb83de7903707e51ae64f9560c29e89a2e36732d82825');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.21');
+ assert.equal(sha(m.previousRecord.path),m.previousRecord.sha256);assert.equal(Object.keys(m.sourceArtifacts).length,6);
+ for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
+ assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ assert.equal(sha(m.existingCoreIntake.path),m.existingCoreIntake.sha256);assert.equal(m.existingCoreIntake.sources,172);
+ assert.deepEqual(m.changedFromV20,[]);assert.equal(m.apiContractsChanged,false);assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);
+});
