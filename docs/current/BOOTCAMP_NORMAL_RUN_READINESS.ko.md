@@ -1,3 +1,5 @@
+2026-10-25 v26: r19 ALLOCATE/PLAN의 `BC_VIEW_STALE`은 읽기 작업의 최종 동일 초 검사로 좁혀졌고, 실제 wall-clock·240초 합성 원천·현재 native 경로에서 REGISTER 뒤 같은 실패를 재현했다. PLAN만 상태/권한/원장/입력 불변인 순방향 초 경계에 한해 최대 1회 새로 읽는다. 쓰기·서명·송신·AI 재시도와 TTL 연장은 없다. 제어시계 전체 경로의 두 합성 동의→100 TEST·중복 거부와 별도로, 전체 wall-clock 시도는 ACCEPT 송신 직전 `BC_E5_CLOCK_CHANGED`로 중단했다. **실제 전체 지급 안정성을 확인한 상태가 아니므로 본부가 이 잔여 경계를 검토한 뒤 새 실제 시험 여부를 판단한다.** 원 r19 tick별 값은 보존되지 않아 과거 순간의 비교값까지 확정하지 않는다. [원인·검증·한계](BOOTCAMP_V26_VERIFICATION.json), [새 인수 지문](../../specs/bootcamp/hackathon-test-memory-source-intake-v26.json). r19 및 기존 328개 보존 기록은 재사용하지 않는다. PR102 Draft·예치 정책 미확정·merge 금지 유지.
+
 # 실제 한 건 실행 전 본부 일괄 준비표
 
 2026-10-25 v25: r18의 빈 executionDiagnostics는 기존 기록이 세 controller callback에만 연결된 진단 공백으로 확인했다. API transaction·native 오류 정규화 전·정상 지급 단계의 최초 고정 오류/위치/시간/송신 상태를 제한적으로 보존한다. 새 격리 체인에서 두 합성 인증 동의부터 100 TEST 지급·중복 거부까지, 봉인 전후/송신 후 오류·응답 분실·권한 만료를 재현했다. 이는 실제 r15/r17/r18의 공통 원인 확정이 아니다. 기존 v24 재확인·만료·서명·지급 정책은 유지한다. [원인·검증과 실제 경로와의 차이](BOOTCAMP_V25_VERIFICATION.json)를 우선한다. 최종 HEAD CI 확인 후 멈추며 새 실제 호스트·CA·로그인·증명·유료 AI·지급을 시작하지 않는다.

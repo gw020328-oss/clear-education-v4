@@ -391,3 +391,15 @@ test('v17 preserves browser assets and pins bounded normal-payment diagnostics',
  assert.equal(sha(m.existingCoreIntake.path),'8c4b1dcca74ca3a350a08268d705e0c8332e849bfbb014c997a926d192398a16');assert.equal(m.existingCoreIntake.sources,171);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
+
+test('v18 preserves browser assets and pins bounded clock-only plan reads',async()=>{
+ const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
+ const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V18.json',import.meta.url)));
+ assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V18.json'),'b809c8ff51cc22031e02cf6d6768e31053820cbc3faf01e4458e4de207baeb8e');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.18');
+ assert.equal(sha(m.previousRecord.path),'0d6dfc4e3aac5311e42428c11a7262f09026f6c4361bca427567ee8146b25e6d');assert.equal(Object.keys(m.sourceArtifacts).length,6);
+ for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
+ assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ assert.equal(sha(m.existingCoreIntake.path),'f6bcbc3700bd6b7d8172da5afeb3786e3343a465c810df11f59d9ce3b700deb8');assert.equal(m.existingCoreIntake.sources,171);
+ assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
+});
