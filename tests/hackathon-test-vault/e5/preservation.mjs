@@ -8,10 +8,10 @@ const digest=p=>createHash('sha256').update(readFileSync(new URL(p,root))).diges
 // intake and eight other E4 artifacts remain frozen; this is no wildcard waiver.
 const consumer='src/hackathon-test-vault/memory-stage-harness.mjs';
 const compatibility='specs/bootcamp/hackathon-test-memory-source-intake-v4.json';
-const consumerV25='0b8b4a3403d26c2b941f04cf212b4ac10271eb61b3bc71fbc7a9e1c67199f06d';
+const consumerV25='e4469c92d6e5f12b87b1e9bf269ccb0d40e9ee76ae21f35f44037a73ada14da9';
 assert.equal(digest(compatibility),'2cf7aba578d1ac5ed712a00288edcdff88d58e2152acdfd709c1228078f078a6');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v5.json'),'7b89a6c9f73797f0a6faff890f8a097f18dd3f91730eddc7f2cc56730c0f17ff');
-assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v25.json'),'5076627c0699c5e87ca37e8d425acc0cfbcca8b1a4d6464ccfe648df9206d036');
+assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v25.json'),'8c4b1dcca74ca3a350a08268d705e0c8332e849bfbb014c997a926d192398a16');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v24.json'),'8ec4832c29f6717b32d47d1266798600994bc17190027b19be604ee6591512fc');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v23.json'),'a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v22.json'),'3072f09076cd07b1db2efbb4001ee2c5ee7d48fabb15649082abff5f8534ca97');
@@ -38,6 +38,7 @@ const service=JSON.parse(readFileSync(new URL('specs/bootcamp/hackathon-test-e5-
 const preserved=Object.entries(service.sourceArtifacts).filter(([path])=>path!=='tests/hackathon-test-vault/e5/preservation.mjs');
 // Explicit normal-path fixes requested by the API owner; original intake remains unchanged.
 const normalPathChanges=[
+  ["src/hackathon-test-vault/e5/envelope-service.mjs", "cd73c063aff3d75aba9532361f2592299260729565875b7721bfdf515083f87b", "ac9431747c64ab86da904222e458dbba1e25ba8b127ef481d8fe57618d162d0b"],
   [
     "src/hackathon-test-vault/e5/environment.mjs",
     "a38dc46a8d0c9afd91b68d295c1d4aaaa3a5815ba8fe70338a9fa68e4fb3666e",

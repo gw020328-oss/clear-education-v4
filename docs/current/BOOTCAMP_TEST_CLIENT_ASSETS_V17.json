@@ -18,7 +18,7 @@
   },
   "existingCoreIntake": {
     "path": "specs/bootcamp/hackathon-test-memory-source-intake-v25.json",
-    "sha256": "5076627c0699c5e87ca37e8d425acc0cfbcca8b1a4d6464ccfe648df9206d036",
+    "sha256": "8c4b1dcca74ca3a350a08268d705e0c8332e849bfbb014c997a926d192398a16",
     "sources": 171,
     "bytesChanged": true
   },

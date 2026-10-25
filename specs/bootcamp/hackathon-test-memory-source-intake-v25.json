@@ -15,7 +15,7 @@
   "version": "clear-hackathon-test-memory-source-intake.25",
   "date": "2026-10-25",
   "status": "REVIEWED_NORMAL_PAYMENT_FAILURE_DIAGNOSTICS_NOT_ACTUAL_ACCEPTANCE",
-  "currentSourceCandidateHead": "fa581eff61f2eb05c5db88e644eb96b3bf8ccd39",
+  "currentSourceCandidateHead": "c48ec5b08e821ffaa08034c8dafe56c2b214df60",
   "previousCompatibilityRecord": {
     "path": "specs/bootcamp/hackathon-test-memory-source-intake-v24.json",
     "sha256": "8ec4832c29f6717b32d47d1266798600994bc17190027b19be604ee6591512fc",
@@ -63,7 +63,7 @@
     "src/bootcamp/execution-commands.mjs": "48f64d6f8d4828238b1d86eef290bf7b6fcc660f522893ff90c89cf88f73335d",
     "src/bootcamp/execution-current.mjs": "d25ad2ed596b6ae3a09aade45563874516d5691dfc344c925c881ae9b26509ff",
     "src/bootcamp/execution-development.mjs": "f1c972d25d48972ff94db263264f9814ec86e5f044587fab8f6a71ef76c4b999",
-    "src/bootcamp/execution-diagnostics.mjs": "b32ca30527e4aa447ed348d11e260701a7040be944d6a6f71c7e5291f983cb89",
+    "src/bootcamp/execution-diagnostics.mjs": "a5e27acd0ff8e87bdd3e93b2d4251b29ec1e8a14736ad88f74f00e46bb09d311",
     "src/bootcamp/execution-e4-ports.mjs": "2a42aa71a57c9d7a6a93121d5c3f7fe48fa3e7bd7492205753a1763f2aa939ca",
     "src/bootcamp/execution-e4b-controller.mjs": "80599880d98712fe1ac8f085027feba81be808d94fd8dde1ba47cdca4555df6f",
     "src/bootcamp/execution-e4b-ports.mjs": "43666ee23ccb8aad1a15a750434d8bc4c08f427e4d7da9f3e972eff46669d635",
@@ -98,7 +98,7 @@
     "src/hackathon-test-vault/HackathonTestVaultExecution.sol": "3720e6cb41ecb7efcad34e3c1d932208c2396e7c93093cef4b3dee924c0e7f29",
     "src/hackathon-test-vault/HackathonTestVaultPreparation.sol": "d8c7467d433e7a428bbd75fe79707b963b4e8208842b89a32ff9a8bae9b60029",
     "src/hackathon-test-vault/StrictECDSA.sol": "d2873eb2ac6205adc268f5eddf4ba89fbd3e046a83785d44f8715616a74fd69a",
-    "src/hackathon-test-vault/e5/envelope-service.mjs": "cd73c063aff3d75aba9532361f2592299260729565875b7721bfdf515083f87b",
+    "src/hackathon-test-vault/e5/envelope-service.mjs": "ac9431747c64ab86da904222e458dbba1e25ba8b127ef481d8fe57618d162d0b",
     "src/hackathon-test-vault/e5/environment.mjs": "eb434625f9c4ec54965c9fb1f55db66d37bdf37c85d44d50f704908d5ecc1d26",
     "src/hackathon-test-vault/e5/private-storage.mjs": "7a140d7ea36b0a3917b9ccd0e935558d0cf9272a09f47d50d915cd29b1a6d220",
     "src/hackathon-test-vault/e5/reader.mjs": "af6c782cd4722e4b3a8c3b32070ff022ef09bd46ef2302956ca451f31ef3b56d",
@@ -107,7 +107,7 @@
     "src/hackathon-test-vault/e5b/bridge.mjs": "a2bf78c5c5de81fdcce0842e6e01f923c27fe83f3f76fddc984e0772840703c3",
     "src/hackathon-test-vault/e5b/business-window.mjs": "93c7153606b612568d155cc581ae57e21f322a3a06b497fe925ef844d5416cd8",
     "src/hackathon-test-vault/e5b/controller-gate.mjs": "88e5145d08cb9401f8e6a42cd373936532b32f78318aa372f25d531c3545397d",
-    "src/hackathon-test-vault/e5b/service.mjs": "7fa073c6706f2cdce524c51d9f7ed805c566d759437feffe5f0b10d3619e8c1d",
+    "src/hackathon-test-vault/e5b/service.mjs": "10858d775c87679a45e877a79c9f72b1591054bd6cdda4f0610dcd9ea80b52ec",
     "src/hackerrank-evidence/browser-source.mjs": "9d9b71fbff42cc97fdd8f2463c9c6cae62237fb8c6dd22f35b6fedeb83a82c08",
     "src/hackerrank-evidence/claim-return-diagnostics.mjs": "2046246cf391c3d02eb7743cd3029d1a2281b98c41d5924506dd7fc74b424653",
     "src/hackerrank-evidence/collector.mjs": "0970a3e60f07c42faf46eae2b342f444931fab99ed299639bdc5f9e3fb57b3ee",
@@ -209,13 +209,17 @@
       "before": "86e9315176b9b2a73a467100d9b3c0a4c3dae53a366e5c9089f65227aee3e02d",
       "after": "43666ee23ccb8aad1a15a750434d8bc4c08f427e4d7da9f3e972eff46669d635"
     },
+    "src/hackathon-test-vault/e5/envelope-service.mjs": {
+      "before": "cd73c063aff3d75aba9532361f2592299260729565875b7721bfdf515083f87b",
+      "after": "ac9431747c64ab86da904222e458dbba1e25ba8b127ef481d8fe57618d162d0b"
+    },
     "src/hackathon-test-vault/e5b/bridge.mjs": {
       "before": "dbea12a6d7bff93dd89f208e0573071adad7238a9a1476a43b07c2b3509667c5",
       "after": "a2bf78c5c5de81fdcce0842e6e01f923c27fe83f3f76fddc984e0772840703c3"
     },
     "src/hackathon-test-vault/e5b/service.mjs": {
       "before": "fabdd5c1326e1aa0e7230b0d9dddaafcb3dc3a23c4c1e3e8374c0f046055f234",
-      "after": "7fa073c6706f2cdce524c51d9f7ed805c566d759437feffe5f0b10d3619e8c1d"
+      "after": "10858d775c87679a45e877a79c9f72b1591054bd6cdda4f0610dcd9ea80b52ec"
     },
     "tools/bootcamp/live-context.mjs": {
       "before": "8ade0cb8857b4d50c4191501c80b0bf60fd9cbaef76f3947f28ef43e41e1c680",
@@ -227,7 +231,7 @@
     }
   },
   "sourceAdditions": {
-    "src/bootcamp/execution-diagnostics.mjs": "b32ca30527e4aa447ed348d11e260701a7040be944d6a6f71c7e5291f983cb89"
+    "src/bootcamp/execution-diagnostics.mjs": "a5e27acd0ff8e87bdd3e93b2d4251b29ec1e8a14736ad88f74f00e46bb09d311"
   },
   "normalHost": {
     "configVersion": "clear-bootcamp-normal-host-config.1",
@@ -532,6 +536,7 @@
     "src/bootcamp/execution-api-bridge.mjs",
     "src/bootcamp/execution-development.mjs",
     "src/bootcamp/execution-e4b-ports.mjs",
+    "src/hackathon-test-vault/e5/envelope-service.mjs",
     "src/hackathon-test-vault/e5b/bridge.mjs",
     "src/hackathon-test-vault/e5b/service.mjs",
     "tools/bootcamp/live-context.mjs",
@@ -546,6 +551,7 @@
     "arbitraryMessagesStacksRequestsAndSecretsRecorded": false,
     "observerFailureMasksOriginal": false,
     "existingNativeSanitizationRetained": true,
+    "nativeReadbackBeforeUnknownRecorded": true,
     "broadcastFailureOutcome": "UNKNOWN",
     "sendAndSigningCountersAndAggregateEnvelopeStatesOnly": true,
     "v24RecoveryRecheckChanged": false,
