@@ -7,7 +7,7 @@ import {TYPES,PRIMARY_TYPE} from '../../src/bootcamp-authorization/test-schema-v
 
 // Offline owner facade only. No E4 environment, payment signature, raw
 // transaction, chain connection or sender is created by this fixture.
-export async function bridgeFixture(t,{kind='PREPARE',configure=true,challenge='12345678-1234-4123-8123-123456789abc'}={}){
+export async function bridgeFixture(t,{kind='PREPARE',configure=true,challenge='12345678-1234-4123-8123-123456789abc',fault=()=>{}}={}){
  const f=await currentFixture(t,{kind,setupOnly:true}),m=f.m;
  const manifest={version:'clear-e5-test-runtime.1',environmentId:f.ports.runtimeId,production:false,finalityPolicy:'LOCAL_DEV_INCLUSION_ONLY',
   imageId:H('offline-image'),platform:'OFFLINE',image:'OFFLINE_FIXTURE',clientVersion:'OFFLINE',networkIsolation:'NO_NETWORK',chainId:m.domain?.chainId??f.runtime.domain.chainId,
@@ -18,7 +18,7 @@ export async function bridgeFixture(t,{kind='PREPARE',configure=true,challenge='
  const runtimeHash=e4Hash(manifest),vaultScope={chainId:manifest.chainId,vaultAddress:manifest.vaultAddress,instanceId:manifest.instanceId};
  const projection={runtimeHash,manifest,vaultScope,authorityScope:{runtimeId:manifest.environmentId,runtimePinHash:runtimeHash,scopeKey:e4Hash(vaultScope)}};
  f.ports.runtimePinHash=runtimeHash;f.runtime.runtimeHash=runtimeHash;f.observation.runtimeHash=runtimeHash;
- let controller,active=null,floor=0,issueHook=()=>{},readHook=async()=>{},adoption=null,envelope=null,lookupHook=()=>{},receipt=null;
+ let controller,active=null,floor=0,issueHook=()=>{},readHook=async()=>{},adoption=null,envelope=null,lookupHook=()=>{},receipt=null,nativeAdoptions=0;
  const tickets=new WeakMap(),counts={reads:0,consumed:0,issued:0,binds:0,seals:0,dispatches:0};
  const snapshot=()=>f.snapshot();
  function invoke(kind,binding,phase,overrides={}){
@@ -38,7 +38,7 @@ export async function bridgeFixture(t,{kind='PREPARE',configure=true,challenge='
   worker:{async authorize({binding}){const value=invoke('capability',binding,'AUTHORIZE');floor=Math.max(floor,Number(binding.workerFence));return value;},
    lookup({binding}){lookupHook();invoke('current',binding,'LOOKUP');return envelope?{status:'FOUND',automaticSeal:false,envelope}:{status:'NOT_FOUND',automaticSeal:false};},
    envelope(){return envelope;},async seal(){counts.seals++;throw Error('OFFLINE_MUST_NOT_SIGN');},async dispatch(){counts.dispatches++;throw Error('OFFLINE_MUST_NOT_SEND');},
-   async adopt({binding,ref,manifestHash}){invoke('current',binding,'BEFORE_ADOPTION');adoption={version:'clear-e5-envelope-adoption.1',adoptionId:'adoption-offline',ref,manifestHash,originalBindingHash:envelope.originalBindingHash,binding,bindingHash:e4Hash(binding),businessValidUntil:binding.business.businessValidUntil,authorityUntil:Math.min(binding.expiresAt,binding.business.businessValidUntil)};adoption.adoptionHash=e4Hash(adoption);return adoption;},
+   async adopt({binding,ref,manifestHash}){nativeAdoptions++;invoke('current',binding,'BEFORE_ADOPTION');adoption={version:'clear-e5-envelope-adoption.1',adoptionId:'adoption-offline',ref,manifestHash,originalBindingHash:envelope.originalBindingHash,binding,bindingHash:e4Hash(binding),businessValidUntil:binding.business.businessValidUntil,authorityUntil:Math.min(binding.expiresAt,binding.business.businessValidUntil)};adoption.adoptionHash=e4Hash(adoption);return adoption;},
    async recover({binding}){invoke('current',binding,'RECOVER');return receipt;},
   },
   bindController(factory){if(controller)throw Error('ALREADY_BOUND');counts.binds++;
@@ -47,14 +47,14 @@ export async function bridgeFixture(t,{kind='PREPARE',configure=true,challenge='
   },fenceReader:{version:'clear-bootcamp-runtime-fence-reader.1',async read(query){if(e4Hash(query)!==e4Hash(projection.authorityScope))throw Error('OFFLINE_SCOPE');return {version:'clear-bootcamp-runtime-fence-witness.1',...query,highestFence:floor};}},
  };
  let bridge,g,h,i,clockHook=()=>{};const baseNow=f.configuration.now;f.configuration.now=()=>{clockHook();return baseNow();};
- if(configure){f.configuration.executionBridge=config;f.restart();bridge=f.store.execution.connectBridge(f.context);await f.store.execution.observeRuntimeFence(f.context);
+ if(configure){f.configuration.fault=fault;f.configuration.executionBridge=config;f.restart();bridge=f.store.execution.connectBridge(f.context);await f.store.execution.observeRuntimeFence(f.context);
   g=f.store.execution.acquireRuntime(f.context,{owner:'worker-one',expectedFence:0,generation:1,leaseSeconds:30});
   i=f.enqueue({kind,preparationId:f.prepared.preparationId,authorizationDigest:f.digest,caller:kind==='ACCEPT'?manifest.roles.relayer:manifest.roles.registrar,payloadHash:e4Hash(f.command)}).receipt.intentId;
   h=f.acquire(i);f.store.execution.bindRuntimeIntent(f.context,g,h);
  }
  return {...f,get store(){return f.store;},get time(){return f.time;},config,projection,counts,bridge,g,h,i,invoke,
   prepare:()=>bridge.prepare(g,h,bridge.inspect(g,h)),setIssueHook:fn=>{issueHook=fn;},setClockHook:fn=>{clockHook=fn;},setReadHook:fn=>{readHook=fn;},setLookupHook:fn=>{lookupHook=fn;},
-  setReceipt:r=>{receipt=r;},setEnvelope:e=>{envelope=e;},get adoption(){return adoption;},
+  setReceipt:r=>{receipt=r;},setEnvelope:e=>{envelope=e;},get adoption(){return adoption;},get nativeAdoptions(){return nativeAdoptions;},
   makeEnvelope(binding,extra={}){envelope={version:'clear-e5-public-envelope.2',ref:'env-offline',manifestHash:H('manifest'),state:'SEALED',runtimeHash,intentId:i,requestId:i,attemptId:binding.attemptId,lineage:binding.lineage,commandHash:binding.commandHash,originalBindingHash:e4Hash(binding),sender:kind==='ACCEPT'?manifest.roles.relayer:manifest.roles.registrar,transactionNonce:'0',authorizationNonce:m.nonce,to:manifest.vaultAddress,value:'0',chainId:manifest.chainId,dataHash:H('data'),txHash:H('tx'),businessValidUntil:binding.business.businessValidUntil,originalAuthorityUntil:binding.expiresAt,bytesUntil:f.time+3600,...extra};return envelope;},
  };
 }

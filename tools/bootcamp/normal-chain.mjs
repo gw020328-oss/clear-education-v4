@@ -14,7 +14,8 @@ import {openDevelopmentConnection} from '../../src/bootcamp/execution-developmen
 import {syntheticAuthority} from '../../tests/bootcamp-store/fixture.mjs';
 import {waitForNormalReviewConsents} from './explicit-consents.mjs';
 import {requireNormalSourceWindow,REVIEW_WINDOW} from './normal-review-window.mjs';
-import {registerNormalSourceTarget,normalProcedureBody} from './normal-current-view.mjs';
+import {registerNormalSourceTarget,normalProcedureBody,readNormalView} from './normal-current-view.mjs';
+import {waitForNormalChainTime} from './normal-chain-time.mjs';
 import {executionErrorSummary} from '../../src/bootcamp/execution-diagnostics.mjs';
 import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
@@ -46,7 +47,15 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    step='PLAN';const plan=store.execution.plan(user,app,{kind,operationId:hash(),expectedChainVersion:observation.business.application.version,preparationId});
    step='ENQUEUE';const i=store.execution.enqueue(user,app,plan.body,key()).receipt.intentId;
    step='ACQUIRE_INTENT';const h=store.execution.acquire(serviceContext,i,{owner:'normal-worker',generation:1,leaseSeconds:60});step='BIND_RUNTIME';store.execution.bindRuntimeIntent(serviceContext,g,h);
-   step='PREPARE_CAPABILITY';const request=await bridge.prepare(g,h,bridge.inspect(g,h));step='SEAL';await bridge.seal(g,h,request.binding);step='LOOKUP';const found=await bridge.lookup(g,h,request.binding);step='ADOPT';await bridge.adopt(g,h,request.binding);
+   const expected=bridge.inspect(g,h);
+   if(m.blockPeriodSeconds===1&&['startReview','prepareUnsigned'].includes(plan.command.method)){
+    step='WAIT_CHAIN_TIME';const v=readNormalView(()=>store.getProcedure(user,app)),message=plan.command.method==='prepareUnsigned'?plan.command.args[1]:null;
+    const requiredAt=message?Number(message.issuedAt):Number(plan.command.args[3]);
+    const businessUntil=Math.min(v.evidence.validUntilExclusive,v.procedure.reviewCapAt,message?Number(message.expiresAt):Infinity);
+    const readiness=await waitForNormalChainTime({requiredAt,businessUntil,authorityUntil:expected.authorityExpiresAt,readBlock:()=>provider.getBlock('latest'),signal});
+    (report.clockReadiness??=[]).push({kind,...readiness});write();
+   }
+   step='PREPARE_CAPABILITY';const request=await bridge.prepare(g,h,expected);step='SEAL';await bridge.seal(g,h,request.binding);step='LOOKUP';const found=await bridge.lookup(g,h,request.binding);step='ADOPT';await bridge.adopt(g,h,request.binding);
    step='DISPATCH';await bridge.dispatch(g,h,request.binding);step='RECEIPT_WAIT';await waitSetupReceipt(provider,found.envelope.txHash);
    step='RECOVER';const completed=await bridge.recover(g,h,request.binding);ensure(completed.completion?.status==='INCLUDED','BC_NORMAL_RECEIPT_PENDING');report.executionDiagnostics=connection.diagnostics().slice(0,16);report.stages.push({kind,txHash:completed.completion.txHash,checkpoint:completed.completion.checkpoint});write();return completed;
   }
@@ -81,7 +90,7 @@ export async function executeNormalPayment({store,connection,serviceContext,user
  }
 }
 export async function runSyntheticNormalChain(){
- const created=await createEnvironment(),id=created.environmentId,m=created.manifest,{dir}=environmentRecord(id);
+ const created=await createEnvironment({blockPeriodSeconds:1}),id=created.environmentId,m=created.manifest,{dir}=environmentRecord(id);
  let auth,store,connection,provider;const report={version:'clear-bootcamp-normal-chain.1',environmentId:id,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false,production:false,stages:[],completed:false};
  const write=()=>atomicPrivate(join(dir,'api-normal-report.json'),report);
  const stage=name=>{report.stage=name;write();process.stdout.write(JSON.stringify({stage:name})+'\n');};

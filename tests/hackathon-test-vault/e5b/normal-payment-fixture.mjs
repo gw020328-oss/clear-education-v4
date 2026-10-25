@@ -17,7 +17,7 @@ import {executeNormalPayment} from '../../../tools/bootcamp/normal-chain.mjs';
 import {assertExplicitConsents,waitForExplicitConsents} from '../../../tools/bootcamp/explicit-consents.mjs';
 
 export async function normalPaymentFixture(t,{crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{}}={}){
- const e=await createEnvironment(),id=e.environmentId,m=e.manifest,{dir}=environmentRecord(id);
+ const e=await createEnvironment({blockPeriodSeconds:wallClock?1:0}),id=e.environmentId,m=e.manifest,{dir}=environmentRecord(id);
  let serviceLive=true;
  let auth,store,connection,metadata,serial=0,ticks=0,crossed=false,floor=Math.floor(Date.now()/1000),extraSeconds=0,reads=0;const readErrors=[];
  const report={startedAt:Math.floor(Date.now()/1000),stages:[],completed:false};

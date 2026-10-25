@@ -40,7 +40,7 @@ export async function prepareLiveInput({hackerRankPins=null,identityPreparationP
   targets:{activity:report.activity,assignment:report.assignment,reflection:report.reflection},completionSetupReceiptHash:report.completionSetupReceiptHash,
   moodleUserId:3,accountBindingRef:'normal-demo-user3',hackerRank:{certificateName:'Python (Basic)',...(hackerRankPins?{trustStatus:'REVIEWED',audience:hackerRankPins.audience,trustConfigHash:hackerRankPins.trustConfigHash,recipeHash:hackerRankPins.recipeHash,expectedClaimOwner:hackerRankPins.expectedClaimOwner}:{trustStatus:'UNCONFIGURED_BLOCKED'})}};
  const runtimeMappingHash=p0Hash('NORMAL-REGISTERED-MAPPING',mapping);atomicPrivate(join(directory,'mapping.json'),{mapping,runtimeMappingHash},{exclusive:true});
- const e=await createEnvironment({runtimeMappingHash});let auth,store;
+ const e=await createEnvironment({runtimeMappingHash,blockPeriodSeconds:1});let auth,store;
  try{
   if(e.manifest.runtimeMappingHash!==runtimeMappingHash)throw Error('BC_LIVE_CHAIN_MAPPING');
   const startedAt=now(),chainId=Number(e.manifest.chainId);

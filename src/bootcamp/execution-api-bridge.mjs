@@ -21,7 +21,8 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
   return freeze({...base,version:recovery?'clear-bootcamp-e5b-recovery-cas.1':'clear-bootcamp-e5b-current-cas.1',runtimeAuthority:s.slot.commitment,
    authorityExpiresAt:Math.min(base.authorityExpiresAt,s.slot.row.expires_at)});
  }
- function run(g,h,action,fn){return service(context,action,null,(time,authority)=>fn(state(g,h,time,authority),time,authority));}
+ function run(g,h,action,fn,validateCommit=null){return service(context,action,null,(time,authority)=>fn(state(g,h,time,authority),time,authority),
+  validateCommit?(time,authority,value)=>validateCommit(state(g,h,time,authority),time,authority,value):null);}
  function bound(b){const record=ledger.bindings(b.intentId).find(r=>canonical(r.binding)===canonical(b));check(record,'BC_E5B_UNKNOWN_BINDING');return record;}
  function inspectBound(s,e,{kind,recovery,time,authority}){
   const record=bound(e.binding),b=record.binding;
@@ -57,7 +58,11 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
   const capability=await ports.authorize(request);
   return run(g,h,'B_AUTHORIZE_COMMIT',(s,time,authority)=>{
    const r=bound(b);sameBasis(r.basis,cas(s,time,authority,{recovery:b.purpose==='RECOVER'}),time);
-   ledger.append(h.intentId,'CAPABILITY','capability-'+e4Hash(b),capability);return freeze({binding:b,command:request.command,capability});
+   ledger.append(h.intentId,'CAPABILITY','capability-'+e4Hash(b),capability);fault('e5b-after-capability');return freeze({binding:b,command:request.command,capability});
+  },(s,time,authority)=>{
+   const r=bound(b);sameBasis(r.basis,cas(s,time,authority,{recovery:b.purpose==='RECOVER'}),time);
+   check(time<b.expiresAt&&(b.purpose==='RECOVER'||time<b.business.businessValidUntil),'BC_E5B_BINDING_AUTHORITY');
+   check(canonical(ledger.event(h.intentId,'CAPABILITY'))===canonical(capability),'BC_E5B_CAPABILITY_REQUIRED');
   });
  }
  function authorized(b){const capability=ledger.event(b.intentId,'CAPABILITY');check(capability&&canonical(capability.payload)===canonical(b),'BC_E5B_CAPABILITY_REQUIRED');return capability;}
@@ -76,9 +81,9 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
   inspect(g,h){return run(g,h,'B_INSPECT',(s,time,authority)=>cas(s,time,authority));},
   async prepare(g,h,expected){
    const command=run(g,h,'B_READ_REQUEST',(s,time,authority)=>{sameBasis(expected,cas(s,time,authority),time);return commands.command(s.i);});
-   const observed=await ports.read(command);
+   const observed=await ports.read(command);let preparedObservation;
    const b=run(g,h,'B_PREPARE',(s,time,authority)=>{
-    sameBasis(expected,cas(s,time,authority),time);const {observation:o}=ports.consume(observed,'OBSERVATION');
+    sameBasis(expected,cas(s,time,authority),time);const {observation:o}=ports.consume(observed,'OBSERVATION');preparedObservation=o;
     const facts=commands.inspect(s.i,business(s.i,time).a,o,ports.runtime,time);check(canonical(facts.command)===canonical(command),'BC_E5B_COMMAND_CHANGED');
     let request=ledger.request(h.intentId);
     if(!request){const limits={createdAt:time,sourceUntil:facts.sourceValidUntilExclusive,reviewUntil:facts.reviewCapAt,messageUntil:facts.payload?Number(facts.payload.message.expiresAt):null};
@@ -88,7 +93,7 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
     }
     check(canonical(request.command)===canonical(command)&&time<request.business.businessValidUntil,'BC_E5B_REQUEST_EXPIRED_OR_CHANGED');
     return saveBinding(s,time,authority,request,'EXECUTE',o);
-   });return authorize(g,h,b);
+   },(s,time,authority,b)=>inspectBound(s,{binding:b,command,observation:preparedObservation},{kind:'capability',recovery:false,time,authority}));return authorize(g,h,b);
   },
   async recoveryAuthority(g,h){
    const b=run(g,h,'B_RECOVERY_AUTHORITY',(s,time,authority)=>{const request=ledger.request(h.intentId);check(request,'BC_E5B_REQUEST_REQUIRED');return saveBinding(s,time,authority,request,'RECOVER');});
@@ -126,6 +131,13 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
      &&a.bindingHash===e4Hash(b)&&adoptionHash===e4Hash(unsigned)&&a.businessValidUntil===b.business.businessValidUntil&&a.authorityUntil===Math.min(b.expiresAt,b.business.businessValidUntil),'BC_E5B_ADOPTION');
     sameBasis(bound(b).basis,cas(s,time,authority),time);check(time<a.authorityUntil,'BC_E5B_ADOPTION_EXPIRED');
     ledger.append(h.intentId,'ADOPTION','adoption-'+a.adoptionId,a);fault('e5b-after-adoption');return a;
+   },(s,time,authority,a)=>{
+    sameBasis(bound(b).basis,cas(s,time,authority),time);
+    check(time<Math.min(a.authorityUntil,b.expiresAt,b.business.businessValidUntil),'BC_E5B_ADOPTION_EXPIRED');
+    check(canonical(ledger.event(h.intentId,'ADOPTION'))===canonical(a),'BC_E5B_ADOPTION_NOT_COMMITTED');
+    const envelope=ledger.event(h.intentId,'ENVELOPE');
+    check(envelope?.state==='SEALED'&&envelope.ref===a.ref&&envelope.manifestHash===a.manifestHash
+     &&envelope.originalBindingHash===a.originalBindingHash,'BC_E5B_ENVELOPE_REQUIRED');
    });
   },
   async dispatch(g,h,b){

@@ -21,8 +21,11 @@ export function openDevelopmentConnection({environmentId,sourceMode='SYNTHETIC_T
   check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===(revision?.after??expected),'BC_E5B_DEVELOPMENT_PACKET');
  }
  const fixes=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins.json',import.meta.url)));
+ const clockFixes=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins-v26.json',import.meta.url)));
+ check(clockFixes.version==='clear-e5-normal-path-source-pins.26'&&clockFixes.scope==='EXACT_V29_ATOMIC_ADOPTION_AND_CANONICAL_CLOCK_READINESS','BC_E5B_DEVELOPMENT_PACKET');
  for(const [path,pin]of Object.entries(fixes.changes).filter(([p])=>p.startsWith('src/hackathon-test-vault/e5/'))){
-  check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===pin.after,'BC_E5B_DEVELOPMENT_PACKET');
+  const revision=path==='src/hackathon-test-vault/e5/environment.mjs'?clockFixes.changes[path]:null;if(revision)check(revision.before===pin.after,'BC_E5B_DEVELOPMENT_PACKET');
+  check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===(revision?.after??pin.after),'BC_E5B_DEVELOPMENT_PACKET');
  }
  const diagnostic=createExecutionFailureLog();
  const owner=openOwnedApiBridge({environmentId,clock:now,onFailure:(phase,error)=>observeExecutionFailure(diagnostic.record,phase,error)}),m=owner.runtime.manifest;

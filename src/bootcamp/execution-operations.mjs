@@ -66,13 +66,30 @@ export function createExecutionOperations({db,transaction,authentication,operato
   if(result.error)throw result.error;return result.value;
   }
  }
- function service(context,action,intentId,fn){
+ function service(context,action,intentId,fn,validateCommit=null){
+  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_ADOPT_COMMIT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
    const corruption=global.audit(c.time);if(corruption)return {error:new Error('BC_E5_GLOBAL_STOPPED:'+corruption)};
    const i=l.intent(intentId);if(i)refresh(app(i.applicationId),c.time,c.reversed);db.exec('SAVEPOINT e5_service');
-   try{const value=sync(fn(c.time,authority)),end=tick();check(!end.reversed&&end.time===c.time,'BC_E5_CLOCK_CHANGED');
+   try{const value=sync(fn(c.time,authority));
+    if(validateCommit){
+     // The metadata operation and any preceding native work each happen once.
+     // Only read-only validation can cross a second; the savepoint stays open.
+     for(let validation=0;;validation++){
+      const at=tick();check(!at.reversed&&at.time>=c.time,'BC_E5_CLOCK_CHANGED');
+      const fresh=ports.authorize(context,request,at.time);check(fresh.serviceId===authority.serviceId&&fresh.expiresAt>=authority.expiresAt,'BC_E5_SERVICE_AUTHORITY');
+      sync(validateCommit(at.time,fresh,value));
+      const final=ports.authorize(context,request,at.time);check(final.serviceId===fresh.serviceId&&final.expiresAt>=authority.expiresAt,'BC_E5_SERVICE_AUTHORITY');
+      check(!global.audit(at.time),'BC_E5_GLOBAL_STOPPED');const end=tick();
+      check(!end.reversed&&end.time>=at.time,'BC_E5_CLOCK_CHANGED');
+      if(end.time>at.time&&validation===0)continue;
+      check(end.time===at.time,'BC_E5_CLOCK_CHANGED');break;
+     }
+     db.exec('RELEASE e5_service');return {value};
+    }
+    const end=tick();check(!end.reversed&&end.time===c.time,'BC_E5_CLOCK_CHANGED');
     const final=ports.authorize(context,request,end.time);check(final.serviceId===authority.serviceId&&final.expiresAt>=authority.expiresAt,'BC_E5_SERVICE_AUTHORITY');
     check(!global.audit(end.time)||value?.status==='BLOCKED','BC_E5_GLOBAL_STOPPED');
     db.exec('RELEASE e5_service');return {value};

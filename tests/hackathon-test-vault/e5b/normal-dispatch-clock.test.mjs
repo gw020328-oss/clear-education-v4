@@ -6,17 +6,18 @@ import {BridgeExecutionService} from '../../../src/hackathon-test-vault/e5b/serv
 import {normalPaymentFixture} from './normal-payment-fixture.mjs';
 
 function crossSecond(){const before=Date.now();Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1001-before%1000);const after=Date.now();assert.ok(Math.floor(after/1000)>Math.floor(before/1000));return {before,after};}
-for(const scenario of ['normal','rollover','commit-rollover','lost-response','capability-rollover','consent-rollover'])test(`real wall-clock full payment with ${scenario==='rollover'?'ACCEPT BEFORE_DISPATCH rollover':scenario==='commit-rollover'?'ACCEPT COMMIT rollover':scenario==='lost-response'?'lost ACCEPT response':scenario==='capability-rollover'?'PREPARE AUTHORIZE rollover':scenario==='consent-rollover'?'each explicit synthetic consent rollover':'ordinary async RPC'}`,async t=>{
+for(const scenario of ['normal','rollover','commit-rollover','lost-response','capability-rollover','consent-rollover','adoption-rollover'])test(`real wall-clock full payment with ${scenario==='rollover'?'ACCEPT BEFORE_DISPATCH rollover':scenario==='commit-rollover'?'ACCEPT COMMIT rollover':scenario==='lost-response'?'lost ACCEPT response':scenario==='capability-rollover'?'PREPARE AUTHORIZE rollover':scenario==='consent-rollover'?'each explicit synthetic consent rollover':scenario==='adoption-rollover'?'ACCEPT adoption record rollover':'ordinary async RPC'}`,async t=>{
  const crossing=scenario==='rollover';
  const original=BridgeExecutionService.prototype.current;let active=false,ticks=0,crossed=null;
  BridgeExecutionService.prototype.current=function(b,o,phase){active=crossing&&phase==='BEFORE_DISPATCH'&&this.commands.get(b.commandHash)?.method==='accept';ticks=0;
   try{return original.call(this,b,o,phase);}finally{active=false;}
  };
  t.after(()=>{BridgeExecutionService.prototype.current=original;});
- const consentCrossings=[];
+ const consentCrossings=[],storeTicks=[];let adoptionBinding=null;
+ const adopt=BridgeExecutionService.prototype.adopt;BridgeExecutionService.prototype.adopt=function(request){if(scenario==='adoption-rollover')adoptionBinding=request.binding;return adopt.call(this,request);};t.after(()=>{BridgeExecutionService.prototype.adopt=adopt;});
  const f=await normalPaymentFixture(t,{wallClock:true,sourceSeconds:240,readWhileAsync:true,
-  fault(point){if(scenario==='consent-rollover'&&point==='e3-after-consent')consentCrossings.push(crossSecond());},
-  onStoreTick(){if(active&&++ticks===2&&!crossed)crossed=crossSecond();}});
+  fault(point,{report}){if(scenario==='consent-rollover'&&point==='e3-after-consent')consentCrossings.push(crossSecond());if(scenario==='adoption-rollover'&&point==='e5b-after-adoption'&&report.stage==='ACCEPT'){crossed=crossSecond();t.diagnostic(JSON.stringify({phase:'ADOPTION_STORE',...crossed,storeTicks:storeTicks.slice(-8),authorityUntil:adoptionBinding.expiresAt,businessUntil:adoptionBinding.business.businessValidUntil,sourceUntil:adoptionBinding.business.sourceUntil,reviewUntil:adoptionBinding.business.reviewUntil,messageUntil:adoptionBinding.business.messageUntil}));}},
+  onStoreTick(){storeTicks.push(Date.now());if(storeTicks.length>16)storeTicks.shift();if(active&&++ticks===2&&!crossed)crossed=crossSecond();}});
  const authorize=BridgeExecutionService.prototype.authorize;
  BridgeExecutionService.prototype.authorize=async function(request){
   if(scenario!=='capability-rollover'||request.command.method!=='prepareUnsigned')return authorize.call(this,request);
@@ -38,7 +39,7 @@ for(const scenario of ['normal','rollover','commit-rollover','lost-response','ca
  assert.equal(r.claim.amountAtoms,'100000000');assert.equal(r.claim.duplicateRejected,true);assert.equal(r.consentOrigin,'AUTHENTICATED_APP_CONSENT_RECORDS');
  assert.equal(f.metrics().broadcasts,6);assert.equal(f.metrics().transactionSignatures,6);assert.equal(f.metrics().paymentSignatures,1);
  assert.equal(f.metadata.prepare("SELECT count(*) n FROM envelopes WHERE state='INCLUDED'").get().n,6);
- if(crossing||scenario==='commit-rollover'||scenario==='capability-rollover'){assert.ok(crossed);t.diagnostic(JSON.stringify({phase:crossing?'BEFORE_DISPATCH':scenario==='capability-rollover'?'AUTHORIZE':'COMMIT',...crossed}));}
+ if(crossing||scenario==='commit-rollover'||scenario==='capability-rollover'||scenario==='adoption-rollover'){assert.ok(crossed);t.diagnostic(JSON.stringify({phase:crossing?'BEFORE_DISPATCH':scenario==='capability-rollover'?'AUTHORIZE':scenario==='adoption-rollover'?'ADOPTION_COMMIT':'COMMIT',...crossed}));}
  if(scenario==='consent-rollover'){assert.equal(consentCrossings.length,2);t.diagnostic(JSON.stringify({phase:'CONSENT_COMMIT',crossings:consentCrossings}));}
 });
 
