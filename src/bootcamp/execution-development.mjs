@@ -5,29 +5,36 @@ import {openOwnedApiBridge} from '../hackathon-test-vault/e5b/bridge.mjs';
 import {ExecutionReader,ZERO} from '../hackathon-test-vault/e5/reader.mjs';
 import {canonical,freeze,requireRule as check} from '../policy/values.mjs';
 import {e4Hash,validateE4Observation} from './execution-e4-ports.mjs';
+import {createExecutionFailureLog,observeExecutionFailure} from './execution-diagnostics.mjs';
 const connections=new WeakSet(),procedures=new WeakSet();
+const failureLogs=new WeakMap();
+export function recordDevelopmentFailure(configuration,phase,error){observeExecutionFailure(failureLogs.get(configuration),phase,error);}
 export const isDevelopmentConnection=value=>connections.has(value);
 export const isCanonicalProcedurePorts=value=>procedures.has(value);
 export function openDevelopmentConnection({environmentId,sourceMode='SYNTHETIC_TEST_SOURCE',now=()=>Math.floor(Date.now()/1000)}){
  check(['SYNTHETIC_TEST_SOURCE','REGISTERED_TEST_SOURCE'].includes(sourceMode),'BC_E5B_DEVELOPMENT_SOURCE');
+ const diagnosticPins=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins-v22.json',import.meta.url)));
+ check(diagnosticPins.scope==='EXACT_V25_NORMAL_PAYMENT_FAILURE_DIAGNOSTICS','BC_E5B_DEVELOPMENT_PACKET');
  const pins=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/source-pins.json',import.meta.url)));
  for(const [path,expected]of Object.entries(pins.sourceArtifactSha256).filter(([p])=>p.startsWith('src/hackathon-test-vault/e5b/'))){
-  check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===expected,'BC_E5B_DEVELOPMENT_PACKET');
+  const revision=diagnosticPins.changes[path];if(revision)check(revision.before===expected,'BC_E5B_DEVELOPMENT_PACKET');
+  check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===(revision?.after??expected),'BC_E5B_DEVELOPMENT_PACKET');
  }
  const fixes=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins.json',import.meta.url)));
  for(const [path,pin]of Object.entries(fixes.changes).filter(([p])=>p.startsWith('src/hackathon-test-vault/e5/'))){
   check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===pin.after,'BC_E5B_DEVELOPMENT_PACKET');
  }
- const owner=openOwnedApiBridge({environmentId,clock:now}),m=owner.runtime.manifest;
- const diagnostic=[];
+ const diagnostic=createExecutionFailureLog();
+ const owner=openOwnedApiBridge({environmentId,clock:now,onFailure:(phase,error)=>observeExecutionFailure(diagnostic.record,phase,error)}),m=owner.runtime.manifest;
  // Fixed codes only, outside the API rollback and before E4 sanitizes errors.
- const allowed=new Set(['BC_E5B_CHALLENGE','BC_E5B_BINDING_AUTHORITY','BC_E5B_READER_PROOF','BC_E5B_ADOPTION_NOT_COMMITTED','BC_E5B_WINDOW_CHANGED','BC_E5_CURRENT_CHANGED','BC_E5_CHAIN_CURRENT','BC_E5_CHAIN_AUTHORITY','BC_E5_SOURCE_CHANGED','BC_E5_CONSENT_CHANGED','BC_E5_EXACT_COMMAND','BC_E5B_CHAIN_CURRENT','BC_E5B_CURRENT_TARGET','BC_E5B_PUBLICATION_ORDER','BC_E5B_REVIEW_STATE','BC_E5B_SOURCE_EXTENSION','BC_E5B_FULL_ALLOCATION_REQUIRED','BC_E5B_REGISTRATION_REQUIRED','BC_E5B_PUBLICATION_REQUIRED','BC_E5B_BUSINESS_EXPIRED','BC_E5_CLOCK_CHANGED','BC_E5_FENCED','BC_E5_GLOBAL_FENCED']);
  const config=Object.freeze({version:'clear-bootcamp-e4b-connection.1',sourceMode,runtime:owner.runtime,reader:owner.reader,worker:owner.worker,fenceReader:owner.owner.fenceReader,
   bindController(factory){owner.owner.bindController(ports=>{
-   const controller=factory(ports);
-   return Object.fromEntries(Object.entries(controller).map(([phase,fn])=>[phase,arg=>{try{return fn(arg);}catch(error){diagnostic.push(Object.freeze({phase,code:allowed.has(error?.message)?error.message:'BC_E5B_CALLBACK_OTHER',rejected:1}));throw error;}}]));
+   let subphase;const observed={...ports,witnesses:{...ports.witnesses,consume(ticket){const e=ports.witnesses.consume(ticket);subphase=e.phase;return e;}}};
+   const controller=factory(observed);
+   return Object.fromEntries(Object.entries(controller).map(([phase,fn])=>[phase,arg=>{subphase=undefined;try{return fn(arg);}catch(error){observeExecutionFailure(diagnostic.record,phase,error,{subphase});throw error;}finally{subphase=undefined;}}]));
   });}});
  connections.add(config);
+ failureLogs.set(config,diagnostic.record);
  const reader=new ExecutionReader(m),cache=new Map(),bindings=new Map();
  const execution='REGISTERED_TEST_CHAIN',result=(version,fields)=>({version,execution,...fields});
  const binding=context=>{const b=bindings.get(context.applicationId);check(b,'BC_E3_REGISTERED_BINDING');return b;};
@@ -45,6 +52,6 @@ export function openDevelopmentConnection({environmentId,sourceMode='SYNTHETIC_T
   registerApplication({applicationId,wallet,decisionId}){check(!bindings.has(applicationId),'BC_E3_REGISTERED_BINDING');const short=e4Hash({applicationId,wallet}).slice(2,42);bindings.set(applicationId,{applicationId,wallet,decisionId,registrationId:'registration-'+short,allocationId:'allocation-'+short,obligationId:'obligation-'+short,chainApplicationId:ZERO,chainDecisionId:ZERO,chainAllocationId:ZERO,nonce:'0x'+randomBytes(32).toString('hex')});},
   bindOpaque(applicationId,target){const b=binding({applicationId});check(b.chainApplicationId===ZERO,'BC_E3_REGISTERED_BINDING');Object.assign(b,{chainApplicationId:target.applicationId,chainDecisionId:target.decisionId,chainAllocationId:target.allocationId});},
   async refresh(applicationId){const b=binding({applicationId}),o=validateE4Observation(await reader.observe({applicationId:b.chainApplicationId,nonce:b.nonce}),{runtimeHash:owner.runtime.runtimeHash});cache.set(applicationId,{observation:o,until:now()+5});return o;},
-  diagnostics:()=>structuredClone(diagnostic),metrics:()=>owner.owner.metrics(),close:()=>owner.owner.close(),
+  diagnostics:diagnostic.snapshot,failureState:()=>owner.owner.failureState(),metrics:()=>owner.owner.metrics(),close:()=>owner.owner.close(),
  });
 }

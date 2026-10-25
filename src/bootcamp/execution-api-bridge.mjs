@@ -7,7 +7,9 @@ import {bridgeControllerFactory} from './execution-e4b-controller.mjs';
 import {executionBridgeLedger} from './execution-b-ledger.mjs';
 import {executionCommands} from './execution-commands.mjs';
 
-export function createApiExecutionBridge({db,ports,service,live,basis,sameBasis,business,app,current,heads,source,global,runtime,event,fault},context){
+export function createApiExecutionBridge({db,ports,service:baseService,live,basis,sameBasis,business,app,current,heads,source,global,runtime,event,fault},context){
+ // The controller wrapper records only terminal failures after its existing bounded recheck.
+ const service=(context,action,...args)=>{try{return baseService(context,action,...args);}catch(error){try{if(action!=='B_CONTROLLER')ports.diagnose?.(action,error);}catch{}throw error;}};
  const ledger=executionBridgeLedger(db),commands=executionCommands({db,current,heads,source});
  const decode=row=>row?JSON.parse(row.record):null;
  function state(g,h,time,authority){const s=live(h,time,authority.serviceId);check(['UNOBSERVED','ACTIVE'].includes(s.r.status),'BC_E5_RUNTIME_SUSPENDED');

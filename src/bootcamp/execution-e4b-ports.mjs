@@ -1,4 +1,4 @@
-import {isDevelopmentConnection} from './execution-development.mjs';
+import {isDevelopmentConnection,recordDevelopmentFailure} from './execution-development.mjs';
 import {recoverAddress,Signature,TypedDataEncoder,id as ethersId} from 'ethers';
 import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 import {hash,id} from './model.mjs';
@@ -66,6 +66,7 @@ export function createE4BridgePorts(configuration=null){
   check(signer===runtime.controllerAddress,'BC_E5B_CONTROLLER_SIGNER');return copy(value);
  }
  return Object.freeze({configured:true,sourceMode:configuration.sourceMode,scope:copy(scope),runtime,projection,executionEnabled:isDevelopmentConnection(configuration),
+  diagnose:(phase,error)=>recordDevelopmentFailure(configuration,phase,error),
   fenceReader:Object.freeze({version:'clear-bootcamp-runtime-fence-reader.1',read:query=>floor(copy(query))}),
   bind(factory){check(!bound,'BC_E5B_ALREADY_BOUND');bound=true;
    sync(bind(owner=>{

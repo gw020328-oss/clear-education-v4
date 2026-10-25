@@ -15,63 +15,70 @@ import {syntheticAuthority} from '../../tests/bootcamp-store/fixture.mjs';
 import {waitForNormalReviewConsents} from './explicit-consents.mjs';
 import {requireNormalSourceWindow,REVIEW_WINDOW} from './normal-review-window.mjs';
 import {registerNormalSourceTarget,normalProcedureBody} from './normal-current-view.mjs';
+import {executionErrorSummary} from '../../src/bootcamp/execution-diagnostics.mjs';
 import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(condition,code)=>{if(!condition)throw Error(code);};
 export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,signal,sourceTarget,requireReviewReaders}){
+ const started=performance.now();let step='VALIDATE',operation='SETUP';
+ try{
  const automatic=connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'&&waitForConsents===undefined;
  ensure(automatic||typeof waitForConsents==='function','BC_NORMAL_EXPLICIT_CONSENTS_REQUIRED');
  ensure(connection.configuration.sourceMode!=='REGISTERED_TEST_SOURCE'||sourceTarget,'BC_NORMAL_SOURCE_TARGET_REQUIRED');
  const m=connection.runtime.manifest,id=m.environmentId,reader=new ExecutionReader(m),bridge=store.execution.connectBridge(serviceContext);
   ensure(user.wallet.toLowerCase()===recipient.toLowerCase(),'BC_NORMAL_RECIPIENT');
   const reviewWindow=()=>{if(!automatic){requireReviewReaders?.();requireNormalSourceWindow({store,context:user,applicationId:app,sourceTarget:target});}};
-  const {target,intake}=await registerNormalSourceTarget({store,connection,user,app,key,sourceTarget});
+  step='REGISTER_SOURCE_TARGET';const {target,intake}=await registerNormalSourceTarget({store,connection,user,app,key,sourceTarget});
   reviewWindow();
   const body=(context=user,extra={})=>normalProcedureBody(store,context,app,target,extra);
   const chainApp=intake.record.opaqueTarget.applicationId;report.chainApplicationId=chainApp;
   const token=new Contract(m.tokenAddress,reader.token,ownedTestWallet(id,'depositor').connect(provider));
   const vault=new Contract(m.vaultAddress,reader.vault,ownedTestWallet(id,'depositor').connect(provider));
-  for(const tx of [()=>token.approve(m.vaultAddress,100000000n),()=>vault.fund(hash(),100000000n)]){reviewWindow();const sent=await tx();await waitSetupReceipt(provider,sent.hash);}
+  for(const tx of [()=>token.approve(m.vaultAddress,100000000n),()=>vault.fund(hash(),100000000n)]){reviewWindow();step='FUND_SEND';const sent=await tx();step='FUND_RECEIPT';await waitSetupReceipt(provider,sent.hash);}
   stage(connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'?'SYNTHETIC_CURRENT_MET_AND_RESERVE':'REGISTERED_CURRENT_MET_AND_RESERVE');
-  await store.execution.observeRuntimeFence(serviceContext);
-  const g=store.execution.acquireRuntime(serviceContext,{owner:'normal-worker',expectedFence:0,generation:1,leaseSeconds:60});
+  step='RUNTIME_FENCE';await store.execution.observeRuntimeFence(serviceContext);
+  step='ACQUIRE_RUNTIME';const g=store.execution.acquireRuntime(serviceContext,{owner:'normal-worker',expectedFence:0,generation:1,leaseSeconds:60});
   async function execute(kind,preparationId=null){
-   if(['REGISTER','ALLOCATE','START_REVIEW'].includes(kind))reviewWindow();
-   stage(kind);store.execution.heartbeatRuntime(serviceContext,g,60);
-   const observation=await connection.refresh(app);
-   const plan=store.execution.plan(user,app,{kind,operationId:hash(),expectedChainVersion:observation.business.application.version,preparationId});
-   const i=store.execution.enqueue(user,app,plan.body,key()).receipt.intentId;
-   const h=store.execution.acquire(serviceContext,i,{owner:'normal-worker',generation:1,leaseSeconds:60});store.execution.bindRuntimeIntent(serviceContext,g,h);
-   const request=await bridge.prepare(g,h,bridge.inspect(g,h));await bridge.seal(g,h,request.binding);const found=await bridge.lookup(g,h,request.binding);await bridge.adopt(g,h,request.binding);
-   await bridge.dispatch(g,h,request.binding);await waitSetupReceipt(provider,found.envelope.txHash);
-   const completed=await bridge.recover(g,h,request.binding);ensure(completed.completion?.status==='INCLUDED','BC_NORMAL_RECEIPT_PENDING');report.stages.push({kind,txHash:completed.completion.txHash,checkpoint:completed.completion.checkpoint});write();return completed;
+   operation=kind;step='REVIEW_WINDOW';if(['REGISTER','ALLOCATE','START_REVIEW'].includes(kind))reviewWindow();
+   stage(kind);step='HEARTBEAT';store.execution.heartbeatRuntime(serviceContext,g,60);
+   step='REFRESH';const observation=await connection.refresh(app);
+   step='PLAN';const plan=store.execution.plan(user,app,{kind,operationId:hash(),expectedChainVersion:observation.business.application.version,preparationId});
+   step='ENQUEUE';const i=store.execution.enqueue(user,app,plan.body,key()).receipt.intentId;
+   step='ACQUIRE_INTENT';const h=store.execution.acquire(serviceContext,i,{owner:'normal-worker',generation:1,leaseSeconds:60});step='BIND_RUNTIME';store.execution.bindRuntimeIntent(serviceContext,g,h);
+   step='PREPARE_CAPABILITY';const request=await bridge.prepare(g,h,bridge.inspect(g,h));step='SEAL';await bridge.seal(g,h,request.binding);step='LOOKUP';const found=await bridge.lookup(g,h,request.binding);step='ADOPT';await bridge.adopt(g,h,request.binding);
+   step='DISPATCH';await bridge.dispatch(g,h,request.binding);step='RECEIPT_WAIT';await waitSetupReceipt(provider,found.envelope.txHash);
+   step='RECOVER';const completed=await bridge.recover(g,h,request.binding);ensure(completed.completion?.status==='INCLUDED','BC_NORMAL_RECEIPT_PENDING');report.executionDiagnostics=connection.diagnostics().slice(0,16);report.stages.push({kind,txHash:completed.completion.txHash,checkpoint:completed.completion.checkpoint});write();return completed;
   }
   await execute('REGISTER');await execute('ALLOCATE');
   const allocated=await connection.refresh(app),publishedNotBefore=Math.max(Number(allocated.business.application.allocatedAt),Number(allocated.business.application.targetRecordedAt));
   ensure(publishedNotBefore-now()<=30,'BC_NORMAL_CHAIN_CLOCK_AHEAD');
   if(now()<publishedNotBefore)await new Promise(resolve=>setTimeout(resolve,publishedNotBefore*1000-Date.now()+20));
-  await connection.refresh(app);store.publishReview(user,app,body(),key());
+  step='PUBLISH_REVIEW';await connection.refresh(app);store.publishReview(user,app,body(),key());
   await execute('START_REVIEW');await connection.refresh(app);
   if(automatic){
    store.recordReviewConsent(user,app,body(user,{value:'AGREE'}),key());store.recordReviewConsent(op,app,body(op,{value:'AGREE'}),key());
    report.consentOrigin='SYNTHETIC_AUTOMATIC_TEST_ROLES';
   }else{
-   await waitForNormalReviewConsents({store,connection,context:user,applicationId:app,sourceTarget,waitForConsents,
+   step='WAIT_CONSENTS';await waitForNormalReviewConsents({store,connection,context:user,applicationId:app,sourceTarget,waitForConsents,
     minimumWindowSeconds:REVIEW_WINDOW.openingSeconds,
     heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal,
     onTarget:(target,window)=>{report.reviewTarget=target;report.reviewWindowAtOpen=window;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');}});
    report.consentOrigin='AUTHENTICATED_APP_CONSENT_RECORDS';
   }
 
-  await execute('BIND_CONSENTS');await connection.refresh(app);const preparation=store.prepareReviewAuthorization(user,app,body(),key()).record.target.preparationId;
+  await execute('BIND_CONSENTS');step='PREPARE_AUTHORIZATION';await connection.refresh(app);const preparation=store.prepareReviewAuthorization(user,app,body(),key()).record.target.preparationId;
   await execute('PREPARE',preparation);const accepted=await execute('ACCEPT',preparation);ensure(accepted.claimJob,'BC_NORMAL_CLAIM_JOB_REQUIRED');
-  stage('SEPARATE_CLAIM');const before=await token.balanceOf(recipient),claim=await vault.connect(ownedTestWallet(id,'anycaller').connect(provider)).claim(chainApp);await waitSetupReceipt(provider,claim.hash);
-  const settlement=await bridge.directClaimReceipt(g,accepted.claimJob.jobId,claim.hash);ensure(settlement.status==='SETTLED','BC_NORMAL_CLAIM_PENDING');
-  const after=await token.balanceOf(recipient);ensure(after-before===100000000n,'BC_NORMAL_BALANCE');
-  let duplicateRejected=false;try{await vault.claim.staticCall(chainApp);}catch{duplicateRejected=true;}ensure(duplicateRejected,'BC_NORMAL_DUPLICATE');
+  operation='CLAIM';stage('SEPARATE_CLAIM');step='BALANCE_BEFORE';const before=await token.balanceOf(recipient);step='CLAIM_SEND';const claim=await vault.connect(ownedTestWallet(id,'anycaller').connect(provider)).claim(chainApp);step='CLAIM_RECEIPT_WAIT';await waitSetupReceipt(provider,claim.hash);
+  step='CLAIM_CANONICAL';const settlement=await bridge.directClaimReceipt(g,accepted.claimJob.jobId,claim.hash);ensure(settlement.status==='SETTLED','BC_NORMAL_CLAIM_PENDING');
+  step='BALANCE_AFTER';const after=await token.balanceOf(recipient);ensure(after-before===100000000n,'BC_NORMAL_BALANCE');
+  step='DUPLICATE_CHECK';let duplicateRejected=false;try{await vault.claim.staticCall(chainApp);}catch{duplicateRejected=true;}ensure(duplicateRejected,'BC_NORMAL_DUPLICATE');
   report.claim={txHash:claim.hash,checkpoint:settlement.receipt.checkpoint,amountAtoms:String(after-before),duplicateRejected};report.completed=true;stage(connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'?'SYNTHETIC_SOURCE_CHAIN_COMPLETE':'REGISTERED_SOURCE_CHAIN_COMPLETE');
   return report;
+ }catch(error){
+  try{report.executionDiagnostics=connection.diagnostics().slice(0,16);report.paymentFailure??={operation,step,...executionErrorSummary(error),atUnixMs:Date.now(),offsetMs:Math.max(0,performance.now()-started),metrics:connection.metrics(),native:connection.failureState?.()??null};write();}catch{}
+  throw error;
+ }
 }
 export async function runSyntheticNormalChain(){
  const created=await createEnvironment(),id=created.environmentId,m=created.manifest,{dir}=environmentRecord(id);

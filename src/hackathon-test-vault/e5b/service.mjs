@@ -12,9 +12,9 @@ import {validateWindowShape,validateBusinessWindow} from './business-window.mjs'
 const recoveryPhases=new Set(['RECOVER','RECOVER_FINAL_SYNC','RETENTION','LOOKUP']);
 const identityKeys=['intentId','requestId','attemptId','runtimeHash','lineage','commandHash'];
 export class BridgeExecutionService extends OwnedExecutionService {
- constructor({gate,...configuration}){
+ constructor({gate,diagnose=()=>{},...configuration}){
   super({...configuration,controller:{readCurrentSync(){throw Error('E5B_INTERNAL_ONLY');},commitCurrentSync(){throw Error('E5B_INTERNAL_ONLY');}}});
-  this.gate=gate;this.proofs=new WeakMap();this.commands=new Map();
+  this.gate=gate;this.diagnose=(...args)=>{try{diagnose(...args);}catch{}};this.proofs=new WeakMap();this.commands=new Map();
   this.db.exec('CREATE TABLE IF NOT EXISTS bridge_adoptions(sequence INTEGER PRIMARY KEY AUTOINCREMENT,ref TEXT NOT NULL,record TEXT NOT NULL);');
  }
  validateBinding(binding,command){
@@ -48,13 +48,14 @@ export class BridgeExecutionService extends OwnedExecutionService {
   this.transaction(()=>this.fence(binding,{recovery:binding.purpose==='RECOVER'}));return cert;
  }
  current(binding,observation,phase){
+  this.diagnosticPhase=phase;
   const recovery=recoveryPhases.has(phase),command=this.commands.get(binding.commandHash);ensure(command,'E5B_COMMAND_NOT_REGISTERED');
   let proof={kind:'AUTHORITY_ONLY_NO_CHAIN_ASSERTION'};
   if(!recovery){ensure(binding.purpose==='EXECUTE','E5B_EXECUTION_CAPABILITY_REQUIRED');proof=this.proofs.get(observation);ensure(proof&&proof.bindingHash===sha(binding)&&proof.commandHash===sha(command),'E5B_UNREGISTERED_OBSERVATION');validateBusinessWindow(binding.business,command,observation,this.clock());}
   const payload={version:'clear-e5-current-witness.2',challenge:randomUUID(),phase,bindingHash:sha(binding),observationHash:sha(observation),runtimeHash:this.runtimeHash};
   const cert=this.gate.invoke('current',{binding,command,observation,proof,phase,payload});verifyCertificate(cert,payload,this.manifest.controllerAddress);this.fence(binding,{recovery});
  }
- async checked(binding,command,phase){const observation=await this.inspect(binding,command,{track:true});this.transaction(()=>this.current(binding,observation,phase));return observation;}
+ async checked(binding,command,phase){this.diagnosticPhase=phase;const observation=await this.inspect(binding,command,{track:true});this.transaction(()=>this.current(binding,observation,phase));return observation;}
  authenticateReference(request,row,purpose){
   const {binding,capability}=request;this.validateBinding(binding,row.command);verifyCertificate(capability,binding,this.manifest.controllerAddress);
   for(const k of identityKeys)ensure(binding[k]===row.binding[k],'E5_REFERENCE_BINDING');
@@ -96,8 +97,8 @@ export class BridgeExecutionService extends OwnedExecutionService {
   const cert=this.gate.invoke('commit',{binding:request.binding,command:row.command,observation,proof:this.proofs.get(observation),phase:'COMMIT',payload,reference:{ref:row.ref,manifestHash:row.manifestHash,adoptionId:adoption.adoptionId,adoptionHash:adoption.adoptionHash}});verifyCertificate(cert,payload,this.manifest.controllerAddress);
   this.transaction(()=>{row=this.row(row.ref);ensure(row.state==='SEALED','E5_DISPATCH_STATE');this.requireAdoption(request,row);this.current(request.binding,observation,'SEND_STARTED_FINAL_SYNC');row.state='SEND_STARTED';row.sendStartedAt=this.clock();row.apiCommitHash=sha(cert.payload);row.sendAdoptionHash=adoption.adoptionHash;this.save(row);});
   this.cut('SEND_STARTED_BEFORE_BROADCAST',row);
-  try{this.metrics.broadcasts++;const txHash=await this.reader.rpc('eth_sendRawTransaction',[secret.raw]);ensure(txHash===row.txHash,'E5_BROADCAST_HASH');this.cut('BROADCAST_RESPONSE',row);}
-  catch{this.transaction(()=>{const r=this.row(row.ref);if(r.state==='SEND_STARTED'){r.state='UNKNOWN';this.save(r);}});return {status:'UNKNOWN',ref:row.ref,txHash:row.txHash};}
+  try{this.diagnosticPhase='BROADCAST';this.metrics.broadcasts++;const txHash=await this.reader.rpc('eth_sendRawTransaction',[secret.raw]);ensure(txHash===row.txHash,'E5_BROADCAST_HASH');this.cut('BROADCAST_RESPONSE',row);}
+  catch(error){this.diagnose('BROADCAST',error);this.transaction(()=>{const r=this.row(row.ref);if(r.state==='SEND_STARTED'){r.state='UNKNOWN';this.save(r);}});return {status:'UNKNOWN',ref:row.ref,txHash:row.txHash};}
   return this.recover(request);
  }
  async seal({binding,command,capability}){
@@ -147,6 +148,6 @@ export class BridgeExecutionService extends OwnedExecutionService {
    row.manifestHash=sha({...row,state:'SEALED'});row.state='SEALED';
    this.transaction(()=>{ensure(this.row(ref).state==='PREPARING','E5_STATE_CONFLICT');this.current(binding,observation,'SEALED_FINAL_SYNC');this.save(row);});
    this.cut('SEALED_BEFORE_API_COMMIT',row);return this.public(row);
-  }catch(error){this.transaction(()=>{const current=this.row(ref);if(current.state==='PREPARING'){current.state='SIGNING_UNCERTAIN';current.failure='E5_SEAL_FAILED_NO_RESIGN';this.save(current);}});throw Error(/^E5B?_[A-Z0-9_]{1,80}$/.test(error.message)?error.message:'E5_SEAL_FAILED');}
+  }catch(error){this.diagnose(this.diagnosticPhase,error);this.transaction(()=>{const current=this.row(ref);if(current.state==='PREPARING'){current.state='SIGNING_UNCERTAIN';current.failure='E5_SEAL_FAILED_NO_RESIGN';this.save(current);}});throw Error(/^E5B?_[A-Z0-9_]{1,80}$/.test(error.message)?error.message:'E5_SEAL_FAILED');}
  }
 }

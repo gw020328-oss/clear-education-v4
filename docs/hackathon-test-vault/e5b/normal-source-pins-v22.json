@@ -1,0 +1,13 @@
+{
+  "scope": "EXACT_V25_NORMAL_PAYMENT_FAILURE_DIAGNOSTICS",
+  "changes": {
+    "src/hackathon-test-vault/e5b/bridge.mjs": {
+      "before": "dbea12a6d7bff93dd89f208e0573071adad7238a9a1476a43b07c2b3509667c5",
+      "after": "a2bf78c5c5de81fdcce0842e6e01f923c27fe83f3f76fddc984e0772840703c3"
+    },
+    "src/hackathon-test-vault/e5b/service.mjs": {
+      "before": "fabdd5c1326e1aa0e7230b0d9dddaafcb3dc3a23c4c1e3e8374c0f046055f234",
+      "after": "7fa073c6706f2cdce524c51d9f7ed805c566d759437feffe5f0b10d3619e8c1d"
+    }
+  }
+}
