@@ -101,7 +101,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    fault('e3-before-command');
    const saved=command(a,s.wallet,route,key,body,{decisionId:st.d.decisionId,...target},time,{...attempt,extraEvent:'AUTO_OPERATION_COMPLETED'});fault('e3-after-command');
    return operation(a,saved,time);
-  },()=>observers.forEach(f=>f()),{retryClockBoundary:name==='register-target'});}catch(error){
+  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:name==='consent'});}catch(error){
    if(attempt)transaction(()=>ledger.emit({...attempt,eventType:'OPERATION_FAILED'}));throw error;
   }
  }
@@ -229,11 +229,17 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
   });},
   recordReviewConsent(context,a,body,key,{beforeNewConsent}={}){return run(context,a,body,key,'consent',['value'],(st,s,time,observers)=>{
    check(['AGREE','WITHDRAW'].includes(body.value),'BC_E3_CONSENT_VALUE');active(st,time);published(st);sourceObservation(st,time,observers);
-   // Owner operating gate runs only for a new authenticated command, after exact replay handling.
-   beforeNewConsent?.(Object.freeze({asOf:time,applicationId:a,applicationRevision:st.a.revision,
+   // Validate the original source/review caps and pure owner operating gate at
+   // commit time, before this one provisional consent becomes durable. Exact
+   // replay never registers this check. A clock-only final read may check again.
+   observers.unshift(asOf=>{
+    active(st,asOf);
+    check(sameSnapshot(st.sourceState,currentSourceWindow(st.a,heads,source,asOf)),'BC_E3_PORT_CHANGED');
+    beforeNewConsent?.(Object.freeze({asOf,applicationId:a,applicationRevision:st.a.revision,
     decisionId:st.d.decisionId,decisionRevision:st.d.decisionRevision,decisionHash:st.d.decisionHash,
     scopeHash:st.pub.consentScopeHash,validUntilExclusive:st.sourceState.validUntilExclusive,reviewCapAt:st.p.reviewCapAt,
     fullyAllocated:st.fullCurrent,amountAtoms:st.funding.amountAtoms,reservedAtoms:st.funding.reservedAtoms,objectionBlocked:st.unresolved}));
+   });
    const commitment=actorCommitment(st.a,s),prior=records(st.a,'CONSENT').filter(r=>r.scopeHash===st.pub.consentScopeHash&&r.actorCommitment===commitment).at(-1);
    const record=prior?.value===body.value?prior:l.record(a,'CONSENT',p0Hash('E3-CONSENT-COMMAND',{scope:st.pub.consentScopeHash,actor:commitment,value:body.value,prior:prior?.id??null}),{
     version:'clear-bootcamp-review-consent.1',id:procedureId('consent'),procedureId:st.p.procedureId,scopeHash:st.pub.consentScopeHash,

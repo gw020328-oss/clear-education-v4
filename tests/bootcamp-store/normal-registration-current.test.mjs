@@ -96,8 +96,8 @@ test('the exact E3 source cutoff still rejects even when the ledger head has one
 test('human consent commands never opt into the internal registration retry',async t=>{
  const x=await fixture(t);x.f.setFull(true);x.f.publish(x.a);const body=x.f.body(x.a,{value:'AGREE'}),before=x.executions;
  x.arm(n=>{if(n===2)x.f.setTime(START+216);});
- assert.throws(()=>x.f.store.recordReviewConsent(x.f.aliceContext,x.a,body,x.f.key()),/BC_VIEW_STALE/);
- x.disarm();assert.equal(x.executions,before+1);assert.equal(x.stats().consents,0);
+ x.f.store.recordReviewConsent(x.f.aliceContext,x.a,body,x.f.key());
+ x.disarm();assert.equal(x.executions,before+1);assert.equal(x.stats().consents,1);
 });
 
 test('authentication is reacquired after a clock rollback; logout cannot be reused',async t=>{

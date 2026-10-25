@@ -93,13 +93,13 @@ test('renewed decision and publication cannot reuse the original target or its t
  await assert.rejects(x.start(),/BC_NORMAL_SOURCE_CHANGED/);assert.equal(x.refreshes,0);assert.equal(x.targets,0);
 });
 
-test('caller stale revision, decision hash and clock-conflicted consent writes are never retried',async t=>{
+test('caller stale targets stay rejected and a forward-clock consent commits once without write retry',async t=>{
  const x=await fixture(t),body=x.f.body(x.app,{value:'AGREE'});
  assert.throws(()=>x.f.store.recordReviewConsent(x.f.aliceContext,x.app,{...body,expectedRevision:body.expectedRevision-1},x.f.key()),/BC_VIEW_STALE/);
  assert.throws(()=>x.f.store.recordReviewConsent(x.f.aliceContext,x.app,{...body,targetDecisionHash:'0x'+'66'.repeat(32)},x.f.key()),/BC_DECISION_TARGET/);
  const current=x.f.body(x.app,{value:'AGREE'});x.arm();
- assert.throws(()=>x.f.store.recordReviewConsent(x.f.aliceContext,x.app,current,x.f.key()),/BC_VIEW_STALE/);
- assert.equal(x.view().consent.records.length,0);assert.equal(x.collections,4);
+ x.f.store.recordReviewConsent(x.f.aliceContext,x.app,current,x.f.key());
+ assert.equal(x.view().consent.records.length,1);assert.equal(x.collections,4);
 });
 
 test('unrelated or awaited refresh failures propagate without a retry',async t=>{

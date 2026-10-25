@@ -6,14 +6,24 @@ import {BridgeExecutionService} from '../../../src/hackathon-test-vault/e5b/serv
 import {normalPaymentFixture} from './normal-payment-fixture.mjs';
 
 function crossSecond(){const before=Date.now();Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1001-before%1000);const after=Date.now();assert.ok(Math.floor(after/1000)>Math.floor(before/1000));return {before,after};}
-for(const scenario of ['normal','rollover','commit-rollover','lost-response'])test(`real wall-clock full payment with ${scenario==='rollover'?'ACCEPT BEFORE_DISPATCH rollover':scenario==='commit-rollover'?'ACCEPT COMMIT rollover':scenario==='lost-response'?'lost ACCEPT response':'ordinary async RPC'}`,async t=>{
+for(const scenario of ['normal','rollover','commit-rollover','lost-response','capability-rollover','consent-rollover'])test(`real wall-clock full payment with ${scenario==='rollover'?'ACCEPT BEFORE_DISPATCH rollover':scenario==='commit-rollover'?'ACCEPT COMMIT rollover':scenario==='lost-response'?'lost ACCEPT response':scenario==='capability-rollover'?'PREPARE AUTHORIZE rollover':scenario==='consent-rollover'?'each explicit synthetic consent rollover':'ordinary async RPC'}`,async t=>{
  const crossing=scenario==='rollover';
  const original=BridgeExecutionService.prototype.current;let active=false,ticks=0,crossed=null;
  BridgeExecutionService.prototype.current=function(b,o,phase){active=crossing&&phase==='BEFORE_DISPATCH'&&this.commands.get(b.commandHash)?.method==='accept';ticks=0;
   try{return original.call(this,b,o,phase);}finally{active=false;}
  };
  t.after(()=>{BridgeExecutionService.prototype.current=original;});
- const f=await normalPaymentFixture(t,{wallClock:true,sourceSeconds:240,readWhileAsync:true,onStoreTick(){if(active&&++ticks===2&&!crossed)crossed=crossSecond();}});
+ const consentCrossings=[];
+ const f=await normalPaymentFixture(t,{wallClock:true,sourceSeconds:240,readWhileAsync:true,
+  fault(point){if(scenario==='consent-rollover'&&point==='e3-after-consent')consentCrossings.push(crossSecond());},
+  onStoreTick(){if(active&&++ticks===2&&!crossed)crossed=crossSecond();}});
+ const authorize=BridgeExecutionService.prototype.authorize;
+ BridgeExecutionService.prototype.authorize=async function(request){
+  if(scenario!=='capability-rollover'||request.command.method!=='prepareUnsigned')return authorize.call(this,request);
+  const gate=this.gate;this.gate={...gate,invoke(kind,e){active=kind==='capability';ticks=0;try{return gate.invoke(kind,e);}finally{active=false;}}};
+  try{return await authorize.call(this,request);}finally{this.gate=gate;}
+ };
+ t.after(()=>{BridgeExecutionService.prototype.authorize=authorize;});
  const dispatch=BridgeExecutionService.prototype.dispatch;let lost=0;
  BridgeExecutionService.prototype.dispatch=async function(request){
   if(this.commands.get(request.binding.commandHash)?.method!=='accept')return dispatch.call(this,request);
@@ -28,7 +38,8 @@ for(const scenario of ['normal','rollover','commit-rollover','lost-response'])te
  assert.equal(r.claim.amountAtoms,'100000000');assert.equal(r.claim.duplicateRejected,true);assert.equal(r.consentOrigin,'AUTHENTICATED_APP_CONSENT_RECORDS');
  assert.equal(f.metrics().broadcasts,6);assert.equal(f.metrics().transactionSignatures,6);assert.equal(f.metrics().paymentSignatures,1);
  assert.equal(f.metadata.prepare("SELECT count(*) n FROM envelopes WHERE state='INCLUDED'").get().n,6);
- if(crossing||scenario==='commit-rollover'){assert.ok(crossed);t.diagnostic(JSON.stringify({phase:crossing?'BEFORE_DISPATCH':'COMMIT',...crossed}));}
+ if(crossing||scenario==='commit-rollover'||scenario==='capability-rollover'){assert.ok(crossed);t.diagnostic(JSON.stringify({phase:crossing?'BEFORE_DISPATCH':scenario==='capability-rollover'?'AUTHORIZE':'COMMIT',...crossed}));}
+ if(scenario==='consent-rollover'){assert.equal(consentCrossings.length,2);t.diagnostic(JSON.stringify({phase:'CONSENT_COMMIT',crossings:consentCrossings}));}
 });
 
 for(const failure of ['source-change','service-revoked','expiry'])test('real wall-clock ACCEPT pre-send '+failure+' stops with one sealed envelope and no sixth send',async t=>{

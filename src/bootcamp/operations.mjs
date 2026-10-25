@@ -21,7 +21,7 @@ export function createOperations({db,transaction,authentication,operatorBindings
     for(const a of applications)scope(s,a,bindings);
     if(s.role==='operator')check(bindings.some(b=>b.wallet===s.wallet),'FORBIDDEN');
   }
-  function access(context,applicationId,write,fn,finalCheck=()=>{},{retryClockBoundary=false}={}){
+  function access(context,applicationId,write,fn,finalCheck=()=>{},{retryClockBoundary=false,consentCommitClock=false}={}){
     id(applicationId);
     // Only internal registration opts in. Retry one rolled-back transaction,
     // never a caller's stale CAS/decision, changed source, port or authority.
@@ -32,10 +32,22 @@ export function createOperations({db,transaction,authentication,operatorBindings
       const initialSequence=ledger.sequence();let clockOnly=false;
       db.exec('SAVEPOINT r2_command');
       try{check(!clock.reversed,'BC_CLOCK_REVERSED');const value=fn(a,s,clock.time),sequence=ledger.sequence();
-        const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed);finalCheck(latest,s,final.time);const end=tick();
-        clockOnly=!final.reversed&&!end.reversed&&end.time>clock.time&&latest.revision===a.revision&&ledger.sequence()===sequence;
-        check(!final.reversed&&!end.reversed&&end.time===clock.time&&latest.revision===a.revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
-        finalAuthority(context,write,s,[latest]);
+        // A consent is written once in this savepoint. Only its final read-only
+        // validation may restart once if the clock advances while checking it.
+        // Never replay fn, the caller's command, its idempotency key or consent.
+        for(let validation=0;;validation++){
+          const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed);
+          check(!final.reversed&&final.time>=clock.time,'BC_VIEW_STALE');
+          finalCheck(latest,s,final.time);
+          if(consentCommitClock)finalAuthority(context,write,s,[latest]);
+          const end=tick();
+          clockOnly=!end.reversed&&end.time>clock.time&&latest.revision===a.revision&&ledger.sequence()===sequence;
+          check(!end.reversed&&end.time>=final.time&&latest.revision===a.revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
+          if(consentCommitClock&&end.time>final.time&&validation===0)continue;
+          check(end.time===(consentCommitClock?final.time:clock.time),'BC_VIEW_STALE');
+          if(!consentCommitClock)finalAuthority(context,write,s,[latest]);
+          break;
+        }
         db.exec('RELEASE r2_command');return {value};}
       catch(error){db.exec('ROLLBACK TO r2_command; RELEASE r2_command');const c=tick(),latest=refresh(app(applicationId),c.time,c.reversed);
         return {error,retry:retryClockBoundary&&attempt===0&&clockOnly&&!c.reversed&&c.time>=clock.time
