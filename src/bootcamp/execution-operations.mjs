@@ -35,18 +35,36 @@ export function createExecutionOperations({db,transaction,authentication,operato
  function scope(s,a,bindings=operatorBindings()){check(s.role==='participant'?s.wallet===a.wallet:bindings.some(b=>b.wallet===s.wallet&&b.courseOperatorRef===a.course_operator_ref),'FORBIDDEN');}
  function actor(context,write){const s=sync(authentication.authorizeWorkflow(context,write));
   check(['participant','operator'].includes(s?.role)&&typeof s.wallet==='string','FORBIDDEN');address(s.wallet.toLowerCase());return {...s,wallet:s.wallet.toLowerCase()};}
- function withUser(context,applicationId,write,fn){
-  id(applicationId);const result=transaction(()=>{
+ function withUser(context,applicationId,write,fn,{retryPlanClock=false}={}){
+  id(applicationId);let original;
+  // PLAN is a read projection, never an enqueue/sign/send. Discard at most one
+  // rolled-back clock-only view. Keep the same actor, target, ledger and input;
+  // a new transaction must authenticate and validate current source facts again.
+  for(let attempt=0;;attempt++){
+  const result=transaction(()=>{
    const s=actor(context,write);let a=app(applicationId);scope(s,a);const c=tick();l.clock(c.time);
-   a=refresh(a,c.time,c.reversed,s.role==='participant'?sessionHash(context,s.wallet):null);db.exec('SAVEPOINT e5_command');
+   a=refresh(a,c.time,c.reversed,s.role==='participant'?sessionHash(context,s.wallet):null);
+   const initialSequence=ledger.sequence();let clockOnly=false;
+   db.exec('SAVEPOINT e5_command');
    try{
-    check(!c.reversed,'BC_CLOCK_REVERSED');const value=sync(fn(a,s,c.time));const sequence=ledger.sequence(),latestTick=tick();
+    check(!c.reversed,'BC_CLOCK_REVERSED');
+    if(original){check(s.wallet===original.wallet&&s.role===original.role,'BC_COMMIT_AUTHORITY');
+     check(a.revision===original.revision&&a.decision_id===original.decisionId&&initialSequence===original.sequence,'BC_VIEW_STALE');}
+    else original={wallet:s.wallet,role:s.role,revision:a.revision,decisionId:a.decision_id,sequence:initialSequence};
+    const value=sync(fn(a,s,c.time)),sequence=ledger.sequence(),latestTick=tick();
     const latest=refresh(app(applicationId),latestTick.time,latestTick.reversed),end=tick();
+    clockOnly=retryPlanClock&&!latestTick.reversed&&!end.reversed&&end.time>c.time
+     &&latest.revision===a.revision&&latest.decision_id===a.decision_id&&ledger.sequence()===initialSequence&&sequence===initialSequence;
     check(!latestTick.reversed&&!end.reversed&&end.time===c.time&&latest.revision===a.revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
     const bindings=operatorBindings(),final=actor(context,write);check(final.wallet===s.wallet&&final.role===s.role,'BC_COMMIT_AUTHORITY');scope(final,latest,bindings);
     db.exec('RELEASE e5_command');return {value};
-   }catch(error){db.exec('ROLLBACK TO e5_command; RELEASE e5_command');const end=tick();refresh(app(applicationId),end.time,end.reversed);return {error};}
-  });if(result.error)throw result.error;return result.value;
+   }catch(error){db.exec('ROLLBACK TO e5_command; RELEASE e5_command');const end=tick(),latest=refresh(app(applicationId),end.time,end.reversed);
+    return {error,retry:attempt===0&&clockOnly&&!end.reversed&&end.time>=c.time&&latest.revision===a.revision
+     &&latest.decision_id===a.decision_id&&ledger.sequence()===initialSequence};}
+  });
+  if(result.retry)continue;
+  if(result.error)throw result.error;return result.value;
+  }
  }
  function service(context,action,intentId,fn){
   configured();const result=transaction(()=>{
@@ -112,14 +130,16 @@ export function createExecutionOperations({db,transaction,authentication,operato
   plan(context,applicationId,{kind,operationId,expectedChainVersion,preparationId=null}){
    check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');check(kinds.includes(kind),'BC_E5_KIND');hash(operationId);u64(expectedChainVersion);
    return withUser(context,applicationId,false,(a,s,time)=>{
-    const d=decision(a),opaque=type=>get('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?',type,type==='APPLICATION'?a.id:d.decisionId)?.opaque_id;
+    const d=decision(a);
+    if(!['OBSERVE','TERMINATE'].includes(kind))check(a.status==='ACTIVE'&&d.conditionsStatus==='MET'&&currentSourceWindow(a,heads,source,time),'BC_E5_CURRENT_SOURCE_REQUIRED');
+    const opaque=type=>get('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?',type,type==='APPLICATION'?a.id:d.decisionId)?.opaque_id;
     const body={expectedRevision:a.revision,expectedLedgerSequence:ledger.sequence(),targetDecisionId:d.decisionId,targetDecisionRevision:d.decisionRevision,targetDecisionHash:d.decisionHash,
      kind,operationId,caller:kind==='ACCEPT'?e4BridgePorts.runtime.roles.relayer:e4BridgePorts.runtime.roles.registrar,expectedChainVersion,preparationId,authorizationDigest:null};
     const i={...body,applicationId:a.id,chainApplicationId:opaque('APPLICATION'),chainDecisionId:opaque('DECISION')};
     const command=executionCommands({db,current,heads,source}).command(i,{verifyHash:false});body.payloadHash=e4Hash(command);
     if(preparationId){const p=decode(get('SELECT record FROM e3_prepared WHERE application_id=? AND id=?',a.id,preparationId));check(p,'BC_E5_PREPARATION_REQUIRED');body.authorizationDigest=hashTestUnsignedPayload({domain:p.payload.domain,message:p.payload.message}).digest;}
     return freeze({body,command});
-   });
+   },{retryPlanClock:true});
   },
   connectBridge(context){
    check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');service(context,'B_CONNECT',null,time=>ensureRuntime(time));
