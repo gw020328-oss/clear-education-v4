@@ -1,0 +1,203 @@
+{
+  "version": "clear-bootcamp-v27-verification.1",
+  "date": "2026-10-25",
+  "baselineHead": "f5dc165ad0d76ffdcc0c4040ade06539ca432e5d",
+  "sourceCandidateHead": "be6596e553e9dbb0f82b2932e8b22063ef24d355",
+  "scope": "BOUNDED_PRE_SEND_CURRENT_AND_COMMIT_WITNESS_CLOCK_RECHECK",
+  "cause": {
+    "throwSite": "execution-operations.service final !end.reversed && end.time===c.time -> RuleError BC_E5_CLOCK_CHANGED",
+    "nativePath": "BridgeExecutionService.dispatch -> checked(BEFORE_DISPATCH) -> current -> private controllerGate -> bridgeControllerFactory -> API B_CONTROLLER transaction",
+    "ordering": [
+      "immutable envelope already SEALED and adopted",
+      "fresh native canonical observation and business-window validation",
+      "controller current witness before/after API authority and exact-business inspection",
+      "API transaction same-second check",
+      "native ancestry and eth_call",
+      "matching persisted adoption COMMIT witness",
+      "SEND_STARTED_FINAL_SYNC witness and durable SEND_STARTED",
+      "one eth_sendRawTransaction",
+      "canonical recovery"
+    ],
+    "confirmedFailure": "A forward wall-clock second during synchronous witness issuance invalidates the API transaction even if its unchanged immutable payload, source, authority and business caps remain valid. Prior v24 recovery-only cached-certificate recheck excluded execution phases and COMMIT.",
+    "nativeBaselineRed": {
+      "operation": "ACCEPT",
+      "step": "DISPATCH",
+      "subphase": "BEFORE_DISPATCH",
+      "code": "BC_E5_CLOCK_CHANGED",
+      "atUnixMs": 1792902137009,
+      "nativeStates": {
+        "INCLUDED": 5,
+        "SEALED": 1
+      },
+      "broadcasts": 5,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1
+    },
+    "additionalRelatedRed": {
+      "afterCurrentOnlyFix": "ACCEPT / COMMIT witness also crossed a second before send",
+      "atUnixMs": 1792902341003,
+      "code": "BC_E5_CLOCK_CHANGED",
+      "broadcasts": 5,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1
+    },
+    "originalR19HistoricalTickTupleProven": false
+  },
+  "change": {
+    "runtimeFiles": [
+      "src/bootcamp/execution-e4b-controller.mjs"
+    ],
+    "maximumFreshApiRechecks": 1,
+    "eligible": "already-issued unreturned current witness in existing executionPhases, or COMMIT adoption witness; existing RECOVER/RECOVER_FINAL_SYNC unchanged",
+    "sameSecondCheckRemoved": false,
+    "sameTicketConsumedOnce": true,
+    "sameCertificateAndPayloadReturned": true,
+    "issuerInvokedOnce": true,
+    "capabilityIssuanceRetryAdded": false,
+    "rechecks": [
+      "service and global/local worker authority and original expiry",
+      "original immutable binding, exact command/payload and original CAS/business hash",
+      "current source, recipient, amount, decision and message/review/source bounds",
+      "COMMIT exact persisted adoption/ref/manifest identities",
+      "before/after equality within the fresh transaction"
+    ],
+    "nativeOperationRepeated": false,
+    "ttlOrSourceCapsExtended": false,
+    "transactionOrPaymentResigningOrResending": false,
+    "whyCommitIsSafe": "B_CONTROLLER COMMIT inspects the already-persisted adoption and issues a certificate; it does not perform native dispatch or append a new adoption. The same unreturned certificate is retained, and the fresh transaction revalidates its original reference."
+  },
+  "wallClockValidation": {
+    "clock": "Math.floor(Date.now()/1000) throughout store, native owner and authentication; no Date.now mock or logical-clock block pre-read in these cases",
+    "sourceGrantSeconds": 240,
+    "serviceAuthoritySeconds": 600,
+    "globalAndIntentLeaseSeconds": 60,
+    "businessCapSeconds": 120,
+    "reviewCapSeconds": 600,
+    "freshIsolatedGethAndRealAsyncRpc": true,
+    "cases": [
+      "ordinary full flow",
+      "forced actual second crossing inside ACCEPT BEFORE_DISPATCH controller transaction",
+      "forced actual second crossing inside ACCEPT COMMIT controller transaction",
+      "lost response after actual ACCEPT broadcast, existing canonical recovery"
+    ],
+    "completedStages": [
+      "REGISTER",
+      "ALLOCATE",
+      "START_REVIEW",
+      "two explicit synthetic authenticated consents",
+      "BIND_CONSENTS",
+      "PREPARE",
+      "ACCEPT",
+      "CLAIM"
+    ],
+    "canonicalSettlement": true,
+    "recipientIncreaseAtoms": "100000000",
+    "duplicateClaimRejected": true,
+    "eachSuccessfulRunMetrics": {
+      "bridgeBroadcasts": 6,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1,
+      "includedNativeEnvelopes": 6
+    },
+    "extraSendSignOrModelCalls": 0,
+    "externalLoginOfficialProofPaidAiOrUserWalletUsed": false
+  },
+  "negativeValidation": {
+    "realWallClockNative": [
+      "withdraw source immediately before ACCEPT current check",
+      "revoke service authority immediately before ACCEPT current check",
+      "wait until the original ACCEPT binding actually expires before continuing dispatch"
+    ],
+    "nativeResult": {
+      "included": 5,
+      "sealed": 1,
+      "broadcasts": 5,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1,
+      "additionalSend": 0
+    },
+    "apiController": [
+      "expiry and service revocation during current and COMMIT issuance",
+      "source change during issuance",
+      "second clock conflict",
+      "source change during second validation",
+      "recipient/amount/payload mismatch in immutable evidence rejected before issuance",
+      "untyped error not retried"
+    ],
+    "unitClarification": "The owner snapshots/freezes evidence before controller use. Changing the caller fixture object after issuance does not change that evidence; target-mismatch tests therefore submit changed evidence before issuance, and source-change tests mutate the actual resolver during revalidation."
+  },
+  "focusedVerification": {
+    "controllerIncludingExistingRecovery": 23,
+    "newNativeWallClockCases": 7
+  },
+  "requiredRegression": {
+    "apiAndStore": {
+      "cases": 585,
+      "passed": 585,
+      "networkGuard": true
+    },
+    "compatibilityMemoryGate": {
+      "cases": 105,
+      "passed": 105
+    },
+    "nativeE5B": {
+      "cases": 39,
+      "passed": 39
+    },
+    "uniqueTotalPassed": 729,
+    "e5Preservation": "PASS",
+    "e5bPinsAndDeclarationSyntax": "PASS_NOT_FULL_TSC",
+    "workspace": "PASS",
+    "dependencies": "PASS"
+  },
+  "pins": {
+    "candidate": "be6596e553e9dbb0f82b2932e8b22063ef24d355",
+    "intakeSha256": "309b79a1a8c1c490f602c9cc1e7daa4bf387efed942f87dc40271436506302f9",
+    "sourceCount": 171,
+    "changed": [
+      "src/bootcamp/execution-e4b-controller.mjs"
+    ],
+    "additions": {},
+    "helperSha256": "d24a3e97fd6123ef600ecccb5464a6f48a276b77031fc5167401f3cba2e16b28",
+    "guardSha256": "2963af18eb1d4c9e16c349f70642e6b3ed3a60d6bbb060d43615364a6763b7c4",
+    "manifestSha256": "79ae10d83f2752cdfda146a1a4c414c4fce40257ac0e69b8c3950d4258026a97",
+    "memoryHarnessSha256": "3b6872f470035d8015a047d143da7b723be676d167ca8216090e1eef92636815"
+  },
+  "limits": [
+    "All source/model facts and both actors are synthetic. Real institution login, fresh official proofs, paid AI and human UI/signatures remain untested in this unit.",
+    "These wall-clock samples demonstrate ordinary and forced current/commit boundaries, not universal timing availability. A second conflict, expiry or changed authority deliberately stops; other non-controller transaction gates retain their existing behavior.",
+    "No historical run or consumed approval is resumed. Actual new run still requires separate authorization and fresh inputs."
+  ],
+  "preservation": {
+    "baselineFiles": 334,
+    "manifest": "/tmp/clear-v26-preservation-after.json",
+    "existingEvidenceBytesChanged": false
+  },
+  "boundaries": {
+    "depositPolicy": "UNRESOLVED_UNCHANGED",
+    "draftPr": 102,
+    "merge": false,
+    "newActualHostCaLoginProofAiSignatureConsentOrRetest": false
+  },
+  "finalHeadCi": "VERIFY_AFTER_PUSH; var/bootcamp-verification/v27-final-ci.json",
+  "nextStep": "REPORT_AND_WAIT_FOR_SEPARATE_ACTUAL_RETEST_AUTHORIZATION",
+  "testFingerprints": {
+    "tests/bootcamp-execution/dispatch-clock.test.mjs": "333818d1cc6e5e88d3597c0bf084c0baa31d896095d05fe31de579477f78a58b",
+    "tests/bootcamp-execution/bridge-fixture.mjs": "b1ac416579fff2a33f523ba2412a57c8bbe83bb725892a09c68c85f6ca9ec519",
+    "tests/bootcamp-execution/recovery-clock.test.mjs": "a8df3d2350a88950df869db389f2b1d30b71501e00f84d9cb67afeb60e06a7c0",
+    "tests/hackathon-test-vault/e5b/normal-dispatch-clock.test.mjs": "e680b92e77b86d4d66cf6058b017db1c5d1abbbf4866562f1856707d833d2bd8",
+    "tests/hackathon-test-vault/e5b/normal-payment-fixture.mjs": "3cb00badc578b308c401f58241f3cc78e119d3617e4885ca69865556d79e8db4"
+  },
+  "localEvidenceSha256": {
+    "clear-v27-red.tap": "1fbba754053b697befe7fe418374874a4dcf4340c2fcd78eedf0e8cc56948ff8",
+    "clear-v27-unit-red.tap": "b9c2e0b22379bc2dbcd0972fa038b10b2a6435c6e99250b012ebc6ad8f07584e",
+    "clear-v27-unit-final.tap": "081d1a185be609835377b44ad0f75969941b3e04df3c34b2dccc6b9c08aefe2e",
+    "clear-v27-wall-green.tap": "5a0151e3ff06157523aeb7dfd7b8e0a0b8f4704293d13b175f3be9db3e25fb07",
+    "clear-v27-native-negative.tap": "e8f0e6492822cf995e1bf95279c6a4c6bc86e788509c72f9d200ee4a598afd62",
+    "clear-v27-commit-lost-green.tap": "653242dfce7871cbd315b8d04c37d73148f8f6abab17622db2771e20cd2438eb",
+    "clear-v27-api.tap": "39937f8ff389a0d4e43acdba6bfb041f74781ef4c9ec20d27dd2817c10ec560c",
+    "clear-v27-compat.tap": "5d0a554d4b725b61ef1ef7347e93c35238ad9a4da287d47d85aaa673b64a1e7d",
+    "clear-v27-native.tap": "e4fb4f920779bf795a50da8cc57e0854475ee4a2e36a19d48628d7e1274bbb7d",
+    "clear-v27-pins.log": "c9f3ab39be33ad7a2e0b1a9780da41a6f9ff42b3c9adb4ac5e296d6fc4e0955b"
+  }
+}
