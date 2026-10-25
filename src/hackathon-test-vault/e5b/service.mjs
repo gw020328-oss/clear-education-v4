@@ -90,7 +90,7 @@ export class BridgeExecutionService extends OwnedExecutionService {
  requireAdoption(request,row){const adoption=this.adoption(row.ref);ensure(adoption&&adoption.adoptionId===request.adoptionId&&adoption.adoptionHash===request.adoptionHash&&adoption.bindingHash===sha(request.binding),'E5B_CURRENT_ADOPTION_REQUIRED');ensure(this.clock()<adoption.authorityUntil&&this.clock()<row.businessValidUntil,'E5B_AUTHORITY_EXPIRED');return adoption;}
  async dispatch(request){
   request=structuredClone(request);let row=this.row(request.ref);this.authenticateReference(request,row,'dispatch');
-  if(row.state!=='SEALED')return this.recover(request);const adoption=this.requireAdoption(request,row);
+  if(row.state!=='SEALED'){this.diagnosticPhase='RECOVER';return this.recover(request);}const adoption=this.requireAdoption(request,row);
   const observation=await this.checked(request.binding,row.command,'BEFORE_DISPATCH');await this.reader.ancestry(row.binding.anchor,observation.checkpoint);const secret=this.verifyBytes(row);
   await this.reader.rpc('eth_call',[{from:row.sender,to:row.to,value:'0x0',gas:'0x2dc6c0',data:Transaction.from(secret.raw).data},{blockHash:observation.checkpoint.hash,requireCanonical:true}]);
   const payload={version:'clear-e5-api-commit.2',challenge:randomUUID(),ref:row.ref,manifestHash:row.manifestHash,adoptionId:adoption.adoptionId,adoptionHash:adoption.adoptionHash,bindingHash:sha(request.binding),runtimeHash:this.runtimeHash};
@@ -99,7 +99,7 @@ export class BridgeExecutionService extends OwnedExecutionService {
   this.cut('SEND_STARTED_BEFORE_BROADCAST',row);
   try{this.diagnosticPhase='BROADCAST';this.metrics.broadcasts++;const txHash=await this.reader.rpc('eth_sendRawTransaction',[secret.raw]);ensure(txHash===row.txHash,'E5_BROADCAST_HASH');this.cut('BROADCAST_RESPONSE',row);}
   catch(error){this.diagnose('BROADCAST',error);this.transaction(()=>{const r=this.row(row.ref);if(r.state==='SEND_STARTED'){r.state='UNKNOWN';this.save(r);}});return {status:'UNKNOWN',ref:row.ref,txHash:row.txHash};}
-  return this.recover(request);
+  this.diagnosticPhase='RECOVER';return this.recover(request);
  }
  async seal({binding,command,capability}){
   ensure(binding.purpose==='EXECUTE','E5B_EXECUTION_CAPABILITY_REQUIRED');binding=structuredClone(binding);command=structuredClone(command);this.validateBinding(binding,command);const route=this.command(command);

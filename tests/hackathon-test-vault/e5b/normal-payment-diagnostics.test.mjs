@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {normalPaymentFixture} from './normal-payment-fixture.mjs';
 import {BridgeExecutionService} from '../../../src/hackathon-test-vault/e5b/service.mjs';
+import {ExecutionReader} from '../../../src/hackathon-test-vault/e5/reader.mjs';
 import {RuleError} from '../../../src/policy/values.mjs';
 import {isDevelopmentConnection,isCanonicalProcedurePorts} from '../../../src/bootcamp/execution-development.mjs';
 
@@ -37,7 +38,7 @@ test('post-send native failure is recorded before sanitization without another b
  t.after(()=>{BridgeExecutionService.prototype.current=original;});
  const f=await normalPaymentFixture(t);await assert.rejects(f.run(),/E5B_PORT_REJECTED/);
  const saved=f.readReport();assert.equal(saved.paymentFailure.operation,'BIND_CONSENTS');
- const first=saved.executionDiagnostics[0];assert.equal(first.errorKind,'TYPE_ERROR');assert.equal(first.code,'UNCLASSIFIED');assert.equal(first.causes[0].code,'E5_LEASE_EXPIRED');
+ const first=saved.executionDiagnostics[0];assert.equal(first.phase,'RECOVER');assert.equal(first.errorKind,'TYPE_ERROR');assert.equal(first.code,'UNCLASSIFIED');assert.equal(first.causes[0].code,'E5_LEASE_EXPIRED');
  assert.equal(injected,1);assert.equal(f.nativeState(),'SEND_STARTED');assert.equal(f.metrics().broadcasts,4);assert.equal(f.metrics().transactionSignatures,4);assert.equal(f.metrics().paymentSignatures,0);
  assert.equal(readFileSync(f.reportPath,'utf8').includes('SYNTHETIC_PRIVATE_TEXT'),false);
 });
@@ -80,4 +81,18 @@ test('authority expiry during an awaited dispatch read stops before broadcast',a
  assert.equal(f.metadata.prepare('SELECT state FROM envelopes').get().state,'SEALED');
  assert.equal(saved.executionDiagnostics[0].code,'BC_E5_FENCED');
  assert.equal(saved.completed,false);
+});
+
+
+test('internal canonical readback failure is recorded before UNKNOWN fallback',async t=>{
+ const original=ExecutionReader.prototype.receipt;let injected=0;
+ ExecutionReader.prototype.receipt=async function(row){
+  if(row.method==='registerCurrentMet'&&injected===0){injected++;throw Error('E5_NONCANONICAL');}
+  return original.call(this,row);
+ };
+ t.after(()=>{ExecutionReader.prototype.receipt=original;});
+ const f=await normalPaymentFixture(t);await f.run();const saved=f.readReport();
+ assert.equal(injected,1);assert.equal(saved.completed,true);assert.equal(saved.executionDiagnostics[0].phase,'RECOVER_READBACK');assert.equal(saved.executionDiagnostics[0].code,'E5_NONCANONICAL');
+ assert.equal(f.metrics().broadcasts,6);assert.equal(f.metrics().transactionSignatures,6);assert.equal(f.metrics().paymentSignatures,1);
+ assert.equal(saved.claim.amountAtoms,'100000000');assert.equal(saved.claim.duplicateRejected,true);
 });

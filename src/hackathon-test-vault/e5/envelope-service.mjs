@@ -191,7 +191,7 @@ export class OwnedExecutionService {
   // Recovery authority is independent of source eligibility after an accepted right.
   this.transaction(()=>this.current(request.binding,{recovery:true,txHash:row.txHash??null},'RECOVER'));
   if(!row.txHash)return {status:row.state,ref:row.ref,automaticResign:false};
-  let result;try{result=await this.reader.receipt(row);const live=await this.reader.observe({applicationId:row.applicationId,nonce:row.authorizationNonce??ZERO});await this.track(live);if(result.checkpoint)await this.reader.ancestry(result.checkpoint,live.checkpoint);result.currentObservation=live;}catch{result={status:'UNKNOWN',txHash:row.txHash,code:'E5_CANONICAL_READBACK_UNAVAILABLE'};}
+  let result;try{result=await this.reader.receipt(row);const live=await this.reader.observe({applicationId:row.applicationId,nonce:row.authorizationNonce??ZERO});await this.track(live);if(result.checkpoint)await this.reader.ancestry(result.checkpoint,live.checkpoint);result.currentObservation=live;}catch(error){try{this.diagnose?.('RECOVER_READBACK',error);}catch{}result={status:'UNKNOWN',txHash:row.txHash,code:'E5_CANONICAL_READBACK_UNAVAILABLE'};}
   const halted=Boolean(this.db.prepare('SELECT id FROM stops').get());
   this.transaction(()=>{
    this.current(request.binding,{recovery:true,txHash:row.txHash},'RECOVER_FINAL_SYNC');const current=this.row(row.ref);
