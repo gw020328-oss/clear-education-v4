@@ -1,5 +1,7 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-26 최신 승인: PR #114는 CI 6/6 성공 후 develop `a53f6f541d45275ea92057c1beb2cf27af434855`에 병합됐다. 백엔드 실행 기준 PR #102/c108dc8 및 r20 실제 이력은 보존한다. 교수 피드백의 핵심 보완을 기존 정상 흐름에 연결하는 [보안 보완·자동 지급 완료 계획](BOOTCAMP_SECURITY_COMPLETION_PLAN.ko.md)을 추가 승인 범위로 우선한다. 수령인 직접 서명 → 체인 등록 순서 → 이의/정정의 체인 반영 → 근거 조회 → 제품 화면의 실제 조건 검증과 자동 ACCEPT/CLAIM 순서다. 통합 담당은 backend/contract/API와 오프라인 검증, 서준형/Claude는 기존 PR60·로컬 변경을 보존한 제품 화면 연결을 맡는다. 문서 반영·구현·오프라인 검증·실제 완주를 각각 기록하며 신규 PR 자동 병합/main 배포는 승인되지 않았다. 아래 날짜별 범위는 당시 이력이다.
+
 2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.
 
 2026-10-17 추가 승인·계획 revision2: [MVP 보완 계약·실행 백로그](PYTHON_BOOTCAMP_R2.ko.md)를 우선한다. 기존 P0 동결03fa643과 네 조건/100 TEST·P1/P2는 유지한다. Oracle 승인·부족알림/영향 대기열·학생/운영자 두 화면·기존 relayer 가스 UX·실측 이벤트를 P3→P4→P5의 실제 구현 범위에 추가했다. 별도 v2 envelope/이행 인수이며 기존 v1 wire·ABI는 바꾸지 않는다. 현재 지급/production을 켜지 않으며 P4 권한·자금 코드는 Astra/High 경계 리뷰 후 격리 TEST로 진행한다. 아래의 종전 P3/P4/P5 계획만 정리한다는 문구는 이 추가 승인 이전 범위다.
