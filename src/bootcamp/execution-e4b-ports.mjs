@@ -53,7 +53,7 @@ export function createE4BridgePorts(configuration=null){
  const claimReceipt=configuration.reader.claimReceipt?.bind(configuration.reader);
  const worker=Object.fromEntries(workerKeys.map(k=>[k,configuration.worker[k].bind(configuration.worker)]));
  const floor=configuration.fenceReader.read.bind(configuration.fenceReader),tickets=new WeakMap();let bound=false;
- const runtime=copy({runtimeHash:projection.runtimeHash,domain:m.domain,tokenAddress:m.tokenAddress,signerKeyId:m.signerKeyId,controllerAddress:m.controllerAddress,roles:{registrar:m.roles.registrar,relayer:m.roles.relayer}});
+ const runtime=copy({runtimeHash:projection.runtimeHash,domain:m.domain,tokenAddress:m.tokenAddress,signerKeyId:m.signerKeyId,controllerAddress:m.controllerAddress,roles:{registrar:m.roles.registrar,relayer:m.roles.relayer,terminator:m.roles.terminator}});
  function observation(input,command){
   const {executionBusinessHash,operationMethod,...raw}=input;
   const o=validateE4Observation(raw,runtime);check(o.business.applicationId===command.applicationId&&o.business.nonce===commandNonce(command),'BC_E5B_OBSERVATION_TARGET');

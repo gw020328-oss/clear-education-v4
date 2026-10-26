@@ -92,7 +92,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    observers.length=0;
    const route='e3-'+name+':'+a.id,prior=replay(s.wallet,route,key,body);if(prior)return operation(a,prior,time);
    checkTarget(a,body);attempt={applicationId:a.id,decision:decision(a),operationId:'operation-'+p0Hash('E3-OPERATION',{applicationId:a.id,route,key,actor:actorCommitment(a,s)}).slice(2,50),start:ledger.stamp()};
-   const st=state(a,time,observers);const target=fn(st,s,time,observers);
+   const st=state(a,time,observers);if(['objection','assess-objection','revalidate'].includes(name))observers.push(at=>active(st,at??time));const target=fn(st,s,time,observers);
    if(st.funding.status==='FULLY_ALLOCATED'){
     const checkpoint={version:'clear-bootcamp-e3-observed-funding-checkpoint.1',id:procedureId('checkpoint'),allocationId:st.funding.allocationId,obligationId:st.funding.obligationId,
      allocationVersion:st.funding.allocationVersion,authorizationEpoch:st.funding.authorizationEpoch,decisionId:st.funding.decisionId,decisionHash:st.funding.decisionHash,
@@ -102,7 +102,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    fault('e3-before-command');
    const saved=command(a,s.wallet,route,key,body,{decisionId:st.d.decisionId,...target},time,{...attempt,extraEvent:'AUTO_OPERATION_COMPLETED'});fault('e3-after-command');
    return operation(a,saved,time);
-  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:['consent','recipient-registration','prepare'].includes(name)});}catch(error){
+  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:['consent','recipient-registration','prepare','objection','assess-objection','revalidate','termination-intent'].includes(name)});}catch(error){
    if(attempt)transaction(()=>ledger.emit({...attempt,eventType:'OPERATION_FAILED'}));throw error;
   }
  }
@@ -289,7 +289,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    const record=l.record(a,'OBJECTION',p0Hash('E3-OBJECTION',{procedureId:st.p.procedureId,decisionId:st.d.decisionId,reason:body.reason,evidenceId:body.evidenceId,actor:actorCommitment(st.a,s)}),{
     version:'clear-bootcamp-review-objection.1',id:procedureId('objection'),procedureId:st.p.procedureId,decisionId:st.d.decisionId,decisionHash:st.d.decisionHash,
     reason:body.reason,evidenceId:body.evidenceId,actorRole:role(s),actorCommitment:actorCommitment(st.a,s),recordedAt:time,status:'RECEIVED',validity:'UNASSESSED',substantive:true});
-   return {procedureId:st.p.procedureId,actionId:record.id};
+   return {procedureId:st.p.procedureId,actionId:record.id,chainStatus:'NOT_OBSERVED'};
   });},
   assessReviewObjection(context,a,body,key){return run(context,a,body,key,'assess-objection',['assessmentId','objectionId'],(st,s,time,observers)=>{
    active(st,time);id(body.assessmentId);id(body.objectionId);const objection=st.objections.find(r=>r.id===body.objectionId);check(objection,'BC_NOT_FOUND');
@@ -299,7 +299,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
     &&['DUPLICATE','IRRELEVANT','VALID_UNRESOLVED','RESOLVED'].includes(value.outcome),'BC_E3_ASSESSMENT');evidenceIds(st.a,value.basisEvidenceIds);
    const prior=records(st.a,'OBJECTION_ASSESSMENT').find(r=>r.assessmentId===value.assessmentId);if(prior)check(prior.objectionId===objection.id&&prior.receiptHash===value.receiptHash,'BC_E3_ASSESSMENT_REPLAY');
    const record=l.record(a,'OBJECTION_ASSESSMENT',p0Hash('E3-ASSESSMENT-ID',value.assessmentId),{...value,id:procedureId('assessment'),recordedAt:time});
-   return {procedureId:st.p.procedureId,actionId:record.id};
+   return {procedureId:st.p.procedureId,actionId:record.id,chainStatus:'NOT_OBSERVED'};
   });},
   recordReviewRevalidation(context,a,body,key){return run(context,a,body,key,'revalidate',['assessmentId'],(st,s,time,observers)=>{
    active(st,time);id(body.assessmentId);const value=observe(observers,()=>ports.assessment('revalidationAssessment',{applicationId:a,assessmentId:body.assessmentId}));
@@ -310,7 +310,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    const kind=st.count>=1?'TERMINATION_REQUIRED':'REVALIDATION';
    const record=l.record(a,kind,p0Hash('E3-REVALIDATION-ID',value.assessmentId),{...value,id:procedureId('revalidation'),recordedAt:time,
     procedureId:st.p.procedureId,reason:st.count>=1?'NEW_VALID_ERROR_AFTER_ONE_REVERIFICATION':null,result:st.count>=1?'UNRESOLVED_TERMINATION_REQUIRED':'REVALIDATION_RECORDED',
-    requiresNewDecision:true,reservationReleased:false,epochInvalidated:false});fault('e3-after-revalidation');return {procedureId:st.p.procedureId,actionId:record.id};
+    requiresNewDecision:true,reservationReleased:false,epochInvalidated:false});fault('e3-after-revalidation');return {procedureId:st.p.procedureId,actionId:record.id,chainStatus:'NOT_OBSERVED'};
   });},
   prepareReviewAuthorization(context,a,body,key){return run(context,a,body,key,'prepare',[],(st,s,time,observers)=>{
    const value=draft(st,time,observers),nonceKey=p0Hash('E3-PREPARED-NONCE',{domain:value.payload.domain,nonce:value.payload.message.nonce});
@@ -338,7 +338,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
     fundingSnapshotHash:snapshotHash(st.funding),chainSnapshotHash:snapshotHash(st.chain),recordedAt:time,
     requiredAtomicEffects:['CHECK_UNACCEPTED_AND_AUTHORIZED_CONDITION','INVALIDATE_OLD_AUTHORIZATION_EPOCH','RELEASE_RESERVATION_AND_TRANSITION_OBLIGATION'],
     contractExecuted:false,reservationReleased:false,epochInvalidated:false,authority:'E4_CONTRACT_CHECK_REQUIRED'});
-   return {procedureId:st.p.procedureId,terminationIntentId:record.id};
+   return {procedureId:st.p.procedureId,terminationIntentId:record.id,chainStatus:'NOT_OBSERVED'};
   });},
   inspectTerminationForE4(context,a,intentId){id(intentId);const observers=[];return access(context,a,false,(app,s,time)=>{
    const intent=records(app,'TERMINATION_INTENT').find(r=>r.id===intentId);check(intent,'BC_NOT_FOUND');const st=state(app,time,observers);

@@ -168,10 +168,16 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
      const a=receipt.business.application,args=command.args;
      if(command.method==='registerCurrentMet')check(a.state==='1'&&a.recipient===args[2]&&canonical(a.target)===canonical(args.length===6?{...args[3],acceptanceSequence:a.target.acceptanceSequence}:args[3])&&(args.length!==6||BigInt(a.target.acceptanceSequence)>0n),'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='allocate')check(a.state==='2'&&a.allocationId===args[2],'BC_E5B_RECEIPT_POSTCONDITION');
-     else if(command.method==='startReview')check(a.state==='3'&&a.procedureId===args[2]&&a.publishedAt===args[3]&&a.firstStartedAt===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
+     else if(command.method==='startReview')check(a.state==='3'&&a.procedureId===args[2]&&a.publishedAt===args[3]&&a.firstStartedAt===String(JSON.parse(db.prepare('SELECT record FROM e3_procedures WHERE application_id=?').get(s.i.applicationId).record).firstStartedAt),'BC_E5B_RECEIPT_POSTCONDITION');
+     else if(command.method==='observeCurrent'){
+      const v=args[2];check(a.currentMet===v.currentMet&&a.validObjection===v.validObjection&&a.unassessedObjection===v.unassessedObjection&&(!v.newValidError||a.newValidError)
+       &&a.observationReceiptHash===v.receiptHash&&a.observedAt===v.observedAt&&a.target.sourceValidUntilExclusive===v.sourceValidUntilExclusive&&a.preparedDigest==='0x'+'00'.repeat(32),'BC_E5B_RECEIPT_POSTCONDITION');
+     }else if(command.method==='replaceTarget')check(canonical(a.target)===canonical(args[2])&&['1','2'].includes(a.state)&&a.publishedAt==='0'&&a.preparedDigest==='0x'+'00'.repeat(32),'BC_E5B_RECEIPT_POSTCONDITION');
+     else if(command.method==='terminate')check(a.state==='4'&&a.terminationReason===args[2]&&a.terminationReceiptHash===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='bindConsents')check(a.state==='3'&&a.consentSetHash===args[2]&&a.mutualConsent===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='prepareUnsigned')check(a.state==='3'&&a.preparedDigest===s.i.authorizationDigest&&a.preparedNonce===args[1].nonce,'BC_E5B_RECEIPT_POSTCONDITION');
      else check(command.method==='accept','BC_E5B_RECEIPT_POSTCONDITION');
+     if(['observeCurrent','replaceTarget','terminate'].includes(command.method))check(canonical(c)===canonical(a)&&BigInt(a.version)===BigInt(s.i.expectedChainVersion)+1n,'BC_E5B_RECEIPT_POSTCONDITION');
      check(c.version===a.version&&canonical(c.target)===canonical(a.target)&&c.recipient===a.recipient&&c.allocationId===a.allocationId,'BC_E5B_RECEIPT_POSTCONDITION');
     }
     let job=null;

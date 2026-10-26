@@ -48,10 +48,11 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         else check(false,'BC_NOT_FOUND');
       }
       else if(v3){
-        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations|recipient-registration)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
+        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(review-chain|procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations|recipient-registration)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
         check(m,'BC_NOT_FOUND');const [,a,resource,target]=m;
         if(req.method==='GET'){
           if(!target&&resource==='recipient-registration'){result=normalUi?.getRecipientRegistration?await normalUi.getRecipientRegistration(context,a):store.getRecipientRegistration(context,a);}
+          else if(!target&&resource==='review-chain')result=await store.execution.reviewChain(context,a);
           else if(!target&&resource==='procedure'){if(normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=store.getProcedure(context,a);}
           else if(target&&resource==='procedure-operations')result=store.getProcedureOperation(context,a,target);
           else check(false,'BC_NOT_FOUND');

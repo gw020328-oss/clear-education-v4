@@ -1,5 +1,7 @@
 # 서준형 Claude Code 복사 지침
 
+2026-10-26 S3 후보: [이의·정정·종료 체인 연결](BOOTCAMP_S3_CHAIN_REVIEW.ko.md). PR115는 develop `dce9ab1`에 병합됐다. S3는 접수 `NOT_OBSERVED`와 새 `review-chain` canonical 조회를 구분하며, 기존 동의·지급/수락 권리는 유지한다. 프론트는 후보 PR 병합 전 새 경로를 develop 기능으로 가정하지 않는다. S4/S5 실제 제품 완주·PR 병합·main 배포는 포함하지 않는다. 아래 이전 날짜의 후보/미연결 문구는 당시 기록이다.
+
 2026-10-26 기준. 아래 블록을 프론트 작업 중인 Claude Code에 붙여 넣는다. [Issue #106](https://github.com/gw020328-oss/clear-education-v4/issues/106)의 최신 본문과 함께 사용한다.
 
 백엔드 PR #102는 develop의 `c108dc8f20a86da3d48419615285a815f947b91c`에 병합됐다. 최종 CI HEAD `8bff2be17e3ae280ff03d80f578e7727de48cb14`의 10개 검사 모두 성공했고 병합 결과의 파일 트리도 동일하다. 과거 v28 CI 실패와 미병합 안내는 현재 연결의 차단 조건이 아니다. 실제 r20 성공은 별도 HEAD `f38ae8bd44c9da2e27f6a56650ced0f7bffe9aba`의 이력이며, 제품 프론트의 실제 정상 흐름 검증은 아직 남아 있다.
