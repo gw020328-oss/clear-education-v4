@@ -81,7 +81,8 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
   inspect(g,h){return run(g,h,'B_INSPECT',(s,time,authority)=>cas(s,time,authority),
    (s,time,authority,value)=>sameBasis(value,cas(s,time,authority),time));},
   async prepare(g,h,expected){
-   const command=run(g,h,'B_READ_REQUEST',(s,time,authority)=>{sameBasis(expected,cas(s,time,authority),time);return commands.command(s.i);});
+   const command=run(g,h,'B_READ_REQUEST',(s,time,authority)=>{sameBasis(expected,cas(s,time,authority),time);return commands.command(s.i);},
+    (s,time,authority,value)=>{sameBasis(expected,cas(s,time,authority),time);check(canonical(value)===canonical(commands.command(s.i)),'BC_E5B_COMMAND_CHANGED');});
    const observed=await ports.read(command);let preparedObservation;
    const b=run(g,h,'B_PREPARE',(s,time,authority)=>{
     sameBasis(expected,cas(s,time,authority),time);const {observation:o}=ports.consume(observed,'OBSERVATION');preparedObservation=o;
