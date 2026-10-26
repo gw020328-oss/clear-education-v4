@@ -67,11 +67,10 @@ export function openDevelopmentConnection({environmentId,sourceMode='SYNTHETIC_T
   bindDecision(applicationId,target,decision){const b=binding({applicationId});check(target.applicationId===b.chainApplicationId&&target.allocationId===b.chainAllocationId,'BC_E3_REGISTERED_BINDING');const v={decisionId:decision.decisionId,decisionRevision:decision.decisionRevision,decisionHash:decision.decisionHash,acceptanceSequence:decision.acceptanceSequence};const old=b.decisions.get(target.decisionId);check(!old||canonical(old)===canonical(v),'BC_E3_REGISTERED_BINDING');b.decisions.set(target.decisionId,v);},
   bindOpaque(applicationId,target,decision=null){const b=binding({applicationId});check(b.chainApplicationId===ZERO,'BC_E3_REGISTERED_BINDING');Object.assign(b,{chainApplicationId:target.applicationId,chainDecisionId:target.decisionId,chainAllocationId:target.allocationId});b.decisions.set(target.decisionId,decision??b.registrationContext);},
   async refresh(applicationId){
-   const b=binding({applicationId});cache.delete(applicationId);
+   const b=binding({applicationId});let nonce=b.nonce;try{
    let o=validateE4Observation(await reader.observe({applicationId:b.chainApplicationId,nonce:b.nonce}),{runtimeHash:owner.runtime.runtimeHash});
    let a=o.business.application,replacement=null;
-   if(b.nonceEpoch!==undefined&&b.nonceEpoch!==a.epoch){b.nonce='0x'+randomBytes(32).toString('hex');o=validateE4Observation(await reader.observe({applicationId:b.chainApplicationId,nonce:b.nonce}),{runtimeHash:owner.runtime.runtimeHash});check(o.business.application.epoch===a.epoch,'BC_E5_CURRENT_CHANGED');a=o.business.application;}
-   b.nonceEpoch=a.epoch;
+   if(b.nonceEpoch!==undefined&&b.nonceEpoch!==a.epoch){nonce='0x'+randomBytes(32).toString('hex');o=validateE4Observation(await reader.observe({applicationId:b.chainApplicationId,nonce}),{runtimeHash:owner.runtime.runtimeHash});check(o.business.application.epoch===a.epoch,'BC_E5_CURRENT_CHANGED');a=o.business.application;}
    if(a.target.decisionId!==ZERO&&a.target.decisionId!==b.chainDecisionId){
     const logs=await reader.rpc('eth_getLogs',[{address:m.vaultAddress,fromBlock:'0x0',toBlock:'0x'+BigInt(o.checkpoint.number).toString(16),topics:[reader.vault.getEvent('TargetReplaced').topicHash,b.chainApplicationId]}]);
     for(const log of logs){const e=reader.vault.parseLog(log)?.args;if(!e||e.current.decisionId!==a.target.decisionId||e.current.decisionHash!==a.target.decisionHash)continue;
@@ -85,7 +84,8 @@ export function openDevelopmentConnection({environmentId,sourceMode='SYNTHETIC_T
     }
     check(replacement,'BC_E3_REPLACEMENT_REQUIRED');
    }
-   await reader.block(o.checkpoint.hash);cache.set(applicationId,{observation:o,replacement,until:now()+5});return o;
+   await reader.block(o.checkpoint.hash);b.nonce=nonce;b.nonceEpoch=a.epoch;cache.set(applicationId,{observation:o,replacement,until:now()+5});return o;
+   }catch(error){cache.delete(applicationId);throw error;}
   },
   recipientRegistrationState(applicationId){const b=binding({applicationId}),v=cache.get(applicationId);check(v&&now()<v.until,'BC_E5_CURRENT_CHANGED');const a=v.observation.business.application;if(a.state!=='0')check(a.recipient===b.wallet&&b.decisions.has(a.target.decisionId),'BC_E3_REGISTERED_BINDING');return {chainStatus:a.state==='0'?'NOT_REGISTERED':'INCLUDED',canonical:true,finalized:false,checkpoint:v.observation.checkpoint,registrationSequence:a.state==='0'?null:a.target.acceptanceSequence,recipient:a.state==='0'?null:a.recipient,chainApplicationId:b.chainApplicationId};},
   diagnostics:diagnostic.snapshot,failureState:()=>owner.owner.failureState(),metrics:()=>owner.owner.metrics(),close:()=>owner.owner.close(),

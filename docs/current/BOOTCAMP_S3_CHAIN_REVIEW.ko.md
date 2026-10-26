@@ -29,3 +29,5 @@
 첫 S3 벽시계 확장 실행은 2/3이었다. 종료 enum의 NONE(0)을 빼고 매핑한 오류로 terminate 봉인 단계가 거부됐으며, 이를 계약의 1/2/3과 일치시킨 후 3/3이 통과했다. 실패를 체인 완료로 집계하지 않았다. 최종 개수·커밋·CI는 이 문서의 후속 검증 기록 및 해당 PR/Issue106에 남긴다. 실제 사용자 제품 완주를 뜻하지 않는다.
 
 4개 벽시계 시나리오를 묶은 다음 실행은 3/4였다. 신규 시험 helper가 기존 normal 실행기의 canonical clock 대기를 호출하지 않아 PREPARE의 issuedAt이 최신 블록보다 앞섰다(`BC_E5_CURRENT_FIRST_ACCEPT_TIME`). 기존 `waitForNormalChainTime`을 원래 authority/source/review cap으로 재사용하도록 시험 helper를 고쳤으며 제품 검사나 기한을 완화하지 않았다.
+
+정상 V2 동시 조회 회귀에서 지급 자체는 완료됐으나 refresh 시작 때 기존 5초 snapshot을 지운 영향으로 조회 오류 4건을 발견했다. 새 canonical 읽기가 진행되는 동안 원래 TTL 안의 snapshot/nonce를 함께 유지하고, 성공 때 새 snapshot/nonce를 함께 교체하며 실패 때 cache를 폐기하도록 수정했다. TTL을 늘리거나 실패한 읽기를 성공으로 표시하지 않는다.
