@@ -52,7 +52,7 @@ Solidity 0.8.30, optimizer 200, Shanghai, V2만 `viaIR: true`로 컴파일한다
 
 ## v31: V2 등록 API·실행 서버 연결
 
-코어 후보 `13fef0f4b60097b1aa665e05d4bf4455ff93a25c`와 별도 v31 인수의 정확한 177개 소스를 사용한다. v30 `c4d61be`의 CI 8/8은 과거 시간 경계 수정의 결과이며 v31의 검증을 대신하지 않는다. [v31 검증 기록](BOOTCAMP_V31_VERIFICATION.json), [프론트 복사 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md)의 등록 절을 따른다.
+코어 후보 `e37cd702a970dc955c6b0a92a6cef7b840255d0b`와 별도 v31 인수의 정확한 177개 소스를 사용한다. v30 `c4d61be`의 CI 8/8은 과거 시간 경계 수정의 결과이며 v31의 검증을 대신하지 않는다. [v31 검증 기록](BOOTCAMP_V31_VERIFICATION.json), [프론트 복사 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md)의 등록 절을 따른다.
 
 - 기존 신청 소유 지갑에서 participant-bound chain application ID를 만들고 application salt/등록 nonce/원래 deadline/원래 참가자 세션을 append-only 저장한다. V1 무작위 ID를 V2 ID로 이행하지 않는다. 서버 body에는 임의 owner/recipient/domain/nonce를 받지 않는다.
 - GET/POST `/bootcamp/v3/applications/:app/recipient-registration`, `api.recipientRegistration`, `api.submitRecipientRegistration`을 구현했다. 현재 역할·세션·CSRF·CAS·원천/서명 기한을 최종 검증하고 서명은 한 번 저장한다. 비동기 chain 조회 뒤에도 같은 권한을 다시 검사한다.
@@ -65,3 +65,7 @@ S3/S4 및 제품 프론트 S5 실제 완주는 이번 연결 완료 범위에 �
 전체 V1/V2 회귀 중 START_REVIEW 거래의 canonical 포함 뒤 `B_RECEIPT_COMMIT`에서 초가 바뀌어 API 완료 기록만 롤백되는 실패를 재현했다. v31은 완료 기록/슬롯 해제를 한 번 수행하고 원래 서비스·local/global lease와 원래 binding cap, 정확한 terminal release/completion 관계를 최종 검증한다. 최대 한 번의 읽기 검증만 허용하며 RPC/receipt 소비/키/송신/완료 쓰기를 재실행하지 않는다. 이미 포함된 과거 영수증을 기록하는 경로에 새 원천 적격성을 요구하지 않으며, 거래 전 currentness 검사는 유지한다. 수정 전 재현과 수정 후 6개 경계 검사를 분리해 기록한다.
 
 이어진 전체 회귀의 ACCEPT 만료 시나리오는 목표 주입 전에 `B_READ_REQUEST`의 같은 초 비교에서 중단됐다. 원래 CAS와 불변 명령을 최대 한 번 읽기로 재검증하며, 변경/만료/철회/역행/두 번째 충돌은 native read/issuer 전에 거부하도록 보완했다. 이 추가 6개 경계 검사와 최종 V1/V2 벽시계 검사를 별도로 기록하며, 앞선 전체 실행의 실패를 통과로 바꾸지 않는다.
+
+최초 v31 HEAD `bef2faa`의 CI는 7/8 성공, E5B 49/50 실패였다. V2 ACCEPT 만료 주입 전에 REGISTER `ENQUEUE`가 초 경계에서 `BC_VIEW_STALE`로 중단된 것이다. 의도·영수증 저장을 한 번 수행한 뒤 같은 savepoint 안에서 원래 CAS/판정·원천 commitment/기한·runtime·저장 기록·참가자/운영자 권한을 재검증한다. 최종 읽기 검증은 최대 한 번만 반복하고 두 번째 시간 충돌·원천 변경·만료·로그아웃·역할 철회·역행은 모두 롤백한다. 기존 실패 기록은 보존하며 새 HEAD의 최종 CI는 Issue106에서 확인한다.
+
+ENQUEUE 수정 후 벽시계 실행은 16/18이었다. 남은 두 실패는 원천 요청 발행 `issueRequest`와 unsigned `prepareReviewAuthorization`의 같은 초 조건이었으며, 대상 ACCEPT 거부로 대신 집계하지 않았다. 요청/준비를 각각 한 번만 저장하고 원래 nonce·issuedAt·expiresAt·세션·원천·동의/재원/서명자 상태를 현재 시점에 재검증하도록 보완했다. 17개 집중 검사는 시간 경과 성공과 원천/만료/로그아웃/시계 역행/반복 충돌, 준비 nonce·서명자·재원·운영자 동의 철회를 구분한다.

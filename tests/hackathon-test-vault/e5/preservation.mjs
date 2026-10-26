@@ -8,7 +8,7 @@ const digest=p=>createHash('sha256').update(readFileSync(new URL(p,root))).diges
 // intake and eight other E4 artifacts remain frozen; this is no wildcard waiver.
 const consumer='src/hackathon-test-vault/memory-stage-harness.mjs';
 const compatibility='specs/bootcamp/hackathon-test-memory-source-intake-v4.json';
-const consumerV31='c29b750e611819023412093d6cf8bbb8100beb1db8614d1b61339052c0c0ea42'; // V31 consumes preserved prior records and the exact V2 registration delta.
+const consumerV31='c2a8e752680a7dc5ebafcd1547973cb7034f8282658a43623582fc882d16d46c'; // V31 consumes preserved prior records and the exact V2 registration delta.
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v30.json'),'cc5e9b3339e3cafac3db828abe23463f680b9719c0dc431503d452635dbe8f69');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v29.json'),'db613940a142d37d1f52f82d979a66e48f9dfa951d60bda5d8661198ac96dcd5');
 assert.equal(digest('specs/bootcamp/hackathon-test-memory-source-intake-v28.json'),'a0cde4221afa098bd4405fe4a65af94b3ebc91543179360ba2cb951303bb4561');

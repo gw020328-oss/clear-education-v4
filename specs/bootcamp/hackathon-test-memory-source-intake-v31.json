@@ -15,7 +15,7 @@
   "version": "clear-hackathon-test-memory-source-intake.31",
   "date": "2026-10-26",
   "status": "REVIEWED_BOUNDED_INSPECTION_COLLECTION_CLOCK_VALIDATION",
-  "currentSourceCandidateHead": "13fef0f4b60097b1aa665e05d4bf4455ff93a25c",
+  "currentSourceCandidateHead": "e37cd702a970dc955c6b0a92a6cef7b840255d0b",
   "previousCompatibilityRecord": {
     "path": "specs/bootcamp/hackathon-test-memory-source-intake-v30.json",
     "sha256": "cc5e9b3339e3cafac3db828abe23463f680b9719c0dc431503d452635dbe8f69",
@@ -68,7 +68,7 @@
     "src/bootcamp/execution-e4b-ports.mjs": "04f45a4555b6c9d1cdda9aae106d29a03049ea522b85bb83ddf2b8778525cb89",
     "src/bootcamp/execution-handshake.mjs": "d70700377bb36489cd63f5f204a43fdb2a556b70c9ae7cbf25e02c6d7351bda0",
     "src/bootcamp/execution-ledger.mjs": "2da2ecf181a408af00f817a18fe5516c4c6775e9ed081794878e0db514d74f41",
-    "src/bootcamp/execution-operations.mjs": "0ecdd1e5961721cc02b0aed53e6f3ccc76e4e72bd268ac1ed8dafd2889bb818f",
+    "src/bootcamp/execution-operations.mjs": "440fd26aedcb3e84c5e3f5943a31c4f7fb69f74dd8827977f522d7fdbc9513c0",
     "src/bootcamp/execution-ports.mjs": "4dae489da512de8b1d287dc3351992d67a2cf1928eb83637c34ec1cb8fde5270",
     "src/bootcamp/execution-readback.mjs": "a285e68128cd813039a5b1da5c23ebdd6873d0cbf4bf4a67d6558bf26801519c",
     "src/bootcamp/execution-worker.mjs": "1e838e7c199390f23e2d392639d1db1f30551e000c12cadf33342dfb2deac4a8",
@@ -80,11 +80,11 @@
     "src/bootcamp/operations.mjs": "968f9d1da70f93bdb980b172012afc3c52506c13396ddd40791652329ce8d4d8",
     "src/bootcamp/procedure-ledger.mjs": "63a7ba7e83f5a2e688f30e53b7dc4597707743cc0ec91bfdc2e9c87a230abadc",
     "src/bootcamp/procedure-ports.mjs": "7422fde775f10ffe07dfa599f2fcc7656f76042e43800d97f2eae0c821bfb4b3",
-    "src/bootcamp/procedure.mjs": "c04420c5ea83db706a2d1f3e54ec2aaa360c3a047927570a4e1ff9ea2c0434c5",
+    "src/bootcamp/procedure.mjs": "b6fd791ac7b6ee1a7d5960f7154890fd82b071f85996ed4fc51e33ed275922e6",
     "src/bootcamp/r2-ledger.mjs": "dcde4df3e456d4b97101250ccc591d12c0f0bd84263cccd81c950cd358e01e2a",
     "src/bootcamp/reclaim-consumer.mjs": "ffc7bb8d2e0b1cdf904d2602cf403cdb71f956a46282c2ba4ff8a553f62d6cd0",
     "src/bootcamp/reclaim-live-consumer.mjs": "1ff2bb45526698bdb6252ca65ea2e2e03ce1c445e861e43805fa364017564c10",
-    "src/bootcamp/store.mjs": "e016abef9b25584dec0969ce1de2488e30a2bc371f8a18401e96d12402fe661e",
+    "src/bootcamp/store.mjs": "451aeed9b397aa59766714bdff98fe89b75f2d490a91d51efd587c6692156ee6",
     "src/bootcamp/ui-session.mjs": "9132218da63eed53b8f6f0c0aa7c61753ca8401c1e1562ddf62538875d83df04",
     "src/dev/files.mjs": "12cc1ea9689e66f1885f4dfedfcb8364a0af1ee2d7b1de5e30479bef3366417d",
     "src/dev/public-assets.mjs": "ad6c1155a18b88bb45b5f8b8d5034b5fb10157eba6f4f8bcbf852fd81243f0f6",
@@ -224,7 +224,7 @@
     },
     "src/bootcamp/execution-operations.mjs": {
       "before": "916522e88c1a7f5b962542012b08407c51557e71432daec039fc09d29bb809ba",
-      "after": "0ecdd1e5961721cc02b0aed53e6f3ccc76e4e72bd268ac1ed8dafd2889bb818f"
+      "after": "440fd26aedcb3e84c5e3f5943a31c4f7fb69f74dd8827977f522d7fdbc9513c0"
     },
     "src/bootcamp/http.mjs": {
       "before": "57292697834b24755309aa46df1a1736b3eebb82925fb4cbde15eae44708ec80",
@@ -244,7 +244,11 @@
     },
     "src/bootcamp/procedure.mjs": {
       "before": "3bcdf3cd4bee2362896cdd3a88fa2cf2f384715843e94855390a7af929a2586d",
-      "after": "c04420c5ea83db706a2d1f3e54ec2aaa360c3a047927570a4e1ff9ea2c0434c5"
+      "after": "b6fd791ac7b6ee1a7d5960f7154890fd82b071f85996ed4fc51e33ed275922e6"
+    },
+    "src/bootcamp/store.mjs": {
+      "before": "e016abef9b25584dec0969ce1de2488e30a2bc371f8a18401e96d12402fe661e",
+      "after": "451aeed9b397aa59766714bdff98fe89b75f2d490a91d51efd587c6692156ee6"
     },
     "src/hackathon-test-vault/e5/environment.mjs": {
       "before": "d21a8be8fb1cd588d0f31e4e049e5adec4f628ff66e10bc0eb8dd8e96565a9a9",
@@ -695,6 +699,7 @@
     "src/bootcamp/procedure-ledger.mjs",
     "src/bootcamp/procedure-ports.mjs",
     "src/bootcamp/procedure.mjs",
+    "src/bootcamp/store.mjs",
     "src/hackathon-test-vault/e5/environment.mjs",
     "src/hackathon-test-vault/e5/reader.mjs",
     "tools/bootcamp/live-context.mjs",
