@@ -13,15 +13,16 @@ export const isDevelopmentConnection=value=>connections.has(value);
 export const isCanonicalProcedurePorts=value=>procedures.has(value);
 export function openDevelopmentConnection({environmentId,sourceMode='SYNTHETIC_TEST_SOURCE',now=()=>Math.floor(Date.now()/1000)}){
  check(['SYNTHETIC_TEST_SOURCE','REGISTERED_TEST_SOURCE'].includes(sourceMode),'BC_E5B_DEVELOPMENT_SOURCE');
+ const registrationPins=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins-v27.json',import.meta.url)));
+ check(registrationPins.version==='clear-e5-normal-path-source-pins.27'&&registrationPins.scope==='EXACT_V31_RECIPIENT_REGISTRATION_V2','BC_E5B_DEVELOPMENT_PACKET');
  const diagnosticPins=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins-v22.json',import.meta.url)));
  check(diagnosticPins.scope==='EXACT_V25_NORMAL_PAYMENT_FAILURE_DIAGNOSTICS','BC_E5B_DEVELOPMENT_PACKET');
  const pins=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/source-pins.json',import.meta.url)));
  for(const [path,expected]of Object.entries(pins.sourceArtifactSha256).filter(([p])=>p.startsWith('src/hackathon-test-vault/e5b/'))){
   const revision=diagnosticPins.changes[path];if(revision)check(revision.before===expected,'BC_E5B_DEVELOPMENT_PACKET');
-  check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===(revision?.after??expected),'BC_E5B_DEVELOPMENT_PACKET');
+  const v2=registrationPins.changes[path];if(v2)check(v2.before===(revision?.after??expected),'BC_E5B_DEVELOPMENT_PACKET');
+  check(createHash('sha256').update(readFileSync(new URL('../../'+path,import.meta.url))).digest('hex')===(v2?.after??revision?.after??expected),'BC_E5B_DEVELOPMENT_PACKET');
  }
- const registrationPins=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins-v27.json',import.meta.url)));
- check(registrationPins.version==='clear-e5-normal-path-source-pins.27'&&registrationPins.scope==='EXACT_V31_RECIPIENT_REGISTRATION_V2','BC_E5B_DEVELOPMENT_PACKET');
  const fixes=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins.json',import.meta.url)));
  const clockFixes=JSON.parse(readFileSync(new URL('../../docs/hackathon-test-vault/e5b/normal-source-pins-v26.json',import.meta.url)));
  check(clockFixes.version==='clear-e5-normal-path-source-pins.26'&&clockFixes.scope==='EXACT_V29_ATOMIC_ADOPTION_AND_CANONICAL_CLOCK_READINESS','BC_E5B_DEVELOPMENT_PACKET');

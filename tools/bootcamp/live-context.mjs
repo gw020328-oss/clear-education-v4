@@ -5,7 +5,7 @@ import {join,dirname,resolve} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {JsonRpcProvider} from 'ethers';
-import {readPrivate,atomicPrivate,privateDirectory} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
+import {readPrivate,atomicPrivate,privateDirectory,sha} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {loadRuntime,startEnvironment,stopEnvironment,parkEnvironment} from '../../src/hackathon-test-vault/e5/environment.mjs';
 import {ExecutionReader} from '../../src/hackathon-test-vault/e5/reader.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
@@ -15,6 +15,7 @@ import {openDevelopmentConnection} from '../../src/bootcamp/execution-developmen
 import {createLiveMoodleConsumer} from '../../src/bootcamp/moodle-live-consumer.mjs';
 import {createLiveReclaimConsumer} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {requireRule as requireUiRule} from '../../src/policy/values.mjs';
+import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {createNormalReceiptReader} from '../../src/bootcamp/normal-receipt.mjs';
 import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {createBootcampFrontendServer} from './frontend-server.mjs';
@@ -50,7 +51,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
  ensure([prepared.participantWallet,prepared.operatorWallet].every(x=>/^0x[0-9a-f]{40}$/.test(x)&&x!=='0x'+'00'.repeat(20))&&prepared.participantWallet!==prepared.operatorWallet
   &&mapping.participantWallet===prepared.participantWallet&&pins.recipeHash===LIVE_WORKER_RECIPE_HASH,'BC_LIVE_IDENTITY');
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
- const m=loadRuntime(prepared.environmentId);ensure(m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
+ const m=loadRuntime(prepared.environmentId);ensure(sha(m)===prepared.runtimeHash&&m.version===(prepared.runtimeVersion??'clear-e5-test-runtime.1')&&m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
  let auth,store,connection,provider,ui,mounted,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
@@ -98,9 +99,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
    recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:reflectionApproval?.brief(context)??null});};
-  const recipientView=async(c,a)=>{ui.authorize(c,false);requireUiRule(a===app,'BC_LIVE_CONTEXT');
-   const packet=readNormalView(()=>store.getRecipientRegistration(c,a));
-   if(packet.registrationTargetId){await connection.refresh(a);ui.authorize(c,false);return {...readNormalView(()=>store.getRecipientRegistration(c,a)),...connection.recipientRegistrationState(a)};}return packet;};
+  const recipientView=(c,a)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,authorize:(c,w)=>ui.authorize(c,w)});};
   const normalUi=Object.freeze({getRecipientRegistration:recipientView,
    beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');

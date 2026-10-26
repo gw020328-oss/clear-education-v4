@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Wallet} from 'ethers';
+import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {recipientHttp} from './recipient-http-fixture.mjs';
 import {createNormalBootcampClient} from '../../src/bootcamp/normal-client.mjs';
 import {procedureFixture} from './procedure-fixture.mjs';
@@ -67,4 +68,22 @@ test('logout in final port validation rolls signature write back',async t=>{
  f.setHook(name=>{if(name==='funding'&&++calls===2)f.service.logout(f.aliceContext);});
  assert.throws(()=>f.store.submitRecipientRegistration(f.aliceContext,f.app,body,f.key()),/AUTH_REQUIRED/);assert.equal(calls,2);
  f.setHook(()=>{});assert.equal(f.store.getRecipientRegistration(f.operatorContext,f.app).signatureAccepted,false);
+});
+
+test('asynchronous registration read rejects logout before response',async t=>{
+ const f=await setup(t);let observed=0;
+ await assert.rejects(readRecipientRegistration({store:f.store,context:f.aliceContext,applicationId:f.app,authorize:(c,w)=>f.service.authorizeWorkflow(c,w),connection:{async refresh(){observed++;f.service.logout(f.aliceContext);},recipientRegistrationState(){throw Error('MUST_NOT_RETURN');}}}),/AUTH_REQUIRED/);assert.equal(observed,1);
+});
+test('existing V1 application cannot silently become V2 and retains its original target',async t=>{
+ const f=await procedureFixture(t),a=f.create();await f.complete(a);
+ const original=f.store.registerCurrentMetForE4(f.aliceContext,a,f.body(a),f.key());
+ const read=()=>f.store.inspectRegistrationForE4(f.aliceContext,a,original.record.target.registrationTargetId).record;
+ const before=read(),registration=f.configuration.procedurePorts.registration;
+ f.configuration.procedurePorts.registration=(...args)=>({...registration(...args),version:'clear-bootcamp-procedure-registration-port.2'});f.restart();
+ assert.throws(()=>f.store.registerCurrentMetForE4(f.aliceContext,a,f.body(a),f.key()),/BC_E3_REGISTRATION_IMMUTABLE/);
+ f.configuration.procedurePorts.registration=registration;f.restart();assert.deepEqual(read(),before);assert.equal(f.store.getRecipientRegistration(f.aliceContext,a).status,'NOT_READY');
+});
+test('registration cannot change accepted right or recipient',async t=>{
+ const f=await setup(t),sig=await f.sign();f.submit(sig);f.publish(f.app);f.setAccepted();
+ assert.throws(()=>f.submit(sig),/CURRENT_MET/);assert.equal(f.store.getProcedure(f.aliceContext,f.app).procedure.status,'ACCEPTED_RIGHT_PRESERVED');
 });

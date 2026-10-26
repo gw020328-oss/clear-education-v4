@@ -12,6 +12,7 @@ import {LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 const now=()=>Math.floor(Date.now()/1000);
 export async function prepareLiveInput({hackerRankPins=null,identityPreparationPath=null,uiIdentity=null,executionVersion=2}={}){
+ if(![1,2].includes(executionVersion))throw Error('E5_EXECUTION_VERSION');
  if(uiIdentity){
   const u=new URL(uiIdentity.origin);
   if(identityPreparationPath||u.protocol!=='https:'||u.hostname!=='127.0.0.1'||u.origin!==uiIdentity.origin||Number(u.port)<1024||Number(u.port)>65535
@@ -45,7 +46,7 @@ export async function prepareLiveInput({hackerRankPins=null,identityPreparationP
   if(e.manifest.runtimeMappingHash!==runtimeMappingHash)throw Error('BC_LIVE_CHAIN_MAPPING');
   const startedAt=now(),chainId=Number(e.manifest.chainId);
   if(uiIdentity){
-   const preparation={version:'clear-bootcamp-normal-live-input.2',identityMode:'EXTERNAL_UI_WALLETS',origin:uiIdentity.origin,directory,instanceId,startedAt,environmentId:e.environmentId,runtimeHash:e.manifestHash,runtimeMappingHash,
+   const preparation={version:'clear-bootcamp-normal-live-input.2',identityMode:'EXTERNAL_UI_WALLETS',origin:uiIdentity.origin,directory,instanceId,startedAt,environmentId:e.environmentId,runtimeHash:e.manifestHash,runtimeVersion:e.manifest.version,runtimeMappingHash,
     participantWallet:participant.address,operatorWallet:operator.address,policyHash:mapping.policyHash,applicationId:null,participantId:null,
     moodleBinding:{moodleUserId:3,accountBindingRef:mapping.accountBindingRef,revision:1,assurance:'HOST_APPROVED_GENERATED_DEMO_ACCOUNT',identityVerified:false},
     sourceStatus:'NOT_COLLECTED',hackerRankTrust:hackerRankPins?'REVIEWED_HOST_CONFIGURATION_NOT_YET_COLLECTED':'UNCONFIGURED_BLOCKED',aiApprovalCallsRemaining:0,sourceLease:null,finalAllocationAtoms:'0',production:false};
@@ -56,7 +57,7 @@ export async function prepareLiveInput({hackerRankPins=null,identityPreparationP
   const context={token:r.token,wallet:r.wallet,chainId,csrf:r.csrf};
   store=createBootcampStore({directory:join(directory,'store'),authentication:auth,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}]});
   const applicationId=store.createApplication(context,{},'first-normal-application').record.applicationId,v=store.getApplication(context,applicationId);
-  const preparation={version:'clear-bootcamp-normal-live-input.1',directory,instanceId,startedAt,environmentId:e.environmentId,runtimeHash:e.manifestHash,runtimeMappingHash,applicationId,participantId:v.participantId,participantWallet:participant.address.toLowerCase(),operatorWallet:operator.address.toLowerCase(),policyHash:v.policyHash,
+  const preparation={version:'clear-bootcamp-normal-live-input.1',directory,instanceId,startedAt,environmentId:e.environmentId,runtimeHash:e.manifestHash,runtimeVersion:e.manifest.version,runtimeMappingHash,applicationId,participantId:v.participantId,participantWallet:participant.address.toLowerCase(),operatorWallet:operator.address.toLowerCase(),policyHash:v.policyHash,
    moodleBinding:{moodleUserId:3,accountBindingRef:mapping.accountBindingRef,revision:1,assurance:'HOST_APPROVED_GENERATED_DEMO_ACCOUNT',identityVerified:false},
    sourceStatus:'NOT_COLLECTED',hackerRankTrust:hackerRankPins?'REVIEWED_HOST_CONFIGURATION_NOT_YET_COLLECTED':'UNCONFIGURED_BLOCKED',aiApprovalCallsRemaining:0,sourceLease:null,finalAllocationAtoms:'0',production:false};
   atomicPrivate(join(directory,'preparation.json'),preparation,{exclusive:true});return preparation;

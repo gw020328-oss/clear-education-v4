@@ -358,7 +358,7 @@ test('v14 pins six current browser assets and the reviewed v22 human review wind
 
 test('v15 pins the rebalanced budget and current action explanations',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V15.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V15.json'),'bd5ef7fbb97b7f7b18c415d400c30635452ec45751ee934d5e77459f3f6452d8');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.15');
  assert.equal(sha(m.previousRecord.path),'8b423a94d31c7482388835201d89e5af20a6fcbc1fde9ec271eb2e36448cdd40');assert.equal(Object.keys(m.sourceArtifacts).length,6);
@@ -370,7 +370,7 @@ test('v15 pins the rebalanced budget and current action explanations',async()=>{
 
 test('v16 preserves browser assets and consumes exact post-send recovery clock checks',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V16.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V16.json'),'c5132921fc82cb4879c05a19b6a2c0943de44b88c7258fac5a61cf4adbc3c103');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.16');
  assert.equal(sha(m.previousRecord.path),'bd5ef7fbb97b7f7b18c415d400c30635452ec45751ee934d5e77459f3f6452d8');assert.equal(Object.keys(m.sourceArtifacts).length,6);
@@ -382,7 +382,7 @@ test('v16 preserves browser assets and consumes exact post-send recovery clock c
 
 test('v17 preserves browser assets and pins bounded normal-payment diagnostics',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V17.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V17.json'),'0d6dfc4e3aac5311e42428c11a7262f09026f6c4361bca427567ee8146b25e6d');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.17');
  assert.equal(sha(m.previousRecord.path),'c5132921fc82cb4879c05a19b6a2c0943de44b88c7258fac5a61cf4adbc3c103');assert.equal(Object.keys(m.sourceArtifacts).length,6);
@@ -394,7 +394,7 @@ test('v17 preserves browser assets and pins bounded normal-payment diagnostics',
 
 test('v18 preserves browser assets and pins bounded clock-only plan reads',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V18.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V18.json'),'b809c8ff51cc22031e02cf6d6768e31053820cbc3faf01e4458e4de207baeb8e');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.18');
  assert.equal(sha(m.previousRecord.path),'0d6dfc4e3aac5311e42428c11a7262f09026f6c4361bca427567ee8146b25e6d');assert.equal(Object.keys(m.sourceArtifacts).length,6);
@@ -406,7 +406,7 @@ test('v18 preserves browser assets and pins bounded clock-only plan reads',async
 
 test('v19 preserves browser assets and pins bounded witness revalidation',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V19.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V19.json'),'79ae10d83f2752cdfda146a1a4c414c4fce40257ac0e69b8c3950d4258026a97');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.19');
  assert.equal(sha(m.previousRecord.path),'b809c8ff51cc22031e02cf6d6768e31053820cbc3faf01e4458e4de207baeb8e');assert.equal(Object.keys(m.sourceArtifacts).length,6);
@@ -418,7 +418,7 @@ test('v19 preserves browser assets and pins bounded witness revalidation',async(
 
 test('v20 preserves browser assets and binds single-write consent and capability validation',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V20.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V20.json'),'c14eba63cf67ccf3e3173241883ec218930ceb09fe745d6992165e57bc9aad45');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.20');
  assert.equal(sha(m.previousRecord.path),m.previousRecord.sha256);assert.equal(Object.keys(m.sourceArtifacts).length,6);
@@ -430,7 +430,7 @@ test('v20 preserves browser assets and binds single-write consent and capability
 
 test('v21 preserves browser assets and binds atomic metadata and canonical clock readiness',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V21.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V21.json'),'4f29daafc472b1f5706fb83de7903707e51ae64f9560c29e89a2e36732d82825');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.21');
  assert.equal(sha(m.previousRecord.path),m.previousRecord.sha256);assert.equal(Object.keys(m.sourceArtifacts).length,6);
@@ -438,4 +438,10 @@ test('v21 preserves browser assets and binds atomic metadata and canonical clock
  assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),m.existingCoreIntake.sha256);assert.equal(m.existingCoreIntake.sources,172);
  assert.deepEqual(m.changedFromV20,[]);assert.equal(m.apiContractsChanged,false);assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);
+});
+
+test('V31 browser client is pinned independently of preserved V15–V21 snapshots',async()=>{
+ const {createHash}=await import('node:crypto');
+ const intake=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-memory-source-intake-v31.json',import.meta.url)));
+ const p='src/bootcamp/normal-client.mjs';assert.equal(createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex'),intake.sourceArtifactSha256[p]);
 });

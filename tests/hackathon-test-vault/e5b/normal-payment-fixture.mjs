@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {atomicPrivate} from '../../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {DatabaseSync} from 'node:sqlite';
 import {join} from 'node:path';
+import {readRecipientRegistration} from '../../../src/bootcamp/recipient-registration-ui.mjs';
 import {recipientHttp} from '../../bootcamp-store/recipient-http-fixture.mjs';
 import {createNormalBootcampClient} from '../../../src/bootcamp/normal-client.mjs';
 import {JsonRpcProvider} from 'ethers';
@@ -49,14 +50,14 @@ export async function normalPaymentFixture(t,{executionVersion=1,beforeRegistrat
   reader:{async snapshot(){throw Error('OFFLINE_LEGACY_DISABLED');}},envelope:{async lookup(){throw Error('OFFLINE_LEGACY_DISABLED');}}};
  store=createBootcampStore({directory:join(dir,'offline-bind-store'),authentication:auth,instanceId:'offline-'+id,demoStartedAt:report.startedAt,mode:'SYNTHETIC_FIXTURE',runtimeMappingHash:m.runtimeMappingHash,now:storeNow,fault:point=>fault(point,{report,metadata}),
   producers:source.producers,resolveSource,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices,executionBridge:connection.configuration});
- const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key}):null,api=http?createNormalBootcampClient(http):null;
+ const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key,normalUi:{getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store,connection,context,applicationId,authorize:(c,w)=>auth.authorizeWorkflow(c,w)})}}):null,api=http?createNormalBootcampClient(http):null;
  const app=(http?await http.request('/bootcamp/v1/applications',{method:'POST',body:{}}):store.createApplication(user,{},key())).record.applicationId;
  for(const criterion of P0_POLICY.criteria){const req=store.issueRequest(user,app,{criterionId:criterion.criterionId,expectedRevision:store.getApplication(user,app).revision},key());await store.collect(user,app,{requestId:req.record.target.requestId,expectedRevision:req.record.applicationRevision},key());}
  const sourceTarget=normalSourceTarget(store.getApplication(user,app));
  const directConsent=async context=>{const v=store.getProcedure(context,app),body={expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,
   targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,value:'AGREE'};if(http)await http.request('/bootcamp/v3/applications/'+app+'/review-consents',{method:'POST',body,actor:context});else store.recordReviewConsent(context,app,body,key());};
  const reportPath=join(dir,'offline-normal-payment-report.json');
- const run=async()=>{const timer=readWhileAsync?setInterval(()=>{try{readNormalView(()=>store.getApplication(user,app));readNormalView(()=>store.getProcedure(op,app));reads++;}catch(e){readErrors.push(e);}},250):null;
+ const run=async()=>{const timer=readWhileAsync?setInterval(()=>{try{readNormalView(()=>store.getApplication(user,app));if(report.chainApplicationId)readNormalView(()=>store.getProcedure(op,app));reads++;}catch(e){readErrors.push(e);}},250):null;
  const paymentStore=Object.freeze({...store,execution:Object.freeze({...store.execution,plan(...args){planFrame={kind:args[2].kind,ticks:0};try{const value=store.execution.plan(...args);afterPlan(value,{store,source,app,user,op,auth});return value;}finally{planFrame=null;}}})});
  try{return await executeNormalPayment({store:paymentStore,connection,serviceContext,user,op,app,recipient:participant.address.toLowerCase(),provider,key,report,sourceTarget,write:()=>atomicPrivate(reportPath,report),stage:name=>{report.stage=name;atomicPrivate(reportPath,report);},
   waitForRecipientRegistration:api?async()=>{const packet=await api.recipientRegistration(app);report.registrationRequest={status:packet.status,chainStatus:packet.chainStatus};await beforeRegistrationSignature({store,source,app,user,op,auth,packet});const signature=await participant.signTypedData(packet.payload.domain,packet.payload.types,packet.payload.message);const result=await api.submitRecipientRegistration(app,packet,signature,{idempotencyKey:key()});report.registrationAccepted=result.record.target.signatureAccepted;assert.equal((await api.recipientRegistration(app)).status,'SIGNED');}:undefined,
