@@ -67,7 +67,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
   }
  }
  function service(context,action,intentId,fn,validateCommit=null){
-  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_ADOPT_COMMIT','B_INSPECT','ACQUIRE','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
+  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_ADOPT_COMMIT','B_RECEIPT_COMMIT','B_INSPECT','ACQUIRE','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
@@ -99,8 +99,8 @@ export function createExecutionOperations({db,transaction,authentication,operato
  function intent(intentId){id(intentId);const i=l.intent(intentId);check(i&&i.runtimeId===ports.runtimeId,'BC_NOT_FOUND');return i;}
  function handle(h){exactKeys(h,['intentId','owner','workerFence','generation','leaseRevision'],'BC_E5_LEASE_HANDLE');id(h.intentId);id(h.owner);
   for(const k of ['workerFence','generation','leaseRevision'])revision(h[k]);return h;}
- function live(h,time,owner){handle(h);const i=intent(h.intentId),r=runtime(),lease=l.lease(i.intentId);
-  check(!e4BridgePorts.configured||!get('SELECT 1 FROM e5b_completions WHERE intent_id=?',h.intentId),'BC_E5B_ALREADY_COMPLETED');
+ function live(h,time,owner,{completedReceipt=false}={}){handle(h);const i=intent(h.intentId),r=runtime(),lease=l.lease(i.intentId);
+  check(completedReceipt||!e4BridgePorts.configured||!get('SELECT 1 FROM e5b_completions WHERE intent_id=?',h.intentId),'BC_E5B_ALREADY_COMPLETED');
   check(lease&&lease.owner===h.owner&&lease.owner===owner&&lease.fence===h.workerFence&&lease.generation===h.generation
    &&lease.revision===h.leaseRevision&&lease.expires_at>time&&r.generation===h.generation,'BC_E5_FENCED');return {i,r,lease};}
  function business(i,time){

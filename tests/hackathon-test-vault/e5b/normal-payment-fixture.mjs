@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {atomicPrivate} from '../../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {DatabaseSync} from 'node:sqlite';
 import {join} from 'node:path';
+import {createNormalReceiptReader} from '../../../src/bootcamp/normal-receipt.mjs';
 import {readRecipientRegistration} from '../../../src/bootcamp/recipient-registration-ui.mjs';
 import {recipientHttp} from '../../bootcamp-store/recipient-http-fixture.mjs';
 import {createNormalBootcampClient} from '../../../src/bootcamp/normal-client.mjs';
@@ -50,9 +51,11 @@ export async function normalPaymentFixture(t,{executionVersion=1,beforeRegistrat
   reader:{async snapshot(){throw Error('OFFLINE_LEGACY_DISABLED');}},envelope:{async lookup(){throw Error('OFFLINE_LEGACY_DISABLED');}}};
  store=createBootcampStore({directory:join(dir,'offline-bind-store'),authentication:auth,instanceId:'offline-'+id,demoStartedAt:report.startedAt,mode:'SYNTHETIC_FIXTURE',runtimeMappingHash:m.runtimeMappingHash,now:storeNow,fault:point=>fault(point,{report,metadata}),
   producers:source.producers,resolveSource,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices,executionBridge:connection.configuration});
- const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key,normalUi:{getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store,connection,context,applicationId,authorize:(c,w)=>auth.authorizeWorkflow(c,w)})}}):null,api=http?createNormalBootcampClient(http):null;
+ const receiptReader=createNormalReceiptReader({authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash:m.runtimeMappingHash,policyHash:m.policyHash,recipient:participant.address.toLowerCase(),token:m.tokenAddress});
+ const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key,normalUi:{getPaymentReceipt:receiptReader,getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store,connection,context,applicationId,authorize:(c,w)=>auth.authorizeWorkflow(c,w)})}}):null,api=http?createNormalBootcampClient(http):null;
  const app=(http?await http.request('/bootcamp/v1/applications',{method:'POST',body:{}}):store.createApplication(user,{},key())).record.applicationId;
  for(const criterion of P0_POLICY.criteria){const req=store.issueRequest(user,app,{criterionId:criterion.criterionId,expectedRevision:store.getApplication(user,app).revision},key());await store.collect(user,app,{requestId:req.record.target.requestId,expectedRevision:req.record.applicationRevision},key());}
+ Object.assign(report,{applicationId:app,recipient:participant.address.toLowerCase(),runtimeMappingHash:m.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false});
  const sourceTarget=normalSourceTarget(store.getApplication(user,app));
  const directConsent=async context=>{const v=store.getProcedure(context,app),body={expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,
   targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,value:'AGREE'};if(http)await http.request('/bootcamp/v3/applications/'+app+'/review-consents',{method:'POST',body,actor:context});else store.recordReviewConsent(context,app,body,key());};

@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import {BridgeExecutionService} from '../../../src/hackathon-test-vault/e5b/service.mjs';
 import {ExecutionReader} from '../../../src/hackathon-test-vault/e5/reader.mjs';
 import {normalPaymentFixture} from './normal-payment-fixture.mjs';
-test('V2 HTTP request/signature to canonical exact 100 TEST through wall-clock Geth',async t=>{
- const f=await normalPaymentFixture(t,{executionVersion:2,wallClock:true,sourceSeconds:240,readWhileAsync:true});
+for(const rollover of [false,true])test('V2 HTTP request/signature to canonical exact 100 TEST; receipt rollover='+rollover,async t=>{
+ let injected=0;const f=await normalPaymentFixture(t,{executionVersion:2,wallClock:true,sourceSeconds:240,readWhileAsync:true,fault(point,{report}){if(rollover&&point==='e5b-after-completion'&&report.stage==='ACCEPT'){injected++;const before=Date.now();Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1001-before%1000);assert.ok(Math.floor(Date.now()/1000)>Math.floor(before/1000));}}});
  await f.run();const r=f.readReport();
- assert.equal(r.completed,true);assert.equal(r.registrationAccepted,true);
+ assert.equal(injected,rollover?1:0);assert.equal(r.completed,true);assert.equal(r.registrationAccepted,true);
  assert.deepEqual(r.registrationRequest,{status:'AWAITING_SIGNATURE',chainStatus:'NOT_REGISTERED'});
  assert.deepEqual(r.stages.map(x=>x.kind),['REGISTER','ALLOCATE','START_REVIEW','BIND_CONSENTS','PREPARE','ACCEPT']);
  assert.equal(r.claim.amountAtoms,'100000000');assert.equal(r.claim.duplicateRejected,true);
@@ -16,6 +16,7 @@ test('V2 HTTP request/signature to canonical exact 100 TEST through wall-clock G
  assert.equal(chain.chainStatus,'INCLUDED');assert.equal(chain.canonical,true);assert.equal(chain.finalized,false);assert.equal(chain.registrationSequence,'1');
  assert.equal(chain.recipient,f.user.wallet.toLowerCase());
  const packet=await f.api.recipientRegistration(f.app);assert.equal(packet.signatureAccepted,true);assert.equal(packet.chainStatus,'INCLUDED');assert.equal(packet.registrationSequence,'1');
+ const received=await f.api.paymentReceipt(f.app);assert.equal(received.claim.state,'INCLUDED');assert.equal(received.claim.canonical,true);assert.equal(received.claim.finalized,false);assert.equal(received.balance.receivedAtoms,'100000000');assert.equal(received.balance.exactExpectedAmountVerified,true);
  assert.ok(f.concurrentReads()>0);assert.equal(f.readErrors.length,0);
  const wrong=new ExecutionReader({...f.connection.runtime.manifest,version:'clear-e5-test-runtime.1'});await assert.rejects(wrong.observe({applicationId:chain.chainApplicationId}),/E5_.*CODE|E5_.*TEMPLATE/);
 });
