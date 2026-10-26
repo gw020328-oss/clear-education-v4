@@ -1,5 +1,6 @@
 // Fresh isolated TEST chain, invented actors/source/model only. Never opens a retained actual run.
 import assert from 'node:assert/strict';
+import {RuleError} from '../../../src/policy/values.mjs';
 import {readFileSync} from 'node:fs';
 import {atomicPrivate} from '../../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {DatabaseSync} from 'node:sqlite';
@@ -54,10 +55,23 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
  const receiptReader=createNormalReceiptReader({authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash:m.runtimeMappingHash,policyHash:m.policyHash,recipient:participant.address.toLowerCase(),token:m.tokenAddress});
  const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key,normalUi:{getPaymentReceipt:receiptReader,getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store,connection,context,applicationId,authorize:(c,w)=>auth.authorizeWorkflow(c,w)})}}):null,api=http?createNormalBootcampClient(http):null;
  const app=(http?await http.request('/bootcamp/v1/applications',{method:'POST',body:{}}):store.createApplication(user,{},key())).record.applicationId;
- for(const criterion of P0_POLICY.criteria){const req=store.issueRequest(user,app,{criterionId:criterion.criterionId,expectedRevision:store.getApplication(user,app).revision},key());await store.collect(user,app,{requestId:req.record.target.requestId,expectedRevision:req.record.applicationRevision},key());}
+ const setupDb=new DatabaseSync(join(dir,'offline-bind-store/bootcamp.sqlite'),{readOnly:true});
+ try{for(const criterion of P0_POLICY.criteria){
+  const req=store.issueRequest(user,app,{criterionId:criterion.criterionId,expectedRevision:readNormalView(()=>store.getApplication(user,app)).revision},key());
+  const body={requestId:req.record.target.requestId,expectedRevision:req.record.applicationRevision},collectionKey=key();
+  const sequence=()=>setupDb.prepare('SELECT sequence FROM r2_meta WHERE id=1').get().sequence,before=sequence();
+  try{await store.collect(user,app,body,collectionKey);}catch(error){
+   // A STARTED attempt is durable before verify runs. Retry only an initial
+   // rolled-back clock boundary: no attempt, producer invocation or accepted write.
+   if(Object.getPrototypeOf(error)!==RuleError.prototype||error.message!=='BC_VIEW_STALE'||sequence()!==before
+    ||setupDb.prepare('SELECT status FROM requests WHERE id=?').get(body.requestId)?.status!=='PENDING'
+    ||setupDb.prepare('SELECT revision FROM applications WHERE id=?').get(app)?.revision!==body.expectedRevision)throw error;
+   await store.collect(user,app,body,collectionKey);
+  }
+ }}finally{setupDb.close();}
  Object.assign(report,{applicationId:app,recipient:participant.address.toLowerCase(),runtimeMappingHash:m.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false});
- const sourceTarget=normalSourceTarget(store.getApplication(user,app));
- const directConsent=async context=>{const v=store.getProcedure(context,app),body={expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,
+ const sourceTarget=normalSourceTarget(readNormalView(()=>store.getApplication(user,app)));
+ const directConsent=async context=>{const v=readNormalView(()=>store.getProcedure(context,app)),body={expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,
   targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,value:'AGREE'};if(http)await http.request('/bootcamp/v3/applications/'+app+'/review-consents',{method:'POST',body,actor:context});else store.recordReviewConsent(context,app,body,key());};
  const reportPath=join(dir,'offline-normal-payment-report.json');
  let activeBridge,activeRuntime;
