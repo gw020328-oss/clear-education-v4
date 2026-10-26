@@ -1,5 +1,33 @@
 # 개발 현황
 
+## 2026-10-26 공개 현황
+
+main의 실제 제공 코드·의존성·기존 시작 명령은 유지한다. main 재현 경로는 기존 ProofAdapter 합성 테스트36개와 문서 CI이며 아래 develop 도구·기능의 로컬 명령을 main에서 실행하라고 안내하지 않는다. develop 전체/기능 커밋을 main에 합치지 않았다.
+
+원격 확인 **2026-10-26 13:19 KST**. develop은 [c108dc8](https://github.com/gw020328-oss/clear-education-v4/commit/c108dc8f20a86da3d48419615285a815f947b91c)로 [PR #102](https://github.com/gw020328-oss/clear-education-v4/pull/102)가 10월 25일 병합됐다. main은 [ab438d0](https://github.com/gw020328-oss/clear-education-v4/commit/ab438d0ae9ad581fd1b41792f9898b43a6cd7360)이며 기능 코드는 미반영이다. 아래는 **develop 기준, main 미반영**인 구현과 공개 보고서의 저장된 결과이며 이번 자동화가 재실행한 결과가 아니다.
+
+### 완료한 범위 — 로컬 TEST 정상 경로와 develop 통합
+
+[현재 develop에 고정한 정상 실행 기록](https://github.com/gw020328-oss/clear-education-v4/blob/c108dc8f20a86da3d48419615285a815f947b91c/docs/current/BOOTCAMP_NORMAL_RUN_READINESS.ko.md)과 #102는 실제 r20의 실행 HEAD를 **f38ae8bd44c9da2e27f6a56650ced0f7bffe9aba**로 기록한다. 같은 신청에서 새 실제 HackerRank 계정/인증서 검증, 로컬 Moodle 데모3조건, 실제 Gemini 회고 응답1회와 지정 운영자의 정확 입력 AI 승인, 동일 판정에 대한 참여자/운영자의 별도 AGREE가 연결됐으며 네 조건이 MET였다. AI 승인과 지급 동의는 별개다. Moodle은 로컬 데모 자료이며 원격 실제 기관의 학습 성과 입증이 아니다.
+
+6개 native bridge 단계 INCLUDED 후 canonical CLAIM receipt status1/block12, 저장 checkpoint, vault→participant Transfer와 **실측100000000 atoms =100 TEST 수령**, 중복 청구 거부를 확인한 저장 기록이다. 상태는 **INCLUDED / finalized=false**로 최종 확정이라고 표시하지 않는다. FINISH1회·exit0, 관리 세션/Chrome0·HTTPS/RPC 종료·Geth 중지/네트워크 park와 chain/keys/DB/소비된 승인 보존을 보고했다. 이 사실은 과거 합성 원천 run3와 별도이며 실패했던 r15를 소급 성공으로 바꾸지 않는다. 이번 자동화는 원본 증명·개인자료·잔액/키·실행 환경을 직접 열거나 재시험하지 않았다.
+
+### 병합한 v29 수정과 합성 검증의 한계
+
+[고정 통합 head의 v29 공개 검증](https://github.com/gw020328-oss/clear-education-v4/blob/8bff2be17e3ae280ff03d80f578e7727de48cb14/docs/current/BOOTCAMP_V29_VERIFICATION.json)은 준비/권한/채택 메타데이터를 같은 savepoint에서1회 쓰고 원래 target·binding·cap·현재 권한을 최종 검증하도록 보완했다고 보고한다. 순방향 초 경계의 최종 읽기 검증만 최대1회 다시 확인하고 두 번째 충돌은 rollback한다. 새 정상 TEST 환경에만1초 empty-block mining을 적용하고 원래 만료 안에서 canonical 시각을 읽어 기다린 뒤 같은 CAS를 확인한다. 기존 환경 이행·추가 거래·재서명·재동의·TTL 연장은 없다.
+
+v29 로컬 API/store/execution633·브라우저 manifest1·호환114·E5 native46·E5B native43은 각 검사 범위이며 서로 합산하지 않는다. E5B43 중 실제 wall-clock을 쓴 **합성 원천/사용자/모델**10경로는 양성7경로의100 TEST/중복 거부와 음성3경로의 ACCEPT 송신 전 차단을 구분한다. 실제 r20 이후 새 실제 로그인/proof/유료 AI/사람 서명·동의/지급을 수행한 검증이 아니다. v28의 E5B38/41 실패와 보존되지 않은 당시 수치·미수락 조사 기록을 보존하며 새 head 성공으로 소급 덮지 않는다.
+
+### 정확한 CI·통합·남은 작업
+
+최종 통합 head **8bff2be17e3ae280ff03d80f578e7727de48cb14**의 PR/push 검사 **10/10 COMPLETED·SUCCESS**를 확인했다. 공개 이력·합성 시험·Mac 복구 각2개와 E5 A·E5 B·HR offline·Windows synthetic 각1개이며 테스트 사례 수가 아니다. develop 병합 커밋 c108dc8의 tree가 이 검사 head와 동일함을 별도 확인했다. 병합 SHA 자체의 새 CI 실행을 주장하지 않는다.
+
+[run 40172949648](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40172949648) · [run 40172949636](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40172949636) · [run 40172949715](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40172949715) · [run 40172949626](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40172949626) · [run 40172946770](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40172946770) · [run 40172949646](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40172949646)
+
+열린 PR은 #60·#66·#69·#70·#73·#75·#78·#87·#101이다. #78/#87/#101의 현재 head와 develop의 diff를 확인한 결과 남은 고유 변경은 Markdown뿐이며 runtime은 통합돼 있다. 해당 문서는 작성자 검토 없이 이 자동화가 병합하지 않는다. 나머지 연구·제품 프론트 PR의 코드 통합/동작 완료를 주장하지 않는다. 제품 프론트 연결, P2 시험 클라이언트 busy/오류 표시 후속, 예치 정책 미결, 원격 기관 Moodle·Windows 사용자 PC 실측·상용 서비스/배포는 미완료다. r20의 silent create click 원인도 미확정이다.
+
+이전 날짜별 미병합·실패·준비 표기는 당시 기록이며 현재 병합/실행 범위는 이 절을 우선한다. 과거 AI 평가·합성 시험·실제 수령·타 사용자 시험을 혼용하거나 횟수를 합산하지 않는다. 이번 작업은 공개 코드/문서·CI만 대조했으며 새 원격 로그인·proof·유료 호출·서명·거래·배포를 하지 않았다.
+
 ## 2026-10-25 공개 현황
 
 main의 제공 코드·의존성·기존 사용법은 유지한다. 공개 재현 경로는 기존 ProofAdapter 합성 테스트36개와 문서 CI다. 아래 미병합 API/복구 변경은 main 제공 기능이나 로컬 실행 명령이 아니다.
