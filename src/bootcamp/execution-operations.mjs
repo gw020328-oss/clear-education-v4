@@ -67,7 +67,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
   }
  }
  function service(context,action,intentId,fn,validateCommit=null){
-  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_ADOPT_COMMIT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
+  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_ADOPT_COMMIT','B_INSPECT','ACQUIRE','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
@@ -166,7 +166,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
    return service(context,'ACQUIRE_RUNTIME',null,(time,authority)=>global.acquire(time,authority,runtime(),body));},
   heartbeatRuntime(context,h,seconds=30){return service(context,'HEARTBEAT_RUNTIME',null,(time,authority)=>global.heartbeat(h,time,authority,seconds));},
   bindRuntimeIntent(context,g,h){return service(context,'BIND_RUNTIME_INTENT',h.intentId,(time,authority)=>{
-   live(h,time,authority.serviceId);return global.bind(g,h,time,authority);});},
+   live(h,time,authority.serviceId);return global.bind(g,h,time,authority);},(time,authority)=>{live(h,time,authority.serviceId);global.slot(g,h,time,authority);});},
   releaseRuntimeIntent(context,g,h){return service(context,'RELEASE_RUNTIME_INTENT',h.intentId,(time,authority)=>{
    live(h,time,authority.serviceId);return global.release(g,h,time,authority);});},
   async observeRuntimeFence(context,g=null){
@@ -229,7 +229,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
     db.prepare('INSERT INTO e5_leases VALUES(?,?,?,?,?,1) ON CONFLICT(intent_id) DO UPDATE SET owner=excluded.owner,fence=excluded.fence,generation=excluded.generation,expires_at=excluded.expires_at,revision=e5_leases.revision+1')
      .run(i.intentId,owner,fence,r.generation,expiresAt);
     const lease=l.lease(i.intentId);return freeze({intentId:i.intentId,owner,workerFence:fence,generation:r.generation,leaseRevision:lease.revision});
-   });
+   },(time,authority,h)=>{const {r}=live(h,time,authority.serviceId);check(['UNOBSERVED','ACTIVE'].includes(r.status),'BC_E5_RUNTIME_SUSPENDED');});
   },
   heartbeat(context,h,leaseSeconds=30){check(Number.isSafeInteger(leaseSeconds)&&leaseSeconds>=1&&leaseSeconds<=60,'BC_E5_LEASE');
    return service(context,'HEARTBEAT',h.intentId,(time,authority)=>{const {lease}=live(h,time,authority.serviceId);
@@ -238,7 +238,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
     return freeze({...h});});
   },
   inspect(context,h){return service(context,'INSPECT',h.intentId,(time,authority)=>{const {i,r,lease}=live(h,time,authority.serviceId);
-   check(['UNOBSERVED','ACTIVE'].includes(r.status),'BC_E5_RUNTIME_SUSPENDED');return basis(i,r,lease,time,authority);});},
+   check(['UNOBSERVED','ACTIVE'].includes(r.status),'BC_E5_RUNTIME_SUSPENDED');return basis(i,r,lease,time,authority);},(time,authority,value)=>{const {i,r,lease}=live(h,time,authority.serviceId);sameBasis(value,basis(i,r,lease,time,authority),time);});},
   async observe(context,h,expected){
    const request=service(context,'READ',h.intentId,(time,authority)=>{const {i,r,lease}=live(h,time,authority.serviceId);sameBasis(expected,basis(i,r,lease,time,authority),time);
     check(['UNOBSERVED','ACTIVE'].includes(r.status),'BC_E5_RUNTIME_SUSPENDED');

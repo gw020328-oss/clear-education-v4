@@ -78,7 +78,8 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
  }
  const worker={
   status(){return freeze({version:'clear-bootcamp-e5b-api.1',signingEnabled:ports.executionEnabled,dispatchEnabled:ports.executionEnabled,productionEnabled:false});},
-  inspect(g,h){return run(g,h,'B_INSPECT',(s,time,authority)=>cas(s,time,authority));},
+  inspect(g,h){return run(g,h,'B_INSPECT',(s,time,authority)=>cas(s,time,authority),
+   (s,time,authority,value)=>sameBasis(value,cas(s,time,authority),time));},
   async prepare(g,h,expected){
    const command=run(g,h,'B_READ_REQUEST',(s,time,authority)=>{sameBasis(expected,cas(s,time,authority),time);return commands.command(s.i);});
    const observed=await ports.read(command);let preparedObservation;

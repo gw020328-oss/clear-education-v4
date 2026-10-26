@@ -164,14 +164,22 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     return {time:t,reversed:!!prior&&t<prior.floor};
   }
   function outcome(result){if(result.error)throw result.error;return result.value;}
-  function access(context,applicationId,write,fn){
+  function access(context,applicationId,write,fn,validateCommit=null){
     return outcome(transaction(()=>{
       const wallet=actor(context,write);let a=owned(wallet,applicationId);const {time,reversed}=tick();a=refresh(a,time,reversed,sessionHash(context,wallet));
       db.exec('SAVEPOINT command');
       try{check(!reversed,'BC_CLOCK_REVERSED');const value=fn(a,wallet,time),sequence=ledger.sequence(),revision=app(applicationId).revision;
-        const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed,sessionHash(context,wallet)),end=tick();
-        check(!final.reversed&&!end.reversed&&end.time===time&&latest.revision===revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
-        check(actor(context,write)===wallet,'BC_COMMIT_AUTHORITY');
+        // Collection writes once. Only its original candidate/authority and current
+        // heads are revalidated; no producer call, nonce consumption or write replay.
+        for(let validation=0;;validation++){
+          const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed,sessionHash(context,wallet));
+          check(!final.reversed&&final.time>=time&&latest.revision===revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
+          if(validateCommit)validateCommit(latest,final.time);
+          check(actor(context,write)===wallet,'BC_COMMIT_AUTHORITY');const end=tick();
+          check(!end.reversed&&end.time>=final.time,'BC_VIEW_STALE');
+          if(validateCommit&&end.time>final.time&&validation===0)continue;
+          check(end.time===(validateCommit?final.time:time),'BC_VIEW_STALE');break;
+        }
         db.exec('RELEASE command');return {value};}
       catch(error){
         db.exec('ROLLBACK TO command; RELEASE command');
@@ -325,6 +333,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
           new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('BC_PRODUCER_TIMEOUT'));},mode==='ISOLATED_LIVE_TEST'?Math.min(timeoutMs,Math.max(0,(started.request.expiresAt-epoch(now()))*1000)):timeoutMs);})]);
       }catch(error){failure=error;}finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
       reconcile(applicationId);
+      let validateCollected=()=>{};
       try{return access(context,applicationId,true,(a,wallet,time)=>{
         const prior=replay(wallet,route,key,body);if(prior)return projection(prior);
         check(wallet===started.wallet,'FORBIDDEN');ready(a);cas(a,body.expectedRevision);window(a,time);
@@ -342,7 +351,15 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
         // Recheck immediately before the first write; callbacks must be synchronous.
         check(actor(context,true)===wallet&&started.producer.recheck(candidate,started.request)===true,'BC_COMMIT_AUTHORITY');
         const writeTime=epoch(now()),writeGuard=source(a,r.criterionId,writeTime);
-        check(writeTime===time&&writeGuard&&requestGuardHash(writeGuard,r.version)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
+        check(writeTime>=time&&writeGuard&&requestGuardHash(writeGuard,r.version)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
+        validateCollected=(currentApp,at)=>{
+          const guard=source(currentApp,r.criterionId,at);
+          check(guard&&requestGuardHash(guard,r.version)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
+          check(at<r.expiresAt&&at<r.receiptWindowUntilExclusive,'BC_RECEIPT_WINDOW');
+          check(started.producer.recheck(candidate,started.request)===true&&actor(context,true)===wallet,'BC_COMMIT_AUTHORITY');
+          validateCandidate(safe,r,guard,at);
+        };
+        validateCollected(a,writeTime);
         run("UPDATE requests SET status='CONSUMED' WHERE id=? AND status='PENDING'",r.requestId);fault('after-nonce');
         run('INSERT INTO evidence VALUES(?,?,?,?,?,?,?,?)',e.evidenceId,a.id,r.criterionId,e.evidenceRevision,r.requestHash,r.nonceHash,safe.proofBundleHash,canonical(e));fault('after-evidence');
         if(reference)ledger.bridge(e.evidenceId,reference);
@@ -358,7 +375,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
         // to any of them must reject this acceptance, not commit a mixed result.
         check(refresh(a,final.time).revision===a.revision,'BC_COMMIT_CONTEXT');
         return projection(result);
-      });}catch(error){
+      },(a,time)=>validateCollected(a,time));}catch(error){
         transaction(()=>{const end=ledger.stamp();ledger.attempt(applicationId,started.operationId,{phase:'FAILED',clockEpoch:end.clockEpoch,endedUtcMs:end.utc});
           ledger.emit({applicationId,decision:started.decision,operationId:started.operationId,eventType:'OPERATION_FAILED',start:started.start,end});});
         throw error;
