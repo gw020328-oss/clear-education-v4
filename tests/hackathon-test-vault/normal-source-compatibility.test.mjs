@@ -4,7 +4,10 @@ import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {normalE2Hash,NORMAL_E2_PATH,NORMAL_SOURCE_INTAKE,NORMAL_SOURCE_INTAKE_SHA} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
-const root=new URL('../../',import.meta.url),read=p=>readFileSync(new URL(p,root));
+const root=new URL('../../',import.meta.url),actualRead=p=>readFileSync(new URL(p,root));
+// V1–V29 assertions use the preserved exact V29 bytes for these four deltas.
+// The separate V30 assertion below verifies every current source, without exemptions.
+const read=p=>["src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-e4b-controller.mjs", "src/bootcamp/execution-operations.mjs", "src/bootcamp/store.mjs"].includes(p)?execFileSync('git',['show','59864d27c0a32657a395f5d17544731b759dbb47:'+p],{cwd:root}):actualRead(p);
 const sha=b=>createHash('sha256').update(b).digest('hex');
 test('original accepted E2 pins match original Git snapshot; only reviewed E2 label delta is current',()=>{
  const pins=JSON.parse(read('specs/bootcamp/hackathon-test-consumer-pins-v1.json'));
@@ -445,4 +448,12 @@ test('v29 pins atomic metadata commits and original-deadline canonical clock rea
  for(const p of ['specs/bootcamp/hackathon-test-memory-source-intake-v28.json','src/hackathon-test-vault/reviewed-source-v28.mjs','docs/hackathon-test-vault/e5b/normal-source-pins-v25.json','docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V20.json'])assert.deepEqual(read(p),execFileSync('git',['show','cc9452a21aebe91fbf0b966341b11f9f5a0029dd:'+p],{cwd:root}),p);
  assert.deepEqual(v.executionMetadataClockCurrentness,{"actions": ["B_PREPARE", "B_AUTHORIZE_COMMIT", "B_ADOPT_COMMIT"], "writeExecutions": 1, "maximumFinalValidationRechecks": 1, "sameSavepoint": true, "originalTargetCommandBindingCapsAndCurrentAuthorityRequired": true, "issuerTicketConsumeNativeAdoptOrSendRepeated": false, "secondConflictRollsBack": true});
  assert.deepEqual(v.canonicalClockReadiness,{"freshNormalEnvironmentBlockPeriodSeconds": 1, "legacyAbsentPeriodSeconds": 0, "periodPinnedInOwnedRecordRuntimeHashAndContainer": true, "methods": ["startReview", "prepareUnsigned"], "onlyCanonicalReadsDuringWait": true, "originalAuthoritySourceReviewAndMessageDeadlines": true, "sameExpectedCasRecheckedAfterWait": true, "stalledRpcBoundedByOriginalExpiry": true, "clockFrozenThresholdExtendedOrExtraTransaction": false, "existingEnvironmentMigrated": false, "frontendContractChanged": false});
+});
+
+test('v30 current exact source set and original V29 records remain pinned',()=>{
+ const v=JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v30.json'));
+ assert.equal(v.version,'clear-hackathon-test-memory-source-intake.30');assert.equal(v.currentSourceCandidateHead,'1a6dac1532ca85533c66ceb21578238075440e6f');
+ assert.equal(sha(actualRead(v.previousCompatibilityRecord.path)),v.previousCompatibilityRecord.sha256);
+ assert.equal(Object.keys(v.sources??v.sourceArtifactSha256).length,172);
+ for(const [p,h]of Object.entries(v.sourceArtifactSha256))assert.equal(sha(actualRead(p)),h,p);
 });

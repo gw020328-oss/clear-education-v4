@@ -1,0 +1,82 @@
+{
+  "version": "clear-bootcamp-v30-verification.1",
+  "date": "2026-10-26",
+  "basePrHead": "59864d27c0a32657a395f5d17544731b759dbb47",
+  "sourceCandidateHead": "1a6dac1532ca85533c66ceb21578238075440e6f",
+  "failedCiRun": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/40271564175",
+  "diagnosis": {
+    "originalCi": {
+      "passed": 39,
+      "failed": 4
+    },
+    "offlineBefore": {
+      "passed": 0,
+      "failed": 4
+    },
+    "causes": [
+      "Same-second service fence rejected read-only B_INSPECT and LOOKUP witness",
+      "Same-second pre-write collection fence rejected an otherwise current candidate",
+      "ACQUIRE lease metadata needed original-expiry validation at commit"
+    ],
+    "v2ContractCausationClaimed": false
+  },
+  "changes": {
+    "metadataActions": [
+      "B_INSPECT",
+      "INSPECT",
+      "ACQUIRE",
+      "BIND_RUNTIME_INTENT"
+    ],
+    "additionalUnreturnedRecoveryWitnessPhases": [
+      "LOOKUP",
+      "RETENTION"
+    ],
+    "collection": "One producer result and one nonce/evidence write; validate original candidate/guard/expiry and refresh all heads after final producer recheck",
+    "maximumRechecks": 1,
+    "sameIssuedWitnessAndOriginalCaps": true,
+    "repeatedSigningSealingSendingProducerOrNonce": false,
+    "fixedClockOrExtendedTtl": false
+  },
+  "local": {
+    "focusedFinal": {
+      "passed": 23,
+      "failed": 0
+    },
+    "apiStoreFinal": {
+      "passed": 657,
+      "failed": 0
+    },
+    "e5bInitialCandidate": {
+      "passed": 43,
+      "failed": 0,
+      "sourceCandidateHead": "8fe0325157aad8280166ad6641e6695abb9e0f4a"
+    },
+    "finalWallClock": {
+      "passed": 10,
+      "failed": 0,
+      "positivePayments": 7,
+      "targetAcceptPreSendRejections": 3,
+      "eachSuccessBroadcasts": 6,
+      "eachSuccessPaymentSignatures": 1,
+      "eachSuccessReceivedAtoms": "100000000",
+      "eachRejectionBroadcasts": 5,
+      "eachRejectionIncluded": 5,
+      "eachRejectionSealedUnsent": 1
+    },
+    "sourceIntakeAndTamper": {
+      "passed": 117,
+      "failed": 0
+    },
+    "retainedRecords": {
+      "matched": 648,
+      "total": 648
+    }
+  },
+  "ci": "PENDING_NEW_HEAD",
+  "actualUserLogin": false,
+  "actualSourceProofs": false,
+  "paidAi": false,
+  "normalHostOrCaStarted": false,
+  "v2ApiConnected": false,
+  "automaticMerge": false
+}

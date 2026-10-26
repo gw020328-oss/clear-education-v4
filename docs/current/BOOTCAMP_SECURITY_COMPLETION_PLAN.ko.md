@@ -43,3 +43,9 @@ Solidity 0.8.30, optimizer 200, Shanghai, V2만 `viaIR: true`로 컴파일한다
 `./tools/node --test tests/hackathon-test-vault/recipient-registration-v2.test.mjs` 8개 통과. 무권한 서명/다른 도메인/만료/nonce 재사용/공격자 신청 대체, 체인 등록 순서/정정 후 순서 유지, 서명 등록에서 ACCEPT→CLAIM 정확한 100 TEST, 이의/정정 뒤 오래된 승인 거부, 종료 우선/수락 우선 및 수락 후 만료·키 폐기·pause에도 청구 가능, 중복 청구 거부를 합성 인메모리 체인에서 검증했다. 실제 사용자 데이터나 지갑은 사용하지 않았다.
 
 다음 구현은 고정 신청 ID의 V2 생성·영속 결합, 별도 등록 서명 세션/HTTP, execution reader/command·manifest의 명시적 버전 선택과 인수 지문이다. S3의 API 접수→canonical 체인 반영 및 S4 근거 조회도 남아 있다. 현행 normal host는 여전히 V1이므로 프론트는 이 후보를 현재 사용 가능한 API로 취급하지 않는다.
+
+## PR115 CI 후속: v30 시간 경계 검증
+
+초기 HEAD `59864d2`의 E5B CI는 39/43 통과, 4건 실패였다. 목표 ACCEPT 실패 주입 전에 B_INSPECT/LOOKUP·ACQUIRE 또는 원천 수집의 같은 초 비교에서 중단됐으며, V2 계약이 원인이라는 근거는 없었다. [v30 검증 기록](BOOTCAMP_V30_VERIFICATION.json)에 수정 전 재현과 후보별 검증을 분리한다. 과거 v29 CI 성공과 r20 실제 성공 기록은 그대로 보존한다.
+
+조회/미반환 witness는 원래 권한과 대상을 최대 한 번 다시 검증하고, lease·원천 수집은 한 번 기록 후 원래 만료·권한·원천/전체 head를 최종 검증한다. 키/송신/producer/nonce 소비 재실행이나 기한 연장은 없다. 별도 v30 인수가 정확한 네 소스 변경을 고정한다. 새 HEAD CI 통과 후 V2 API·실행 서버 연결을 이어가며, 이 수정만으로 V2 API가 연결됐다고 표현하지 않는다.
