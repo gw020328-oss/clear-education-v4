@@ -31,3 +31,5 @@
 4개 벽시계 시나리오를 묶은 다음 실행은 3/4였다. 신규 시험 helper가 기존 normal 실행기의 canonical clock 대기를 호출하지 않아 PREPARE의 issuedAt이 최신 블록보다 앞섰다(`BC_E5_CURRENT_FIRST_ACCEPT_TIME`). 기존 `waitForNormalChainTime`을 원래 authority/source/review cap으로 재사용하도록 시험 helper를 고쳤으며 제품 검사나 기한을 완화하지 않았다.
 
 정상 V2 동시 조회 회귀에서 지급 자체는 완료됐으나 refresh 시작 때 기존 5초 snapshot을 지운 영향으로 조회 오류 4건을 발견했다. 새 canonical 읽기가 진행되는 동안 원래 TTL 안의 snapshot/nonce를 함께 유지하고, 성공 때 새 snapshot/nonce를 함께 교체하며 실패 때 cache를 폐기하도록 수정했다. TTL을 늘리거나 실패한 읽기를 성공으로 표시하지 않는다.
+
+최종 로컬 확인: 코어 `aed387b553e46e4fa5503e11a3dd9a12ef2f3ce6`, V32 179개 소스(10개 변경+2개 추가), E4/E5 보존·workspace·공개 이력 검사 통과. 오프라인 전체 최초 719개 중 718개 동작 통과/기존 브라우저 V31 pin 1개 실패를 새 V32 인수와 과거 Git bytes 대조로 해소했다. 신규 실패/경합/시계 경계 8/8, 소스 gate+브라우저 132/132, 정상 V2 HTTP→등록→양측 동의→ACCEPT→100 TEST 및 동시 조회 1/1이 각각 통과했다. S3 벽시계는 정정·종료/ACCEPT 우선/자동 OBSERVE 3개 통과와 canonical-clock helper 보정 후 이의·평가·재수락 1개 통과를 별도 실행으로 기록한다. 같은 최종 HEAD의 전체 CI 결과는 Draft PR과 Issue106에서 확인한다. CI 성공 전 이 로컬 결과를 전체 CI 통과로 표현하지 않는다.

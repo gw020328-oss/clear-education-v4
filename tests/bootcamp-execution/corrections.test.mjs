@@ -4,7 +4,7 @@ import {currentFixture} from './current-fixture.mjs';
 import {bridgeFixture} from './bridge-fixture.mjs';
 import {database,H,ZERO} from './fixture.mjs';
 import {executionCorrections} from '../../src/bootcamp/execution-corrections.mjs';
-import {executionCommands} from '../../src/bootcamp/execution-commands.mjs';
+import {procedureFixture} from '../bootcamp-store/procedure-fixture.mjs';
 
 test('objection receipt is not inclusion and invalidates already prepared API approval before chain reflection',async t=>{
  const f=await currentFixture(t,{kind:'ACCEPT'}),evidenceId=f.store.getApplication(f.aliceContext,f.a).evidence[0].record.evidenceId;
@@ -54,4 +54,13 @@ test('correction receipt with missing observed effect cannot complete or release
  const {f,b}=await correctionReceipt(t);f.observation.business.application.observationReceiptHash=H('not-applied');
  await assert.rejects(f.bridge.recover(f.g,f.h,b),/BC_E5B_RECEIPT_POSTCONDITION/);
  assert.equal(database(f,db=>db.prepare('SELECT COUNT(*) n FROM e5b_completions').get().n),0);
+});
+
+for(const crossing of ['one-second','review-cap'])test('objection commit '+crossing+' rechecks the original review deadline without repeating writes',async t=>{
+ let f,armed=false,writes=0,cap;f=await procedureFixture(t,{fault(point){if(armed&&point==='e3-before-command'){writes++;f.setTime(crossing==='review-cap'?cap:f.time+1);}}});
+ const a=f.create();await f.complete(a);f.publish(a);cap=f.view(a).procedure.reviewCapAt;if(crossing==='review-cap')await f.refreshEvidence(a,f.time+590);
+ const evidenceId=f.store.getApplication(f.aliceContext,a).evidence[0].record.evidenceId,body=f.body(a,{reason:'SOURCE_MISMATCH',evidenceId});armed=true;
+ const submit=()=>f.store.submitReviewObjection(f.aliceContext,a,body,f.key());
+ if(crossing==='review-cap')assert.throws(submit,/BC_E3_REVIEW_CLOSED/);else assert.equal(submit().record.target.chainStatus,'NOT_OBSERVED');
+ assert.equal(writes,1);assert.equal(database(f,db=>db.prepare("SELECT COUNT(*) n FROM e3_records WHERE kind='OBJECTION'").get().n),crossing==='review-cap'?0:1);
 });
