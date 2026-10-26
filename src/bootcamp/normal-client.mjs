@@ -86,6 +86,7 @@ export function createNormalBootcampClient({request}){
    const v=operation(await request(base(applicationId)+'/review-consents',{method:'POST',body:{...view.target,value},idempotencyKey:id(idempotencyKey),signal}),applicationId);
    check(v.record.target.decisionId===view.target.targetDecisionId,'BC_NORMAL_TARGET');return v;
   },
+  async reviewChain(applicationId,{signal}={}){const v=await request(base(applicationId)+'/review-chain',{signal});check(v?.version==='clear-bootcamp-review-chain.1'&&v.applicationId===applicationId&&v.finalized===false);return copy(v);},
   async operation(applicationId,operationId,{signal}={}){const v=operation(await request(base(applicationId)+'/procedure-operations/'+id(operationId),{signal}),applicationId);check(v.record.operationId===operationId);return v;},
  });
 }

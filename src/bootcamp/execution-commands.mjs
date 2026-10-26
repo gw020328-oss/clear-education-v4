@@ -1,9 +1,11 @@
 import {canonical,freeze,requireRule as check} from '../policy/values.mjs';
 import {currentSourceWindow} from './procedure-ports.mjs';
 import {verifyRecipientRegistration} from './recipient-registration.mjs';
+import {executionCorrections,correctionKinds} from './execution-corrections.mjs';
 import {e4Hash} from './execution-e4-ports.mjs';
 const ZERO='0x'+'00'.repeat(32);
 export function executionCommands({db,current,heads,source}){
+ const corrections=executionCorrections({db,heads,source});
  const decode=row=>row?JSON.parse(row.record):null;
  const record=(a,kind)=>decode(db.prepare('SELECT record FROM e3_records WHERE application_id=? AND kind=? ORDER BY sequence DESC LIMIT 1').get(a,kind));
  const opaque=(kind,logical)=>{const r=db.prepare('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?').get(kind,logical);check(r,'BC_E3_ID_NOT_REGISTERED');return r.opaque_id;};
@@ -14,6 +16,8 @@ export function executionCommands({db,current,heads,source}){
   return [r.recipientRegistration.message,signed.signature];
  }
  function inspect(i,a,o,runtime,time){
+  if(correctionKinds.includes(i.kind)){const facts=corrections.build(i,a,o,time);check(canonical(facts.command)===canonical(i.correctionCommand)&&e4Hash(facts.command)===i.payloadHash&&i.caller===(i.kind==='TERMINATE'?runtime.roles.terminator:runtime.roles.registrar),'BC_E5_EXACT_COMMAND');return facts;}
+  corrections.gate(a,time);
   if(['PREPARE','ACCEPT'].includes(i.kind))return current.inspect(i,a,o,runtime,time);
   const c=o.business.application,d=decode(db.prepare('SELECT record FROM decisions WHERE id=?').get(a.decision_id));
   check(a.status==='ACTIVE'&&d.conditionsStatus==='MET'&&i.targetDecisionId===d.decisionId&&i.targetDecisionHash===d.decisionHash&&i.targetDecisionRevision===d.decisionRevision,'BC_E5B_CURRENT_TARGET');
@@ -40,7 +44,7 @@ export function executionCommands({db,current,heads,source}){
      &&pub.recipient===a.wallet&&pub.token===runtime.tokenAddress&&time<p.reviewCapAt,'BC_E5B_PUBLICATION_REQUIRED');
     check(BigInt(c.allocatedAt)<=BigInt(pub.publishedAt)&&BigInt(c.targetRecordedAt)<=BigInt(pub.publishedAt),'BC_E5B_PUBLICATION_ORDER');
     if(i.kind==='START_REVIEW'){
-     check(c.state==='2'&&p.firstStartedAt===pub.publishedAt&&p.reviewCapAt===p.firstStartedAt+600,'BC_E5B_REVIEW_STATE');
+     check(c.state==='2'&&(c.firstStartedAt==='0'?p.firstStartedAt===pub.publishedAt:c.firstStartedAt===String(p.firstStartedAt))&&p.reviewCapAt===p.firstStartedAt+600,'BC_E5B_REVIEW_STATE');
      command={method:'startReview',args:[i.operationId,i.chainApplicationId,opaque('PROCEDURE',p.procedureId),String(pub.publishedAt),i.expectedChainVersion],applicationId:i.chainApplicationId};
     }else if(i.kind==='BIND_CONSENTS'){
      check(c.state==='3'&&c.procedureId===opaque('PROCEDURE',p.procedureId)&&c.firstStartedAt===String(p.firstStartedAt)&&c.publishedAt===String(pub.publishedAt),'BC_E5B_REVIEW_STATE');
@@ -55,6 +59,7 @@ export function executionCommands({db,current,heads,source}){
   // The immutable request is reconstructed from owner records and subsequently
   // compared with current facts; no arbitrary method/args callback is accepted.
   const a=db.prepare('SELECT * FROM applications WHERE id=?').get(i.applicationId);check(a,'BC_NOT_FOUND');
+  if(correctionKinds.includes(i.kind)){check(i.correctionCommand&&e4Hash(i.correctionCommand)===i.payloadHash,'BC_E5_EXACT_COMMAND');return i.correctionCommand;}
   const prepared=i.preparationId?decode(db.prepare('SELECT record FROM e3_prepared WHERE id=? AND application_id=?').get(i.preparationId,a.id)):null;
   if(['PREPARE','ACCEPT'].includes(i.kind)){check(prepared,'BC_E5_CURRENT_PREPARATION_REQUIRED');return {method:i.kind==='PREPARE'?'prepareUnsigned':'accept',args:[i.operationId,prepared.payload.message,i.expectedChainVersion],applicationId:i.chainApplicationId};}
   const d=decode(db.prepare('SELECT record FROM decisions WHERE id=?').get(a.decision_id)),r=record(a.id,'REGISTRATION_TARGET');

@@ -20,7 +20,7 @@ import {normalSourceTarget,readNormalView} from '../../../tools/bootcamp/normal-
 import {executeNormalPayment} from '../../../tools/bootcamp/normal-chain.mjs';
 import {assertExplicitConsents,waitForExplicitConsents} from '../../../tools/bootcamp/explicit-consents.mjs';
 
-export async function normalPaymentFixture(t,{executionVersion=1,beforeRegistrationSignature=()=>{},crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{}}={}){
+export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,assessmentPorts=null,beforeRegistrationSignature=()=>{},crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{}}={}){
  const e=await createEnvironment({blockPeriodSeconds:wallClock?1:0,executionVersion}),id=e.environmentId,m=e.manifest,{dir}=environmentRecord(id);
  let serviceLive=true;
  let auth,store,connection,metadata,serial=0,ticks=0,crossed=false,floor=Math.floor(Date.now()/1000),extraSeconds=0,reads=0;const readErrors=[];
@@ -42,7 +42,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,beforeRegistrat
  const login=async wallet=>{const c=auth.challenge({wallet:wallet.address,chainId:Number(m.chainId)}),r=auth.login({nonce:c.nonce,signature:await wallet.signMessage(c.message)},c.browserToken);
   return {token:r.token,wallet:r.wallet,chainId:Number(m.chainId),csrf:r.csrf};};
  const user=await login(participant),op=await login(operator),serviceContext=Object.freeze({});
- const native=openDevelopmentConnection({environmentId:id,now});
+ const native=openDevelopmentConnection({environmentId:id,now,assessmentPorts});
  connection=Object.freeze({...native,async refresh(applicationId){if(!wallClock){const block=await provider.getBlock('latest');floor=Math.max(floor,Number(block.timestamp)+extraSeconds);}return native.refresh(applicationId);}});metadata=new DatabaseSync(join(dir,'envelopes/metadata.sqlite'),{readOnly:true});
  const source=syntheticAuthority({now}),seen=new WeakSet();
  const resolveSource=r=>{const v=source.resolveSource(r);if(!seen.has(v)){v.authExpiresAt=now()+(sourceSeconds??600);v.rawExpiresAt=now()+(sourceSeconds??300);v.queryExpiresAt=now()+(sourceSeconds??600);seen.add(v);}return v;};
@@ -60,11 +60,12 @@ export async function normalPaymentFixture(t,{executionVersion=1,beforeRegistrat
  const directConsent=async context=>{const v=store.getProcedure(context,app),body={expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,
   targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,value:'AGREE'};if(http)await http.request('/bootcamp/v3/applications/'+app+'/review-consents',{method:'POST',body,actor:context});else store.recordReviewConsent(context,app,body,key());};
  const reportPath=join(dir,'offline-normal-payment-report.json');
+ let activeBridge,activeRuntime;
  const run=async()=>{const timer=readWhileAsync?setInterval(()=>{try{readNormalView(()=>store.getApplication(user,app));if(report.chainApplicationId)readNormalView(()=>store.getProcedure(op,app));reads++;}catch(e){readErrors.push(e);}},250):null;
- const paymentStore=Object.freeze({...store,execution:Object.freeze({...store.execution,plan(...args){planFrame={kind:args[2].kind,ticks:0};try{const value=store.execution.plan(...args);afterPlan(value,{store,source,app,user,op,auth});return value;}finally{planFrame=null;}}})});
+ const paymentStore=Object.freeze({...store,execution:Object.freeze({...store.execution,connectBridge(...args){return activeBridge=store.execution.connectBridge(...args);},acquireRuntime(...args){return activeRuntime=store.execution.acquireRuntime(...args);},plan(...args){planFrame={kind:args[2].kind,ticks:0};try{const value=store.execution.plan(...args);afterPlan(value,{store,source,app,user,op,auth});return value;}finally{planFrame=null;}}})});
  try{return await executeNormalPayment({store:paymentStore,connection,serviceContext,user,op,app,recipient:participant.address.toLowerCase(),provider,key,report,sourceTarget,write:()=>atomicPrivate(reportPath,report),stage:name=>{report.stage=name;atomicPrivate(reportPath,report);},
   waitForRecipientRegistration:api?async()=>{const packet=await api.recipientRegistration(app);report.registrationRequest={status:packet.status,chainStatus:packet.chainStatus};await beforeRegistrationSignature({store,source,app,user,op,auth,packet});const signature=await participant.signTypedData(packet.payload.domain,packet.payload.types,packet.payload.message);const result=await api.submitRecipientRegistration(app,packet,signature,{idempotencyKey:key()});report.registrationAccepted=result.record.target.signatureAccepted;assert.equal((await api.recipientRegistration(app)).status,'SIGNED');}:undefined,
-  waitForConsents:async options=>{let polls=0;await waitForExplicitConsents({...options,pollMs:1,read:async()=>{const v=await options.read();if(++polls===2){await directConsent(user);await directConsent(op);}return v;}});assertExplicitConsents(await options.read(),options.target);}});
+  waitForConsents:async options=>{if(onReview)await onReview({store,connection,bridge:activeBridge,runtimeHandle:activeRuntime,serviceContext,user,op,app,key,http,provider,participant,source,now,body:(extra={})=>{const v=store.getProcedure(user,app);return {expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,...extra};}});let polls=0;await waitForExplicitConsents({...options,pollMs:1,read:async()=>{const v=await options.read();if(++polls===2){await directConsent(user);await directConsent(op);}return v;}});assertExplicitConsents(await options.read(),options.target);}});
  }finally{clearInterval(timer);}};
  return {run,report,reportPath,api,http,op,connection,revokeService:()=>{serviceLive=false;},withdrawSource:()=>source.change(app,'activity-complete',{rawAvailable:false}),concurrentReads:()=>reads,readErrors,advance:seconds=>{extraSeconds+=seconds;floor+=seconds;},readReport:()=>JSON.parse(readFileSync(reportPath)),metadata,store,user,app,get crossed(){return crossed;},nativeState:state,environmentId:id,runtimeHash:connection.runtime.runtimeHash,diagnostics:()=>connection.diagnostics(),metrics:()=>connection.metrics()};
 }

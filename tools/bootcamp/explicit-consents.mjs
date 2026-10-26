@@ -1,4 +1,4 @@
-// Server-owned read callbacks only. Does not publish, consent, sign, allocate or dispatch.
+// Server-owned wait. The optional S3 callback synchronizes review changes before returning a view; it never creates consent.
 import {readNormalView,assertNormalSourceTarget} from './normal-current-view.mjs';
 import {requireNormalReviewWindow} from './normal-review-window.mjs';
 const check=(ok,code)=>{if(!ok)throw Error(code);};
@@ -6,7 +6,7 @@ const check=(ok,code)=>{if(!ok)throw Error(code);};
 // Discard only a failed synchronous store view and reacquire it once. Never
 // repeat the awaited chain refresh, a consent command or a payment operation.
 export async function waitForNormalReviewConsents({store,connection,context,applicationId,sourceTarget,
- waitForConsents,heartbeat,signal,onTarget,minimumWindowSeconds=0}){
+ waitForConsents,heartbeat,signal,onTarget,minimumWindowSeconds=0,synchronizeReview=null}){
  const active=()=>check(!signal?.aborted,'BC_NORMAL_CONSENT_WAIT_STOPPED');
  const view=()=>{active();return readNormalView(()=>store.getProcedure(context,applicationId));};
  const initial=view();assertNormalSourceTarget(initial,sourceTarget);
@@ -16,7 +16,7 @@ export async function waitForNormalReviewConsents({store,connection,context,appl
  onTarget(target,{asOf:initial.asOf,sourceOrReviewDeadline:deadline,remainingSeconds:deadline-initial.asOf,minimumOpeningSeconds:minimumWindowSeconds});
  await waitForConsents({target,heartbeat,signal,read:async()=>{
   active();readNormalView(()=>store.getOperationsProjection(context,applicationId));
-  await connection.refresh(applicationId);return view();
+  await connection.refresh(applicationId);if(synchronizeReview)await synchronizeReview();return view();
  }});
  assertExplicitConsents(view(),target);return target;
 }

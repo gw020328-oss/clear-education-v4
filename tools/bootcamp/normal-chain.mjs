@@ -50,7 +50,7 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    operation=kind;step='REVIEW_WINDOW';if(['REGISTER','ALLOCATE','START_REVIEW'].includes(kind))reviewWindow();
    stage(kind);step='HEARTBEAT';store.execution.heartbeatRuntime(serviceContext,g,60);
    step='REFRESH';const observation=await connection.refresh(app);
-   step='PLAN';const plan=store.execution.plan(user,app,{kind,operationId:hash(),expectedChainVersion:observation.business.application.version,preparationId});
+   step='PLAN';const plan=['OBSERVE','REPLACE','TERMINATE'].includes(kind)?await store.execution.planCorrection(user,app,{kind,operationId:hash()}):store.execution.plan(user,app,{kind,operationId:hash(),expectedChainVersion:observation.business.application.version,preparationId});
    step='ENQUEUE';const i=store.execution.enqueue(user,app,plan.body,key()).receipt.intentId;
    step='ACQUIRE_INTENT';const h=store.execution.acquire(serviceContext,i,{owner:'normal-worker',generation:1,leaseSeconds:60});step='BIND_RUNTIME';store.execution.bindRuntimeIntent(serviceContext,g,h);
    const expected=bridge.inspect(g,h);
@@ -65,6 +65,15 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    step='DISPATCH';await bridge.dispatch(g,h,request.binding);step='RECEIPT_WAIT';await waitSetupReceipt(provider,found.envelope.txHash);
    step='RECOVER';const completed=await bridge.recover(g,h,request.binding);ensure(completed.completion?.status==='INCLUDED','BC_NORMAL_RECEIPT_PENDING');report.executionDiagnostics=connection.diagnostics().slice(0,16);report.stages.push({kind,txHash:completed.completion.txHash,checkpoint:completed.completion.checkpoint});write();return completed;
   }
+  let lastReviewChange=null;
+  async function synchronizeReview(){
+   const v=readNormalView(()=>store.getProcedure(user,app));
+   if(v.chain.status!=='UNACCEPTED')return;
+   if(!v.objection.records.length&&!v.procedure.revalidationCount&&!v.procedure.terminationReason&&v.decisionId===v.procedure.publishedDecisionId)return;
+   const change=JSON.stringify({decision:v.decisionId,objections:v.objection.records,revalidation:v.procedure.revalidationCount,termination:v.procedure.terminationReason});
+   if(change===lastReviewChange)return;
+   await execute('OBSERVE');lastReviewChange=change;await connection.refresh(app);
+  }
   await execute('REGISTER');await execute('ALLOCATE');
   const allocated=await connection.refresh(app),publishedNotBefore=Math.max(Number(allocated.business.application.allocatedAt),Number(allocated.business.application.targetRecordedAt));
   ensure(publishedNotBefore-now()<=30,'BC_NORMAL_CHAIN_CLOCK_AHEAD');
@@ -76,12 +85,13 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    report.consentOrigin='SYNTHETIC_AUTOMATIC_TEST_ROLES';
   }else{
    step='WAIT_CONSENTS';await waitForNormalReviewConsents({store,connection,context:user,applicationId:app,sourceTarget,waitForConsents,
-    minimumWindowSeconds:REVIEW_WINDOW.openingSeconds,
+    minimumWindowSeconds:REVIEW_WINDOW.openingSeconds,synchronizeReview,
     heartbeat:()=>store.execution.heartbeatRuntime(serviceContext,g,60),signal,
     onTarget:(target,window)=>{report.reviewTarget=target;report.reviewWindowAtOpen=window;stage('AWAITING_AUTHENTICATED_APP_CONSENTS');}});
    report.consentOrigin='AUTHENTICATED_APP_CONSENT_RECORDS';
   }
 
+  await synchronizeReview();
   await execute('BIND_CONSENTS');step='PREPARE_AUTHORIZATION';await connection.refresh(app);const preparation=store.prepareReviewAuthorization(user,app,body(),key()).record.target.preparationId;
   await execute('PREPARE',preparation);const accepted=await execute('ACCEPT',preparation);ensure(accepted.claimJob,'BC_NORMAL_CLAIM_JOB_REQUIRED');
   operation='CLAIM';stage('SEPARATE_CLAIM');step='BALANCE_BEFORE';const before=await token.balanceOf(recipient);step='CLAIM_SEND';const claim=await vault.connect(ownedTestWallet(id,'anycaller').connect(provider)).claim(chainApp);step='CLAIM_RECEIPT_WAIT';await waitSetupReceipt(provider,claim.hash);

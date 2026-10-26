@@ -1,3 +1,4 @@
+import {executionCorrections,correctionKinds} from './execution-corrections.mjs';
 import {executionCommands} from './execution-commands.mjs';
 import {e4Hash} from './execution-e4-ports.mjs';
 import {randomUUID} from 'node:crypto';
@@ -15,12 +16,13 @@ import {createRuntimeAuthority} from './execution-authority.mjs';
 import {createApiExecutionBridge} from './execution-api-bridge.mjs';
 
 const freshId=prefix=>prefix+'-'+randomUUID();
-const kinds=['REGISTER','ALLOCATE','START_REVIEW','OBSERVE','BIND_CONSENTS','PREPARE','ACCEPT','TERMINATE'];
+const kinds=['REGISTER','ALLOCATE','START_REVIEW','REPLACE','OBSERVE','BIND_CONSENTS','PREPARE','ACCEPT','TERMINATE'];
 const bodyKeys=['expectedRevision','expectedLedgerSequence','targetDecisionId','targetDecisionRevision','targetDecisionHash',
  'kind','operationId','caller','expectedChainVersion','payloadHash','preparationId','authorizationDigest'];
 export function createExecutionOperations({db,transaction,authentication,operatorBindings,app,refresh,tick,sessionHash,ledger,heads,source,
  services=null,e4CurrentPorts={configured:false},e4BridgePorts={configured:false},fenceWitness={configured:false},fault=()=>{}}){
  const l=executionLedger(db),ports=createExecutionPorts(services),get=(sql,...args)=>db.prepare(sql).get(...args);
+ const corrections=executionCorrections({db,heads,source});
  const current=createExecutionCurrent({db,heads,source,operatorBindings});
  const global=ports.configured?createRuntimeAuthority({db,runtimeId:ports.runtimeId,runtimePinHash:ports.runtimePinHash,e4Runtime:e4CurrentPorts.runtime??null,authorityScope:e4BridgePorts.scope??null,requireWitness:fenceWitness.configured,fault}):null;
  const decode=row=>row?JSON.parse(row.record):null;
@@ -161,8 +163,47 @@ export function createExecutionOperations({db,transaction,authentication,operato
    .run(reason,canonical(record),r.id,r.revision);event(i,'RUNTIME_SUSPENDED',{generation:r.generation,reason},time);return {status:'BLOCKED',reason};
  }
  const api={
+  async reviewChain(context,applicationId){
+   check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');
+   const initial=withUser(context,applicationId,false,a=>{
+    const rows=db.prepare("SELECT record FROM e5_intents WHERE application_id=? ORDER BY sequence DESC").all(a.id).map(decode);
+    const i=rows.find(i=>correctionKinds.includes(i.kind))??null;
+    const completion=i?decode(get('SELECT record FROM e5b_completions WHERE intent_id=?',i.intentId)):null;
+    return {revision:a.revision,sequence:ledger.sequence(),i,completion,chainApplicationId:get("SELECT opaque_id FROM e3_ids WHERE kind='APPLICATION' AND logical_id=?",a.id)?.opaque_id};
+   });
+   const query={method:'claim',args:[initial.chainApplicationId],applicationId:initial.chainApplicationId};
+   const ticket=await e4BridgePorts.read(query,initial.completion?.checkpoint??null);
+   return withUser(context,applicationId,false,(a,s,time)=>{
+    check(a.revision===initial.revision&&ledger.sequence()===initial.sequence,'BC_VIEW_STALE');
+    const {observation:o,comparison}=e4BridgePorts.consume(ticket,'OBSERVATION'),c=o.business.application,f=corrections.facts(a,time);
+    const pending=db.prepare("SELECT MAX(sequence) n FROM e3_records WHERE application_id=? AND kind IN ('OBJECTION','OBJECTION_ASSESSMENT','REVALIDATION','TERMINATION_REQUIRED','TERMINATION_INTENT')").get(a.id).n??0;
+    const matchesCurrentDecision=c.target.decisionHash===f.d.decisionHash&&c.target.revision===String(f.d.decisionRevision);
+    const status=comparison?.status==='REORG_PROVEN_RECOVERY_BLOCKED'?'REORGED':initial.completion?.status==='REVERTED'?'REVERTED':
+     initial.completion?.status==='INCLUDED'&&pending<=initial.i.expectedLedgerSequence&&(matchesCurrentDecision||['4','5','6'].includes(c.state))?'INCLUDED':pending||initial.i?'PENDING':'NOT_REQUESTED';
+    return freeze({version:'clear-bootcamp-review-chain.1',applicationId:a.id,status,canonical:status==='INCLUDED',finalized:false,
+     checkpoint:o.checkpoint,operationId:initial.i?.operationId??null,transactionHash:initial.completion?.txHash??null,
+     current:{state:c.state,version:c.version,epoch:c.epoch,decisionHash:c.target.decisionHash,decisionRevision:c.target.revision,registrationSequence:c.target.acceptanceSequence,
+      recipient:c.recipient,unassessedObjection:c.unassessedObjection,validObjection:c.validObjection,terminalError:c.terminalError},
+     serverBlocked:!f.met||f.unassessed||f.valid||f.termination.length>0||f.revalidations.some(r=>r.fromDecisionId===f.d.decisionId),
+     matchesCurrentDecision,acceptedRightPreserved:['5','6'].includes(c.state),claimExpiresAt:null,receiptIsChainInclusion:false});
+   },{retryPlanClock:true});
+  },
+  async planCorrection(context,applicationId,{kind,operationId}){
+   check(e4BridgePorts.configured&&correctionKinds.includes(kind),'BC_E5_KIND');hash(operationId);
+   const initial=withUser(context,applicationId,false,(a)=>({revision:a.revision,sequence:ledger.sequence(),chainApplicationId:get("SELECT opaque_id FROM e3_ids WHERE kind='APPLICATION' AND logical_id=?",a.id)?.opaque_id}));
+   const query={method:'claim',args:[initial.chainApplicationId],applicationId:initial.chainApplicationId};
+   const ticket=await e4BridgePorts.read(query);
+   return withUser(context,applicationId,false,(a,s,time)=>{
+    check(a.revision===initial.revision&&ledger.sequence()===initial.sequence,'BC_VIEW_STALE');
+    const {observation:o}=e4BridgePorts.consume(ticket,'OBSERVATION'),d=decision(a);
+    const body={expectedRevision:a.revision,expectedLedgerSequence:ledger.sequence(),targetDecisionId:d.decisionId,targetDecisionRevision:d.decisionRevision,targetDecisionHash:d.decisionHash,
+     kind,operationId,caller:kind==='TERMINATE'?e4BridgePorts.runtime.roles.terminator:e4BridgePorts.runtime.roles.registrar,expectedChainVersion:o.business.application.version,preparationId:null,authorizationDigest:null};
+    const command=corrections.build({...body,chainApplicationId:initial.chainApplicationId},a,o,time).command;
+    return freeze({body:{...body,payloadHash:e4Hash(command),correctionCommand:command},command});
+   },{retryPlanClock:true});
+  },
   plan(context,applicationId,{kind,operationId,expectedChainVersion,preparationId=null}){
-   check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');check(kinds.includes(kind),'BC_E5_KIND');hash(operationId);u64(expectedChainVersion);
+   check(e4BridgePorts.configured,'BC_E5B_UNCONFIGURED');check(!correctionKinds.includes(kind),'BC_E5_CORRECTION_PLAN_REQUIRED');check(kinds.includes(kind),'BC_E5_KIND');hash(operationId);u64(expectedChainVersion);
    return withUser(context,applicationId,false,(a,s,time)=>{
     const d=decision(a);
     if(!['OBSERVE','TERMINATE'].includes(kind))check(a.status==='ACTIVE'&&d.conditionsStatus==='MET'&&currentSourceWindow(a,heads,source,time),'BC_E5_CURRENT_SOURCE_REQUIRED');
@@ -201,7 +242,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
   status(){return freeze({version:EXECUTION_VERSION,status:ports.status,signingImplemented:false,broadcastImplemented:false,rebaseImplemented:false,paymentAuthority:false,
    currentConnection:{status:e4CurrentPorts.status??'UNCONFIGURED',ownerSealPortConfigured:!!e4CurrentPorts.sealPortConfigured,dispatchAuthorized:false}});},
   enqueue(context,applicationId,body,key){
-   exactKeys(body,bodyKeys,'BC_E5_COMMAND_BODY');id(key);revision(body.expectedRevision);revision(body.targetDecisionRevision);id(body.targetDecisionId);
+   exactKeys(body,[...bodyKeys,...(e4BridgePorts.configured&&correctionKinds.includes(body.kind)?['correctionCommand']:[])],'BC_E5_COMMAND_BODY');id(key);revision(body.expectedRevision);revision(body.targetDecisionRevision);id(body.targetDecisionId);
    hash(body.targetDecisionHash);hash(body.operationId);address(body.caller);u64(body.expectedChainVersion);hash(body.payloadHash);
    check(Number.isSafeInteger(body.expectedLedgerSequence)&&body.expectedLedgerSequence>=0&&kinds.includes(body.kind),'BC_E5_COMMAND_BODY');
    if(body.preparationId!==null)id(body.preparationId);if(body.authorizationDigest!==null)hash(body.authorizationDigest);
@@ -218,8 +259,9 @@ export function createExecutionOperations({db,transaction,authentication,operato
     check(d.decisionId===body.targetDecisionId&&d.decisionRevision===body.targetDecisionRevision&&d.decisionHash===body.targetDecisionHash,'BC_DECISION_TARGET');
     const requiresSource=!['OBSERVE','TERMINATE'].includes(body.kind);
     if(requiresSource)check(a.status==='ACTIVE'&&d.conditionsStatus==='MET','BC_E5_CURRENT_SOURCE_REQUIRED');
+    if(requiresSource&&body.kind!=='REPLACE')corrections.gate(a,time);
     const originalSource=requiresSource?currentSourceWindow(a,heads,source,time):null;
-    const opaque=kind=>{const logical=kind==='APPLICATION'?a.id:d.decisionId,v=get('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?',kind,logical);check(v,'BC_E3_ID_NOT_REGISTERED');return v.opaque_id;};
+    const opaque=kind=>{const logical=kind==='APPLICATION'?a.id:d.decisionId,v=get('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?',kind,logical);check(v||kind==='DECISION'&&['OBSERVE','TERMINATE'].includes(body.kind),'BC_E3_ID_NOT_REGISTERED');return v?.opaque_id??'0x'+'00'.repeat(32);};
     if(body.preparationId!==null){const p=decode(get('SELECT record FROM e3_prepared WHERE application_id=? AND id=?',a.id,body.preparationId));
      check(p&&p.payload.logicalTarget.decisionId===d.decisionId&&p.payload.logicalTarget.applicationId===a.id,'BC_E5_PREPARATION_REQUIRED');
      if(body.authorizationDigest!==null)check(hashTestUnsignedPayload({domain:p.payload.domain,message:p.payload.message}).digest===body.authorizationDigest,'BC_E5_AUTHORIZATION_DIGEST');}
@@ -229,6 +271,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
      check(latest.revision===body.expectedRevision&&ledger.sequence()===body.expectedLedgerSequence,'BC_VIEW_STALE');
      const finalDecision=decision(latest);
      check(finalDecision.decisionId===body.targetDecisionId&&finalDecision.decisionRevision===body.targetDecisionRevision&&finalDecision.decisionHash===body.targetDecisionHash,'BC_DECISION_TARGET');
+     if(requiresSource&&body.kind!=='REPLACE')corrections.gate(latest,at);
      if(requiresSource)check(latest.status==='ACTIVE'&&finalDecision.conditionsStatus==='MET'
       &&canonical(currentSourceWindow(latest,heads,source,at))===canonical(originalSource),'BC_E5_CURRENT_SOURCE_REQUIRED');
      const finalRuntime=runtime();check(finalRuntime.generation===r.generation&&finalRuntime.revision===r.revision&&finalRuntime.status===r.status,'BC_E5_RUNTIME_SUSPENDED');
