@@ -3,8 +3,13 @@ import assert from 'node:assert/strict';
 import {BridgeExecutionService} from '../../../src/hackathon-test-vault/e5b/service.mjs';
 import {ExecutionReader} from '../../../src/hackathon-test-vault/e5/reader.mjs';
 import {normalPaymentFixture} from './normal-payment-fixture.mjs';
-for(const rollover of ['none','receipt','enqueue'])test('V2 HTTP request/signature to canonical exact 100 TEST; rollover='+rollover,async t=>{
- let injected=0;const f=await normalPaymentFixture(t,{executionVersion:2,wallClock:true,sourceSeconds:240,readWhileAsync:true,fault(point,{report}){if(rollover==='receipt'&&point==='e5b-after-completion'&&report.stage==='ACCEPT'||rollover==='enqueue'&&point==='e5-after-receipt'&&report.stage==='REGISTER'){injected++;const before=Date.now();Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1001-before%1000);assert.ok(Math.floor(Date.now()/1000)>Math.floor(before/1000));}}});
+for(const rollover of ['none','receipt','enqueue','request','prepare'])test('V2 HTTP request/signature to canonical exact 100 TEST; rollover='+rollover,async t=>{
+ let injected=0;const f=await normalPaymentFixture(t,{executionVersion:2,wallClock:true,sourceSeconds:240,readWhileAsync:true,fault(point,{report}){
+  const target=rollover==='receipt'&&point==='e5b-after-completion'&&report.stage==='ACCEPT'
+   ||rollover==='enqueue'&&point==='e5-after-receipt'&&report.stage==='REGISTER'
+   ||rollover==='request'&&point==='after-request-command'||rollover==='prepare'&&point==='e3-after-prepared';
+  if(target&&!injected){injected++;const before=Date.now();Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1001-before%1000);assert.ok(Math.floor(Date.now()/1000)>Math.floor(before/1000));}
+ }});
  await f.run();const r=f.readReport();
  assert.equal(injected,rollover==='none'?0:1);assert.equal(r.completed,true);assert.equal(r.registrationAccepted,true);
  assert.deepEqual(r.registrationRequest,{status:'AWAITING_SIGNATURE',chainStatus:'NOT_REGISTERED'});

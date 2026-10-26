@@ -259,6 +259,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     getApplication(context,applicationId){id(applicationId);return access(context,applicationId,false,a=>view(a));},
     issueRequest(context,applicationId,body,key,{bridge=false}={}){
       exactKeys(body,['criterionId','expectedRevision'],'BC_REQUEST_BODY');criterion(body.criterionId);
+      let issued=null;
       return access(context,applicationId,true,(a,wallet,time)=>{
         const route=(bridge?'request2:':'request:')+applicationId,prior=replay(wallet,route,key,body);if(prior)return projection(prior);
         ready(a);cas(a,body.expectedRevision);window(a,time);const g=source(a,body.criterionId,time);check(g,'BC_SOURCE_UNKNOWN');
@@ -275,7 +276,16 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
           sourceGuardHash:requestGuardHash(g,version),dataMode:producer.dataMode,...(bridge?{producerVersion:producer.bridgeVersion,producerTrustHash:g.trustHash,
             plannedEvidenceId:newId('evidence'),plannedEvidenceRevision:(get('SELECT MAX(revision) n FROM evidence WHERE application_id=? AND criterion_id=?',a.id,body.criterionId).n??0)+1}:{})};
         r.requestHash=p0Hash('REQUEST',r);run("INSERT INTO requests VALUES(?,?,?,?,?,?,'PENDING')",r.requestId,a.id,r.criterionId,r.requestHash,r.nonceHash,canonical(r));
-        const d=decide(a,time);return projection(command(a,wallet,route,key,body,{requestId:r.requestId,decisionId:d.decisionId},time,{extraEvent:h?'REVERIFICATION_REQUESTED':null}));
+        const d=decide(a,time),result=projection(command(a,wallet,route,key,body,{requestId:r.requestId,decisionId:d.decisionId},time,{extraEvent:h?'REVERIFICATION_REQUESTED':null}));
+        issued={record:r,wallet};fault('after-request-command');return result;
+      },(a,time)=>{
+        if(!issued)return;
+        // Retain the one nonce/request and its original source/session/deadline.
+        // The shared access guard revalidates authority and never replays writes.
+        const {record:r,wallet}=issued;ready(a);cas(a,r.expectedRevision);window(a,time);
+        const g=source(a,r.criterionId,time),row=get('SELECT * FROM requests WHERE id=? AND application_id=?',r.requestId,a.id);
+        check(row?.status==='PENDING'&&canonical(decode(row))===canonical(r)&&g&&requestGuardHash(g,r.version)===r.sourceGuardHash
+          &&sessionHash(context,wallet)===r.authContextHash&&time>=r.issuedAt&&time<r.expiresAt&&time<r.receiptWindowUntilExclusive,'BC_REQUEST_STALE');
       });
     },
     issueBridgeRequest(context,applicationId,body,key){const result=service.issueRequest(context,applicationId,body,key,{bridge:true});return projection2(result.record);},

@@ -102,7 +102,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    fault('e3-before-command');
    const saved=command(a,s.wallet,route,key,body,{decisionId:st.d.decisionId,...target},time,{...attempt,extraEvent:'AUTO_OPERATION_COMPLETED'});fault('e3-after-command');
    return operation(a,saved,time);
-  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:name==='consent'||name==='recipient-registration'});}catch(error){
+  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:['consent','recipient-registration','prepare'].includes(name)});}catch(error){
    if(attempt)transaction(()=>ledger.emit({...attempt,eventType:'OPERATION_FAILED'}));throw error;
   }
  }
@@ -316,6 +316,14 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    const value=draft(st,time,observers),nonceKey=p0Hash('E3-PREPARED-NONCE',{domain:value.payload.domain,nonce:value.payload.message.nonce});
    const record=l.prepare(a,nonceKey,{version:'clear-bootcamp-prepared-test-target.1',preparationId:procedureId('preparation'),...value,recordedAt:time,
     authority:'UNSIGNED_PREFLIGHT_ONLY',nonceConsumed:false,signerActivated:false});fault('e3-after-prepared');
+   observers.push(at=>{
+    // Rebuild only from current reads with the original issuedAt. Never mint a
+    // new nonce/window or repeat preparation/command writes across the clock.
+    const fresh=state(st.a,at,[]),rebuilt=draft(fresh,Number(record.payload.message.issuedAt),[]);
+    check(canonical(rebuilt.payload)===canonical(record.payload)&&rebuilt.sourceCommitment===record.sourceCommitment,'BC_E3_PREPARATION_STALE');
+    const inspected=createTestDraftInspector(record.snapshot,{clock:()=>at}).inspect(record.payload,rebuilt.current);
+    check(inspected.status==='UNSIGNED_PREFLIGHT_ONLY','BC_E3_PREPARATION_STALE');
+   });
    return {procedureId:st.p.procedureId,publicationId:st.pub.publicationId,preparationId:record.preparationId};
   });},
   requestReviewTermination(context,a,body,key){return run(context,a,body,key,'termination-intent',[],(st,s,time)=>{
