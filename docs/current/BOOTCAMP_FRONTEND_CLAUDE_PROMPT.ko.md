@@ -1,11 +1,13 @@
 # 서준형 Claude Code 복사 지침
 
-아래 블록을 프론트 작업 중인 Claude Code에 붙여 넣는다. Issue #106의 최신 인계 댓글에 있는 정확한 backend 커밋을 먼저 확인한다.
+2026-10-26 기준. 아래 블록을 프론트 작업 중인 Claude Code에 붙여 넣는다. [Issue #106](https://github.com/gw020328-oss/clear-education-v4/issues/106)의 최신 본문과 함께 사용한다.
+
+백엔드 PR #102는 develop의 `c108dc8f20a86da3d48419615285a815f947b91c`에 병합됐다. 최종 CI HEAD `8bff2be17e3ae280ff03d80f578e7727de48cb14`의 10개 검사 모두 성공했고 병합 결과의 파일 트리도 동일하다. 과거 v28 CI 실패와 미병합 안내는 현재 연결의 차단 조건이 아니다. 실제 r20 성공은 별도 HEAD `f38ae8bd44c9da2e27f6a56650ced0f7bffe9aba`의 이력이며, 제품 프론트의 실제 정상 흐름 검증은 아직 남아 있다.
 
 ```text
-CLEAR 기존 프론트에 한 신청의 네 조건 → 참여자/운영자의 같은 판정 명시 동의 → 100 TEST 수령 조회를 연결해줘. GitHub Issue #106과 최신 인계 댓글, 해당 커밋 docs/current/BOOTCAMP_NORMAL_HOST.ko.md, BOOTCAMP_C3_FRONTEND.ko.md, BOOTCAMP_C3_REFRESH.ko.md를 읽고 진행해.
+CLEAR 기존 프론트에 한 신청의 원천 확인·네 조건 → 운영자의 이번 입력 AI 승인 → 참여자/운영자의 같은 판정 명시 동의 → 100 TEST 수령 확인을 연결해줘. 기준은 develop 병합 커밋 c108dc8f20a86da3d48419615285a815f947b91c와 GitHub Issue #106 최신 본문이야. 해당 커밋의 docs/current/BOOTCAMP_NORMAL_HOST.ko.md, BOOTCAMP_C3_FRONTEND.ko.md, BOOTCAMP_C3_REFRESH.ko.md와 src/bootcamp/normal-client.mjs, tools/bootcamp/test-client/driver.js를 대조해. 과거 문서의 미병합·잔여 v28 실패 문구보다 이 기준과 현재 코드를 우선해.
 
-기존 프론트 PR #60과 최신 로컬 변경을 보존하고 먼저 git 상태와 기존 라우팅/디자인과 지갑 adapter 유무를 확인해. PR60 확인 snapshot은 F0 골격이라 web 안에 walletClient가 아직 없어. 최신 작업본에도 없다면 아래 공개 계약에 맞는 최소 browser adapter를 프론트 소유 범위에서 구현해야 해. develop에는 backend가 아직 합쳐지지 않았으므로 develop만 기준으로 구현하지 말고 backend PR #102/#78의 인계 커밋을 참고해. backend 전체를 프론트에 merge/cherry-pick하거나 기존 작업을 덮어쓰지 마. web/만 프론트 소유로 작업하고 backend/컨트랙트/수집기는 수정하지 마.
+기존 프론트 PR #60(codex/frontend-shell)과 최신 로컬 변경·미추적 파일을 먼저 확인하고 안전하게 보존해. 기존 작업 브랜치에 최신 origin/develop을 병합하며 충돌은 양쪽 의도를 확인해 해결해. reset·덮어쓰기·강제 푸시로 정리하거나 이미 통합된 backend PR을 개별 cherry-pick하지 마. 현재 라우팅·디자인·지갑 adapter·빌드 방식을 재사용해. adapter가 없다면 아래 공개 계약에 필요한 최소 browser adapter를 구현해. web/와 관련 프론트 검사를 소유 범위로 삼고 backend/컨트랙트/수집기 변경이 필요하면 통합 담당과 조율해.
 
 PR60 a0620cd39fe5cd44b62a1deb5806883503242227 기준은 npm/package/bundler/build 단계가 없는 web/index.html+src/*.js+CSS 정적 트리야. 현재 작업본이 다르면 먼저 차이를 확인하고 기존 방식을 유지해. 기존 5173 dev server는 합성용이고 실제 실행은 통합 담당 호스트가 최신 작업본 web/ 절대 경로의 공개 파일을 HTTPS 같은 출처로 제공해. 프론트 구현 후 통합 담당에게 절대 web 경로와 자산 변경 사실을 알려줘. backend 호스트가 자산 digest를 수락하기 전 실제 실행은 하지 않아.
 
@@ -19,11 +21,15 @@ Bootcamp 응답의 오류 형식은 {error:CODE}이고 기존 application/api-cl
 
 참여자 pendingSourceSignature(app)의 정확한 message·용도·만료를 화면에 표시하고 별도 사용자 클릭으로 personal_sign 한 뒤 submitSourceSignature(app,approval,signature)해. bind/submit은 자동 재시도하지 마. 원천 확인 서명은 지급 동의가 아니고 운영자가 대신할 수 없어. 서명·쿠키·원문·proof를 로그/저장소/이슈에 남기지 마.
 
+운영자의 이번 입력 AI 승인 화면을 반드시 연결해. api.session()의 aiApproval 자료에서 이번 입력·모델·외부 전송·비용·호출 한도·남은 시간을 보여주고 지정 승인 지갑인지 확인해. 별도 확인 체크와 직접 클릭으로만 승인해. tools/bootcamp/test-client/driver.js의 approveAi를 기준으로 POST /bootcamp/v4/applications/:app/reflection-approval의 version/applicationId/bodySha256/planHash/contextHash/runBindingHash/codeHead/model/action/costAcknowledgment 및 응답 검증을 그대로 대조해. normal-client에 없는 메서드를 임의로 가정하지 마. 결과 미확인은 확인 필요로 표시하고 자동 재승인·새 유료 호출을 만들지 마. 원천 확인 서명·AI 검토 승인·지급 동의는 각각 구분해.
+
 각 역할은 자기 최신 view와 같은 target/revision/hash를 화면에서 확인한 뒤 사용자 버튼으로 api.consent(app,view,'AGREE',{idempotencyKey})해. 자동 서명/자동 동의/POST 자동 재시도는 금지야. 상대 동의로 ledger가 바뀌거나 충돌이면 재조회 후 다시 사용자 확인을 받아. 응답 유실은 기존 operation/멱등 계약을 따라.
 
 api.paymentReceipt(app)로 약정100 TEST, 배정, 제출, 수령 확인을 구분해. INCLUDED/finalized=false를 최종 확정으로 표현하지 마. exactExpectedAmountVerified/canonical/receivedAtoms 검증 조건을 따르고 미측정 null은 유지해. 현재 판정과 acceptedTarget을 구분해. receipt를 읽는 버튼에서 지급/claim 쓰기를 호출하지 마.
 
-C4~C6, 복구 프레임워크, 새 대시보드나 디자인 전면 개편은 제외해. 사용자 지갑 설정/HR 로그인은 준비 완료 후 본부가 한 번에 안내하므로 지금 재로그인이나 비밀번호 설정을 요구하지 마. 실제 AI 승인 파일/서버키는 통합 담당 영역이야.
+자동 GET 조회 중 명시 클릭이 조용히 유실되지 않게 하고 역할별 다음 행동·처리 중·비활성·실패 이유를 보여줘. 조회와 쓰기 요청의 충돌을 오프라인으로 재현·검사하고 쓰기 자동 재시도로 해결하지 마. 남은 시간은 서버 기준과 조회 경과 시간을 반영하며 브라우저 타이머로 원천·검토 기한을 연장하지 마. 현재 240초는 시험용 원천 유효기간이고 제품 지급기한이 아니야. 계정/체인 변경·원래 세션 폐기·만료 뒤 돌아온 원천 서명을 제출하지 마.
 
-변경에 필요한 검사만 실행해. 기준 정적 트리 검사 명령은 ./tools/node --test web/tests/*.test.mjs이고 별도 build 명령은 없어. 현재 작업본에 이미 검사/빌드가 추가됐다면 그 명시된 절차를 확인해. fixture는 합성이라고 구분하고 실제 API 확인 항목과 분리해. 완료 시 변경 파일/검사 명령과 결과/실제 API 확인 범위/fixture 확인 범위/절대 web 경로/미확인 사항을 보고하고 Issue #106을 기존 프론트 PR에 연결해. 자동 merge/배포하지 마.
+새 기능은 이번 정상 흐름 연결 뒤로 미뤄. 예치·배정 정책 변경, 새 반/LMS/Windows 확장, 독립 청구, 새 AI 조건 연결, C4~C6·복구 프레임워크·대시보드 확장과 디자인 전면 개편은 제외해. 실제 로그인·원천 증명·유료 AI·사용자 서명·새 체인/호스트 실행은 오프라인 연결과 자산 확인 후 본부가 사용자와 준비해. 지금 재로그인이나 비밀번호 설정을 요구하지 마. 기존 r20 실행·AI 승인·DB·원천 lease를 재사용하지 마. 실제 AI 승인 파일/서버키는 통합 담당 영역이야.
+
+변경에 필요한 검사만 실행해. 기준 정적 트리 검사 명령은 ./tools/node --test web/tests/*.test.mjs이고 별도 build 명령은 없어. 현재 작업본에 이미 검사/빌드가 추가됐다면 그 명시된 절차를 확인해. fixture는 합성이라고 구분하고 실제 API 확인 항목과 분리해. 준비 상태·인증 취소/만료·조회와 클릭 충돌·AI 승인·오래된 동의 대상·영수증 null/성공을 검사해. 완료 시 프론트 커밋/변경 파일/검사 명령과 결과/실제 API 확인 범위/fixture 확인 범위/절대 web 경로/자산 변경/남은 차단 사유를 보고하고 Issue #106을 기존 프론트 PR에 연결해. 제품 프론트로 실제 정상 흐름을 검증하기 전에는 Issue #106을 완료 처리하지 마. 자동 merge/배포하지 마.
 ```
