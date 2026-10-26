@@ -87,3 +87,9 @@ test('registration cannot change accepted right or recipient',async t=>{
  const f=await setup(t),sig=await f.sign();f.submit(sig);f.publish(f.app);f.setAccepted();
  assert.throws(()=>f.submit(sig),/CURRENT_MET/);assert.equal(f.store.getProcedure(f.aliceContext,f.app).procedure.status,'ACCEPTED_RIGHT_PRESERVED');
 });
+test('cancelled application rejects a late registration signature and cannot reopen',async t=>{
+ const f=await setup(t),sig=await f.sign(),body=f.body(f.app,{registrationTargetId:f.packet().registrationTargetId,signature:sig});
+ f.store.cancel(f.aliceContext,f.app,{expectedRevision:body.expectedRevision},f.key());
+ assert.throws(()=>f.store.submitRecipientRegistration(f.aliceContext,f.app,body,f.key()),/BC_VIEW_STALE|CURRENT_MET/);
+ assert.equal(f.packet().signatureAccepted,false);assert.equal(f.packet().status,'STALE');
+});

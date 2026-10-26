@@ -1,5 +1,7 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-26 V2 후속: 통합 담당이 PR115에서 S1 고정 소유자 등록 API/normal-client/실행 서버와 S2 canonical 등록 순서 조회를 구현했다. 코어 후보 `13fef0f`, 정확한 v31 소스 인수, [검증 기록](BOOTCAMP_V31_VERIFICATION.json), [프론트 등록 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md)을 따른다. develop/a53f6f5의 V1과 기존 r20·v30 성공은 보존한다. 서준형/Claude는 PR60·로컬 변경을 보존하며 새 등록 서명 화면과 접수/체인 반영 구분을 연결한다. S3 이의/정정 체인 반영, S4 근거 조회와 제품 S5 실제 완주는 남아 있다. 새 실제 사용자 행동은 프론트 준비 후 본부가 요청하며 PR115는 Draft로 유지한다.
+
 2026-10-26 최신 승인: PR #114는 CI 6/6 성공 후 develop `a53f6f541d45275ea92057c1beb2cf27af434855`에 병합됐다. 백엔드 실행 기준 PR #102/c108dc8 및 r20 실제 이력은 보존한다. 교수 피드백의 핵심 보완을 기존 정상 흐름에 연결하는 [보안 보완·자동 지급 완료 계획](BOOTCAMP_SECURITY_COMPLETION_PLAN.ko.md)을 추가 승인 범위로 우선한다. 수령인 직접 서명 → 체인 등록 순서 → 이의/정정의 체인 반영 → 근거 조회 → 제품 화면의 실제 조건 검증과 자동 ACCEPT/CLAIM 순서다. 통합 담당은 backend/contract/API와 오프라인 검증, 서준형/Claude는 기존 PR60·로컬 변경을 보존한 제품 화면 연결을 맡는다. 문서 반영·구현·오프라인 검증·실제 완주를 각각 기록하며 신규 PR 자동 병합/main 배포는 승인되지 않았다. 아래 날짜별 범위는 당시 이력이다.
 
 2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.

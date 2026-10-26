@@ -4,8 +4,10 @@
 
 백엔드 PR #102는 develop의 `c108dc8f20a86da3d48419615285a815f947b91c`에 병합됐다. 최종 CI HEAD `8bff2be17e3ae280ff03d80f578e7727de48cb14`의 10개 검사 모두 성공했고 병합 결과의 파일 트리도 동일하다. 과거 v28 CI 실패와 미병합 안내는 현재 연결의 차단 조건이 아니다. 실제 r20 성공은 별도 HEAD `f38ae8bd44c9da2e27f6a56650ced0f7bffe9aba`의 이력이며, 제품 프론트의 실제 정상 흐름 검증은 아직 남아 있다.
 
+현재 추가 계약: [Draft PR115](https://github.com/gw020328-oss/clear-education-v4/pull/115)의 V2 등록 API·실행 연결을 아래에 명시한다. develop 병합본과 후보 서버를 구분하며, 정확한 최종 CI/검증 커밋은 Issue106과 [v31 검증 기록](BOOTCAMP_V31_VERIFICATION.json)을 따른다. r20 실제 성공과 v30 `c4d61be` CI 8/8은 이번 V2 실제 사용자 검증을 뜻하지 않는다.
+
 ```text
-CLEAR 기존 프론트에 한 신청의 원천 확인·네 조건 → 운영자의 이번 입력 AI 승인 → 참여자/운영자의 같은 판정 명시 동의 → 100 TEST 수령 확인을 연결해줘. 기준은 develop 병합 커밋 c108dc8f20a86da3d48419615285a815f947b91c와 GitHub Issue #106 최신 본문이야. 해당 커밋의 docs/current/BOOTCAMP_NORMAL_HOST.ko.md, BOOTCAMP_C3_FRONTEND.ko.md, BOOTCAMP_C3_REFRESH.ko.md와 src/bootcamp/normal-client.mjs, tools/bootcamp/test-client/driver.js를 대조해. 과거 문서의 미병합·잔여 v28 실패 문구보다 이 기준과 현재 코드를 우선해.
+CLEAR 기존 프론트에 한 신청의 원천 확인·운영자의 이번 입력 AI 승인·네 조건 → 별도 V2 수령인 등록 서명 → 참여자/운영자의 같은 판정 명시 동의 → 100 TEST 수령 확인을 연결해줘. 기존 V1 연결 기준은 develop의 PR102 병합 c108dc8f20a86da3d48419615285a815f947b91c와 PR114 문서 병합 a53f6f541d45275ea92057c1beb2cf27af434855야. 추가 V2 등록은 Issue #106에 명시한 PR115 최종 검증 HEAD와 통합 담당의 후보 서버를 기준으로 별도 대조해. V2가 develop에 이미 있다고 가정하지 마. 해당 커밋의 docs/current/BOOTCAMP_NORMAL_HOST.ko.md, BOOTCAMP_C3_FRONTEND.ko.md, BOOTCAMP_C3_REFRESH.ko.md와 src/bootcamp/normal-client.mjs, tools/bootcamp/test-client/driver.js를 대조해. 과거 문서의 미병합·잔여 v28 실패 문구보다 이 기준과 현재 코드를 우선해.
 
 기존 프론트 PR #60(codex/frontend-shell)과 최신 로컬 변경·미추적 파일을 먼저 확인하고 안전하게 보존해. 기존 작업 브랜치에 최신 origin/develop을 병합하며 충돌은 양쪽 의도를 확인해 해결해. reset·덮어쓰기·강제 푸시로 정리하거나 이미 통합된 backend PR을 개별 cherry-pick하지 마. 현재 라우팅·디자인·지갑 adapter·빌드 방식을 재사용해. adapter가 없다면 아래 공개 계약에 필요한 최소 browser adapter를 구현해. web/와 관련 프론트 검사를 소유 범위로 삼고 backend/컨트랙트/수집기 변경이 필요하면 통합 담당과 조율해.
 
@@ -23,13 +25,25 @@ Bootcamp 응답의 오류 형식은 {error:CODE}이고 기존 application/api-cl
 
 운영자의 이번 입력 AI 승인 화면을 반드시 연결해. api.session()의 aiApproval 자료에서 이번 입력·모델·외부 전송·비용·호출 한도·남은 시간을 보여주고 지정 승인 지갑인지 확인해. 별도 확인 체크와 직접 클릭으로만 승인해. tools/bootcamp/test-client/driver.js의 approveAi를 기준으로 POST /bootcamp/v4/applications/:app/reflection-approval의 version/applicationId/bodySha256/planHash/contextHash/runBindingHash/codeHead/model/action/costAcknowledgment 및 응답 검증을 그대로 대조해. normal-client에 없는 메서드를 임의로 가정하지 마. 결과 미확인은 확인 필요로 표시하고 자동 재승인·새 유료 호출을 만들지 마. 원천 확인 서명·AI 검토 승인·지급 동의는 각각 구분해.
 
+V2 수령인 등록은 Draft PR115의 새 연결 계약이야. develop/a53f6f5에는 없으므로 통합 담당이 인수한 PR115 후보 서버에서만 연결하고, PR을 임의 병합하지 마. api.session()의 recipientRegistrationRequired=true와 phase=AWAITING_RECIPIENT_REGISTRATION_SIGNATURE를 확인해. 원천 네 조건과 이번 입력 AI 확인 후, 검토/양측 동의 전에 아래 등록 단계를 추가해. procedureReady=false인 동안에도 등록 조회는 가능해.
+
+api.recipientRegistration(app)는 GET /bootcamp/v3/applications/:app/recipient-registration이야. DTO version=clear-bootcamp-recipient-registration.1, role=PARTICIPANT 또는 COURSE_OPERATOR, purpose=REGISTER_FIXED_RECIPIENT, calldataPublic=true를 확인해. status는 NOT_READY/AWAITING_SIGNATURE/SIGNED/STALE/EXPIRED이며 signatureAccepted는 서버 서명 접수 여부야. applicationRevision/ledgerSequence/decisionId/decisionRevision/decisionHash가 쓰기 CAS이고 registrationTargetId가 서버 발행 요청이야. payload에는 EIP712 domain/types/primaryType/message가 있으며 참가자·수령인, 신청 ID, 정책/매핑, chainId·verifyingContract·instance salt, nonce와 원래 deadline을 그대로 보여줘. source 서명 또는 지급용 .3 메시지로 바꾸지 마.
+
+PARTICIPANT의 AWAITING_SIGNATURE에서만 별도 확인 버튼으로 eth_signTypedData_v4를 호출해. 등록은 수령인 고정용이고 원천 적격성 확인·AI 승인·지급 동의가 아니야. 이 등록 서명과 공개 필드는 계약 검증을 위해 거래 calldata에 공개된다는 점을 서명 전에 안내해. JSON typed data의 types에 EIP712Domain=[name:string,version:string,chainId:uint256,verifyingContract:address,salt:bytes32]를 추가하고 서버 payload의 domain, RecipientRegistration 타입과 message는 그대로 유지해. 지갑 주소·체인이 payload와 맞는지 확인하고 계정/체인/세션/요청 변경, 취소, 원래 deadline 이후 돌아온 결과는 제출하지 마. 운영자는 읽기만 하며 참가자 대신 서명/제출하지 않아.
+
+제출은 api.submitRecipientRegistration(app,packet,signature,{idempotencyKey,signal})이고 같은 /recipient-registration에 POST해. body는 expectedRevision/expectedLedgerSequence/targetDecisionId/targetDecisionRevision/targetDecisionHash/registrationTargetId/signature만 허용해. recipient, wallet, role, nonce, deadline을 body에 추가해 바꾸지 마. 기존 cookie/Origin/CSRF/지갑·체인 헤더를 사용해. 응답은 clear-bootcamp-procedure-operation.1이며 record.target.signatureAccepted=true와 chainStatus=NOT_OBSERVED는 접수 완료야. operationId가 있으면 api.operation으로 조회하고, 응답 유실이면 등록 GET으로 상태를 확인해. 자동 재서명·새 nonce·POST 자동 재시도는 하지 마. 같은 명령/멱등 키는 저장된 결과를 돌려주고 다른 키의 중복 제출은 거부돼.
+
+등록 GET의 chainStatus는 NOT_OBSERVED/NOT_REGISTERED/INCLUDED로 서명 status와 별개야. 실행 호스트의 canonical 조회가 확인됐을 때만 INCLUDED, canonical=true, finalized=false, checkpoint, registrationSequence(10진 문자열), recipient, chainApplicationId를 보여줘. 순서는 실제 체인 최초 등록 순서이며 서버 접수 순서나 확정 블록 순서로 표현하지 마. 조회 실패 시 이전 INCLUDED를 새 확인 결과로 유지하지 말고 확인 필요를 표시해. SIGNED를 등록 완료나 지급 완료로 표시하지 않아. 수락 후 서명 요청이 EXPIRED여도 이미 수락한 권리의 만료를 뜻하지 않아. 수령 여부는 기존 paymentReceipt에서 별도로 확인해.
+
+오류는 {error:CODE}야. AUTH_REQUIRED는 재인증/기존 실행 중단, FORBIDDEN·CSRF는 권한 확인, BC_VIEW_STALE/BC_DECISION_TARGET은 재조회·대상 재확인, BC_RECIPIENT_REGISTRATION_TARGET/SESSION/SOURCE/SIGNATURE/ALREADY_SIGNED와 BC_E3_CURRENT_MET_REQUIRED는 해당 등록/원천 상태 확인으로 처리해. 만료 시 BC_RECIPIENT_REGISTRATION_SIGNATURE 또는 현재 MET 오류가 반환될 수 있으니 GET status/deadline과 함께 표시해. 새 세션으로 이전 요청을 되살리지 마. S3 이의/정정의 체인 반영 API와 S4 근거 manifest 조회는 아직 미구현이므로 이 등록 endpoint로 대신하지 마.
+
 각 역할은 자기 최신 view와 같은 target/revision/hash를 화면에서 확인한 뒤 사용자 버튼으로 api.consent(app,view,'AGREE',{idempotencyKey})해. 자동 서명/자동 동의/POST 자동 재시도는 금지야. 상대 동의로 ledger가 바뀌거나 충돌이면 재조회 후 다시 사용자 확인을 받아. 응답 유실은 기존 operation/멱등 계약을 따라.
 
 api.paymentReceipt(app)로 약정100 TEST, 배정, 제출, 수령 확인을 구분해. INCLUDED/finalized=false를 최종 확정으로 표현하지 마. exactExpectedAmountVerified/canonical/receivedAtoms 검증 조건을 따르고 미측정 null은 유지해. 현재 판정과 acceptedTarget을 구분해. receipt를 읽는 버튼에서 지급/claim 쓰기를 호출하지 마.
 
 자동 GET 조회 중 명시 클릭이 조용히 유실되지 않게 하고 역할별 다음 행동·처리 중·비활성·실패 이유를 보여줘. 조회와 쓰기 요청의 충돌을 오프라인으로 재현·검사하고 쓰기 자동 재시도로 해결하지 마. 남은 시간은 서버 기준과 조회 경과 시간을 반영하며 브라우저 타이머로 원천·검토 기한을 연장하지 마. 현재 240초는 시험용 원천 유효기간이고 제품 지급기한이 아니야. 계정/체인 변경·원래 세션 폐기·만료 뒤 돌아온 원천 서명을 제출하지 마.
 
-교수 피드백 중 승인된 핵심 보완은 이번 정상 흐름에 포함해. docs/current/BOOTCAMP_SECURITY_COMPLETION_PLAN.ko.md의 담당·완료 기준을 따라 참가자의 별도 수령인 등록 서명, 실제 체인 등록 순서, 이의/정정의 접수와 체인 반영 상태, 판정 근거 조회를 backend 계약 확정 뒤 연결해. 원천 서명을 수령인 등록에 재사용하지 말고 아직 없는 endpoint를 가정하지 마. 양측 직접 동의 뒤 서버의 자동 ACCEPT/CLAIM과 정확한 영수증까지 연결하되 브라우저 자동 POST 재시도로 구현하지 마. 그 외 새 기능은 이번 정상 흐름 연결 뒤로 미뤄. 예치·배정 정책 변경, 새 반/LMS/Windows 확장, 독립 청구, 새 AI 조건 연결, C4~C6·복구 프레임워크·대시보드 확장과 디자인 전면 개편은 제외해. 실제 로그인·원천 증명·유료 AI·사용자 서명·새 체인/호스트 실행은 오프라인 연결과 자산 확인 후 본부가 사용자와 준비해. 지금 재로그인이나 비밀번호 설정을 요구하지 마. 기존 r20 실행·AI 승인·DB·원천 lease를 재사용하지 마. 실제 AI 승인 파일/서버키는 통합 담당 영역이야.
+교수 피드백 중 승인된 핵심 보완은 이번 정상 흐름에 포함해. docs/current/BOOTCAMP_SECURITY_COMPLETION_PLAN.ko.md의 담당·완료 기준을 따라 위에서 구현한 별도 수령인 등록 서명과 체인 등록 순서를 연결해. S3 이의/정정 체인 반영과 S4 근거 조회는 후속 계약이 확정될 때 연결해. 원천 서명을 수령인 등록에 재사용하지 말고 아직 없는 endpoint를 가정하지 마. 양측 직접 동의 뒤 서버의 자동 ACCEPT/CLAIM과 정확한 영수증까지 연결하되 브라우저 자동 POST 재시도로 구현하지 마. 그 외 새 기능은 이번 정상 흐름 연결 뒤로 미뤄. 예치·배정 정책 변경, 새 반/LMS/Windows 확장, 독립 청구, 새 AI 조건 연결, C4~C6·복구 프레임워크·대시보드 확장과 디자인 전면 개편은 제외해. 실제 로그인·원천 증명·유료 AI·사용자 서명·새 체인/호스트 실행은 오프라인 연결과 자산 확인 후 본부가 사용자와 준비해. 지금 재로그인이나 비밀번호 설정을 요구하지 마. 기존 r20 실행·AI 승인·DB·원천 lease를 재사용하지 마. 실제 AI 승인 파일/서버키는 통합 담당 영역이야.
 
 변경에 필요한 검사만 실행해. 기준 정적 트리 검사 명령은 ./tools/node --test web/tests/*.test.mjs이고 별도 build 명령은 없어. 현재 작업본에 이미 검사/빌드가 추가됐다면 그 명시된 절차를 확인해. fixture는 합성이라고 구분하고 실제 API 확인 항목과 분리해. 준비 상태·인증 취소/만료·조회와 클릭 충돌·AI 승인·오래된 동의 대상·영수증 null/성공을 검사해. 완료 시 프론트 커밋/변경 파일/검사 명령과 결과/실제 API 확인 범위/fixture 확인 범위/절대 web 경로/자산 변경/남은 차단 사유를 보고하고 Issue #106을 기존 프론트 PR에 연결해. 제품 프론트로 실제 정상 흐름을 검증하기 전에는 Issue #106을 완료 처리하지 마. 자동 merge/배포하지 마.
 ```
