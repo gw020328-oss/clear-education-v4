@@ -1,5 +1,6 @@
 // E5 TEST reader. Every state query is bound to an EIP-1898 canonical block hash.
 import {Interface,AbiCoder,TypedDataEncoder,keccak256} from 'ethers';
+import {buildExecutionV2} from '../../../tests/hackathon-test-vault/execution-v2-build.mjs';
 import {buildExecution} from '../../../tests/hackathon-test-vault/execution-build.mjs';
 import {buildPreparation} from '../../../tests/hackathon-test-vault/build.mjs';
 import {TYPES} from '../../bootcamp-authorization/test-schema-v3.mjs';
@@ -14,9 +15,9 @@ export const checkpoint=b=>({number:BigInt(b.number).toString(),hash:b.hash,time
 export function businessHashFor(command,observation){return command.method==='claim'?sha({applicationId:observation.business.applicationId,state:observation.business.application.state,right:observation.business.right}):observation.businessHash;}
 export class ExecutionReader {
  constructor(manifest,{rpc=loopbackRpc(manifest.endpoint)}={}) {
-  ensure(manifest.version==='clear-e5-test-runtime.1'&&manifest.production===false&&manifest.finalityPolicy==='LOCAL_DEV_INCLUSION_ONLY','E5_RUNTIME_KIND');
+  ensure(['clear-e5-test-runtime.1','clear-e5-test-runtime.2'].includes(manifest.version)&&manifest.production===false&&manifest.finalityPolicy==='LOCAL_DEV_INCLUSION_ONLY','E5_RUNTIME_KIND');
   this.manifest=structuredClone(manifest);this.runtimeHash=sha(manifest);this.rpc=rpc;
-  this.build=buildExecution();this.vault=new Interface(this.build.contract.abi);this.token=new Interface(buildPreparation().ClearTestToken.abi);
+  this.build=manifest.version==='clear-e5-test-runtime.2'?buildExecutionV2():buildExecution();this.vault=new Interface(this.build.contract.abi);this.token=new Interface(buildPreparation().ClearTestToken.abi);
  }
  async block(hash){const b=hash?await this.rpc('eth_getBlockByHash',[hash,false]):await this.rpc('eth_getBlockByNumber',['latest',false]);ensure(b?.hash&&b.number&&b.timestamp,'E5_BLOCK_INCOMPLETE');if(hash)ensure(b.hash===hash,'E5_BLOCK_HASH');await this.canonical(b);return b;}
  async canonical(b){const current=await this.rpc('eth_getBlockByNumber',[b.number,false]);ensure(current?.hash,'E5_CANONICAL_INCOMPLETE');ensure(current.hash===b.hash,'E5_NONCANONICAL');}

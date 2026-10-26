@@ -56,7 +56,7 @@ export function bridgeControllerFactory({ports,run,inspect}){
     const clockChanged=error&&!types.isProxy(error)&&Object.getPrototypeOf(error)===RuleError.prototype
      &&Object.getOwnPropertyDescriptor(error,'message')?.value==='BC_E5_CLOCK_CHANGED';
     const recheckable=kind==='capability'&&e.phase==='AUTHORIZE'
-     ||kind==='current'&&(['RECOVER','RECOVER_FINAL_SYNC'].includes(e.phase)||executionPhases.has(e.phase))
+     ||kind==='current'&&(recoveryPhases.has(e.phase)||executionPhases.has(e.phase))
      ||kind==='commit'&&e.phase==='COMMIT';
     if(!clockChanged||!issued||!recheckable)throw error;
     // The private ticket is still active and its one certificate is unreturned.

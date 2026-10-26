@@ -21,7 +21,7 @@ import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(condition,code)=>{if(!condition)throw Error(code);};
-export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,signal,sourceTarget,requireReviewReaders}){
+export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,waitForRecipientRegistration,signal,sourceTarget,requireReviewReaders}){
  const started=performance.now();let step='VALIDATE',operation='SETUP';
  try{
  const automatic=connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'&&waitForConsents===undefined;
@@ -31,6 +31,12 @@ export async function executeNormalPayment({store,connection,serviceContext,user
   ensure(user.wallet.toLowerCase()===recipient.toLowerCase(),'BC_NORMAL_RECIPIENT');
   const reviewWindow=()=>{if(!automatic){requireReviewReaders?.();requireNormalSourceWindow({store,context:user,applicationId:app,sourceTarget:target});}};
   step='REGISTER_SOURCE_TARGET';const {target,intake}=await registerNormalSourceTarget({store,connection,user,app,key,sourceTarget});
+  if(m.version==='clear-e5-test-runtime.2'){
+   ensure(typeof waitForRecipientRegistration==='function','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
+   step='WAIT_RECIPIENT_SIGNATURE';stage('AWAITING_RECIPIENT_REGISTRATION_SIGNATURE');
+   await waitForRecipientRegistration({applicationId:app,registrationTargetId:intake.record.id,signal});
+   ensure(readNormalView(()=>store.getRecipientRegistration(user,app)).status==='SIGNED','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
+  }
   reviewWindow();
   const body=(context=user,extra={})=>normalProcedureBody(store,context,app,target,extra);
   const chainApp=intake.record.opaqueTarget.applicationId;report.chainApplicationId=chainApp;

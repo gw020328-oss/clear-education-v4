@@ -23,7 +23,7 @@ export interface AuthorizationV3 {
 }
 export interface AcceptedRight {recipient: Hex; token: Hex; amountAtoms: Decimal; allocationId: Hex; authorizationDigest: Hex; nonce: Hex; signerKeyId: Hex; authorizationEpoch: Decimal; acceptedAt: Decimal; settledAt: Decimal}
 export interface CommandArgs {
- registerCurrentMet: [operationId: Hex, applicationId: Hex, recipient: Hex, target: Target];
+ registerCurrentMet: [operationId: Hex, applicationId: Hex, recipient: Hex, target: Target] | [operationId: Hex, applicationId: Hex, recipient: Hex, target: Target, registration: {applicationId: Hex; applicationSalt: Hex; policyHash: Hex; runtimeMappingHash: Hex; participant: Hex; recipient: Hex; nonce: Hex; deadline: string}, signature: Hex];
  allocate: [operationId: Hex, applicationId: Hex, allocationId: Hex, expectedVersion: Decimal];
  startReview: [operationId: Hex, applicationId: Hex, procedureId: Hex, publishedAt: Decimal, expectedVersion: Decimal];
  observeCurrent: [operationId: Hex, applicationId: Hex, observation: SourceObservation, expectedVersion: Decimal];
@@ -120,7 +120,7 @@ export interface WorkerPorts {
  recover(request: ReferenceRequest): Promise<RecoveryResult>;
 }
 export interface RuntimeManifest {
- version: 'clear-e5-test-runtime.1'; environmentId: string; production: false; finalityPolicy: 'LOCAL_DEV_INCLUSION_ONLY';
+ version: 'clear-e5-test-runtime.1' | 'clear-e5-test-runtime.2'; environmentId: string; production: false; finalityPolicy: 'LOCAL_DEV_INCLUSION_ONLY';
  imageId: string; platform: string; image: string; clientVersion: string; networkIsolation: string;
  chainId: Decimal; networkId: string; genesisHash: Hex; endpoint: string; tokenAddress: Hex; tokenCodeHash: Hex;
  vaultAddress: Hex; vaultCodeHash: Hex; instanceId: Hex; policyHash: Hex; runtimeMappingHash: Hex; operationsPolicyHash: Hex;

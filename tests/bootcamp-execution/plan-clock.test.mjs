@@ -38,8 +38,8 @@ test('enqueue stale revision and changed decision stay rejected, without write r
  const x=await fixture(t),p=x.plan();
  assert.throws(()=>x.f.store.execution.enqueue(x.f.aliceContext,x.f.a,{...p.body,expectedRevision:p.body.expectedRevision-1},x.f.key()),/BC_VIEW_STALE/);
  assert.throws(()=>x.f.store.execution.enqueue(x.f.aliceContext,x.f.a,{...p.body,targetDecisionHash:H('changed-decision')},x.f.key()),/BC_DECISION_TARGET/);
- x.arm(n=>{if(n===2)x.f.setTime(x.f.time+1);});
- assert.throws(()=>x.f.store.execution.enqueue(x.f.aliceContext,x.f.a,p.body,x.f.key()),/BC_VIEW_STALE/);assert.equal(x.ticks,4);
+ x.arm(n=>{if([2,3,5].includes(n))x.f.setTime(x.f.time+1);});
+ assert.throws(()=>x.f.store.execution.enqueue(x.f.aliceContext,x.f.a,p.body,x.f.key()),/BC_VIEW_STALE/);assert.equal(x.ticks,6);
  assert.equal(database(x.f,db=>db.prepare('SELECT count(*) n FROM e5_intents').get().n),0);
 });
 

@@ -154,6 +154,13 @@ export function createRuntimeAuthority({db,runtimeId,runtimePinHash,e4Runtime=nu
    db.prepare('UPDATE e5_runtime_workers SET slot_revision=?,slot_id=NULL,intent_id=NULL,local_fence=NULL,local_revision=NULL WHERE runtime_id=?').run(n,runtimeId);
    fault('e5b-after-terminal-slot-release');return freeze({released:true,completionHash:record.completionHash,transactionReplacement:false});
   },
+  validateCompleted(h,local,time,authority,completion,originalSlot){
+   const row=live(h,time,authority.serviceId),s=decode(lastSlot());
+   check(row.slot_id===null&&row.intent_id===null&&row.local_fence===null&&row.local_revision===null
+    &&s?.kind==='RELEASE'&&s.intentId===local.intentId&&s.globalFence===row.fence
+    &&s.releaseOf===originalSlot.slotId&&s.revision===originalSlot.slotRevision+1&&row.slot_revision===s.revision
+    &&s.completionHash===e4Hash(completion)&&s.recordedAt<=time,'BC_E5B_COMPLETION_REQUIRED');
+  },
   witnessQuery(){return {runtimeId,runtimePinHash,scopeKey};},
   witnessBasis(){const row=get();return e4Hash(row?{fence:row.fence,leaseId:row.lease_id,incarnation:row.incarnation,generation:row.generation}:null);},
   acceptWitness(value,time){const row=get(),floor=db.prepare('SELECT MAX(fence) n FROM e5_worker_witnesses WHERE runtime_id=?').get(runtimeId).n??0;

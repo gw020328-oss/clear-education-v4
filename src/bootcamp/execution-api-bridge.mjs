@@ -78,9 +78,11 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
  }
  const worker={
   status(){return freeze({version:'clear-bootcamp-e5b-api.1',signingEnabled:ports.executionEnabled,dispatchEnabled:ports.executionEnabled,productionEnabled:false});},
-  inspect(g,h){return run(g,h,'B_INSPECT',(s,time,authority)=>cas(s,time,authority));},
+  inspect(g,h){return run(g,h,'B_INSPECT',(s,time,authority)=>cas(s,time,authority),
+   (s,time,authority,value)=>sameBasis(value,cas(s,time,authority),time));},
   async prepare(g,h,expected){
-   const command=run(g,h,'B_READ_REQUEST',(s,time,authority)=>{sameBasis(expected,cas(s,time,authority),time);return commands.command(s.i);});
+   const command=run(g,h,'B_READ_REQUEST',(s,time,authority)=>{sameBasis(expected,cas(s,time,authority),time);return commands.command(s.i);},
+    (s,time,authority,value)=>{sameBasis(expected,cas(s,time,authority),time);check(canonical(value)===canonical(commands.command(s.i)),'BC_E5B_COMMAND_CHANGED');});
    const observed=await ports.read(command);let preparedObservation;
    const b=run(g,h,'B_PREPARE',(s,time,authority)=>{
     sameBasis(expected,cas(s,time,authority),time);const {observation:o}=ports.consume(observed,'OBSERVATION');preparedObservation=o;
@@ -154,7 +156,9 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
     check(result.ref===request.ref,'BC_E5B_RECEIPT_REFERENCE');ledger.append(h.intentId,'RECOVERY','recovery-'+randomUUID(),result);return freeze({status:'HOLD',observation:result,automaticResign:false});
    });
    const command=ledger.request(h.intentId).command,observed=await ports.read(command,result.checkpoint);
-   return run(g,h,'B_RECEIPT_COMMIT',(s,time,authority)=>{
+   let originalReceiptAuthority;
+   return service(context,'B_RECEIPT_COMMIT',null,(time,authority)=>{
+    const s=state(g,h,time,authority);originalReceiptAuthority={until:Math.min(b.expiresAt,s.lease.expires_at,s.slot.row.expires_at,authority.expiresAt),slot:s.slot.commitment,runtime:s.r};
     const latest=ports.consume(observed,'OBSERVATION');check(result.ref===request.ref&&result.txHash,'BC_E5B_RECEIPT_REFERENCE');hash(result.txHash);
     if(latest.comparison?.status==='REORG_PROVEN_RECOVERY_BLOCKED')return freeze({status:'RECOVERY_BLOCKED',automaticPromotion:false});
     const receipt=validateE4Observation(result.observation,ports.runtime);check(canonical(receipt.checkpoint)===canonical(result.checkpoint)&&receipt.business.applicationId===command.applicationId,'BC_E5B_RECEIPT');
@@ -162,7 +166,7 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
     const c=latest.observation.business.application;check(BigInt(c.version)>=BigInt(receipt.business.application.version),'BC_E5B_RECEIPT_REGRESSION');
     if(result.status==='INCLUDED'){
      const a=receipt.business.application,args=command.args;
-     if(command.method==='registerCurrentMet')check(a.state==='1'&&a.recipient===args[2]&&canonical(a.target)===canonical(args[3]),'BC_E5B_RECEIPT_POSTCONDITION');
+     if(command.method==='registerCurrentMet')check(a.state==='1'&&a.recipient===args[2]&&canonical(a.target)===canonical(args.length===6?{...args[3],acceptanceSequence:a.target.acceptanceSequence}:args[3])&&(args.length!==6||BigInt(a.target.acceptanceSequence)>0n),'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='allocate')check(a.state==='2'&&a.allocationId===args[2],'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='startReview')check(a.state==='3'&&a.procedureId===args[2]&&a.publishedAt===args[3]&&a.firstStartedAt===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='bindConsents')check(a.state==='3'&&a.consentSetHash===args[2]&&a.mutualConsent===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
@@ -182,6 +186,15 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
     const completion=ledger.complete(h.intentId,{version:'clear-bootcamp-e5b-completion.1',status:result.status,ref:request.ref,manifestHash:request.manifestHash,
      txHash:result.txHash,checkpoint:receipt.checkpoint,currentObservationHash:e4Hash(latest.observation),globalHandle:g,localHandle:h,recordedAt:time});
     fault('e5b-after-completion');global.complete(g,h,time,authority);return freeze({completion,claimJob:job});
+   },(time,authority,value)=>{
+    check(time<originalReceiptAuthority.until,'BC_E5B_BINDING_AUTHORITY');
+    if(value.status==='RECOVERY_BLOCKED'){state(g,h,time,authority);return;}
+    // Completed local/global slots cannot pass the ordinary live-intent gate.
+    // Validate their exact terminal relation without writing/recovering again.
+    const s=live(h,time,authority.serviceId,{completedReceipt:true});
+    check(canonical(s.r)===canonical(originalReceiptAuthority.runtime),'BC_E5_RUNTIME_SUSPENDED');
+    check(canonical(ledger.completion(h.intentId))===canonical(value.completion),'BC_E5B_COMPLETION_REQUIRED');
+    global.validateCompleted(g,h,time,authority,value.completion,originalReceiptAuthority.slot);
    });
   },
   completion(intentId){id(intentId);return service(context,'B_READ_COMPLETION',null,()=>ledger.completion(intentId));},

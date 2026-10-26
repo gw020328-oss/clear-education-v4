@@ -54,6 +54,8 @@ jobs:
           ./tools/npm --prefix spikes/w02-collector-boundary ci --ignore-scripts
           ./tools/npm --prefix src/ybm-collector ci --ignore-scripts
           ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts
+      - name: Participant-bound V2 registration and synthetic payment boundaries
+        run: ./tools/node --test tests/hackathon-test-vault/recipient-registration-v2.test.mjs
       - name: Check dependencies and compile reference contract in memory
         run: ./tools/npm run verify:dependencies
       - name: Offline proof adapter tests

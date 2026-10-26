@@ -2,6 +2,7 @@ import {exactKeys,canonical,freeze,requireRule as check} from '../policy/values.
 import {P0_GATES,p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {PROFILE_ID,PROFILE_COMMIT,PROFILE_HASH} from '../bootcamp-authorization/test-schema-v3.mjs';
 import {createTestDraftInspector,testDeadlineHash,testDeadlineRecord} from '../bootcamp-authorization/test-encoding-v3.mjs';
+import {recipientRegistration,verifyRecipientRegistration} from './recipient-registration.mjs';
 import {id,hash,revision} from './model.mjs';
 import {procedureLedger,procedureId} from './procedure-ledger.mjs';
 import {createProcedurePorts,currentSourceWindow,sameSnapshot,snapshotHash} from './procedure-ports.mjs';
@@ -101,7 +102,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    fault('e3-before-command');
    const saved=command(a,s.wallet,route,key,body,{decisionId:st.d.decisionId,...target},time,{...attempt,extraEvent:'AUTO_OPERATION_COMPLETED'});fault('e3-after-command');
    return operation(a,saved,time);
-  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:name==='consent'});}catch(error){
+  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:['consent','recipient-registration','prepare'].includes(name)});}catch(error){
    if(attempt)transaction(()=>ledger.emit({...attempt,eventType:'OPERATION_FAILED'}));throw error;
   }
  }
@@ -179,12 +180,48 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    const prior=records(st.a,'REGISTRATION_TARGET').at(-1);
    if(prior)check(prior.registration.allocationId===registration.allocationId&&prior.registration.obligationId===registration.obligationId
     &&prior.registration.recipient===registration.recipient&&prior.registration.token===registration.token&&sameSnapshot(prior.registration.domain,registration.domain),'BC_E3_REGISTRATION_IMMUTABLE');
-   const target={applicationId:l.opaque('APPLICATION',a,true),decisionId:l.opaque('DECISION',st.d.decisionId,true),allocationId:l.opaque('ALLOCATION',registration.allocationId,true)};
+   const v2=registration.version==='clear-bootcamp-procedure-registration-port.2';
+   check(!prior||!!prior.recipientRegistration===v2,'BC_E3_REGISTRATION_IMMUTABLE');
+   const recipientPacket=v2?(prior?.recipientRegistration??recipientRegistration({
+    ...registration.domain,instanceId:registration.domain.salt,policyHash:st.a.policy_hash,runtimeMappingHash:st.a.mapping_hash,
+    participant:st.a.wallet,applicationSalt:l.opaque('REGISTRATION_SALT',a,true),nonce:l.opaque('REGISTRATION_NONCE',a,true),deadline:src.validUntilExclusive})):null;
+   const target={applicationId:l.opaque('APPLICATION',a,true,recipientPacket?.message.applicationId??null),decisionId:l.opaque('DECISION',st.d.decisionId,true),allocationId:l.opaque('ALLOCATION',registration.allocationId,true)};
    const record=l.record(a,'REGISTRATION_TARGET',p0Hash('E3-REGISTRATION-TARGET',{applicationId:a,decisionId:st.d.decisionId,source:src.commitment,registration:snapshotHash(registration)}),{
-    version:'clear-bootcamp-e4-registration-target.1',id:procedureId('registration'),registration,opaqueTarget:target,policyHash:st.a.policy_hash,runtimeMappingHash:st.a.mapping_hash,
+    version:'clear-bootcamp-e4-registration-target.1',id:procedureId('registration'),registration,opaqueTarget:target,...(v2?{recipientRegistration:recipientPacket,recipientSessionHash:prior?.recipientSessionHash??p0Hash('RECIPIENT-SESSION',{token:context.token,wallet:st.a.wallet,chainId:context.chainId})}:{}),policyHash:st.a.policy_hash,runtimeMappingHash:st.a.mapping_hash,
     decisionAcceptanceSequence:acceptance(st.d),sourceWindow:src.window,sourceValidUntilExclusive:src.validUntilExclusive,sourceCurrentCommitment:src.commitment,
     profileHash:PROFILE_HASH,recordedAt:time,procedureStarted:false,allocationConfirmed:false,paymentAuthority:false});
    return {registrationTargetId:record.id};
+  });},
+  getRecipientRegistration(context,a){return access(context,a,false,(app,s,time)=>{
+   const r=records(app,'REGISTRATION_TARGET').at(-1),signed=records(app,'RECIPIENT_REGISTRATION').at(-1);
+   const d=decision(app),base={version:'clear-bootcamp-recipient-registration.1',applicationId:a,role:role(s),
+    applicationRevision:app.revision,ledgerSequence:ledger.sequence(),decisionId:d.decisionId,decisionRevision:d.decisionRevision,decisionHash:d.decisionHash,
+    chainStatus:'NOT_OBSERVED',signatureAccepted:!!signed,observedAt:time,calldataPublic:true,purpose:'REGISTER_FIXED_RECIPIENT'};
+   if(!r?.recipientRegistration)return freeze({...base,status:'NOT_READY',registrationTargetId:null,payload:null,digest:null});
+   const sessionMatches=s.role!=='participant'||r.recipientSessionHash===p0Hash('RECIPIENT-SESSION',{token:context.token,wallet:app.wallet,chainId:context.chainId});
+   const current=sessionMatches&&app.status==='ACTIVE'&&d.conditionsStatus==='MET'&&d.decisionId===r.registration.decisionId;
+   const expired=time>=Number(r.recipientRegistration.message.deadline);
+   return freeze({...base,status:!current?'STALE':expired?'EXPIRED':signed?'SIGNED':'AWAITING_SIGNATURE',registrationTargetId:r.id,
+    payload:r.recipientRegistration,digest:signed?.digest??null});
+  });},
+  submitRecipientRegistration(context,a,body,key){return run(context,a,body,key,'recipient-registration',['registrationTargetId','signature'],(st,s,time,observers)=>{
+   check(s.role==='participant'&&s.wallet===st.a.wallet,'FORBIDDEN');
+   check(st.met&&st.chain.status==='UNACCEPTED','BC_E3_CURRENT_MET_REQUIRED');
+   const r=records(st.a,'REGISTRATION_TARGET').at(-1);check(r?.recipientRegistration&&r.id===body.registrationTargetId&&r.registration.decisionId===st.d.decisionId,'BC_RECIPIENT_REGISTRATION_TARGET');
+   check(r.recipientSessionHash===p0Hash('RECIPIENT-SESSION',{token:context.token,wallet:st.a.wallet,chainId:context.chainId}),'BC_RECIPIENT_REGISTRATION_SESSION');
+   check(typeof body.signature==='string'&&/^0x[0-9a-fA-F]{130}$/.test(body.signature),'BC_RECIPIENT_REGISTRATION_SIGNATURE');
+   const prior=records(st.a,'RECIPIENT_REGISTRATION').at(-1);check(!prior,'BC_RECIPIENT_REGISTRATION_ALREADY_SIGNED');
+   const validate=at=>{
+    const src=currentSourceWindow(st.a,heads,source,at);check(src.commitment===r.sourceCurrentCommitment,'BC_RECIPIENT_REGISTRATION_SOURCE');
+    let verified;try{verified=verifyRecipientRegistration(r.recipientRegistration,body.signature,{applicationOwner:st.a.wallet,nowSeconds:at,sourceValidUntilExclusive:src.validUntilExclusive});}
+    catch{check(false,'BC_RECIPIENT_REGISTRATION_SIGNATURE');}
+    check(verified.applicationId===l.opaque('APPLICATION',a),'BC_E3_ID_BINDING');return verified;
+   };
+   const verified=validate(time);observers.push(validate);
+   const row=l.record(a,'RECIPIENT_REGISTRATION',p0Hash('E3-RECIPIENT-REGISTRATION',a),{
+    id:procedureId('recipient-registration'),version:'clear-bootcamp-recipient-registration-signature.1',registrationTargetId:r.id,
+    digest:verified.digest,signature:body.signature,recordedAt:time},s.wallet);
+   return {recipientRegistrationId:row.id,digest:verified.digest,signatureAccepted:true,chainStatus:'NOT_OBSERVED'};
   });},
   inspectRegistrationForE4(context,a,registrationTargetId,expected=null){id(registrationTargetId);const observers=[];return access(context,a,false,(app,s,time)=>{
    if(expected){exactKeys(expected,['expectedRevision','expectedLedgerSequence','expectedSnapshotHash'],'BC_E3_INTERNAL_CAS');
@@ -279,6 +316,14 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    const value=draft(st,time,observers),nonceKey=p0Hash('E3-PREPARED-NONCE',{domain:value.payload.domain,nonce:value.payload.message.nonce});
    const record=l.prepare(a,nonceKey,{version:'clear-bootcamp-prepared-test-target.1',preparationId:procedureId('preparation'),...value,recordedAt:time,
     authority:'UNSIGNED_PREFLIGHT_ONLY',nonceConsumed:false,signerActivated:false});fault('e3-after-prepared');
+   observers.push(at=>{
+    // Rebuild only from current reads with the original issuedAt. Never mint a
+    // new nonce/window or repeat preparation/command writes across the clock.
+    const fresh=state(st.a,at,[]),rebuilt=draft(fresh,Number(record.payload.message.issuedAt),[]);
+    check(canonical(rebuilt.payload)===canonical(record.payload)&&rebuilt.sourceCommitment===record.sourceCommitment,'BC_E3_PREPARATION_STALE');
+    const inspected=createTestDraftInspector(record.snapshot,{clock:()=>at}).inspect(record.payload,rebuilt.current);
+    check(inspected.status==='UNSIGNED_PREFLIGHT_ONLY','BC_E3_PREPARATION_STALE');
+   });
    return {procedureId:st.p.procedureId,publicationId:st.pub.publicationId,preparationId:record.preparationId};
   });},
   requestReviewTermination(context,a,body,key){return run(context,a,body,key,'termination-intent',[],(st,s,time)=>{
