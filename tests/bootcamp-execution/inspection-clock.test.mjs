@@ -27,3 +27,9 @@ for(const change of ['expiry','source','revoked','reverse'])test('B_INSPECT fail
  f.setClockHook(()=>{if(++ticks===3){if(change==='source')f.change(f.a,'activity-complete',{rawAvailable:false});else if(change==='revoked')f.revoke();else f.setTime(f.time+(change==='expiry'?30:-1));}});
  assert.throws(()=>f.bridge.inspect(f.g,f.h),/BC_|SERVICE_FORBIDDEN/);assert.equal(f.counts.issued,0);
 });
+for(const phase of ['LOOKUP','RETENTION'])for(const change of ['expiry','revoked','reverse'])test(phase+' stops on '+change+' with one unreturned witness',async t=>{
+ const f=await bridgeFixture(t),r=await f.prepare(),before=f.counts.issued;
+ f.setIssueHook(()=>{if(change==='revoked')f.revoke();f.setTime(change==='expiry'?r.binding.expiresAt:f.time+(change==='reverse'?-1:1));});
+ assert.throws(()=>f.invoke('current',r.binding,phase),/BC_|SERVICE_FORBIDDEN/);
+ assert.equal(f.counts.issued,before+1);assert.equal(f.counts.seals,0);assert.equal(f.counts.dispatches,0);
+});

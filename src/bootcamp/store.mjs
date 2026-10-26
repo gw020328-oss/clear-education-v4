@@ -172,10 +172,11 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
         // Collection writes once. Only its original candidate/authority and current
         // heads are revalidated; no producer call, nonce consumption or write replay.
         for(let validation=0;;validation++){
-          const final=tick(),latest=refresh(app(applicationId),final.time,final.reversed,sessionHash(context,wallet));
-          check(!final.reversed&&final.time>=time&&latest.revision===revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');
-          if(validateCommit)validateCommit(latest,final.time);
-          check(actor(context,write)===wallet,'BC_COMMIT_AUTHORITY');const end=tick();
+          const final=tick();check(!final.reversed&&final.time>=time,'BC_VIEW_STALE');
+          if(validateCommit)validateCommit(app(applicationId),final.time);
+          check(actor(context,write)===wallet,'BC_COMMIT_AUTHORITY');
+          const latest=refresh(app(applicationId),final.time,final.reversed,sessionHash(context,wallet));
+          check(latest.revision===revision&&ledger.sequence()===sequence,'BC_VIEW_STALE');const end=tick();
           check(!end.reversed&&end.time>=final.time,'BC_VIEW_STALE');
           if(validateCommit&&end.time>final.time&&validation===0)continue;
           check(end.time===(validateCommit?final.time:time),'BC_VIEW_STALE');break;
