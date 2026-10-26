@@ -163,7 +163,7 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
     const c=latest.observation.business.application;check(BigInt(c.version)>=BigInt(receipt.business.application.version),'BC_E5B_RECEIPT_REGRESSION');
     if(result.status==='INCLUDED'){
      const a=receipt.business.application,args=command.args;
-     if(command.method==='registerCurrentMet')check(a.state==='1'&&a.recipient===args[2]&&canonical(a.target)===canonical(args[3]),'BC_E5B_RECEIPT_POSTCONDITION');
+     if(command.method==='registerCurrentMet')check(a.state==='1'&&a.recipient===args[2]&&canonical(a.target)===canonical(args.length===6?{...args[3],acceptanceSequence:a.target.acceptanceSequence}:args[3])&&(args.length!==6||BigInt(a.target.acceptanceSequence)>0n),'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='allocate')check(a.state==='2'&&a.allocationId===args[2],'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='startReview')check(a.state==='3'&&a.procedureId===args[2]&&a.publishedAt===args[3]&&a.firstStartedAt===args[3],'BC_E5B_RECEIPT_POSTCONDITION');
      else if(command.method==='bindConsents')check(a.state==='3'&&a.consentSetHash===args[2]&&a.mutualConsent===args[3],'BC_E5B_RECEIPT_POSTCONDITION');

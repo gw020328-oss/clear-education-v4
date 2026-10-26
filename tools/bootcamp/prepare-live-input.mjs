@@ -11,7 +11,7 @@ import {createApplicationService} from '../../src/application/service.mjs';
 import {LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 const now=()=>Math.floor(Date.now()/1000);
-export async function prepareLiveInput({hackerRankPins=null,identityPreparationPath=null,uiIdentity=null}={}){
+export async function prepareLiveInput({hackerRankPins=null,identityPreparationPath=null,uiIdentity=null,executionVersion=2}={}){
  if(uiIdentity){
   const u=new URL(uiIdentity.origin);
   if(identityPreparationPath||u.protocol!=='https:'||u.hostname!=='127.0.0.1'||u.origin!==uiIdentity.origin||Number(u.port)<1024||Number(u.port)>65535
@@ -40,7 +40,7 @@ export async function prepareLiveInput({hackerRankPins=null,identityPreparationP
   targets:{activity:report.activity,assignment:report.assignment,reflection:report.reflection},completionSetupReceiptHash:report.completionSetupReceiptHash,
   moodleUserId:3,accountBindingRef:'normal-demo-user3',hackerRank:{certificateName:'Python (Basic)',...(hackerRankPins?{trustStatus:'REVIEWED',audience:hackerRankPins.audience,trustConfigHash:hackerRankPins.trustConfigHash,recipeHash:hackerRankPins.recipeHash,expectedClaimOwner:hackerRankPins.expectedClaimOwner}:{trustStatus:'UNCONFIGURED_BLOCKED'})}};
  const runtimeMappingHash=p0Hash('NORMAL-REGISTERED-MAPPING',mapping);atomicPrivate(join(directory,'mapping.json'),{mapping,runtimeMappingHash},{exclusive:true});
- const e=await createEnvironment({runtimeMappingHash,blockPeriodSeconds:1});let auth,store;
+ const e=await createEnvironment({runtimeMappingHash,blockPeriodSeconds:1,executionVersion});let auth,store;
  try{
   if(e.manifest.runtimeMappingHash!==runtimeMappingHash)throw Error('BC_LIVE_CHAIN_MAPPING');
   const startedAt=now(),chainId=Number(e.manifest.chainId);

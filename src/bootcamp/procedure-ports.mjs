@@ -63,7 +63,7 @@ export function createProcedurePorts(configuration,mode){
   const v=read('registration',{applicationId:a.id,decisionId:d.decisionId,decisionRevision:d.decisionRevision,decisionHash:d.decisionHash,acceptanceSequence});
   check(v.implementation!=='NOT_IMPLEMENTED','BC_E3_REGISTRATION_PORT_BLOCKED');
   exactKeys(v,['version','execution','registrationId','applicationId','decisionId','decisionRevision','decisionHash','allocationId','obligationId','recipient','token','amountAtoms','tokenDecimals','domain'],'BC_E3_REGISTRATION_PORT');
-  check(v.version==='clear-bootcamp-procedure-registration-port.1'&&v.applicationId===a.id&&v.decisionId===d.decisionId&&v.decisionRevision===d.decisionRevision
+  check(['clear-bootcamp-procedure-registration-port.1','clear-bootcamp-procedure-registration-port.2'].includes(v.version)&&v.applicationId===a.id&&v.decisionId===d.decisionId&&v.decisionRevision===d.decisionRevision
    &&v.decisionHash===d.decisionHash&&v.recipient===a.wallet&&v.amountAtoms==='100000000'&&v.tokenDecimals==='6','BC_E3_REGISTRATION_TARGET');
   id(v.registrationId);id(v.allocationId);id(v.obligationId);address(v.recipient);address(v.token);
   exactKeys(v.domain,['name','version','chainId','verifyingContract','salt'],'BC_E3_REGISTRATION_DOMAIN');

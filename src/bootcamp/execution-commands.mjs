@@ -1,11 +1,18 @@
 import {canonical,freeze,requireRule as check} from '../policy/values.mjs';
 import {currentSourceWindow} from './procedure-ports.mjs';
+import {verifyRecipientRegistration} from './recipient-registration.mjs';
 import {e4Hash} from './execution-e4-ports.mjs';
 const ZERO='0x'+'00'.repeat(32);
 export function executionCommands({db,current,heads,source}){
  const decode=row=>row?JSON.parse(row.record):null;
  const record=(a,kind)=>decode(db.prepare('SELECT record FROM e3_records WHERE application_id=? AND kind=? ORDER BY sequence DESC LIMIT 1').get(a,kind));
  const opaque=(kind,logical)=>{const r=db.prepare('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?').get(kind,logical);check(r,'BC_E3_ID_NOT_REGISTERED');return r.opaque_id;};
+ function registrationSignature(a,r,time=null){
+  const signed=record(a.id,'RECIPIENT_REGISTRATION');check(signed&&r.recipientRegistration,'BC_RECIPIENT_REGISTRATION_REQUIRED');
+  let verified;try{verified=verifyRecipientRegistration(r.recipientRegistration,signed.signature,{applicationOwner:a.wallet,nowSeconds:time??r.recordedAt,sourceValidUntilExclusive:r.sourceValidUntilExclusive});}catch{check(false,'BC_RECIPIENT_REGISTRATION_SIGNATURE');}
+  check(verified.applicationId===opaque('APPLICATION',a.id)&&verified.digest===signed.digest,'BC_RECIPIENT_REGISTRATION_TARGET');
+  return [r.recipientRegistration.message,signed.signature];
+ }
  function inspect(i,a,o,runtime,time){
   if(['PREPARE','ACCEPT'].includes(i.kind))return current.inspect(i,a,o,runtime,time);
   const c=o.business.application,d=decode(db.prepare('SELECT record FROM decisions WHERE id=?').get(a.decision_id));
@@ -19,8 +26,8 @@ export function executionCommands({db,current,heads,source}){
   if(i.kind==='REGISTER'){
    check(c.state==='0'&&registration&&registration.sourceCurrentCommitment===src.commitment&&registration.registration.decisionId===d.decisionId,'BC_E5B_REGISTRATION_REQUIRED');
    const target={decisionId:opaque('DECISION',d.decisionId),revision:String(d.decisionRevision),decisionHash:d.decisionHash,
-    sourceValidUntilExclusive:String(src.validUntilExclusive),acceptanceSequence:String(registration.decisionAcceptanceSequence),sourceReceiptHash:src.commitment};
-   command={method:'registerCurrentMet',args:[i.operationId,i.chainApplicationId,a.wallet,target],applicationId:i.chainApplicationId};
+    sourceValidUntilExclusive:String(src.validUntilExclusive),acceptanceSequence:registration.recipientRegistration?'0':String(registration.decisionAcceptanceSequence),sourceReceiptHash:src.commitment};
+   command={method:'registerCurrentMet',args:[i.operationId,i.chainApplicationId,a.wallet,target,...(registration.recipientRegistration?registrationSignature(a,registration,time):[])],applicationId:i.chainApplicationId};
   }else{
    check(c.target.decisionId===opaque('DECISION',d.decisionId)&&c.target.decisionHash===d.decisionHash&&c.target.revision===String(d.decisionRevision)
     &&c.recipient===a.wallet&&c.currentMet&&!c.validObjection&&!c.unassessedObjection&&!c.newValidError,'BC_E5B_CHAIN_CURRENT');
@@ -54,7 +61,7 @@ export function executionCommands({db,current,heads,source}){
   const pub=decode(db.prepare('SELECT record FROM e3_publications WHERE application_id=? ORDER BY sequence DESC LIMIT 1').get(a.id));
   const p=decode(db.prepare('SELECT record FROM e3_procedures WHERE application_id=?').get(a.id));
   let method,args;
-  if(i.kind==='REGISTER'){check(r,'BC_E5B_REGISTRATION_REQUIRED');method='registerCurrentMet';args=[i.operationId,i.chainApplicationId,a.wallet,{decisionId:i.chainDecisionId,revision:String(d.decisionRevision),decisionHash:d.decisionHash,sourceValidUntilExclusive:String(r.sourceValidUntilExclusive),acceptanceSequence:String(r.decisionAcceptanceSequence),sourceReceiptHash:r.sourceCurrentCommitment}];}
+  if(i.kind==='REGISTER'){check(r,'BC_E5B_REGISTRATION_REQUIRED');method='registerCurrentMet';args=[i.operationId,i.chainApplicationId,a.wallet,{decisionId:i.chainDecisionId,revision:String(d.decisionRevision),decisionHash:d.decisionHash,sourceValidUntilExclusive:String(r.sourceValidUntilExclusive),acceptanceSequence:r.recipientRegistration?'0':String(r.decisionAcceptanceSequence),sourceReceiptHash:r.sourceCurrentCommitment},...(r.recipientRegistration?registrationSignature(a,r):[])];}
   else if(i.kind==='ALLOCATE'){check(r,'BC_E5B_REGISTRATION_REQUIRED');method='allocate';args=[i.operationId,i.chainApplicationId,opaque('ALLOCATION',r.registration.allocationId),i.expectedChainVersion];}
   else if(i.kind==='START_REVIEW'){check(p&&pub,'BC_E5B_PUBLICATION_REQUIRED');method='startReview';args=[i.operationId,i.chainApplicationId,opaque('PROCEDURE',p.procedureId),String(pub.publishedAt),i.expectedChainVersion];}
   else if(i.kind==='BIND_CONSENTS'){check(pub,'BC_E5B_PUBLICATION_REQUIRED');const set=current.consents(a,pub,'1');method='bindConsents';args=[i.operationId,i.chainApplicationId,set.hash,set.both,i.expectedChainVersion];}

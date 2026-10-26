@@ -48,16 +48,17 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         else check(false,'BC_NOT_FOUND');
       }
       else if(v3){
-        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
+        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations|recipient-registration)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
         check(m,'BC_NOT_FOUND');const [,a,resource,target]=m;
         if(req.method==='GET'){
-          if(!target&&resource==='procedure'){if(normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=store.getProcedure(context,a);}
+          if(!target&&resource==='recipient-registration'){result=normalUi?.getRecipientRegistration?await normalUi.getRecipientRegistration(context,a):store.getRecipientRegistration(context,a);}
+          else if(!target&&resource==='procedure'){if(normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=store.getProcedure(context,a);}
           else if(target&&resource==='procedure-operations')result=store.getProcedureOperation(context,a,target);
           else check(false,'BC_NOT_FOUND');
         }else if(!target){
-          const methods={'review-publications':'publishReview','review-consents':'recordReviewConsent','review-objections':'submitReviewObjection',
+          const methods={'recipient-registration':'submitRecipientRegistration','review-publications':'publishReview','review-consents':'recordReviewConsent','review-objections':'submitReviewObjection',
             'objection-assessments':'assessReviewObjection','review-revalidations':'recordReviewRevalidation','unsigned-preparations':'prepareReviewAuthorization','termination-intents':'requestReviewTermination'};
-          check(methods[resource],'BC_NOT_FOUND');if(resource==='review-consents'&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');
+          check(methods[resource],'BC_NOT_FOUND');if(resource==='recipient-registration')normalUi?.beforeRecipientRegistration?.(context,a);if(resource==='review-consents'&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');
           const consentOptions=resource==='review-consents'&&normalUi?.beforeReviewConsent
             ?{beforeNewConsent:view=>normalUi.beforeReviewConsent(context,a,body,view)}:undefined;
           result=store[methods[resource]](context,a,body,key,consentOptions);

@@ -31,7 +31,7 @@ export function createE4BridgePorts(configuration=null){
  const m=projection.manifest;
  exactKeys(m,['version','environmentId','production','finalityPolicy','imageId','platform','image','clientVersion','networkIsolation','chainId','networkId','genesisHash','endpoint','tokenAddress','tokenCodeHash','vaultAddress','vaultCodeHash','instanceId','policyHash','runtimeMappingHash','operationsPolicyHash','domain','typeHash','domainSeparator','roles','signerKeyId','signerAddress','controllerAddress','deploymentTransactions','checkpoint','blockHashCapability',...(Object.hasOwn(m,'blockPeriodSeconds')?['blockPeriodSeconds']:[])],'BC_E5B_MANIFEST');
  check([0,1].includes(Object.hasOwn(m,'blockPeriodSeconds')?m.blockPeriodSeconds:0),'BC_E5B_BLOCK_PERIOD');
- check(m.version==='clear-e5-test-runtime.1'&&m.production===false&&m.finalityPolicy==='LOCAL_DEV_INCLUSION_ONLY'&&m.operationsPolicyHash===PROFILE_HASH,'BC_E5B_RUNTIME');
+ check(['clear-e5-test-runtime.1','clear-e5-test-runtime.2'].includes(m.version)&&m.production===false&&m.finalityPolicy==='LOCAL_DEV_INCLUSION_ONLY'&&m.operationsPolicyHash===PROFILE_HASH,'BC_E5B_RUNTIME');
  id(m.environmentId);uint(m.chainId);check(m.chainId!=='0','BC_E5B_RUNTIME');
  for(const key of ['tokenAddress','vaultAddress','signerAddress','controllerAddress'])address(m[key]);
  for(const key of ['genesisHash','tokenCodeHash','vaultCodeHash','instanceId','policyHash','runtimeMappingHash','operationsPolicyHash','typeHash','domainSeparator','signerKeyId'])hash(m[key]);

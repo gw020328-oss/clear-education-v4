@@ -36,10 +36,11 @@ export function procedureLedger(db,ledger){
  const getProcedure=a=>decode(db.prepare('SELECT record FROM e3_procedures WHERE application_id=?').get(a));
  const publications=a=>db.prepare('SELECT record FROM e3_publications WHERE application_id=? ORDER BY sequence').all(a).map(decode);
  const rows=(a,kind)=>db.prepare('SELECT * FROM e3_records WHERE application_id=? AND kind=? ORDER BY sequence').all(a,kind).map(r=>({...r,record:decode(r)}));
- const opaque=(kind,logicalId,create=false)=>{
+ const opaque=(kind,logicalId,create=false,expected=null)=>{
+  check(expected===null||kind==='APPLICATION'&&/^0x[0-9a-f]{64}$/.test(expected)&&!/^0x0+$/.test(expected),'BC_E3_ID_BINDING');
   let row=db.prepare('SELECT opaque_id FROM e3_ids WHERE kind=? AND logical_id=?').get(kind,logicalId);
-  if(!row&&create){row={opaque_id:'0x'+randomBytes(32).toString('hex')};db.prepare('INSERT INTO e3_ids VALUES(?,?,?)').run(kind,logicalId,row.opaque_id);}
-  check(row,'BC_E3_ID_NOT_REGISTERED');return row.opaque_id;
+  if(!row&&create){row={opaque_id:expected??'0x'+randomBytes(32).toString('hex')};db.prepare('INSERT INTO e3_ids VALUES(?,?,?)').run(kind,logicalId,row.opaque_id);}
+  check(row,'BC_E3_ID_NOT_REGISTERED');check(expected===null||row.opaque_id===expected,'BC_E3_ID_BINDING');return row.opaque_id;
  };
  return {getProcedure,publications,rows,opaque,
   create(a,record){db.prepare('INSERT INTO e3_procedures VALUES(?,?,?)').run(record.procedureId,a,canonical(record));ledger.next();},

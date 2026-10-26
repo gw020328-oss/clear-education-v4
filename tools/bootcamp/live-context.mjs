@@ -95,10 +95,14 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
   const getSession=context=>{const actor=ui.authorize(context,false);if(app)readNormalView(()=>store.getOperationsProjection(context,app));
    readers.observe(actor.role.toUpperCase());return Object.freeze({
    version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,
-   procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
+   recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:reflectionApproval?.brief(context)??null});};
-  const normalUi=Object.freeze({getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
+  const recipientView=async(c,a)=>{ui.authorize(c,false);requireUiRule(a===app,'BC_LIVE_CONTEXT');
+   const packet=readNormalView(()=>store.getRecipientRegistration(c,a));
+   if(packet.registrationTargetId){await connection.refresh(a);ui.authorize(c,false);return {...readNormalView(()=>store.getRecipientRegistration(c,a)),...connection.recipientRegistrationState(a)};}return packet;};
+  const normalUi=Object.freeze({getRecipientRegistration:recipientView,
+   beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
     requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},
    approveReflection(c,a,b,k){requireUiRule(a===app&&reflectionApproval,'BC_NORMAL_AI_APPROVAL_TARGET');return reflectionApproval.approve(c,a,b,k);},
@@ -115,7 +119,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
      &&result.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');
     sourceTarget=normalSourceTarget(result);report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return result;
    },
-   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;try{return await executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});}catch(error){try{report.executionDiagnostics=connection.diagnostics().slice(0,16);write();}catch{}throw error;}},
+   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;try{return await executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),waitForRecipientRegistration:async()=>{await waitUntil(()=>{ui.participant();const r=readNormalView(()=>store.getRecipientRegistration(user,app));requireUiRule(!['STALE','EXPIRED'].includes(r.status),'BC_RECIPIENT_REGISTRATION_EXPIRED');return r.status==='SIGNED';},{signal:controller.signal,timeoutMs:Math.max(1,(Number(store.getRecipientRegistration(user,app).payload.message.deadline)-now())*1000)});},waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});}catch(error){try{report.executionDiagnostics=connection.diagnostics().slice(0,16);write();}catch{}throw error;}},
    report:()=>structuredClone(report),close,
   });
  }catch(error){report.failureCode=/^(BC|E5|E5B)_[A-Z0-9_]+$/.test(error?.message)?error.message:'BC_LIVE_OPEN_FAILED';write();close();throw Error(report.failureCode);}

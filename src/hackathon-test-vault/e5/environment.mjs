@@ -9,6 +9,7 @@ import {Interface,Wallet,ContractFactory,JsonRpcProvider,keccak256,hexlify,Typed
 import {atomicPrivate,readPrivate,privateDirectory,ensure,sha} from './private-storage.mjs';
 import {loopbackRpc,blockHashCapability} from './rpc.mjs';
 import {waitSetupReceipt} from './setup-receipt.mjs';
+import {buildExecutionV2} from '../../../tests/hackathon-test-vault/execution-v2-build.mjs';
 import {buildExecution} from '../../../tests/hackathon-test-vault/execution-build.mjs';
 import {buildPreparation} from '../../../tests/hackathon-test-vault/build.mjs';
 import {P0_POLICY,p0PolicyHash} from '../../../specs/bootcamp/p0-contract.mjs';
@@ -24,10 +25,10 @@ export function environmentRecord(id){const dir=own(id),r=JSON.parse(readPrivate
 export function ownedTestWallet(id,role){const {dir,record}=environmentRecord(id);ensure(roleNames.includes(role),'E5_ROLE');const keys=JSON.parse(readPrivate(join(dir,'roles.json')));ensure(keys.environmentId===id,'E5_KEY_OWNER');const wallet=new Wallet(keys.keys[role]);ensure(wallet.address.toLowerCase()===record.addresses[role],'E5_KEY_PIN');return wallet;}
 function checkedContainer(record){const value=JSON.parse(docker(['inspect',record.container]))[0];ensure(value.Config.Labels?.['clear.e5.owner']===record.environmentId&&value.Config.Image===GETH_IMAGE,'E5_CONTAINER_OWNER');const args=value.Config.Cmd,index=args.indexOf('--dev.period');ensure((index<0?0:Number(args[index+1]))===(record.blockPeriodSeconds??0),'E5_BLOCK_PERIOD_OWNER');return value;}
 async function waitRpc(rpc){const deadline=Date.now()+30000;while(Date.now()<deadline){try{return await rpc('eth_chainId');}catch{await sleep(100);}}throw Error('E5_NODE_START_FAILED');}
-export async function createEnvironment({runtimeMappingHash=DEFAULT_MAPPING_HASH,blockPeriodSeconds=0,testAfterStarted=()=>{}}={}){
+export async function createEnvironment({runtimeMappingHash=DEFAULT_MAPPING_HASH,blockPeriodSeconds=0,executionVersion=1,testAfterStarted=()=>{}}={}){
  // Validate the caller-approved mapping before creating keys, directories or a chain.
  ensure(typeof runtimeMappingHash==='string'&&/^0x[0-9a-f]{64}$/.test(runtimeMappingHash)&&runtimeMappingHash!=='0x'+'0'.repeat(64),'E5_RUNTIME_MAPPING_HASH');
- ensure([0,1].includes(blockPeriodSeconds),'E5_BLOCK_PERIOD');
+ ensure([0,1].includes(blockPeriodSeconds),'E5_BLOCK_PERIOD');ensure([1,2].includes(executionVersion),'E5_EXECUTION_VERSION');
  privateDirectory(dirname(ENV_ROOT),{create:true});privateDirectory(ENV_ROOT,{create:true});
  const id='e5-'+randomUUID(),dir=join(ENV_ROOT,id);mkdirSync(dir,{mode:0o700});const chainDir=join(dir,'chain');mkdirSync(chainDir,{mode:0o700});
  const wallets=Object.fromEntries(roleNames.map(k=>[k,Wallet.createRandom()])),addresses=Object.fromEntries(roleNames.map(k=>[k,wallets[k].address.toLowerCase()]));
@@ -47,7 +48,8 @@ export async function createEnvironment({runtimeMappingHash=DEFAULT_MAPPING_HASH
   const capability=await blockHashCapability(rpc);const clientVersion=await rpc('web3_clientVersion');ensure(clientVersion.startsWith('Geth/v1.17.8-'),'E5_CLIENT_VERSION');
   const provider=new JsonRpcProvider(record.endpoint,undefined,{cacheTimeout:-1,batchMaxCount:1});provider.pollingInterval=50;
   try{
-   const tokenBuild=buildPreparation().ClearTestToken,build=buildExecution();
+   const build=executionVersion===2?buildExecutionV2():buildExecution();
+   const tokenBuild=executionVersion===2?{abi:build.tokenContract.abi,bytecode:'0x'+build.tokenContract.evm.bytecode.object}:buildPreparation().ClearTestToken;
    const token=await new ContractFactory(tokenBuild.abi,tokenBuild.bytecode,wallets.depositor.connect(provider)).deploy(10000000000n);const tokenReceipt=await waitSetupReceipt(provider,token.deploymentTransaction().hash);ensure(tokenReceipt.contractAddress?.toLowerCase()===(await token.getAddress()).toLowerCase(),'E5_SETUP_DEPLOYMENT_ADDRESS');
    const roles=Object.fromEntries(roleNames.slice(0,6).map(k=>[k,addresses[k]])),instanceId=hexlify(randomBytes(32));
    const vault=await new ContractFactory(build.contract.abi,'0x'+build.contract.evm.bytecode.object,wallets.registrar.connect(provider)).deploy(await token.getAddress(),instanceId,p0PolicyHash(P0_POLICY),runtimeMappingHash,roles);const vaultReceipt=await waitSetupReceipt(provider,vault.deploymentTransaction().hash);ensure(vaultReceipt.contractAddress?.toLowerCase()===(await vault.getAddress()).toLowerCase(),'E5_SETUP_DEPLOYMENT_ADDRESS');
@@ -57,7 +59,7 @@ export async function createEnvironment({runtimeMappingHash=DEFAULT_MAPPING_HASH
    ensure(roleNames.slice(0,6).every((k,i)=>actualRoles[i].toLowerCase()===roles[k]),'E5_ROLE_READBACK');
    ensure(await vault.runtimeMappingHash()===runtimeMappingHash,'E5_MAPPING_READBACK');
    const block=await rpc('eth_getBlockByNumber',['latest',false]);
-   const manifest={blockPeriodSeconds,imageId:c.Image,platform:c.Platform,networkIsolation:record.networkIsolation,version:'clear-e5-test-runtime.1',environmentId:id,image:GETH_IMAGE,clientVersion,chainId,networkId:await rpc('net_version'),genesisHash:(await rpc('eth_getBlockByNumber',['0x0',false])).hash,endpoint:record.endpoint,
+   const manifest={blockPeriodSeconds,imageId:c.Image,platform:c.Platform,networkIsolation:record.networkIsolation,version:executionVersion===2?'clear-e5-test-runtime.2':'clear-e5-test-runtime.1',environmentId:id,image:GETH_IMAGE,clientVersion,chainId,networkId:await rpc('net_version'),genesisHash:(await rpc('eth_getBlockByNumber',['0x0',false])).hash,endpoint:record.endpoint,
     tokenAddress,tokenCodeHash:keccak256(await provider.getCode(tokenAddress)),vaultAddress,vaultCodeHash:keccak256(await provider.getCode(vaultAddress)),instanceId,policyHash:p0PolicyHash(P0_POLICY),runtimeMappingHash,operationsPolicyHash:await vault.PROFILE(),domain,typeHash:await vault.TYPE_HASH(),domainSeparator:await vault.domainSeparator(),roles,signerKeyId:keyId,signerAddress:addresses.initialSigner,controllerAddress:addresses.controller,
     deploymentTransactions:{token:token.deploymentTransaction().hash,vault:vault.deploymentTransaction().hash},checkpoint:{number:BigInt(block.number).toString(),hash:block.hash},blockHashCapability:capability,finalityPolicy:'LOCAL_DEV_INCLUSION_ONLY',production:false};
    ensure(manifest.tokenCodeHash===build.tokenCodeHash&&manifest.domainSeparator===TypedDataEncoder.hashDomain(domain),'E5_DEPLOYMENT_PIN');
