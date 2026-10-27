@@ -1,0 +1,49 @@
+{
+  "version": "clear-bootcamp-s4-verification.1",
+  "date": "2026-10-27",
+  "baseDevelop": "19e1c1473165cdea52a42040e740b79ba3e50c03",
+  "coreHead": "73a220dd193bc99b5557a9946a5e984dc3b1c7b9",
+  "scope": "S4_STORED_METADATA_READ_ONLY",
+  "syntheticOnly": true,
+  "checks": [
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/decision-evidence.test.mjs tests/bootcamp-store/consumers.test.mjs",
+      "passed": 30,
+      "failed": 0
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-execution/*.test.mjs tests/bootcamp-store/*.test.mjs",
+      "passed": 726,
+      "failed": 1,
+      "failure": "Existing current-client pin still compared new normal-client with preserved V32. Fixed by preserving V32 Git bytes and checking current V33 separately. This first run remains a failure."
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/test-client.test.mjs",
+      "passed": 38,
+      "failed": 0,
+      "reason": "Targeted verification after V33 browser-pin update"
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/decision-evidence.test.mjs",
+      "passed": 6,
+      "failed": 0,
+      "reason": "Final check separates source expiry from raw retention expiry"
+    },
+    {
+      "command": "./tools/node --test --test-name-pattern='rollover=none$' tests/hackathon-test-vault/e5b/recipient-v2-flow.test.mjs",
+      "passed": 1,
+      "failed": 0,
+      "assurance": "Fresh isolated synthetic Geth V2 HTTP registration/consents/exact 100 TEST/duplicate rejection; S4 GET before and after with no additional execution metrics"
+    }
+  ],
+  "sourceIntake": "specs/bootcamp/hackathon-test-memory-source-intake-v33.json",
+  "sourceCount": 180,
+  "ci": "Final exact HEAD results are recorded in the Draft PR and Issue106; not inferred from local checks",
+  "limitations": [
+    "No new source collection, actual Reclaim/login, paid AI, user wallets, normal host/CA or public chain",
+    "Source truth and independent third-party reverification are not guaranteed by metadata hashes",
+    "AI model/prompt/rubric and policy string versions absent from exact persisted evidence remain UNAVAILABLE",
+    "Live source currentness is UNKNOWN and original text HTTP is unavailable",
+    "No merge/main deployment or S5 product completion"
+  ]
+}

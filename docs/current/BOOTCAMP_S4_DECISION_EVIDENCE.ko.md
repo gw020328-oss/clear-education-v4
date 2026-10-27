@@ -57,3 +57,5 @@ S5에는 PR60의 양 역할 화면 연결·오프라인 UX 검사와 새 신청�
 ## 검증
 
 합성 자료만 사용한다. 신규 `decision-evidence.test.mjs`는 양 역할·같은 판정 결합·DB 불변·만료/삭제/과거 revision/누락·재시작·민감 필드 배제·타인/다른 과정 거부·최종 권한 철회·시계 역행/경계·HTTP/client를 검사한다. 기존 consumers 시험에서 실제 verifier 모듈의 **합성** pair proof 참조와 Moodle/AI observation 지문 연결을 대조한다. V2 정상 지급 시험은 S4 GET 전후의 실행 지표 불변과 동일 manifest, 정확한 100 TEST·중복 거부를 함께 확인한다. 정확한 실행 결과와 CI HEAD는 PR/Issue106에 기록한다.
+
+로컬 상세는 [S4 검증 기록](BOOTCAMP_S4_VERIFICATION.json)을 따른다. 첫 전체 실행의 브라우저 지문 1건 실패와 보정 후 38개 집중 검사, 원문/원천 만료 구분의 6개 최종 집중 검사를 별도 보존한다. 같은 전체 검사를 로컬에서 반복하지 않았으며 최종 HEAD 전체 CI는 PR/Issue106에 기록한다.
