@@ -15,7 +15,7 @@
   "version": "clear-hackathon-test-memory-source-intake.33",
   "date": "2026-10-27",
   "status": "REVIEWED_S3_CHAIN_SYNCHRONIZATION",
-  "currentSourceCandidateHead": "73a220dd193bc99b5557a9946a5e984dc3b1c7b9",
+  "currentSourceCandidateHead": "e61f2ac91e58496d0d4f627b874cf2b8a7d1b708",
   "previousCompatibilityRecord": {
     "path": "specs/bootcamp/hackathon-test-memory-source-intake-v32.json",
     "sha256": "642cb8eaedf5afbbd0a298586d619cbd04684399e8eaeba92a22a97e006333b6",
@@ -179,7 +179,7 @@
     "tests/hackathon-test-vault/execution-build.mjs": "8ac7602b9562ee57d2f70ea63d153267bb9985f3d73d85be8588a5634e248b59",
     "tests/policy/fixture.mjs": "15d9f86e946523c0e82b70bfc6811314ec93f39b584699e296ea678cb1b60317",
     "tools/bootcamp/explicit-consents.mjs": "7ff0b3b2cdcf15dfe648707ba124e9116349984a1dccecf93ba01410b1298e16",
-    "tools/bootcamp/frontend-server.mjs": "d595ff6149f9c2ee4ad133b0c50222340bb6f55cdbea9db8577d54e407657438",
+    "tools/bootcamp/frontend-server.mjs": "e396ce2fe577e30ec50c89955c73106f25a4f3fbf9a75795e03c8a7a4b222b51",
     "tools/bootcamp/live-context.mjs": "e47a440e1e8deffed72ca3bb64bda137c43a04b90b4bb43bd1dcec7ba0f6b279",
     "tools/bootcamp/normal-chain.mjs": "8269acb1250c3f7e462430c7c0c24932cd36d8f6a4d157a43fb824bd142466d5",
     "tools/bootcamp/normal-current-view.mjs": "18e4db029d297d34c217e06782b9cf83311f90123fcdf00b1f55e01b083f4e25",
@@ -217,6 +217,10 @@
     "src/bootcamp/store.mjs": {
       "before": "451aeed9b397aa59766714bdff98fe89b75f2d490a91d51efd587c6692156ee6",
       "after": "9318beb7fc58667ebf0b812fbd8fecf8b58dfda7d1fce5fba7fa234c9f8c972c"
+    },
+    "tools/bootcamp/frontend-server.mjs": {
+      "before": "d595ff6149f9c2ee4ad133b0c50222340bb6f55cdbea9db8577d54e407657438",
+      "after": "e396ce2fe577e30ec50c89955c73106f25a4f3fbf9a75795e03c8a7a4b222b51"
     }
   },
   "sourceAdditions": {
@@ -658,7 +662,8 @@
   "changedFromV32": [
     "src/bootcamp/http.mjs",
     "src/bootcamp/normal-client.mjs",
-    "src/bootcamp/store.mjs"
+    "src/bootcamp/store.mjs",
+    "tools/bootcamp/frontend-server.mjs"
   ],
   "s4DecisionEvidence": {
     "readOnlyStoredSnapshot": true,

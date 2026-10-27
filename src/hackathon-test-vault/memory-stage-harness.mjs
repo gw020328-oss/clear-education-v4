@@ -56,7 +56,7 @@ function intake(){
  }
  check(c.normalSourceDeltaInput.path==='specs/bootcamp/hackathon-test-normal-source-intake-v1.json'&&c.normalSourceDeltaInput.sha256==='410ec5bab91a365cee6909328b0c1a2f847283738b27f66aaf911e2300f47dc9'&&digest(c.normalSourceDeltaInput.path)==='0x'+c.normalSourceDeltaInput.sha256,'STAGE_NORMAL_SOURCE_DELTA');
  check(Object.keys(c.e3ArtifactSha256).length===8&&Object.keys(c.additionalSourceArtifactSha256).length===19&&Object.keys(c.producerSeamArtifactSha256).length===6&&Object.keys(c.normalEntryArtifactSha256).length===3,'STAGE_COMPATIBILITY_SOURCES');
- check(digest('src/hackathon-test-vault/reviewed-source-v33.mjs')==='0xd067e729b1309da3bbf066bd9d20c3cec950bc10ee1361c0949c03ad125fd7ea','STAGE_SOURCE_PIN');
+ check(digest('src/hackathon-test-vault/reviewed-source-v33.mjs')==='0xa071aadc4c551d2f5d7da6468f3fbc3a43894cb2e2ec8bb0ad3426298d303a2b','STAGE_SOURCE_PIN');
  const v9=consumeReviewedV33Sources(c);
  for(const [p,sha]of [...Object.entries(i.e4Preparation.artifactSha256),...Object.entries(e2.artifactSha256)])check(digest(p)==='0x'+normalE2Hash(p,sha),'STAGE_SOURCE_PIN');
  return {...i,currentCompatibleSourceHead:v9.currentSourceCandidateHead};

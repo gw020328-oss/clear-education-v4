@@ -2,7 +2,7 @@
   "version": "clear-bootcamp-s4-verification.1",
   "date": "2026-10-27",
   "baseDevelop": "19e1c1473165cdea52a42040e740b79ba3e50c03",
-  "coreHead": "73a220dd193bc99b5557a9946a5e984dc3b1c7b9",
+  "coreHead": "e61f2ac91e58496d0d4f627b874cf2b8a7d1b708",
   "scope": "S4_STORED_METADATA_READ_ONLY",
   "syntheticOnly": true,
   "checks": [
@@ -34,6 +34,12 @@
       "passed": 1,
       "failed": 0,
       "assurance": "Fresh isolated synthetic Geth V2 HTTP registration/consents/exact 100 TEST/duplicate rejection; S4 GET before and after with no additional execution metrics"
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/normal-frontend.test.mjs",
+      "passed": 9,
+      "failed": 0,
+      "reason": "Final integration inspection found the separate same-origin route allowlist. Added only S4 GET mounting and synthetic HTTPS owner/operator/expiry/no-side-effect checks; no normal-host activation or trust-store CA installation."
     }
   ],
   "sourceIntake": "specs/bootcamp/hackathon-test-memory-source-intake-v33.json",
@@ -44,6 +50,8 @@
     "Source truth and independent third-party reverification are not guaranteed by metadata hashes",
     "AI model/prompt/rubric and policy string versions absent from exact persisted evidence remain UNAVAILABLE",
     "Live source currentness is UNKNOWN and original text HTTP is unavailable",
-    "No merge/main deployment or S5 product completion"
-  ]
+    "No merge/main deployment or S5 product completion",
+    "Existing same-origin recipient-registration/review-chain route mounting remains a S5 dependency; internal V2/S3 handlers are preserved and were not expanded in S4."
+  ],
+  "initialCiHead": "9b3e61b383df9b506a0adeff5b813a39b836f97e"
 }
