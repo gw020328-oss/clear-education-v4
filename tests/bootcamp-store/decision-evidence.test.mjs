@@ -30,6 +30,7 @@ test('S4 exact decision/evidence snapshot, four allowlisted checks, stable manif
  assert.deepEqual(s.limitations,{hashProvesSourceTruth:false,independentReverificationAvailable:false,liveSourceChecked:false,originalTextHttpAvailable:false,usableForPayment:false});
  assert.deepEqual(snapshot(f),before);assert.deepEqual(f.counts(),counts);
  f.setTime(START+302);const expired=read(f,a);assert.equal(expired.availability.every(r=>r.status==='EXPIRED'),true);
+ assert.equal(expired.availability.every(r=>r.original.status==='UNAVAILABLE'&&r.original.expiresAt>START+302),true);
  assert.equal(expired.currentDecision.matchesRequestedDecision,true);assert.equal(expired.manifestHash,s.manifestHash);
  assert.deepEqual(snapshot(f),before);assert.deepEqual(f.counts(),counts);
  const text=JSON.stringify(s);

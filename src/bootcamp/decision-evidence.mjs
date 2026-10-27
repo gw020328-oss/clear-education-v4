@@ -51,7 +51,7 @@ export function createDecisionEvidenceReader({db,authentication,operatorBindings
     availability.push({criterionId:c.criterionId,evidenceId:r.evidenceId,
      status:!r.evidenceId?'MISSING':!e?'UNAVAILABLE':deleted?'DELETED':expired?'EXPIRED':!sameHead?'SUPERSEDED':!h.valid?'INVALIDATED':a.status!=='ACTIVE'?'APPLICATION_INACTIVE':'VALID_AS_RECORDED',
      sourceCurrentness:'UNKNOWN',sourceValidUntilExclusive:sameHead?h.valid_until:b?.validUntilExclusive??null,
-     original:{status:deleted?'DELETED':expired?'EXPIRED':'UNAVAILABLE',httpAvailable:false,expiresAt:e?.rawLocator.expiresAt??null}});
+     original:{status:deleted?'DELETED':e&&time>=e.rawLocator.expiresAt?'EXPIRED':'UNAVAILABLE',httpAvailable:false,expiresAt:e?.rawLocator.expiresAt??null}});
     if(!e)return {criterionId:c.criterionId,state:r.state,evidenceId:r.evidenceId,evidenceRevision:r.evidenceRevision,metadataStatus:r.evidenceId?'UNAVAILABLE':'MISSING',source:null,verification:null,reference:unavailable(),checks:null};
     // Only an evidence opaque ID and fixed logical field are exposed. Source
     // account/instance/record IDs, raw locations, owner hashes and text stay private.
