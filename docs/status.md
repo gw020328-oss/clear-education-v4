@@ -1,5 +1,38 @@
 # 개발 현황
 
+## 2026-10-27 공개 현황
+
+main의 제공 코드·의존성·기존 시작 명령은 유지한다. main 재현 경로는 기존 ProofAdapter 합성 테스트36개와 문서 CI이며 아래 develop의 새 API/계약/실행 도구를 main에서 쓸 수 있는 명령으로 안내하지 않는다.
+
+원격 확인 **2026-10-27 11:00 KST**. develop은 [19e1c14](https://github.com/gw020328-oss/clear-education-v4/commit/19e1c1473165cdea52a42040e740b79ba3e50c03), main은 [ad82b0f](https://github.com/gw020328-oss/clear-education-v4/commit/ad82b0fee1c6e8f1374016b732e8e82184894f66)다. [#114](https://github.com/gw020328-oss/clear-education-v4/pull/114) 프론트 인계 정정, [#115](https://github.com/gw020328-oss/clear-education-v4/pull/115) S1/S2 V2 등록·실행 연결, [#116](https://github.com/gw020328-oss/clear-education-v4/pull/116) S3 이의·정정·종료가 develop에 병합됐다. 아래는 **develop 기준, main 미반영**이며 이번 자동화의 실행 결과가 아니다.
+
+### 완료 — develop의 V2 등록과 검토 체인 연결
+
+[S1/S2 공개 검증](https://github.com/gw020328-oss/clear-education-v4/blob/a53efe0295ae1b2f13eff960e26bcdda12fe9ed0/docs/current/BOOTCAMP_V31_VERIFICATION.json)은 고정 신청 소유 지갑/정책/배포 문맥의 chain application ID·salt·등록 nonce·원래 deadline/참가자 세션을 영속 결합하고, recipient-registration GET/POST와 client 메서드로 별도 EIP-712 등록 서명을 접수한다고 보고한다. 접수와 canonical 체인 등록/최초 순서를 구분한다. 등록 서명/공개 필드는 calldata에 포함되며 기존 V1 환경·계약·DB·실제 r20을 이행하지 않는다. 합성 참가자/원천·실제 벽시계·새 격리 Geth의 HTTP 등록→양측 동의→정확100 TEST·중복 거부 검증이다. 새 실제 사용자 지갑/원천/AI 지급 성공으로 표시하지 않는다.
+
+[S3 공개 계약/검증](https://github.com/gw020328-oss/clear-education-v4/blob/b545a93a5fd04dc54e1df9a87185f5f81454fc1c/docs/current/BOOTCAMP_S3_CHAIN_REVIEW.ko.md)은 서버 이의·평가·재검증·종료 원장을 기존 worker의 OBSERVE/REPLACE/TERMINATE에 연결한다. review-chain GET과 client 조회는 접수 NOT_OBSERVED·PENDING과 canonical INCLUDED/REVERTED/REORGED·finalized=false를 구분한다. 정정은 고정 수령인·최초 등록순서·원래600초 상한/재검증1회와 새 판정의 동의를 유지한다. 서버 접수와 체인 포함은 원자적이지 않아 먼저 전송/포함된 ACCEPT 권리는 회수·변경·만료시키지 않는다. 원천 진실성이나 평가 authority 신뢰 제거를 보장하지 않는다.
+
+#115의 최종 E5B53/53·API/store713/713과 #116의 E5B57/57(신규 S3 4경로 포함)·API/store721/721은 각 실행 범위다. 서로 합산하거나 실제 사용자 완주 수로 바꾸지 않는다. #115의 초기 E5B49/50, #116의 초기55/57 및 과거 pin/시계 fixture 실패는 보존하며 최종 head 성공으로 덮지 않는다. S3의 새 격리 Geth·합성 HTTP 이의/정정/종료·ACCEPT 우선/권리 보존 시험을 실제 운영 이의 처리/평가 authority 인수로 표시하지 않는다. 이번 후속은 새 로그인/Reclaim·유료 AI·사용자 지갑·normal-host/CA·공개 체인 실행을 하지 않았다.
+
+### 진행 — 미병합 S4, 남은 제품 프론트
+
+열린 [#117](https://github.com/gw020328-oss/clear-education-v4/pull/117)의 [읽기 계약](https://github.com/gw020328-oss/clear-education-v4/blob/9b3e61b383df9b506a0adeff5b813a39b836f97e/docs/current/BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)·[합성 검증](https://github.com/gw020328-oss/clear-education-v4/blob/9b3e61b383df9b506a0adeff5b813a39b836f97e/docs/current/BOOTCAMP_S4_VERIFICATION.json)은 정확한 저장 decisionId/revision/hash의 근거 메타데이터와 최소 manifest 읽기를 제안한다. 판정 당시 상태와 조회 시점 availability를 분리하며 원천 현재성 UNKNOWN·원문 HTTP 없음·독립 재검증/지급 근거 불가를 명시한다. 저장되지 않은 model/prompt/rubric/policy 문자열 버전은 UNAVAILABLE이고 현재 설정으로 추정하지 않는다. 아직 develop/main 기능이 아니다.
+
+S4 로컬 신규 연결30/30·최종 원문/원천 만료 구분6/6·합성 V2 지급/조회불변1/1은 별도 검사다. 최초 전체726/727의 역사 pin1건 실패와 보정 후 해당 client38/38도 구분한다. 제품 web/PR60의 S5 실제 완주·실제 평가 authority 입력·장기 worker 복구·원격 기관 Moodle·Windows 사용자 PC 실측·상용 배포는 미완료다. 현재 열린 PR은 #60과 #117 두 건이며 나머지 과거 열린 PR 표기는 이전 시점 기록이다.
+
+### 정확한 head의 CI와 병합 범위
+
+| PR / 현재 상태 | 검사 head SHA | 확인 시점 CI | 실행 근거 |
+| --- | --- | --- | --- |
+| [#114](https://github.com/gw020328-oss/clear-education-v4/pull/114) / MERGED | 87367880b38e8ab070dc310367575d5cb78e52f7 | SUCCESS 6/6 | [run 40269911912](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40269911912) · [run 40269907510](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40269907510) |
+| [#115](https://github.com/gw020328-oss/clear-education-v4/pull/115) / MERGED | a53efe0295ae1b2f13eff960e26bcdda12fe9ed0 | SUCCESS 8/8 | [run 40288428711](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40288428711) · [run 40288428180](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40288428180) · [run 40288428132](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40288428132) · [run 40288423785](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40288423785) |
+| [#116](https://github.com/gw020328-oss/clear-education-v4/pull/116) / MERGED | b545a93a5fd04dc54e1df9a87185f5f81454fc1c | SUCCESS 8/8 | [run 40300580376](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40300580376) · [run 40300580347](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40300580347) · [run 40300580418](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40300580418) · [run 40300571949](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40300571949) |
+| [#117](https://github.com/gw020328-oss/clear-education-v4/pull/117) / OPEN | 9b3e61b383df9b506a0adeff5b813a39b836f97e | SUCCESS 4/8 · 진행 중4 | [run 40435366140](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40435366140) · [run 40435366052](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40435366052) · [run 40435366286](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40435366286) · [run 40435325323](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40435325323) |
+
+#116 병합 tree와 검사를 통과한 b545a93 tree가 동일함을 확인했다. 병합 SHA 자체의 새 CI 실행을 주장하지 않는다. #117의4개 진행 중 검사는 통과로 간주하지 않으며 기능 PR을 이 자동화에서 병합하지 않는다. 경로 조건상 develop 문서3개 변경에는 공개 이력·합성 시험·Mac 복구의 PR/push6검사가, main 문서에는 공개 이력·합성 시험의 PR/push4검사가 적용되며, 코드 전용 E5/Windows/HR 검사를 문서 변경에서 실행했다고 주장하지 않는다.
+
+실제 r20의 로컬100 TEST 수령 기록은 원 실행 HEAD·INCLUDED/finalized=false 범위로 보존한다. 이를 새 V2/S3/S4의 실제 재시험으로 표현하지 않는다. 이번 작업은 공개 코드/문서·CI만 대조했으며 실제 원문/proof·쿠키·개인키·민감 로그 접근, 새 로그인/유료 호출/서명/거래/배포를 하지 않았다. 이전 날짜별 미병합·준비·실패는 당시 기록이다.
+
 ## 2026-10-26 공개 현황
 
 main의 실제 제공 코드·의존성·기존 시작 명령은 유지한다. main 재현 경로는 기존 ProofAdapter 합성 테스트36개와 문서 CI이며 아래 develop 도구·기능의 로컬 명령을 main에서 실행하라고 안내하지 않는다. develop 전체/기능 커밋을 main에 합치지 않았다.
