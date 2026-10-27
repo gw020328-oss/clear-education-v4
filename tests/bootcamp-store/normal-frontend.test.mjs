@@ -45,6 +45,22 @@ test('existing HTTPS auth and bootcamp handlers serve both roles and preserve nu
  assert.equal((await x.raw('/rpc',{method:'POST',body:{method:'eth_sendRawTransaction'}})).status,404);
  assert.equal((await x.raw(`/bootcamp/v3/applications/${a}/unsigned-preparations`,{method:'POST',body:{}})).status,404);
 });
+test('S4 same-origin HTTPS mount serves both roles and historical decision GET while rejecting writes and foreign owners',async t=>{
+ const x=await fixture(t),a=x.f.create();await x.f.complete(a);
+ const counts=x.f.counts(),learner=x.client(x.f.aliceContext),operator=x.client(x.f.operatorContext);
+ const initial=await learner.decisionEvidence(a),d=initial.manifest.decision.decisionId;
+ assert.deepEqual((await operator.decisionEvidence(a,{decisionId:d})).manifest,initial.manifest);
+ const base=`/bootcamp/v3/applications/${a}/decision-evidence`;
+ assert.equal((await x.raw(base)).headers['cache-control'],'no-store');
+ await assert.rejects(x.client(x.f.bobContext).decisionEvidence(a),/FORBIDDEN/);
+ assert.equal((await x.raw(base,{headers:{origin:'https://wrong.invalid'}})).status,403);
+ assert.equal((await x.raw(base,{headers:{cookie:''}})).status,401);
+ assert.equal((await x.raw(base,{method:'POST',body:{}})).status,404);
+ assert.equal((await x.raw(base+'/decision-missing')).status,404);
+ x.f.setTime(START+302);const past=await operator.decisionEvidence(a,{decisionId:d});
+ assert.equal(past.manifestHash,initial.manifestHash);assert.equal(past.availability.every(r=>r.status==='EXPIRED'),true);
+ assert.deepEqual(x.f.counts(),counts);
+});
 test('both roles consent to the same target; explicit replay is idempotent and old target is refused',async t=>{
  const x=await fixture(t),a=x.f.create();await x.f.complete(a);x.f.publish(a);
  const learner=x.client(x.f.aliceContext),operator=x.client(x.f.operatorContext),s=await learner.view(a),o=await operator.view(a);
