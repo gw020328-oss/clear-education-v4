@@ -1,5 +1,6 @@
 // Fresh isolated TEST chain, invented actors/source/model only. Never opens a retained actual run.
 import assert from 'node:assert/strict';
+import {executionErrorSummary} from '../../../src/bootcamp/execution-diagnostics.mjs';
 import {RuleError} from '../../../src/policy/values.mjs';
 import {readFileSync} from 'node:fs';
 import {atomicPrivate} from '../../../src/hackathon-test-vault/e5/private-storage.mjs';
@@ -21,7 +22,7 @@ import {normalSourceTarget,readNormalView} from '../../../tools/bootcamp/normal-
 import {executeNormalPayment} from '../../../tools/bootcamp/normal-chain.mjs';
 import {assertExplicitConsents,waitForExplicitConsents} from '../../../tools/bootcamp/explicit-consents.mjs';
 
-export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,assessmentPorts=null,beforeRegistrationSignature=()=>{},crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{}}={}){
+export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,assessmentPorts=null,beforeRegistrationSignature=()=>{},crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{},afterRecovery=async()=>{},afterRefresh=()=>{}}={}){
  const e=await createEnvironment({blockPeriodSeconds:wallClock?1:0,executionVersion}),id=e.environmentId,m=e.manifest,{dir}=environmentRecord(id);
  let serviceLive=true;
  let auth,store,connection,metadata,serial=0,ticks=0,crossed=false,floor=Math.floor(Date.now()/1000),extraSeconds=0,reads=0;const readErrors=[];
@@ -36,7 +37,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
  let planFrame=null;
  const storeNow=()=>{onStoreTick({store,report});if(planFrame)onPlanTick(++planFrame.ticks,{kind:planFrame.kind,store,source,app,user,op,auth,time:now(),advanceClock:seconds=>{floor+=seconds;}});return now();};
  const provider=new JsonRpcProvider(m.endpoint,undefined,{cacheTimeout:-1,batchMaxCount:1});provider.pollingInterval=50;
- t.after(()=>{if(report.paymentFailure)t.diagnostic(JSON.stringify({paymentFailure:report.paymentFailure,executionDiagnostics:report.executionDiagnostics}));metadata?.close();store?.close();auth?.close();connection?.close();provider.destroy();stopEnvironment(id);parkEnvironment(id);});
+ t.after(()=>{if(report.paymentFailure)t.diagnostic(JSON.stringify({paymentFailure:report.paymentFailure,executionDiagnostics:report.executionDiagnostics}));if(readErrors.length)t.diagnostic(JSON.stringify({concurrentReadFailures:readErrors}));metadata?.close();store?.close();auth?.close();connection?.close();provider.destroy();stopEnvironment(id);parkEnvironment(id);});
  const participant=ownedTestWallet(id,'recipient'),operator=ownedTestWallet(id,'terminator');
  auth=createApplicationService({directory:join(dir,'offline-bind-auth'),origin:'https://offline-bind.example.invalid',chainId:Number(m.chainId),instanceId:m.instanceId,
   participants:[participant.address],operators:[operator.address],now});
@@ -44,7 +45,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
   return {token:r.token,wallet:r.wallet,chainId:Number(m.chainId),csrf:r.csrf};};
  const user=await login(participant),op=await login(operator),serviceContext=Object.freeze({});
  const native=openDevelopmentConnection({environmentId:id,now,assessmentPorts});
- connection=Object.freeze({...native,async refresh(applicationId){if(!wallClock){const block=await provider.getBlock('latest');floor=Math.max(floor,Number(block.timestamp)+extraSeconds);}return native.refresh(applicationId);}});metadata=new DatabaseSync(join(dir,'envelopes/metadata.sqlite'),{readOnly:true});
+ connection=Object.freeze({...native,async refresh(applicationId){if(!wallClock){const block=await provider.getBlock('latest');floor=Math.max(floor,Number(block.timestamp)+extraSeconds);}const value=await native.refresh(applicationId);await afterRefresh({report,auth,user,source,app,advanceClock:seconds=>{extraSeconds+=seconds;floor+=seconds;}});return value;}});metadata=new DatabaseSync(join(dir,'envelopes/metadata.sqlite'),{readOnly:true});
  const source=syntheticAuthority({now}),seen=new WeakSet();
  const resolveSource=r=>{const v=source.resolveSource(r);if(!seen.has(v)){v.authExpiresAt=now()+(sourceSeconds??600);v.rawExpiresAt=now()+(sourceSeconds??300);v.queryExpiresAt=now()+(sourceSeconds??600);seen.add(v);}return v;};
  const executionServices={version:'clear-bootcamp-test-execution-port.1',runtimeId:id,runtimePinHash:connection.runtime.runtimeHash,
@@ -53,7 +54,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
  store=createBootcampStore({directory:join(dir,'offline-bind-store'),authentication:auth,instanceId:'offline-'+id,demoStartedAt:report.startedAt,mode:'SYNTHETIC_FIXTURE',runtimeMappingHash:m.runtimeMappingHash,now:storeNow,fault:point=>fault(point,{report,metadata}),
   producers:source.producers,resolveSource,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices,executionBridge:connection.configuration});
  const receiptReader=createNormalReceiptReader({authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash:m.runtimeMappingHash,policyHash:m.policyHash,recipient:participant.address.toLowerCase(),token:m.tokenAddress});
- const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key,normalUi:{getPaymentReceipt:receiptReader,getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store,connection,context,applicationId,authorize:(c,w)=>auth.authorizeWorkflow(c,w)})}}):null,api=http?createNormalBootcampClient(http):null;
+ const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key,normalUi:{async refreshProcedure(c,a){readNormalView(()=>store.getOperationsProjection(c,a));await connection.refresh(a);readNormalView(()=>store.getOperationsProjection(c,a));},getPaymentReceipt:receiptReader,getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store,connection,context,applicationId,authorize:(c,w)=>auth.authorizeWorkflow(c,w)})}}):null,api=http?createNormalBootcampClient(http):null;
  const app=(http?await http.request('/bootcamp/v1/applications',{method:'POST',body:{}}):store.createApplication(user,{},key())).record.applicationId;
  const setupDb=new DatabaseSync(join(dir,'offline-bind-store/bootcamp.sqlite'),{readOnly:true});
  try{for(const criterion of P0_POLICY.criteria){
@@ -75,11 +76,21 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
   targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,value:'AGREE'};if(http)await http.request('/bootcamp/v3/applications/'+app+'/review-consents',{method:'POST',body,actor:context});else store.recordReviewConsent(context,app,body,key());};
  const reportPath=join(dir,'offline-normal-payment-report.json');
  let activeBridge,activeRuntime;
- const run=async()=>{const timer=readWhileAsync?setInterval(()=>{try{readNormalView(()=>store.getApplication(user,app));if(report.chainApplicationId)readNormalView(()=>store.getProcedure(op,app));reads++;}catch(e){readErrors.push(e);}},250):null;
- const paymentStore=Object.freeze({...store,execution:Object.freeze({...store.execution,connectBridge(...args){return activeBridge=store.execution.connectBridge(...args);},acquireRuntime(...args){return activeRuntime=store.execution.acquireRuntime(...args);},plan(...args){planFrame={kind:args[2].kind,ticks:0};try{const value=store.execution.plan(...args);afterPlan(value,{store,source,app,user,op,auth});return value;}finally{planFrame=null;}}})});
+ const run=async()=>{let pendingRead=null;
+ const poll=async()=>{let step='APPLICATION';try{
+  readNormalView(()=>store.getApplication(user,app));
+  if(report.chainApplicationId){step='PROCEDURE';
+   // V2 exercises the same authenticated refresh hook as the normal HTTP host.
+   // The direct synchronous cache getter cannot promise freshness during RPC waits.
+   if(http)await http.request('/bootcamp/v3/applications/'+app+'/procedure',{actor:op});
+   else readNormalView(()=>store.getProcedure(op,app));
+  }reads++;
+ }catch(e){if(readErrors.length<16)readErrors.push({stage:report.stage,step,...executionErrorSummary(e),atUnixMs:Date.now()});}};
+ const timer=readWhileAsync?setInterval(()=>{if(!pendingRead)pendingRead=poll().finally(()=>{pendingRead=null;});},250):null;
+ const paymentStore=Object.freeze({...store,execution:Object.freeze({...store.execution,connectBridge(...args){const bridge=store.execution.connectBridge(...args);return activeBridge=Object.freeze({...bridge,async recover(...recoveryArgs){const result=await bridge.recover(...recoveryArgs);await afterRecovery({report,result});return result;}});},acquireRuntime(...args){return activeRuntime=store.execution.acquireRuntime(...args);},plan(...args){planFrame={kind:args[2].kind,ticks:0};try{const value=store.execution.plan(...args);afterPlan(value,{store,source,app,user,op,auth});return value;}finally{planFrame=null;}}})});
  try{return await executeNormalPayment({store:paymentStore,connection,serviceContext,user,op,app,recipient:participant.address.toLowerCase(),provider,key,report,sourceTarget,write:()=>atomicPrivate(reportPath,report),stage:name=>{report.stage=name;atomicPrivate(reportPath,report);},
   waitForRecipientRegistration:api?async()=>{const packet=await api.recipientRegistration(app);report.registrationRequest={status:packet.status,chainStatus:packet.chainStatus};await beforeRegistrationSignature({store,source,app,user,op,auth,packet});const signature=await participant.signTypedData(packet.payload.domain,packet.payload.types,packet.payload.message);const result=await api.submitRecipientRegistration(app,packet,signature,{idempotencyKey:key()});report.registrationAccepted=result.record.target.signatureAccepted;assert.equal((await api.recipientRegistration(app)).status,'SIGNED');}:undefined,
   waitForConsents:async options=>{if(onReview)await onReview({store,connection,bridge:activeBridge,runtimeHandle:activeRuntime,serviceContext,user,op,app,key,http,provider,participant,source,now,body:(extra={})=>{const v=store.getProcedure(user,app);return {expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,...extra};}});let polls=0;await waitForExplicitConsents({...options,pollMs:1,read:async()=>{const v=await options.read();if(++polls===2){await directConsent(user);await directConsent(op);}return v;}});assertExplicitConsents(await options.read(),options.target);}});
- }finally{clearInterval(timer);}};
+ }finally{clearInterval(timer);await pendingRead;}};
  return {run,report,reportPath,api,http,op,connection,revokeService:()=>{serviceLive=false;},withdrawSource:()=>source.change(app,'activity-complete',{rawAvailable:false}),concurrentReads:()=>reads,readErrors,advance:seconds=>{extraSeconds+=seconds;floor+=seconds;},readReport:()=>JSON.parse(readFileSync(reportPath)),metadata,store,user,app,get crossed(){return crossed;},nativeState:state,environmentId:id,runtimeHash:connection.runtime.runtimeHash,diagnostics:()=>connection.diagnostics(),metrics:()=>connection.metrics()};
 }

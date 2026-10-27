@@ -64,7 +64,7 @@ test('a lost synthetic send response resolves by canonical readback, six sends a
  assert.equal(injected,1);assert.equal(f.metrics().broadcasts,6);assert.equal(f.metrics().transactionSignatures,6);assert.equal(f.metrics().paymentSignatures,1);
  assert.equal(f.metadata.prepare("SELECT count(*) n FROM envelopes WHERE state='INCLUDED'").get().n,6);
  assert.equal(readFileSync(f.reportPath,'utf8').includes('PRIVATE_RESPONSE'),false);
- assert.ok(f.concurrentReads()>0);assert.ok(f.readErrors.every(e=>e instanceof RuleError&&e.message==='BC_E3_REGISTERED_SNAPSHOT_EXPIRED'));assert.equal(saved.consentOrigin,'AUTHENTICATED_APP_CONSENT_RECORDS');
+ assert.ok(f.concurrentReads()>0);assert.ok(f.readErrors.every(e=>e.code==='BC_E3_REGISTERED_SNAPSHOT_EXPIRED'&&e.step==='PROCEDURE'));assert.equal(saved.consentOrigin,'AUTHENTICATED_APP_CONSENT_RECORDS');
 });
 
 

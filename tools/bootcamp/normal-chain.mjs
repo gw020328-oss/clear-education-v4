@@ -29,7 +29,13 @@ export async function executeNormalPayment({store,connection,serviceContext,user
  ensure(connection.configuration.sourceMode!=='REGISTERED_TEST_SOURCE'||sourceTarget,'BC_NORMAL_SOURCE_TARGET_REQUIRED');
  const m=connection.runtime.manifest,id=m.environmentId,reader=new ExecutionReader(m),bridge=store.execution.connectBridge(serviceContext);
   ensure(user.wallet.toLowerCase()===recipient.toLowerCase(),'BC_NORMAL_RECIPIENT');
-  const reviewWindow=()=>{if(!automatic){requireReviewReaders?.();requireNormalSourceWindow({store,context:user,applicationId:app,sourceTarget:target});}};
+  const reviewWindow=async()=>{if(!automatic){
+   // Chain cache lifetime is independent of source/consent deadlines. RPC and
+   // receipt waits can outlive it; refresh before consuming, never extend it.
+   requireReviewReaders?.();readNormalView(()=>store.getApplication(user,app));
+   await connection.refresh(app);
+   requireReviewReaders?.();requireNormalSourceWindow({store,context:user,applicationId:app,sourceTarget:target});
+  }};
   step='REGISTER_SOURCE_TARGET';const {target,intake}=await registerNormalSourceTarget({store,connection,user,app,key,sourceTarget});
   if(m.version==='clear-e5-test-runtime.2'){
    ensure(typeof waitForRecipientRegistration==='function','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
@@ -37,17 +43,17 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    await waitForRecipientRegistration({applicationId:app,registrationTargetId:intake.record.id,signal});
    ensure(readNormalView(()=>store.getRecipientRegistration(user,app)).status==='SIGNED','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
   }
-  reviewWindow();
+  await reviewWindow();
   const body=(context=user,extra={})=>normalProcedureBody(store,context,app,target,extra);
   const chainApp=intake.record.opaqueTarget.applicationId;report.chainApplicationId=chainApp;
   const token=new Contract(m.tokenAddress,reader.token,ownedTestWallet(id,'depositor').connect(provider));
   const vault=new Contract(m.vaultAddress,reader.vault,ownedTestWallet(id,'depositor').connect(provider));
-  for(const tx of [()=>token.approve(m.vaultAddress,100000000n),()=>vault.fund(hash(),100000000n)]){reviewWindow();step='FUND_SEND';const sent=await tx();step='FUND_RECEIPT';await waitSetupReceipt(provider,sent.hash);}
+  for(const tx of [()=>token.approve(m.vaultAddress,100000000n),()=>vault.fund(hash(),100000000n)]){await reviewWindow();step='FUND_SEND';const sent=await tx();step='FUND_RECEIPT';await waitSetupReceipt(provider,sent.hash);}
   stage(connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'?'SYNTHETIC_CURRENT_MET_AND_RESERVE':'REGISTERED_CURRENT_MET_AND_RESERVE');
   step='RUNTIME_FENCE';await store.execution.observeRuntimeFence(serviceContext);
   step='ACQUIRE_RUNTIME';const g=store.execution.acquireRuntime(serviceContext,{owner:'normal-worker',expectedFence:0,generation:1,leaseSeconds:60});
   async function execute(kind,preparationId=null){
-   operation=kind;step='REVIEW_WINDOW';if(['REGISTER','ALLOCATE','START_REVIEW'].includes(kind))reviewWindow();
+   operation=kind;step='REVIEW_WINDOW';if(['REGISTER','ALLOCATE','START_REVIEW'].includes(kind))await reviewWindow();
    stage(kind);step='HEARTBEAT';store.execution.heartbeatRuntime(serviceContext,g,60);
    step='REFRESH';const observation=await connection.refresh(app);
    step='PLAN';const plan=['OBSERVE','REPLACE','TERMINATE'].includes(kind)?await store.execution.planCorrection(user,app,{kind,operationId:hash()}):store.execution.plan(user,app,{kind,operationId:hash(),expectedChainVersion:observation.business.application.version,preparationId});
