@@ -1,6 +1,6 @@
 # S4 — 판정 근거 읽기 계약
 
-2026-10-27. 기준 develop은 PR116 병합 `19e1c1473165cdea52a42040e740b79ba3e50c03`이다. 이 문서의 S4는 별도 Draft 후보이며 병합 전 develop 기능으로 표시하지 않는다. web/PR60·Solidity·S3 쓰기·지급 정책·원천 수집·보존 정책은 변경하지 않는다.
+2026-10-27. PR117의 S4 계약이다. 최신 develop 문서 기준 `0384ae54771b3d1f9d927bac01078cc6a7163804`를 이력 반영했다. 정확한 최종 HEAD 검사와 병합 SHA는 PR117·Issue106의 최신 기록을 따른다. web/PR60·Solidity·S3 쓰기·지급 정책·원천 수집·보존 정책은 변경하지 않는다.
 
 ## 요청·권한
 
@@ -61,3 +61,13 @@ S5에는 PR60의 양 역할 화면 연결·오프라인 UX 검사와 새 신청�
 로컬 상세는 [S4 검증 기록](BOOTCAMP_S4_VERIFICATION.json)을 따른다. 첫 전체 실행의 브라우저 지문 1건 실패와 보정 후 38개 집중 검사, 원문/원천 만료 구분의 6개 최종 집중 검사를 별도 보존한다. 같은 전체 검사를 로컬에서 반복하지 않았으며 최종 HEAD 전체 CI는 PR/Issue106에 기록한다.
 
 최종 통합 대조에서 `tools/bootcamp/frontend-server.mjs`의 별도 허용 목록에도 S4 GET을 연결했다. 합성 임시 TLS 서버에서 두 역할·과거 판정·타인/Origin/인증 거부·POST 차단·조회 부작용 없음을 기존 HTTPS 파일 9/9로 확인했다. 실제 normal-host 활성화나 사용자 신뢰 저장소 CA 설치는 하지 않았다. 기존 같은 출처 호스트의 V2 `recipient-registration` 및 S3 `review-chain` 경로 허용은 별도 S5 연결 의존성으로 남는다. 내부 API handler 구현과 제품 호스트의 노출 경로를 구분하며 이번 S4에서는 그 두 경로를 확대하지 않았다.
+
+## CI 시간·동시 조회 후속 (2026-10-27)
+
+이전 HEAD `9ebe014`의 E5 B run `40439514458`은 55/57 실패다. `rollover=none`은 REGISTER 처리 뒤 5초 체인 snapshot을 재갱신하기 전에 ALLOCATE의 review window를 읽어 `BC_E3_REGISTERED_SNAPSHOT_EXPIRED`로 종료했다. 소스의 240초 수명과 별개의 조회 캐시다. 5.5초 완료 반환 지연으로 같은 단계·코드를 재현했고, 현재는 각 review preflight가 인증된 조회 → canonical refresh → 현재 원천/권한/window 재검사를 수행한다. 캐시 TTL을 늘리거나 원천 기한을 갱신하지 않는다.
+
+동일 CI의 `rollover=request`는 지급·중복 거부·영수증·S4 확인 후 `readErrors.length=1`이었으나 원래 오류 코드가 저장되지 않았다. 그 과거 오류를 확정하지 않는다. fixture의 직접 동기 procedure getter가 비동기 실행 중 만료 캐시를 읽는 결함은 동일 지연으로 재현됐다. V2 동시 조회는 실제 HTTP handler와 정상 호스트의 인증/refresh hook을 사용하도록 맞췄다. 한 번에 한 조회만 진행하고 정리 전에 진행 중 조회를 기다린다. 오류는 고정 코드/단계/시각의 최대 16개 진단으로 남기며 성공 조건은 여전히 오류 0개다. HTTP 오류를 무시하거나 다시 시도하지 않는다.
+
+보정 회귀 중 `START_REVIEW / LOOKUP / B_LOOKUP_REQUEST`의 `BC_E5_CLOCK_CHANGED`도 실측했다(이전 `9b3e61b` CI에도 존재). 동기 조회 요청에서 초가 바뀌는 경우를 결정적으로 재현했다. 현재는 기존 `service`의 제한된 최종 검증을 이 읽기 요청에도 적용한다. 요청을 한 번 만들고 원래 lease/worker/runtime/request/capability/binding을 재검사하며, native lookup은 검증 커밋 후 한 번만 호출한다. 원래 권한 기한은 유지하고 두 번째 검증 충돌·역행·만료·폐기는 거부한다. 원천 철회 뒤 복구용 lookup 허용은 기존 경계이며 새 adoption/지급을 허용하지 않는다. 서명·봉인·전송 재시도는 추가하지 않았다.
+
+새 v34 인수는 기존 v33 원문을 보존하고 제품 소스 3개(`normal-chain`, `execution-api-bridge`, `execution-operations`)의 정확한 지문만 변경한다. 판정 근거 GET 자체에는 체인 refresh를 추가하지 않았다. 합성 검증이며 신규 실제 사용자 E2E 성공이 아니다. 과거 실패, 최종 전체 검사 결과와 실질 리뷰는 PR에 함께 남긴다.

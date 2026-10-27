@@ -1,6 +1,6 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
-2026-10-27 현재 기준: PR115/PR116은 develop `19e1c1473165cdea52a42040e740b79ba3e50c03`에 포함됐다. S3 `reviewChain`은 병합된 API다. **S4는 별도 Draft 후보**이며 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)을 따른다. 병합 전 develop 기능으로 표시하지 않는다. 아래 과거 후보/미구현 문구보다 이 날짜의 기준을 우선한다. S5 실제 제품 완주는 남아 있다.
+2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
 
 
 2026-10-26 S3 후보: [이의·정정·종료 체인 연결](BOOTCAMP_S3_CHAIN_REVIEW.ko.md). PR115는 develop `dce9ab1`에 병합됐다. S3는 접수 `NOT_OBSERVED`와 새 `review-chain` canonical 조회를 구분하며, 기존 동의·지급/수락 권리는 유지한다. 프론트는 후보 PR 병합 전 새 경로를 develop 기능으로 가정하지 않는다. S4/S5 실제 제품 완주·PR 병합·main 배포는 포함하지 않는다. 아래 이전 날짜의 후보/미연결 문구는 당시 기록이다.

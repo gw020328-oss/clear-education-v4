@@ -1,6 +1,6 @@
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
-2026-10-27 현재 기준: PR115/PR116은 develop `19e1c1473165cdea52a42040e740b79ba3e50c03`에 포함됐다. S3 `reviewChain`은 병합된 API다. **S4는 별도 Draft 후보**이며 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)을 따른다. 병합 전 develop 기능으로 표시하지 않는다. 아래 과거 후보/미구현 문구보다 이 날짜의 기준을 우선한다. S5 실제 제품 완주는 남아 있다.
+2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
 
 
 2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.

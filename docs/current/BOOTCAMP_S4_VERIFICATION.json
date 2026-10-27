@@ -44,14 +44,67 @@
   ],
   "sourceIntake": "specs/bootcamp/hackathon-test-memory-source-intake-v33.json",
   "sourceCount": 180,
-  "ci": "Final exact HEAD results are recorded in the Draft PR and Issue106; not inferred from local checks",
+  "ci": "Exact final HEAD results and any merge SHA are recorded in PR117 and Issue106",
   "limitations": [
     "No new source collection, actual Reclaim/login, paid AI, user wallets, normal host/CA or public chain",
     "Source truth and independent third-party reverification are not guaranteed by metadata hashes",
     "AI model/prompt/rubric and policy string versions absent from exact persisted evidence remain UNAVAILABLE",
     "Live source currentness is UNKNOWN and original text HTTP is unavailable",
-    "No merge/main deployment or S5 product completion",
+    "No main deployment or S5 product completion; develop merge only after approved final CI/review",
     "Existing same-origin recipient-registration/review-chain route mounting remains a S5 dependency; internal V2/S3 handlers are preserved and were not expanded in S4."
   ],
-  "initialCiHead": "9b3e61b383df9b506a0adeff5b813a39b836f97e"
+  "initialCiHead": "9b3e61b383df9b506a0adeff5b813a39b836f97e",
+  "followup": {
+    "date": "2026-10-27",
+    "baseDevelop": "0384ae54771b3d1f9d927bac01078cc6a7163804",
+    "codeHead": "9599db18abf305106fdb4c705511aed76ae1d3df",
+    "sourceIntake": "specs/bootcamp/hackathon-test-memory-source-intake-v34.json",
+    "baselineCacheReproduction": {
+      "passed": 1,
+      "delayMs": 5500,
+      "paymentFailure": "ALLOCATE/REVIEW_WINDOW/BC_E3_REGISTERED_SNAPSHOT_EXPIRED",
+      "concurrentFailure": "PROCEDURE/BC_E3_REGISTERED_SNAPSHOT_EXPIRED",
+      "historicalSecondCiErrorCode": "NOT_RECORDED_NOT_INFERRED"
+    },
+    "cacheRegression": {
+      "passed": 2,
+      "cases": [
+        "expired worker cache",
+        "expired HTTP cache"
+      ]
+    },
+    "preflightDenials": {
+      "passed": 3,
+      "cases": [
+        "logout",
+        "source-change",
+        "expiry"
+      ],
+      "registerBroadcastsOnly": 1,
+      "paymentSignatures": 0
+    },
+    "lookupBoundary": {
+      "baselineReproduced": true,
+      "passed": 6,
+      "nativeLookupRepeated": false,
+      "signSealSendRepeated": false
+    },
+    "targetedStoreTests": 55,
+    "finalHeadResults": "PR117 and Issue106; do not substitute previous/local success for final CI",
+    "preservedFailures": [
+      "40439514458: 55/57, snapshot expiry plus unclassified concurrent read",
+      "local initial combined cache/V2 regression: B_LOOKUP_REQUEST clock rollover before native lookup"
+    ],
+    "apiStoreRegression": {
+      "passed": 734,
+      "failed": 0
+    },
+    "finalCodeV2NormalPayment": {
+      "passed": 1,
+      "failed": 0,
+      "exactTestAtoms": "100000000",
+      "duplicateRejected": true,
+      "concurrentReadErrors": 0
+    }
+  }
 }
