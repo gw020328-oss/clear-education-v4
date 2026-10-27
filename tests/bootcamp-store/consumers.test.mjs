@@ -44,6 +44,11 @@ test('P1 actual verifier + participant EOA + two signed contexts compose into on
  const reference=JSON.parse(db.prepare('SELECT record FROM r2_bridges WHERE evidence_id=?').get(e.evidenceId).record);
  assert.equal(reference.version,'clear-bootcamp-producer-bridge.2');assert.equal(reference.ledgerRequestHash,e.requestHash);
  assert.notEqual(reference.producerRequestHash,reference.ledgerRequestHash);assert.notEqual(reference.producerNonceHash,reference.ledgerNonceHash);
+ const manifest=f.store.getDecisionEvidence(f.aliceContext,a).manifest,explanation=manifest.criteria.find(c=>c.criterionId==='python-basic-certificate');
+ assert.equal(explanation.evidenceId,e.evidenceId);assert.equal(explanation.reference.status,'RECORDED');
+ for(const k of ['receiptHash','proofBundleHash','trustConfigHash','recipeHash','producerRequestHash'])assert.equal(explanation.reference.value[k],reference[k]);
+ assert.equal(explanation.checks.accountProofHash,e.facts.accountProofHash);assert.equal(explanation.checks.certificateProofHash,e.facts.certificateProofHash);
+ assert.equal('expectedClaimOwnerHash' in explanation.reference.value,false);
  assert.equal(db.prepare('SELECT COUNT(*) n FROM evidence').get().n,1);assert.equal(f.store.getRequest(f.aliceContext,a,r.record.target.requestId,{bridge:true}).status,'CONSUMED');
  assert.equal(f.store.getOperationsProjection(f.aliceContext,a).payment.state,'BLOCKED');
 });
@@ -121,6 +126,10 @@ test('Moodle completion/SUBMITTED and original-body AI reflection compose throug
  const v=f.view(a);assert.equal(v.evidence.length,3);assert.equal(v.decision.record.conditionsStatus,'UNKNOWN');
  assert.ok(v.evidence.every(e=>e.record.condition==='MET'&&e.record.dataMode==='SYNTHETIC_FIXTURE'));
  const reflection=v.evidence.find(e=>e.record.criterionId==='reflection-topics').record;assert.ok(reflection.facts.topics.every(t=>t.originalEvidenceLocator.quoteHash));
+ const manifest=f.store.getDecisionEvidence(f.aliceContext,a).manifest;
+ for(const row of manifest.criteria.slice(0,3)){assert.equal(row.reference.status,'RECORDED');assert.ok(row.source.sourceHash);assert.equal(row.source.acquiredAt,f.time);}
+ assert.ok(manifest.criteria[2].reference.value.observationHash);assert.equal(manifest.criteria[2].checks.modelVersion.status,'UNAVAILABLE');
+ assert.deepEqual(manifest.criteria[2].checks.topics.map(t=>t.state),reflection.facts.topics.map(t=>t.state));
  m.state.available=false;assert.ok(f.view(a).evidence.every(e=>!e.current));m.state.available=true;assert.ok(f.view(a).evidence.every(e=>!e.current));
 });
 test('Moodle/AI source expiry during review disposes raw and rejects late receipt; default mapping remains blocked',async t=>{

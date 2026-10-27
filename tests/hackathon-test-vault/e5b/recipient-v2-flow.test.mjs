@@ -10,6 +10,10 @@ for(const rollover of ['none','receipt','enqueue','request','prepare'])test('V2 
    ||rollover==='request'&&point==='after-request-command'||rollover==='prepare'&&point==='e3-after-prepared';
   if(target&&!injected){injected++;const before=Date.now();Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1001-before%1000);assert.ok(Math.floor(Date.now()/1000)>Math.floor(before/1000));}
  }});
+ const evidenceBefore=await f.api.decisionEvidence(f.app),metricsBefore=f.metrics();
+ assert.equal(evidenceBefore.manifest.decision.conditionsStatus,'MET');assert.equal(evidenceBefore.limitations.usableForPayment,false);
+ const historical=await f.api.decisionEvidence(f.app,{decisionId:evidenceBefore.manifest.decision.decisionId});
+ assert.equal(historical.manifestHash,evidenceBefore.manifestHash);assert.deepEqual(f.metrics(),metricsBefore);
  await f.run();const r=f.readReport();
  assert.equal(injected,rollover==='none'?0:1);assert.equal(r.completed,true);assert.equal(r.registrationAccepted,true);
  assert.deepEqual(r.registrationRequest,{status:'AWAITING_SIGNATURE',chainStatus:'NOT_REGISTERED'});
@@ -22,6 +26,8 @@ for(const rollover of ['none','receipt','enqueue','request','prepare'])test('V2 
  assert.equal(chain.recipient,f.user.wallet.toLowerCase());
  const packet=await f.api.recipientRegistration(f.app);assert.equal(packet.signatureAccepted,true);assert.equal(packet.chainStatus,'INCLUDED');assert.equal(packet.registrationSequence,'1');
  const received=await f.api.paymentReceipt(f.app);assert.equal(received.claim.state,'INCLUDED');assert.equal(received.claim.canonical,true);assert.equal(received.claim.finalized,false);assert.equal(received.balance.receivedAtoms,'100000000');assert.equal(received.balance.exactExpectedAmountVerified,true);
+ const evidenceAfter=await f.api.decisionEvidence(f.app);assert.equal(evidenceAfter.manifestHash,evidenceBefore.manifestHash);
+ assert.equal(f.metrics().broadcasts,6);assert.equal(f.metrics().paymentSignatures,1);
  assert.ok(f.concurrentReads()>0);assert.equal(f.readErrors.length,0);
  const wrong=new ExecutionReader({...f.connection.runtime.manifest,version:'clear-e5-test-runtime.1'});await assert.rejects(wrong.observe({applicationId:chain.chainApplicationId}),/E5_.*CODE|E5_.*TEMPLATE/);
 });

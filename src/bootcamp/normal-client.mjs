@@ -46,6 +46,13 @@ export function createNormalBootcampClient({request}){
   &&r.purpose==='HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION'
   &&typeof r.message==='string'&&r.message.startsWith('CLEAR HackerRank evidence observation approval; not a payment authorization.\n'),'BC_NORMAL_SOURCE_APPROVAL');return {...r,applicationId:a};};
  return Object.freeze({
+  async decisionEvidence(a,{decisionId,signal}={}){id(a);if(decisionId!==undefined)id(decisionId);
+   const r=await request(base(a)+'/decision-evidence'+(decisionId===undefined?'':'/'+decisionId),{signal});
+   check(r?.version==='clear-bootcamp-decision-evidence.1'&&r.applicationId===a&&r.manifest?.version==='clear-bootcamp-evidence-manifest.1'
+    &&r.manifest.applicationId===a&&['PARTICIPANT','COURSE_OPERATOR'].includes(r.role)
+    &&(decisionId===undefined||r.manifest.decision?.decisionId===decisionId)
+    &&/^0x[0-9a-f]{64}$/.test(r.manifest.decision?.decisionHash)&&/^0x[0-9a-f]{64}$/.test(r.manifestHash)
+    &&r.limitations?.usableForPayment===false&&r.limitations.liveSourceChecked===false,'BC_NORMAL_DECISION_EVIDENCE');return copy(r);},
   async recipientRegistration(a,{signal}={}){id(a);const r=await request(base(a)+'/recipient-registration',{signal});
    check(r?.version==='clear-bootcamp-recipient-registration.1'&&r.applicationId===a&&r.purpose==='REGISTER_FIXED_RECIPIENT'&&r.calldataPublic===true,'BC_NORMAL_RECIPIENT_REGISTRATION');return r;},
   async submitRecipientRegistration(a,packet,signature,{idempotencyKey,signal}={}){id(a);

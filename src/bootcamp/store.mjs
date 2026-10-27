@@ -18,6 +18,7 @@ import {createE4CurrentPorts} from './execution-e4-ports.mjs';
 import {migrateExecutionAuthority,createFenceWitness} from './execution-authority.mjs';
 import {createE4BridgePorts} from './execution-e4b-ports.mjs';
 import {migrateExecutionBridge} from './execution-b-ledger.mjs';
+import {createDecisionEvidenceReader} from './decision-evidence.mjs';
 
 const mapping=JSON.parse(readFileSync(new URL('../../specs/bootcamp/p0-runtime-mapping.json',import.meta.url)));
 export const DEFAULT_MAPPING_HASH=p0Hash('RUNTIME-MAPPING',mapping);
@@ -432,7 +433,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       });
     },
   };
-  return Object.assign(service,createOperations({db,transaction,authentication,operatorBindings:currentOperators,app,refresh,tick,sessionHash,ledger,heads,replay,command,
+  return Object.assign(service,createDecisionEvidenceReader({db,authentication,operatorBindings:currentOperators,now}),createOperations({db,transaction,authentication,operatorBindings:currentOperators,app,refresh,tick,sessionHash,ledger,heads,replay,command,
     projectOperation:projection2,source,mode,procedurePorts,fault}),{execution:createExecutionOperations({db,transaction,authentication,operatorBindings:currentOperators,
       app,refresh,tick,sessionHash,ledger,heads,source,services:executionServices,e4CurrentPorts,e4BridgePorts,fenceWitness,fault})});
 }
