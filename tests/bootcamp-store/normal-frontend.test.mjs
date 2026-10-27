@@ -8,11 +8,16 @@ import {procedureFixture,START} from './procedure-fixture.mjs';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
 import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server.mjs';
 import {createNormalBootcampClient,normalView} from '../../src/bootcamp/normal-client.mjs';
+import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
+import {bridgeFixture} from '../bootcamp-execution/bridge-fixture.mjs';
+import {database,H,ZERO} from '../bootcamp-execution/fixture.mjs';
+import {requireRule as check} from '../../src/policy/values.mjs';
+import {e4Hash} from '../../src/bootcamp/execution-e4-ports.mjs';
 
-async function fixture(t){
- const f=await procedureFixture(t),tlsDirectory=join(f.directory,'c1-tls');mkdirSync(tlsDirectory,{mode:0o700});
+async function fixture(t,{f:provided,normalUi=null}={}){
+ const f=provided??await procedureFixture(t),tlsDirectory=join(f.directory,'c1-tls');mkdirSync(tlsDirectory,{mode:0o700});
  const fingerprint=createCertificates(tlsDirectory),mounted=createBootcampFrontendServer({authentication:f.service,store:f.store,
-  tls:loadTls(tlsDirectory,fingerprint),sourceMode:'SYNTHETIC_TEST_SOURCE',chainId:f.config.chainId});
+  tls:loadTls(tlsDirectory,fingerprint),sourceMode:normalUi?'REGISTERED_TEST_SOURCE':'SYNTHETIC_TEST_SOURCE',chainId:f.service.chainId,normalUi});
  mounted.server.listen(0,'127.0.0.1');await once(mounted.server,'listening');
  t.after(async()=>{mounted.server.closeAllConnections();await new Promise(r=>mounted.server.close(r));await mounted.drain();});
  let posts=0;
@@ -20,10 +25,10 @@ async function fixture(t){
   if(method==='POST')posts++;
   return new Promise((resolve,reject)=>{
    const req=httpsRequest({hostname:'127.0.0.1',servername:'localhost',port:mounted.server.address().port,path,method,
-    ca:readFileSync(join(tlsDirectory,'ca.pem')),headers:{host:'clear.example.invalid',origin:f.config.origin,
+    ca:readFileSync(join(tlsDirectory,'ca.pem')),headers:{host:'clear.example.invalid',origin:f.store.origin,
      cookie:'__Host-clear-session='+context.token,'x-wallet':context.wallet,'x-chain-id':String(context.chainId),'x-csrf-token':context.csrf,
      ...(body===undefined?{}:{'content-type':'application/json'}),...(idempotencyKey?{'idempotency-key':idempotencyKey}:{}),...headers}},res=>{
-      const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(Buffer.concat(chunks)),headers:res.headers}));
+      const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>resolve({status:res.statusCode,body:chunks.length?JSON.parse(Buffer.concat(chunks)):null,headers:res.headers}));
      });req.on('error',reject);req.end(body===undefined?undefined:JSON.stringify(body));
   });
  }
@@ -125,4 +130,80 @@ test('active wallet network is explicit loopback only and never inherited by the
  assert.equal(server.config.network.chainId,'0x'+BigInt(x.f.config.chainId).toString(16));assert.equal(server.config.network.nativeCurrency.decimals,18);
  for(const network of [{chainId:x.f.config.chainId+1,rpcUrl:'http://127.0.0.1:19999'},{chainId:x.f.config.chainId,rpcUrl:'https://public.invalid'},
   {chainId:x.f.config.chainId,rpcUrl:'http://user:pass@127.0.0.1:19999'}])assert.throws(()=>createBootcampFrontendServer({...options,network}),/BC_FRONTEND_NETWORK/);
+});
+
+async function registrationHost(t){
+ const f=await procedureFixture(t),registration=f.configuration.procedurePorts.registration;
+ f.configuration.procedurePorts.registration=(...args)=>({...registration(...args),version:'clear-bootcamp-procedure-registration-port.2'});f.restart();
+ const a=f.create();await f.complete(a);f.store.registerCurrentMetForE4(f.aliceContext,a,f.body(a),f.key());
+ let refreshes=0,submissions=0,afterRefresh=()=>{};
+ const normalUi={getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store:f.store,context,applicationId,
+  authorize:(c,w)=>f.service.authorizeWorkflow(c,w),connection:{async refresh(){refreshes++;afterRefresh();},recipientRegistrationState(){return {chainStatus:'NOT_OBSERVED',canonical:false,finalized:false,registrationSequence:null};}}}),
+  beforeRecipientRegistration(c,app){submissions++;f.service.authorizeWorkflow(c,true);check(app===a&&c.token===f.aliceContext.token,'BC_RECIPIENT_REGISTRATION_SESSION');}};
+ const x=await fixture(t,{f,normalUi});return {...x,a,stats:()=>({refreshes,submissions}),afterRefresh:fn=>{afterRefresh=fn;}};
+}
+test('S5 product HTTPS routes V2 GET/POST through normalUi, preserving owner, CAS, idempotency and calldata notice',async t=>{
+ const x=await registrationHost(t),{f,a}=x,api=x.client(f.aliceContext),path=`/bootcamp/v3/applications/${a}/recipient-registration`;
+ const before=f.counts(),p=await api.recipientRegistration(a);
+ assert.equal(p.calldataPublic,true);assert.equal(p.status,'AWAITING_SIGNATURE');assert.equal(p.finalized,false);assert.equal(x.stats().refreshes,1);
+ assert.equal((await x.client(f.operatorContext).recipientRegistration(a)).role,'COURSE_OPERATOR');
+ assert.deepEqual(f.counts(),before);
+ const signature=await f.alice.signTypedData(p.payload.domain,p.payload.types,p.payload.message),body=f.body(a,{registrationTargetId:p.registrationTargetId,signature});
+ for(const [options,status] of [
+  [{context:f.bobContext},403],[{headers:{cookie:''}},401],[{headers:{host:'wrong.invalid'}},403],
+  [{headers:{origin:'https://wrong.invalid'}},403],[{headers:{'sec-fetch-site':'cross-site'}},403],
+  [{method:'POST',body,headers:{'x-csrf-token':'bad'}},403],[{method:'POST',body,context:f.operatorContext},409],
+  [{method:'POST',body:{...body,expectedLedgerSequence:body.expectedLedgerSequence-1}},409],
+  [{method:'POST',body:{...body,recipient:f.bob.address}},409]])assert.equal((await x.raw(path,options)).status,status);
+ const key=f.key(),r=await api.submitRecipientRegistration(a,p,signature,{idempotencyKey:key});
+ assert.equal(r.record.target.signatureAccepted,true);assert.equal(r.record.target.chainStatus,'NOT_OBSERVED');
+ assert.deepEqual(await api.submitRecipientRegistration(a,p,signature,{idempotencyKey:key}),r);
+ assert.deepEqual(await api.operation(a,r.record.operationId),r);
+ assert.equal((await api.recipientRegistration(a)).status,'SIGNED');
+ assert.equal(JSON.stringify(r).includes(signature),false);
+ await assert.rejects(api.submitRecipientRegistration(a,p,signature,{idempotencyKey:f.key()}),/BC_VIEW_STALE/);
+ assert.equal((await x.raw(path,{method:'POST',body:f.body(a,{registrationTargetId:p.registrationTargetId,signature}),idempotencyKey:f.key()})).body.error,'BC_RECIPIENT_REGISTRATION_ALREADY_SIGNED');
+ assert.ok(x.stats().submissions>=3);
+});
+test('S5 product HTTPS preserves registration session, original deadline and final authorization after async read',async t=>{
+ const x=await registrationHost(t),{f,a}=x,api=x.client(f.aliceContext),p=await api.recipientRegistration(a);
+ const signature=await f.alice.signTypedData(p.payload.domain,p.payload.types,p.payload.message);
+ await assert.rejects(x.client(await f.login(f.alice)).submitRecipientRegistration(a,p,signature,{idempotencyKey:f.key()}),/RECIPIENT_REGISTRATION_SESSION/);
+ f.setTime(Number(p.payload.message.deadline));
+ await assert.rejects(api.submitRecipientRegistration(a,p,signature,{idempotencyKey:f.key()}),/BC_VIEW_STALE|CURRENT_MET|SIGNATURE|SOURCE/);
+ assert.equal((await api.recipientRegistration(a)).signatureAccepted,false);
+ x.afterRefresh(()=>f.service.logout(f.aliceContext));await assert.rejects(api.recipientRegistration(a),/AUTH_REQUIRED/);
+});
+test('S5 product HTTPS exposes only exact methods and paths, retaining S4 and hiding internal write APIs',async t=>{
+ const x=await registrationHost(t),{a}=x,base=`/bootcamp/v3/applications/${a}`;
+ for(const resource of ['recipient-registration','review-chain'])for(const [suffix,method] of [['','PUT'],['','DELETE'],['','HEAD'],['/extra','GET'],['?x=1','GET'],['/','GET']])
+  assert.equal((await x.raw(base+'/'+resource+suffix,{method})).status,404);
+ for(const resource of ['review-chain','review-objections','objection-assessments','review-revalidations','termination-intents','review-publications','unsigned-preparations'])
+  assert.equal((await x.raw(base+'/'+resource,{method:'POST',body:{}})).status,404);
+ assert.equal((await x.raw(base.replace('/v3/','/v2/')+'/recipient-registration')).status,404);
+ assert.equal((await x.raw(base+'/decision-evidence')).status,200);
+ assert.equal((await x.raw(base+'/decision-evidence',{method:'POST',body:{}})).status,404);
+});
+test('S5 product HTTPS review-chain passes pending/included/reorg and accepted-right fields without write side effects',async t=>{
+ const f=await bridgeFixture(t,{kind:'OBSERVE'}),x=await fixture(t,{f}),api=x.client(f.aliceContext),path=`/bootcamp/v3/applications/${f.a}/review-chain`;
+ const tables=['applications','decisions','evidence','commands','requests','events','e3_records','e5_intents','e5b_completions'];
+ const state=()=>database(f,db=>Object.fromEntries(tables.map(p=>[p,db.prepare('SELECT * FROM '+p+' ORDER BY rowid').all()])));
+ let before=state();const pending=await api.reviewChain(f.a);assert.equal(pending.status,'PENDING');assert.equal(pending.finalized,false);assert.deepEqual(state(),before);
+ assert.deepEqual(await x.client(f.operatorContext).reviewChain(f.a),pending);
+ for(const [headers,status] of [[{cookie:''},401],[{host:'wrong.invalid'},403],[{origin:'https://wrong.invalid'},403],[{'sec-fetch-site':'cross-site'},403]])
+  assert.equal((await x.raw(path,{headers})).status,status);
+ assert.equal((await x.raw(path,{context:f.bobContext})).status,403);
+ const r=await f.prepare();f.makeEnvelope(r.binding,{authorizationNonce:ZERO});await f.bridge.lookup(f.g,f.h,r.binding);
+ const v=f.command.args[2];Object.assign(f.observation.business.application,{currentMet:v.currentMet,unassessedObjection:v.unassessedObjection,validObjection:v.validObjection,newValidError:v.newValidError,
+  observationReceiptHash:v.receiptHash,observedAt:v.observedAt,preparedDigest:ZERO,preparedNonce:ZERO,deadlinePolicyHash:ZERO,consentSetHash:ZERO,mutualConsent:false,version:'5',epoch:String(BigInt(f.m.authorizationEpoch)+1n)});
+ f.observation.business.application.target.sourceValidUntilExclusive=v.sourceValidUntilExclusive;
+ const o=f.snapshot();o.business.nonce=ZERO;o.businessHash=e4Hash(o.business);
+ f.setReceipt({ref:'env-offline',status:'INCLUDED',txHash:H('tx'),checkpoint:o.checkpoint,observation:o,automaticResign:false});
+ await f.bridge.recover(f.g,f.h,r.binding);before=state();
+ const included=await api.reviewChain(f.a);assert.equal(included.status,'INCLUDED');assert.equal(included.canonical,true);assert.equal(included.finalized,false);assert.equal(included.claimExpiresAt,null);assert.deepEqual(state(),before);
+ f.setComparison((previous,current)=>({status:'REORG_PROVEN_RECOVERY_BLOCKED',oldHash:previous.hash,currentHash:current.hash,replacementHash:H('fork'),automaticRebase:false}));
+ const reorg=await api.reviewChain(f.a);assert.equal(reorg.status,'REORGED');assert.equal(reorg.canonical,false);assert.equal(reorg.finalized,false);assert.deepEqual(state(),before);
+ f.observation.business.application.state='5';
+ const accepted=await api.reviewChain(f.a);assert.equal(accepted.acceptedRightPreserved,true);assert.equal(accepted.claimExpiresAt,null);assert.equal(accepted.finalized,false);
+ f.setReadHook(async()=>f.service.logout(f.aliceContext));await assert.rejects(api.reviewChain(f.a),/AUTH_REQUIRED/);
 });

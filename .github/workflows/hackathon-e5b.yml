@@ -6,6 +6,8 @@ on:
       - 'src/hackathon-test-vault/**'
       - 'tests/hackathon-test-vault/**'
       - 'src/bootcamp/**'
+      - 'tools/bootcamp/frontend-server.mjs'
+      - 'tests/bootcamp-store/normal-frontend.test.mjs'
       - 'specs/bootcamp/hackathon-test-memory-source-intake-*.json'
       - 'docs/hackathon-test-vault/e5b/**'
       - '.github/workflows/hackathon-e5b.yml'
