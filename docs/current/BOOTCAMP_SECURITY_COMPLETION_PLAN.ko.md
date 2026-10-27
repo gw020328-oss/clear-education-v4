@@ -1,5 +1,8 @@
 # 교수 피드백: 보안 보완과 자동 지급 완료 계획
 
+2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
+
+
 2026-10-26 S3 후보: [이의·정정·종료 체인 연결](BOOTCAMP_S3_CHAIN_REVIEW.ko.md). PR115는 develop `dce9ab1`에 병합됐다. S3는 접수 `NOT_OBSERVED`와 새 `review-chain` canonical 조회를 구분하며, 기존 동의·지급/수락 권리는 유지한다. 프론트는 후보 PR 병합 전 새 경로를 develop 기능으로 가정하지 않는다. S4/S5 실제 제품 완주·PR 병합·main 배포는 포함하지 않는다. 아래 이전 날짜의 후보/미연결 문구는 당시 기록이다.
 
 2026-10-26. 사용자 직접 요청을 본부가 기존 통합 담당에게 전달한 추가 승인 범위다. 기준 develop은 PR114 병합 `a53f6f541d45275ea92057c1beb2cf27af434855`; PR102의 백엔드 실행과 r20 실제 성공은 각자의 기존 지문으로 보존한다. 이 문서의 계획 수락은 구현·배포·실제 검증 완료를 뜻하지 않는다.
@@ -11,7 +14,7 @@
 | S1 | 통합: 참가자 서명에 의한 최초 수령인 등록, 별도 V2 계약·typed data·소비자 | 신청 소유자/수령인·정책/매핑·chain/contract/instance·nonce·deadline 결합. 타인 신청에 자기 서명, 잘못된 chain/contract/recipient, 만료, nonce 재사용, 수락 뒤 변경 거부. 원천 서명 재사용 금지 | V2 고정 신청 ID/영속 nonce·세션, HTTP/normal-client, 실행 소비자 연결 구현; 오프라인 결과는 v31 검증 기록, 제품 실제 시험은 남음 |
 | S2 | 통합: 체인 최초 등록 counter/event/query | 유효한 신청이 체인에 등록된 순서로 기존 allocate/nextAllocatable 실행. 정정/refresh는 최초 순서 유지. 무효/만료 중 건너뛰되 유효해지면 원래 순서, 서버 사전 지연/누락을 방지한다는 주장 금지 | V2 counter/event/순서 유지와 canonical 등록 GET 조회 구현; finalized=false, 제품 표시 연결은 남음 |
 | S3 | 통합: 이의/정정/종료를 기존 observeCurrent/replaceTarget/terminate에 연결 | 기존 decisionId/revision/hash·version/epoch 재사용. 접수와 canonical 반영 분리. 오래된 승인 거부, 종료/수락 경합·정정·중복 지급·수락 권리 불변 검증. reorg/DB 대조 필요 명시 | S3 후보 구현·합성 검증; 상세는 위 연결 문서, 최종 CI는 PR/Issue106 |
-| S4 | 통합: 판정 근거 manifest 및 권한 있는 조회 / 프론트: 두 역할 표시 | Reclaim pair proof 참조·검증 문맥, Moodle 응답 hash/관측시각, AI 근거·rubric/model/policy version을 기존 판정과 결합. hash만으로 제3자 검증 가능하다고 표현하지 않음. 원문 보존 기한·삭제·조회 권한 유지 | 기존 receipt 경로 조사 |
+| S4 | 통합: 판정 근거 manifest 및 권한 있는 조회 / 프론트: 두 역할 표시 | Reclaim pair proof 참조·검증 문맥, Moodle 응답 hash/관측시각, AI 근거·rubric/model/policy version을 기존 판정과 결합. hash만으로 제3자 검증 가능하다고 표현하지 않음. 원문 보존 기한·삭제·조회 권한 유지 | S4 Draft 후보의 읽기 계약·합성 검사 구현; 원문 HTTP/model·rubric 저장 확대와 S5 실제 완주는 제외 |
 | S5 | 서준형/Claude: 기존 PR60 제품 화면 / 통합: 자동 ACCEPT/CLAIM·영수증 | 새 신청의 네 조건 실제 검증, 이번 입력 AI 승인, 양측 직접 동의 후 자동 지급. canonical receipt와 정확한 100 TEST·중복 차단 확인. 준비/실패/미수령/INCLUDED 및 finalized 상태 구분 | 제품 화면 준비와 S1~S4 검증 의존 |
 
 ## 최소 계약 영향

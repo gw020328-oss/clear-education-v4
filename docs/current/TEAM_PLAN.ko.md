@@ -1,5 +1,8 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
+
+
 2026-10-26 S3 후보: [이의·정정·종료 체인 연결](BOOTCAMP_S3_CHAIN_REVIEW.ko.md). PR115는 develop `dce9ab1`에 병합됐다. S3는 접수 `NOT_OBSERVED`와 새 `review-chain` canonical 조회를 구분하며, 기존 동의·지급/수락 권리는 유지한다. 프론트는 후보 PR 병합 전 새 경로를 develop 기능으로 가정하지 않는다. S4/S5 실제 제품 완주·PR 병합·main 배포는 포함하지 않는다. 아래 이전 날짜의 후보/미연결 문구는 당시 기록이다.
 
 2026-10-26 V2 후속: 통합 담당이 PR115에서 S1 고정 소유자 등록 API/normal-client/실행 서버와 S2 canonical 등록 순서 조회를 구현했다. 코어 후보 `e37cd70`, 정확한 v31 소스 인수, [검증 기록](BOOTCAMP_V31_VERIFICATION.json), [프론트 등록 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md)을 따른다. develop/a53f6f5의 V1과 기존 r20·v30 성공은 보존한다. 서준형/Claude는 PR60·로컬 변경을 보존하며 새 등록 서명 화면과 접수/체인 반영 구분을 연결한다. S3 이의/정정 체인 반영, S4 근거 조회와 제품 S5 실제 완주는 남아 있다. 새 실제 사용자 행동은 프론트 준비 후 본부가 요청하며 PR115는 Draft로 유지한다.

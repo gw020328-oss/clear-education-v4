@@ -102,7 +102,18 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
    return authorize(g,h,b);
   },
   async lookup(g,h,b){
-   const request=run(g,h,'B_LOOKUP_REQUEST',()=>({binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)}));
+   let original;
+   const request=run(g,h,'B_LOOKUP_REQUEST',(s,time,authority)=>{
+    original=cas(s,time,authority,{recovery:true});
+    return {binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)};
+   },(s,time,authority,value)=>{
+    // Unreturned metadata only: keep the original lease/binding and exact request.
+    // The native lookup runs once, after this bounded final validation commits.
+    sameBasis(original,cas(s,time,authority,{recovery:true}),time);
+    const record=bound(b);check(time<b.expiresAt&&canonical(record.globalHandle)===canonical(g)
+     &&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
+    check(canonical(value)===canonical({binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)}),'BC_E5B_COMMAND_CHANGED');
+   });
    const ticket=ports.lookup(request); // Synchronous E4 callbacks still run outside the API transaction.
    return run(g,h,'B_LOOKUP_COMMIT',()=>{
     const result=ports.consume(ticket,'LOOKUP');check(result.automaticSeal===false&&['NOT_FOUND','FOUND','FOUND_UNSEALED_HOLD'].includes(result.status),'BC_E5B_LOOKUP');
