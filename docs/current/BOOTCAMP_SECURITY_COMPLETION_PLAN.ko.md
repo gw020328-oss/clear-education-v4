@@ -1,5 +1,7 @@
 # 교수 피드백: 보안 보완과 자동 지급 완료 계획
 
+2026-10-27 S5 호스트 연결 **Draft 후보**: [정확한 경로·기존 client·합성 검증 범위](BOOTCAMP_S5_HOST_MOUNT.ko.md). 병합 전 develop 기능으로 가정하지 않으며, 제품 화면/실제 완주는 미완료다. 아래 기존 미연결 기록은 해당 병합 시점의 사실이다.
+
 2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
 
 

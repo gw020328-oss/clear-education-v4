@@ -5,9 +5,12 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {normalE2Hash,NORMAL_E2_PATH,NORMAL_SOURCE_INTAKE,NORMAL_SOURCE_INTAKE_SHA} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
 const root=new URL('../../',import.meta.url),actualRead=p=>readFileSync(new URL(p,root));
+const v34Read=p=>['tools/bootcamp/frontend-server.mjs','src/hackathon-test-vault/memory-stage-harness.mjs','tests/hackathon-test-vault/e5/preservation.mjs','tests/hackathon-test-vault/e5b/source-pins.mjs'].includes(p)?execFileSync('git',['show','3a82dcefbb51b635937d01f17f48d095c7594e7a:'+p],{cwd:root}):actualRead(p);
 // V1–V29 assertions use the preserved exact V29 bytes for these four deltas.
-// V30 remains historical; the separate V31 assertion verifies every current source.
-const v30Read=p=>["src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-authority.mjs", "src/bootcamp/execution-commands.mjs", "src/bootcamp/execution-development.mjs", "src/bootcamp/execution-e4b-ports.mjs", "src/bootcamp/execution-operations.mjs", "src/bootcamp/http.mjs", "src/bootcamp/normal-client.mjs", "src/bootcamp/procedure-ledger.mjs", "src/bootcamp/procedure-ports.mjs", "src/bootcamp/procedure.mjs", "src/hackathon-test-vault/e5/environment.mjs", "src/hackathon-test-vault/e5/reader.mjs", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs", "tools/bootcamp/prepare-live-input.mjs", "src/hackathon-test-vault/e5b/bridge.d.mts", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs", "src/bootcamp/store.mjs"].includes(p)?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p],{cwd:root}):actualRead(p);
+// V30 and V31 remain historical; v35 verifies every current source.
+// Historical generations compare their original bytes; v35 below checks all current files.
+const v31Read=p=>['tools/bootcamp/frontend-server.mjs','src/bootcamp/execution-api-bridge.mjs','src/bootcamp/execution-commands.mjs','src/bootcamp/execution-development.mjs','src/bootcamp/execution-e4b-ports.mjs','src/bootcamp/execution-operations.mjs','src/bootcamp/http.mjs','src/bootcamp/normal-client.mjs','src/bootcamp/procedure.mjs','src/bootcamp/store.mjs','tools/bootcamp/explicit-consents.mjs','tools/bootcamp/normal-chain.mjs'].includes(p)?execFileSync('git',['show','dce9ab18c25f2eee288de9c7bde05209e24af430:'+p],{cwd:root}):v34Read(p);
+const v30Read=p=>["tools/bootcamp/explicit-consents.mjs","src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-authority.mjs", "src/bootcamp/execution-commands.mjs", "src/bootcamp/execution-development.mjs", "src/bootcamp/execution-e4b-ports.mjs", "src/bootcamp/execution-operations.mjs", "src/bootcamp/http.mjs", "src/bootcamp/normal-client.mjs", "src/bootcamp/procedure-ledger.mjs", "src/bootcamp/procedure-ports.mjs", "src/bootcamp/procedure.mjs", "src/hackathon-test-vault/e5/environment.mjs", "src/hackathon-test-vault/e5/reader.mjs", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs", "tools/bootcamp/prepare-live-input.mjs", "src/hackathon-test-vault/e5b/bridge.d.mts", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs", "src/bootcamp/store.mjs"].includes(p)?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p],{cwd:root}):v31Read(p);
 const read=p=>["src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-e4b-controller.mjs", "src/bootcamp/execution-operations.mjs", "src/bootcamp/store.mjs"].includes(p)?execFileSync('git',['show','59864d27c0a32657a395f5d17544731b759dbb47:'+p],{cwd:root}):v30Read(p);
 const sha=b=>createHash('sha256').update(b).digest('hex');
 test('original accepted E2 pins match original Git snapshot; only reviewed E2 label delta is current',()=>{
@@ -459,8 +462,15 @@ test('v30 preserved exact source set and original V29 records remain pinned',()=
  for(const [p,h]of Object.entries(v.sourceArtifactSha256))assert.equal(sha(v30Read(p)),h,p);
 });
 
-test('v31 every current source and explicit V2 additions are pinned',()=>{
+test('v31 original source and explicit V2 additions remain pinned',()=>{
  const v=JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v31.json'));
  assert.equal(Object.keys(v.sourceArtifactSha256).length,177);
+ for(const [p,h]of Object.entries(v.sourceArtifactSha256))assert.equal(sha(v31Read(p)),h,p);
+});
+
+test('v35 product host mount admits only the exact source delta and preserves v34',()=>{
+ const v=JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v35.json'));
+ assert.deepEqual(v.changedFromV34,['tools/bootcamp/frontend-server.mjs']);
+ assert.equal(sha(actualRead(v.previousCompatibilityRecord.path)),v.previousCompatibilityRecord.sha256);
  for(const [p,h]of Object.entries(v.sourceArtifactSha256))assert.equal(sha(actualRead(p)),h,p);
 });

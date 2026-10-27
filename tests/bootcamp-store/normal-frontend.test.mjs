@@ -183,8 +183,9 @@ test('S5 product HTTPS exposes only exact methods and paths, retaining S4 and hi
  assert.equal((await x.raw(base.replace('/v3/','/v2/')+'/recipient-registration')).status,404);
  assert.equal((await x.raw(base+'/decision-evidence')).status,200);
  assert.equal((await x.raw(base+'/decision-evidence',{method:'POST',body:{}})).status,404);
+ assert.deepEqual((await x.raw(base+'/review-chain')).body,{error:'BC_E5B_UNCONFIGURED'});
 });
-test('S5 product HTTPS review-chain passes pending/included/reorg and accepted-right fields without write side effects',async t=>{
+for(const receiptStatus of ['INCLUDED','REVERTED'])test('S5 product HTTPS review-chain '+receiptStatus+' preserves canonical status and read boundaries',async t=>{
  const f=await bridgeFixture(t,{kind:'OBSERVE'}),x=await fixture(t,{f}),api=x.client(f.aliceContext),path=`/bootcamp/v3/applications/${f.a}/review-chain`;
  const tables=['applications','decisions','evidence','commands','requests','events','e3_records','e5_intents','e5b_completions'];
  const state=()=>database(f,db=>Object.fromEntries(tables.map(p=>[p,db.prepare('SELECT * FROM '+p+' ORDER BY rowid').all()])));
@@ -198,8 +199,9 @@ test('S5 product HTTPS review-chain passes pending/included/reorg and accepted-r
   observationReceiptHash:v.receiptHash,observedAt:v.observedAt,preparedDigest:ZERO,preparedNonce:ZERO,deadlinePolicyHash:ZERO,consentSetHash:ZERO,mutualConsent:false,version:'5',epoch:String(BigInt(f.m.authorizationEpoch)+1n)});
  f.observation.business.application.target.sourceValidUntilExclusive=v.sourceValidUntilExclusive;
  const o=f.snapshot();o.business.nonce=ZERO;o.businessHash=e4Hash(o.business);
- f.setReceipt({ref:'env-offline',status:'INCLUDED',txHash:H('tx'),checkpoint:o.checkpoint,observation:o,automaticResign:false});
+ f.setReceipt({ref:'env-offline',status:receiptStatus,txHash:H('tx'),checkpoint:o.checkpoint,observation:o,automaticResign:false});
  await f.bridge.recover(f.g,f.h,r.binding);before=state();
+ if(receiptStatus==='REVERTED'){const reverted=await api.reviewChain(f.a);assert.equal(reverted.status,'REVERTED');assert.equal(reverted.canonical,false);assert.equal(reverted.finalized,false);assert.deepEqual(state(),before);return;}
  const included=await api.reviewChain(f.a);assert.equal(included.status,'INCLUDED');assert.equal(included.canonical,true);assert.equal(included.finalized,false);assert.equal(included.claimExpiresAt,null);assert.deepEqual(state(),before);
  f.setComparison((previous,current)=>({status:'REORG_PROVEN_RECOVERY_BLOCKED',oldHash:previous.hash,currentHash:current.hash,replacementHash:H('fork'),automaticRebase:false}));
  const reorg=await api.reviewChain(f.a);assert.equal(reorg.status,'REORGED');assert.equal(reorg.canonical,false);assert.equal(reorg.finalized,false);assert.deepEqual(state(),before);
