@@ -52,3 +52,5 @@ constructor 전용 `onCollectionFailure`는 PREFLIGHT/PRODUCER와 기존 고정 
 새 seal 집중 시험은 제어된 논리 시계로 ALLOCATE 복구까지 확인한다. 초기 시험을 이후 START_REVIEW까지 진행하면 논리 시각과 canonical block의 차이로 RPC가 거부되어 대상 범위를 분리했다. 실제 wall-clock 전체 지급 검증은 기존 V2 suite에서 수행한다. 별도 wall-clock 시도의 SETUP/connectBridge 경계 실패도 기록하며 성공으로 계산하지 않는다. 이 일반 초기화 경로에는 재시도나 검사 완화를 추가하지 않았다.
 
 v36은 v35 원문과 180개 소스를 보존하면서 `execution-api-bridge`, `execution-operations`, `operations`, `procedure`, `store`의 정확한 다섯 소스 지문만 변경한다. 원래 TTL·business/source/review/lease 기한, 발급 시각, nonce, 서명·송신 수와 기존 불변 인수는 유지한다. 최종 검사 수·HEAD·CI·병합 여부는 PR120과 Issue106의 최신 검증 기록을 따른다.
+
+후속 로컬 검증: 집중 API/HTTPS 55/55(제품 HTTPS 15개 포함), native 봉인 경계 6/6, 기존 CI 실패 세 건 3/3, 역사/현재 소스 호환성 32/32, v36 180개·E4 8/E5 18 보존·workspace·고정 의존성 통과. 전체 API/store 첫 실행은 754/755이며 유일 실패는 수정된 procedure GET을 여전히 실패해야 한다고 가정한 기존 control 시험이었다. 해당 기대값 수정 후 집중 회귀가 통과했고 최종 전체 검사는 CI에서 확인한다.
