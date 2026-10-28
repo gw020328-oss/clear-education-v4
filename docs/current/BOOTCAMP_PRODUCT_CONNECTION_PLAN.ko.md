@@ -4,15 +4,15 @@
 
 ## 현재 기준
 
-확인한 develop은 `3a82dcefbb51b635937d01f17f48d095c7594e7a`다. PR115 V2 등록, PR116 S3 내부 체인 연결/조회, PR117 S4 근거 조회가 병합됐다. S4 GET은 제품 호스트에 연결됐지만 V2 등록 GET/POST·S3 조회 GET의 제품 호스트 연결은 PR120 후보다. PR120 수정 HEAD `cb8ed34ad0dde06f8ea4174297adb8dbcc45e66d`는 확인 시 CI 진행 중이며 미병합이다. 이후 상태는 [PR120](https://github.com/gw020328-oss/clear-education-v4/pull/120)과 [Issue106](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 확인한다.
+확인한 develop은 `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`다. PR115 V2 등록, PR116 S3 내부 체인 연결/조회, PR117 S4 근거 조회와 PR120 제품 호스트 V2 등록 GET/POST·S3 조회 GET이 병합됐다. PR120 검증 HEAD `cd659370a6264b1fa8592c85f7585ae125ee9275`의 CI 8/8 성공 후 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에 정상 병합됐고 병합 트리는 검증 HEAD와 같다. [최종 E5 B 74/74·API/store 774/774](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016882), [E5 46/46·E4 164/164](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016840), [PR 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016836), [push 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679011653)을 확인했다. 정확한 경로·client·초 경계 보정과 이전 실패 이력은 [S5 호스트 인수 기록](BOOTCAMP_S5_HOST_MOUNT.ko.md) 및 [PR120](https://github.com/gw020328-oss/clear-education-v4/pull/120)을 따른다. 호스트 인수 문서의 Draft/병합 대기 표현은 당시 기록이다.
 
-**내부 구현 / 제품 호스트 노출 / 실제 사용자 시험**을 각각 보고한다. PR120이 병합돼도 이의 접수 쓰기·평가·실질 재검증 요청까지 연결되는 것은 아니다. 기존 r20은 V1 실제 성공 기록이며 새 V2 제품 화면 완주의 근거로 재사용하지 않는다.
+**내부 구현 / 제품 호스트 노출 / 실제 사용자 시험**을 각각 보고한다. PR120 병합은 이의 접수 쓰기·평가·실질 재검증 요청 연결 완료를 뜻하지 않는다. 기존 r20은 V1 실제 성공 기록이며 새 V2 제품 화면 완주의 근거로 재사용하지 않는다.
 
 ## 진행 순서와 소유 범위
 
 | 단위 | 담당 | 의존성·완료 기준 |
 | --- | --- | --- |
-| S5-H 호스트 연결 | 기존 S5 세션 | PR120 세 실패 최소 수정 → 정확한 최종 HEAD CI·리뷰 → 승인된 develop 병합. merge SHA·노출 경로 확인. 신규 이의 기능을 PR120에 추가하지 않음 |
+| S5-H 호스트 연결 | 기존 S5 세션 | 완료: PR120 최종 HEAD CI8/8·실질 리뷰 후 develop 병합, 검증/merge 트리 일치·노출 경로 인수. 새 이의 실행 기능은 포함하지 않음 |
 | S5-F 화면 인수 | 서준형/Claude, 본부 인수 | 최신 프론트 브랜치/커밋·develop 반영·`web/` 절대 경로·공개 자산 변경/digest·검사 결과·미연결 항목 전달. 기존 PR60/로컬 변경 보존 |
 | S5-E 정상 제품 완주 | 본부·프론트 | S5-H/F 인수 후 새 신청의 실제 네 조건 → 이번 입력 AI 승인 → 별도 V2 등록 서명 → 동일 판정 양측 직접 동의 → 정확100 TEST·canonical 영수증·중복 거부. INCLUDED/finalized=false 구분 |
 | R0 사용자 요청 계약 | 통합 설계·프론트 협의 | 문서/화면 준비는 병행 가능. 이의/다시 확인 요청과 내부 평가 결과 기록을 분리하고 역할·상태·허용 메서드·평가 authority·필요한 원천/비용 승인을 확정 |
@@ -28,7 +28,7 @@
 | POST `…/review-objections` | reason/evidenceId와 현재 판정 CAS에 결합된 접수. 응답 `chainStatus:NOT_OBSERVED` | 최소 사용자 요청 client/제품 호스트 경로·사유/접수 상태 계약 |
 | POST `…/objection-assessments` | assessmentId/objectionId로 신뢰된 포트의 평가 결과 조회·기록 | 평가 주체·권한·불변 결과 참조·공급 경로 확정. 학생의 판정 값 직접 제출로 대체 불가 |
 | POST `…/review-revalidations` | assessmentId로 검증된 NEW_EVIDENCE/OBJECTIVE_ERROR 평가를 기록 | 사용자 재검증 요청과 실제 원천 재수집·검사 실행을 별도로 연결. AI 재호출 버튼 API가 아님 |
-| GET `…/review-chain` | 접수 이후 체인 반영/경합 상태 | PR120은 이 GET만 제품 노출. 쓰기 접수를 대신하지 않음 |
+| GET `…/review-chain` | 접수 이후 체인 반영/경합 상태 | PR120으로 이 GET만 제품 노출 완료. 쓰기 접수를 대신하지 않음 |
 
 `…`는 `/bootcamp/v3/applications/:app`이다. 사유 코드는 현재 `SOURCE_MISMATCH`, `EVIDENCE_MISSING`, `DECISION_TARGET_ERROR`, `UNRESOLVED_QUESTION`이며 사용자 문구·새 요청 DTO는 R0에서 정한다. 구현 전 임의 endpoint를 프론트 계약으로 만들지 않는다.
 
@@ -53,4 +53,4 @@ R0에서 요청·접수/대기·평가·재검증 진행·정정·미해결·체
 
 ## 인계 갱신 조건
 
-PR120 병합 후 본부는 정확한 검증 HEAD·최종 CI·merge SHA·제품 노출 메서드를 확인해 [복사 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md), 이 계획 및 Issue106 상단을 함께 갱신한다. 화면과 API 인수 후에만 새 origin/chainId/RPC·사용자 행동을 안내한다. `PREPARED_NOT_ACTIVATED`는 준비 화면이며 성공/합성 자동 대체로 바꾸지 않는다. Issue106은 제품 실제 완주 전까지 OPEN이다.
+PR120의 검증 HEAD·CI8/8·merge SHA·제품 노출 메서드는 인수했다. 본부는 이 기준으로 [복사 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md), 이 계획 및 Issue106 상단을 함께 갱신한다. 화면과 API 인수 후에만 새 origin/chainId/RPC·사용자 행동을 안내한다. `PREPARED_NOT_ACTIVATED`는 준비 화면이며 성공/합성 자동 대체로 바꾸지 않는다. Issue106은 제품 실제 완주 전까지 OPEN이다.
