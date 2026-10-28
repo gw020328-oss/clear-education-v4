@@ -1,0 +1,31 @@
+{
+  "version": "clear-e5-normal-path-source-pins.3",
+  "baseHead": "da5b1cd5d62b8f56658346d9b23a31f7c9637910",
+  "scope": "EXACT_REVIEWED_V6_THREE_FILE_REFLECTION_PREPARATION_COMPATIBILITY_ONLY",
+  "previousRecord": {
+    "path": "docs/hackathon-test-vault/e5b/ci-source-pins.json",
+    "sha256": "02d633a695f4487320d13a79c3cb0c2b658e9dbcf21e00ede1cdf72ffddde16a"
+  },
+  "reviewedIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v6.json",
+    "sha256": "247326385d1514c57383553a9f7290a3a59f9ba1182f91600443f35027d32f22"
+  },
+  "reviewedApiHead": "92387a49a7808af0f7b240021aafcd01edc17253",
+  "changes": {
+    "src/hackathon-test-vault/memory-stage-harness.mjs": {
+      "before": "7b4e94abd861bc0a57f0bf2d433ed2ebc9ec0054147c9da6f05801e5403cd928",
+      "after": "7b80e10bd887179c2fce338570ed31eadca9980cd7b7978e8076896c82cb1b5f"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "a27dfb3c2e64ea7425c352a85f8bb1670ee4f836041d47713b104917f5f9294e",
+      "after": "b5a05cbea5565ad80244feeaeeec367b1aa6c7da641ae52e1343be92245e5575"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "d6f79ddbeed0b182b30ffa6ef4a8399b6344d1ec2229772cc44123bc739859c0",
+      "after": "ccdc0a412016b71880a13ac2263eeef2b1d6eeb15c026df8267b0b7656d618df"
+    }
+  },
+  "priorAcceptanceBytesChanged": false,
+  "actualSourceAccepted": false,
+  "productionEnabled": false
+}

@@ -1,5 +1,20 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
+
+
+2026-10-26 S3 후보: [이의·정정·종료 체인 연결](BOOTCAMP_S3_CHAIN_REVIEW.ko.md). PR115는 develop `dce9ab1`에 병합됐다. S3는 접수 `NOT_OBSERVED`와 새 `review-chain` canonical 조회를 구분하며, 기존 동의·지급/수락 권리는 유지한다. 프론트는 후보 PR 병합 전 새 경로를 develop 기능으로 가정하지 않는다. S4/S5 실제 제품 완주·PR 병합·main 배포는 포함하지 않는다. 아래 이전 날짜의 후보/미연결 문구는 당시 기록이다.
+
+2026-10-26 V2 후속: 통합 담당이 PR115에서 S1 고정 소유자 등록 API/normal-client/실행 서버와 S2 canonical 등록 순서 조회를 구현했다. 코어 후보 `e37cd70`, 정확한 v31 소스 인수, [검증 기록](BOOTCAMP_V31_VERIFICATION.json), [프론트 등록 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md)을 따른다. develop/a53f6f5의 V1과 기존 r20·v30 성공은 보존한다. 서준형/Claude는 PR60·로컬 변경을 보존하며 새 등록 서명 화면과 접수/체인 반영 구분을 연결한다. S3 이의/정정 체인 반영, S4 근거 조회와 제품 S5 실제 완주는 남아 있다. 새 실제 사용자 행동은 프론트 준비 후 본부가 요청하며 PR115는 Draft로 유지한다.
+
+2026-10-26 최신 승인: PR #114는 CI 6/6 성공 후 develop `a53f6f541d45275ea92057c1beb2cf27af434855`에 병합됐다. 백엔드 실행 기준 PR #102/c108dc8 및 r20 실제 이력은 보존한다. 교수 피드백의 핵심 보완을 기존 정상 흐름에 연결하는 [보안 보완·자동 지급 완료 계획](BOOTCAMP_SECURITY_COMPLETION_PLAN.ko.md)을 추가 승인 범위로 우선한다. 수령인 직접 서명 → 체인 등록 순서 → 이의/정정의 체인 반영 → 근거 조회 → 제품 화면의 실제 조건 검증과 자동 ACCEPT/CLAIM 순서다. 통합 담당은 backend/contract/API와 오프라인 검증, 서준형/Claude는 기존 PR60·로컬 변경을 보존한 제품 화면 연결을 맡는다. 문서 반영·구현·오프라인 검증·실제 완주를 각각 기록하며 신규 PR 자동 병합/main 배포는 승인되지 않았다. 아래 날짜별 범위는 당시 이력이다.
+
+2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.
+
+2026-10-17 추가 승인·계획 revision2: [MVP 보완 계약·실행 백로그](PYTHON_BOOTCAMP_R2.ko.md)를 우선한다. 기존 P0 동결03fa643과 네 조건/100 TEST·P1/P2는 유지한다. Oracle 승인·부족알림/영향 대기열·학생/운영자 두 화면·기존 relayer 가스 UX·실측 이벤트를 P3→P4→P5의 실제 구현 범위에 추가했다. 별도 v2 envelope/이행 인수이며 기존 v1 wire·ABI는 바꾸지 않는다. 현재 지급/production을 켜지 않으며 P4 권한·자금 코드는 Astra/High 경계 리뷰 후 격리 TEST로 진행한다. 아래의 종전 P3/P4/P5 계획만 정리한다는 문구는 이 추가 승인 이전 범위다.
+
+2026-10-17 새 P0 정본: [CLEAR Python 부트캠프 정책·기록 계약](PYTHON_BOOTCAMP_P0.ko.md)을 따른다. 활동완료·과제제출·회고3항목·HackerRank Python(Basic) 보유형 인증의 AND, 고정100 TEST/decimals6/100000000 atoms다. 실제 Moodle ID는 소유 fixture 검증 전null/ready=false이며 증명시각을 합격시각으로 바꾸지 않는다. P1/P2 연결만 구현하고 P3/P4/P5는 관계·관문/인수부터 정리한다. 제품 API/DB는 별도 기존 세션 단일 소유, 이 통합 세션은 docs/동결계약·교차인수만 담당한다.
+
 2026-10-15 최신 C3 Draft: 선행 PR63은 develop890ad93에 병합됐고, 이슈65의 별도 합성 증거 수락→M2 평가→불변 결과/보완·재시작 조회를 구현했다. [단일 HTTP 인계](MVP_SOURCE_HTTP_HANDOFF.ko.md)와 [C3 계약](MVP_EVIDENCE_HTTP_CONTRACT.ko.md)을 따른다. 기존 F0/운영 API와 다른 namespace이며 실제 자격·지급/원천·개인자료는 미완료다. web/PR60·독립 청구 파일은 각 담당 소유다.
 
 2026-10-15 C2 최신: Draft PR63/코드0a9945b에서 합성 fixture 실bytes 접수·별도 문서 확인·검토run/보완·멱등/restart를 구현했다. [단일 인계 최신 C2절](MVP_SOURCE_HTTP_HANDOFF.ko.md)과 [상세 계약](MVP_DOCUMENT_HTTP_CONTRACT.ko.md)을 따른다. 운영 documentSubmissionReady=false·full decode/실동의/개인자료/재원 미완료, web/는 서준형 소유다. 아래 계약 단계/미구현 문구는 이전 기록이다.

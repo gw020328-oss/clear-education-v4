@@ -1,5 +1,23 @@
 # CLEAR 문서
 
+2026-10-27 현황: [develop의 V2 등록·S3 이의/정정 통합과 미병합 S4](status.md#2026-10-27-v2-등록s3-통합과-s4-진행-현황)를 반영했습니다. 새 검증은 합성 원천·격리 TEST 범위이며, 기존 실제 r20·main 제공 기능·제품 프론트 실제 완주와 구분합니다.
+
+2026-10-26 현황: [develop #102 통합과 실제 r20의 로컬100 TEST 수령 기록](status.md#2026-10-26-develop-통합실제-r20-로컬-test-현황)을 반영했습니다. 실제 HackerRank·로컬 Moodle 데모·AI·양측 동의의 연결 결과는 INCLUDED/finalized=false이며, main 기능 반영·제품 프론트·원격 기관 Moodle·상용 배포 완료와 구분합니다.
+
+2026-10-25 현황: [실제 r15의 BIND 중단·합성 복구 권한 재현과 수정](status.md#2026-10-25-r15-중단복구-권한-재검사-현황)을 반영했습니다. 실제 지급 완료·원인 확정·수정 후 실제 재시험과 구분하며, 미병합 #102의 로컬/CI 결과를 현재 제공 기능으로 표시하지 않습니다.
+
+2026-10-24 현황: [r9 원격 ZK 검증 중단·STWO 버전 호환성 조사](status.md#2026-10-24-r9-중단stwo-호환성-현황)를 갱신했습니다. 미병합 #102의 로컬 검증·CI 성공과 원격 배포 호환/실제 재시험 미확정을 구분하며, 기존 제공 코드와 사용법은 유지합니다.
+
+2026-10-23 현황: [시험 클라이언트 준비·실제 원천 요청 전 실패·수정 후 미재시험](status.md#2026-10-23-시험-클라이언트원천-실패-현황)을 구분했습니다. HackerRank #103은 API 작업 브랜치에만 병합됐으며 develop/main 기능 반영이나 전체 시연 완료가 아닙니다.
+
+2026-10-21 현황: [미병합 TEST 연결·실제 합성 AI 평가와 남은 원천 차단](status.md#2026-10-21-미병합-연결평가-현황)을 갱신했습니다. 격리 체인의 합성 원천 지급과 공개 합성 8건 평가(7 PASS·1 보완)는 실제 원천 전체 시연·제품 지급 완료와 구분합니다. 기존 코드와 사용법은 유지합니다.
+
+[2026-10-19 미병합 준비·CI 현황](status.md#2026-10-19-미병합-준비ci-현황)은 새 E1~E6 TEST 준비·Mac 시험 보강과 실패/후속 성공을 구분합니다. 열린 의존 PR과 TEST 운영 제안을 현재 제품 인수나 실제 지급 완료로 해석하지 않습니다.
+
+[2026-10-18 미병합 작업 현황](status.md#2026-10-18-미병합-작업-현황)은 새 부트캠프·HackerRank·ledger·권한 리뷰 PR과 Moodle/AI 갱신을 현재 병합 코드와 구분합니다. CI 성공만으로 운영 원천·지급·모든 로컬 시험 coverage 완료를 주장하지 않습니다.
+
+최신 develop 진행은 [2026-10-17 원격 확인](status.md#2026-10-17-원격-확인)을 우선합니다. [C3 합성 증거/평가](current/MVP_EVIDENCE_HTTP_CONTRACT.ko.md), [원문·C1·C2 HTTP 인계](current/MVP_SOURCE_HTTP_HANDOFF.ko.md), [격리 Moodle](moodle/LOCAL_API_LAB.ko.md), [AI workflow adapter](ai-vision/WORKFLOW_ADAPTERS.ko.md)는 각 구현 범위와 운영 차단을 함께 확인합니다. 과거 문서의 Draft/미구현 표현을 현재 병합 상태와 구분합니다.
+
 2026-10-15 11:22 KST 최신 원격 상태: `develop` [21776f5](https://github.com/gw020328-oss/clear-education-v4/commit/21776f53d7660597b94a37c89139316e43eeb673)(PR #36 병합), `main` `375051e` 미통합. [최신 현황·PR·CI](status.md#2026-10-15-원격-확인)를 먼저 읽습니다. 아래 날짜별 기준과 시험 수는 당시 기록입니다.
 
 - [등록 이력 → 목표 성적의 합성 계약](current/EXAM_LIFECYCLE.ko.md), [별도 영속 접수·수집기 연결](current/HISTORY_INTAKE.ko.md), [비식별 실제 실행 기록](current/history-intake-verification.json): PR #31~#35가 develop에 병합됐습니다. 표 증명·접수 성공과 전체 이력·신원·제품 자격·지급을 구분합니다.

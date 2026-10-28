@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-17",
+  "project": "clear-moodle-bootcamp-p2-20261017",
+  "finalRunRef": "run3",
+  "tokensRemaining": 0,
+  "servicesDisabled": 15,
+  "syntheticUsersSuspended": 9,
+  "revokedTokenRejected": true,
+  "ownedContainersStopped": true,
+  "newVolumesPreserved": true,
+  "oldLabsTouched": false,
+  "fixtureLiveReadable": false
+}

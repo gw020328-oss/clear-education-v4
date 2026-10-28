@@ -1,0 +1,84 @@
+{
+  "version": "clear-bootcamp-v15-verification.1",
+  "date": "2026-10-23",
+  "baselineHead": "4b0a1063cc442f331510c1a0ed9e65bbbd570daf",
+  "sourceCandidateHead": "3e8aa5c1060278431c8eda8fb8f0328c35115658",
+  "scope": "OFFLINE_R6_INVESTIGATION_AND_LOCAL_TRANSPORT_FIX_NOT_ACTUAL_ACCEPTANCE",
+  "actualR6Cause": "UNRECOVERED_ORIGINAL_ERROR_NOT_RECORDED",
+  "confirmedDefects": [
+    "OWNED_BOUNDED_SEND_FAILURE_COLLAPSED_TO_UNKNOWN",
+    "SYNCHRONOUS_SEND_THROW_LEFT_TIMEOUT_ARMED"
+  ],
+  "postVerificationReproduction": "EXACT_INSTALLED_SDK_SOURCE_BLOCK_WITH_REAL_PROTOBUF_AND_ETH_SIGNER_NOT_FULL_TLS_ZK",
+  "transportReproduction": "REAL_PINNED_SDK_RPC_AND_PRODUCTION_BOUNDED_SENDER_WITH_MEMORY_SOCKET",
+  "sourceIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v15.json",
+    "sha256": "6b5c80282fba406a3097f81b568b400ef22636bdf481c5ae3d400176c3e06887",
+    "sources": 161,
+    "runtimeDeltas": [
+      "src/hackerrank-evidence/diagnostics.mjs",
+      "src/hackerrank-evidence/worker-source.mjs",
+      "src/ybm-collector/client.mjs",
+      "src/ybm-collector/socket.mjs"
+    ],
+    "runtimeAdditions": [
+      "src/ybm-collector/claim-rpc-observer.mjs"
+    ]
+  },
+  "reviewedHelper": {
+    "path": "src/hackathon-test-vault/reviewed-source-v15.mjs",
+    "sha256": "97f65833aa053ea6136531d926f6db65d2f5d4e458d6a24a6d918e9e4b4d7ea2"
+  },
+  "guardPins": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v12.json",
+    "sha256": "404aeaa4249d2869bf5d448f7f017a843ec1c808152f9255d9ca15e0b504d4da"
+  },
+  "testClientManifest": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V7.json",
+    "sha256": "98775a866470b75cde59e154fd476cd25be9a1c6e7630d24702ef87e37c3ea5b",
+    "browserBytesChanged": false
+  },
+  "finalLocalChecks": {
+    "hackerRankAndTransportOffline": {
+      "passed": 432,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "apiAndExecutionOffline": {
+      "passed": 418,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "pinCompatibilityAndMemoryGate": {
+      "passed": 52,
+      "failed": 0,
+      "externalNetworkBlocked": true
+    },
+    "uniqueTestsAcrossTheseThreeCommands": 902,
+    "e5Preservation": "PASS",
+    "e5bExactSourcePins": "PASS",
+    "portableWorkspacePreservation": "PASS",
+    "frozenDependencyValidation": "PASS",
+    "declarationValidation": "SYNTAX_ONLY_NOT_FULL_TSC"
+  },
+  "securityReview": {
+    "existingAgentReused": true,
+    "blockingFindingsRemaining": 0,
+    "scope": "OWNED_SEND_PROVENANCE_SYNC_OBSERVER_OUTCOME_AND_CLIENT_IDENTITY_PRIVACY",
+    "sourcePinReview": "161_HASHES_MATCH_CANDIDATE_AND_CURRENT_WITH_PRIOR_GENERATIONS_PRESERVED"
+  },
+  "preservation": {
+    "priorImmutableGenerationFiles": 37,
+    "r6PrivateFilesUnchanged": 5,
+    "r5PrivateFilesUnchanged": 5,
+    "r6DiagnosticsSha256": "206b22de7fa6421b9d8fd4abfedfcfc96409575cb7bcfe5ca8e5fa120ed2fba5"
+  },
+  "finalHeadCi": "VERIFY_AFTER_COMMIT_AND_PUSH_DO_NOT_REUSE_OLD_HEAD_RESULTS",
+  "r7EnvironmentCreated": false,
+  "newLoginOrReadyPerformed": false,
+  "newActualProofPerformed": false,
+  "newChainOrPaymentPerformed": false,
+  "newAiCallPerformed": false,
+  "caTrustChanged": false,
+  "mergePerformed": false
+}

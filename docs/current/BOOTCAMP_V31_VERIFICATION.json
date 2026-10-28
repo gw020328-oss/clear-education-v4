@@ -1,0 +1,212 @@
+{
+  "version": "clear-bootcamp-v31-verification.1",
+  "date": "2026-10-26",
+  "coreCandidateHead": "e37cd702a970dc955c6b0a92a6cef7b840255d0b",
+  "baseDevelop": "a53f6f541d45275ea92057c1beb2cf27af434855",
+  "pullRequest": 115,
+  "priorEvidence": {
+    "v30CiHead": "c4d61be65cd2e912006060a4eb62183efad9cadc",
+    "v30CiChecks": {
+      "success": 8,
+      "failure": 0
+    },
+    "actualR20Head": "f38ae8bd44c9da2e27f6a56650ced0f7bffe9aba",
+    "actualR20Finalized": false,
+    "reusedActualLeaseOrApproval": false
+  },
+  "scope": {
+    "fixedOwnerPersistentRegistration": true,
+    "httpGetPost": "/bootcamp/v3/applications/:app/recipient-registration",
+    "browserMethods": [
+      "recipientRegistration",
+      "submitRecipientRegistration"
+    ],
+    "signaturePurpose": "REGISTER_FIXED_RECIPIENT",
+    "signatureIsPublicCalldata": true,
+    "signatureAcceptedIsChainIncluded": false,
+    "canonicalRegistrationSequenceQuery": true,
+    "newPreparationRuntime": "clear-e5-test-runtime.2",
+    "oldV1ContractOrEnvironmentMigrated": false,
+    "S3ChainCorrectionApiComplete": false,
+    "S4EvidenceManifestComplete": false,
+    "S5ProductFrontendActualComplete": false
+  },
+  "local": {
+    "apiStoreExecution": {
+      "passed": 713,
+      "failed": 0,
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-execution/*.test.mjs tests/bootcamp-store/*.test.mjs"
+    },
+    "registrationHttpStore": {
+      "passed": 19,
+      "includedInApiTotal": true
+    },
+    "receiptCommitBoundary": {
+      "passed": 6,
+      "includedInApiTotal": true
+    },
+    "intakeAndTamperGates": {
+      "passed": 121,
+      "failed": 0
+    },
+    "v2Contract": {
+      "passed": 8,
+      "failed": 0,
+      "runtimeBytes": 24352,
+      "runtimeLimitBytes": 24576,
+      "creationBytes": 26887,
+      "solc": "0.8.30",
+      "optimizerRuns": 200,
+      "evmVersion": "shanghai",
+      "viaIR": true,
+      "contractUnchangedDuringApiIntegration": true
+    },
+    "e5bFull": {
+      "status": "SUPERSEDED_BY_TARGETED_REVALIDATION_AND_FINAL_CI",
+      "firstCandidate": {
+        "passed": 48,
+        "failed": 1,
+        "failure": "B_RECEIPT_COMMIT clock rollover"
+      },
+      "secondCandidate": {
+        "passed": 49,
+        "failed": 1,
+        "failure": "B_READ_REQUEST clock rollover before target ACCEPT expiry injection"
+      },
+      "exactFinalHeadFullSuite": "SEE_CI_IN_ISSUE106",
+      "firstV31Ci": {
+        "head": "bef2faa899a629701697179106a3c82e11ddbff4",
+        "checksSucceeded": 7,
+        "checksFailed": 1,
+        "passed": 49,
+        "failed": 1,
+        "failure": "REGISTER ENQUEUE BC_VIEW_STALE clock rollover before target V2 ACCEPT expiry injection",
+        "run": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/40284574137"
+      },
+      "enqueueCandidateWallClock": {
+        "coreHead": "db4feb59f28280b0ddeecbe2fae42ca9919e5d48",
+        "passed": 16,
+        "failed": 2,
+        "failures": [
+          "issueRequest BC_VIEW_STALE during V2 fixture setup",
+          "prepareReviewAuthorization BC_VIEW_STALE before target V2 ACCEPT revocation"
+        ]
+      },
+      "previousTargetedWallClock": {
+        "passed": 17,
+        "failed": 0,
+        "v1FullPayments": 7,
+        "v2HttpFullPayments": 2,
+        "preRegistrationRejections": 2,
+        "targetAcceptRejections": 6,
+        "executionBroadcastsPerSuccess": 6,
+        "executionTransactionSignaturesPerSuccess": 6,
+        "paymentSignaturesPerSuccess": 1,
+        "claimIsSeparateDirectTransaction": true,
+        "exactReceivedAtoms": "100000000",
+        "canonicalHttpReceiptFinalized": false,
+        "duplicateClaimRejected": true,
+        "targetRejections": {
+          "includedEnvelopes": 5,
+          "sealedEnvelopes": 1,
+          "executionBroadcasts": 5
+        },
+        "coreHead": "13fef0f4b60097b1aa665e05d4bf4455ff93a25c"
+      },
+      "finalTargetedWallClock": {
+        "snapshotAtCommit": "IN_PROGRESS",
+        "coreHead": "e37cd702a970dc955c6b0a92a6cef7b840255d0b",
+        "plannedTests": 20,
+        "resultsPublishedAt": "https://github.com/gw020328-oss/clear-education-v4/issues/106",
+        "prior17SuccessIsNotFinalCandidateVerification": true
+      }
+    },
+    "sourcePins": {
+      "result": "PASS",
+      "exactCurrentSources": 177,
+      "priorRecordsUnchanged": true
+    },
+    "preservation": {
+      "originalRecords": 648,
+      "unchanged": 648
+    },
+    "workspace": "PASS",
+    "dependencies": "PASS",
+    "commandReadBoundary": {
+      "passed": 6,
+      "includedInApiTotal": true
+    },
+    "enqueueCommitBoundary": {
+      "passed": 7,
+      "includedInApiTotal": true
+    },
+    "requestIssuanceClockBoundary": {
+      "passed": 6,
+      "includedInApiTotal": true
+    },
+    "unsignedPreparationClockBoundary": {
+      "passed": 11,
+      "includedInApiTotal": true
+    }
+  },
+  "receiptClockCorrection": {
+    "reproducedBefore": "B_RECEIPT_COMMIT BC_E5_CLOCK_CHANGED after canonical START_REVIEW inclusion",
+    "oneCompletionAndSlotRelease": true,
+    "maximumReadOnlyFinalValidationRechecks": 1,
+    "originalLocalGlobalServiceAndBindingCapsRetained": true,
+    "secondConflictRollsBack": true,
+    "receiptConsumptionSigningOrBroadcastRepeated": false,
+    "sourceEligibilityRequiredForHistoricalIncludedReceipt": false,
+    "beforeDispatchCurrentnessPreserved": true
+  },
+  "ci": {
+    "snapshotAtCommit": "PENDING_NEW_HEAD",
+    "exactFinalHeadAndResultsPublishedAt": "https://github.com/gw020328-oss/clear-education-v4/issues/106",
+    "previousC4SuccessIsNotV31Verification": true
+  },
+  "actualExecution": {
+    "externalLogin": false,
+    "reclaim": false,
+    "paidAi": false,
+    "userWallet": false,
+    "normalHost": false,
+    "tlsCa": false,
+    "production": false,
+    "autoMerge": false
+  },
+  "unchangedPolicy": {
+    "amountAtoms": "100000000",
+    "tokenDecimals": 6,
+    "confirmationSeconds": 120,
+    "substantiveRevalidations": 1,
+    "reviewCapSeconds": 600,
+    "acceptedRightClaimExpiry": null,
+    "automaticParticipantSignature": false,
+    "automaticConsent": false,
+    "ttlExtended": false,
+    "frontendPr60OrWebEdited": false
+  },
+  "commandReadClockCorrection": {
+    "originalCasAndCommandRevalidated": true,
+    "maximumFinalValidationRechecks": 1,
+    "nativeReadOrIssuerRepeated": false,
+    "expiryRevocationSourceChangeClockReversalSecondConflictBeforeNativeWork": "REJECTED"
+  },
+  "enqueueClockCorrection": {
+    "reproducedBefore": "REGISTER ENQUEUE BC_VIEW_STALE after intent and receipt writes",
+    "intentAndReceiptWritesEachOnce": true,
+    "sameSavepointFinalValidation": true,
+    "originalCasDecisionSourceCommitmentDeadlineRuntimeAndActorRetained": true,
+    "maximumReadOnlyFinalValidationRechecks": 1,
+    "expirySourceChangeLogoutRoleRevocationClockReversalSecondConflict": "ROLLBACK_BOTH_RECORDS",
+    "signingOrBroadcastRepeated": false
+  },
+  "requestAndPreparationClockCorrection": {
+    "requestNonceAndCommandIssuedOnce": true,
+    "unsignedPreparationAndCommandWrittenOnce": true,
+    "originalIssuedAtExpiresAtRetained": true,
+    "maximumReadOnlyFinalValidationRechecks": 1,
+    "sourceSessionSignerNonceFundingConsentCurrentnessRevalidated": true,
+    "producerNonceConsumptionSignatureOrBroadcastRepeated": false
+  }
+}

@@ -1,0 +1,606 @@
+{
+  "scope": "READ_ONLY_EXISTING_SOURCE_COMPILATION_AND_ABI_NO_EVM",
+  "reviewBase": "318f296ca424c7bbe4cf1321b9ceea555c8936c0",
+  "p0": "03fa64324ef9cc2ce4fb442a612329a7b1285677",
+  "r2": "69d6dc80caaf2bde963385e176068e3a0293e6b3",
+  "sourceSha256": {
+    "contracts/CourseRefundVaultV4.sol": "b38ec36c138be640f83fae9ad45257fe7e4c8909cf4cfc8ec4fba175edffc369",
+    "contracts/ClearTestToken.sol": "f6b904626da44e856c5854235fe6ac64af0057a1550f1a5337d56bfe7790356a",
+    "spikes/funding-lab/FundingLab.sol": "b37da1f79600a60ebcc590e045cc0dff126ffc49813d191d62c1cd1e816111fd",
+    "src/vault/encoding.mjs": "f0ab5bd6235002a3ac873aae01171f523a6025b490bc209f7b88e0430e30d586",
+    "src/vault/reader.mjs": "2e55df6e2e2928d0501cca0f4b647958b39ced252144e10df74c250ec48adf2e",
+    "spikes/funding-lab/reader.mjs": "b2f23a2a5d091b642604f66f9e823a01c62866c8ff242bca3ee2381f7a4ed9e3",
+    "specs/bootcamp/p0-policy.json": "53df7e4aff20639b73353e7e5fd5d3032c1f847f96fbae749c654df76a932dcd",
+    "specs/bootcamp/p0-contract.mjs": "c3a5a28d81704221e0dd407e9b1afd45697175d68fe5f2cbf7af62d3db0f584c",
+    "specs/bootcamp/p0-addendum-r2.json": "8b78615cdbe76cbb7d2198b2cabb600c9ddc29a0a6061479d5b68dc4b1d672fa",
+    "specs/bootcamp/r2-reference.mjs": "c20b75bb824c11d81b6b8c24d4dc997ec7596716c33ab7ad00b2f3c02f3447be",
+    "tests/product-workflow/bootcamp-r2-existing-relayer.test.mjs": "ba948ad1346ef52bd66872ed0bdffdb215dc39a0d29e8103c820ab84bc8b8b9c"
+  },
+  "contracts": {
+    "CourseRefundVaultV4": {
+      "runtimeCodeHash": "0x7d5db60375a71096beedf3fc8e21bf1cfa2d123e4659a2661b35149f80335b10",
+      "functions": [
+        {
+          "name": "authorizeGrant",
+          "signature": "authorizeGrant((bytes32,bytes32,address,bytes32,bytes32,bytes32,uint256,uint256,uint256,uint256),bytes)",
+          "selector": "0x8d122e60",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "grantId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "applicationId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address",
+                  "name": "learner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "policyHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "runtimeConfigHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "examNullifier",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "verifiedAt",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "issueBy",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "claimUntil",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct CourseRefundVaultV4.Grant",
+              "name": "g",
+              "type": "tuple"
+            },
+            {
+              "internalType": "bytes",
+              "name": "sig",
+              "type": "bytes"
+            }
+          ]
+        },
+        {
+          "name": "claim",
+          "signature": "claim(bytes32)",
+          "selector": "0xbd66528a",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "applicationId",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "domainSeparator",
+          "signature": "domainSeparator()",
+          "selector": "0xf698da25",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "enableSupplement",
+          "signature": "enableSupplement(uint256,bytes)",
+          "selector": "0xc9430446",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "observedAt",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "sig",
+              "type": "bytes"
+            }
+          ]
+        },
+        {
+          "name": "enrollAndFund",
+          "signature": "enrollAndFund((bytes32,address,bytes32,bytes32,bytes32,uint256,uint256),bytes)",
+          "selector": "0xb32d801d",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "applicationId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address",
+                  "name": "learner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "policyHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "runtimeConfigHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "nonce",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "signedAt",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "expiresAt",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct CourseRefundVaultV4.Terms",
+              "name": "t",
+              "type": "tuple"
+            },
+            {
+              "internalType": "bytes",
+              "name": "sig",
+              "type": "bytes"
+            }
+          ]
+        },
+        {
+          "name": "enrollments",
+          "signature": "enrollments(bytes32)",
+          "selector": "0x01ecdd07",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "grantApplication",
+          "signature": "grantApplication(bytes32)",
+          "selector": "0x681fa7c4",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "grantDigest",
+          "signature": "grantDigest((bytes32,bytes32,address,bytes32,bytes32,bytes32,uint256,uint256,uint256,uint256))",
+          "selector": "0x5ead90e4",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "grantId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "applicationId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address",
+                  "name": "learner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "policyHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "runtimeConfigHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "examNullifier",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "verifiedAt",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "issueBy",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "claimUntil",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct CourseRefundVaultV4.Grant",
+              "name": "g",
+              "type": "tuple"
+            }
+          ]
+        },
+        {
+          "name": "nullifierApplication",
+          "signature": "nullifierApplication(bytes32)",
+          "selector": "0xecea9660",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "reclaimExpired",
+          "signature": "reclaimExpired(bytes32)",
+          "selector": "0x7d2c2931",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "applicationId",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "runtimeConfig",
+          "signature": "runtimeConfig()",
+          "selector": "0x432e9aab",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "runtimeConfigHash",
+          "signature": "runtimeConfigHash()",
+          "selector": "0x3c287e34",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "supplementEnabled",
+          "signature": "supplementEnabled()",
+          "selector": "0x43825007",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "termsDigest",
+          "signature": "termsDigest((bytes32,address,bytes32,bytes32,bytes32,uint256,uint256))",
+          "selector": "0xa4ecbec4",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "applicationId",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address",
+                  "name": "learner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "policyHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "runtimeConfigHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "nonce",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "signedAt",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "expiresAt",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct CourseRefundVaultV4.Terms",
+              "name": "t",
+              "type": "tuple"
+            }
+          ]
+        },
+        {
+          "name": "totalReserved",
+          "signature": "totalReserved()",
+          "selector": "0xc71b0e1c",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "usedConsentNonces",
+          "signature": "usedConsentNonces(bytes32)",
+          "selector": "0x34e54b0d",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        }
+      ]
+    },
+    "FundingLab": {
+      "runtimeCodeHash": "0x517fd4e63acc0cb41fb2b3b78daa0f46ceb5cce1593b04539ab8d3315cb57d6c",
+      "functions": [
+        {
+          "name": "accounts",
+          "signature": "accounts(bytes32)",
+          "selector": "0xbc529c43",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "agreementHash",
+          "signature": "agreementHash(bytes32)",
+          "selector": "0x09d96a03",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "allocate",
+          "signature": "allocate(bytes32)",
+          "selector": "0x0b1e175c",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "cancel",
+          "signature": "cancel(bytes32)",
+          "selector": "0xc4d252f5",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "claim",
+          "signature": "claim(bytes32)",
+          "selector": "0xbd66528a",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "configHash",
+          "signature": "configHash()",
+          "selector": "0xe1f1176d",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "fixture",
+          "signature": "fixture(bytes32)",
+          "selector": "0x4ba38cc0",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "operationHash",
+          "signature": "operationHash(bytes32,uint256)",
+          "selector": "0x5b972092",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "name": "operations",
+          "signature": "operations(bytes32)",
+          "selector": "0xc74f349b",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "reclaimExpired",
+          "signature": "reclaimExpired(bytes32)",
+          "selector": "0x7d2c2931",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "recoverUnallocated",
+          "signature": "recoverUnallocated(bytes32)",
+          "selector": "0x7daeecc5",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "register",
+          "signature": "register(bytes32,bytes32)",
+          "selector": "0x2f926732",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "expectedAgreement",
+              "type": "bytes32"
+            }
+          ]
+        },
+        {
+          "name": "runtimeConfig",
+          "signature": "runtimeConfig()",
+          "selector": "0x432e9aab",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "topUp",
+          "signature": "topUp(bytes32,bytes32,uint256)",
+          "selector": "0x4672d724",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "app",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "operationId",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "name": "totalHeld",
+          "signature": "totalHeld()",
+          "selector": "0xf43cc773",
+          "stateMutability": "view",
+          "inputs": []
+        },
+        {
+          "name": "totalReserved",
+          "signature": "totalReserved()",
+          "selector": "0xc71b0e1c",
+          "stateMutability": "view",
+          "inputs": []
+        }
+      ]
+    }
+  }
+}

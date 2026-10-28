@@ -1,0 +1,110 @@
+{
+  "version": "clear-bootcamp-s4-verification.1",
+  "date": "2026-10-27",
+  "baseDevelop": "19e1c1473165cdea52a42040e740b79ba3e50c03",
+  "coreHead": "e61f2ac91e58496d0d4f627b874cf2b8a7d1b708",
+  "scope": "S4_STORED_METADATA_READ_ONLY",
+  "syntheticOnly": true,
+  "checks": [
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/decision-evidence.test.mjs tests/bootcamp-store/consumers.test.mjs",
+      "passed": 30,
+      "failed": 0
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-execution/*.test.mjs tests/bootcamp-store/*.test.mjs",
+      "passed": 726,
+      "failed": 1,
+      "failure": "Existing current-client pin still compared new normal-client with preserved V32. Fixed by preserving V32 Git bytes and checking current V33 separately. This first run remains a failure."
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/test-client.test.mjs",
+      "passed": 38,
+      "failed": 0,
+      "reason": "Targeted verification after V33 browser-pin update"
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/decision-evidence.test.mjs",
+      "passed": 6,
+      "failed": 0,
+      "reason": "Final check separates source expiry from raw retention expiry"
+    },
+    {
+      "command": "./tools/node --test --test-name-pattern='rollover=none$' tests/hackathon-test-vault/e5b/recipient-v2-flow.test.mjs",
+      "passed": 1,
+      "failed": 0,
+      "assurance": "Fresh isolated synthetic Geth V2 HTTP registration/consents/exact 100 TEST/duplicate rejection; S4 GET before and after with no additional execution metrics"
+    },
+    {
+      "command": "./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-store/normal-frontend.test.mjs",
+      "passed": 9,
+      "failed": 0,
+      "reason": "Final integration inspection found the separate same-origin route allowlist. Added only S4 GET mounting and synthetic HTTPS owner/operator/expiry/no-side-effect checks; no normal-host activation or trust-store CA installation."
+    }
+  ],
+  "sourceIntake": "specs/bootcamp/hackathon-test-memory-source-intake-v33.json",
+  "sourceCount": 180,
+  "ci": "Exact final HEAD results and any merge SHA are recorded in PR117 and Issue106",
+  "limitations": [
+    "No new source collection, actual Reclaim/login, paid AI, user wallets, normal host/CA or public chain",
+    "Source truth and independent third-party reverification are not guaranteed by metadata hashes",
+    "AI model/prompt/rubric and policy string versions absent from exact persisted evidence remain UNAVAILABLE",
+    "Live source currentness is UNKNOWN and original text HTTP is unavailable",
+    "No main deployment or S5 product completion; develop merge only after approved final CI/review",
+    "Existing same-origin recipient-registration/review-chain route mounting remains a S5 dependency; internal V2/S3 handlers are preserved and were not expanded in S4."
+  ],
+  "initialCiHead": "9b3e61b383df9b506a0adeff5b813a39b836f97e",
+  "followup": {
+    "date": "2026-10-27",
+    "baseDevelop": "0384ae54771b3d1f9d927bac01078cc6a7163804",
+    "codeHead": "9599db18abf305106fdb4c705511aed76ae1d3df",
+    "sourceIntake": "specs/bootcamp/hackathon-test-memory-source-intake-v34.json",
+    "baselineCacheReproduction": {
+      "passed": 1,
+      "delayMs": 5500,
+      "paymentFailure": "ALLOCATE/REVIEW_WINDOW/BC_E3_REGISTERED_SNAPSHOT_EXPIRED",
+      "concurrentFailure": "PROCEDURE/BC_E3_REGISTERED_SNAPSHOT_EXPIRED",
+      "historicalSecondCiErrorCode": "NOT_RECORDED_NOT_INFERRED"
+    },
+    "cacheRegression": {
+      "passed": 2,
+      "cases": [
+        "expired worker cache",
+        "expired HTTP cache"
+      ]
+    },
+    "preflightDenials": {
+      "passed": 3,
+      "cases": [
+        "logout",
+        "source-change",
+        "expiry"
+      ],
+      "registerBroadcastsOnly": 1,
+      "paymentSignatures": 0
+    },
+    "lookupBoundary": {
+      "baselineReproduced": true,
+      "passed": 6,
+      "nativeLookupRepeated": false,
+      "signSealSendRepeated": false
+    },
+    "targetedStoreTests": 55,
+    "finalHeadResults": "PR117 and Issue106; do not substitute previous/local success for final CI",
+    "preservedFailures": [
+      "40439514458: 55/57, snapshot expiry plus unclassified concurrent read",
+      "local initial combined cache/V2 regression: B_LOOKUP_REQUEST clock rollover before native lookup"
+    ],
+    "apiStoreRegression": {
+      "passed": 734,
+      "failed": 0
+    },
+    "finalCodeV2NormalPayment": {
+      "passed": 1,
+      "failed": 0,
+      "exactTestAtoms": "100000000",
+      "duplicateRejected": true,
+      "concurrentReadErrors": 0
+    }
+  }
+}

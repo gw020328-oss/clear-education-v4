@@ -1,0 +1,82 @@
+{
+  "version": "clear-e5-normal-path-source-pins.20",
+  "baseHead": "dd10cb27dda05c320530a15305f4b464d2361780",
+  "scope": "EXACT_V23_BUDGET_AND_BUTTON_EXPLANATIONS",
+  "previousRecord": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v19.json",
+    "sha256": "99b14eee0328133dfce5e1213339b53d4c934dfc98606cbcf9777c793f46bf78"
+  },
+  "reviewedIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v23.json",
+    "sha256": "a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c"
+  },
+  "reviewedApiHead": "3374c383e585f26ea712911ac6be5b6ac44c0a56",
+  "changes": {
+    "src/bootcamp/http.mjs": {
+      "before": "57292697834b24755309aa46df1a1736b3eebb82925fb4cbde15eae44708ec80",
+      "after": "57292697834b24755309aa46df1a1736b3eebb82925fb4cbde15eae44708ec80"
+    },
+    "src/bootcamp/normal-client.mjs": {
+      "before": "b4ad85572a57ed04c24ced710242d39669bb1eb46dfeea88f503097784a9350a",
+      "after": "b4ad85572a57ed04c24ced710242d39669bb1eb46dfeea88f503097784a9350a"
+    },
+    "src/bootcamp/procedure.mjs": {
+      "before": "e297241fea3a8478ddf694b002d82d3d25374ef71a5db8599b77f3b64b304b24",
+      "after": "e297241fea3a8478ddf694b002d82d3d25374ef71a5db8599b77f3b64b304b24"
+    },
+    "src/hackathon-test-vault/memory-stage-harness.mjs": {
+      "before": "360a7ece991c5b07b5e65599e47274867b0a1a4a941b0314ab51cfcf1f45e84d",
+      "after": "e5580d70a3e77ca9df0121dd3fc71999b64903734d8c8732fb3198be3460ccc5"
+    },
+    "src/hackerrank-evidence/diagnostics.mjs": {
+      "before": "21528e02d1048a0e36258bfc05bed77bef0ebac5b72d46086b81210895d335c4",
+      "after": "21528e02d1048a0e36258bfc05bed77bef0ebac5b72d46086b81210895d335c4"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "7cfaeba00df72f54d73a1fb41e2c4148e58be0d4f266e5efb512d46b53465124",
+      "after": "b9ad563873d56c4866995a8f2436baa5040d03e9a395de46c6d45c1179e0d3a6"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "4206f584c1d1ee34d13faa881e8785c76d9ef4e95bee8547c4e1629efe7f192f",
+      "after": "feea21e2f9b8bb7e66ca2ab8073fef8a755e99721c15c61fa4829c5d2486c4be"
+    },
+    "tools/bootcamp/explicit-consents.mjs": {
+      "before": "bc1db05c983506f96249a9d3281ba720d27796e2814df4a43bbdbbcfdb12f4a9",
+      "after": "bc1db05c983506f96249a9d3281ba720d27796e2814df4a43bbdbbcfdb12f4a9"
+    },
+    "tools/bootcamp/frontend-server.mjs": {
+      "before": "d595ff6149f9c2ee4ad133b0c50222340bb6f55cdbea9db8577d54e407657438",
+      "after": "d595ff6149f9c2ee4ad133b0c50222340bb6f55cdbea9db8577d54e407657438"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "0feb123532927163fc33dcfd49a0452e6451fafbfb74a5834dff4c8c64d70599",
+      "after": "0feb123532927163fc33dcfd49a0452e6451fafbfb74a5834dff4c8c64d70599"
+    },
+    "tools/bootcamp/normal-chain.mjs": {
+      "before": "c97f33c301525a14e61493116d19ea486e8d32dcfc73a0d3ad074315bc3bbb93",
+      "after": "c97f33c301525a14e61493116d19ea486e8d32dcfc73a0d3ad074315bc3bbb93"
+    },
+    "tools/bootcamp/normal-host-config.mjs": {
+      "before": "15204442309e3c91653f28518ec5d5af8e0f83c637881e73f307c335964c8fc1",
+      "after": "15204442309e3c91653f28518ec5d5af8e0f83c637881e73f307c335964c8fc1"
+    },
+    "tools/bootcamp/normal-host-flow.mjs": {
+      "before": "32c4119c2d9c2f41041434c6b5b3ab16f20934b640be8a53b2faf18f18a10ce1",
+      "after": "32c4119c2d9c2f41041434c6b5b3ab16f20934b640be8a53b2faf18f18a10ce1"
+    },
+    "tools/bootcamp/normal-host.mjs": {
+      "before": "679a96be27b1123396436622fa974902d0f2e8ba4f7f2ce8818125cfe94cb089",
+      "after": "679a96be27b1123396436622fa974902d0f2e8ba4f7f2ce8818125cfe94cb089"
+    },
+    "tools/bootcamp/test-client/review-window.js": {
+      "before": "b8524af41e643a19b37493b6f46a23161ef68f9429134579743c3c6e9570fa06",
+      "after": "c852be52294854c3073e46acb556645aa89a7d2bc15e55d15f05e63b5a0b7708"
+    }
+  },
+  "additions": {
+    "src/hackathon-test-vault/reviewed-source-v23.mjs": "7e14f3cde90b2360407e9f4446463bf6615404b0585e0a49f5289d5ca260f1e4"
+  },
+  "priorAcceptanceBytesChanged": false,
+  "actualSourceAccepted": false,
+  "productionEnabled": false
+}

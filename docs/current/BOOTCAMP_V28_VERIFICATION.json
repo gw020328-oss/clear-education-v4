@@ -1,0 +1,162 @@
+{
+  "version": "clear-bootcamp-v28-verification.1",
+  "date": "2026-10-25",
+  "baselineHead": "7a39f91b0861ea775cc4d1945f81a654b97d4458",
+  "sourceCandidateHead": "d2a6ffcda125057cebd932536e045b5f204604e8",
+  "scope": "SINGLE_ISSUANCE_CAPABILITY_AND_SINGLE_WRITE_CONSENT_CLOCK_VALIDATION",
+  "causes": [
+    {
+      "path": "PREPARE/PREPARE_CAPABILITY/AUTHORIZE",
+      "failure": "BC_E5_CLOCK_CHANGED -> E5B_CONTROLLER_REJECTED",
+      "reason": "The already-issued unreturned capability was excluded from the bounded witness revalidation when the synchronous API transaction crossed a second."
+    },
+    {
+      "path": "explicit synthetic review consent before ACCEPT fault injection",
+      "failure": "BC_VIEW_STALE",
+      "reason": "The same-second access check rejected an otherwise current one-write consent before either intended ACCEPT fault was reached."
+    }
+  ],
+  "baselineCi": {
+    "head": "7a39f91b0861ea775cc4d1945f81a654b97d4458",
+    "success": 9,
+    "failure": 1,
+    "failingRun": "https://github.com/gw020328-oss/clear-education-v4/actions/runs/40167086446",
+    "e5bTests": 39,
+    "passed": 36,
+    "failed": 3
+  },
+  "changes": {
+    "runtimeFiles": [
+      "src/bootcamp/execution-e4b-controller.mjs",
+      "src/bootcamp/operations.mjs",
+      "src/bootcamp/procedure.mjs"
+    ],
+    "capability": {
+      "eligible": "exact owned RuleError BC_E5_CLOCK_CHANGED after AUTHORIZE issued but did not return its certificate",
+      "issuerInvocations": 1,
+      "maximumFreshApiRechecks": 1,
+      "privateTicketKeptActiveUntilReturn": true,
+      "originalCertificatePayloadAndCapsRetained": true,
+      "secondClockConflictRejected": true
+    },
+    "consent": {
+      "writeExecutions": 1,
+      "sameSavepoint": true,
+      "maximumFinalValidationRechecks": 1,
+      "originalCallerTargetAndKeyRetained": true,
+      "ownerOperatingWindowCheckedAtFinalTime": true,
+      "ownerCheckBeforeOriginalPortObservations": true,
+      "finalAuthenticationAndScopeRevalidated": true,
+      "exactReplayReopensOwnerGate": false,
+      "secondClockConflictRollsBack": true
+    },
+    "ttlOrReviewOrSourceCapsExtended": false,
+    "clockFrozen": false,
+    "signatureOrTransactionOrConsentRetried": false,
+    "nativeSealOrSendRepeated": false,
+    "frontendApiOrDtoChanged": false
+  },
+  "redGreen": {
+    "capabilityRed": "BC_E5_CLOCK_CHANGED",
+    "consentRed": "BC_VIEW_STALE",
+    "focusedBoundaryAndRecoveryTests": 79,
+    "apiStoreExecutionRegressionPassed": 606,
+    "newBrowserManifestTestPassed": 1,
+    "sourceGateAndCompatibilityPassed": 110,
+    "e5bNativeWallClockPassed": 9,
+    "e5bNativeOtherPassed": 32,
+    "e5bNativeTotalPassed": 41
+  },
+  "wallClock": {
+    "clock": "actual Date.now with asynchronous RPC; boundary waits only force targeted forward crossings",
+    "source": "synthetic actors/source/model on fresh isolated Geth",
+    "originalSourceGrantSeconds": 240,
+    "positiveScenarios": [
+      "ordinary asynchronous RPC",
+      "ACCEPT BEFORE_DISPATCH rollover",
+      "ACCEPT COMMIT rollover",
+      "lost ACCEPT response",
+      "PREPARE AUTHORIZE rollover",
+      "both explicit synthetic consent rollovers"
+    ],
+    "eachPositive": {
+      "nativeStagesIncluded": 6,
+      "broadcasts": 6,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1,
+      "canonicalClaimAmountAtoms": "100000000",
+      "symbol": "TEST",
+      "duplicateClaimRejected": true
+    },
+    "negativeScenarios": [
+      "original expiry with actual elapsed time",
+      "service revoked before ACCEPT send",
+      "source changed before ACCEPT send"
+    ],
+    "eachNegative": {
+      "nativeStagesIncluded": 5,
+      "sealedUnsent": 1,
+      "broadcasts": 5,
+      "transactionSignatures": 6,
+      "paymentSignatures": 1,
+      "targetFaultReached": true
+    }
+  },
+  "counterexamples": [
+    "capability original expiry",
+    "capability service revocation",
+    "capability source change",
+    "capability reversed clock",
+    "untyped lookalike error",
+    "different recipient/amount/payload",
+    "second capability conflict",
+    "consent source expiry",
+    "consent review cap",
+    "consent source/funding change",
+    "consent logout",
+    "consent reversed clock",
+    "owner minimum settlement reserve",
+    "second final-validation conflict",
+    "owner callback mutating funding",
+    "exact consent replay without another write"
+  ],
+  "review": {
+    "ownerIssueIsSingleUse": true,
+    "nativeSendGateUnchanged": true,
+    "originalSourceReviewAndAuthorityCapsRevalidated": true,
+    "casAndImmutableTargetPreserved": true,
+    "nonceAndDuplicatePaymentGuardsUnchanged": true,
+    "reviewMethod": "substantive local review of three runtime changes and their caller/owner/native boundaries; no extra reviewer session"
+  },
+  "preservation": {
+    "existingFilesMatched": 624,
+    "oldVersionedPinsAndHelpersChanged": false,
+    "oldRunUsedSpentApprovalDbReusedOrReset": false
+  },
+  "intake": "specs/bootcamp/hackathon-test-memory-source-intake-v28.json",
+  "browserAssets": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V20.json",
+  "actualHistoricalRun": {
+    "run": "r20",
+    "head": "f38ae8bd44c9da2e27f6a56650ced0f7bffe9aba",
+    "claimAmountAtoms": "100000000",
+    "status": "INCLUDED",
+    "finalized": false,
+    "finishedAndStopped": true,
+    "reexecutedByV28": false
+  },
+  "limits": {
+    "newActualLoginProofPaidAiUserSignatureOrConsent": false,
+    "normalHostOrCaStarted": false,
+    "remoteMoodle": false,
+    "windowsActual": false,
+    "productFrontendComplete": false,
+    "productionDepositPolicyFinal": false
+  },
+  "integration": "Final guard commit CI and merge SHA are recorded separately on PR102 and Issue106. This source-candidate record does not claim pending CI or merge completed.",
+  "checks": {
+    "frozenE4E5Preservation": "PASS",
+    "v28SourcePins": "PASS",
+    "workspace": "PASS",
+    "dependencies": "PASS"
+  }
+}

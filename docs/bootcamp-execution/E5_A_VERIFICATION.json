@@ -1,0 +1,130 @@
+{
+  "version": "clear-bootcamp-test-e5-a-verification.1",
+  "date": "2026-10-19",
+  "status": "LOCAL_METADATA_PASS_PENDING_COMMON_SOURCE_REVIEW_AND_E4_INTEGRATION",
+  "branch": "codex/bootcamp-e5-execution",
+  "implementationBaseMerge": "2d606ea29f2f1dee3ca1f39c77d58725b0548119",
+  "inputs": {
+    "e3": "c3b71c710f558529680e255222857f0e81fe1dcb",
+    "common": "249f4bd2088cea687333f02fb2e18add2c15efcd",
+    "e4": "17dca2eea07f50e4e15c3dc11f8b57169c7d3f9b"
+  },
+  "settings": {
+    "requestedModel": "gpt-6.1-sol",
+    "requestedReasoning": "high",
+    "actualExecutionSettingIndependentlyVerified": false
+  },
+  "checks": {
+    "offlineWithNetworkGuard": {
+      "newDistinct": 44,
+      "existingE1": 111,
+      "existingE3": 47,
+      "total": 202,
+      "pass": 202,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "durationMs": 5400.224458,
+      "logSha256": "e941189988f84b7b80ed9bab374fc5e6cbd21266944abbc9863db7b4c302796d"
+    },
+    "processRecovery": {
+      "sigkill": 5,
+      "independentProcessLeaseRace": 1,
+      "migrationRollbackInjectionPoints": 2
+    },
+    "workspace": "PASS_191_REFERENCE4_PROFILES3_GRAPH_PENDING",
+    "dependencies": "PASS_PINNED_MEMORY_COMPILE_ONLY"
+  },
+  "source8": {
+    "src/bootcamp/procedure.mjs": {
+      "sha256": "91ec8afd7e6aa001bb25ff8e716d168eb37f0e39e6fd09824b535889848d764f",
+      "previousSha256": "91ec8afd7e6aa001bb25ff8e716d168eb37f0e39e6fd09824b535889848d764f",
+      "preserved": true
+    },
+    "src/bootcamp/procedure-ledger.mjs": {
+      "sha256": "db6d5a0273bb135c120828fc6ed32a4f1b6e2bb46182337908410948ada9035f",
+      "previousSha256": "db6d5a0273bb135c120828fc6ed32a4f1b6e2bb46182337908410948ada9035f",
+      "preserved": true
+    },
+    "src/bootcamp/procedure-ports.mjs": {
+      "sha256": "f6e51f4f23ccaf5d55f5754cd3308df13e3894dc282256556feae1613137bbfc",
+      "previousSha256": "f6e51f4f23ccaf5d55f5754cd3308df13e3894dc282256556feae1613137bbfc",
+      "preserved": true
+    },
+    "src/bootcamp/store.mjs": {
+      "sha256": "db19b7fbfeec8ddf5cada6c53e4aff1d9c8857cd014eeb9d8ce2b8dd9df98f64",
+      "previousSha256": "d6f7b7c4b832441310bba6ad7c407019872c598059585c187be5fa196b32b607",
+      "preserved": false
+    },
+    "src/bootcamp/operations.mjs": {
+      "sha256": "7228821abd7d8f1157e889a0bb9173e465afd7fa662e9c139d4eecff99b2e37d",
+      "previousSha256": "7228821abd7d8f1157e889a0bb9173e465afd7fa662e9c139d4eecff99b2e37d",
+      "preserved": true
+    },
+    "src/bootcamp/http.mjs": {
+      "sha256": "06c7b249e6cc0a876bda8de0ea99b42f3f1cc8fb53f4edec2a1efb7f36c5d7a9",
+      "previousSha256": "06c7b249e6cc0a876bda8de0ea99b42f3f1cc8fb53f4edec2a1efb7f36c5d7a9",
+      "preserved": true
+    },
+    "docs/bootcamp-procedure/e4-port-proposal.json": {
+      "sha256": "74f5472788fd3c807a931033e8e6383b8793f8b8f02be283d746e23bbab12f7e",
+      "previousSha256": "74f5472788fd3c807a931033e8e6383b8793f8b8f02be283d746e23bbab12f7e",
+      "preserved": true
+    },
+    "docs/bootcamp-procedure/synthetic-intake-example.json": {
+      "sha256": "309072d4eea6e3e8f7d233f13e9160621f89861a3099038987668b49d684b494",
+      "previousSha256": "309072d4eea6e3e8f7d233f13e9160621f89861a3099038987668b49d684b494",
+      "preserved": true
+    }
+  },
+  "ownedArtifactSha256": {
+    "src/bootcamp/execution-ledger.mjs": "2da2ecf181a408af00f817a18fe5516c4c6775e9ed081794878e0db514d74f41",
+    "src/bootcamp/execution-operations.mjs": "74d061bc7de34c052f330510d433be26ce35ed4624ddb05088453bc9c69eabb0",
+    "src/bootcamp/execution-ports.mjs": "4dae489da512de8b1d287dc3351992d67a2cf1928eb83637c34ec1cb8fde5270",
+    "src/bootcamp/execution-readback.mjs": "a285e68128cd813039a5b1da5c23ebdd6873d0cbf4bf4a67d6558bf26801519c",
+    "src/bootcamp/execution-worker.mjs": "1e838e7c199390f23e2d392639d1db1f30551e000c12cadf33342dfb2deac4a8",
+    "src/bootcamp/store.mjs": "db19b7fbfeec8ddf5cada6c53e4aff1d9c8857cd014eeb9d8ce2b8dd9df98f64",
+    "tests/bootcamp-store/r2-operations.test.mjs": "fd6e50ed114196db5d72342ea546aa12b8f1fbd8fd84872037adcdd1051d5b64",
+    "tests/bootcamp-execution/fixture.mjs": "5ff3cf5589fdc0952c2935b32aed83752403baa6c534f5b80ab111cac3da1885",
+    "tests/bootcamp-execution/legacy-factory.mjs": "fd5b2ec38d9457dda82129e9de424bc350a75fff32e4117af673357987d70992",
+    "tests/bootcamp-execution/metadata.test.mjs": "075a59830e02944304292d6ba93b50b48a551bab364bd34a9a5f106c93232fb6",
+    "tests/bootcamp-execution/recovery.test.mjs": "0bf887886de85fe4a562fedb398b843ada51739e63620199dc1fdd1c0c3d50b6",
+    "tests/bootcamp-execution/worker.mjs": "3eb98e7a12468e11f12d5e8eb50bb80419cb16a1d529c151d97555d71dba577d",
+    "tests/product-workflow/bootcamp-e5-metadata.test.mjs": "5f7ecdd4c3f5c6a9cf0028c0cd152030545dc40b37ffec4106c6beafe93b8b0c"
+  },
+  "compatibility": {
+    "memoryV1BoundarySha256": "cfb42a8f559a54b94188df6f94cb7d67d9a7085b32990ce55968be62904c3fa0",
+    "historicalBoundaryMutated": false,
+    "e4SourceMutated": false,
+    "changedFrozenSourcePaths": [
+      "src/bootcamp/store.mjs"
+    ],
+    "memoryStageRun": "NOT_RUN_EXPECTED_STAGE_SOURCE_PIN_UNTIL_REVIEWED_V2",
+    "push": false,
+    "ci": "NOT_RUN",
+    "fullRuntimeAccepted": false
+  },
+  "execution": {
+    "default": "UNCONFIGURED_BLOCKED",
+    "configured": "METADATA_ONLY",
+    "dispatchAuthorization": false,
+    "rebaseImplemented": false,
+    "actualSource": 0,
+    "existingKeyReads": 0,
+    "payoutSignatures": 0,
+    "transactions": 0,
+    "newChains": 0,
+    "paidCalls": 0,
+    "sourceAndLoginSignatures": "EXISTING_SYNTHETIC_REGRESSION_FIXTURES_ONLY_NOT_PAYOUT_SIGNATURES"
+  },
+  "remaining": [
+    "REVIEWED_MEMORY_COMPATIBLE_INPUT_V2",
+    "E4_CANONICAL_HASH_BOUND_READER_INTAKE",
+    "PRIVATE_DURABLE_ENVELOPE_AND_RETENTION_INTAKE",
+    "FULL_CURRENT_APPROVAL_AND_DISPATCH_HANDSHAKE",
+    "UNKNOWN_TRANSPORT_READBACK",
+    "AUTHENTICATED_REBASE_LINEAGE_ACTIVATION",
+    "PERSISTENT_BACKEND_STOP_ANYCALLER_CLAIM",
+    "CROSS_MERGE_AND_EXACT_HEAD_CI"
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "version": "clear-e5-normal-path-source-pins.23",
+  "baseHead": "851c9e12a139295d337f347d49d1f4aac90c6ce7",
+  "scope": "EXACT_V26_CLOCK_ONLY_PLAN_RECHECK",
+  "previousRecord": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v22.json",
+    "sha256": "5d2378f839616737bf084c8bf45910b99e38ac6767ca82bc9240fddf12d53557"
+  },
+  "reviewedIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v26.json",
+    "sha256": "f6bcbc3700bd6b7d8172da5afeb3786e3343a465c810df11f59d9ce3b700deb8"
+  },
+  "reviewedApiHead": "b49c9485894a50c21ae10a5a8997b1993f4a0c51",
+  "changes": {
+    "src/bootcamp/execution-api-bridge.mjs": {
+      "before": "1a6cd934ccf2f41010a9124869f5e3c90b4d85d26235f7d5b44497bbe15b499a",
+      "after": "1a6cd934ccf2f41010a9124869f5e3c90b4d85d26235f7d5b44497bbe15b499a"
+    },
+    "src/bootcamp/execution-development.mjs": {
+      "before": "f1c972d25d48972ff94db263264f9814ec86e5f044587fab8f6a71ef76c4b999",
+      "after": "f1c972d25d48972ff94db263264f9814ec86e5f044587fab8f6a71ef76c4b999"
+    },
+    "src/bootcamp/execution-e4b-controller.mjs": {
+      "before": "80599880d98712fe1ac8f085027feba81be808d94fd8dde1ba47cdca4555df6f",
+      "after": "80599880d98712fe1ac8f085027feba81be808d94fd8dde1ba47cdca4555df6f"
+    },
+    "src/bootcamp/execution-e4b-ports.mjs": {
+      "before": "43666ee23ccb8aad1a15a750434d8bc4c08f427e4d7da9f3e972eff46669d635",
+      "after": "43666ee23ccb8aad1a15a750434d8bc4c08f427e4d7da9f3e972eff46669d635"
+    },
+    "src/bootcamp/execution-operations.mjs": {
+      "before": "3090e6aefcacbec90beed0badeddd86ee3654532e81f7d046407a63c383d2c17",
+      "after": "1fa18306acf21662d1b12c1ded11210b320d17d1aa08a2615bb5fe15947ae7fd"
+    },
+    "src/bootcamp/http.mjs": {
+      "before": "57292697834b24755309aa46df1a1736b3eebb82925fb4cbde15eae44708ec80",
+      "after": "57292697834b24755309aa46df1a1736b3eebb82925fb4cbde15eae44708ec80"
+    },
+    "src/bootcamp/normal-client.mjs": {
+      "before": "b4ad85572a57ed04c24ced710242d39669bb1eb46dfeea88f503097784a9350a",
+      "after": "b4ad85572a57ed04c24ced710242d39669bb1eb46dfeea88f503097784a9350a"
+    },
+    "src/bootcamp/procedure.mjs": {
+      "before": "e297241fea3a8478ddf694b002d82d3d25374ef71a5db8599b77f3b64b304b24",
+      "after": "e297241fea3a8478ddf694b002d82d3d25374ef71a5db8599b77f3b64b304b24"
+    },
+    "src/hackathon-test-vault/e5/envelope-service.mjs": {
+      "before": "ac9431747c64ab86da904222e458dbba1e25ba8b127ef481d8fe57618d162d0b",
+      "after": "ac9431747c64ab86da904222e458dbba1e25ba8b127ef481d8fe57618d162d0b"
+    },
+    "src/hackathon-test-vault/e5b/bridge.mjs": {
+      "before": "a2bf78c5c5de81fdcce0842e6e01f923c27fe83f3f76fddc984e0772840703c3",
+      "after": "a2bf78c5c5de81fdcce0842e6e01f923c27fe83f3f76fddc984e0772840703c3"
+    },
+    "src/hackathon-test-vault/e5b/service.mjs": {
+      "before": "10858d775c87679a45e877a79c9f72b1591054bd6cdda4f0610dcd9ea80b52ec",
+      "after": "10858d775c87679a45e877a79c9f72b1591054bd6cdda4f0610dcd9ea80b52ec"
+    },
+    "src/hackathon-test-vault/memory-stage-harness.mjs": {
+      "before": "e4469c92d6e5f12b87b1e9bf269ccb0d40e9ee76ae21f35f44037a73ada14da9",
+      "after": "a5f1328e789a93552f140340156de1b5a53cd59c7a57f76bb0607281ea012518"
+    },
+    "src/hackerrank-evidence/diagnostics.mjs": {
+      "before": "fa3d083298734fd8c0fd70d5b54639c565944e4373c0eeb4a851643639ce5895",
+      "after": "fa3d083298734fd8c0fd70d5b54639c565944e4373c0eeb4a851643639ce5895"
+    },
+    "tests/hackathon-test-vault/e5/preservation.mjs": {
+      "before": "47c939dd6f13733e4756d5d62765864e1a0dbd6fcbcfe744c763a6a69c73116e",
+      "after": "aa91c20dceaaeb852bb6e4093dd5a9a39cadb79bf000248b32c8befa0a57a871"
+    },
+    "tests/hackathon-test-vault/e5b/source-pins.mjs": {
+      "before": "79ac908f41e261e521e44ce7aa180a29098f2132b037234b2aa25f4ee9048c9b",
+      "after": "2367cd1a646a53aff3b888ea2ccc2e97285e859867bc84aac2d8640e12d25b48"
+    },
+    "tools/bootcamp/explicit-consents.mjs": {
+      "before": "bc1db05c983506f96249a9d3281ba720d27796e2814df4a43bbdbbcfdb12f4a9",
+      "after": "bc1db05c983506f96249a9d3281ba720d27796e2814df4a43bbdbbcfdb12f4a9"
+    },
+    "tools/bootcamp/frontend-server.mjs": {
+      "before": "d595ff6149f9c2ee4ad133b0c50222340bb6f55cdbea9db8577d54e407657438",
+      "after": "d595ff6149f9c2ee4ad133b0c50222340bb6f55cdbea9db8577d54e407657438"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "c0f0f383d22d933e65eac0ff8385535dc9aed6bbab70077e9b9a44026449f30a",
+      "after": "c0f0f383d22d933e65eac0ff8385535dc9aed6bbab70077e9b9a44026449f30a"
+    },
+    "tools/bootcamp/normal-chain.mjs": {
+      "before": "8063ffcc777a56bfac930ddbef22305a0bc9ce5a0ed7a30398fe91b9ac5aeb5f",
+      "after": "8063ffcc777a56bfac930ddbef22305a0bc9ce5a0ed7a30398fe91b9ac5aeb5f"
+    },
+    "tools/bootcamp/normal-host-config.mjs": {
+      "before": "15204442309e3c91653f28518ec5d5af8e0f83c637881e73f307c335964c8fc1",
+      "after": "15204442309e3c91653f28518ec5d5af8e0f83c637881e73f307c335964c8fc1"
+    },
+    "tools/bootcamp/normal-host-flow.mjs": {
+      "before": "32c4119c2d9c2f41041434c6b5b3ab16f20934b640be8a53b2faf18f18a10ce1",
+      "after": "32c4119c2d9c2f41041434c6b5b3ab16f20934b640be8a53b2faf18f18a10ce1"
+    },
+    "tools/bootcamp/normal-host.mjs": {
+      "before": "679a96be27b1123396436622fa974902d0f2e8ba4f7f2ce8818125cfe94cb089",
+      "after": "679a96be27b1123396436622fa974902d0f2e8ba4f7f2ce8818125cfe94cb089"
+    },
+    "tools/bootcamp/test-client/review-window.js": {
+      "before": "c852be52294854c3073e46acb556645aa89a7d2bc15e55d15f05e63b5a0b7708",
+      "after": "c852be52294854c3073e46acb556645aa89a7d2bc15e55d15f05e63b5a0b7708"
+    }
+  },
+  "additions": {
+    "src/hackathon-test-vault/reviewed-source-v26.mjs": "d43dad4591f79a3653c80c170779f1f594601fb82d57c2257ec5a13c5d8796f6"
+  },
+  "priorAcceptanceBytesChanged": false,
+  "actualSourceAccepted": false,
+  "productionEnabled": false
+}

@@ -1,0 +1,83 @@
+{
+  "version": "clear-bootcamp-normal-host-verification.1",
+  "date": "2026-10-22",
+  "sourceCandidateHead": "3c086b6f755bce880031bf1be92aa7df5905ab41",
+  "reviewedIntakeSha256": "823761592e8178e682ad2f2c39dd6d95423dcbcebad9ffdd15bb2ccfb4424ba8",
+  "relatedOfflineHostHttpsTests": {
+    "pass": 23,
+    "total": 23,
+    "firstAttempt": {
+      "pass": 21,
+      "total": 22,
+      "failure": "DEV_WEB_ROOT",
+      "cause": "Mac temporary /var alias in new asset test fixture",
+      "fix": "realpath fixture; production boundary unchanged"
+    }
+  },
+  "sourceMutationAndCompatibilityTests": {
+    "pass": 32,
+    "total": 32,
+    "evmCreated": false
+  },
+  "e5Preservation": "PASS",
+  "e5bExactSourcePins": "PASS",
+  "sources": {
+    "preservedV6": 36,
+    "preservedV7": 134,
+    "preservedV8": 135,
+    "preservedV9": 135,
+    "reviewedV10": 159,
+    "deltaFromV9": 4,
+    "additions": 24
+  },
+  "localObservations": {
+    "origin": "https://127.0.0.1:9445",
+    "preparedHttpsCaVerified": true,
+    "preparedAuth503": true,
+    "browserModuleServed": true,
+    "preparedListenerClosedAfterCheck": true,
+    "registry": {
+      "attempts": 1,
+      "success": true,
+      "signerCount": 3,
+      "realLockfBoundary": true,
+      "sourceVerified": false
+    },
+    "dockerAvailable": true,
+    "pinnedGethAvailable": true,
+    "moodleRunning": true,
+    "moodleOwnerHead": "364871ea139daed385f8c0ccd7033d03b8f24928",
+    "moodleOwnerCleanAndReaderMatch": true,
+    "existingGeminiEnvironmentPresent": true,
+    "keyProviderOrBillingValidityVerified": false,
+    "priceReviewOn": "2026-10-22",
+    "priceSource": "https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite",
+    "inputNanoUsdPerToken": "300",
+    "outputIncludingThinkingNanoUsdPerToken": "2500",
+    "scenarioUsd": "0.00346",
+    "providerHardCashCapVerified": false
+  },
+  "newActualActivity": {
+    "applications": 0,
+    "realms": 0,
+    "sourceLeases": 0,
+    "managedBrowsers": 0,
+    "paidCalls": 0,
+    "transactions": 0,
+    "run3Replays": 0
+  },
+  "remainingDependencies": [
+    "LATEST_FRONTEND_CONTRACT_IMPLEMENTATION_AND_ASSET_ACCEPTANCE",
+    "TWO_PUBLIC_ROLE_ADDRESSES_AND_BROWSER_CA_PREPARATION",
+    "FRESH_EXACT_AI_PACKET_DIRECT_HUMAN_APPROVAL_DURING_RUN"
+  ],
+  "notVerified": [
+    "LATEST_MANAGED_HR_3_LOGIN_AND_HOSTED_TRANSCRIPT_PROOF",
+    "ACTUAL_FRONTEND_TWO_ROLE_FLOW",
+    "FRESH_EXACT_AI_CALL",
+    "ACTUAL_FULL_SOURCE_PAYMENT_E2E"
+  ],
+  "historicalEvidence": "docs/current/BOOTCAMP_V9_VERIFICATION.json",
+  "productionEnabled": false,
+  "ciEvidenceLocation": "GitHub PR #102 and #78 current-head checks; prior 14125ad result is historical only"
+}

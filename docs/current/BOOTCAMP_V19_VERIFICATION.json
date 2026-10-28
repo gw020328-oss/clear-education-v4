@@ -1,0 +1,126 @@
+{
+  "version": "clear-bootcamp-v19-verification.1",
+  "date": "2026-10-24",
+  "baselineHead": "03f8d157043fa1b1d004d5ef9d645a5767a26ffe",
+  "sourceCandidateHead": "b2f11e62546e6bd3ab0a5458993918be6d3265c7",
+  "scope": "OFFLINE_R10_REGISTRATION_CLOCK_BOUNDARY_FIX",
+  "r10Evidence": {
+    "failedOperation": "e3-register-target",
+    "computedOperationIdMatches": true,
+    "hostCommandOrdinal": 9,
+    "failedMetricSequence": 40,
+    "failedMetricUtcMs": [
+      1792778179000,
+      1792778179007
+    ],
+    "clockFloor": 1792778179,
+    "applicationRevision": 9,
+    "decisionRevision": 9,
+    "conditionsStatus": "MET",
+    "validHeads": 4,
+    "consumedRequests": 4,
+    "invalidationEvents": 0,
+    "earliestLeaseExpiresAt": 1792778203,
+    "minimumRemainingSeconds": 24,
+    "e3Records": 0,
+    "e3OpaqueIds": 0,
+    "paymentPerformed": false,
+    "initialTransactionTickRecorded": false,
+    "causeBasis": "EXACT_OPERATION_MATCH_AND_CODE_PATH_ELIMINATION_WITH_DETERMINISTIC_REPRODUCTION"
+  },
+  "sourceIntake": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v19.json",
+    "sha256": "51c1b01c643b6f11d05fbb6a85a89c66eb86a426db3cc4d947e1df7bb09e1d72",
+    "sources": 165,
+    "runtimeDeltas": [
+      "src/bootcamp/operations.mjs",
+      "src/bootcamp/procedure.mjs",
+      "tools/bootcamp/live-context.mjs",
+      "tools/bootcamp/normal-chain.mjs"
+    ],
+    "additions": {
+      "tools/bootcamp/normal-current-view.mjs": "18e4db029d297d34c217e06782b9cf83311f90123fcdf00b1f55e01b083f4e25"
+    }
+  },
+  "reviewedHelper": {
+    "path": "src/hackathon-test-vault/reviewed-source-v19.mjs",
+    "sha256": "2282128347f428e06db497699f32e93d7aed86efa9535f5ffb6b226d5ca783d1"
+  },
+  "guardPins": {
+    "path": "docs/hackathon-test-vault/e5b/normal-source-pins-v16.json",
+    "sha256": "5dfdef5889b0b7f9c49a24a7e0028a37398d3c490c3f4467126dd6b637b1c4d3"
+  },
+  "testClientManifest": {
+    "path": "docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V11.json",
+    "sha256": "0ada61dfc01abbb62b65fb4ed00865e9a6c102510f7983438d07a68308dae7b3",
+    "browserBytesChanged": false
+  },
+  "finalLocalChecks": {
+    "originalV18FailureReproduced": "BC_VIEW_STALE",
+    "newDeterministicRegressionTests": 18,
+    "apiAndExecutionSynthetic": {
+      "passed": 440,
+      "failed": 0,
+      "networkGuard": true
+    },
+    "pinCompatibilityAndMemoryGate": {
+      "passed": 70,
+      "failed": 0
+    },
+    "normalAiAndSpentJournalOffline": {
+      "passed": 28,
+      "failed": 0,
+      "networkGuard": true
+    },
+    "uniqueNodeTests": 538,
+    "preliminaryBoundarySubset": {
+      "passed": 124,
+      "includedInFinalApiTotal": true
+    },
+    "e5Preservation": "PASS",
+    "e5bSourcePins": "PASS",
+    "workspace": "PASS",
+    "rootDependencies": "PASS",
+    "declarationSyntax": "PASS_NOT_FULL_TSC"
+  },
+  "boundaryReview": {
+    "method": "DIRECT_CODE_AND_REGRESSION_REVIEW",
+    "registrationClockRetryOnly": true,
+    "sameBodyCasHashKey": true,
+    "freshAuthorityPortsAndSources": true,
+    "allFinalChecksRetained": true,
+    "secondConflictRejected": true,
+    "collectedDecisionTargetBound": true,
+    "consentAutomaticRetry": false,
+    "chainOrFundingAuthorityChanged": false,
+    "sdkCryptoTransportChanged": false,
+    "sourceExpiryExtended": false,
+    "actualHumanConsentReplaced": false
+  },
+  "preservation": {
+    "baselineFiles": 110,
+    "result": "PASS",
+    "r5ThroughR10": true,
+    "priorImmutableGenerations": true,
+    "r10ApprovalAndSpentAiJournal": true
+  },
+  "ci": {
+    "status": "VERIFY_FINAL_HEAD_AFTER_PUSH",
+    "evidencePath": "var/bootcamp-verification/v19-final-ci.json",
+    "priorHeadResultsReused": false
+  },
+  "newActualExecution": {
+    "hostPrepared": false,
+    "login": false,
+    "proof": false,
+    "paidAi": false,
+    "payment": false,
+    "merged": false
+  },
+  "nextActualTest": {
+    "requiresNewRun": true,
+    "requiresFreshExactAiApproval": true,
+    "requiresBothRolePaymentConsents": true,
+    "automaticallyStarted": false
+  }
+}

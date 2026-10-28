@@ -1,0 +1,60 @@
+{
+  "report": {
+    "version": "clear-moodle-e6-fixture.1",
+    "environmentRef": "e6-20261018-run1",
+    "runRef": "run1",
+    "mappingRevision": 1,
+    "project": "clear-moodle-e6-20261018",
+    "port": 18768,
+    "sourceVersion": "moodle-4.5.15-215f4438",
+    "apiVersion": "2024100715",
+    "publicSourceCommit": "215f44380bdc3ccf852a3a22e34f8423ff64033a",
+    "courseId": 2,
+    "activity": {
+      "cmId": 3,
+      "instanceId": 1,
+      "module": "page"
+    },
+    "assignment": {
+      "cmId": 4,
+      "instanceId": 1
+    },
+    "reflection": {
+      "cmId": 5,
+      "forumId": 3,
+      "selectedPostId": 1
+    },
+    "participantMapping": {
+      "participantId": "participant-e6-one",
+      "applicationId": "application-e6-one",
+      "moodleUserId": 3,
+      "accountBindingRef": "e6-one-account",
+      "revision": 1,
+      "assurance": "GENERATED_SYNTHETIC_ACCOUNT_NOT_REAL_IDENTITY"
+    },
+    "automaticConfiguration": {
+      "tracking": 2,
+      "isAutomatic": true,
+      "rules": [
+        "completionview"
+      ],
+      "assurance": "AUTHENTICATED_API_FIELDS"
+    },
+    "completionSetupReceipt": {
+      "id": "3",
+      "course": "2",
+      "module": "16",
+      "instance": "1",
+      "completion": "2",
+      "completionview": "1",
+      "completiongradeitemnumber": null,
+      "completionexpected": "0"
+    },
+    "completionSetupReceiptHash": "0x1d4bede4680307fc8dad2b21022fb2b1b9826b8ac3e2857454a9e1ea22536e61",
+    "setupAssurance": "OWNED_SETUP_DB_RECEIPT_SEPARATE_FROM_API",
+    "preparedAtMs": 1792334258073,
+    "sourceTimestampRewritten": false,
+    "productRuntimeReady": false
+  },
+  "reportHash": "0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28"
+}

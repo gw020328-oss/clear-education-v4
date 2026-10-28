@@ -1,0 +1,29 @@
+name: clear-moodle-e6-20261018
+services:
+  db:
+    image: postgres@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54
+    mem_limit: 256m
+    cpus: 0.5
+    env_file: ../../../var/moodle-e6/db.env
+    volumes: [e6db:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U moodle -d moodle']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  web:
+    image: moodlehq/moodle-php-apache@sha256:501f19fa75ad3cdc8962f2a742f39d179b8aa8ffdc2ff233d8d27a32f14e0e05
+    mem_limit: 768m
+    cpus: 1
+    ports: ['127.0.0.1:18768:80']
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../../../var/moodle-e6/moodle:/var/www/html
+      - ./scripts:/lab-scripts:ro
+      - ../../../var/moodle-e6:/lab-runtime
+      - e6data:/var/moodledata
+volumes:
+  e6db:
+  e6data:

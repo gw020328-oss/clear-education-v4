@@ -1,0 +1,62 @@
+{
+  "version": "clear-bootcamp-c1-local-intake.1",
+  "date": "2026-10-22",
+  "baseHead": "6962c1394b82aac633a686e1d197475d1803aacb",
+  "sourceHead": "47972c12fa57d4a92b861f5917be2acae4e80bd6",
+  "scope": "MINIMAL_EXISTING_HTTPS_HANDLER_WIRING_AND_BROWSER_DISPLAY_CONSENT_ADAPTER",
+  "recommendedSetting": "GPT-6.1 Sol / High",
+  "runtimeModelIdIndependentlyVerified": false,
+  "existingPinned36SourcesChanged": false,
+  "existingV1R2R3Changed": false,
+  "newPinGenerationRequired": false,
+  "localTests": {
+    "relatedPass": 15,
+    "relatedFail": 0,
+    "includesNewHttpsAndHostCases": 8,
+    "logSha256": "ce8521246a8c7f0b8b2dee45a87f2c361d913df88ae7dc64d03a3484c0ea8d48",
+    "sourcePreservationPass": 4,
+    "combinedPass": 19,
+    "logSourceHead": "47972c12fa57d4a92b861f5917be2acae4e80bd6"
+  },
+  "initialFixtureFailuresPreserved": [
+    {
+      "kind": "MAC_TMP_PARENT_REALPATH_OMITTED",
+      "pass": 14,
+      "fail": 1,
+      "logSha256": "ff4f2f76f6fa60f020afbd59800f06a87050e561e00d5534cfeb2948f0011a5b"
+    },
+    {
+      "kind": "TEST_CLEANUP_REMOVED_DIRECTORY_BEFORE_HOST_RELEASE",
+      "pass": 0,
+      "fail": 1,
+      "logSha256": "08d5d797891fe5f4f3c63c2ef0d675994562011c79ff0b3b607f3e1145cc2e79"
+    }
+  ],
+  "fixtures": {
+    "path": "specs/bootcamp/normal-frontend-fixtures-v1.json",
+    "sha256": "edf763f76cf21d6040462d8ca638820b2b5ab33d0652350af3746515ff62cb02",
+    "cases": 2,
+    "rolesPerCase": 2,
+    "actualSourceEvidence": false
+  },
+  "host": {
+    "version": "clear-bootcamp-frontend-host.1",
+    "defaultOrigin": "https://127.0.0.1:9444",
+    "mode": "C1_DISPLAY_AUTH_ONLY_STORE_DISABLED",
+    "automaticApplicationCreation": false,
+    "sourceCollectionConfigured": false,
+    "signerInstalled": false,
+    "executionReceiptHttpImplemented": false
+  },
+  "newActualSourceApplicationsOrLeases": 0,
+  "actualHrLogins": 0,
+  "paidCalls": 0,
+  "actualSourceCollections": 0,
+  "demoChainTransactions": 0,
+  "syntheticRun3Repeated": false,
+  "webFilesChanged": false,
+  "uiConsumptionVerified": false,
+  "actualRuntimeFrontendInstalled": false,
+  "actualSourceDemoCompleted": false,
+  "remoteCi": "PENDING_FINAL_PUSH_HEAD"
+}

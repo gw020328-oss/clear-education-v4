@@ -1,0 +1,126 @@
+{
+  "version": "clear-e5b-component-verification.1",
+  "date": "2026-10-19",
+  "status": "LOCAL_COMPONENT_VERIFIED_REMOTE_EXACT_HEAD_PENDING",
+  "implementationHead": "9607f4762842c520bbb6b08d9359483adcc0a7b4",
+  "requestedModel": "gpt-6-astra/high",
+  "runtimeModelIndependentlyVerified": false,
+  "local": {
+    "bridge": {
+      "sourceBasis": "9607f4762842c520bbb6b08d9359483adcc0a7b4",
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 119321.045583,
+      "logSha256": "fe752942e89f4b92c3ad03632a6c766f4d72f47bb3c5529ab9a33bc518bef668"
+    },
+    "aRegression": {
+      "sourceBasis": "UNCHANGED_A_RUNTIME_AND_TESTS_AT_B244648",
+      "tests": 42,
+      "pass": 42,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 242826.781584,
+      "logSha256": "57d7f3dbbc4b68b61b88b0a5e5457eaafcfd2ec08d16e225505a45a2c7d83fec"
+    },
+    "memoryAndContractRegression": {
+      "sourceBasis": "EXPLICIT_V4_CONSUMER_59E615AA",
+      "tests": 164,
+      "pass": 164,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 153607.2485,
+      "logSha256": "77d2b299d7eb3d8d3ae3c5bec82cb39e58a2bc4646bbfac711f4bb732b36ee41"
+    },
+    "apiE1E3": {
+      "sourceBasis": "REVIEWED_API_4DEC3BD_V4_17_SOURCE_HASHES",
+      "tests": 275,
+      "pass": 275,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 8785.42825,
+      "logSha256": "f10368ce56cf678964ad0bffabfb9457ad633986528f4d5830827b280c7875fa"
+    },
+    "productEntrypoints": {
+      "sourceBasis": "EXPLICIT_V4_CONSUMER_ENTRYPOINTS_WITH_OVERLAPPING_REGRESSION",
+      "tests": 165,
+      "pass": 165,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 157696.912916,
+      "logSha256": "02b514a7c443d58f14926da44d52d5227a0ec2e450891ed88f03031c548344e9"
+    }
+  },
+  "countMeaning": "PER_SUITE_COUNTS_WITH_OVERLAP_NOT_UNIQUE_INTEGRATED_CASE_TOTAL",
+  "frozen": {
+    "originalSourceReferenceFiles": 191,
+    "dependencyGraph": "UNCHANGED",
+    "e4OtherArtifacts": 8,
+    "changedMemoryConsumerSha256": "59e615aa4eac8797b84f4397c27daa2790c5023ace5d94d13b1913e15e391895",
+    "aOtherArtifacts": 22,
+    "aRuntimeFiles": 7,
+    "aPr95Head": "0e6d4225e5b645e57e3988dc426937b08069ead8",
+    "v1V2V3AndE2": "UNCHANGED",
+    "v4Sha256": "2cf7aba578d1ac5ed712a00288edcdff88d58e2152acdfd709c1228078f078a6",
+    "currentApiSourceFiles": 17
+  },
+  "review": {
+    "selfReview": "docs/hackathon-test-vault/e5b/REVIEW.ko.md",
+    "independentAudit": false,
+    "declarationSyntax": "NODE_PARSER_PASS_NOT_FULL_TSC",
+    "sourcePinFileSha256": "4d30d61857bc6add340eb2bea9b230827a1a81f78da1eacfb82c63936f66cc83"
+  },
+  "historicalFailure": {
+    "source": "b26bd8f548ace80d0a706091a309edf9784785b5",
+    "pass": 19,
+    "fail": 1,
+    "cause": "ACCEPT_CLEARS_TEMPORARY_PREPARED_FIELDS_RECEIPT_MUST_BIND_PERMANENT_ACCEPTED_RIGHT",
+    "failureLogSha256": "19eb037a00d1c8c4f09500656e5d9ef31b81367f35e505b900039d3b9526c01d",
+    "focusedRepair": {
+      "sourceBasis": "PERMANENT_ACCEPTED_RIGHT_REPAIR",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 10451.785333,
+      "logSha256": "f924b7260e51da2c379737b3d0a1c6714275992a6b9361c129cadaa8bbcf15d0"
+    }
+  },
+  "scope": {
+    "apiController": "NEW_OWNED_TEST_FIXTURE_SQLITE_NOT_REAL_API_ADAPTER",
+    "runtime": "PINNED_LOCAL_GETH_NEW_OWNED_ENVIRONMENTS",
+    "gethImage": "ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd",
+    "localArchitecture": "linux-arm64",
+    "remoteArchitectureTarget": "linux-amd64",
+    "realChildExitAfterSendStarted": true,
+    "actualRetainedOrphanReorg": true,
+    "directClaimReceiptAndTokenTransfer": true,
+    "wholeApiBackendStopIntegrated": false,
+    "existingUserKeyReads": 0,
+    "realSourceReads": 0,
+    "publicTransactions": 0,
+    "paidCalls": 0
+  },
+  "remaining": [
+    "MANDATORY_API_CONSTRUCTOR_CAPTURE_OF_EXACT_B_RUNTIME_SCOPE_AND_FENCE_READER",
+    "API_PRE_ACQUIRE_5_SECOND_PREFLIGHT_POST_AWAIT_CAS_AND_ROLLBACK_STOP",
+    "ACTUAL_API_SYNCHRONOUS_AUTH_SOURCE_E3_CONSENT_OBJECTION_GLOBAL_AND_INTENT_CAS_CONTROLLER",
+    "NEW_UNSIGNED_PREPARATION_AND_FULL_COMMAND_ORCHESTRATION",
+    "DURABLE_API_ADOPTION_COMMIT_AND_REGISTERED_CANONICAL_RECEIPT_INTAKE",
+    "AUTOMATIC_FIXED_CLAIM_JOB_AND_FULL_API_BACKEND_STOP_RECOVERY",
+    "FINAL_REMOTE_EXACT_HEAD_CI_AND_ROOT_REVIEW"
+  ],
+  "actualApiConnected": false,
+  "fullE5Accepted": false,
+  "defaultSignerActivated": false,
+  "productionEnabled": false,
+  "mainOrDevelopMerge": false,
+  "deployment": false
+}
