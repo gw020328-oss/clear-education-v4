@@ -64,3 +64,13 @@ v36은 v35 원문과 180개 소스를 보존하면서 `execution-api-bridge`, `e
 v37은 v36 원문과 180개 집합을 보존하고 이 두 제품 소스(`execution-api-bridge`, `execution-operations`)만 정확히 인수한다. 새 최종 HEAD/CI가 통과할 때까지 PR120은 병합하지 않는다. PR123 문서 정렬은 본부 담당이며 이 작업에서 수정하지 않는다.
 
 추가 두 경계의 로컬 집중 시험 26/26과 전체 API/store 768/768을 확인했다. 기존 receipt/request 전체 지급 시험 결과와 새 최종 CI는 PR120의 후속 기록을 따른다.
+
+### v37 최종 CI의 dispatch/recovery 요청 경계
+
+`a2024af8a74f833070c12c90ebf8fc3b12809f19`의 [E5 B attempt 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40646656896)은 66/68이었다. cache-readiness의 BIND_CONSENTS/B_RECOVER_REQUEST와 S3 corrected target의 B_DISPATCH_REQUEST에서 `BC_E5_CLOCK_CHANGED`가 발생했다. 각각 broadcasts=4/UNKNOWN=1, broadcasts=9/SEALED=1이며 기존 수정 경계는 통과했다. 후속 API/pin/history는 실행되지 않았다. 다른 CI 7개는 성공(E5 46/46, E4 164/164)했다.
+
+두 요청 경계를 결정적 tick +1로 재현한 뒤 같은 savepoint의 최종 검증만 기존 최대 한 번 재검사하도록 좁게 수정했다. dispatch는 원래 EXECUTE binding, current basis, command, adoption, SEALED envelope와 원래 authority/business 만료를 모두 유지한다. native dispatch는 검증 후 한 번만 호출한다. recover는 원래 recovery CAS, binding/handle, capability/reference/command와 서비스·lease 만료를 유지하며 원본 철회 후 receipt 조회를 허용하는 기존 복구 의미를 보존한다. native recovery도 한 번만 호출한다. 서명·봉인·adoption·송신 재시도나 기한 연장은 없다.
+
+로컬 native dispatch 경계 6/6, recovery와 기존 bridge 18/18, 직전 CI 실패 두 시나리오 2/2를 확인했다. 첫 전체 API 실행에서 fixture의 추가 recovers 카운터가 기존 exact-shape 단언과 충돌했다. 기존 counts 객체는 그대로 두고 별도 getter로 계측을 옮겼으며 수정 후 전체 API/store 774/774를 확인했다.
+
+68개 native 시험의 CI 실측이 약 22분이므로 신규 native 거부 시험 6개와 후속 API/보존/history 단계를 모두 실행하도록 E5 B job 제한만 25분에서 30분으로 변경한다. 시험 생략이나 runtime 기한 변경은 없다. v38은 v37 원문과 180개 소스를 보존하면서 위 두 제품 소스의 정확한 delta 및 CI workflow의 별도 정확한 지문을 기록한다. 최종 HEAD의 모든 CI 성공과 실질 검토 완료 전에는 병합하지 않는다.

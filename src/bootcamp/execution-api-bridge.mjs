@@ -183,10 +183,30 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
    const request=run(g,h,'B_DISPATCH_REQUEST',()=>{
     const a=ledger.event(h.intentId,'ADOPTION');check(a&&a.bindingHash===e4Hash(b),'BC_E5B_ADOPTION_NOT_COMMITTED');
     return {...reference(b),adoptionId:a.adoptionId,adoptionHash:a.adoptionHash};
+   },(s,time,authority,value)=>{
+    const record=bound(b);sameBasis(record.basis,cas(s,time,authority),time);
+    const a=ledger.event(h.intentId,'ADOPTION'),envelope=ledger.event(h.intentId,'ENVELOPE');
+    check(a&&a.bindingHash===e4Hash(b)&&canonical(a.binding)===canonical(b),'BC_E5B_ADOPTION_NOT_COMMITTED');
+    check(b.purpose==='EXECUTE'&&time<Math.min(b.expiresAt,b.business.businessValidUntil,a.authorityUntil)
+     &&canonical(record.globalHandle)===canonical(g)&&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
+    check(canonical(value)===canonical({...reference(b),adoptionId:a.adoptionId,adoptionHash:a.adoptionHash})
+     &&e4Hash(ledger.request(h.intentId).command)===b.commandHash,'BC_E5B_COMMAND_CHANGED');
+    check(envelope?.state==='SEALED'&&envelope.ref===a.ref&&envelope.manifestHash===a.manifestHash
+     &&envelope.originalBindingHash===a.originalBindingHash,'BC_E5B_ENVELOPE_REQUIRED');
    });return ports.dispatch(request);
   },
   async recover(g,h,b){
-   const request=run(g,h,'B_RECOVER_REQUEST',()=>reference(b));const ticket=await ports.recover(request);
+   let original;
+   const request=run(g,h,'B_RECOVER_REQUEST',(s,time,authority)=>{
+    original=cas(s,time,authority,{recovery:true});return reference(b);
+   },(s,time,authority,value)=>{
+    // Receipt recovery does not require current source/business eligibility.
+    // Preserve the original recovery authority and reference before native I/O.
+    sameBasis(original,cas(s,time,authority,{recovery:true}),time);
+    const record=bound(b);check(time<b.expiresAt&&canonical(record.globalHandle)===canonical(g)
+     &&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
+    check(canonical(value)===canonical(reference(b))&&e4Hash(ledger.request(h.intentId).command)===b.commandHash,'BC_E5B_COMMAND_CHANGED');
+   });const ticket=await ports.recover(request);
    const result=ports.consume(ticket,'RECEIPT');
    if(!['INCLUDED','REVERTED'].includes(result.status))return run(g,h,'B_RECOVERY_HOLD',()=>{
     check(result.ref===request.ref,'BC_E5B_RECEIPT_REFERENCE');ledger.append(h.intentId,'RECOVERY','recovery-'+randomUUID(),result);return freeze({status:'HOLD',observation:result,automaticResign:false});

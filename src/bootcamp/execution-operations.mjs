@@ -86,7 +86,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
   }
  }
  function service(context,action,intentId,fn,validateCommit=null){
-  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
+  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_DISPATCH_REQUEST','B_RECOVER_REQUEST','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
