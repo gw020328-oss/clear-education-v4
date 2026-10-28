@@ -7,15 +7,21 @@
 
 2026-10-26. 사용자 직접 요청을 본부가 기존 통합 담당에게 전달한 추가 승인 범위다. 기준 develop은 PR114 병합 `a53f6f541d45275ea92057c1beb2cf27af434855`; PR102의 백엔드 실행과 r20 실제 성공은 각자의 기존 지문으로 보존한다. 이 문서의 계획 수락은 구현·배포·실제 검증 완료를 뜻하지 않는다.
 
+## 2026-10-28 실행 순서 정리
+
+현재 develop `3a82dcefbb51b635937d01f17f48d095c7594e7a`에 PR115/116/117이 병합됐다. 내부 구현·제품 호스트 노출·실제 사용자 검증을 구분한다. PR120은 V2 등록 GET/POST·S3 조회 GET의 제품 호스트 연결 후보이며 아직 미병합이다. 아래 과거 기록의 Draft/미구현 표현보다 이 절과 현재 코드가 우선한다.
+
+[제품 연결 및 이의·재검증 계획](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)의 순서는 **PR120 수정/CI/리뷰/병합 → 프론트 자산·계약 인수 → 실제 정상 지급 완주 → 사용자 이의 접수·평가·실질 재검증 연결**이다. R0 계약 정리와 화면 준비는 병행할 수 있으나 진행 중인 PR120에 새 이의 실행 기능을 섞지 않는다. 사용자 요청과 내부 assessment 결과 기록을 분리하며 실제 normal-host 평가 공급 경로는 미완료다. 문서 정리만으로 실제 실행을 시작하지 않는다.
+
 ## 우선순위·담당·완료 기준
 
 | 순서 | 담당 / 변경 | 완료 기준 | 현재 상태 |
 | --- | --- | --- | --- |
 | S1 | 통합: 참가자 서명에 의한 최초 수령인 등록, 별도 V2 계약·typed data·소비자 | 신청 소유자/수령인·정책/매핑·chain/contract/instance·nonce·deadline 결합. 타인 신청에 자기 서명, 잘못된 chain/contract/recipient, 만료, nonce 재사용, 수락 뒤 변경 거부. 원천 서명 재사용 금지 | V2 고정 신청 ID/영속 nonce·세션, HTTP/normal-client, 실행 소비자 연결 구현; 오프라인 결과는 v31 검증 기록, 제품 실제 시험은 남음 |
 | S2 | 통합: 체인 최초 등록 counter/event/query | 유효한 신청이 체인에 등록된 순서로 기존 allocate/nextAllocatable 실행. 정정/refresh는 최초 순서 유지. 무효/만료 중 건너뛰되 유효해지면 원래 순서, 서버 사전 지연/누락을 방지한다는 주장 금지 | V2 counter/event/순서 유지와 canonical 등록 GET 조회 구현; finalized=false, 제품 표시 연결은 남음 |
-| S3 | 통합: 이의/정정/종료를 기존 observeCurrent/replaceTarget/terminate에 연결 | 기존 decisionId/revision/hash·version/epoch 재사용. 접수와 canonical 반영 분리. 오래된 승인 거부, 종료/수락 경합·정정·중복 지급·수락 권리 불변 검증. reorg/DB 대조 필요 명시 | S3 후보 구현·합성 검증; 상세는 위 연결 문서, 최종 CI는 PR/Issue106 |
-| S4 | 통합: 판정 근거 manifest 및 권한 있는 조회 / 프론트: 두 역할 표시 | Reclaim pair proof 참조·검증 문맥, Moodle 응답 hash/관측시각, AI 근거·rubric/model/policy version을 기존 판정과 결합. hash만으로 제3자 검증 가능하다고 표현하지 않음. 원문 보존 기한·삭제·조회 권한 유지 | S4 Draft 후보의 읽기 계약·합성 검사 구현; 원문 HTTP/model·rubric 저장 확대와 S5 실제 완주는 제외 |
-| S5 | 서준형/Claude: 기존 PR60 제품 화면 / 통합: 자동 ACCEPT/CLAIM·영수증 | 새 신청의 네 조건 실제 검증, 이번 입력 AI 승인, 양측 직접 동의 후 자동 지급. canonical receipt와 정확한 100 TEST·중복 차단 확인. 준비/실패/미수령/INCLUDED 및 finalized 상태 구분 | 제품 화면 준비와 S1~S4 검증 의존 |
+| S3 | 통합: 이의/정정/종료를 기존 observeCurrent/replaceTarget/terminate에 연결 | 기존 decisionId/revision/hash·version/epoch 재사용. 접수와 canonical 반영 분리. 오래된 승인 거부, 종료/수락 경합·정정·중복 지급·수락 권리 불변 검증. reorg/DB 대조 필요 명시 | PR116 내부 실행/체인 조회 병합. 제품 조회 GET은 PR120 후보, 사용자 이의/평가/재검증 쓰기 노출·실제 평가 공급 연결은 후속 R0~R2 |
+| S4 | 통합: 판정 근거 manifest 및 권한 있는 조회 / 프론트: 두 역할 표시 | Reclaim pair proof 참조·검증 문맥, Moodle 응답 hash/관측시각, AI 근거·rubric/model/policy version을 기존 판정과 결합. hash만으로 제3자 검증 가능하다고 표현하지 않음. 원문 보존 기한·삭제·조회 권한 유지 | PR117 읽기 API·제품 호스트 GET 병합. 원천 현재성 UNKNOWN/미저장 버전 UNAVAILABLE, 제품 화면·실제 완주 미완료 |
+| S5 | 서준형/Claude: 기존 PR60 제품 화면 / 통합: 자동 ACCEPT/CLAIM·영수증 | 새 신청의 네 조건 실제 검증, 이번 입력 AI 승인, 양측 직접 동의 후 자동 지급. canonical receipt와 정확한 100 TEST·중복 차단 확인. 준비/실패/미수령/INCLUDED 및 finalized 상태 구분 | PR120 호스트 연결·최종 CI 진행 중. 프론트 자산 인수와 새 실제 제품 완주 미완료 |
 
 ## 최소 계약 영향
 
