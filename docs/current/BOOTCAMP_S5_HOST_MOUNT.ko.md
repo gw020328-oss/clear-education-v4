@@ -74,3 +74,11 @@ v37은 v36 원문과 180개 집합을 보존하고 이 두 제품 소스(`execut
 로컬 native dispatch 경계 6/6, recovery와 기존 bridge 18/18, 직전 CI 실패 두 시나리오 2/2를 확인했다. 첫 전체 API 실행에서 fixture의 추가 recovers 카운터가 기존 exact-shape 단언과 충돌했다. 기존 counts 객체는 그대로 두고 별도 getter로 계측을 옮겼으며 수정 후 전체 API/store 774/774를 확인했다.
 
 68개 native 시험의 CI 실측이 약 22분이므로 신규 native 거부 시험 6개와 후속 API/보존/history 단계를 모두 실행하도록 E5 B job 제한만 25분에서 30분으로 변경한다. 시험 생략이나 runtime 기한 변경은 없다. v38은 v37 원문과 180개 소스를 보존하면서 위 두 제품 소스의 정확한 delta 및 CI workflow의 별도 정확한 지문을 기록한다. 최종 HEAD의 모든 CI 성공과 실질 검토 완료 전에는 병합하지 않는다.
+
+### v38 CI의 S3 fixture 공개 순서
+
+`97ac3ab100242fefd98180bb672d2e1ec6062ad8`의 [E5 B attempt 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40676130461)은 73/74였다. 새 dispatch/recovery 경계와 이전 실패 시나리오는 해당 경계를 통과했으나 S3 corrected target이 START_REVIEW/B_PREPARE의 `BC_E5B_PUBLICATION_ORDER`에서 멈췄다. 이 검사는 canonical allocatedAt/targetRecordedAt이 저장된 publishedAt보다 늦을 때 거부하며 로그의 INCLUDED=7/broadcasts=7 이후 추가 송신하지 않았다. 후속 API/pin/history는 skip이다. 나머지 CI 7개와 E5 46/46·E4 164/164는 성공했다.
+
+정상 worker의 최초 공개는 canonical 기록 시각까지 벽시계가 도달한 뒤 공개한다. S3 시험의 REPLACE 후 직접 재공개는 이 준비를 빠뜨렸다. 시험에서 동일한 최대 30초 시각 차이 제한과 원래 source/review cap을 확인하고 해당 시각까지 기다린 뒤 fresh read/CAS로 공개한다. 공개 시각의 순서와 원래 firstStartedAt/600초 cap을 단언하고 고정 시각 진단을 남긴다. 제품 코드·PUBLICATION_ORDER 거부 검사·기한·서명/송신/논리 시계에는 변경이 없으므로 v38 제품 지문을 유지한다.
+
+보정 후 로컬 S3 실제 Geth 시나리오 4/4가 통과했다. 정정 시각/공개 시각 순서, 원래 cap, 오래된 서명 거부, 두 번째 유효 오류 종료, 수락 권리 및 중복 claim 거부를 유지했다. 제품 소스가 그대로이므로 기존 API774/774를 근거 없이 반복하지 않고 새 HEAD CI에서 전체 회귀를 확인한다.

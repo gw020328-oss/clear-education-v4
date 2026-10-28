@@ -76,7 +76,18 @@ test('S3 corrected target keeps recipient/order/cap, rejects old signature, publ
   assert.equal(a.recipient,before.business.application.recipient);assert.equal(a.target.acceptanceSequence,'1');assert.equal(a.firstStartedAt,before.business.application.firstStartedAt);assert.equal(a.revalidationCount,'1');
   assert.equal(a.target.decisionHash,intake.registration.decisionHash);assert.equal(a.target.revision,String(intake.registration.decisionRevision));
   await assert.rejects(h.vault.connect(h.wallet('relayer')).accept.staticCall(hash(),old.message,old.signature,a.version));
-  h.store.publishReview(h.user,h.app,h.body(),h.key());await h.execute('START_REVIEW');
+  // Like the normal worker's first publication, replacement publication must
+  // follow the canonical target-recording time, even if Geth is ahead of wall time.
+  const publishedNotBefore=Math.max(Number(a.allocatedAt),Number(a.targetRecordedAt)),wallBefore=h.now();
+  const originalCap=Number(before.business.application.firstStartedAt)+600;
+  assert.ok(publishedNotBefore-wallBefore<=30,'replacement chain clock bounded');
+  assert.ok(publishedNotBefore<Math.min(Number(a.target.sourceValidUntilExclusive),originalCap),'original publication caps');
+  if(wallBefore<publishedNotBefore)await new Promise(resolve=>setTimeout(resolve,publishedNotBefore*1000-Date.now()+20));
+  await h.read();h.store.publishReview(h.user,h.app,h.body(),h.key());
+  const published=h.store.getProcedure(h.user,h.app).procedure;
+  assert.ok(published.publishedAt>=publishedNotBefore);assert.equal(published.firstStartedAt,Number(before.business.application.firstStartedAt));assert.equal(published.reviewCapAt,originalCap);
+  t.diagnostic(JSON.stringify({phase:'REPLACEMENT_PUBLICATION',wallBefore,publishedNotBefore,publishedAt:published.publishedAt,originalCap}));
+  await h.execute('START_REVIEW');
   const fresh=await h.prepare();assert.notEqual(fresh.message.nonce,old.message.nonce);assert.equal(fresh.message.firstReviewStartedAt,old.message.firstReviewStartedAt);
   await assess('s3-correct-second');await h.call('termination-intents');const done=await h.execute('TERMINATE');assert.equal(done.completion.status,'INCLUDED');
   o=await h.read();assert.equal(o.business.application.state,'4');assert.equal(o.business.accounting.R,'0');assert.equal(o.business.accounting.O,'0');
