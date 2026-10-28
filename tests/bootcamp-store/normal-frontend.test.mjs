@@ -50,6 +50,14 @@ test('existing HTTPS auth and bootcamp handlers serve both roles and preserve nu
  assert.equal((await x.raw('/rpc',{method:'POST',body:{method:'eth_sendRawTransaction'}})).status,404);
  assert.equal((await x.raw(`/bootcamp/v3/applications/${a}/unsigned-preparations`,{method:'POST',body:{}})).status,404);
 });
+test('product HTTPS procedure GET survives a forward second after canonical refresh without a write',async t=>{
+ const f=await procedureFixture(t),a=f.create();await f.complete(a);let armed=false,ticks=0,refreshes=0;
+ f.configuration.now=()=>{if(armed&&++ticks===2)f.setTime(f.time+1);return f.time;};f.restart();
+ const x=await fixture(t,{f,normalUi:{async refreshProcedure(){refreshes++;armed=true;}}}),before=f.counts();
+ const result=await x.raw(`/bootcamp/v3/applications/${a}/procedure`);armed=false;
+ assert.equal(result.status,200);assert.equal(result.body.asOf,f.time);assert.equal(refreshes,1);
+ assert.deepEqual(f.counts(),before);assert.equal(x.posts(),0);
+});
 test('S4 same-origin HTTPS mount serves both roles and historical decision GET while rejecting writes and foreign owners',async t=>{
  const x=await fixture(t),a=x.f.create();await x.f.complete(a);
  const counts=x.f.counts(),learner=x.client(x.f.aliceContext),operator=x.client(x.f.operatorContext);

@@ -132,7 +132,14 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
     event(s.i,'E4_SEAL_REQUESTED',{bindingHash:e4Hash(b)},time,'e5b-seal-'+h.intentId);fault('e5b-after-seal-request');return request;
    });
    const result=await ports.seal(request);
-   return run(g,h,'B_SEAL_REFERENCE',()=>{const r=ports.consume(result,'REFERENCE');ledger.append(h.intentId,'REFERENCE','reference-'+r.ref,r);fault('e5b-after-reference');return r;});
+   return run(g,h,'B_SEAL_REFERENCE',()=>{const r=ports.consume(result,'REFERENCE');ledger.append(h.intentId,'REFERENCE','reference-'+r.ref,r);fault('e5b-after-reference');return r;
+   },(s,time,authority,r)=>{
+    const record=bound(b);sameBasis(record.basis,cas(s,time,authority),time);
+    check(b.purpose==='EXECUTE'&&time<Math.min(b.expiresAt,b.business.businessValidUntil)
+     &&canonical(record.globalHandle)===canonical(g)&&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
+    check(canonical(request)===canonical({binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)}),'BC_E5B_COMMAND_CHANGED');
+    check(canonical(ledger.event(h.intentId,'REFERENCE'))===canonical(r),'BC_E5B_REFERENCE_REQUIRED');
+   });
   },
   async adopt(g,h,b){
    const request=run(g,h,'B_ADOPT_REQUEST',()=>reference(b)),ticket=await ports.adopt(request);
