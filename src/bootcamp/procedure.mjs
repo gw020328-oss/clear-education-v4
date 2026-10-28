@@ -236,7 +236,10 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    return freeze({version:'clear-bootcamp-e4-registration-intake.1',record,currentSnapshotHash,applicationRevision:app.revision,ledgerSequence:ledger.sequence(),
     procedureStarted:false,allocationConfirmed:false,paymentAuthority:false});
   },()=>observers.forEach(f=>f()));},
-  getProcedure(context,a){const observers=[];return access(context,a,false,(app,s,time)=>view(state(app,time,observers),s,time),()=>observers.forEach(f=>f()));},
+  getProcedure(context,a){const observers=[];return access(context,a,false,(app,s,time)=>{
+   // Rebuild time-dependent status from fresh ports after one clock-only rollback.
+   observers.length=0;return view(state(app,time,observers),s,time);
+  },()=>observers.forEach(f=>f()),{retryClockBoundary:true});},
   publishReview(context,a,body,key){return run(context,a,body,key,'publish',[],(st,s,time,observers)=>{
    check(st.met&&st.fullCurrent&&st.chain.status==='UNACCEPTED','BC_E3_FULL_ALLOCATION_REQUIRED');const src=sourceObservation(st,time,observers);
    const registered=records(st.a,'REGISTRATION_TARGET');

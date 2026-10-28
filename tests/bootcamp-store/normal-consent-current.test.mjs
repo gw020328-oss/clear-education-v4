@@ -30,11 +30,12 @@ async function fixture(t){
   view:()=>f.view(app),start:()=>waitForNormalReviewConsents(args)};
 }
 
-for(const method of ['operations','procedure'])test(`v20 control: consent polling stops on a pure ${method} clock boundary`,async t=>{
- const x=await fixture(t),target=explicitReviewTarget(x.initial);
+for(const method of ['operations','procedure'])test(`direct consent polling ${method==='procedure'?'survives one procedure':'still stops on an unwrapped operations'} clock boundary`,async t=>{
+ const x=await fixture(t),target=explicitReviewTarget(x.initial),stop=Error('TEST_WAITING_WITHOUT_CONSENT');let beats=0;
  const read=async()=>{if(method==='operations')x.arm();x.f.store.getOperationsProjection(x.f.aliceContext,x.app);
   await x.args.connection.refresh(x.app);if(method==='procedure')x.arm();return x.f.view(x.app);};
- await assert.rejects(waitForExplicitConsents({target,read,heartbeat(){assert.fail('old wait stops before heartbeat');},pollMs:1}),/BC_VIEW_STALE/);
+ await assert.rejects(waitForExplicitConsents({target,read,heartbeat(){beats++;throw stop;},pollMs:1}),method==='procedure'?e=>e===stop:/BC_VIEW_STALE/);
+ assert.equal(beats,method==='procedure'?1:0);
  const v=x.view();assert.equal(v.applicationRevision,9);assert.equal(v.decisionHash,x.initial.decisionHash);
  assert.equal(v.evidence.current,true);assert.equal(v.evidence.validUntilExclusive,START+300);assert.equal(v.consent.records.length,0);
 });
