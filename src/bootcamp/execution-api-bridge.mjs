@@ -103,16 +103,19 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
   },
   async lookup(g,h,b){
    let original;
+   const validateLookup=(s,time,authority,value)=>{
+    sameBasis(original,cas(s,time,authority,{recovery:true}),time);
+    const record=bound(b);check(time<b.expiresAt&&canonical(record.globalHandle)===canonical(g)
+     &&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
+    check(canonical(value)===canonical({binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)}),'BC_E5B_COMMAND_CHANGED');
+   };
    const request=run(g,h,'B_LOOKUP_REQUEST',(s,time,authority)=>{
     original=cas(s,time,authority,{recovery:true});
     return {binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)};
    },(s,time,authority,value)=>{
     // Unreturned metadata only: keep the original lease/binding and exact request.
     // The native lookup runs once, after this bounded final validation commits.
-    sameBasis(original,cas(s,time,authority,{recovery:true}),time);
-    const record=bound(b);check(time<b.expiresAt&&canonical(record.globalHandle)===canonical(g)
-     &&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
-    check(canonical(value)===canonical({binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)}),'BC_E5B_COMMAND_CHANGED');
+    validateLookup(s,time,authority,value);
    });
    const ticket=ports.lookup(request); // Synchronous E4 callbacks still run outside the API transaction.
    return run(g,h,'B_LOOKUP_COMMIT',()=>{
@@ -121,6 +124,14 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
     const value=validateEnvelope(result.envelope,ledger.request(h.intentId));
     if(result.status==='FOUND'){check(value.manifestHash,'BC_E5B_ENVELOPE');ledger.append(h.intentId,'REFERENCE','reference-'+value.ref,{ref:value.ref,manifestHash:value.manifestHash});}
     ledger.append(h.intentId,'ENVELOPE','envelope-'+e4Hash(value),value);return result;
+   },(s,time,authority,result)=>{
+    // Consume the lookup ticket and write its metadata once; recheck only the
+    // original recovery authority, never renew or invoke native lookup again.
+    validateLookup(s,time,authority,request);
+    if(result.status==='NOT_FOUND')return;
+    const value=validateEnvelope(result.envelope,ledger.request(h.intentId));
+    check(canonical(ledger.event(h.intentId,'ENVELOPE'))===canonical(value),'BC_E5B_ENVELOPE_REQUIRED');
+    if(result.status==='FOUND')check(canonical(ledger.event(h.intentId,'REFERENCE'))===canonical({ref:value.ref,manifestHash:value.manifestHash}),'BC_E5B_REFERENCE_REQUIRED');
    });
   },
   async seal(g,h,b){
@@ -142,7 +153,14 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
    });
   },
   async adopt(g,h,b){
-   const request=run(g,h,'B_ADOPT_REQUEST',()=>reference(b)),ticket=await ports.adopt(request);
+   const request=run(g,h,'B_ADOPT_REQUEST',()=>reference(b),(s,time,authority,value)=>{
+    const record=bound(b);sameBasis(record.basis,cas(s,time,authority),time);
+    check(b.purpose==='EXECUTE'&&time<Math.min(b.expiresAt,b.business.businessValidUntil)
+     &&canonical(record.globalHandle)===canonical(g)&&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
+    check(canonical(value)===canonical(reference(b))&&e4Hash(ledger.request(h.intentId).command)===b.commandHash,'BC_E5B_COMMAND_CHANGED');
+    const envelope=ledger.event(h.intentId,'ENVELOPE');
+    check(envelope?.state==='SEALED'&&envelope.ref===value.ref&&envelope.manifestHash===value.manifestHash,'BC_E5B_ENVELOPE_REQUIRED');
+   }),ticket=await ports.adopt(request);
    return run(g,h,'B_ADOPT_COMMIT',(s,time,authority)=>{
     const a=ports.consume(ticket,'ADOPTION'),{adoptionHash,...unsigned}=a;
     exactKeys(a,['version','adoptionId','ref','manifestHash','originalBindingHash','binding','bindingHash','businessValidUntil','authorityUntil','adoptionHash'],'BC_E5B_ADOPTION');

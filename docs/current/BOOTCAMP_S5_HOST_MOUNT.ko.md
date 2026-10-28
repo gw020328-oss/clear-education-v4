@@ -54,3 +54,13 @@ constructor 전용 `onCollectionFailure`는 PREFLIGHT/PRODUCER와 기존 고정 
 v36은 v35 원문과 180개 소스를 보존하면서 `execution-api-bridge`, `execution-operations`, `operations`, `procedure`, `store`의 정확한 다섯 소스 지문만 변경한다. 원래 TTL·business/source/review/lease 기한, 발급 시각, nonce, 서명·송신 수와 기존 불변 인수는 유지한다. 최종 검사 수·HEAD·CI·병합 여부는 PR120과 Issue106의 최신 검증 기록을 따른다.
 
 후속 로컬 검증: 집중 API/HTTPS 55/55(제품 HTTPS 15개 포함), native 봉인 경계 6/6, 기존 CI 실패 세 건 3/3, 역사/현재 소스 호환성 32/32, v36 180개·E4 8/E5 18 보존·workspace·고정 의존성 통과. 전체 API/store 첫 실행은 754/755이며 유일 실패는 수정된 procedure GET을 여전히 실패해야 한다고 가정한 기존 control 시험이었다. 해당 기대값 수정 후 집중 회귀가 통과했고 최종 전체 검사는 CI에서 확인한다.
+
+### v36 최종 CI에서 확인한 추가 두 경계
+
+`cb8ed34ad0dde06f8ea4174297adb8dbcc45e66d`의 [E5 B attempt 1](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40643200010)은 66/68이었다. 기존 세 수정과 새 native 6개는 통과했고, receipt 시나리오는 REGISTER/B_LOOKUP_COMMIT, request 시나리오는 PREPARE/B_ADOPT_REQUEST에서 `BC_E5_CLOCK_CHANGED`로 멈췄다. 각각 SEALED=1/broadcasts=0, INCLUDED=4/SEALED=1/broadcasts=4로 추가 송신하지 않았다. 이후 API/pin/public 단계는 skip이므로 그 실행의 통과로 기록하지 않는다. 나머지 CI 7개는 성공했고 E5 46/46·E4 164/164였다.
+
+두 위치 모두 제어된 두 번째 tick +1로 수정 전 재현했다. lookup 결과 ticket consume/REFERENCE·ENVELOPE 저장은 한 번만 실행하고 원래 recovery CAS·binding·request·서비스/lease 기한과 저장 결과를 최종 재검증한다. source 철회 뒤의 recovery-only 조회는 보존하되 새 adoption 권한으로 취급하지 않는다. adoption 요청은 원래 current basis·기한·SEALED reference/command/capability를 native 호출 전에 재검증한다. 재검사는 기존 최대 한 번이며 native lookup/adopt·서명·송신을 반복하지 않는다. expiry/revocation/reversal/두 번째 충돌과 NOT_FOUND, source 철회 뒤 adoption 거부를 추가 검사한다.
+
+v37은 v36 원문과 180개 집합을 보존하고 이 두 제품 소스(`execution-api-bridge`, `execution-operations`)만 정확히 인수한다. 새 최종 HEAD/CI가 통과할 때까지 PR120은 병합하지 않는다. PR123 문서 정렬은 본부 담당이며 이 작업에서 수정하지 않는다.
+
+추가 두 경계의 로컬 집중 시험 26/26과 전체 API/store 768/768을 확인했다. 기존 receipt/request 전체 지급 시험 결과와 새 최종 CI는 PR120의 후속 기록을 따른다.
