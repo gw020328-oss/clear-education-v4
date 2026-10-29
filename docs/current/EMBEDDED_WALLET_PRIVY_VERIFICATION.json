@@ -26,6 +26,16 @@
     "sourceIntakeAndStageExecution": {
       "passed": 83,
       "failed": 0
+    },
+    "productIntegrationAndRegression": {
+      "passed": 164,
+      "failed": 0,
+      "scope": "Product HTTP/session, all embedded wallet tests, existing normal host/frontend and driver; participant-only anchor follow-up additionally 12/12"
+    },
+    "memoryStage": {
+      "passed": 48,
+      "failed": 0,
+      "scope": "Fresh in-memory synthetic execution; no real source or external RPC; before participant-only response narrowing"
     }
   },
   "actual": {
@@ -65,7 +75,7 @@
     "src/embedded-wallet/operator.jsx": "2764bbf9dffb1dd30318a45d796b27210bdcb8278809bf9b3f3a929c1b540c9d",
     "src/embedded-wallet/exports.mjs": "49989bcc7d09763b5814e1357415b435f945ff3e08cba3db12d3ce8939bbc04b",
     "tools/embedded-wallet/build.mjs": "799a57babc6b3b2a6eb760935ee9ea810a081582fa89a534207e88eca141f0e2",
-    "src/embedded-wallet/product-session.mjs": "5547b8eebd223e2438945f8949be2f610d411430381f7a5f32883ab1b2f38831",
+    "src/embedded-wallet/product-session.mjs": "67d3b61ce0440f2b78e678b2045733bb7f5bda2f7a061e9b4b785cd733573eb8",
     "src/embedded-wallet/product-panel.jsx": "72986fb661492ae6ef0e7a6f882d081fd9d15c071ced7ca801abb3ec1b780857",
     "tools/embedded-wallet/product-mount.mjs": "24f37245e548706dec5761a246670d28ab628ae54e2bf57e50408a67d9c55f32",
     "tools/embedded-wallet/product-rpc.mjs": "2af54a4fe1a6d853aa905ed65e517670e2edbed82cee971ccb753eeb5fdeab12",
@@ -99,16 +109,20 @@
     "scope": "Separate accepted fully allocated unclaimed right after normal product completion; no private key collection"
   },
   "sourceIntake": {
-    "version": 39,
+    "version": 40,
     "changedSourcePaths": [
-      "src/application/http.mjs"
+      "tools/bootcamp/frontend-server.mjs",
+      "tools/bootcamp/live-context.mjs",
+      "tools/bootcamp/normal-host-flow.mjs"
     ],
     "historicalGenerationsPreserved": true,
     "currentSourceCount": 180,
     "preservationChecks": "PASS",
     "previousCiHead": "50f7a82b2a8e4a61e07301ea68e611a52665d8ee",
     "previousCiFailure": "STAGE_SOURCE_PIN",
-    "currentCi": "PENDING_PUSH"
+    "currentCi": "PENDING_PRODUCT_PUSH",
+    "lastVerifiedCiHead": "267002a8bab25e51bbcb8f7a629539a8f9115c3b",
+    "lastVerifiedCiPassed": 10
   },
   "productConnection": {
     "implemented": true,
@@ -117,6 +131,10 @@
     "aiCostApprover": "USER_DESIGNATED_OPERATOR_METAMASK",
     "ui": "Independent participant/operator product panel; teammate web unchanged",
     "rpc": "Constructor-pinned loopback read-only proxy; no transaction submission or signing",
-    "verification": "Synthetic product session, HTTP and existing driver regression; live test pending"
+    "verification": "Synthetic product session, HTTP and existing driver regression; live test pending",
+    "localHostPrepared": true,
+    "registeredSourceSignerRegistryChecked": true,
+    "realSourceLoginStarted": false,
+    "normalRuntimeReadiness": "Local Moodle, Docker, pinned Geth, existing Gemini environment and price review available; final commit and per-host authority record pending"
   }
 }
