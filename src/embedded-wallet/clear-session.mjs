@@ -59,7 +59,7 @@ export function createClearSession({wallet, api, config, now = () => Math.floor(
     check(!closed && !signal?.aborted, 'WALLET_CONTEXT_CANCELLED');
   }
   async function authenticate() {
-    check(c.phase === 'ACTIVE_LOCAL_TEST', 'ONBOARDING_ONLY');
+    check(['AUTH_LOCAL_TEST', 'ACTIVE_LOCAL_TEST'].includes(c.phase), 'ONBOARDING_ONLY');
     check(!loginPending && !session && !closed, 'SESSION_BUSY');
     loginPending = (async () => {
       await guard();

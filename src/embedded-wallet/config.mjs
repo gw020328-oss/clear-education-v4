@@ -5,7 +5,7 @@ export function validateConfig(input) {
     && Number(u.port) >= 1024 && Number(u.port) <= 65535, 'EMBEDDED_ORIGIN');
   check(c.appId === null || typeof c.appId === 'string' && /^[a-z0-9]{10,80}$/.test(c.appId), 'EMBEDDED_APP_ID');
   check(c.redirectUri === c.origin + '/onboarding', 'EMBEDDED_REDIRECT');
-  check(['ONBOARDING_ONLY', 'ACTIVE_LOCAL_TEST'].includes(c.phase), 'EMBEDDED_PHASE');
+  check(['ONBOARDING_ONLY', 'AUTH_LOCAL_TEST', 'ACTIVE_LOCAL_TEST'].includes(c.phase), 'EMBEDDED_PHASE');
   check(Number.isSafeInteger(c.chainId) && c.chainId > 0, 'EMBEDDED_CHAIN');
   const rpc = new URL(c.rpcUrl);
   check(rpc.hostname === '127.0.0.1' && rpc.protocol === 'http:' && Number(rpc.port) >= 1024

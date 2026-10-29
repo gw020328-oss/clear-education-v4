@@ -4,14 +4,27 @@ import {randomBytes, randomInt} from 'node:crypto';
 import {readFileSync, readdirSync} from 'node:fs';
 import ganache from 'ganache';
 import {validateConfig, embeddedCsp} from '../../src/embedded-wallet/config.mjs';
+import {createApplicationService} from '../../src/application/service.mjs';
+import {createApplicationHandler} from '../../src/application/http.mjs';
 
-// Separate address-discovery listener. No product auth, allowlist writes,
-// application store, collector, signer, funding or transaction submission.
-export async function createOnboardingServer({origin, rpcPort, appId = null, tls, buildDirectory}) {
+// Separate address-discovery and opt-in auth-check listener. Product routes,
+// collector, server signer, funding and transaction submission stay unmounted.
+export async function createOnboardingServer({origin, rpcPort, appId = null, tls, buildDirectory, authRoles = null, authDirectory}) {
   const instanceId = '0x' + randomBytes(32).toString('hex');
   const chainId = randomInt(1_000_000_000, 2_000_000_000);
   const config = validateConfig({origin, rpcUrl: `http://127.0.0.1:${rpcPort}`, appId,
-    redirectUri: origin + '/onboarding', phase: 'ONBOARDING_ONLY', instanceId, chainId});
+    redirectUri: origin + '/onboarding', phase: authRoles ? 'AUTH_LOCAL_TEST' : 'ONBOARDING_ONLY', instanceId, chainId});
+  const assets = new Map();
+  for (const file of readdirSync(buildDirectory)) {
+    if (/^[a-zA-Z0-9_-]+\.(js|css)$/.test(file)) assets.set('/assets/' + file, {
+      body: readFileSync(buildDirectory + '/' + file), type: file.endsWith('.css') ? 'text/css' : 'text/javascript'});
+  }
+  if (!assets.has('/assets/onboarding.js')) throw Error('EMBEDDED_BUILD_REQUIRED');
+  // An opt-in, separate auth diagnostic store. The existing auth handler alone
+  // is mounted behind four exact routes; no application/workflow is exposed.
+  const auth = authRoles ? createApplicationService({directory: authDirectory, origin, chainId, instanceId,
+    participants: [authRoles.participant], operators: [authRoles.operator]}) : null;
+  const authHandler = auth && createApplicationHandler(auth, {cookieNamespace: `embedded-check-${new URL(origin).port}`});
   const provider = ganache.provider({chain: {chainId}, wallet: {totalAccounts: 0}, logging: {quiet: true}});
   const rpc = httpServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -35,12 +48,6 @@ export async function createOnboardingServer({origin, rpcPort, appId = null, tls
     } catch { res.writeHead(400, {'Content-Type': 'application/json'}); res.end('{"error":"ONBOARDING_RPC_READ_ONLY"}'); }
   });
   rpc.requestTimeout = 5000; rpc.maxConnections = 16;
-  const assets = new Map();
-  for (const file of readdirSync(buildDirectory)) {
-    if (/^[a-zA-Z0-9_-]+\.(js|css)$/.test(file)) assets.set('/assets/' + file, {
-      body: readFileSync(buildDirectory + '/' + file), type: file.endsWith('.css') ? 'text/css' : 'text/javascript'});
-  }
-  if (!assets.has('/assets/onboarding.js')) { await provider.disconnect(); throw Error('EMBEDDED_BUILD_REQUIRED'); }
   const server = httpsServer({...tls, requestTimeout: 5000, maxHeaderSize: 8192}, (req, res) => {
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Referrer-Policy', 'no-referrer'); res.setHeader('X-Content-Type-Options', 'nosniff');
     const nonce = randomBytes(24).toString('base64'); res.setHeader('Content-Security-Policy', embeddedCsp(nonce, config.rpcUrl));
@@ -55,6 +62,10 @@ export async function createOnboardingServer({origin, rpcPort, appId = null, tls
       && (!req.headers['sec-fetch-site'] || ['none','same-origin'].includes(req.headers['sec-fetch-site'])
         || document && req.headers['sec-fetch-mode'] === 'navigate' && req.headers['sec-fetch-dest'] === 'document');
     if (!valid) { res.writeHead(403); res.end('ORIGIN'); return; }
+    if (authHandler && ((req.method === 'POST' && ['/auth/nonce','/auth/verify','/auth/logout'].includes(req.url))
+      || req.method === 'GET' && req.url === '/auth/session')) {
+      void authHandler(req, res); return;
+    }
     if (document) {
       res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
       res.end(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="sc-nonce" content="${nonce}"><title>CLEAR 내장 지갑 준비</title><link rel="stylesheet" href="/assets/style.css"></head><body><div id="root"></div><script type="module" nonce="${nonce}" src="/assets/onboarding.js"></script></body></html>`); return;
@@ -69,7 +80,11 @@ export async function createOnboardingServer({origin, rpcPort, appId = null, tls
   server.maxConnections = 32;
   const listen = (s, port) => new Promise((resolve, reject) => { s.once('error', reject); s.listen(port, '127.0.0.1', resolve); });
   const close = s => new Promise(resolve => { s.closeAllConnections(); s.close(resolve); });
-  try { await listen(rpc, rpcPort); await listen(server, Number(new URL(origin).port)); }
-  catch (error) { await close(rpc); await provider.disconnect(); throw error; }
-  return {config, server, rpc, async close() { await Promise.all([close(server), close(rpc)]); await provider.disconnect(); }};
+  try {
+    // Finish Ganache initialization before an early shutdown can disconnect it.
+    await provider.request({method: 'eth_chainId', params: []});
+    await listen(rpc, rpcPort); await listen(server, Number(new URL(origin).port));
+  }
+  catch (error) { await close(rpc); await provider.disconnect(); auth?.close(); throw error; }
+  return {config, server, rpc, async close() { await Promise.all([close(server), close(rpc)]); await provider.disconnect(); auth?.close(); }};
 }

@@ -30,7 +30,7 @@ function actor(t, {timeoutMs = 1000} = {}) {
   t.after(() => wallet.dispose());
   return {w, provider, wallet, identity, hook: h => { hook = h; }, setSession: s => {session = s;}, get invalidations() { return invalidations; }};
 }
-function fixture(t) {
+function fixture(t, phase = 'ACTIVE_LOCAL_TEST') {
   const a = actor(t), directory = realpathSync(mkdtempSync(join(tmpdir(), 'clear-embedded-auth-')));
   const service = createApplicationService({directory, origin: config.origin, chainId: CHAIN, instanceId: config.instanceId,
     participants: [a.w.address], operators: [Wallet.createRandom().address], now: () => NOW});
@@ -44,7 +44,7 @@ function fixture(t) {
     if (path === '/auth/logout') return service.logout(context(options.headers));
     service.whoami(context(options.headers)); return {ok: true};
   };
-  const s = createClearSession({wallet: a.wallet, api, config, now: () => NOW}); a.setSession(s);
+  const s = createClearSession({wallet: a.wallet, api, config: {...config, phase}, now: () => NOW}); a.setSession(s);
   t.after(async () => { await s.dispose().catch(() => {}); service.close(); rmSync(directory, {recursive: true, force: true}); });
   return {...a, s, service, api, observed, setHook: h => {hook = h;}, context: () => ({token: cookie, wallet: a.w.address, chainId: CHAIN, csrf: null})};
 }
@@ -54,6 +54,12 @@ test('server role is bound to selected SDK identity; logout revokes real service
   assert.deepEqual(await f.s.request('/test'), {ok: true});
   await f.s.logout(); assert.equal(f.s.state().revocation, 'CONFIRMED');
   assert.throws(() => f.service.whoami(f.context()), /AUTH_REQUIRED/);
+});
+test('explicit auth-only phase uses the same SIWE validation and revocation', async t => {
+  const f = fixture(t, 'AUTH_LOCAL_TEST');
+  assert.equal((await f.s.authenticate()).role, 'participant');
+  assert.equal((await f.s.assertSession()).wallet, f.w.address);
+  await f.s.logout(); assert.equal(f.s.state().revocation, 'CONFIRMED');
 });
 test('wallet change revokes using previous address even after SDK invalidation', async t => {
   const f = fixture(t); await f.s.authenticate();

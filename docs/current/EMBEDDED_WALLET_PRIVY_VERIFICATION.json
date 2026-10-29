@@ -10,14 +10,19 @@
   },
   "tests": {
     "embedded": {
-      "passed": 73,
+      "passed": 75,
       "failed": 0
     },
     "existingV2AndSource": {
       "passed": 36,
-      "failed": 0
+      "failed": 0,
+      "scope": "Earlier baseline run; not rerun for auth diagnostic change"
     },
-    "workspace": "PASS"
+    "workspace": "PASS",
+    "application": {
+      "passed": 99,
+      "failed": 0
+    }
   },
   "actual": {
     "privyAppConfigured": true,
@@ -29,7 +34,8 @@
     "productPayment": false,
     "walletCreation": true,
     "reloadSameAddress": true,
-    "sdkProviderIdentity": true
+    "sdkProviderIdentity": true,
+    "localAuthCheckPrepared": true
   },
   "browserBlocker": null,
   "audit": {
@@ -44,16 +50,22 @@
     "src/embedded-wallet/package-lock.json": "f8ff8bec18dfada31b8b732933ec2e66deb9fb91e40ad6ed56fa559394a77080",
     "src/embedded-wallet/provider-boundary.mjs": "b09b411db91e22d55c5e6e80c5198aa4572966672e5b12d6d4a6d8cc4bf8c46e",
     "src/embedded-wallet/privy-adapter.mjs": "aed2cef3fb0b63469ba0b0766b1890fecf779f9b14500d88ea1c76a11f6f09b9",
-    "src/embedded-wallet/clear-session.mjs": "91c4e9aced519081cf886bb5fd483303e53602e82506a6edc63f56a6dd6fb4c4",
+    "src/embedded-wallet/clear-session.mjs": "675b399753580eec4a49b643ac771c25a4f360e09802c7578d47abe8cd226562",
     "src/embedded-wallet/approvals.mjs": "889a0c4c20fa925e62c39c202b95b2fee9a72d386e71d8f8e9e95be39dc5d54b",
-    "src/embedded-wallet/config.mjs": "5b5d25d5405693a20943767448003e85cbeedfe299de6e7720dd8a59e36ba14f",
-    "src/embedded-wallet/onboarding.jsx": "c7ee387565e57d28a3a0138118c4bd9479b7ae37adff15fb7c6f4c2100262235",
-    "tools/embedded-wallet/server.mjs": "40f773c89d9a5dac58658184506da3562cf4e1299041a4da1a4f41718fd69759"
+    "src/embedded-wallet/config.mjs": "bfff87ed780d056804d88e578a613e5370b02a463b829beff4a6d0d0b76cdfdc",
+    "src/embedded-wallet/onboarding.jsx": "0c03921c06f3cd4072c63516e51c06e26183fd16775a6b8309a87dbdc112adf4",
+    "tools/embedded-wallet/server.mjs": "d0976897b2be7caf191d4d24bb1b91f729bb2d1ce76ea892fc86718e4166a0bd",
+    "src/application/http.mjs": "95f5c4e1078ceac7738f1a7353a00a21f3b6109475eff1ac8ea80216a79d89a3",
+    "tools/embedded-wallet/onboarding.mjs": "b975f58e06b4d435ee0a1e63c224f2cdbd4340bd24d14fcc206a1dbd24d7d0b5"
   },
   "actualEvidence": {
     "method": "Browser UI observation after user Google login and wallet creation; same address after page reload; explicit selected-address read-only probe displayed success.",
     "logoutAndReauthenticationVerified": false,
     "rpcCodeCheck": "0x",
-    "transactionsSent": false
+    "transactionsSent": false,
+    "participantReauthentication": "USER_REPORTED_SAME_ADDRESS",
+    "operatorSeparateAccountAndProfile": "USER_REPORTED_DISTINCT_ADDRESS_AND_LOCAL_RPC_SUCCESS",
+    "realSiweRoleChecks": "PENDING_USER_SIGNATURE",
+    "sameAddressRestorationMeaning": "false means not independently observed across the full logout/login sequence; user reported success"
   }
 }
