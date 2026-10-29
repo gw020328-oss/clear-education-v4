@@ -35,6 +35,7 @@ export function pinnedWallet({provider, identity, readIdentity, onInvalidate = (
   const events = ['accountsChanged', 'chainChanged', 'disconnect'];
   for (const event of events) provider.on(event, invalidate);
   async function guard(signal = lifetime.signal) {
+    signal = signal === lifetime.signal ? signal : AbortSignal.any([signal, lifetime.signal]);
     try {
       check(!lifetime.signal.aborted && !signal.aborted, 'WALLET_CONTEXT_CANCELLED');
       const current = await bounded(readIdentity, {signal, timeoutMs});

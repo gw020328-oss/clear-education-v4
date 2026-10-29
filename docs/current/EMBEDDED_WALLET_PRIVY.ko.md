@@ -68,7 +68,7 @@ SDK의 `disableAutomaticMigration`은 SDK 지갑 migration 제어이며 EIP7702 
 
 2026-10-29 로컬:
 
-- 새 모듈 **72/72**: 이식한 실제 SIWE/HR/V2/store 합성38 + SDK 선택/세션/취소/config/CSP14 + 승인 결합19 + 실제 격리 HTTPS/로컬 RPC host1. localhost TLS는 시험 전용 CA를 명시해 검증하며 TLS 검증을 끄지 않았다.
+- 새 모듈 **73/73**: 이식한 실제 SIWE/HR/V2/store 합성38 + SDK 선택/세션/취소/config/CSP15 + 승인 결합19 + 실제 격리 HTTPS/로컬 RPC host1. localhost TLS는 시험 전용 CA를 명시해 검증하며 TLS 검증을 끄지 않았다.
 - 기존 회귀 **36/36**: `recipient-registration-v2.test.mjs`, `ui-session.test.mjs`, `recipient-registration.test.mjs`. 가짜 원천 및 새 인메모리 키/체인으로 V2 등록→별도 anycaller claim→100000000 atoms, 중복/권한/수락권리 경계를 검사한다. Privy 사용자 지급이 아니다.
 - SDK production bundle 성공(전체 chunks 약7.2MiB), `verify:workspace` PASS, 기존191개 원본 지문 보존.
 - 초기 이식 시험은 collector 패키지가 없는 새 checkout에서 import 오류로 실패했다. 고정 lock대로 의존성을 설치한 후 통과했다. 첫 hostile Host 검사는 Node TLS가 HTTP 전에 hostname 불일치를 잡아 실패했다. 시험 TLS servername을 인증서에 있는 localhost로 고정하여 TLS 검증을 유지하고 서버 Host403까지 확인했다. 경계나 만료 시간을 완화하지 않았다.

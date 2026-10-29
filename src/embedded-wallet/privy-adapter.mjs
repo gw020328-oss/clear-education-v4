@@ -38,5 +38,5 @@ export async function connectSelectedWallet({readSnapshot, selection, chainId, s
   selectedIdentity(readSnapshot(), selection, chainId);
   const boundary = pinnedWallet({provider, identity, timeoutMs, onInvalidate,
     readIdentity: () => selectedIdentity(readSnapshot(), selection, chainId)});
-  try { await boundary.guard(); return boundary; } catch (error) { boundary.dispose(); throw error; }
+  try { await boundary.guard(signal); return boundary; } catch (error) { boundary.dispose(); throw error; }
 }

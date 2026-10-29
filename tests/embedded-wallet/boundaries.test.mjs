@@ -107,6 +107,14 @@ test('caller abort cancels hung identity reads without waiting for provider', as
   const pending = a.wallet.personal('test', {expiresAt: NOW + 120, now: () => NOW, signal: c.signal});
   c.abort(); await assert.rejects(pending, /CANCELLED/);
 });
+test('direct connection guard observes both caller cancellation and SDK invalidation', async t => {
+  for (const trigger of ['caller','sdk']) {
+    const a = actor(t), c = new AbortController(); a.hook(() => new Promise(() => {}));
+    const pending = a.wallet.guard(c.signal);
+    if (trigger === 'caller') c.abort(); else a.wallet.invalidate();
+    await assert.rejects(pending, /CANCELLED/);
+  }
+});
 test('SDK choices require explicit owned EOA; no array-first or delegated fallback', () => {
   const address = Wallet.createRandom().address;
   const account = {type:'wallet',chainType:'ethereum',walletClientType:'privy-v2',connectorType:'embedded',address,

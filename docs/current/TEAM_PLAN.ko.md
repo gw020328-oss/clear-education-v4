@@ -2,7 +2,7 @@
 
 ## 2026-10-29 Privy 연결 준비 후보
 
-최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준으로 별도 `codex/bootcamp-privy-sdk`에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. SDK3.51.0 고정/독립 onboarding/공통 서명·서버 revoke adapter와 합성72/72·기존회귀36/36은 준비 결과이며 실제 Google 로그인·주소복원·SDK서명·새100 TEST는 미완료다. App ID/로컬TLS 확인 및 의존성 audit 위험 처리가 남아 있고 Draft/제품미완료를 유지한다. 기존 web/PR60·제품 CSP·DB/체인은 보존한다. 최신 frontend branch/commit/develop 반영/web 절대경로/asset digest/build/test/adapter 인수는 Issue106에 요청했다. 기존 R0~R2와 r20 V1은 이번 작업에 합치지 않는다. 아래 날짜별 설명은 당시 상태다.
+최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준으로 별도 `codex/bootcamp-privy-sdk`에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. SDK3.51.0 고정/독립 onboarding/공통 서명·서버 revoke adapter와 합성73/73·기존회귀36/36은 준비 결과이며 실제 Google 로그인·주소복원·SDK서명·새100 TEST는 미완료다. App ID/로컬TLS 확인 및 의존성 audit 위험 처리가 남아 있고 Draft/제품미완료를 유지한다. 기존 web/PR60·제품 CSP·DB/체인은 보존한다. 최신 frontend branch/commit/develop 반영/web 절대경로/asset digest/build/test/adapter 인수는 Issue106에 요청했다. 기존 R0~R2와 r20 V1은 이번 작업에 합치지 않는다. 아래 날짜별 설명은 당시 상태다.
 
 ## 2026-10-28 현재 담당·다음 순서
 

@@ -30,7 +30,7 @@ function Onboarding({config}) {
   const run = async fn => {
     if (busy) return;
     setBusy(true); const controller = new AbortController(); operation.current = controller;
-    try { await fn(controller.signal); }
+    try { await bounded(() => fn(controller.signal), {signal: controller.signal, timeoutMs: 120000}); }
     catch { setStatus('작업을 완료하지 못했습니다. 계정·네트워크·콘솔 설정을 확인한 뒤 다시 선택하세요.'); }
     finally { setBusy(false); operation.current = null; }
   };
