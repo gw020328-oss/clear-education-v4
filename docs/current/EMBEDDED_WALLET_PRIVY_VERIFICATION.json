@@ -10,7 +10,7 @@
   },
   "tests": {
     "embedded": {
-      "passed": 75,
+      "passed": 82,
       "failed": 0
     },
     "existingV2AndSource": {
@@ -21,6 +21,10 @@
     "workspace": "PASS",
     "application": {
       "passed": 99,
+      "failed": 0
+    },
+    "sourceIntakeAndStageExecution": {
+      "passed": 83,
       "failed": 0
     }
   },
@@ -53,10 +57,14 @@
     "src/embedded-wallet/clear-session.mjs": "675b399753580eec4a49b643ac771c25a4f360e09802c7578d47abe8cd226562",
     "src/embedded-wallet/approvals.mjs": "889a0c4c20fa925e62c39c202b95b2fee9a72d386e71d8f8e9e95be39dc5d54b",
     "src/embedded-wallet/config.mjs": "bfff87ed780d056804d88e578a613e5370b02a463b829beff4a6d0d0b76cdfdc",
-    "src/embedded-wallet/onboarding.jsx": "0c03921c06f3cd4072c63516e51c06e26183fd16775a6b8309a87dbdc112adf4",
-    "tools/embedded-wallet/server.mjs": "d0976897b2be7caf191d4d24bb1b91f729bb2d1ce76ea892fc86718e4166a0bd",
+    "src/embedded-wallet/onboarding.jsx": "48ffdd320ff096c848599a6c2802be9ff2c3d1afbe00f220cb784534de8c406f",
+    "tools/embedded-wallet/server.mjs": "963f6a650415dca5e83fe4e775c26431fcd198fc91efa4c7f70bf918a9201252",
     "src/application/http.mjs": "95f5c4e1078ceac7738f1a7353a00a21f3b6109475eff1ac8ea80216a79d89a3",
-    "tools/embedded-wallet/onboarding.mjs": "b975f58e06b4d435ee0a1e63c224f2cdbd4340bd24d14fcc206a1dbd24d7d0b5"
+    "tools/embedded-wallet/onboarding.mjs": "b975f58e06b4d435ee0a1e63c224f2cdbd4340bd24d14fcc206a1dbd24d7d0b5",
+    "src/embedded-wallet/metamask-adapter.mjs": "9b61a66a931698810532e20b72584af5d1229a2a5832a03893063a92904ce095",
+    "src/embedded-wallet/operator.jsx": "f160d7aaeb300f0e460309d1fab8893da79303a76d5b259890485bfc6d155498",
+    "src/embedded-wallet/exports.mjs": "49989bcc7d09763b5814e1357415b435f945ff3e08cba3db12d3ce8939bbc04b",
+    "tools/embedded-wallet/build.mjs": "799a57babc6b3b2a6eb760935ee9ea810a081582fa89a534207e88eca141f0e2"
   },
   "actualEvidence": {
     "method": "Browser UI observation after user Google login and wallet creation; same address after page reload; explicit selected-address read-only probe displayed success.",
@@ -64,8 +72,34 @@
     "rpcCodeCheck": "0x",
     "transactionsSent": false,
     "participantReauthentication": "USER_REPORTED_SAME_ADDRESS",
-    "operatorSeparateAccountAndProfile": "USER_REPORTED_DISTINCT_ADDRESS_AND_LOCAL_RPC_SUCCESS",
-    "realSiweRoleChecks": "PENDING_USER_SIGNATURE",
+    "operatorSeparateAccountAndProfile": "HISTORICAL_EMBEDDED_OPERATOR_USER_REPORT_NOT_CURRENT_REQUIREMENT",
+    "realSiweRoleChecks": "PENDING_PARTICIPANT_PRIVY_AND_OPERATOR_METAMASK_USER_SIGNATURES",
     "sameAddressRestorationMeaning": "false means not independently observed across the full logout/login sequence; user reported success"
+  },
+  "walletPlan": {
+    "participant": "PRIVY_GOOGLE_EMBEDDED_EOA",
+    "operator": "METAMASK",
+    "operatorAddress": "USER_CONFIRMED_LOCAL_ONLY",
+    "historicalEmbeddedOperator": "PRESERVED_NOT_ACTIVE",
+    "actualMixedWalletSiwe": "PENDING"
+  },
+  "followupVerification": {
+    "clearStoppedDirectClaim": "NOT_VERIFIED",
+    "freshBrowserRecovery": "NOT_VERIFIED",
+    "independentGas": "NOT_VERIFIED",
+    "transferToOwnedTestAddress": "NOT_VERIFIED",
+    "scope": "Separate accepted fully allocated unclaimed right after normal product completion; no private key collection"
+  },
+  "sourceIntake": {
+    "version": 39,
+    "changedSourcePaths": [
+      "src/application/http.mjs"
+    ],
+    "historicalGenerationsPreserved": true,
+    "currentSourceCount": 180,
+    "preservationChecks": "PASS",
+    "previousCiHead": "50f7a82b2a8e4a61e07301ea68e611a52665d8ee",
+    "previousCiFailure": "STAGE_SOURCE_PIN",
+    "currentCi": "PENDING_PUSH"
   }
 }

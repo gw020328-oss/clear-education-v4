@@ -100,10 +100,11 @@ function Onboarding({config}) {
     const result = await session.authenticate();
     await session.assertSession();
     signal.throwIfAborted();
+    if (result.role !== 'participant') { await session.dispose(); throw Error('PARTICIPANT_REQUIRED'); }
     setStatus(`CLEAR 로그인 서명 확인 완료 · 서버 역할: ${result.role === 'participant' ? '참가자' : '운영자'}`);
   }
-  return <section><h2>Google 로그인과 주소 확인</h2>
-    <p>참가자와 운영자는 서로 다른 Google 계정과 브라우저 프로필을 사용하세요. 역할은 두 주소를 서버에 등록한 뒤 서버가 정합니다.</p>
+  return <section><h2>참가자 Google 로그인과 주소 확인</h2>
+    <p>이 화면은 참가자의 Google 내장 지갑용입니다. 운영자는 별도 Chrome 프로필의 /operator 화면에서 MetaMask를 연결하세요. 운영자 내장 지갑 로그인은 진행하지 않습니다.</p>
     {!privy.authenticated && <button disabled={!privy.ready || busy || !!authSession.current} onClick={() => run(() => initOAuth({provider: 'google'}))}>Google로 로그인</button>}
     {privy.authenticated && <>
       <p>재로그인 후 아래 주소가 이전과 같은지 직접 비교하세요. 다른 주소이면 기존 신청을 이어 진행하지 마세요.</p>
@@ -120,7 +121,7 @@ function Onboarding({config}) {
       {config.phase === 'AUTH_LOCAL_TEST' && <>
         <p>아래 버튼은 서버가 발급한 로그인 확인 메시지(SIWE)에 서명합니다. 메시지의 주소와 로컬 사이트를 확인한 뒤 승인하세요. 상품 약관이나 지급 동의는 포함하지 않습니다.</p>
         <button disabled={!networkReady || busy || !!authSession.current} onClick={() => run(authenticate)}>CLEAR 로그인 서명 확인</button>
-        {authState?.authenticated && <p role="status">서버에서 확인한 역할: {authState.role === 'participant' ? '참가자' : '운영자'}</p>}
+        {authState?.authenticated && authState.role === 'participant' && <p role="status">서버에서 확인한 역할: {authState.role === 'participant' ? '참가자' : '운영자'}</p>}
       </>}
       <button disabled={busy} onClick={() => run(async () => { step.current = '로그아웃'; await clearAuth(); setSelection(null); await privy.logout(); setStatus('SDK 로그아웃 완료. 다시 로그인하여 같은 주소인지 확인하세요.'); })}>로그아웃</button>
     </>}

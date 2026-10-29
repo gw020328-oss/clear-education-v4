@@ -18,7 +18,7 @@ function request(url,{ca,headers={},method='GET',body}={}){
 }
 test('isolated HTTPS host: exact origin, OAuth navigation, read-only chain and product routes denied',async t=>{
  const dir=realpathSync(mkdtempSync(join(tmpdir(),'clear-embedded-host-'))),build=join(dir,'build');mkdirSync(build);
- writeFileSync(join(build,'onboarding.js'),'// synthetic host transport fixture');writeFileSync(join(build,'style.css'),'body{}');
+ writeFileSync(join(build,'onboarding.js'),'// synthetic host transport fixture');writeFileSync(join(build,'operator.js'),'// operator fixture');writeFileSync(join(build,'style.css'),'body{}');
  const fingerprint=createCertificates(dir),httpsPort=await port(),rpcPort=await port(),origin=`https://127.0.0.1:${httpsPort}`;
  const host=await createOnboardingServer({origin,rpcPort,tls:loadTls(dir,fingerprint),buildDirectory:build});
  t.after(async()=>{await host.close();rmSync(dir,{recursive:true,force:true});});
@@ -29,21 +29,27 @@ test('isolated HTTPS host: exact origin, OAuth navigation, read-only chain and p
  assert.equal((await get('/onboarding?privy_oauth_code=synthetic',{headers:{'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'document'}})).status,200);
  assert.equal((await get('/__embedded/config',{headers:{'sec-fetch-site':'cross-site'}})).status,403);
  assert.equal((await get('/onboarding',{headers:{host:'evil.example'}})).status,403);
+ const operatorPage=await get('/operator');assert.equal(operatorPage.status,200);assert.match(operatorPage.body,/assets\/operator.js/);assert.doesNotMatch(operatorPage.body,/assets\/onboarding.js/);
  const config=JSON.parse((await get('/__embedded/config')).body);assert.equal(config.phase,'ONBOARDING_ONLY');assert.equal(config.appId,null);
  for(const path of ['/auth/nonce','/auth/verify','/bootcamp/v1/applications'])assert.equal((await get(path,{method:'POST'})).status,404);
  const rpc=(method,originHeader=origin)=>request(config.rpcUrl,{method:'POST',headers:{origin:originHeader,'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params:[]})});
  const chain=await rpc('eth_chainId');assert.equal(chain.status,200);assert.equal(BigInt(JSON.parse(chain.body).result),BigInt(config.chainId));
  for(const method of ['eth_sendTransaction','eth_sendRawTransaction','personal_sign','evm_revert','evm_mine'])assert.equal((await rpc(method)).status,400);
  assert.equal((await rpc('eth_chainId','https://evil.example')).status,403);
+ assert.equal((await rpc('eth_chainId','chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn')).status,200);
+ assert.equal((await rpc('eth_chainId','chrome-extension://untrusted')).status,403);
+ const noOrigin=await request(config.rpcUrl,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_chainId',params:[]})});
+ assert.equal(noOrigin.status,200);assert.equal(noOrigin.headers['access-control-allow-origin'],undefined);
 });
 
 test('auth check verifies both server roles with isolated cookies; denies replay, wrong browser and product routes',async t=>{
  const dir=realpathSync(mkdtempSync(join(tmpdir(),'clear-embedded-auth-host-'))),build=join(dir,'build');mkdirSync(build);
- writeFileSync(join(build,'onboarding.js'),'// synthetic host transport fixture');
+ writeFileSync(join(build,'onboarding.js'),'// synthetic host transport fixture');writeFileSync(join(build,'operator.js'),'// operator fixture');
  const participant=Wallet.createRandom(),operator=Wallet.createRandom(),outsider=Wallet.createRandom();
  const fingerprint=createCertificates(dir),httpsPort=await port(),rpcPort=await port(),origin=`https://127.0.0.1:${httpsPort}`;
+ await assert.rejects(createOnboardingServer({origin,rpcPort,tls:loadTls(dir,fingerprint),buildDirectory:build,authRoles:{participant:participant.address,operator:operator.address}}),/EXPLICIT_METAMASK_OPERATOR_REQUIRED/);
  const host=await createOnboardingServer({origin,rpcPort,tls:loadTls(dir,fingerprint),buildDirectory:build,
-   authRoles:{participant:participant.address,operator:operator.address},authDirectory:join(dir,'auth')});
+   authRoles:{participant:participant.address,operator:operator.address,operatorWalletKind:'metamask'},authDirectory:join(dir,'auth')});
  t.after(async()=>{await host.close();rmSync(dir,{recursive:true,force:true});});
  const ca=readFileSync(join(dir,'ca.pem'));
  const call=(path,{method='POST',body={},headers={}}={})=>request(origin+path,{ca,method,

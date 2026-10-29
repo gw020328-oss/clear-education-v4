@@ -1,10 +1,22 @@
 # Privy 내장 EOA 연결 준비
 
-2026-10-29 · SDK 설치/번들 및 합성 경계 검증 완료 · 실제 Google 로그인·첫 지갑 생성·새로고침 후 동일 주소·로컬 RPC 확인 완료 · 동일 Google 재로그인 주소 복원·별도 운영자 주소/로컬 확인은 사용자 보고 · 실제 SIWE/제품 연결 미완료.
+2026-10-29 · SDK 설치/번들 및 합성 경계 검증 완료 · 실제 Google 로그인·첫 지갑 생성·새로고침 후 동일 주소·로컬 RPC 확인 완료 · 동일 Google 재로그인 주소 복원·과거 운영자 내장 주소/로컬 확인은 사용자 보고 · 실제 SIWE/제품 연결 미완료.
 
-실제 브라우저에서 Google 로그인 후 첫 생성 버튼이 숨겨지는 문제를 확인했다. SDK 3.51.0의 `useWallets.ready`는 외부 connector 준비도 포함하며, 외부 지갑을 끄면 초기화가 생략된다. 첫 생성 버튼은 인증된 사용자와 `privy.ready` 및 기존 내장 지갑 부재로 판단하도록 수정했다. 외부 지갑이 명시적으로 비활성인 snapshot에서만 aggregate ready 대신 현재 연결된 내장 지갑의 정확한 소유권·user/address/id/chain 매치를 요구한다. 외부 지갑 사용 시 기존 ready 요구를 유지하며, 실제 provider의 계정/체인 읽기와 EOA code 검증도 계속 수행한다. 75/75 합성 경계 시험, SDK 번들, 실제 선택 주소의 읽기 전용 probe 성공을 확인했다. 새로고침 직후 배경 탭에서는 지갑 연결이 지연됐으며, 탭을 전면에 둔 뒤 동일 주소가 복원됐다. 로그아웃 후 같은 Google 계정의 동일 주소 복원과 별도 프로필/Google 계정의 운영자 주소·로컬 확인 성공은 사용자가 보고했다. 실제 SIWE 서명·제품 지급은 아직 미검증이다.
+실제 브라우저에서 Google 로그인 후 첫 생성 버튼이 숨겨지는 문제를 확인했다. SDK 3.51.0의 `useWallets.ready`는 외부 connector 준비도 포함하며, 외부 지갑을 끄면 초기화가 생략된다. 첫 생성 버튼은 인증된 사용자와 `privy.ready` 및 기존 내장 지갑 부재로 판단하도록 수정했다. 외부 지갑이 명시적으로 비활성인 snapshot에서만 aggregate ready 대신 현재 연결된 내장 지갑의 정확한 소유권·user/address/id/chain 매치를 요구한다. 외부 지갑 사용 시 기존 ready 요구를 유지하며, 실제 provider의 계정/체인 읽기와 EOA code 검증도 계속 수행한다. 82/82 합성 경계 시험, SDK 번들, 실제 선택 주소의 읽기 전용 probe 성공을 확인했다. 새로고침 직후 배경 탭에서는 지갑 연결이 지연됐으며, 탭을 전면에 둔 뒤 동일 주소가 복원됐다. 로그아웃 후 같은 Google 계정의 동일 주소 복원과 별도 프로필/Google 계정의 운영자 주소·로컬 확인 성공은 사용자가 보고했다. 당시 운영자 내장 지갑은 현재 완료 조건에서 제외한다. 실제 SIWE 서명·제품 지급은 아직 미검증이다.
 
 기준은 develop `d44b01216241d120064145016a99d73b1b361e34`, 작업은 `codex/bootcamp-privy-sdk`다. PR60 원격 HEAD는 `a0620cd39fe5cd44b62a1deb5806883503242227`이며 팀원 로컬 작업을 인수한 것은 아니다. [Issue106 소유 경계·인수 요청](https://github.com/gw020328-oss/clear-education-v4/issues/106#issuecomment-6487251657)을 남겼다.
+
+## 2026-10-29 지갑 역할 확정
+
+사용자 확정: **참가자는 Privy 소셜 로그인/내장 EOA, 운영자는 당분간 MetaMask**다. 과거 운영자 내장 지갑 생성/로컬 확인은 준비 이력이며 현재 완료 조건이 아니다. 사용자가 이번에 명시한 MetaMask 주소를 별도 로컬 allowlist에 등록하고 새 인증 저장소·instance·chain으로 시작한다. 과거 운영자 주소/서명/권리/제품 DB를 치환하지 않는다.
+
+- 참가자: `/onboarding`, 처음 사용한 동일 Google 계정/기존 내장 주소 → 명시 선택 → 로컬 확인 → CLEAR SIWE 직접 서명.
+- 운영자: `/operator`, MetaMask가 설치된 기존 프로필 → EIP-6963에서 표시된 MetaMask 직접 연결 → 운영자 계정 하나만 허용 → 전체 주소 직접 선택 → 이번 로컬 체인 추가/전환 확인 → 운영자 SIWE 직접 서명. MetaMask 제공자 메타데이터는 탐색용 표시이며 권한 근거가 아니다. 주소/체인/제공자 변경과 늦은 서명은 기존 pinnedWallet/서버 세션 폐기 경계를 사용한다.
+- 두 화면은 서로 다른 Chrome 프로필/쿠키 저장소에서 사용한다. MetaMask가 참가자용 프로필에만 설치돼 있다면 그 프로필을 운영자용으로 쓰고, 다른 프로필에서 참가자의 원래 Google 계정으로 로그인한다. 운영자용 Google 계정은 필요하지 않다.
+- 역할은 서버 allowlist와 새 서명 검증 결과로만 정하며 각 화면의 기대 역할과 다르면 세션을 종료한다. 로컬 settings의 `authRoles`는 참가자/운영자 주소와 명시적 `operatorWalletKind: "metamask"`가 있어야 활성화된다. 과거 내장 운영자 설정은 그대로 활성화할 수 없다.
+- MetaMask RPC 검증은 페이지 밖에서 호출될 수 있으므로 읽기 전용 loopback RPC는 정확한 Host/loopback 연결에서 Origin 없음 또는 정확한 MetaMask 확장 Origin도 허용한다. 일반 외부 웹 Origin과 거래/서명 RPC는 계속 거부한다. 참가자 SDK의 외부 지갑 옵션/CSP wildcard를 켜지 않는다.
+
+현재 **82개 embedded + 99개 application = 181/181 PASS**, SDK bundle 성공. 실제 새 조합의 SIWE/HR/V2 서명·정상 지급은 사용자 실행 전이다.
 
 ## 범위와 상태
 
@@ -53,7 +65,7 @@ SDK의 `disableAutomaticMigration`은 SDK 지갑 migration 제어이며 EIP7702 
 
 `init`은 최초 1회만 실행하며 기존 디렉터리를 덮어쓰지 않는다. 로컬 `var/embedded-wallet-onboarding/settings.json`의 `appId`에 공개 App ID를 넣고 재시작한다. secret은 필요하지 않다. 런타임/인증서/번들은 Git에 넣지 않는다. `start`는 새 임시 chain을 만들며 이전 trial 체인/DB를 초기화하지 않는다. 종료는 해당 foreground 명령의 Ctrl-C다.
 
-두 주소를 확인한 뒤 로컬 settings의 `authRoles`에 `participant`와 `operator`를 명시하면 AUTH_LOCAL_TEST를 연다. 실제 주소는 Git/공개 문서에 넣지 않는다. 매 시작 `auth-check-` 접두사의 새 임시 인증 저장소를 만들고 정상 종료/시작 실패 시 해당 실행이 만든 디렉터리를 삭제한다. 강제 종료 시 잔존할 수 있으며 다음 실행이 그 저장소를 재사용하지 않는다. 각 브라우저 프로필에서 새로고침 → 주소 선택 → 로컬 네트워크 확인 → **CLEAR 로그인 서명 확인**을 누르고 로컬 사이트/주소/로그인 메시지를 확인한다. 서버가 표시하는 참가자/운영자 역할을 각각 확인한다. 상품 동의·거래 전송은 포함하지 않는다.
+두 주소를 확인한 뒤 로컬 settings의 `authRoles`에 `participant`와 `operator`를 명시하면 AUTH_LOCAL_TEST를 연다. 실제 주소는 Git/공개 문서에 넣지 않는다. 매 시작 `auth-check-` 접두사의 새 임시 인증 저장소를 만들고 정상 종료/시작 실패 시 해당 실행이 만든 디렉터리를 삭제한다. 강제 종료 시 잔존할 수 있으며 다음 실행이 그 저장소를 재사용하지 않는다. 참가자 /onboarding과 운영자 /operator의 서로 다른 브라우저 프로필에서 새로고침 → 주소 선택 → 로컬 네트워크 확인 → **CLEAR 로그인 서명 확인**을 누르고 로컬 사이트/주소/로그인 메시지를 확인한다. 서버가 표시하는 참가자/운영자 역할을 각각 확인한다. 상품 동의·거래 전송은 포함하지 않는다.
 
 | 설정 | 정확한 값/행동 |
 | --- | --- |
@@ -64,7 +76,7 @@ SDK의 `disableAutomaticMigration`은 SDK 지갑 migration 제어이며 EIP7702 
 | Allowed origin | `https://127.0.0.1:9457` (path·wildcard 없음). 정확한 IP/포트의 콘솔 수락 및 실제 로그인 확인 |
 | OAuth redirect | `https://127.0.0.1:9457/onboarding` (trailing slash/query 없음) |
 | wallet | 사용자 소유 Ethereum EOA, smart wallet/자동 추가 wallet/서버 위임 signer 사용하지 않음 |
-| 참가자/운영자 | 서로 다른 계정·브라우저 프로필로 두 주소 확인 → 별도 로컬 authRoles 설정 → SIWE/서버 역할 확인; 제품 host 활성화는 후속 |
+| 참가자/운영자 | 참가자 Privy + 운영자 MetaMask, 별도 Chrome 프로필 → 사용자가 지정한 두 주소의 로컬 authRoles → 새 SIWE/서버 역할; 제품 host는 후속 |
 
 자체 Google OAuth가 꼭 필요한 경우에만 별도 콘솔에서 callback `https://auth.privy.io/api/v1/oauth/callback`을 설정한다. client secret을 채팅/코드/브라우저에 넣지 않는다. 유료 요금제·공개 배포·RPC 터널은 이번 범위가 아니다. SDK 인증 토큰/복구 자료는 Privy SDK가 관리하며 CLEAR adapter는 이를 읽거나 저장하지 않는다. SDK 자체 브라우저 저장/복구 수명은 실제 로그인 검증에 포함한다.
 
@@ -72,11 +84,13 @@ SDK의 `disableAutomaticMigration`은 SDK 지갑 migration 제어이며 EIP7702 
 
 2026-10-29 로컬:
 
-- 새 모듈 **75/75**: 기존73 + AUTH_LOCAL_TEST 세션/폐기1 + 격리 HTTPS 양측 역할/쿠키/재사용 거부1. 기존 application 회귀 **99/99**, 합계 **174/174** 통과. 역할 주입·미등록 주소·다른 브라우저·서명 재사용·지갑 변경·CSRF 누락·기본 제품 쿠키 사용을 거부하고 올바른 세션 종료를 확인한다. localhost TLS는 시험 전용 CA를 명시해 검증하며 TLS 검증을 끄지 않았다.
+- 새 모듈 **82/82**: 기존73 + AUTH_LOCAL_TEST 세션/폐기1 + 격리 HTTPS 양측 역할/쿠키/재사용 거부1 + MetaMask 제공자 탐색/명시 주소/체인 설정/거부/교체/늦은 서명/취소7. 기존 application 회귀 **99/99**, 합계 **181/181** 통과. 역할 주입·미등록 주소·다른 브라우저·서명 재사용·지갑 변경·CSRF 누락·기본 제품 쿠키 사용을 거부하고 올바른 세션 종료를 확인한다. localhost TLS는 시험 전용 CA를 명시해 검증하며 TLS 검증을 끄지 않았다.
 - 기존 회귀 **36/36**: `recipient-registration-v2.test.mjs`, `ui-session.test.mjs`, `recipient-registration.test.mjs`. 가짜 원천 및 새 인메모리 키/체인으로 V2 등록→별도 anycaller claim→100000000 atoms, 중복/권한/수락권리 경계를 검사한다. Privy 사용자 지급이 아니다.
 - SDK production bundle 성공(전체 chunks 약7.2MiB), `verify:workspace` PASS, 기존191개 원본 지문 보존.
 - 초기 이식 시험은 collector 패키지가 없는 새 checkout에서 import 오류로 실패했다. 고정 lock대로 의존성을 설치한 후 통과했다. 첫 hostile Host 검사는 Node TLS가 HTTP 전에 hostname 불일치를 잡아 실패했다. 시험 TLS servername을 인증서에 있는 localhost로 고정하여 TLS 검증을 유지하고 서버 Host403까지 확인했다. 경계나 만료 시간을 완화하지 않았다.
 - 초기 시도에서는 인증서 경고/App ID 미입력으로 중단됐다. 이후 사용자 콘솔 설정·Google 로그인·지갑 생성, 새로고침 후 동일 주소 및 선택한 EOA/provider/RPC 성공을 브라우저에서 확인했다. 동일 Google 재로그인 복원과 별도 운영자 프로필/주소/로컬 확인은 사용자 보고다. 실제 SIWE 서명·새 제품 지급은 아직 0회이며 CI 결과는 PR의 정확한 HEAD checks를 따른다.
+
+CI 후속: 50f7a82의 SDK/Mac/공개 이력 검사는 성공했으나 공개 합성 실행은 `STAGE_SOURCE_PIN`으로 실패했다. 공통 HTTP의 선택적 쿠키 namespace 변경을 기존 v38 소스 기록이 거부한 것이 원인이다. v1–v38 원본을 보존하고 v39에 `src/application/http.mjs` 한 파일의 전후 지문과 기본 인증/쿠키 동작 불변을 명시했다. 180개 현행 소스 지문 및 E4/E5 보존 검사, 소스 호환성/실행 회귀 83/83은 통과했으며 최신 CI 결과는 해당 PR HEAD에서 확인한다.
 
 의존성 주의: 3.51.0 설치는 SDK 내부 `@privy-io/ethereum@0.2.5`의 viem2.56.5 peer와 SDK가 고정한2.57.8 차이를 경고한다. npm audit(omit dev)은 **31개 영향 패키지: high17/moderate14/critical0**를 보고했다. 이는31개 서로 다른 취약점이라는 뜻이 아니다. 직접 advisory는 zod의 대형 collection 메모리 소모, ws의 메모리/DoS, decode-uri-component의 malformed percent decode DoS, uuid buffer bounds다. zod3→4 강제 치환이나 audit의 오래된 Privy3.6.1 downgrade 권고를 검증 없이 적용하지 않았다. 외부 wallet 기능은 비활성이고 CSP로 해당 외부 host를 차단하지만 SDK 의존성 전체의 비도달성을 입증한 것은 아니다. **최종 채택/제품 병합 검토에는 이 의존성 위험 처리가 남아 있다.**
 
@@ -84,10 +98,26 @@ CSP는 `auth.privy.io` frame/connect, Cloudflare Turnstile script/frame 및 정�
 
 ## 실제 완료 관문
 
-두 계정의 Google 로그인·같은 주소 복원·fresh SIWE → 새 신청의 HR account/certificate proof pair·Moodle·이번 입력 AI 승인·네 조건 → 별도 V2 수령인 등록 공개 안내/직접 서명 → 동일 최신 판정에 양측 직접 동의 → 기존 서비스 REGISTER/ACCEPT 및 별도 anycaller CLAIM → canonical receipt/Transfer/잔액 증가100000000 atoms=100 TEST/중복거부를 확인한다. 참가자 ETH 충전과 TEST에서 가스 차감은 요구하지 않는다. 기존120초/1회/600초·수락권리를 유지한다. `INCLUDED/finalized=false`를 최종 확정으로 표시하지 않는다. 새 Reclaim/유료AI는 해당 입력 승인 시점 전까지 실행하지 않는다. r20 V1과 이번 V2/Privy 기록은 분리한다.
+참가자의 Google 로그인·같은 내장 주소 복원과 운영자의 명시 MetaMask 주소·양측 fresh SIWE → 새 신청의 HR account/certificate proof pair·Moodle·이번 입력 AI 승인·네 조건 → 별도 V2 수령인 등록 공개 안내/직접 서명 → 동일 최신 판정에 양측 직접 동의 → 기존 서비스 REGISTER/ACCEPT 및 별도 anycaller CLAIM → canonical receipt/Transfer/잔액 증가100000000 atoms=100 TEST/중복거부를 확인한다. 참가자 ETH 충전과 TEST에서 가스 차감은 요구하지 않는다. 기존120초/1회/600초·수락권리를 유지한다. `INCLUDED/finalized=false`를 최종 확정으로 표시하지 않는다. 새 Reclaim/유료AI는 해당 입력 승인 시점 전까지 실행하지 않는다. r20 V1과 이번 V2/Privy 기록은 분리한다.
+
+## 정상 지급 다음의 CLEAR 중단 검증
+
+정상 지급 후 별도 새 신청에서 **수락·전액 배정되고 아직 미청구인 권리**를 준비한다. 이미 지급된 권리의 재청구 거부와 구분한다. 신청 ID/chain/contract/ABI/필요 승인 데이터는 중단 전 사용자가 독립 보관할 수 있게 하되 키·복구 문구·원본 개인정보는 포함하지 않는다. 사용자 키 내보내기/복구가 필요하면 사용자가 비공개 UI에서 직접 수행하고 에이전트·채팅·로그·산출물은 키를 수집하지 않는다.
+
+| 시험 | 판정할 내용 | 현재 |
+| --- | --- | --- |
+| CLEAR 프론트/백엔드/승인 서버/relayer 중지 | 지원되는 독립 지갑 UI/독립 청구 페이지/사용자 직접 외부 복구 중 최소 경로로 미청구 권리 청구, receipt/Transfer/잔액 확인 | 미검증 |
+| 새 브라우저·세션 만료 | CLEAR origin/session 없이 지갑 접근·서명·복구 가능 여부 | 미검증 |
+| 중단 중 가스 | 독립 대납 또는 참가자 네이티브 시험 가스의 출처/소비 실측; 직접 청구와 무료 청구를 구분 | 미검증 |
+| 자산 이동 | 소유 확인한 다른 본인 시험 주소로 명시적 전송, receipt/양측 잔액 확인 | 미검증 |
+| 외부 의존성 | CLEAR 중단과 Privy/Google/RPC/독립 페이지 호스팅 중단을 구분; 로컬 Geth/RPC는 유지 | 미검증 |
+
+수락 전/새 승인이 필요한 신청까지 독립 처리할 수 있다고 주장하지 않는다. 기존 nonce/domain/chain/만료/판정 버전/수령인/재사용 방지를 유지한다. 광범위 복구 기능은 PR125에 넣지 않고 정상 연결 이후 별도 작은 시험·다음 PR로 분리한다. 실제 자금·유료 가입·공개 배포는 제외한다.
 
 ## 근거
 
 - [Privy EIP1193](https://docs.privy.io/wallets/using-wallets/ethereum/ethereum-provider), [custom chain](https://docs.privy.io/basics/react/advanced/configuring-evm-networks): custom chain 지원은 문서 확인. 문서의 explorer 필수 표현과 달리 이 버전 타입/번들에는 생략 가능하나 실제 SDK provider와 loopback RPC 확인은 성공했다.
 - [CSP](https://docs.privy.io/security/implementation-guide/content-security-policy), [Google 기본 개발 OAuth](https://docs.privy.io/basics/get-started/dashboard/configure-login-methods), [origin](https://docs.privy.io/recipes/dashboard/allowed-domains), [redirect](https://docs.privy.io/recipes/react/allowed-oauth-redirects).
 - [Zod advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), [uuid advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq), [ws memory](https://github.com/advisories/GHSA-58qx-3vcg-4xpx), [ws DoS](https://github.com/advisories/GHSA-96hv-2xvq-fx4p), [decode advisory](https://github.com/advisories/GHSA-vcc3-ghjq-m6fr).
+
+- [MetaMask EIP-1193/제공자 API](https://github.com/MetaMask/metamask-docs/blob/main/metamask-connect/evm/reference/provider-api.md), [EIP-6963 명시 제공자 탐색](https://eips.ethereum.org/EIPS/eip-6963), [EIP-3326 체인 전환](https://eips.ethereum.org/EIPS/eip-3326).

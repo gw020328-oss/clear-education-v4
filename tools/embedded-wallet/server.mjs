@@ -10,6 +10,7 @@ import {createApplicationHandler} from '../../src/application/http.mjs';
 // Separate address-discovery and opt-in auth-check listener. Product routes,
 // collector, server signer, funding and transaction submission stay unmounted.
 export async function createOnboardingServer({origin, rpcPort, appId = null, tls, buildDirectory, authRoles = null, authDirectory}) {
+  if (authRoles && authRoles.operatorWalletKind !== 'metamask') throw Error('EXPLICIT_METAMASK_OPERATOR_REQUIRED');
   const instanceId = '0x' + randomBytes(32).toString('hex');
   const chainId = randomInt(1_000_000_000, 2_000_000_000);
   const config = validateConfig({origin, rpcUrl: `http://127.0.0.1:${rpcPort}`, appId,
@@ -19,7 +20,7 @@ export async function createOnboardingServer({origin, rpcPort, appId = null, tls
     if (/^[a-zA-Z0-9_-]+\.(js|css)$/.test(file)) assets.set('/assets/' + file, {
       body: readFileSync(buildDirectory + '/' + file), type: file.endsWith('.css') ? 'text/css' : 'text/javascript'});
   }
-  if (!assets.has('/assets/onboarding.js')) throw Error('EMBEDDED_BUILD_REQUIRED');
+  if (!assets.has('/assets/onboarding.js') || !assets.has('/assets/operator.js')) throw Error('EMBEDDED_BUILD_REQUIRED');
   // An opt-in, separate auth diagnostic store. The existing auth handler alone
   // is mounted behind four exact routes; no application/workflow is exposed.
   const auth = authRoles ? createApplicationService({directory: authDirectory, origin, chainId, instanceId,
@@ -28,10 +29,14 @@ export async function createOnboardingServer({origin, rpcPort, appId = null, tls
   const provider = ganache.provider({chain: {chainId}, wallet: {totalAccounts: 0}, logging: {quiet: true}});
   const rpc = httpServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    const allowed = req.headers.host === `127.0.0.1:${rpcPort}` && req.headers.origin === origin
+    const rpcOrigin = req.headers.origin;
+    // MetaMask's extension/backend validates a custom RPC outside page fetch.
+    // Allow only loopback, exact Host, no Origin or the known extension origin.
+    // Methods remain read-only; arbitrary web origins are still rejected.
+    const allowed = req.headers.host === `127.0.0.1:${rpcPort}` && [undefined, origin, 'chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn'].includes(rpcOrigin)
       && ['127.0.0.1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
     if (!allowed) { res.writeHead(403); res.end(); return; }
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    if (rpcOrigin) res.setHeader('Access-Control-Allow-Origin', rpcOrigin);
     res.setHeader('Vary', 'Origin');
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Methods', 'POST'); res.setHeader('Access-Control-Allow-Headers', 'content-type');
@@ -54,7 +59,7 @@ export async function createOnboardingServer({origin, rpcPort, appId = null, tls
     let url;
     try { url = new URL(req.url, origin); }
     catch { res.writeHead(400); res.end('URL'); return; }
-    const document = req.method === 'GET' && url.pathname === '/onboarding';
+    const document = req.method === 'GET' && ['/onboarding','/operator'].includes(url.pathname);
     // OAuth returns by top-level cross-site navigation; assets/config do not.
     const valid = url.origin === origin && req.headers.host === new URL(origin).host && req.socket.encrypted
       && ['127.0.0.1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)
@@ -68,7 +73,7 @@ export async function createOnboardingServer({origin, rpcPort, appId = null, tls
     }
     if (document) {
       res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
-      res.end(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="sc-nonce" content="${nonce}"><title>CLEAR 내장 지갑 준비</title><link rel="stylesheet" href="/assets/style.css"></head><body><div id="root"></div><script type="module" nonce="${nonce}" src="/assets/onboarding.js"></script></body></html>`); return;
+      res.end(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="sc-nonce" content="${nonce}"><title>${url.pathname === '/operator' ? 'CLEAR 운영자 MetaMask 준비' : 'CLEAR 참가자 내장 지갑 준비'}</title><link rel="stylesheet" href="/assets/style.css"></head><body><div id="root"></div><script type="module" nonce="${nonce}" src="/assets/${url.pathname === '/operator' ? 'operator' : 'onboarding'}.js"></script></body></html>`); return;
     }
     if (req.method === 'GET' && req.url === '/__embedded/config') {
       res.writeHead(200, {'Content-Type': 'application/json'}); res.end(JSON.stringify(config)); return;

@@ -2,7 +2,9 @@
 
 ## 2026-10-29 Privy 연결 준비 후보
 
-최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준으로 별도 `codex/bootcamp-privy-sdk`에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. SDK3.51.0 고정/독립 onboarding/공통 서명·서버 revoke adapter와 합성73/73·기존회귀36/36은 준비 결과이며 실제 Google 로그인·주소복원·SDK서명·새100 TEST는 미완료다. App ID/로컬TLS 확인 및 의존성 audit 위험 처리가 남아 있고 Draft/제품미완료를 유지한다. 기존 web/PR60·제품 CSP·DB/체인은 보존한다. 최신 frontend branch/commit/develop 반영/web 절대경로/asset digest/build/test/adapter 인수는 Issue106에 요청했다. 기존 R0~R2와 r20 V1은 이번 작업에 합치지 않는다. 아래 날짜별 설명은 당시 상태다.
+최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준 `codex/bootcamp-privy-sdk`/PR125에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. 사용자 확정은 **참가자=Privy Google 내장 EOA, 운영자=MetaMask 유지**다. 운영자 내장 지갑 준비는 과거 기록이며 완료 조건이 아니다. 이번 사용자가 지정한 MetaMask 주소를 명시 allowlist와 새 세션에 연결하고 과거 주소/권리/서명을 치환하지 않는다. 독립 /onboarding·/operator, 정확한 SIWE/HR/V2·서버 revoke 경계, 181/181 합성 시험과 SDK bundle이 준비됐다. 참가자 실제 Google/지갑 생성/읽기 RPC는 확인했고 재로그인 동일 주소는 사용자 보고다. 새 조합 실제 SIWE·HR/V2·100 TEST는 미검증이다. web/PR60·제품 CSP·DB/체인은 보존하고 공통 HTTP의 선택적 쿠키 namespace만 추가했다. 최신 프론트 인수와 의존성 audit 검토가 남아 Draft다.
+
+정상 완주 다음에 별도 **수락·전액 배정·미청구 권리**로 CLEAR 프론트/백엔드/승인 서버/relayer 중단 직접 청구 및 다른 본인 시험 주소로 자산 이동을 검증한다. 신청 ID/chain/contract/ABI/필요 승인 데이터의 사전 독립 보관, 새 브라우저/세션 만료 후 접근·복구, CLEAR origin 의존성을 확인한다. 키 내보내기/복구가 필요하면 사용자가 비공개 UI에서 직접 수행하며 키/복구 문구/원본 개인정보를 수집하지 않는다. 독립 대납 또는 네이티브 시험 가스의 출처·소비를 확인하고 직접 청구와 무료 청구를 구분한다. CLEAR 중단과 Privy/Google/RPC/독립 페이지 호스팅 중단을 별도 보고하며 Geth/RPC는 유지한다. 수락 전 신청까지 독립 처리한다고 주장하지 않는다. 모두 미검증이며 정상 연결 PR에 광범위 복구 기능을 섞지 않고 후속 작은 시험/PR로 분리한다. R0~R2와 r20 V1은 별도 기록이다. 아래 날짜별 설명은 당시 상태다.
 
 2026-10-28 정리. 아래 복사 블록 전체가 현재 지침이다. 이전 PR별 구현/실패 이력은 각 PR과 검증 문서에 보존하며 현재 실행 지시와 섞지 않는다.
 
@@ -34,7 +36,7 @@ PR60 a0620cd39fe5cd44b62a1deb5806883503242227 기준은 npm/package/bundler/buil
 
 모듈은 같은 출처 /bootcamp-normal-client.mjs에서 import {createNormalBootcampClient} 해. request 포트에는 walletClient.request 형태의 인증 adapter를 연결해. 서버가 직접 제공하는 browser module은 normal-client 하나이고 src/application/wallet-client.mjs를 그 경로에서 자동 제공하지는 않아. 그 파일과 api-client.mjs는 지갑/세션 동작의 읽기 전용 구현 참고 자료야. wallet-client의 bare ethers import를 bundler 없는 정적 페이지에서 그대로 import하지 마. 최신 frontend에 이미 제공된 adapter가 있으면 재사용하고, 없으면 기존 정적 방식 안에서 필요한 EIP1193 connect/login/request/logout·세션 메모리 관리만 구현해. 기존 SIWE nonce→사용자 서명→verify→session, Secure HttpOnly cookie, credentials same-origin, wallet/chain 헤더, 쓰기 CSRF를 재사용해. 읽기 Origin은 브라우저가 관리하고 GET은 Sec-Fetch-Site same-origin 규칙을 따라. 두 역할은 서로 다른 주소/브라우저 쿠키 저장소를 써. accountsChanged/chainChanged/disconnect에서는 보존한 이전 세션의 헤더로 서버 logout을 시도하고 진행 요청·메모리 인증 상태를 정리해. 기존 참고 walletClient의 이벤트 invalidate는 메모리 정리만 하므로 그것만으로 서버 revoke가 됐다고 주장하지 마. 키/서명/토큰을 저장소나 로그에 남기지 마.
 
-제품 목표는 일반 로그인 → 내장 지갑 생성·복구 → 명시적 수령인 확인 → 서비스 거래 제출·가스비 부담이야. 일반 로그인/내장 지갑 연결·공급자·계약 호환성은 아직 검증 전이고 현재 EIP1193/SIWE 외부 지갑은 시험 수단이야. 전체 ERC4337/Paymaster 보류를 내장 지갑 목표 폐기로 해석하지 마. 기존 지갑 adapter는 유지하되 이번 연결 중 새 공급자/주소·서명 모델을 임의 확정하지 마. 현재 시험의 두 역할은 서로 다른 주소와 분리된 브라우저 프로필을 사용해. 우리 노트북 시연은 추천안이며 대회 장비 규정 확정이 아니야.
+사용자가 참가자는 Privy Google 로그인/내장 EOA, 운영자는 당분간 MetaMask로 확정했어. 참가자 기존 내장 주소 복원·명시 수령인 확인 → 운영자 MetaMask와 같은 판정 직접 확인 → 기존 서비스 거래 제출/가스 부담 → 정확100 TEST를 연결해. 두 역할은 서로 다른 주소와 분리된 Chrome 프로필을 써. 과거 운영자 내장 주소나 옛 MetaMask 주소를 자동 등록/치환하지 말고 이번 사용자가 지정한 주소를 서버 allowlist에 등록한 새 세션을 사용해. PR125 adapter/실제 검증 상태와 최신 팀원 자산 인수를 대조하고 기존 nonce/chain/domain/만료/판정 버전/수령인 검증은 유지해. 실제 서명·새 제품 지급은 미검증이야. AA/Paymaster 확장은 이번 범위가 아니야. 우리 노트북 시연은 추천안이며 대회 장비 규정 확정이 아니야.
 
 합성 web/src/demo는 명시적으로 선택하는 별도 화면 검증 모드로 유지할 수 있어. 실제 서버 장애·미활성화·API 누락 때 자동 합성 전환하지 마. 합성 상태/세션은 실제 저장·서명·지급과 격리하고 합성 표시와 검사 성과를 구분해. 기존 디자인과 팀원 변경은 보존하되 이번 지침이 디자인/코드 리뷰 완료를 뜻하지는 않아. 추가 합성 기능 확장보다 정상 신청 한 건 연결을 우선해.
 
