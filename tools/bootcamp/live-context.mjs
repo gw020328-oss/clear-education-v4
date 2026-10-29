@@ -97,7 +97,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
   const getSession=context=>{const actor=ui.authorize(context,false);if(app)readNormalView(()=>store.getOperationsProjection(context,app));
    readers.observe(actor.role.toUpperCase());return Object.freeze({
    version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,
-   signingContext:productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}),
+   signingContext:actor.role==='participant'?productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}):null,
    recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:reflectionApproval?.brief(context)??null});};

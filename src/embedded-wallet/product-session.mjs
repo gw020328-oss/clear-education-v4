@@ -15,6 +15,7 @@ export function createProductSession({session, wallet, config}) {
   async function context(signal) {
     const actor = await session.assertSession(signal), b = await normal.session({signal});
     check(b.role === actor.role.toUpperCase(), 'PRODUCT_ROLE_CHANGED');
+    check(actor.role === 'participant', 'FORBIDDEN');
     check(b.signingContext && b.applicationId, 'PRODUCT_APPLICATION_REQUIRED');
     const r = b.signingContext.registration, s = b.signingContext.source;
     check(r.applicationId === b.applicationId && s.applicationId === b.applicationId
