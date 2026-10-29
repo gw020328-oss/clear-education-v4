@@ -1,18 +1,58 @@
-# 제품 정상 흐름과 이의·재검증 연결 계획
+# 제품 정상 흐름과 후속 개발 계획
 
-최신 실행 결과: 독립 제품 화면 연결·로컬 준비 검사는 완료했지만 공식 Attestor WebSocket의 HTTP403으로 로그인 창 준비 전에 중단됐다. 실제 신청/증빙/AI/지급은 미실행이다. [실행 인계](PRODUCT_WALLET_RUN.ko.md)를 따른다.
+## 2026-10-29 현행 인계
 
-2026-10-29 제품 연결 후속: 양측 인증 확인 완료(운영자 스크린샷/참가자 사용자 보고). 독립 제품 패널에서 기존 normal-client의 신청·원천 승인·V2 수령 지갑 등록·동일 판정 동의·영수증을 연결한다. 실제 제품 호스트 활성화/증빙/지급 완료는 별도이며 인증 시험 성공으로 간주하지 않는다. 운영자 MetaMask를 AI 비용·외부 전송 승인자로 사용자가 지정했고 정확한 입력의 직접 승인 관문은 유지한다. web/PR60은 수정하지 않는다.
+**참가자 Privy 내장 EOA·운영자 MetaMask로 정상 100 TEST 수령을 먼저 완주한다.** 이번 문서 반영은 후속 기능 착수나 새 실제 로그인/유료 호출 승인이 아니다. 팀원 `web/`/PR60을 덮어쓰지 않고 최신 자산·커밋·검사 결과를 인수한다.
 
-## 2026-10-29 Privy 연결 준비 후보
+확인된 develop은 `d44b01216241d120064145016a99d73b1b361e34`이며 PR120/123은 병합됐다. PR125는 미병합 Draft다. 코드 검토 기준 `d8dd973dad8e9f56e9eb5a8045eb16e1f4271a56`에는 독립 제품 패널의 신청·원천 승인·V2 등록·동일 판정 동의·영수증 연결이 있다. 팀원 최신 `web/`에 이 SDK/패널을 인수하는 작업과 실제 완주는 별도다. 운영자 인증은 사용자 스크린샷, 참가자 인증은 사용자 완료 보고이며 새 제품 HR/V2 서명·100 TEST를 검증한 것은 아니다.
 
-최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준 `codex/bootcamp-privy-sdk`/PR125에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. 사용자 확정은 **참가자=Privy Google 내장 EOA, 운영자=MetaMask 유지**다. 운영자 내장 지갑 준비는 과거 기록이며 완료 조건이 아니다. 이번 사용자가 지정한 MetaMask 주소를 명시 allowlist와 새 세션에 연결하고 과거 주소/권리/서명을 치환하지 않는다. 독립 /onboarding·/operator, 정확한 SIWE/HR/V2·서버 revoke 경계, 181/181 합성 시험과 SDK bundle이 준비됐다. 참가자 실제 Google/지갑 생성/읽기 RPC는 확인했고 재로그인 동일 주소는 사용자 보고다. 새 조합 실제 SIWE·HR/V2·100 TEST는 미검증이다. web/PR60·제품 CSP·DB/체인은 보존하고 공통 HTTP의 선택적 쿠키 namespace만 추가했다. 최신 프론트 인수와 의존성 audit 검토가 남아 Draft다.
+공식 Attestor의 WebSocket과 공개 `/address`가 HTTP403을 반환한다. 응답은 `awselb/2.0`/HTML이며 과거 성공 SDK/endpoint/연결 설정과 비교했지만 서비스 측 거부 정책은 미확정이다. 재로그인부터 요구하지 않는다. 기존 실패 실행과 인증 호스트는 보존한다. 해당 코드 HEAD의 CI9/9와 로그인 없는 회귀228/228은 성공했으나 실제 시험 준비 완료와 구분한다. Privy 의존성 audit31패키지(high17/moderate14) 및 Zod3·viem peer 잔여 위험도 유지한다. 최신 문서 후속 HEAD/CI는 [PR125](https://github.com/gw020328-oss/clear-education-v4/pull/125)에서 따로 확인한다.
 
-정상 완주 다음에 별도 **수락·전액 배정·미청구 권리**로 CLEAR 프론트/백엔드/승인 서버/relayer 중단 직접 청구 및 다른 본인 시험 주소로 자산 이동을 검증한다. 신청 ID/chain/contract/ABI/필요 승인 데이터의 사전 독립 보관, 새 브라우저/세션 만료 후 접근·복구, CLEAR origin 의존성을 확인한다. 키 내보내기/복구가 필요하면 사용자가 비공개 UI에서 직접 수행하며 키/복구 문구/원본 개인정보를 수집하지 않는다. 독립 대납 또는 네이티브 시험 가스의 출처·소비를 확인하고 직접 청구와 무료 청구를 구분한다. CLEAR 중단과 Privy/Google/RPC/독립 페이지 호스팅 중단을 별도 보고하며 Geth/RPC는 유지한다. 수락 전 신청까지 독립 처리한다고 주장하지 않는다. 모두 미검증이며 정상 연결 PR에 광범위 복구 기능을 섞지 않고 후속 작은 시험/PR로 분리한다. R0~R2와 r20 V1은 별도 기록이다. 아래 날짜별 설명은 당시 상태다.
+사용자는 운영자 MetaMask를 AI 외부 전송/비용 승인자로 지정했다. 이 지정은 현재 회고 입력·모델·비용·기한을 확인한 1회 직접 승인과 별개다. 과거 서명·증명·AI 승인·소비된 run을 새 실행에 재사용하지 않는다. 자세한 실행 관문은 [실행 인계](PRODUCT_WALLET_RUN.ko.md), SDK 상태는 [Privy 연결](EMBEDDED_WALLET_PRIVY.ko.md)을 따른다.
+
+### 지갑과 증빙의 세 주체
+
+| 값 | 현재 코드 의미 | 화면·연결 규칙 |
+| --- | --- | --- |
+| `participantWallet` | 참가자가 증빙 관측 요청에 서명하는 지갑 | 신청·정책·nonce·만료·expectedClaimOwner에 결합된 원천 요청을 승인한다. |
+| `expectedClaimOwner` | 수집기가 이번 증명에 만든 임시 EOA | 두 proof의 owner·signed request context·동일 HackerRank username을 검증한다. 학생 주소로 치환하지 않는다. |
+| 수령인 | 신청과 별도 V2 등록으로 고정한 TEST 수령 주소 | 원천 요청 서명을 수령인 등록이나 지급 동의로 재사용하지 않는다. |
+
+`src/hackerrank-evidence/request.mjs`, `collector.mjs`, `verifier.mjs` 및 `src/embedded-wallet/approvals.mjs`가 근거다. 학생 개인키를 서버에서 수집하지 않는다. pair proof의 수집/검증/제품 소비 코드는 존재한다. [PRODUCT_STORE](../bootcamp-store/PRODUCT_STORE.ko.md)는 PR80 초기 합성 저장 이력이며 현재 전체가 미구현이라는 뜻이 아니다. [r20 기록](BOOTCAMP_NORMAL_RUN_READINESS.ko.md)의 이전 V1 실제 성공과 이번 Privy/V2 미완주를 구분한다.
+
+### 기존 판정 근거 GET 인계
+
+`api.decisionEvidence(app,{decisionId:view.target.targetDecisionId})`는 기존 `GET /bootcamp/v3/applications/:app/decision-evidence/:decisionId`를 사용한다. decisionId 생략형 GET도 있다. 응답 manifest의 decision ID/revision/hash를 화면 판정과 대조한다. HackerRank checks의 `certificateName`, `issuerStatus`, 두 proof hash/issuedAt, `achievementAt`을 표시할 수 있으며 현재 achievementAt은 null이다.
+
+계정 증명/인증서 증명/연결 검증을 구분하고 `verification`(sourceStatus/participantBinding/requestBinding/integrity/freshness), `reference`(RECORDED/UNAVAILABLE), `availability`(유효·만료·삭제·교체 등)를 함께 읽는다. 해시 존재만으로 연결 성공을 표시하지 않는다. 저장된 당시 검증 기록이며 `sourceCurrentness=UNKNOWN`, 원문 HTTP=false, 독립 재검증/실시간 원천 확인=false다. 표시 근거가 부족하면 확인 필요로 남기고 검증 요약 DTO를 별도 확정한다. [S4 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)을 그대로 따른다.
+
+### 재원·가스·현금화
+
+V2는 지정 depositor의 `approve → fund(operationId, amount)`로 내부 balance를 갱신한다. 금고로 ERC20 `transfer`만 보내면 정상 예치 회계가 아니라 surplus로 구분되므로 직접 송금 충전 안내를 하지 않는다. CLEAR 운영자 SIWE 역할과 depositor 권한은 별개이며, 현재 normal-chain은 별도 시험 예치자로100 TEST를 준비한다. 정상 완주에는 이 재원을 사용한다. 충전 UI·권한 조회/DTO·operationId·영수증·확정 회계는 후속이다. 현 화면 문구는 “현재 화면에서는 재원 충전을 지원하지 않습니다”다.
+
+금고→학생의 기존 제한된 지급 대납과 학생→외부 주소 송금, CLEAR 중단 후 직접 청구의 가스는 별개다. 현 SDK 어댑터는 임의 거래 전송을 제공하지 않는다. 후속에는 네이티브 시험 가스/독립 제출자, SDK·인증·RPC·호스팅 의존성을 검증하며 모든 송금 무료나 AA/paymaster 채택을 약속하지 않는다. 원화 현금화는 상용 미구현·미검증이며 SDK 선정만으로 국내 오프램프 지원을 확정하지 않는다.
+
+### 승인된 후속 순서·완료 조건
+
+| 순서 | 범위 | 완료 조건·미확정 |
+| --- | --- | --- |
+| 1. 정상 완주 | Attestor403·SDK 잔여 검토, 최신 프론트 인수, 참가자 Privy/운영자 MetaMask | 새 신청/원천·입력별 AI 승인·V2 등록·동일 판정 양측 동의·정확100 TEST canonical receipt/Transfer/잔액·중복 거부. INCLUDED/finalized=false를 최종 확정으로 표시하지 않음. |
+| 2. 판단 근거 표시 | 기존 decision-evidence GET 인계는 정상 완주와 병행 가능 | 판정 대상과 verification/reference/availability 일치, 해시와 실제 검증 의미 구분. 새 원문 공개 없음. |
+| 3. Moodle·회고 보완 | 정상 완주 후 제한 재조회와 회고 수정 후 새 증거/판정 | 대상 조건·횟수/주기·운영창·다음 확인 시간·권한 계약 확정. 기존 만료/동의/재검증 정책 유지. Reclaim/AI를 모든 재조회에 자동 실행하지 않음. |
+| 4. 중단 대응 | 별도 수락·전액 배정·미청구 권리로 직접 청구/새 브라우저 복구/자산 이동 | 기존 권리·예약·중복 방지, 필요한 독립 데이터/가스/SDK·인증·RPC·호스팅 의존성과 실제 receipt 확인. 이미 지급한 신청의 재청구와 구분. |
+| 5. 운영자 충전 | depositor 권한 및 approve/fund 계약 인수 후 UI | chain/instance/vault/token/decimals·operationId·거래 영수증과 내부 회계 확인. 운영자 세션 주소만 추가해 완료 처리하지 않음. |
+
+현재 `normal-source-sequence`는 단회 수집이며 회고 준비/정확 승인 대기 후 이어간다. 화면 GET polling은 저장 상태 조회이고 Moodle 재수집이 아니다. 아직 “곧 다시 확인합니다”를 약속하지 않는다. 내부 이의/평가/review-revalidations POST는 현재 제품 호스트 허용 목록과 normal-client 사용자 요청에 없다. `review-revalidations`는 신뢰된 평가 결과 기록이며 학생의 재실행 요청 API가 아니다. 아래 R0/R1/R2는 후속 계약·구현 분리 기준으로 유지한다.
+
+미해결 종료 후 재개/구제는 정책 공백이다. 기존 신청에 연결된 새 검토 사건/증거/판정, 재개 권한·기한·예약금·수락권리·중복 방지를 포함한 제안부터 한다. 사람 검토·임의 수동 지급·무조건 재신청·종료만으로 예약 해제는 확정 정책이 아니다. 원래 검토창/수락 권리 보호를 줄여 정상 완주의 장애를 없애지 않는다. 어느 후속 기능도 현재403 해결·정상 완주의 선행 조건으로 새로 끼워 넣지 않는다.
+
+개발용 외부 지갑은 사용자의 명시 선택으로만 허용하며 SDK 장애의 자동 fallback은 아니다. 안내는 “이번 시험의 신청과 TEST 수령에는 이 주소가 사용되며 내장 계정과 별개입니다”로 한다. 내장 전환 시 기존 신청·수령인·서명을 자동 치환하지 않는다.
+
+## 2026-10-28 이전 계획 이력
 
 2026-10-28. 사용자 승인 범위는 프론트 지침 정리와 후속 개발 계획 반영이다. 이 문서는 새 실제 로그인·유료 호출·호스트 활성화나 후속 구현의 실행 지시가 아니다.
 
-## 현재 기준
+## 2026-10-28 병합·구현 이력
 
 확인한 develop은 `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`다. PR115 V2 등록, PR116 S3 내부 체인 연결/조회, PR117 S4 근거 조회와 PR120 제품 호스트 V2 등록 GET/POST·S3 조회 GET이 병합됐다. PR120 검증 HEAD `cd659370a6264b1fa8592c85f7585ae125ee9275`의 CI 8/8 성공 후 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에 정상 병합됐고 병합 트리는 검증 HEAD와 같다. [최종 E5 B 74/74·API/store 774/774](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016882), [E5 46/46·E4 164/164](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016840), [PR 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016836), [push 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679011653)을 확인했다. 정확한 경로·client·초 경계 보정과 이전 실패 이력은 [S5 호스트 인수 기록](BOOTCAMP_S5_HOST_MOUNT.ko.md) 및 [PR120](https://github.com/gw020328-oss/clear-education-v4/pull/120)을 따른다. 호스트 인수 문서의 Draft/병합 대기 표현은 당시 기록이다.
 
@@ -57,7 +97,7 @@ R0에서 요청·접수/대기·평가·재검증 진행·정정·미해결·체
 
 ## 지갑·시연·합성 모드
 
-현재 목표는 참가자 Privy Google 내장 EOA·기존 주소 복원·명시적 수령인 확인, 운영자 MetaMask·같은 판정 직접 확인, 기존 서비스 거래 제출/가스 부담이다. PR125의 독립 연결 준비와 제품 실제 완료를 구분한다. 실제 SIWE/HR/V2·새100 TEST 및 중단 직접 청구/자산 이동은 미검증이다. AA/Paymaster 확장은 보류한다.
+현재 목표는 참가자 Privy Google 내장 EOA·기존 주소 복원·명시적 수령인 확인, 운영자 MetaMask·같은 판정 직접 확인, 기존 서비스 거래 제출/가스 부담이다. PR125의 독립 연결 준비와 제품 실제 완료를 구분한다. 당시 준비 이후 인증 전용 SIWE 완료 보고를 받았으나 새 제품 HR/V2·100 TEST 및 중단 직접 청구/자산 이동은 미검증이다. AA/Paymaster 확장은 보류한다.
 
 현재 시험은 서로 다른 참가자·운영자 주소와 분리된 브라우저 프로필을 사용한다. 우리 노트북 시연은 추천안이며 대회 장비 규정은 별도 확인한다. `web/src/demo/`는 명시적 합성 모드로 유지할 수 있으나 실제 장애/미활성화 때 자동 전환하지 않고 실제 서명/쓰기/지급과 격리한다. 합성 표시·성과를 구분하고 디자인 변경은 코드 리뷰 완료로 간주하지 않는다.
 
