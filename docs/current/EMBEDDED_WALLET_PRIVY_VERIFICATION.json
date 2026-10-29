@@ -10,7 +10,7 @@
   },
   "tests": {
     "embedded": {
-      "passed": 71,
+      "passed": 72,
       "failed": 0
     },
     "existingV2AndSource": {
@@ -41,7 +41,7 @@
     "src/embedded-wallet/package-lock.json": "f8ff8bec18dfada31b8b732933ec2e66deb9fb91e40ad6ed56fa559394a77080",
     "src/embedded-wallet/provider-boundary.mjs": "e492c0f5be7d8a4ecbb452eca159b207d8d2cafd10f8ab34be64bb2009069255",
     "src/embedded-wallet/privy-adapter.mjs": "06ca2d6491f1558a0a312a91b7652870be3c1ed0f2146d7e39fd5829dc6e058d",
-    "src/embedded-wallet/clear-session.mjs": "c11e5762ac842de00cdc2608498197c075327c6d9cacd6cfb0323e3061f56bb2",
+    "src/embedded-wallet/clear-session.mjs": "91c4e9aced519081cf886bb5fd483303e53602e82506a6edc63f56a6dd6fb4c4",
     "src/embedded-wallet/approvals.mjs": "889a0c4c20fa925e62c39c202b95b2fee9a72d386e71d8f8e9e95be39dc5d54b",
     "src/embedded-wallet/config.mjs": "5b5d25d5405693a20943767448003e85cbeedfe299de6e7720dd8a59e36ba14f",
     "src/embedded-wallet/onboarding.jsx": "659c0074df0c03c6a62cf0b63944e1a00da5955a204d6c61c62753b0290a9197",

@@ -78,6 +78,14 @@ test('revoke network failure remains UNKNOWN and explicit retry confirms', async
   await assert.rejects(f.s.logout(), /REVOKE_UNKNOWN/); assert.equal(f.s.state().revocation, 'UNKNOWN');
   f.setHook(async () => {}); await f.s.retryRevocation(); assert.equal(f.s.state().revocation, 'CONFIRMED');
 });
+test('lost verify response cannot be declared revoked by a later empty-cookie 401', async t => {
+  const f = fixture(t);
+  f.setHook(async path => {if (path === '/auth/verify') throw Object.assign(Error('API_TIMEOUT'), {outcome:'UNKNOWN'});});
+  await assert.rejects(f.s.authenticate(), /API_TIMEOUT/);
+  await assert.rejects(f.s.logout(), /REVOKE_UNKNOWN/);
+  assert.equal(f.s.state().revocation, 'UNKNOWN'); assert.equal(f.s.state().authenticated, false);
+  await assert.rejects(f.s.authenticate(), /SESSION_BUSY/);
+});
 test('onboarding cannot use CLEAR auth or infer operator role', async t => {
   const a = actor(t); const s = createClearSession({wallet: a.wallet, api: () => assert.fail('no HTTP'), config: {...config, phase: 'ONBOARDING_ONLY'}});
   await assert.rejects(s.authenticate(), /ONBOARDING_ONLY/); await s.dispose();

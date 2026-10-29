@@ -18,7 +18,7 @@ export function createClearSession({wallet, api, config, now = () => Math.floor(
   const c = validateConfig(config), pin = wallet.pin, lifetime = new AbortController();
   check(c.chainId === pin.chainId, 'SESSION_CHAIN');
   let session = null, closed = false, loginPending = null, verifying = null, revokePending = null;
-  let attemptedLogin = false, revocation = 'NOT_REQUIRED';
+  let attemptedLogin = false, verificationUncertain = false, revocation = 'NOT_REQUIRED';
   const headers = s => ({'x-wallet': pin.address, 'x-chain-id': String(pin.chainId), ...(s ? {'x-csrf-token': s.csrf} : {})});
   const publicState = () => ({authenticated: !closed && !!session, role: !closed ? session?.role ?? null : null, revocation});
   const notify = () => { try { onState(publicState()); } catch {} };
@@ -40,9 +40,9 @@ export function createClearSession({wallet, api, config, now = () => Math.floor(
         validSession(current);
         const result = await api('/auth/logout', {method: 'POST', body: {}, headers: headers(current)});
         check(result?.loggedOut === true, 'SESSION_REVOKE_RESPONSE');
-        revocation = 'CONFIRMED';
+        revocation = verificationUncertain ? 'UNKNOWN' : 'CONFIRMED';
       } catch (error) {
-        revocation = error?.status === 401 || error?.message === 'AUTH_REQUIRED' ? 'CONFIRMED' : 'UNKNOWN';
+        revocation = !verificationUncertain && (error?.status === 401 || error?.message === 'AUTH_REQUIRED') ? 'CONFIRMED' : 'UNKNOWN';
       } finally { session = null; notify(); }
       check(revocation === 'CONFIRMED', 'SESSION_REVOKE_UNKNOWN');
     })();
@@ -68,7 +68,13 @@ export function createClearSession({wallet, api, config, now = () => Math.floor(
       const signature = await wallet.personal(challenge.message, {expiresAt: challenge.expiresAt, now, signal: lifetime.signal});
       await guard();
       attemptedLogin = true;
-      verifying = api('/auth/verify', {method: 'POST', body: {nonce: challenge.nonce, signature}});
+      verifying = api('/auth/verify', {method: 'POST', body: {nonce: challenge.nonce, signature}}).catch(error => {
+        // A timeout/network failure cannot prove that the server did not create
+        // a session. A subsequent 401 only describes the cookie we currently
+        // have; it cannot establish revocation of an undelivered new cookie.
+        verificationUncertain = error?.outcome === 'UNKNOWN' || !Number.isInteger(error?.status);
+        throw error;
+      });
       try {
         const result = validSession(await verifying);
         await guard(); session = {...result}; notify();

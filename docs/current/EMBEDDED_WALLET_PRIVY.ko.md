@@ -24,7 +24,7 @@
 
 - `src/embedded-wallet/provider-boundary.mjs`: EIP1193 `eth_accounts`, `eth_chainId`, `personal_sign`, `eth_signTypedData_v4`만 호출. 65-byte EOA 복구, chain 고정, 전체 작업 기한·취소, provider 조회 hang·이벤트·SDK identity 변경 처리. signature는 호출 메모리에만 반환한다.
 - `privy-adapter.mjs`: `walletChoices`를 표시하고 사용자가 선택한 `sdkUserId/walletId/address`로 `connectSelectedWallet`을 호출한다. 연결된 사용자 소유·비수입·비위임 Ethereum embedded wallet만 선택한다. v3 legacy wallet에 SDK ID가 없으면 `walletIdKind=local-locator`인 user/HD index/address 결합 식별자를 쓴다. 서버 wallet ID라고 주장하지 않는다.
-- `clear-session.mjs`: `createClearSession`은 서버 발급 SIWE 전체 문자열을 origin/chain/instance/주소/nonce/time과 정확히 대조한 뒤 서명한다. role은 verify/session 응답에서만 받는다. 매 인증 요청 전에 현재 서버 세션·role/CSRF와 SDK 지갑을 검사한다. 이전 지갑 헤더로 서버 revoke하며 늦게 도착한 verify도 정리한다. 실패는 `UNKNOWN`; 새 controller 로그인 전에 `logout/dispose/retryRevocation`의 확인이 필요하다. 새 로그인은 매번 새 SIWE이며 과거 cookie만으로 SDK identity를 복원하지 않는다.
+- `clear-session.mjs`: `createClearSession`은 서버 발급 SIWE 전체 문자열을 origin/chain/instance/주소/nonce/time과 정확히 대조한 뒤 서명한다. role은 verify/session 응답에서만 받는다. 매 인증 요청 전에 현재 서버 세션·role/CSRF와 SDK 지갑을 검사한다. 이전 지갑 헤더로 서버 revoke하며 늦게 도착한 verify도 정리한다. 실패는 `UNKNOWN`; 특히 verify 응답 유실 후 empty-cookie401은 미전달 세션 폐기의 증거가 아니므로 계속 UNKNOWN이며 자동 재로그인을 차단한다. 이 경우 단순 revoke 재시도로 새 세션 발급 여부를 확정할 수 없어 서버측 조사/세션 만료 확인이 필요하다. 새 controller 로그인 전에 `logout/dispose/retryRevocation`의 확인이 필요하다. 새 로그인은 매번 새 SIWE이며 과거 cookie만으로 SDK identity를 복원하지 않는다.
 - `approvals.mjs`: `createApprovalSigner.source(reviewed, expected)`는 collector 준비에서 받은 독립 `expectedClaimOwner` 및 신청/정책/mapping/trust/recipe/audience를 대조한다. 참가자 주소로 claim owner를 치환하지 않는다. `registration(reviewed, expected)`는 공개 calldata 안내를 포함한 기존 server packet과 독립 runtime의 contract/instance/chain/participant/정책/mapping을 대조한다. 현재 packet을 서명 전후 다시 읽는다. 두 메서드는 서명만 반환한다. 제출은 별도 명시 사용자 동작에서 기존 `createNormalBootcampClient`를 통해 진행하며 서버의 원래 session/nonce/expiry/CAS 검증을 유지한다.
 - `config.mjs`: HTTPS 127.0.0.1/정확한 포트와 redirect, 하나의 custom chain 및 HTTP 127.0.0.1 RPC만 허용한다. mainnet·가짜 explorer·공개 RPC fallback이 없다.
 - `onboarding.jsx`: Google 로그인·명시적 첫 지갑 생성·주소 선택·명시적 체인 확인·로그아웃만 제공한다. 로그인만으로 지갑을 추가 생성하지 않는다. 모든 SDK 지갑이 없어야 첫 생성 버튼을 제공한다. 과거 주소/권리의 자동 치환이나 지갑 transaction API 호출이 없다.
@@ -68,7 +68,7 @@ SDK의 `disableAutomaticMigration`은 SDK 지갑 migration 제어이며 EIP7702 
 
 2026-10-29 로컬:
 
-- 새 모듈 **71/71**: 이식한 실제 SIWE/HR/V2/store 합성38 + SDK 선택/세션/취소/config/CSP13 + 승인 결합19 + 실제 격리 HTTPS/로컬 RPC host1. localhost TLS는 시험 전용 CA를 명시해 검증하며 TLS 검증을 끄지 않았다.
+- 새 모듈 **72/72**: 이식한 실제 SIWE/HR/V2/store 합성38 + SDK 선택/세션/취소/config/CSP14 + 승인 결합19 + 실제 격리 HTTPS/로컬 RPC host1. localhost TLS는 시험 전용 CA를 명시해 검증하며 TLS 검증을 끄지 않았다.
 - 기존 회귀 **36/36**: `recipient-registration-v2.test.mjs`, `ui-session.test.mjs`, `recipient-registration.test.mjs`. 가짜 원천 및 새 인메모리 키/체인으로 V2 등록→별도 anycaller claim→100000000 atoms, 중복/권한/수락권리 경계를 검사한다. Privy 사용자 지급이 아니다.
 - SDK production bundle 성공(전체 chunks 약7.2MiB), `verify:workspace` PASS, 기존191개 원본 지문 보존.
 - 초기 이식 시험은 collector 패키지가 없는 새 checkout에서 import 오류로 실패했다. 고정 lock대로 의존성을 설치한 후 통과했다. 첫 hostile Host 검사는 Node TLS가 HTTP 전에 hostname 불일치를 잡아 실패했다. 시험 TLS servername을 인증서에 있는 localhost로 고정하여 TLS 검증을 유지하고 서버 Host403까지 확인했다. 경계나 만료 시간을 완화하지 않았다.
