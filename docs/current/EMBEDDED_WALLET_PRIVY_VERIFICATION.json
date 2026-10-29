@@ -36,6 +36,12 @@
       "passed": 48,
       "failed": 0,
       "scope": "Fresh in-memory synthetic execution; no real source or external RPC; before participant-only response narrowing"
+    },
+    "productSourceCompatibility": {
+      "passed": 36,
+      "failed": 0,
+      "preservation": "PASS",
+      "e5bSourcePins": "PASS"
     }
   },
   "actual": {
@@ -120,9 +126,12 @@
     "preservationChecks": "PASS",
     "previousCiHead": "50f7a82b2a8e4a61e07301ea68e611a52665d8ee",
     "previousCiFailure": "STAGE_SOURCE_PIN",
-    "currentCi": "PENDING_PRODUCT_PUSH",
+    "currentCi": "PRODUCT_HEAD_E8019F9_PARTIAL_6_SUCCESS_4_RUNNING",
     "lastVerifiedCiHead": "267002a8bab25e51bbcb8f7a629539a8f9115c3b",
-    "lastVerifiedCiPassed": 10
+    "lastVerifiedCiPassed": 10,
+    "productCiHead": "e8019f96e73e475b99473d9fd8af0260bfa218a9",
+    "productCiCompletedSuccess": 6,
+    "productCiRunning": 4
   },
   "productConnection": {
     "implemented": true,
@@ -135,6 +144,20 @@
     "localHostPrepared": true,
     "registeredSourceSignerRegistryChecked": true,
     "realSourceLoginStarted": false,
-    "normalRuntimeReadiness": "Local Moodle, Docker, pinned Geth, existing Gemini environment and price review available; final commit and per-host authority record pending"
+    "normalRuntimeReadiness": "PASSED_BEFORE_ATTEMPT",
+    "actualStartupAttempted": true,
+    "startupBlocker": "OFFICIAL_ATTESTOR_WEBSOCKET_HTTP_403",
+    "sourceCollected": false,
+    "aiCalls": 0,
+    "diagnosticHostKeptRunning": true,
+    "startupEvidence": {
+      "managedSource": "FAILED_BEFORE_LOGIN_CALLBACK",
+      "officialClient": "ATTESTOR_UNAVAILABLE",
+      "dns": "PASS",
+      "tls444": "AUTHORIZED",
+      "websocketHandshakeHttpStatus": 403,
+      "causeOfServerDenial": "NOT_DETERMINED",
+      "retryPolicy": "No automatic retries; preserve spent host, prepare a fresh run after availability is resolved"
+    }
   }
 }

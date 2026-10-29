@@ -1,5 +1,7 @@
 # Privy 내장 EOA 연결 준비
 
+최신 실행 결과: 독립 제품 화면 연결·로컬 준비 검사는 완료했지만 공식 Attestor WebSocket의 HTTP403으로 로그인 창 준비 전에 중단됐다. 실제 신청/증빙/AI/지급은 미실행이다. [실행 인계](PRODUCT_WALLET_RUN.ko.md)를 따른다.
+
 2026-10-29 최신: 인증 전용 호스트에서 운영자 MetaMask SIWE/서버 역할은 사용자 스크린샷으로 확인했고 참가자 Privy SIWE/참가자 역할은 사용자 완료 보고를 받았다. 제품의 새 체인·새 세션에서는 별도 로그인한다. 이번 추가는 독립 제품 패널과 기존 normal-client/driver 연결, 서버 준비에서 온 독립 HR/V2 서명 문맥, 수령 지갑 등록 전 공개 calldata 안내, 같은 판정의 양측 동의, canonical 지급 영수증 조회다. 제품 체인의 브라우저 접근은 정확한 loopback/Origin·읽기 전용 RPC 중계로 제한한다. SDK의 임의 거래 전송은 연결하지 않는다. 정상 수집/지급 runner와 만료·동의·예치 조건은 유지한다. 실제 제품 증빙·등록·100 TEST 지급은 아직 완료되지 않았다.
 
 `tools/node tools/embedded-wallet/build-product.mjs`는 기존 로그인 번들을 교체하지 않고 `var/embedded-wallet-products/`에 새 자산 묶음을 만든다. 그 자산을 normal-host의 검토된 webRoot로 지정해야 제품 패널이 열린다. `/clear-wallet-app.html`의 공개 App ID marker도 자산 지문에 포함된다. 기본 self-only CSP는 유지하고 명시적으로 인수한 해당 묶음의 두 역할 문서에만 SDK CSP를 적용한다. 제품 RPC는 해당 HTTPS 포트+2이며 내부 Geth RPC만 중계한다. 프론트 `web/` 인수는 여전히 별도다.
