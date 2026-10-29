@@ -1,11 +1,10 @@
 # 교수 피드백: 보안 보완과 자동 지급 완료 계획
 
-2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
+## 2026-10-28 실행 순서 정리
 
+현재 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에 PR115/116/117/120이 병합됐다. PR120 검증 HEAD `cd659370a6264b1fa8592c85f7585ae125ee9275`의 CI 8/8 성공 후 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에 정상 병합됐고 병합 트리는 검증 HEAD와 같다. [최종 E5 B 74/74·API/store 774/774](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016882), [E5 46/46·E4 164/164](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016840), [PR 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016836), [push 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679011653)을 확인했다. 정확한 경로·client·초 경계 보정과 이전 실패 이력은 [S5 호스트 인수 기록](BOOTCAMP_S5_HOST_MOUNT.ko.md) 및 [PR120](https://github.com/gw020328-oss/clear-education-v4/pull/120)을 따른다. 호스트 인수 문서의 Draft/병합 대기 표현은 당시 기록이다. 내부 구현·제품 호스트 노출·실제 사용자 검증을 구분한다. 아래 과거 기록의 Draft/미구현 표현보다 이 절과 현재 코드가 우선한다.
 
-2026-10-26 S3 후보: [이의·정정·종료 체인 연결](BOOTCAMP_S3_CHAIN_REVIEW.ko.md). PR115는 develop `dce9ab1`에 병합됐다. S3는 접수 `NOT_OBSERVED`와 새 `review-chain` canonical 조회를 구분하며, 기존 동의·지급/수락 권리는 유지한다. 프론트는 후보 PR 병합 전 새 경로를 develop 기능으로 가정하지 않는다. S4/S5 실제 제품 완주·PR 병합·main 배포는 포함하지 않는다. 아래 이전 날짜의 후보/미연결 문구는 당시 기록이다.
-
-2026-10-26. 사용자 직접 요청을 본부가 기존 통합 담당에게 전달한 추가 승인 범위다. 기준 develop은 PR114 병합 `a53f6f541d45275ea92057c1beb2cf27af434855`; PR102의 백엔드 실행과 r20 실제 성공은 각자의 기존 지문으로 보존한다. 이 문서의 계획 수락은 구현·배포·실제 검증 완료를 뜻하지 않는다.
+[제품 연결 및 이의·재검증 계획](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)의 순서는 **PR120 호스트 연결·검증·병합 완료 → 프론트 자산·계약 인수 → 실제 정상 지급 완주 → 사용자 이의 접수·평가·실질 재검증 연결**이다. R0 계약 정리와 화면 준비는 병행할 수 있으나 병합된 PR120에 새 이의 실행 기능은 포함되지 않았다. 사용자 요청과 내부 assessment 결과 기록을 분리하며 실제 normal-host 평가 공급 경로는 미완료다. 문서 정리만으로 실제 실행을 시작하지 않는다.
 
 ## 우선순위·담당·완료 기준
 
@@ -13,9 +12,9 @@
 | --- | --- | --- | --- |
 | S1 | 통합: 참가자 서명에 의한 최초 수령인 등록, 별도 V2 계약·typed data·소비자 | 신청 소유자/수령인·정책/매핑·chain/contract/instance·nonce·deadline 결합. 타인 신청에 자기 서명, 잘못된 chain/contract/recipient, 만료, nonce 재사용, 수락 뒤 변경 거부. 원천 서명 재사용 금지 | V2 고정 신청 ID/영속 nonce·세션, HTTP/normal-client, 실행 소비자 연결 구현; 오프라인 결과는 v31 검증 기록, 제품 실제 시험은 남음 |
 | S2 | 통합: 체인 최초 등록 counter/event/query | 유효한 신청이 체인에 등록된 순서로 기존 allocate/nextAllocatable 실행. 정정/refresh는 최초 순서 유지. 무효/만료 중 건너뛰되 유효해지면 원래 순서, 서버 사전 지연/누락을 방지한다는 주장 금지 | V2 counter/event/순서 유지와 canonical 등록 GET 조회 구현; finalized=false, 제품 표시 연결은 남음 |
-| S3 | 통합: 이의/정정/종료를 기존 observeCurrent/replaceTarget/terminate에 연결 | 기존 decisionId/revision/hash·version/epoch 재사용. 접수와 canonical 반영 분리. 오래된 승인 거부, 종료/수락 경합·정정·중복 지급·수락 권리 불변 검증. reorg/DB 대조 필요 명시 | S3 후보 구현·합성 검증; 상세는 위 연결 문서, 최종 CI는 PR/Issue106 |
-| S4 | 통합: 판정 근거 manifest 및 권한 있는 조회 / 프론트: 두 역할 표시 | Reclaim pair proof 참조·검증 문맥, Moodle 응답 hash/관측시각, AI 근거·rubric/model/policy version을 기존 판정과 결합. hash만으로 제3자 검증 가능하다고 표현하지 않음. 원문 보존 기한·삭제·조회 권한 유지 | S4 Draft 후보의 읽기 계약·합성 검사 구현; 원문 HTTP/model·rubric 저장 확대와 S5 실제 완주는 제외 |
-| S5 | 서준형/Claude: 기존 PR60 제품 화면 / 통합: 자동 ACCEPT/CLAIM·영수증 | 새 신청의 네 조건 실제 검증, 이번 입력 AI 승인, 양측 직접 동의 후 자동 지급. canonical receipt와 정확한 100 TEST·중복 차단 확인. 준비/실패/미수령/INCLUDED 및 finalized 상태 구분 | 제품 화면 준비와 S1~S4 검증 의존 |
+| S3 | 통합: 이의/정정/종료를 기존 observeCurrent/replaceTarget/terminate에 연결 | 기존 decisionId/revision/hash·version/epoch 재사용. 접수와 canonical 반영 분리. 오래된 승인 거부, 종료/수락 경합·정정·중복 지급·수락 권리 불변 검증. reorg/DB 대조 필요 명시 | PR116 내부 실행/체인 조회 병합. 제품 조회 GET은 PR120 병합, 사용자 이의/평가/재검증 쓰기 노출·실제 평가 공급 연결은 후속 R0~R2 |
+| S4 | 통합: 판정 근거 manifest 및 권한 있는 조회 / 프론트: 두 역할 표시 | Reclaim pair proof 참조·검증 문맥, Moodle 응답 hash/관측시각, AI 근거·rubric/model/policy version을 기존 판정과 결합. hash만으로 제3자 검증 가능하다고 표현하지 않음. 원문 보존 기한·삭제·조회 권한 유지 | PR117 읽기 API·제품 호스트 GET 병합. 원천 현재성 UNKNOWN/미저장 버전 UNAVAILABLE, 제품 화면·실제 완주 미완료 |
+| S5 | 서준형/Claude: 기존 PR60 제품 화면 / 통합: 자동 ACCEPT/CLAIM·영수증 | 새 신청의 네 조건 실제 검증, 이번 입력 AI 승인, 양측 직접 동의 후 자동 지급. canonical receipt와 정확한 100 TEST·중복 차단 확인. 준비/실패/미수령/INCLUDED 및 finalized 상태 구분 | PR120 호스트 연결·최종 CI8/8·병합 완료. 프론트 자산 인수와 새 실제 제품 완주 미완료 |
 
 ## 최소 계약 영향
 
@@ -40,6 +39,8 @@
 Issue106은 실제 제품 화면 완주 전까지 OPEN이다. 문서 갱신, 구현, 오프라인 검증, 제품 실제 완주를 별도 표시한다. 후속 PR은 develop 대상 Draft로 검토/CI하며 자동 병합하지 않는다. PR114의 개별 병합 승인을 후속 PR/main 배포 승인으로 확대하지 않는다.
 
 ## 첫 계약 구현 단위 — 당시 기록
+
+이하 PR115/v30/v31의 후보·Draft·미연결 표현은 당시 상태다. 현재 병합·노출 기준은 최상단을 따른다.
 
 `HackathonTestVaultExecutionV2.sol`과 `recipient-registration.mjs`를 별도 추가했다. 기존 V1은 그대로이며 V2에는 서명 없는 4인자 등록 경로가 없다. 서명 메시지/신청 ID를 독립 계산한 JS와 체인 결과를 대조한다. 참가자 고정 지갑과 신청의 결합을 서버가 검증해야 하며 순수 codec의 성공만으로 HTTP 인증이 구현됐다고 보지 않는다.
 
@@ -74,3 +75,16 @@ S3/S4 및 제품 프론트 S5 실제 완주는 이번 연결 완료 범위에 �
 최초 v31 HEAD `bef2faa`의 CI는 7/8 성공, E5B 49/50 실패였다. V2 ACCEPT 만료 주입 전에 REGISTER `ENQUEUE`가 초 경계에서 `BC_VIEW_STALE`로 중단된 것이다. 의도·영수증 저장을 한 번 수행한 뒤 같은 savepoint 안에서 원래 CAS/판정·원천 commitment/기한·runtime·저장 기록·참가자/운영자 권한을 재검증한다. 최종 읽기 검증은 최대 한 번만 반복하고 두 번째 시간 충돌·원천 변경·만료·로그아웃·역할 철회·역행은 모두 롤백한다. 기존 실패 기록은 보존하며 새 HEAD의 최종 CI는 Issue106에서 확인한다.
 
 ENQUEUE 수정 후 벽시계 실행은 16/18이었다. 남은 두 실패는 원천 요청 발행 `issueRequest`와 unsigned `prepareReviewAuthorization`의 같은 초 조건이었으며, 대상 ACCEPT 거부로 대신 집계하지 않았다. 요청/준비를 각각 한 번만 저장하고 원래 nonce·issuedAt·expiresAt·세션·원천·동의/재원/서명자 상태를 현재 시점에 재검증하도록 보완했다. 17개 집중 검사는 시간 경과 성공과 원천/만료/로그아웃/시계 역행/반복 충돌, 준비 nonce·서명자·재원·운영자 동의 철회를 구분한다.
+
+## 이전 계획·병합 대기 상태 기록
+
+아래는 각 작성 시점의 기록이다. 현재 기준과 후속 실행 순서는 위 2026-10-28 절을 따른다.
+
+2026-10-27 S5 호스트 연결 **Draft 후보**: [정확한 경로·기존 client·합성 검증 범위](BOOTCAMP_S5_HOST_MOUNT.ko.md). 병합 전 develop 기능으로 가정하지 않으며, 제품 화면/실제 완주는 미완료다. 아래 기존 미연결 기록은 해당 병합 시점의 사실이다.
+
+2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
+
+
+2026-10-26 S3 후보: [이의·정정·종료 체인 연결](BOOTCAMP_S3_CHAIN_REVIEW.ko.md). PR115는 develop `dce9ab1`에 병합됐다. S3는 접수 `NOT_OBSERVED`와 새 `review-chain` canonical 조회를 구분하며, 기존 동의·지급/수락 권리는 유지한다. 프론트는 후보 PR 병합 전 새 경로를 develop 기능으로 가정하지 않는다. S4/S5 실제 제품 완주·PR 병합·main 배포는 포함하지 않는다. 아래 이전 날짜의 후보/미연결 문구는 당시 기록이다.
+
+2026-10-26. 사용자 직접 요청을 본부가 기존 통합 담당에게 전달한 추가 승인 범위다. 기준 develop은 PR114 병합 `a53f6f541d45275ea92057c1beb2cf27af434855`; PR102의 백엔드 실행과 r20 실제 성공은 각자의 기존 지문으로 보존한다. 이 문서의 계획 수락은 구현·배포·실제 검증 완료를 뜻하지 않는다.

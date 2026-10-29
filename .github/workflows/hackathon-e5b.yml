@@ -6,6 +6,8 @@ on:
       - 'src/hackathon-test-vault/**'
       - 'tests/hackathon-test-vault/**'
       - 'src/bootcamp/**'
+      - 'tools/bootcamp/frontend-server.mjs'
+      - 'tests/bootcamp-store/normal-frontend.test.mjs'
       - 'specs/bootcamp/hackathon-test-memory-source-intake-*.json'
       - 'docs/hackathon-test-vault/e5b/**'
       - '.github/workflows/hackathon-e5b.yml'
@@ -20,7 +22,9 @@ jobs:
   e5b:
     name: E5 B scoped controller and immutable adoption
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # 68 native cases measured ~22 minutes before the six dispatch guards.
+    # Keep the full API/preservation/history tail within one bounded job.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
