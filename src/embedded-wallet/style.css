@@ -1,0 +1,7 @@
+:root {font-family:system-ui,sans-serif;color:#172b35;background:#f3f6f6;color-scheme:light}
+body {margin:0} main {max-width:850px;margin:3rem auto;padding:0 1.5rem} h1 {font-size:2rem}
+section {background:white;border:1px solid #d8e1e2;border-radius:14px;padding:1.5rem;margin:1.5rem 0}
+p {line-height:1.7} dt {font-weight:700;margin-top:1rem} dd {margin:.35rem 0;overflow-wrap:anywhere}
+button {padding:.75rem 1rem;margin:.3rem;border:1px solid #24556a;border-radius:7px;background:#fff;color:#163d4f;cursor:pointer;overflow-wrap:anywhere}
+button[aria-pressed=true] {background:#daeef2} button:disabled {opacity:.45;cursor:default}
+[role=status] {background:#edf4f5;padding:1rem;border-radius:7px}

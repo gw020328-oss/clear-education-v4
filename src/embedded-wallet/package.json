@@ -1,0 +1,15 @@
+{
+  "name": "@clear/embedded-wallet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "node ../../tools/embedded-wallet/build.mjs"},
+  "dependencies": {
+    "@privy-io/react-auth": "3.51.0",
+    "ethers": "6.17.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "viem": "2.57.13"
+  },
+  "devDependencies": {"esbuild": "0.28.2"}
+}

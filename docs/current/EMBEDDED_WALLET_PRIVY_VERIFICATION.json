@@ -1,0 +1,50 @@
+{
+  "version": "clear-embedded-wallet-preparation.1",
+  "date": "2026-10-29",
+  "baseCommit": "d44b01216241d120064145016a99d73b1b361e34",
+  "sdk": {
+    "name": "@privy-io/react-auth",
+    "version": "3.51.0",
+    "installed": true,
+    "bundleBuilt": true
+  },
+  "tests": {
+    "embedded": {
+      "passed": 71,
+      "failed": 0
+    },
+    "existingV2AndSource": {
+      "passed": 36,
+      "failed": 0
+    },
+    "workspace": "PASS"
+  },
+  "actual": {
+    "privyAppConfigured": false,
+    "googleLogin": false,
+    "sameAddressRestoration": false,
+    "privySignatures": false,
+    "browserLoopbackRpc": false,
+    "productHostMounted": false,
+    "productPayment": false
+  },
+  "browserBlocker": "ERR_CERT_AUTHORITY_INVALID",
+  "audit": {
+    "critical": 0,
+    "high": 17,
+    "moderate": 14,
+    "low": 0,
+    "affectedPackages": 31
+  },
+  "sourceSha256": {
+    "src/embedded-wallet/package.json": "c1ae71d66a09cd0e8c76038bba1503634ba2c14e6d120f5b0b6384204762e22d",
+    "src/embedded-wallet/package-lock.json": "f8ff8bec18dfada31b8b732933ec2e66deb9fb91e40ad6ed56fa559394a77080",
+    "src/embedded-wallet/provider-boundary.mjs": "3cce98c610140630b9908e4b6a09cd9228278b66e2f31ec2c82a00028cb2051a",
+    "src/embedded-wallet/privy-adapter.mjs": "06ca2d6491f1558a0a312a91b7652870be3c1ed0f2146d7e39fd5829dc6e058d",
+    "src/embedded-wallet/clear-session.mjs": "c11e5762ac842de00cdc2608498197c075327c6d9cacd6cfb0323e3061f56bb2",
+    "src/embedded-wallet/approvals.mjs": "889a0c4c20fa925e62c39c202b95b2fee9a72d386e71d8f8e9e95be39dc5d54b",
+    "src/embedded-wallet/config.mjs": "5b5d25d5405693a20943767448003e85cbeedfe299de6e7720dd8a59e36ba14f",
+    "src/embedded-wallet/onboarding.jsx": "659c0074df0c03c6a62cf0b63944e1a00da5955a204d6c61c62753b0290a9197",
+    "tools/embedded-wallet/server.mjs": "40f773c89d9a5dac58658184506da3562cf4e1299041a4da1a4f41718fd69759"
+  }
+}
