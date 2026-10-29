@@ -61,7 +61,12 @@ export function pinnedWallet({provider, identity, readIdentity, onInvalidate = (
       await guard(controller.signal);
       let signature;
       try { signature = await bounded(() => provider.request({method, params}), {signal: controller.signal, timeoutMs}); }
-      catch (error) { throw Error(controller.signal.aborted ? 'WALLET_CONTEXT_CANCELLED' : error?.code === 4001 ? 'WALLET_REJECTED' : 'WALLET_SIGN_FAILED'); }
+      catch (error) {
+        // The SDK prompt may still exist after our timeout/abort. Retire this
+        // boundary so a second approval cannot overlap that abandoned prompt.
+        if (controller.signal.aborted || error?.message === 'WALLET_TIMEOUT') invalidate();
+        throw Error(controller.signal.aborted ? 'WALLET_CONTEXT_CANCELLED' : error?.code === 4001 ? 'WALLET_REJECTED' : 'WALLET_SIGN_FAILED');
+      }
       await guard(controller.signal);
       check(now() < expiresAt, 'SIGNATURE_EXPIRED');
       let valid = false;

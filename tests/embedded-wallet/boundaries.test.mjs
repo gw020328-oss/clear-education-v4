@@ -91,6 +91,8 @@ test('server-side session revocation clears local authentication before further 
 for (const method of ['eth_accounts','eth_chainId','personal_sign']) test('bounded hung provider ' + method, async t => {
   const a = actor(t, {timeoutMs: 25}); a.hook(q => q.method === method ? new Promise(() => {}) : undefined);
   await assert.rejects(a.wallet.personal('test', {expiresAt: NOW + 120, now: () => NOW}), /TIMEOUT|CANCELLED|SIGN_FAILED/);
+  assert.equal(a.invalidations, 1);
+  await assert.rejects(a.wallet.personal('second prompt must not overlap', {expiresAt: NOW + 120, now: () => NOW}), /CANCELLED/);
 });
 test('caller abort cancels hung identity reads without waiting for provider', async t => {
   const a = actor(t), c = new AbortController(); a.hook(() => new Promise(() => {}));
