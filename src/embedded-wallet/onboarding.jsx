@@ -62,7 +62,10 @@ function Onboarding({config}) {
     {privy.authenticated && <>
       <p>재로그인 후 아래 주소가 이전과 같은지 직접 비교하세요. 다른 주소이면 기존 신청을 이어 진행하지 마세요.</p>
       {choices.map(c => <button key={c.walletId} disabled={busy} aria-pressed={selection?.walletId === c.walletId} onClick={() => choose(c)}>{c.address} 선택</button>)}
-      {walletsReady && !privy.user?.linkedAccounts?.some(a => a.type === 'wallet' && ['privy','privy-v2'].includes(a.walletClientType)) &&
+      {/* Creation needs an authenticated user, not external-connector readiness.
+          SDK 3.51.0 skips connector initialization when external wallets are
+          disabled, so useWallets.ready can remain false before the first wallet. */}
+      {privy.ready && !privy.user?.linkedAccounts?.some(a => a.type === 'wallet' && ['privy','privy-v2'].includes(a.walletClientType)) &&
         <button disabled={busy} onClick={() => run(() => createWallet())}>첫 내장 지갑 만들기</button>}
       <p>현재 확인용 체인: {config.chainId}. 이 실행에서 새로 만든 격리 체인이며 기존 지급 기록과 별개입니다.</p>
       <button disabled={!selection || busy} onClick={() => run(probe)}>선택한 주소로 로컬 네트워크 확인</button>

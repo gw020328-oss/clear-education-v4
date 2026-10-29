@@ -1,6 +1,8 @@
 # Privy 내장 EOA 연결 준비
 
-2026-10-29 · SDK 설치/번들 및 합성 경계 검증 완료 · 실제 로그인/복원/제품 연결 미완료.
+2026-10-29 · SDK 설치/번들 및 합성 경계 검증 완료 · 실제 Google 로그인 확인 · 지갑 생성/복원/제품 연결 미완료.
+
+실제 브라우저에서 Google 로그인 후 첫 생성 버튼이 숨겨지는 문제를 확인했다. SDK 3.51.0의 `useWallets.ready`는 외부 connector 준비도 포함하며, 외부 지갑을 끄면 초기화가 생략된다. 첫 생성 버튼은 인증된 사용자와 `privy.ready` 및 기존 내장 지갑 부재로 판단하도록 수정했다. 주소 선택·provider 연결의 기존 readiness/소유권 검증은 유지한다. Google 로그인 성공만으로 지갑 생성이나 서명 성공을 주장하지 않는다.
 
 기준은 develop `d44b01216241d120064145016a99d73b1b361e34`, 작업은 `codex/bootcamp-privy-sdk`다. PR60 원격 HEAD는 `a0620cd39fe5cd44b62a1deb5806883503242227`이며 팀원 로컬 작업을 인수한 것은 아니다. [Issue106 소유 경계·인수 요청](https://github.com/gw020328-oss/clear-education-v4/issues/106#issuecomment-6487251657)을 남겼다.
 
