@@ -56,7 +56,7 @@ export async function composeNormalFlow({source,config,directory,signal,ports}){
   fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
   context=await ports.open({preparationPath:join(preparation.directory,'preparation.json'),hackerRank:source});
   if(signal?.aborted){context.close();throw Error('NORMAL_HOST_CANCELLED');}
-  mounted=context.createFrontend({tls:ports.tls,webRoot:config.webRoot});await ports.listen(mounted.server,config.origin);
+  mounted=context.createFrontend({tls:ports.tls,webRoot:config.webRoot});await mounted.ready;await ports.listen(mounted.server,config.origin);
   ports.notify({event:'NORMAL_HOST_ACTIVE',origin:config.origin,chainId:mounted.config.chainId,network:mounted.config.network,applicationId:null,sourceVerified:false});
   await waitUntil(()=>!!context.report().applicationId,{signal,timeoutMs:Math.max(1,(context.report().startedAt+1800)*1000-Date.now())});
   ports.notify({event:'APPLICATION_BOUND',applicationId:context.report().applicationId});

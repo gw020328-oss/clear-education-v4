@@ -1,5 +1,7 @@
 # 서준형 Claude Code 복사 지침
 
+2026-10-29 인계 추가: PR125의 `src/embedded-wallet/product-panel.jsx`와 `product-session.mjs`는 기존 normal-client/검토시간 driver를 사용하는 독립 연결 화면이다. 참가자 Privy·운영자 MetaMask의 제품 SIWE 후에만 마운트하며, HR의 collector owner와 V2 runtime은 인증된 session 응답의 `signingContext`에서 받아 서버 packet과 따로 비교한다. `clear-wallet-app.html` marker를 포함한 공개 bundle 인수와 product mount가 필요하다. 인증 시험은 양측 완료 보고를 받았으나 실제 제품 지급은 미검증이다. 운영자 지갑의 AI 승인 권한은 이번 사용자 지정과 입력별 직접 승인으로 한정한다.
+
 ## 2026-10-29 Privy 연결 준비 후보
 
 최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준 `codex/bootcamp-privy-sdk`/PR125에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. 사용자 확정은 **참가자=Privy Google 내장 EOA, 운영자=MetaMask 유지**다. 운영자 내장 지갑 준비는 과거 기록이며 완료 조건이 아니다. 이번 사용자가 지정한 MetaMask 주소를 명시 allowlist와 새 세션에 연결하고 과거 주소/권리/서명을 치환하지 않는다. 독립 /onboarding·/operator, 정확한 SIWE/HR/V2·서버 revoke 경계, 181/181 합성 시험과 SDK bundle이 준비됐다. 참가자 실제 Google/지갑 생성/읽기 RPC는 확인했고 재로그인 동일 주소는 사용자 보고다. 새 조합 실제 SIWE·HR/V2·100 TEST는 미검증이다. web/PR60·제품 CSP·DB/체인은 보존하고 공통 HTTP의 선택적 쿠키 namespace만 추가했다. 최신 프론트 인수와 의존성 audit 검토가 남아 Draft다.

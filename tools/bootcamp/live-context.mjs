@@ -1,3 +1,4 @@
+import {productSigningContext} from '../embedded-wallet/product-mount.mjs';
 // Constructor-only owner context. Opening is deferred until all source ports are ready.
 import {observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
 import {mkdirSync} from 'node:fs';
@@ -96,11 +97,12 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
   const getSession=context=>{const actor=ui.authorize(context,false);if(app)readNormalView(()=>store.getOperationsProjection(context,app));
    readers.observe(actor.role.toUpperCase());return Object.freeze({
    version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,
+   signingContext:productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}),
    recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:reflectionApproval?.brief(context)??null});};
   const recipientView=(c,a)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,authorize:(c,w)=>ui.authorize(c,w)});};
-  const normalUi=Object.freeze({getRecipientRegistration:recipientView,
+  const normalUi=Object.freeze({walletRuntime:Object.freeze({instanceId:m.instanceId}),getRecipientRegistration:recipientView,
    beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
     requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},

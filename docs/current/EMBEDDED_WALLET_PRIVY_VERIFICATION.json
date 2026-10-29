@@ -57,14 +57,19 @@
     "src/embedded-wallet/clear-session.mjs": "675b399753580eec4a49b643ac771c25a4f360e09802c7578d47abe8cd226562",
     "src/embedded-wallet/approvals.mjs": "889a0c4c20fa925e62c39c202b95b2fee9a72d386e71d8f8e9e95be39dc5d54b",
     "src/embedded-wallet/config.mjs": "bfff87ed780d056804d88e578a613e5370b02a463b829beff4a6d0d0b76cdfdc",
-    "src/embedded-wallet/onboarding.jsx": "48ffdd320ff096c848599a6c2802be9ff2c3d1afbe00f220cb784534de8c406f",
+    "src/embedded-wallet/onboarding.jsx": "dcea7ee886ebe7c9d367d975a2a0c2965ae0ed169c8dfbeac5bce19eccbdf3a1",
     "tools/embedded-wallet/server.mjs": "963f6a650415dca5e83fe4e775c26431fcd198fc91efa4c7f70bf918a9201252",
     "src/application/http.mjs": "95f5c4e1078ceac7738f1a7353a00a21f3b6109475eff1ac8ea80216a79d89a3",
     "tools/embedded-wallet/onboarding.mjs": "b975f58e06b4d435ee0a1e63c224f2cdbd4340bd24d14fcc206a1dbd24d7d0b5",
     "src/embedded-wallet/metamask-adapter.mjs": "9b61a66a931698810532e20b72584af5d1229a2a5832a03893063a92904ce095",
-    "src/embedded-wallet/operator.jsx": "f160d7aaeb300f0e460309d1fab8893da79303a76d5b259890485bfc6d155498",
+    "src/embedded-wallet/operator.jsx": "2764bbf9dffb1dd30318a45d796b27210bdcb8278809bf9b3f3a929c1b540c9d",
     "src/embedded-wallet/exports.mjs": "49989bcc7d09763b5814e1357415b435f945ff3e08cba3db12d3ce8939bbc04b",
-    "tools/embedded-wallet/build.mjs": "799a57babc6b3b2a6eb760935ee9ea810a081582fa89a534207e88eca141f0e2"
+    "tools/embedded-wallet/build.mjs": "799a57babc6b3b2a6eb760935ee9ea810a081582fa89a534207e88eca141f0e2",
+    "src/embedded-wallet/product-session.mjs": "5547b8eebd223e2438945f8949be2f610d411430381f7a5f32883ab1b2f38831",
+    "src/embedded-wallet/product-panel.jsx": "72986fb661492ae6ef0e7a6f882d081fd9d15c071ced7ca801abb3ec1b780857",
+    "tools/embedded-wallet/product-mount.mjs": "24f37245e548706dec5761a246670d28ab628ae54e2bf57e50408a67d9c55f32",
+    "tools/embedded-wallet/product-rpc.mjs": "2af54a4fe1a6d853aa905ed65e517670e2edbed82cee971ccb753eeb5fdeab12",
+    "tools/embedded-wallet/build-product.mjs": "27bd66039ea690488ff6fd812d37b1821258960084add1d689b63eca4a589a9a"
   },
   "actualEvidence": {
     "method": "Browser UI observation after user Google login and wallet creation; same address after page reload; explicit selected-address read-only probe displayed success.",
@@ -73,15 +78,18 @@
     "transactionsSent": false,
     "participantReauthentication": "USER_REPORTED_SAME_ADDRESS",
     "operatorSeparateAccountAndProfile": "HISTORICAL_EMBEDDED_OPERATOR_USER_REPORT_NOT_CURRENT_REQUIREMENT",
-    "realSiweRoleChecks": "PENDING_PARTICIPANT_PRIVY_AND_OPERATOR_METAMASK_USER_SIGNATURES",
-    "sameAddressRestorationMeaning": "false means not independently observed across the full logout/login sequence; user reported success"
+    "realSiweRoleChecks": "OPERATOR_SCREENSHOT_CONFIRMED_PARTICIPANT_USER_REPORTED",
+    "sameAddressRestorationMeaning": "false means not independently observed across the full logout/login sequence; user reported success",
+    "participantSiweRole": "USER_REPORTED_PARTICIPANT",
+    "operatorSiweRole": "SCREENSHOT_OPERATOR_LOGIN_SIGNATURE_COMPLETE",
+    "privySignaturesMeaning": "All three signature classes are not complete; participant SIWE is user-reported, real source/V2 registration remain pending."
   },
   "walletPlan": {
     "participant": "PRIVY_GOOGLE_EMBEDDED_EOA",
     "operator": "METAMASK",
     "operatorAddress": "USER_CONFIRMED_LOCAL_ONLY",
     "historicalEmbeddedOperator": "PRESERVED_NOT_ACTIVE",
-    "actualMixedWalletSiwe": "PENDING"
+    "actualMixedWalletSiwe": "AUTH_LOCAL_TEST_ONLY_OPERATOR_SCREENSHOT_PARTICIPANT_USER_REPORT"
   },
   "followupVerification": {
     "clearStoppedDirectClaim": "NOT_VERIFIED",
@@ -101,5 +109,14 @@
     "previousCiHead": "50f7a82b2a8e4a61e07301ea68e611a52665d8ee",
     "previousCiFailure": "STAGE_SOURCE_PIN",
     "currentCi": "PENDING_PUSH"
+  },
+  "productConnection": {
+    "implemented": true,
+    "hostMountedWithRealSources": false,
+    "actualPayment": false,
+    "aiCostApprover": "USER_DESIGNATED_OPERATOR_METAMASK",
+    "ui": "Independent participant/operator product panel; teammate web unchanged",
+    "rpc": "Constructor-pinned loopback read-only proxy; no transaction submission or signing",
+    "verification": "Synthetic product session, HTTP and existing driver regression; live test pending"
   }
 }

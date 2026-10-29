@@ -1,3 +1,4 @@
+import {ProductPanel} from './product-panel.jsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {validateConfig} from './config.mjs';
@@ -59,7 +60,7 @@ function Operator({config}) {
   }
   async function login(signal) {
     step.current = '운영자 CLEAR 로그인 서명';
-    if (!ready || !active.current || session.current || config.phase !== 'AUTH_LOCAL_TEST') throw Error('AUTH_NOT_READY');
+    if (!ready || !active.current || session.current || !['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('AUTH_NOT_READY');
     const auth = createClearSession({wallet: active.current, config, api: createSameOriginApi({origin: config.origin}), onState: setAuthState});
     session.current = auth;
     const result = await auth.authenticate(); await auth.assertSession(); signal.throwIfAborted();
@@ -81,12 +82,13 @@ function Operator({config}) {
       <p>체인 ID: {config.chainId} · RPC: {config.rpcUrl}. 이번 실행의 격리 시험 체인입니다.</p>
       <button disabled={!selected || busy} onClick={() => run(probe)}>MetaMask 로컬 네트워크 확인</button>
       <p>로그인 버튼은 CLEAR 로그인 메시지(SIWE)에만 서명합니다. MetaMask에서 로컬 사이트와 주소를 확인하세요. 상품 약관·지급 동의·거래 전송은 포함하지 않습니다.</p>
-      {config.phase !== 'AUTH_LOCAL_TEST' && <p>이번 MetaMask 주소의 서버 등록을 기다리는 중입니다.</p>}
-      <button disabled={!ready || busy || !!session.current || config.phase !== 'AUTH_LOCAL_TEST'} onClick={() => run(login)}>운영자 CLEAR 로그인 서명 확인</button>
+      {!['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) && <p>이번 MetaMask 주소의 서버 등록을 기다리는 중입니다.</p>}
+      <button disabled={!ready || busy || !!session.current || !['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)} onClick={() => run(login)}>운영자 CLEAR 로그인 서명 확인</button>
       {authState?.authenticated && authState.role === 'operator' && <p>서버에서 확인한 역할: 운영자</p>}
       {!!session.current && <button disabled={busy} onClick={() => run(async () => { step.current = 'CLEAR 세션 종료'; await clear(); setStatus('CLEAR 세션 종료 확인 완료'); })}>CLEAR 세션 종료 확인</button>}
       {authState?.revocation === 'UNKNOWN' && <p role="alert">서버 세션 종료가 불명확합니다. 새 로그인은 차단됐습니다. 상태를 알려주세요.</p>}
       {busy && <button onClick={cancel}>현재 작업 취소</button>}
+      {config.phase==='ACTIVE_LOCAL_TEST'&&authState?.authenticated&&active.current&&session.current&&<ProductPanel config={config} wallet={active.current} session={session.current}/>}
       <p role="status">{status}</p>
     </section></main>;
 }
@@ -95,6 +97,6 @@ try {
   const response = await fetch('/__embedded/config', {credentials: 'same-origin', cache: 'no-store'});
   if (!response.ok) throw Error('CONFIG');
   const config = validateConfig(await response.json());
-  if (config.origin !== location.origin || location.pathname !== '/operator' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
+  if (config.origin !== location.origin || location.pathname !== '/operator' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
   root.render(<Operator config={config}/>);
 } catch { root.render(<main><h1>운영자 연결 설정을 확인할 수 없습니다</h1><p>호스트 설정 확인 후 다시 열어 주세요.</p></main>); }

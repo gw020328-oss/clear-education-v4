@@ -1,3 +1,5 @@
+import {createProductRpc} from '../embedded-wallet/product-rpc.mjs';
+import {productWalletMount} from '../embedded-wallet/product-mount.mjs';
 import {existsSync,readFileSync} from 'node:fs';
 import {createApplicationServer} from '../../src/application/http.mjs';
 import {createBootcampHandler} from '../../src/bootcamp/http.mjs';
@@ -15,6 +17,15 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
  const server=createApplicationServer(authentication,{tls}),auth=server.listeners('request')[0],bootcamp=createBootcampHandler(store,{normalUi});
  const expected=new URL(store.origin),assets=webRoot&&existsSync(webRoot)?loadPublicAssets(webRoot):new Map();
  assets.set('/bootcamp-normal-client.mjs',{type:'text/javascript; charset=utf-8',body:readFileSync(new URL('../../src/bootcamp/normal-client.mjs',import.meta.url))});
+ let rpc=null;
+ if(assets.has('/clear-wallet-app.html')){
+  if(!walletNetwork||!normalUi?.walletRuntime)throw Error('EMBEDDED_PRODUCT_RUNTIME');
+  productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi.walletRuntime});
+  rpc=createProductRpc({origin:store.origin,upstream:walletNetwork.rpcUrls[0],port:Number(new URL(store.origin).port)+2});
+  walletNetwork=Object.freeze({...walletNetwork,rpcUrls:[rpc.url]});
+  server.once('close',()=>{void rpc.close();});
+ }
+ const wallets=productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi?.walletRuntime});
  const config=Object.freeze({version:NORMAL_HOST_VERSION,origin:store.origin,chainId,sourceMode,network:walletNetwork,phase:normalUi?'ACTIVE_LOCAL_TEST':'DISPLAY_ONLY',policyHash:p0PolicyHash(P0_POLICY),
   procedureHttpVersion:'clear-bootcamp-review-procedure.1',operationsHttpVersion:'clear-bootcamp-operations-projection.2',
   reviewConsentHttpImplemented:true,originalEvidenceHttpImplemented:false,executionReceiptHttpImplemented:typeof normalUi?.getPaymentReceipt==='function',
@@ -36,8 +47,10 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'none'");
   const valid=req.socket.encrypted&&req.headers.host===expected.host&&(!req.headers.origin||req.headers.origin===expected.origin)
-   &&(!req.headers['sec-fetch-site']||['same-origin','none'].includes(req.headers['sec-fetch-site']));
+   &&(!req.headers['sec-fetch-site']||['same-origin','none'].includes(req.headers['sec-fetch-site'])
+    ||wallets?.isDocument(req)&&req.headers['sec-fetch-mode']==='navigate'&&req.headers['sec-fetch-dest']==='document');
   if(!valid){res.writeHead(403,{'Content-Type':'application/json'});res.end('{"error":"ORIGIN"}');return;}
+  if(wallets?.handle(req,res))return;
   if(req.method==='GET'&&req.url==='/__dev/config'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(config));return;}
   const path=req.url.split('?')[0],asset=assets.get(path)??(/^\/ui\/[a-zA-Z0-9/_-]*$/.test(path)?assets.get('/'):undefined);
   if(['GET','HEAD'].includes(req.method)&&asset){res.writeHead(200,{'Content-Type':asset.type});res.end(req.method==='HEAD'?undefined:asset.body);return;}
@@ -48,5 +61,5 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
   task.catch(()=>{if(!res.headersSent){res.writeHead(500,{'Content-Type':'application/json'});res.end('{"error":"BC_INTERNAL"}');}else res.destroy();})
    .finally(()=>pending.delete(task));
  });
- return {server,config,async drain(){await Promise.allSettled([...pending]);}};
+ return {server,config,ready:rpc?.ready,async drain(){await Promise.allSettled([...pending]);await rpc?.close();}};
 }

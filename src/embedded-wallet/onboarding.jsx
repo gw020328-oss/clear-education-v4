@@ -1,3 +1,4 @@
+import {ProductPanel} from './product-panel.jsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {PrivyProvider, usePrivy, useWallets, useCreateWallet, useLoginWithOAuth} from '@privy-io/react-auth';
@@ -8,7 +9,8 @@ import {createClearSession} from './clear-session.mjs';
 import {createSameOriginApi} from '../application/api-client.mjs';
 
 function Setup({config}) {
-  return <section><h2>개발 앱 설정</h2><p>{config.phase === 'AUTH_LOCAL_TEST'
+  if(config.phase==='ACTIVE_LOCAL_TEST')return <section><h2>참가자 신청 준비</h2><p>Google로 기존 지갑을 연결하고 이번 제품 체인에서 로그인 서명을 진행하세요. 운영자는 별도 Chrome 프로필의 /operator 화면을 사용합니다.</p></section>;
+  return <section><h2>개발 앱 설정</h2><p>{['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)
     ? '두 지갑의 CLEAR 로그인 서명과 서버 역할을 확인하는 로컬 시험입니다. 상품 신청·지급은 아직 활성화되지 않았습니다.'
     : '이 화면은 주소 확인 전용입니다. 신청·지급·CLEAR 운영자 권한은 아직 활성화되지 않았습니다.'}</p>
     <dl><dt>Allowed origin</dt><dd>{config.origin}</dd><dt>OAuth redirect</dt><dd>{config.redirectUri}</dd>
@@ -71,7 +73,7 @@ function Onboarding({config}) {
     step.current = '선택한 지갑 연결 확인';
     let boundary;
     boundary = await connectSelectedWallet({readSnapshot: () => snapshot.current, selection, chainId: config.chainId, signal,
-      timeoutMs: config.phase === 'AUTH_LOCAL_TEST' ? 120000 : 30000,
+      timeoutMs: ['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) ? 120000 : 30000,
       onInvalidate: () => { if (active.current !== boundary) return;
         active.current = null; boundary.dispose(); operation.current?.abort(); setNetworkReady(false);
         void authSession.current?.invalidate().catch(() => {});
@@ -92,7 +94,7 @@ function Onboarding({config}) {
     setStatus('선택한 EOA·SDK provider·로컬 RPC 체인을 확인했습니다. 실제 CLEAR 서명과 지급은 아직 미실행입니다.');
   }
   async function authenticate(signal) {
-    if (config.phase !== 'AUTH_LOCAL_TEST' || !networkReady || !active.current || authSession.current) throw Error('AUTH_CHECK_NOT_READY');
+    if (!['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) || !networkReady || !active.current || authSession.current) throw Error('AUTH_CHECK_NOT_READY');
     step.current = 'CLEAR 로그인 서명';
     const session = createClearSession({wallet: active.current, config,
       api: createSameOriginApi({origin: config.origin}), onState: setAuthState});
@@ -116,9 +118,9 @@ function Onboarding({config}) {
           disabled, so useWallets.ready can remain false before the first wallet. */}
       {privy.ready && !privy.user?.linkedAccounts?.some(a => a.type === 'wallet' && ['privy','privy-v2'].includes(a.walletClientType)) &&
         <button disabled={busy} onClick={() => run(() => createWallet())}>첫 내장 지갑 만들기</button>}
-      <p>현재 확인용 체인: {config.chainId}. 이 실행에서 새로 만든 격리 체인이며 기존 지급 기록과 별개입니다.</p>
+      <p>현재 연결할 체인: {config.chainId}. 이 실행에서 새로 만든 격리 체인이며 기존 지급 기록과 별개입니다.</p>
       <button disabled={!selection || busy} onClick={() => run(probe)}>선택한 주소로 로컬 네트워크 확인</button>
-      {config.phase === 'AUTH_LOCAL_TEST' && <>
+      {['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) && <>
         <p>아래 버튼은 서버가 발급한 로그인 확인 메시지(SIWE)에 서명합니다. 메시지의 주소와 로컬 사이트를 확인한 뒤 승인하세요. 상품 약관이나 지급 동의는 포함하지 않습니다.</p>
         <button disabled={!networkReady || busy || !!authSession.current} onClick={() => run(authenticate)}>CLEAR 로그인 서명 확인</button>
         {authState?.authenticated && authState.role === 'participant' && <p role="status">서버에서 확인한 역할: {authState.role === 'participant' ? '참가자' : '운영자'}</p>}
@@ -130,7 +132,8 @@ function Onboarding({config}) {
       step.current = 'CLEAR 세션 종료'; await clearAuth(); setStatus('CLEAR 서버 세션 종료 확인 완료. 주소와 네트워크를 다시 확인할 수 있습니다.');
     })}>CLEAR 세션 종료 확인</button>}
     {busy && <button onClick={cancel}>현재 작업 취소</button>}
-    <p role="status">{status}</p><p>{config.phase === 'AUTH_LOCAL_TEST' ? '로그인 서명 확인만 제공하며, 거래 전송·ETH 충전·유료 호출은 실행하지 않습니다.' : '서명·거래 전송·ETH 충전·유료 호출 기능은 이 주소 확인 화면에 없습니다.'}</p>
+    {config.phase==='ACTIVE_LOCAL_TEST'&&authState?.authenticated&&active.current&&authSession.current&&<ProductPanel config={config} wallet={active.current} session={authSession.current}/>}
+    <p role="status">{status}</p><p>{config.phase==='ACTIVE_LOCAL_TEST'?'신청·승인·지급은 위 제품 화면에서 현재 상태를 읽고 직접 진행합니다.':['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) ? '로그인 서명 확인만 제공하며, 거래 전송·ETH 충전·유료 호출은 실행하지 않습니다.' : '서명·거래 전송·ETH 충전·유료 호출 기능은 이 주소 확인 화면에 없습니다.'}</p>
   </section>;
 }
 
@@ -139,7 +142,7 @@ try {
   const response = await fetch('/__embedded/config', {credentials: 'same-origin', cache: 'no-store'});
   if (!response.ok) throw Error('CONFIG');
   const config = validateConfig(await response.json());
-  if (config.origin !== location.origin || location.pathname !== '/onboarding' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
+  if (config.origin !== location.origin || location.pathname !== '/onboarding' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
   const setup = <Setup config={config}/>;
   root.render(<main><h1>CLEAR 내장 지갑 연결 준비</h1>{setup}{config.appId &&
     <PrivyProvider appId={config.appId} config={privyConfig(config, document.querySelector('meta[name="sc-nonce"]').content)}>

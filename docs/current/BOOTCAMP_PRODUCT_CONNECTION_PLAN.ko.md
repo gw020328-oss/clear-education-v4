@@ -1,5 +1,7 @@
 # 제품 정상 흐름과 이의·재검증 연결 계획
 
+2026-10-29 제품 연결 후속: 양측 인증 확인 완료(운영자 스크린샷/참가자 사용자 보고). 독립 제품 패널에서 기존 normal-client의 신청·원천 승인·V2 수령 지갑 등록·동일 판정 동의·영수증을 연결한다. 실제 제품 호스트 활성화/증빙/지급 완료는 별도이며 인증 시험 성공으로 간주하지 않는다. 운영자 MetaMask를 AI 비용·외부 전송 승인자로 사용자가 지정했고 정확한 입력의 직접 승인 관문은 유지한다. web/PR60은 수정하지 않는다.
+
 ## 2026-10-29 Privy 연결 준비 후보
 
 최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준 `codex/bootcamp-privy-sdk`/PR125에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. 사용자 확정은 **참가자=Privy Google 내장 EOA, 운영자=MetaMask 유지**다. 운영자 내장 지갑 준비는 과거 기록이며 완료 조건이 아니다. 이번 사용자가 지정한 MetaMask 주소를 명시 allowlist와 새 세션에 연결하고 과거 주소/권리/서명을 치환하지 않는다. 독립 /onboarding·/operator, 정확한 SIWE/HR/V2·서버 revoke 경계, 181/181 합성 시험과 SDK bundle이 준비됐다. 참가자 실제 Google/지갑 생성/읽기 RPC는 확인했고 재로그인 동일 주소는 사용자 보고다. 새 조합 실제 SIWE·HR/V2·100 TEST는 미검증이다. web/PR60·제품 CSP·DB/체인은 보존하고 공통 HTTP의 선택적 쿠키 namespace만 추가했다. 최신 프론트 인수와 의존성 audit 검토가 남아 Draft다.
