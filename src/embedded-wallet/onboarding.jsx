@@ -16,8 +16,9 @@ function Onboarding({config}) {
   const privy = usePrivy(), {wallets, ready: walletsReady} = useWallets();
   const {createWallet} = useCreateWallet(), {initOAuth} = useLoginWithOAuth();
   const [selection, setSelection] = useState(null), [status, setStatus] = useState('주소 확인 준비'), [busy, setBusy] = useState(false);
-  const snapshot = useRef(null), active = useRef(null), operation = useRef(null);
-  snapshot.current = {ready: privy.ready, authenticated: privy.authenticated, user: privy.user, walletsReady, wallets};
+  const snapshot = useRef(null), active = useRef(null), operation = useRef(null), step = useRef('');
+  snapshot.current = {ready: privy.ready, authenticated: privy.authenticated, user: privy.user, walletsReady, wallets,
+    externalWalletsDisabled: true}; // Fixed by privyConfig; never enabled by user input.
   const choices = walletChoices(privy.user, wallets);
   // SDK hooks cover silent user/wallet changes even if no EIP-1193 event fires.
   useEffect(() => {
@@ -29,9 +30,9 @@ function Onboarding({config}) {
   useEffect(() => () => { operation.current?.abort(); active.current?.dispose(); }, []);
   const run = async fn => {
     if (busy) return;
-    setBusy(true); const controller = new AbortController(); operation.current = controller;
+    setBusy(true); step.current = ''; const controller = new AbortController(); operation.current = controller;
     try { await bounded(() => fn(controller.signal), {signal: controller.signal, timeoutMs: 120000}); }
-    catch { setStatus('작업을 완료하지 못했습니다. 계정·네트워크·콘솔 설정을 확인한 뒤 다시 선택하세요.'); }
+    catch { setStatus(`${step.current ? step.current + ' 단계에서 ' : ''}작업을 완료하지 못했습니다. 다시 로그인하지 말고 표시된 단계를 알려주세요.`); }
     finally { setBusy(false); operation.current = null; }
   };
   const choose = c => { operation.current?.abort(); active.current?.dispose(); active.current = null;
@@ -41,7 +42,9 @@ function Onboarding({config}) {
     const c = walletChoices(snapshot.current.user, snapshot.current.wallets).find(v => v.walletId === selection.walletId && v.address === selection.address);
     if (!c) throw Error('SELECTION_CHANGED');
     active.current?.dispose(); active.current = null;
+    step.current = '지갑 네트워크 전환';
     await bounded(() => c.wallet.switchChain(config.chainId), {signal});
+    step.current = '선택한 지갑 연결 확인';
     const boundary = await connectSelectedWallet({readSnapshot: () => snapshot.current, selection, chainId: config.chainId, signal,
       onInvalidate: () => { operation.current?.abort(); setStatus('지갑 문맥이 변경되어 이전 작업을 취소했습니다.'); }});
     active.current = boundary;
@@ -51,6 +54,7 @@ function Onboarding({config}) {
       if (!response.ok) throw Error('RPC_UNAVAILABLE');
       const body = await response.json(); if (body.error) throw Error('RPC_FAILED'); return body.result;
     };
+    step.current = '로컬 RPC 연결 확인';
     if (BigInt(await rpc('eth_chainId', [])) !== BigInt(config.chainId)) throw Error('RPC_CHAIN');
     if (await rpc('eth_getCode', [selection.address, 'latest']) !== '0x') throw Error('EOA_REQUIRED');
     await boundary.guard();
@@ -61,6 +65,8 @@ function Onboarding({config}) {
     {!privy.authenticated && <button disabled={!privy.ready || busy} onClick={() => run(() => initOAuth({provider: 'google'}))}>Google로 로그인</button>}
     {privy.authenticated && <>
       <p>재로그인 후 아래 주소가 이전과 같은지 직접 비교하세요. 다른 주소이면 기존 신청을 이어 진행하지 마세요.</p>
+      {choices.length === 0 && privy.user?.linkedAccounts?.some(a => a.type === 'wallet' && ['privy','privy-v2'].includes(a.walletClientType)) &&
+        <p role="status">기존 내장 지갑을 불러오는 중입니다. 이 탭을 열어 둔 채 잠시 기다려 주세요.</p>}
       {choices.map(c => <button key={c.walletId} disabled={busy} aria-pressed={selection?.walletId === c.walletId} onClick={() => choose(c)}>{c.address} 선택</button>)}
       {/* Creation needs an authenticated user, not external-connector readiness.
           SDK 3.51.0 skips connector initialization when external wallets are

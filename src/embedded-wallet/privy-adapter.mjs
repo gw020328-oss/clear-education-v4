@@ -20,7 +20,12 @@ export function walletChoices(user, wallets) {
 }
 
 export function selectedIdentity(snapshot, selection, chainId) {
-  check(snapshot?.ready && snapshot.authenticated && snapshot.walletsReady, 'PRIVY_NOT_READY');
+  // SDK 3.51.0's aggregate ready flag also waits for external connectors,
+  // which it never initializes when they are disabled. In that explicit mode,
+  // require a matching connected embedded wallet below instead. Provider reads
+  // still independently verify the selected account and chain before use.
+  check(snapshot?.ready && snapshot.authenticated
+    && (snapshot.walletsReady || snapshot.externalWalletsDisabled === true), 'PRIVY_NOT_READY');
   const candidates = walletChoices(snapshot.user, snapshot.wallets).filter(c => c.sdkUserId === selection.sdkUserId
     && c.walletId === selection.walletId && c.address === getAddress(selection.address));
   check(candidates.length === 1, 'PRIVY_SELECTION_CHANGED');

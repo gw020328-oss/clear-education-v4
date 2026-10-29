@@ -124,6 +124,14 @@ test('SDK choices require explicit owned EOA; no array-first or delegated fallba
   assert.equal(choices.length,1);
   const snapshot = {ready:true,authenticated:true,walletsReady:true,user,wallets:[wallet]};
   assert.equal(selectedIdentity(snapshot,choices[0],CHAIN).address,address);
+  const noExternal = {...snapshot,walletsReady:false,externalWalletsDisabled:true};
+  assert.equal(selectedIdentity(noExternal,choices[0],CHAIN).address,address);
+  assert.throws(() => selectedIdentity({...snapshot,walletsReady:false},choices[0],CHAIN), /NOT_READY/);
+  assert.throws(() => selectedIdentity({...noExternal,ready:false},choices[0],CHAIN), /NOT_READY/);
+  assert.throws(() => selectedIdentity({...noExternal,authenticated:false},choices[0],CHAIN), /NOT_READY/);
+  assert.throws(() => selectedIdentity({...noExternal,wallets:[]},choices[0],CHAIN), /SELECTION_CHANGED/);
+  assert.throws(() => selectedIdentity({...noExternal,user:{...user,linkedAccounts:[{...account,delegated:true}]}},choices[0],CHAIN), /SELECTION_CHANGED/);
+  assert.throws(() => selectedIdentity(noExternal,choices[0],CHAIN+1), /CHAIN_CHANGED/);
   assert.throws(() => selectedIdentity({...snapshot,user:{...user,id:'other'}},choices[0],CHAIN), /SELECTION_CHANGED/);
   assert.throws(() => selectedIdentity(snapshot,choices[0],CHAIN+1), /CHAIN_CHANGED/);
   for (const patch of [{delegated:true},{imported:true},{userCanSign:false},{chainType:'solana'},{walletClientType:'metamask'}])
@@ -137,6 +145,7 @@ test('exact loopback config, one explicit custom chain, no explorer or default m
   assert.equal(p.supportedChains.length,1); assert.equal(p.defaultChain.id,CHAIN);
   assert.equal(p.defaultChain.blockExplorers,undefined); assert.equal(p.embeddedWallets.disableAutomaticMigration,true);
   assert.equal(p.embeddedWallets.ethereum.createOnLogin,'off');
+  assert.equal(p.externalWallets.disableAllExternalWallets,true);
   for (const patch of [{origin:'http://127.0.0.1:9457'},{rpcUrl:'https://public.example/rpc'},{redirectUri:config.origin+'/'},{chainId:null}])
     assert.throws(() => validateConfig({...config,...patch}), /EMBEDDED_/);
 });

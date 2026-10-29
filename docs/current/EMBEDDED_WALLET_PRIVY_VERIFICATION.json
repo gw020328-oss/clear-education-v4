@@ -20,15 +20,18 @@
     "workspace": "PASS"
   },
   "actual": {
-    "privyAppConfigured": false,
-    "googleLogin": false,
+    "privyAppConfigured": true,
+    "googleLogin": true,
     "sameAddressRestoration": false,
     "privySignatures": false,
-    "browserLoopbackRpc": false,
+    "browserLoopbackRpc": true,
     "productHostMounted": false,
-    "productPayment": false
+    "productPayment": false,
+    "walletCreation": true,
+    "reloadSameAddress": true,
+    "sdkProviderIdentity": true
   },
-  "browserBlocker": "ERR_CERT_AUTHORITY_INVALID",
+  "browserBlocker": null,
   "audit": {
     "critical": 0,
     "high": 17,
@@ -40,11 +43,17 @@
     "src/embedded-wallet/package.json": "c1ae71d66a09cd0e8c76038bba1503634ba2c14e6d120f5b0b6384204762e22d",
     "src/embedded-wallet/package-lock.json": "f8ff8bec18dfada31b8b732933ec2e66deb9fb91e40ad6ed56fa559394a77080",
     "src/embedded-wallet/provider-boundary.mjs": "b09b411db91e22d55c5e6e80c5198aa4572966672e5b12d6d4a6d8cc4bf8c46e",
-    "src/embedded-wallet/privy-adapter.mjs": "0d9923448b3ced9f7457d3e23436ca9e3cd7c8792794fa4a9570569e6a9ccecc",
+    "src/embedded-wallet/privy-adapter.mjs": "aed2cef3fb0b63469ba0b0766b1890fecf779f9b14500d88ea1c76a11f6f09b9",
     "src/embedded-wallet/clear-session.mjs": "91c4e9aced519081cf886bb5fd483303e53602e82506a6edc63f56a6dd6fb4c4",
     "src/embedded-wallet/approvals.mjs": "889a0c4c20fa925e62c39c202b95b2fee9a72d386e71d8f8e9e95be39dc5d54b",
     "src/embedded-wallet/config.mjs": "5b5d25d5405693a20943767448003e85cbeedfe299de6e7720dd8a59e36ba14f",
-    "src/embedded-wallet/onboarding.jsx": "5e2ea0af6392f3eb2182e939e2f9150e6131cd890412d3cc444188b2e79e3f20",
+    "src/embedded-wallet/onboarding.jsx": "c7ee387565e57d28a3a0138118c4bd9479b7ae37adff15fb7c6f4c2100262235",
     "tools/embedded-wallet/server.mjs": "40f773c89d9a5dac58658184506da3562cf4e1299041a4da1a4f41718fd69759"
+  },
+  "actualEvidence": {
+    "method": "Browser UI observation after user Google login and wallet creation; same address after page reload; explicit selected-address read-only probe displayed success.",
+    "logoutAndReauthenticationVerified": false,
+    "rpcCodeCheck": "0x",
+    "transactionsSent": false
   }
 }

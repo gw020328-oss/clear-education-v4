@@ -1,8 +1,8 @@
 # Privy 내장 EOA 연결 준비
 
-2026-10-29 · SDK 설치/번들 및 합성 경계 검증 완료 · 실제 Google 로그인 확인 · 지갑 생성/복원/제품 연결 미완료.
+2026-10-29 · SDK 설치/번들 및 합성 경계 검증 완료 · 실제 Google 로그인·첫 지갑 생성·새로고침 후 동일 주소·로컬 RPC 확인 완료 · 로그아웃 후 재인증/제품 연결 미완료.
 
-실제 브라우저에서 Google 로그인 후 첫 생성 버튼이 숨겨지는 문제를 확인했다. SDK 3.51.0의 `useWallets.ready`는 외부 connector 준비도 포함하며, 외부 지갑을 끄면 초기화가 생략된다. 첫 생성 버튼은 인증된 사용자와 `privy.ready` 및 기존 내장 지갑 부재로 판단하도록 수정했다. 주소 선택·provider 연결의 기존 readiness/소유권 검증은 유지한다. Google 로그인 성공만으로 지갑 생성이나 서명 성공을 주장하지 않는다.
+실제 브라우저에서 Google 로그인 후 첫 생성 버튼이 숨겨지는 문제를 확인했다. SDK 3.51.0의 `useWallets.ready`는 외부 connector 준비도 포함하며, 외부 지갑을 끄면 초기화가 생략된다. 첫 생성 버튼은 인증된 사용자와 `privy.ready` 및 기존 내장 지갑 부재로 판단하도록 수정했다. 외부 지갑이 명시적으로 비활성인 snapshot에서만 aggregate ready 대신 현재 연결된 내장 지갑의 정확한 소유권·user/address/id/chain 매치를 요구한다. 외부 지갑 사용 시 기존 ready 요구를 유지하며, 실제 provider의 계정/체인 읽기와 EOA code 검증도 계속 수행한다. 73/73 합성 경계 시험, SDK 번들, 실제 선택 주소의 읽기 전용 probe 성공을 확인했다. 새로고침 직후 배경 탭에서는 지갑 연결이 지연됐으며, 탭을 전면에 둔 뒤 동일 주소가 복원됐다. 로그아웃 후 재인증·서명·제품 지급은 아직 미검증이다.
 
 기준은 develop `d44b01216241d120064145016a99d73b1b361e34`, 작업은 `codex/bootcamp-privy-sdk`다. PR60 원격 HEAD는 `a0620cd39fe5cd44b62a1deb5806883503242227`이며 팀원 로컬 작업을 인수한 것은 아니다. [Issue106 소유 경계·인수 요청](https://github.com/gw020328-oss/clear-education-v4/issues/106#issuecomment-6487251657)을 남겼다.
 
@@ -10,11 +10,11 @@
 
 | 항목 | 이번 확인 | 남은 확인 |
 | --- | --- | --- |
-| SDK | `@privy-io/react-auth` 3.51.0, React 19.3.1, ethers 6.17.0, esbuild 0.28.2, 별도 npm lock | 실제 개발 App ID 초기화, Google OAuth |
+| SDK | `@privy-io/react-auth` 3.51.0, React 19.3.1, ethers 6.17.0, esbuild 0.28.2, 별도 npm lock | Google 로그인·첫 지갑 생성 확인, 로그아웃 후 복구는 미검증 |
 | 기존 서명 | 실제 CLEAR SIWE/HR/V2 codec/store에 합성 EOA provider 연결 | Privy 실제 사용자 서명 3종 |
 | 계정 수명 | 명시 선택·주소/user/wallet/chain pin, 변경/취소·늦은 결과 폐기, 서버 역할 확인·logout revoke | 실제 동일 계정 주소 복원·다른 계정·두 프로필 |
 | CSP | 독립 HTTPS 경로의 정확한 host/nonce·호스트 검증 | SDK frame/storage/CAPTCHA/스타일 실제 브라우저 관찰 |
-| 로컬 네트워크 | 매 시작 새 임의 chainId, 별도 무계정 in-memory chain의 읽기 전용 loopback RPC | SDK/browser의 HTTP loopback 접근·Chrome 로컬 네트워크 권한 |
+| 로컬 네트워크 | 매 시작 새 임의 chainId, 별도 무계정 in-memory chain의 읽기 전용 loopback RPC | 실제 SDK provider·HTTP loopback RPC·EOA code 읽기 성공; 제품 체인은 별도 |
 | 가스/지급 | 기존 V2 합성 계약 회귀의 서비스 제출·정확100 TEST 경로 통과 | 새 사용자 V2 실제 신청·등록·동의·canonical 지급 |
 | 프론트 | 독립 onboarding + ESM adapter bundle | 팀원 최신 web/자산/adapter 인수, 제품 호스트 mount |
 
@@ -59,7 +59,7 @@ SDK의 `disableAutomaticMigration`은 SDK 지갑 migration 제어이며 EIP7702 
 | 로컬 TLS | `var/embedded-wallet-onboarding/ca.pem`은 이번에 만든 공개 CA 인증서. 시스템 trust 자동 변경 없음. 최초 Chrome 접근은 `ERR_CERT_AUTHORITY_INVALID`로 중단됨. 사용자가 인증서를 직접 확인해야 하며 에이전트가 경고를 통과하지 않음 |
 | Privy 앱 | 무료 개발 앱을 만들거나 선택. 공개 App ID만 설정 |
 | Google | Login methods에서 Google 활성화, 첫 개발 시험은 Privy 기본 OAuth 자격증명 사용 |
-| Allowed origin | `https://127.0.0.1:9457` (path·wildcard 없음). 정확한 IP/포트의 콘솔 수락은 사용자 확인 대기 |
+| Allowed origin | `https://127.0.0.1:9457` (path·wildcard 없음). 정확한 IP/포트의 콘솔 수락 및 실제 로그인 확인 |
 | OAuth redirect | `https://127.0.0.1:9457/onboarding` (trailing slash/query 없음) |
 | wallet | 사용자 소유 Ethereum EOA, smart wallet/자동 추가 wallet/서버 위임 signer 사용하지 않음 |
 | 참가자/운영자 | 서로 다른 계정·브라우저 프로필로 두 주소 확인 → 명시적인 기존 서버 allowlist 등록 → 제품 host 활성화 |
