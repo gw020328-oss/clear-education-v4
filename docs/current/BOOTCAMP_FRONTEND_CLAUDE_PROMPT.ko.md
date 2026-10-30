@@ -1,5 +1,7 @@
 # 서준형 Claude Code 복사 지침
 
+2026-10-30 자체 공증 후속: [전용 TEST 실행·프론트 표시·실제 실행 인계](SELF_ATTESTOR_TEST.ko.md)를 따른다. 공식 경로는 기본값이며 자체 시험으로 자동 전환하지 않는다. `selfAttestor`가 있는 서버 세션·영수증에는 자체 공증/공식 hosted 성공 아님/독립 공증 아님을 표시한다. 기존 web/PR60 소유·운영자 입력별 AI 승인·양측 지급 동의는 유지한다. 합성 HTTPS→격리 V2 지급 리허설과 실제 사용자 완주를 구분한다.
+
 ## 2026-10-30 SDK 수정 인수 추가
 
 기존 web/PR60을 보존하고 PR125의 최신 코드/최종 CI를 인수한다. SDK 설치는 `./tools/npm --prefix src/embedded-wallet ci --strict-peer-deps --ignore-scripts --no-audit --no-fund` 다음 **`./tools/node tools/embedded-wallet/reviewed-dependencies.mjs --apply`**를 명시적으로 실행한다. `build.mjs`와 `build-product.mjs`는 패치 지문/모든 Zod 복사본이 맞지 않으면 중단한다. lifecycle script나 임의 postinstall로 바꾸지 않는다. v42 source pin과 [후속 검토](SDK_DEPENDENCY_REVIEW_20261030.ko.md)를 함께 인수한다.

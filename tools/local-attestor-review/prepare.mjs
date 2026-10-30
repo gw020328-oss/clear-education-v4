@@ -15,7 +15,8 @@ export function loopbackPatch(text){
  return text.replace('http.listen(port)',"http.listen(port, '127.0.0.1')");
 }
 export function verifyPrepared(){
- const record=JSON.parse(readFileSync(join(area,'prepared.json')));
+ const record=JSON.parse(readFileSync(join(area,'prepared.json'))),pinned=JSON.parse(readFileSync(new URL('./build-pins.json',import.meta.url)));
+ if(record.sourcePlan!==pinned.sourcePlan||JSON.stringify(Object.entries(record.files).sort())!==JSON.stringify(Object.entries(pinned.files).sort()))throw Error('LOCAL_REVIEWED_BUILD_PIN');
  if(record.sourcePlan!==sha(readFileSync(new URL('./source.json',import.meta.url))))throw Error('LOCAL_SOURCE_PLAN');
  for(const [p,h]of Object.entries(record.files)){
   const target=resolve(root,p);

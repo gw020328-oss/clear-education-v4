@@ -22,8 +22,8 @@ import {normalSourceTarget,readNormalView} from '../../../tools/bootcamp/normal-
 import {executeNormalPayment} from '../../../tools/bootcamp/normal-chain.mjs';
 import {assertExplicitConsents,waitForExplicitConsents} from '../../../tools/bootcamp/explicit-consents.mjs';
 
-export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,assessmentPorts=null,beforeRegistrationSignature=()=>{},crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{},afterRecovery=async()=>{},afterRefresh=()=>{}}={}){
- const e=await createEnvironment({blockPeriodSeconds:wallClock?1:0,executionVersion}),id=e.environmentId,m=e.manifest,{dir}=environmentRecord(id);
+export async function normalPaymentFixture(t,{executionVersion=1,sourceFactory=null,sourceMappingHash=null,selfAttestor=null,onReview=null,assessmentPorts=null,beforeRegistrationSignature=()=>{},crossing=false,fault=()=>{},wallClock=false,readWhileAsync=false,sourceSeconds=null,onPlanTick=()=>{},afterPlan=()=>{},onStoreTick=()=>{},afterRecovery=async()=>{},afterRefresh=()=>{}}={}){
+ const e=await createEnvironment({...(sourceMappingHash?{runtimeMappingHash:sourceMappingHash}:{}),blockPeriodSeconds:wallClock?1:0,executionVersion}),id=e.environmentId,m=e.manifest,{dir}=environmentRecord(id);
  let serviceLive=true;
  let auth,store,connection,metadata,serial=0,ticks=0,crossed=false,floor=Math.floor(Date.now()/1000),extraSeconds=0,reads=0;const readErrors=[];
  const report={startedAt:Math.floor(Date.now()/1000),stages:[],completed:false};
@@ -46,7 +46,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
  const user=await login(participant),op=await login(operator),serviceContext=Object.freeze({});
  const native=openDevelopmentConnection({environmentId:id,now,assessmentPorts});
  connection=Object.freeze({...native,async refresh(applicationId){if(!wallClock){const block=await provider.getBlock('latest');floor=Math.max(floor,Number(block.timestamp)+extraSeconds);}const value=await native.refresh(applicationId);await afterRefresh({report,auth,user,source,app,advanceClock:seconds=>{extraSeconds+=seconds;floor+=seconds;}});return value;}});metadata=new DatabaseSync(join(dir,'envelopes/metadata.sqlite'),{readOnly:true});
- const source=syntheticAuthority({now}),seen=new WeakSet();
+ const source=sourceFactory?await sourceFactory({now,participant,operator,runtime:m}):syntheticAuthority({now}),seen=new WeakSet();
  const resolveSource=r=>{const v=source.resolveSource(r);if(!seen.has(v)){v.authExpiresAt=now()+(sourceSeconds??600);v.rawExpiresAt=now()+(sourceSeconds??300);v.queryExpiresAt=now()+(sourceSeconds??600);seen.add(v);}return v;};
  const executionServices={version:'clear-bootcamp-test-execution-port.1',runtimeId:id,runtimePinHash:connection.runtime.runtimeHash,
   authorizeService(c){assert.equal(c,serviceContext);if(!serviceLive)throw Error('BC_E5_SERVICE_AUTHORITY');return {serviceId:'normal-worker',runtimeId:id,expiresAt:report.startedAt+600};},
@@ -54,7 +54,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
  store=createBootcampStore({directory:join(dir,'offline-bind-store'),authentication:auth,instanceId:'offline-'+id,demoStartedAt:report.startedAt,mode:'SYNTHETIC_FIXTURE',runtimeMappingHash:m.runtimeMappingHash,now:storeNow,fault:point=>fault(point,{report,metadata}),
   onCollectionFailure(event){report.collectionFailures??=[];if(report.collectionFailures.length<16){report.collectionFailures.push(event);t.diagnostic(JSON.stringify({collectionFailure:event}));}},
   producers:source.producers,resolveSource,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices,executionBridge:connection.configuration});
- const receiptReader=createNormalReceiptReader({authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash:m.runtimeMappingHash,policyHash:m.policyHash,recipient:participant.address.toLowerCase(),token:m.tokenAddress});
+ const receiptReader=createNormalReceiptReader({selfAttestor,authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash:m.runtimeMappingHash,policyHash:m.policyHash,recipient:participant.address.toLowerCase(),token:m.tokenAddress});
  const key=()=> 'offline-bind-'+(++serial),http=executionVersion===2?await recipientHttp(t,{store,context:user,key,normalUi:{async refreshProcedure(c,a){readNormalView(()=>store.getOperationsProjection(c,a));await connection.refresh(a);readNormalView(()=>store.getOperationsProjection(c,a));},getPaymentReceipt:receiptReader,getRecipientRegistration:(context,applicationId)=>readRecipientRegistration({store,connection,context,applicationId,authorize:(c,w)=>auth.authorizeWorkflow(c,w)})}}):null,api=http?createNormalBootcampClient(http):null;
  const app=(http?await http.request('/bootcamp/v1/applications',{method:'POST',body:{}}):store.createApplication(user,{},key())).record.applicationId;
  const setupDb=new DatabaseSync(join(dir,'offline-bind-store/bootcamp.sqlite'),{readOnly:true});
@@ -71,7 +71,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,onReview=null,a
    await store.collect(user,app,body,collectionKey);
   }
  }}finally{setupDb.close();}
- Object.assign(report,{applicationId:app,recipient:participant.address.toLowerCase(),runtimeMappingHash:m.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false});
+ Object.assign(report,{applicationId:app,recipient:participant.address.toLowerCase(),runtimeMappingHash:m.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false,...(selfAttestor?{selfAttestor}:{})});
  const sourceTarget=normalSourceTarget(readNormalView(()=>store.getApplication(user,app)));
  const directConsent=async context=>{const v=readNormalView(()=>store.getProcedure(context,app)),body={expectedRevision:v.applicationRevision,expectedLedgerSequence:v.ledgerSequence,
   targetDecisionId:v.decisionId,targetDecisionRevision:v.decisionRevision,targetDecisionHash:v.decisionHash,value:'AGREE'};if(http)await http.request('/bootcamp/v3/applications/'+app+'/review-consents',{method:'POST',body,actor:context});else store.recordReviewConsent(context,app,body,key());};

@@ -14,6 +14,7 @@ import {createApplicationService} from '../../src/application/service.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {createLiveMoodleConsumer} from '../../src/bootcamp/moodle-live-consumer.mjs';
+import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs';
 import {createLiveReclaimConsumer} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {requireRule as requireUiRule} from '../../src/policy/values.mjs';
 import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
@@ -39,12 +40,13 @@ export function resolveNormalSourceLease(r,{authentication,context,closed,partic
   return {available:sourceWindows.has(r.criterionId)&&time<sourceWindows.get(r.criterionId),authExpiresAt:Math.min(startedAt+3600,sourceWindows.get(r.criterionId)??0),rawExpiresAt:sourceWindows.get(r.criterionId)??0,queryExpiresAt:sourceWindows.get(r.criterionId)??0};
  }catch{return null;}
 }
-export async function openLiveContext({preparationPath,withReader,hackerRank,reviewReflection,reflectionHost=null,diagnostics}){
+export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics}){
  ensure(typeof withReader==='function'&&typeof hackerRank?.pins==='function'&&typeof hackerRank.collectLease==='function'&&typeof reviewReflection==='function','BC_LIVE_PORTS_REQUIRED');
  preparationPath=resolve(preparationPath);const base=privateDirectory(dirname(preparationPath));
  const root=fileURLToPath(new URL('../../private/bootcamp-normal-live/',import.meta.url));ensure(base.startsWith(root)&&preparationPath===join(base,'preparation.json'),'BC_LIVE_OWNER_DIRECTORY');
  const prepared=JSON.parse(readPrivate(preparationPath)),{mapping,runtimeMappingHash}=JSON.parse(readPrivate(join(base,'mapping.json'))),pins=hackerRank.pins();
  ensure(['clear-bootcamp-normal-live-input.1','clear-bootcamp-normal-live-input.2'].includes(prepared.version)&&resolve(prepared.directory)===base&&runtimeMappingHash===prepared.runtimeMappingHash&&runtimeMappingHash===p0Hash('NORMAL-REGISTERED-MAPPING',mapping),'BC_LIVE_MAPPING');
+ requireProfileMode(pins?.selfAttestor,attestorMode,mapping.selfAttestor??null);
  // The old UNCONFIGURED preparation remains blocked. Reviewed trust needs its own immutable mapping.
  ensure(mapping.hackerRank.trustStatus==='REVIEWED'&&pins?.dataMode==='RECLAIM_SIGNED_RECORD'&&mapping.hackerRank.trustConfigHash===pins.trustConfigHash&&mapping.hackerRank.recipeHash===pins.recipeHash&&mapping.hackerRank.expectedClaimOwner===pins.expectedClaimOwner,'BC_LIVE_HR_TRUST_REQUIRED');
  ensure(prepared.version==='clear-bootcamp-normal-live-input.2'&&prepared.identityMode==='EXTERNAL_UI_WALLETS','BC_LIVE_EXTERNAL_UI_REQUIRED');
@@ -56,7 +58,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
  let auth,store,connection,provider,ui,mounted,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
- const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
+ const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
  const stage=name=>{report.stage=name;write();};
  const close=()=>{if(closed)return;closed=true;controller.abort();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
@@ -71,7 +73,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
    const t=c==='activity-complete'?{...mapping.targets.activity,module:'page',selectedPostId:null}:c==='assignment-submitted'?{...mapping.targets.assignment,module:'assign',selectedPostId:null}:{cmId:mapping.targets.reflection.cmId,instanceId:mapping.targets.reflection.forumId,module:'forum',selectedPostId:mapping.targets.reflection.selectedPostId};
    return {environmentRef:mapping.environmentRef,runRef:mapping.runRef,sourceVersion:mapping.sourceVersion,apiVersion:mapping.apiVersion,fixtureReportHash:mapping.fixtureReportHash,courseId:mapping.courseId,participantMapping:{participantId,applicationId:app,moodleUserId:mapping.moodleUserId,accountBindingRef:mapping.accountBindingRef,revision:mapping.revision},target:{targetLogicalId:c==='activity-complete'?'python-intro-activity':c==='assignment-submitted'?'python-practice-task':'python-reflection',...t},completionSetupReceiptHash:c==='activity-complete'?mapping.completionSetupReceiptHash:null};};
   const producers=Object.fromEntries(['activity-complete','assignment-submitted','reflection-topics'].map(criterionId=>[criterionId,createLiveMoodleConsumer({criterionId,withReader,resolvePin,resolveLease,reviewReflection,modelVersion:'gemini-3.5-flash-lite',reflectionHost,now})]));
-  producers['python-basic-certificate']=createLiveReclaimConsumer({pins:hackerRank.pins,collectLease:(request,options)=>hackerRank.collectLease(request,{...options,signRequest:message=>ui.requestSignature(request,message,{signal:options.signal})}),resolveLease,now});
+  producers['python-basic-certificate']=createLiveReclaimConsumer({selfAttestor:mapping.selfAttestor??null,pins:hackerRank.pins,collectLease:(request,options)=>hackerRank.collectLease(request,{...options,signRequest:message=>ui.requestSignature(request,message,{signal:options.signal})}),resolveLease,now});
   const services={version:'clear-bootcamp-test-execution-port.1',runtimeId:m.environmentId,runtimePinHash:prepared.runtimeHash,authorizeService(c){ensure(c===serviceContext&&!closed&&now()<startedAt+1800,'BC_LIVE_SERVICE');return {serviceId:'normal-worker',runtimeId:m.environmentId,expiresAt:startedAt+1800};},reader:{async snapshot(){throw Error('BC_NORMAL_LEGACY_READER_DISABLED');}},envelope:{async lookup(){throw Error('BC_NORMAL_LEGACY_ENVELOPE_DISABLED');}}};
   connection=openDevelopmentConnection({environmentId:m.environmentId,sourceMode:'REGISTERED_TEST_SOURCE'});
   store=createBootcampStore({directory:join(directory,'store'),authentication:auth,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
@@ -82,7 +84,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
    atomicPrivate(join(directory,'context.json'),{runId,environmentId:m.environmentId,applicationId:app,participantId,participantWallet:prepared.participantWallet,policyHash:m.policyHash,runtimeMappingHash,startedAt,sourceStatus:'NOT_COLLECTED',allocationAtoms:'0'},{exclusive:true});
    return {applicationId:app,status:'AUTHENTICATED_SOURCE_SESSION_BOUND',paymentAuthorization:false};
   };
-  const paymentReceipt=createNormalReceiptReader({authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,
+  const paymentReceipt=createNormalReceiptReader({selfAttestor:mapping.selfAttestor??null,authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,
    readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash,policyHash:m.policyHash,recipient:prepared.participantWallet,token:m.tokenAddress});
   const refreshProcedure=async(c,a)=>{
    store.getOperationsProjection(c,a);requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
@@ -98,7 +100,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,rev
    readers.observe(actor.role.toUpperCase());return Object.freeze({
    version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,
    signingContext:actor.role==='participant'?productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}):null,
-   recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
+   recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),receiptRequired:true,
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:reflectionApproval?.brief(context)??null});};
   const recipientView=(c,a)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,authorize:(c,w)=>ui.authorize(c,w)});};

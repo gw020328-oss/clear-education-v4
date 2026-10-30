@@ -35,7 +35,7 @@ export function ProductPanel({session,wallet,config}) {
     catch{if(alive.current){setPacket(null);setError(live.current.product.registrationUnknown?'수령 지갑 등록 결과가 불명확합니다. 다시 서명하지 말고 실행 담당자에게 알려주세요.':'수령 지갑 등록 상태가 바뀌었거나 확인에 실패했습니다. 최신 상태를 다시 읽어주세요.');}}
     finally{registrationAbort.current=null;if(alive.current){setRegBusy(false);live.current.reader.setEnabled(auto);}}
   };
-  return <section><h2>{participant?'참가자 신청':'운영자 검토'} · 로컬 TEST</h2>
+  return <section>{s.bootstrap?.selfAttestor&&<aside role="note"><strong>자체 공증 TEST 시험</strong><p>공식 hosted 검증 성공이나 독립 공증을 의미하지 않습니다. BGP 검사는 꺼져 있습니다. {s.bootstrap.selfAttestor.sourceEnvironment==='SYNTHETIC_HTTPS'?'합성 HTTPS 원천을 사용한 리허설입니다.':'HackerRank 본인 계정 원천을 이 실행의 자체 공증자로 확인합니다.'}</p></aside>}<h2>{participant?'참가자 신청':'운영자 검토'} · 로컬 TEST</h2>
     <p>참가자 지갑으로 100 TEST를 지급하는 시험입니다. 각 승인과 서명은 내용을 확인한 뒤 직접 진행하세요.</p>
     <p>신청: {s.applicationId??'아직 생성되지 않음'} · 서버 단계: {s.bootstrap?.phase??'확인 중'}</p>
     <p role="status">{error|| (s.error?`${s.error.code} · ${s.error.outcome==='UNKNOWN'?'처리 결과 미확인 — 새 요청을 보내지 마세요.':'현재 상태를 확인하지 못했습니다.'}`:busy?'선택한 작업을 처리하고 있습니다.':'서버의 현재 상태를 표시합니다.')}</p>

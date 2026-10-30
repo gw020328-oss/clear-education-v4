@@ -19,7 +19,7 @@ export function prepareHackerRankSource({trustConfig,commitmentKey,selectedCerti
  check(!createClaim||config.dataMode==='SYNTHETIC_FIXTURE','COLLECTOR_TEST_DRIVER');
  const collector=createHackerRankCollector({trustConfig:config,commitmentKey,clock,diagnostics});
  const snapshot=freeze({audience:config.audience,trustConfigHash:hash('TRUST',config),recipeHash:hash('RECIPE',config.recipe),
-  expectedClaimOwner:collector.claimOwner,selectedCertificateId,dataMode:config.dataMode});
+  expectedClaimOwner:collector.claimOwner,selectedCertificateId,dataMode:config.dataMode,...(config.selfAttestor?{selfAttestor:config.selfAttestor}:{})});
  const now=()=>clock?clock():Math.floor(Date.now()/1000);
  let used=false,closed=false,retainedLease;
  const close=()=>{closed=true;collector.close();retainedLease?.dispose();retainedLease=undefined;};
