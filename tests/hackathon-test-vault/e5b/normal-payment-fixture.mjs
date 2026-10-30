@@ -47,7 +47,7 @@ export async function normalPaymentFixture(t,{executionVersion=1,sourceFactory=n
  const native=openDevelopmentConnection({environmentId:id,now,assessmentPorts});
  connection=Object.freeze({...native,async refresh(applicationId){if(!wallClock){const block=await provider.getBlock('latest');floor=Math.max(floor,Number(block.timestamp)+extraSeconds);}const value=await native.refresh(applicationId);await afterRefresh({report,auth,user,source,app,advanceClock:seconds=>{extraSeconds+=seconds;floor+=seconds;}});return value;}});metadata=new DatabaseSync(join(dir,'envelopes/metadata.sqlite'),{readOnly:true});
  const source=sourceFactory?await sourceFactory({now,participant,operator,runtime:m}):syntheticAuthority({now}),seen=new WeakSet();
- const resolveSource=r=>{const v=source.resolveSource(r);if(!seen.has(v)){v.authExpiresAt=now()+(sourceSeconds??600);v.rawExpiresAt=now()+(sourceSeconds??300);v.queryExpiresAt=now()+(sourceSeconds??600);seen.add(v);}return v;};
+ const resolveSource=r=>{const v=source.resolveSource(r);if(!sourceFactory&&!seen.has(v)){v.authExpiresAt=now()+(sourceSeconds??600);v.rawExpiresAt=now()+(sourceSeconds??300);v.queryExpiresAt=now()+(sourceSeconds??600);seen.add(v);}return v;};
  const executionServices={version:'clear-bootcamp-test-execution-port.1',runtimeId:id,runtimePinHash:connection.runtime.runtimeHash,
   authorizeService(c){assert.equal(c,serviceContext);if(!serviceLive)throw Error('BC_E5_SERVICE_AUTHORITY');return {serviceId:'normal-worker',runtimeId:id,expiresAt:report.startedAt+600};},
   reader:{async snapshot(){throw Error('OFFLINE_LEGACY_DISABLED');}},envelope:{async lookup(){throw Error('OFFLINE_LEGACY_DISABLED');}}};
@@ -59,16 +59,16 @@ export async function normalPaymentFixture(t,{executionVersion=1,sourceFactory=n
  const app=(http?await http.request('/bootcamp/v1/applications',{method:'POST',body:{}}):store.createApplication(user,{},key())).record.applicationId;
  const setupDb=new DatabaseSync(join(dir,'offline-bind-store/bootcamp.sqlite'),{readOnly:true});
  try{for(const criterion of P0_POLICY.criteria){
-  const req=store.issueRequest(user,app,{criterionId:criterion.criterionId,expectedRevision:readNormalView(()=>store.getApplication(user,app)).revision},key());
+  const req=store.issueRequest(user,app,{criterionId:criterion.criterionId,expectedRevision:readNormalView(()=>store.getApplication(user,app)).revision},key(),{bridge:!!source.producers[criterion.criterionId].bridgeVersion});
   const body={requestId:req.record.target.requestId,expectedRevision:req.record.applicationRevision},collectionKey=key();
   const sequence=()=>setupDb.prepare('SELECT sequence FROM r2_meta WHERE id=1').get().sequence,before=sequence();
-  try{await store.collect(user,app,body,collectionKey);}catch(error){
+  try{await store.collect(user,app,body,collectionKey,{bridge:!!source.producers[criterion.criterionId].bridgeVersion,timeoutMs:sourceFactory?30000:5000});}catch(error){
    // A STARTED attempt is durable before verify runs. Retry only an initial
    // rolled-back clock boundary: no attempt, producer invocation or accepted write.
    if(Object.getPrototypeOf(error)!==RuleError.prototype||error.message!=='BC_VIEW_STALE'||sequence()!==before
     ||setupDb.prepare('SELECT status FROM requests WHERE id=?').get(body.requestId)?.status!=='PENDING'
     ||setupDb.prepare('SELECT revision FROM applications WHERE id=?').get(app)?.revision!==body.expectedRevision)throw error;
-   await store.collect(user,app,body,collectionKey);
+   await store.collect(user,app,body,collectionKey,{bridge:!!source.producers[criterion.criterionId].bridgeVersion,timeoutMs:sourceFactory?30000:5000});
   }
  }}finally{setupDb.close();}
  Object.assign(report,{applicationId:app,recipient:participant.address.toLowerCase(),runtimeMappingHash:m.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false,...(selfAttestor?{selfAttestor}:{})});

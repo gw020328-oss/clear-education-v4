@@ -12,6 +12,7 @@ import {createLiveReclaimConsumer} from '../../src/bootcamp/reclaim-live-consume
 import {createSourceDiagnostics} from '../../src/hackerrank-evidence/diagnostics.mjs';
 test('explicit self HTTPS pair: real TLS/SDK signatures, private source lease, no official mixing',{skip:process.env.CLEAR_SELF_HTTPS_TEST!=='1',timeout:180000},async t=>{
  process.env.CLEAR_LOCKED='1';const run=await startSelfAttestorTest({syntheticHttps:true});t.after(()=>run.close());
+ await assert.rejects(()=>startSelfAttestorTest(),/SELF_NEW_WORKER_REQUIRED/);
  assertSelfRuntime(run,run.profile);assert.throws(()=>assertSelfRuntime({...run},run.profile),/SELF_RUNTIME_REQUIRED/);
  assert.throws(()=>requireProfileMode(run.profile,'OFFICIAL'),/SELF_IN_OFFICIAL_PATH/);
  assert.throws(()=>validateSelfProfile({...run.profile,officialHostedSuccess:true}),/SELF_PROFILE/);

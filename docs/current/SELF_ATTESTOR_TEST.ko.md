@@ -28,6 +28,8 @@ LOG_LEVEL=silent CLEAR_SELF_HTTPS_TEST=1 ./tools/node --test tests/hackerrank-ev
 LOG_LEVEL=silent CLEAR_SELF_PAYMENT_TEST=1 ./tools/node --test tests/hackathon-test-vault/e5b/self-attestor-payment.test.mjs
 ```
 
+로컬 검증은 HTTPS pair 1/1, 관련 지갑·원천 경계 279/279, 호스트·영수증·승인·등록 69/69, 소스 세대/변조 146/146과 전체 합성 지급 1/1 통과다. [합성 지급 기록](SELF_ATTESTOR_TEST_VERIFICATION.json)을 참고한다. 최종 HEAD CI 상태는 PR125에 별도로 기록한다.
+
 ## 실제 실행 준비와 사용자 단계
 
 새 불변 소스 세대/최종 HEAD CI 확인 후 새 product bundle과 새 `--self-attestor-test` 호스트를 만든다. `check`는 로컬 빌드·Docker/Geth·관리형 Chrome·소유 Moodle·당일 가격 확인·기존 Gemini 키 소스 존재·새 HEAD에 결합한 운영자 AI 승인자 지정·새 프론트 지문을 검사한다. `check --registry`는 자체 시험에서 거부하며 공식 registry 검사와 혼동하지 않는다. 준비는 수집/AI/지급 실행이 아니다.

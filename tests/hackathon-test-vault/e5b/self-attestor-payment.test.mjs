@@ -1,6 +1,7 @@
 // Synthetic-only composition: the real self collector/consumer feeds the fixture
 // ledger. Other criteria/AI and both wallets are invented. No live AI bypass exists.
 import test from 'node:test';import assert from 'node:assert/strict';
+import {JsonRpcProvider} from 'ethers';
 import {randomBytes} from 'node:crypto';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {startSelfAttestorTest} from '../../../tools/local-attestor-review/host.mjs';
@@ -23,7 +24,7 @@ test('self attestor synthetic HTTPS → same application → V2 consent → cano
    const translated=r=>({...r,dataMode:'RECLAIM_SIGNED_RECORD'});
    const bridge={execution:'SYNTHETIC_FIXTURE',capability:hr.capability,bridgeVersion:hr.bridgeVersion,
     verify:(r,o)=>hr.verify(translated(r),o),recheck:(c,r)=>hr.recheck(c,translated(r)),reference:(c,r)=>hr.reference(c,translated(r)),close:()=>hr.close()};
-   return {...synthetic,producers:{...synthetic.producers,'python-basic-certificate':bridge},resolveSource(r){if(r.criterionId==='python-basic-certificate')return hr.resolveSource(r);const g=synthetic.resolveSource(r);g.runtimeMappingHash=runtime.runtimeMappingHash;return g;}};
+   return {...synthetic,producers:{...synthetic.producers,'python-basic-certificate':bridge},resolveSource(r){if(r.criterionId==='python-basic-certificate')return hr.resolveSource(r);const g=synthetic.resolveSource(r);g.runtimeMappingHash=runtime.runtimeMappingHash;g.authExpiresAt=ends;g.rawExpiresAt=ends;g.queryExpiresAt=ends;return g;}};
   }});}catch(e){t.diagnostic(JSON.stringify(diagnostics.snapshot()));throw e;}
  assert.equal(collected,1);assert.equal(bound.applicationId,f.app);assert.equal(bound.participantWallet,f.user.wallet.toLowerCase());
  const evidence=await f.api.decisionEvidence(f.app);assert.equal(evidence.manifest.decision.conditionsStatus,'MET');
@@ -31,6 +32,7 @@ test('self attestor synthetic HTTPS → same application → V2 consent → cano
  assert.deepEqual(r.stages.map(x=>x.kind),['REGISTER','ALLOCATE','START_REVIEW','BIND_CONSENTS','PREPARE','ACCEPT']);
  assert.equal(r.claim.amountAtoms,'100000000');assert.equal(r.claim.duplicateRejected,true);
  assert.equal(f.metrics().broadcasts,6);assert.equal(f.metrics().paymentSignatures,1);
+ const rpc=new JsonRpcProvider(f.connection.runtime.manifest.endpoint);try{assert.equal(await rpc.getTransactionCount(f.user.wallet,'latest'),0);}finally{rpc.destroy();}
  const receipt=await f.api.paymentReceipt(f.app);assert.equal(receipt.claim.state,'INCLUDED');assert.equal(receipt.claim.canonical,true);assert.equal(receipt.balance.exactExpectedAmountVerified,true);assert.equal(receipt.balance.receivedAtoms,'100000000');
  assert.equal(receipt.source.actualSourceVerification,false);assert.deepEqual(receipt.source.selfAttestor,attestor.profile);
  const operator=await f.http.request('/bootcamp/v4/applications/'+f.app+'/payment-receipt',{actor:f.op});assert.deepEqual(operator.source,receipt.source);

@@ -1,0 +1,32 @@
+{
+  "version": "clear-self-attestor-payment-rehearsal.1",
+  "mode": "SELF_ATTESTOR_TEST",
+  "sourceEnvironment": "SYNTHETIC_HTTPS",
+  "otherSources": "SYNTHETIC_MOODLE_REFLECTION_AI",
+  "wallets": "INVENTED_EOA",
+  "actualUserLogin": false,
+  "paidAiCalls": 0,
+  "officialHostedSuccess": false,
+  "independentTrust": false,
+  "bgpCheckEnabled": false,
+  "sameApplication": true,
+  "pairProofVerified": true,
+  "v2RecipientRegistration": true,
+  "bothConsents": true,
+  "canonicalReceipt": true,
+  "finalized": false,
+  "amountAtoms": "100000000",
+  "duplicateRejected": true,
+  "participantGasTransactions": 0,
+  "sourceReplayRejected": true,
+  "completed": true,
+  "verifiedAt": "2026-10-30",
+  "verificationScope": "LOCAL_SYNTHETIC_HTTPS_AND_FRESH_GETH_V2_NOT_ACTUAL_USER",
+  "localChecks": {
+    "httpsPair": 1,
+    "walletAndSourceBoundaries": 279,
+    "hostReceiptApprovalAndRegistration": 69,
+    "immutableSourceAndTamper": 146
+  },
+  "finalHeadCi": "PENDING"
+}

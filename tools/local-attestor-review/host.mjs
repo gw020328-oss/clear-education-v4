@@ -9,10 +9,11 @@ import {check,freeze} from '../../src/hackerrank-evidence/values.mjs';
 import {quiet} from '../../src/ybm-collector/client.mjs';
 import {installClaimRpcObserver} from '../../src/ybm-collector/claim-rpc-observer.mjs';
 import {installBoundedSender} from '../../src/ybm-collector/socket.mjs';
+let started=false;
 const owned=new WeakSet(),req=createRequire(root+'/src/ybm-collector/package.json');
 export function assertSelfRuntime(value,profile){check(owned.has(value)&&value.isCurrent(),'SELF_RUNTIME_REQUIRED');requireProfileMode(profile,SELF_MODE,value.profile);}
 export async function startSelfAttestorTest({signal,syntheticHttps=false}={}){
- check(process.env.CLEAR_LOCKED==='1','LOCKED_LAUNCHER_REQUIRED');check(typeof syntheticHttps==='boolean','SELF_ARGUMENT');signal?.throwIfAborted();verifyPrepared();
+ check(process.env.CLEAR_LOCKED==='1','LOCKED_LAUNCHER_REQUIRED');check(!started,'SELF_NEW_WORKER_REQUIRED');started=true;check(typeof syntheticHttps==='boolean','SELF_ARGUMENT');signal?.throwIfAborted();verifyPrepared();
  const child=fork(fileURLToPath(new URL('./server-child.mjs',import.meta.url)),[syntheticHttps?'--synthetic-https':'--live-hackerrank'],
   {cwd:root,execPath:process.execPath,execArgv:[],env:{PATH:'/usr/bin:/bin',LOG_LEVEL:'silent'},stdio:['ignore','ignore','ignore','ipc'],serialization:'advanced'});
  let closed=false,used=false,connection;const exited=new Promise(r=>child.once('exit',()=>{closed=true;r();}));
