@@ -9,7 +9,9 @@
 
 import { BOOTCAMP_FIXTURES } from '../fixtures/bootcamp.js';
 import { withAiEvidence } from '../fixtures/bootcamp-demo.js';
-import { CRITERIA, CRITERION_LABEL, STAGE_LABEL, AMOUNT, CONFIRM_SECONDS } from './world.js';
+import {
+  CRITERIA, CRITERION_LABEL, STAGE_LABEL, AMOUNT, CONFIRM_SECONDS, CLOCK_BASE,
+} from './world.js';
 
 const BASE = BOOTCAMP_FIXTURES.cases.waitingForOperatorConsent;
 
@@ -34,6 +36,20 @@ function unmet(row) {
   };
 }
 
+/**
+ * 충족한 조건 한 줄.
+ *
+ * fixture 의 `expiresAt` 을 그대로 물려받으면 화면이 **fixture 가 만들어진
+ * 날짜**를 "근거 유효 기한" 으로 적는다. 시연 시계를 2026 으로 옮긴 뒤에도
+ * 이 칸만 2020 으로 남아 있었다. 서버가 주는 값은 조회 시점 기준이므로
+ * 시연에서도 지금 시각을 따라가는 것이 맞다.
+ */
+const EVIDENCE_WINDOW = 1800;   // fixture 와 같은 30분
+
+function met(row, now) {
+  return row.expiresAt === undefined ? row : { ...row, expiresAt: now + EVIDENCE_WINDOW };
+}
+
 /** 확인 기록 한 줄. 서버가 주는 모양 그대로 */
 function consentRecord(base, role, at, decisionId) {
   return {
@@ -56,12 +72,15 @@ export function viewFor(row, role, now) {
   const full = row.metCount === CRITERIA.length;
 
   const criteria = withAiEvidence(base.criteria)
-    .map((c) => (row.met.includes(c.criterionId) ? c : unmet(c)));
+    .map((c) => (row.met.includes(c.criterionId) ? met(c, now) : unmet(c)));
 
   // ── 절차 ──────────────────────────────────────────────────────────
   const procedure = {
     ...base.procedure,
-    firstStartedAt: row.acceptedAt ?? base.procedure.firstStartedAt,
+    // 아직 수락 전이면 fixture 의 값으로 떨어졌었다. 그 값은 백엔드가
+    // fixture 를 만든 날이라 화면이 2020 년을 '절차 시작' 으로 적었다.
+    // 시연에서 절차가 시작된 때는 기수가 열린 때, 곧 시연 시계의 기준이다.
+    firstStartedAt: row.acceptedAt ?? CLOCK_BASE,
     revalidationCount: row.revalidationUsed,
   };
   // 끝난 절차에는 **살아 있는 기한을 남기지 않는다.** base 를 그대로 펴면

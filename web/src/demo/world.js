@@ -44,7 +44,13 @@ export const CAP_SECONDS = 600;           // §8.3 전체 상한
 //   평가·원천 재수집·실질 재검증을 분리."
 export const INTAKE_SECONDS = 15;         // 접수 → 처리 대기
 export const REVALIDATION_SECONDS = 60;   // 접수 → 결과
-export const CLOCK_BASE = 1580558400;     // fixture 와 같은 2020 시계
+// 시연 시계. 2026-11-06 12:00 KST — 본선 당일이다.
+//
+// 전에는 백엔드 fixture 와 같은 2020-02-01 이었다. 맞춰 두면 편했지만,
+// **화면에 2019~2020년 날짜가 깔린다.** 2026년 시연에서 그걸 보면
+// 버그로 읽힌다. 고정된 fixture 4장(`src/fixtures/bootcamp.js`)은 백엔드가
+// 준 값이라 그대로 두고, **우리가 만드는 시연 월드만** 옮긴다.
+export const CLOCK_BASE = 1793934000;
 
 export const CRITERIA = Object.freeze([
   'activity-complete',
@@ -180,7 +186,7 @@ export function initialState() {
     // **학생 모양을 바꾸면 이 번호를 올린다.** 안 올리면 옛 저장본이 그대로
     // 되살아나 없는 칸을 읽다가 화면 전체가 빈 채로 멈춘다. 실제로 한 번
     // 그랬다 — objectionLog 를 더하고 번호를 안 올려서 터졌다.
-    v: 3,
+    v: 4,
     clockBase: CLOCK_BASE,
     startedAtMs: Date.now(),
     depositedAtoms: AMOUNT * 5,          // 500 TEST

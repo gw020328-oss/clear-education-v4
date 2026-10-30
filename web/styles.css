@@ -857,7 +857,9 @@ body::before {
   padding: 16px 0; border-bottom: 1px solid var(--line);
 }
 .bcx-task-main { flex: 1 1 260px; min-width: 0; }
-.bcx-task-name { margin: 0; font-weight: 500; line-height: 1.5; }
+/* 전역 h3 가 uppercase 라 'HackerRank' 가 'HACKERRANK' 로 깨졌다. 조건
+   이름은 받은 그대로 적는다 — 한글은 영향이 없어 이것만 티가 났다. */
+.bcx-task-name { margin: 0; font-weight: 500; line-height: 1.5; text-transform: none; }
 .bcx-task-hint { margin: 4px 0 0; font-size: 0.9em; line-height: 1.65; color: var(--muted); }
 /* 완료는 평문, 조치가 필요한 것만 태그 */
 /* 원천 이름. 조건 설명보다 한 단계 더 보조다 */

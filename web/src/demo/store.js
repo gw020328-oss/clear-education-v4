@@ -17,7 +17,10 @@ import { initialState, derive, worldNow, tick, reset } from './world.js';
 
 const KEY = 'clear.demo.world.1';
 /** world.js 의 initialState().v 와 같아야 한다 */
-const SHAPE = 3;
+// 4 — 2026-10-30. 시연 시계를 2020 에서 2026 으로 옮겼다. 저장된 상태에는
+// clockBase 가 박혀 있어, 올리지 않으면 **옛 상태를 쓰는 브라우저만 2020 을**
+// 계속 보여준다. 발표 당일에 그게 남아 있으면 그대로 사고다.
+const SHAPE = 4;
 const CHANNEL = 'clear.demo.world';
 
 let state = load() ?? initialState();

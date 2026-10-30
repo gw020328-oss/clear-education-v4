@@ -52,6 +52,9 @@ const bootcampLike = (code, outcome = 'HTTP_ERROR') =>
 /** 화면에 영어 코드가 그대로 나왔는가 */
 const CODE_SHAPED = /\b(?:BC|NORMAL|AUTH|BOOTCAMP)_[A-Z0-9_]{3,}\b/;
 
+/** 줄바꿈. 문자열 안에 직접 쓰면 heredoc 을 지날 때 진짜 줄바꿈이 돼 깨진다 */
+const LF = String.fromCharCode(10);
+
 // ── 최소 DOM ────────────────────────────────────────────────────────────
 //
 // render.test.mjs 의 흉내에 **클릭**을 더했다. 5번(조회와 클릭 충돌)은
@@ -352,6 +355,34 @@ test('화면이 뜻을 아는 코드에는 빠짐없이 사람 말이 있다', (
   ];
   const missing = [...BOOTCAMP_CODES, ...thrownHere].filter((code) => errorText(code) === code);
   assert.deepEqual(missing, [], '사람 말이 없는 코드');
+});
+
+test('충전을 운영자가 직접 보내는 송금이라고 적지 않는다', async () => {
+  // 같은 틀린 설명이 **세 군데**에 있었고 두 번에 걸쳐 하나씩 찾았다.
+  // 실서버 가지를 고치고 시연 가지를 빠뜨렸고, 그 다음엔 온보딩을 빠뜨렸다.
+  //
+  // 10-29 B1 답변: V2 는 지정 depositor 의 approve → fund(operationId, amount)
+  // 이고 금고 주소로 그냥 보내면 surplus 로 잡혀 예치 회계에 반영되지 않는다.
+  // CLEAR 운영자 로그인 역할과 계약 depositor 권한도 별개다.
+  const { readdirSync, readFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+
+  const bad = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) { walk(full); continue; }
+      if (!entry.name.endsWith('.js')) continue;
+      for (const line of readFileSync(full, 'utf8').split(LF)) {
+        // 주석에 옛 문구를 인용해 둔 것은 기록이라 넘긴다 — 화면 글만 본다.
+        if (line.trim().startsWith('//')) continue;
+        if (/운영자가 직접 보내/.test(line)) bad.push(entry.name + ': ' + line.trim());
+      }
+    }
+  };
+  walk(fileURLToPath(new URL('../src/', import.meta.url)));
+  assert.deepEqual(bad, [], '충전을 운영자의 직접 송금으로 적은 자리');
 });
 
 // ── 3 · 조회 실패 ───────────────────────────────────────────────────────

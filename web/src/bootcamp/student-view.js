@@ -851,7 +851,13 @@ export function studentSection({
         : conn?.error ? sessionPanel({ conn, onSignIn, onSignOut }) : null,
 
       // 구역마다 띠를 두르고 배경을 번갈아 준다. 레퍼런스의 py-32 리듬.
-      el('div.band.band--card', {}, [el('div.band-inner', {}, [progressSection(view, { onOpen, onToggle })])]),
+      el('div.band.band--card', {}, [el('div.band-inner', {}, [progressSection(view, {
+        onOpen,
+        // 지급·종료된 뒤에는 조건을 바꿀 수 없다. 월드가 막고 있어 눌러도
+        // 상태는 안 깨졌지만 **단추가 살아 있어 멈춘 것처럼 보였다.**
+        // 조작판 칩은 PAID 에서 잠기는데 여기만 안 잠겨 있었다.
+        onToggle: isPaid(view) || view.procedure?.terminationReason ? null : onToggle,
+      })])]),
 
       el('div.band.band--soft', {}, [el('div.band-inner', {}, [fundingSection(view, { api, blocked })])]),
       el('div.band.band--card', {}, [el('div.band-inner', {}, [consentSection(view, { api, blocked, onChange, conn })])]),
@@ -994,7 +1000,10 @@ function aiEvidenceBlock(row) {
       item('판단 시각', ai.checkedAt ? seoulText(ai.checkedAt) : null),
     ]),
     el('p.bcx-note', {
-      text: '판단이 틀렸다고 보시면 확인 기간에 오류를 알려 주세요. 사람이 다시 봅니다.',
+      // '사람이 다시 봅니다' 였다. 10-29 C1 답변이 "회고에 한정한 사람 확인도
+      // 논의안이며 사람 검토자를 확정·구현한 것으로 표시하지 않는다" 라서 뺐다.
+      // 바로 위 문단("CLEAR 가 기록을 다시 가져와")과도 어긋나 있었다.
+      text: '판단이 틀렸다고 보시면 확인 기간에 오류를 알려 주세요. 접수되면 한 번 더 확인합니다.',
     }),
   ].filter(Boolean));
 }

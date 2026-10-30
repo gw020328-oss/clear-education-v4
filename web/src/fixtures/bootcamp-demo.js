@@ -35,6 +35,8 @@
 // 시계를 쓴다 — 오늘 날짜로 바꾸면 진짜처럼 보인다.
 
 import { BOOTCAMP_FIXTURES } from './bootcamp.js';
+// 주차·과제 날짜가 시연 시계와 어긋나면 안 된다. 숫자를 두 번 적지 않는다.
+import { CLOCK_BASE } from '../demo/world.js';
 
 /**
  * 회고 조건에 AI 가 찾은 근거 문장을 붙인다.
@@ -62,7 +64,9 @@ const REFLECTION_TEXT = '이번 주에는 로그인 API 를 Flask 로 구현했�
 const AI_EVIDENCE = Object.freeze({
   model: 'gemini-2.0-flash',
   policyVersion: 'reflection-rubric.1',
-  checkedAt: 1580558300,
+  // AI 가 판단한 시각. 시연 시계보다 100초 앞선다 — 숫자를 따로 적어 두면
+  // 시계를 옮길 때 여기만 남아 화면이 옛 날짜를 적는다(실제로 그랬다).
+  checkedAt: CLOCK_BASE - 100,
   sourceText: REFLECTION_TEXT,
   // 루브릭 세 항목. offset 은 sourceText 안의 위치라 화면이 밑줄을 칠 수 있다.
   findings: Object.freeze([
@@ -103,7 +107,7 @@ const AI_EVIDENCE = Object.freeze({
  * 날짜는 원본과 같은 2020 시계를 쓴다.
  */
 const WEEK = 86400 * 7;
-const BASE_AT = 1580558400 - WEEK * 10;
+const BASE_AT = CLOCK_BASE - WEEK * 10;
 
 const DETAIL = Object.freeze({
   'activity-complete': Object.freeze({
@@ -150,7 +154,9 @@ const DETAIL = Object.freeze({
       Object.freeze({ k: '발급처', v: 'HackerRank' }),
       Object.freeze({ k: '① 계정 통제 증명', v: 'Reclaim zkTLS · 0x4e1f…a37c' }),
       Object.freeze({ k: '② 인증서 증명', v: 'Reclaim zkTLS · 0x8b2c…d019' }),
-      Object.freeze({ k: '두 증명 결합', v: '같은 계정 이름 · 같은 수령 주소' }),
+      // 수령 주소로 묶지 않는다. claim owner 는 수집기가 이번 증명을 위해
+      // 만든 임시 EOA 다 — 학생 지갑 주소를 거기 넣지 않는다(10-29 A1).
+      Object.freeze({ k: '두 증명 결합', v: '같은 계정 이름 · 같은 증명 요청' }),
     ]),
   }),
 });
