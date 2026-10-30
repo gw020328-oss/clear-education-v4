@@ -58,12 +58,22 @@ export const BOOTCAMP_CODES = Object.freeze(new Set([
  *   UNKNOWN      보냈는데 결과를 모른다 — **같은 멱등 키로 조회해 확인한다**
  */
 export class BootcampError extends Error {
-  constructor(code, { outcome = 'NOT_SENT', status = null } = {}) {
+  /**
+   * @param {string} code
+   * @param {object} [options]
+   * @param {string} [options.outcome]  NOT_SENT / HTTP_ERROR / READ_FAILED / UNKNOWN
+   * @param {number|null} [options.status]
+   * @param {string|null} [options.detail]  사람이 읽을 추가 설명. 연결 단계에서
+   *   "기대한 내보내기 이름과 실제 받은 이름" 같은 것을 담는다. 코드만으로는
+   *   무엇이 어긋났는지 알 수 없어 붙인다. 서버 본문을 그대로 넣지 않는다.
+   */
+  constructor(code, { outcome = 'NOT_SENT', status = null, detail = null } = {}) {
     super(code);
     this.name = 'BootcampError';
-    this.code = BOOTCAMP_CODES.has(code) ? code : code;
+    this.code = code;
     this.outcome = outcome;
     this.status = status;
+    this.detail = detail;
   }
 }
 

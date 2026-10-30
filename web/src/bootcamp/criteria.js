@@ -43,13 +43,16 @@ export const CRITERIA = Object.freeze({
   'reflection-topics': Object.freeze({
     kind: 'REVIEW', label: '회고', value: '세 항목', tail: '확인',
     detail: '수행 내용 · 문제 해결 과정 · 배운 점이 글에 있는지 AI 가 읽고 확인합니다. '
-      + '글을 평가하거나 점수를 매기지 않습니다.',
+      + '글을 평가하거나 점수를 매기지는 않습니다.',
     source: 'MOODLE_REFLECTION_AI',
   }),
   'python-basic-certificate': Object.freeze({
     kind: 'EXAM', label: 'HackerRank 인증서', value: 'Python (Basic)', tail: '합격',
-    detail: '본인 계정으로 로그인해 인증서를 공증합니다. 파일을 내지 않습니다. '
-      + '계정이 본인 것인지도 함께 확인합니다.',
+    // 증명이 둘이라는 사실을 설명에도 넣는다. 공개 인증서 페이지는 누구나
+    // 열 수 있어서, 그것 하나로는 **그 인증서가 신청자 것인지** 알 수 없다.
+    detail: '증명을 둘 받습니다. 로그인한 화면으로 그 계정이 본인 것임을, '
+      + '인증서 페이지로 합격 사실을 각각 공증하고 둘을 같은 계정으로 묶습니다. '
+      + '파일은 제출하지 않습니다.',
     source: 'RECLAIM_HACKERRANK',
   }),
 });
@@ -57,6 +60,8 @@ export const CRITERIA = Object.freeze({
 /** 서버 reasonCode 를 사람 말로. 모르는 코드는 그대로 보여준다 — 지어내지 않는다 */
 const REASON = Object.freeze({
   SOURCE_UNAVAILABLE: '아직 원천 기록을 가져오지 못했습니다.',
+  // 운영자는 학생의 원본 근거를 그대로 볼 권한이 없다. 판정 결과만 본다.
+  ROLE_RAW_ACCESS_NOT_GRANTED: '이 역할에는 원본 근거를 볼 권한이 없습니다. 판정 결과만 표시합니다.',
   TARGET_COUNT_NOT_REACHED: '필요한 횟수에 못 미칩니다.',
   GRADE_NOT_FINAL: '채점이 확정되지 않았습니다.',
   SOURCE_MISMATCH: '원천 기록과 다릅니다.',
@@ -79,7 +84,7 @@ export function displayState(row) {
   if (row.state === 'MET' && row.current === false) {
     return {
       state: 'NEEDS_CHECK',
-      note: '예전에 충족했지만 지금은 다시 확인해야 합니다.' + (reason ? ` ${reason}` : ''),
+      note: '예전에 충족했지만 지금 다시 확인해야 합니다.' + (reason ? ` ${reason}` : ''),
       expired: true,
     };
   }
@@ -96,7 +101,7 @@ export function displayState(row) {
     case 'MISSING':
       return {
         state: 'NEEDS_CHECK',
-        note: reason ?? '필요한 근거가 아직 없습니다. 원천에서 확인해 주세요.',
+        note: reason ?? '필요한 근거가 아직 없습니다. 원래 사이트에서 확인해 주세요.',
         expired: false,
       };
 
@@ -181,3 +186,82 @@ export const metCount = (view) =>
 
 /** 쓸 수 있는 EVIDENCE 이름인지 — 바뀌면 여기서 먼저 깨진다 */
 export const knownEvidence = (kind) => Object.prototype.hasOwnProperty.call(EVIDENCE, kind);
+
+// ── §9.3 수집 축 ────────────────────────────────────────────────────────
+//
+// 기획서 §9.3 은 판정과 **별개로** 수집 상태와 보완 가능성을 요구한다.
+// 판정만 보면 "아직 확인 못 함"과 "연동이 안 되는 항목"이 같은 WAITING 으로
+// 뭉개진다. 둘은 학생이 할 일이 다르다 — 앞은 기다리면 되고 뒤는 기다려도 안 된다.
+//
+// 다만 서버가 주는 필드만 쓴다. fixture 가 주는 것은 이것뿐이다.
+//
+//   source.kind                      어느 원천인가
+//   source.hostMode                  실제 원천인가 시험용인가
+//   source.actualSourceVerification  실제 원천 검증 결과 (지금 전부 null)
+//   originalEvidence.authorized      내가 그 근거를 볼 권한이 있나
+//   originalEvidence.httpAvailable   원문을 지금 조회할 수 있나
+//   evidenceId                       근거가 잡혔나
+
+/** 원천 이름. 모르는 kind 는 그대로 보여준다 */
+const SOURCE = Object.freeze({
+  MOODLE_ACTIVITY_COMPLETION: 'Moodle 활동 완료 기록',
+  MOODLE_ASSIGNMENT_SUBMISSION: 'Moodle 과제 제출 기록',
+  MOODLE_REFLECTION_AI: 'Moodle 회고 글 + 텍스트 AI',
+  RECLAIM_HACKERRANK: 'HackerRank + Reclaim 공증',
+});
+
+export const sourceLabel = (kind) => (kind ? SOURCE[kind] ?? kind : null);
+
+/**
+ * 카드 안에서 쓰는 짧은 이름.
+ *
+ * 전체 이름('HackerRank + Reclaim 공증')은 좁은 카드에서 두 줄이 되고,
+ * 그 카드만 아래 줄이 밀려 네 카드의 줄이 어긋난다. 카드에서는 **어디서
+ * 오는가**만 알면 되고, 무엇을 어떻게 가져오는지는 상세 화면에 있다.
+ */
+const SOURCE_SHORT = Object.freeze({
+  MOODLE_ACTIVITY_COMPLETION: 'Moodle',
+  MOODLE_ASSIGNMENT_SUBMISSION: 'Moodle',
+  MOODLE_REFLECTION_AI: 'Moodle + AI',
+  RECLAIM_HACKERRANK: 'Reclaim 공증',
+});
+
+export const sourceShort = (kind) => (kind ? SOURCE_SHORT[kind] ?? SOURCE[kind] ?? kind : null);
+
+/**
+ * 조건 한 줄의 수집 상태.
+ *
+ * 없는 축을 만들지 않는다. 서버는 '대기 / 실행 중 / 실패 / 연동 미지원' 네 값을
+ * 주지 않으므로, 가진 필드로 말할 수 있는 것만 말하고 나머지는 미제공이라고 한다.
+ */
+export function collectionFrom(row) {
+  const kind = row.source?.kind ?? null;
+  const mode = row.source?.hostMode ?? null;
+  const original = row.originalEvidence ?? null;
+
+  return Object.freeze({
+    label: sourceLabel(kind),
+    shortLabel: sourceShort(kind),
+    // 시험용 원천을 실제 학원 기록처럼 보여주면 안 된다. 이게 지금 상태다.
+    synthetic: mode === 'SYNTHETIC_TEST_SOURCE',
+    modeRaw: mode,
+    // 실제 원천 검증은 지금 전부 null 이다. false 와 구분해 미확인으로 둔다.
+    realVerified: row.source?.actualSourceVerification ?? null,
+    collected: Boolean(row.evidenceId),
+    // §10.1 — 해시만 남고 원문이 만료되면 상세 조회가 불가능함을 화면에서 말한다
+    originalReadable: original ? original.httpAvailable === true : null,
+    originalAuthorized: original ? original.authorized === true : null,
+  });
+}
+
+/**
+ * §9.3 보완 가능성 — 회복 가능 / 불가 / 미확인.
+ *
+ * **서버가 주지 않는다.** 그래서 전부 미확인이다. reasonCode 로 추측하면
+ * "다시 해도 안 됩니다"를 화면이 지어내는 것이 되고, 그 말 때문에 학생이
+ * 포기한다. 필드가 생기면 여기만 고친다.
+ */
+export function recoverabilityFrom(row) {
+  if (row.recoverability) return row.recoverability;
+  return 'UNKNOWN';
+}

@@ -18,6 +18,12 @@ export function el(tag, attrs = {}, children = []) {
     if (key === 'text') { node.textContent = String(value); continue; }
     if (key === 'onClick') { node.addEventListener('click', value); continue; }
     if (key === 'onChange') { node.addEventListener('change', value); continue; }
+    // 글자마다 받는다. change 는 칸을 떠나야 오는데, 그 사이에 화면을 다시
+    // 그리면 쓰던 글이 사라진다.
+    if (key === 'onInput') { node.addEventListener('input', value); continue; }
+    // textarea 는 속성이 아니라 값으로 넣어야 한다. setAttribute 로 넣으면
+    // 처음 한 번만 먹고 다시 그릴 때 안 바뀐다.
+    if (key === 'value') { node.value = value; continue; }
     node.setAttribute(key, value === true ? '' : String(value));
   }
 

@@ -24,6 +24,9 @@ const TYPES = new Map(Object.entries({
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
+  // 글꼴을 직접 서빙한다(web/fonts). 이게 없으면 미리보기에서만 글꼴이
+  // 안 떠서 "실서버에선 되는데 왜 여기선" 하고 헤매게 된다.
+  '.woff2': 'font/woff2',
 }));
 
 function portFromArgv(argv) {

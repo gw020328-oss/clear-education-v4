@@ -201,6 +201,28 @@ export function createWalletSession({ origin, provider, onEnd = () => {}, fetchI
       return { wallet, chainId };
     },
 
+    /**
+     * 서버가 준 문구에 서명한다. **사용자 버튼에서만 부른다.**
+     *
+     * 3단계 원천 확인 서명이 이걸 쓴다. signIn 과 똑같이 서명 **앞뒤로** 지갑을
+     * 확인한다 — 서명 창이 떠 있는 동안 계정을 바꿔 버리면 다른 사람 서명이
+     * 그 신청에 붙는다.
+     *
+     * 문구를 우리가 만들지 않는다. 받은 문자열을 그대로 서명한다.
+     */
+    async signMessage(message, { signal } = {}) {
+      if (!csrf) throw fail('AUTH_REQUIRED');
+      if (typeof message !== 'string' || message.length === 0 || message.length > 16384) {
+        throw fail('BC_SIGN_MESSAGE');
+      }
+      const signal2 = scoped(signal);
+      const stamp = generation;
+      await assertSameWallet(stamp, signal2);
+      const signature = await rpc('personal_sign', [toHex(message), wallet], signal2);
+      await assertSameWallet(stamp, signal2);
+      return signature;
+    },
+
     /** 역할·신청·phase. 로그인 뒤에만 부른다 */
     async bootcampSession({ signal } = {}) {
       if (!csrf) throw fail('AUTH_REQUIRED');

@@ -22,6 +22,8 @@
 // 오므로 우리는 이 모양을 **검증하지 않고 그대로 그린다** — 어긋나면 서버 모듈이
 // 먼저 던진다(BC_NORMAL_*).
 
+import { demoCase } from './bootcamp-demo.js';
+
 export const BOOTCAMP_FIXTURES = Object.freeze({
   "version": "clear-bootcamp-normal-frontend-fixtures.1",
   "scope": "PUBLIC_SYNTHETIC_RESPONSE_EXAMPLES_NOT_RUNTIME_INPUT",
@@ -683,15 +685,25 @@ export const BOOTCAMP_FIXTURES = Object.freeze({
   }
 });
 
-/** 화면 선택 상자에 쓸 이름 */
+/**
+ * 화면에 쓸 상황들.
+ *
+ * **paid 가 기본이다.** 주시연(§13.1)은 "정상 환급 한 건"이고 그게 먼저
+ * 보여야 한다. 재원 부족과 동의 대기는 보여줄 본 그림이 아니라 예외 시연이다.
+ *
+ * paid 는 백엔드 fixture 에 없어 우리가 만들었다 — bootcamp-demo.js 참고.
+ */
 export const BOOTCAMP_CASES = Object.freeze({
-  missing: '1. 조건 확인 전 — 네 조건 UNKNOWN · 재원 대기',
-  waitingForOperatorConsent: '2. 참가자 동의함 — 운영자 동의 대기',
+  inProgress: '진행 중 — 조건 3개 충족 · 인증서 남음',
+  paid: '재원 있음 — 조건 4개 충족 · 100 TEST 지급 완료',
+  shortfall: '재원 부족 — 조건 4개 충족 · 50 TEST 모자라 대기',
+  unresolved: '미해결 종료 — 조건 4개 충족 · 이의가 안 풀려 종료',
 });
 
-/** @param {'missing'|'waitingForOperatorConsent'} caseId @param {'participant'|'operator'} role */
+/** @param {keyof BOOTCAMP_CASES} caseId @param {'participant'|'operator'} role */
 export function bootcampView(caseId, role) {
-  const found = BOOTCAMP_FIXTURES.cases[caseId]?.[role];
+  // 시연 두 상황은 우리가 만든 것(bootcamp-demo.js), 나머지는 백엔드 원본이다.
+  const found = demoCase(caseId, role) ?? BOOTCAMP_FIXTURES.cases[caseId]?.[role];
   if (!found) throw new Error('없는 fixture: ' + caseId + '/' + role);
   return found;
 }
