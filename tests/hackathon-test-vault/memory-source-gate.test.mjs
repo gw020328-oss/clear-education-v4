@@ -9,6 +9,13 @@ import {createFreshMemoryStage,memoryStageTotals} from '../../src/hackathon-test
 // Replace one read in memory, never rewrite a pinned file or start an EVM.
 const root=new URL('../../',import.meta.url);
 for(const [path,code]of [
+ ['specs/bootcamp/hackathon-test-memory-source-intake-v43.json','STAGE_V43_FILE_PIN'],
+ ['src/hackathon-test-vault/reviewed-source-v43.mjs','STAGE_SOURCE_PIN'],
+ ['src/hackerrank-evidence/self-profile.mjs','STAGE_SOURCE_PIN'],
+ ['tools/local-attestor-review/host.mjs','STAGE_SOURCE_PIN'],
+ ['tools/local-attestor-review/server-child.mjs','STAGE_SOURCE_PIN'],
+ ['tools/local-attestor-review/build-pins.json','STAGE_SOURCE_PIN'],
+ ['tools/local-attestor-review/synthetic-https.mjs','STAGE_SOURCE_PIN'],
  ['specs/bootcamp/hackathon-test-memory-source-intake-v42.json','STAGE_V42_FILE_PIN'],
  ['src/hackathon-test-vault/reviewed-source-v42.mjs','STAGE_SOURCE_PIN'],
  ['src/hackathon-test-vault/reviewed-source-v41.mjs','STAGE_SOURCE_PIN'],
