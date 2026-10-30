@@ -1,5 +1,23 @@
 # 개발 현황
 
+## 2026-10-30 미병합 지갑·공식 연결 차단 현황
+
+원격 확인 **2026-10-30 11:17 KST**. develop은 [d44b012](https://github.com/gw020328-oss/clear-education-v4/commit/d44b01216241d120064145016a99d73b1b361e34), main은 [3ffd46d](https://github.com/gw020328-oss/clear-education-v4/commit/3ffd46d7986c31b47e0a5f011d9d918e8d84f735)이며 어제 이후 새 기능 병합은 없다. [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)는 **develop 작업 브랜치 기준, develop/main 미병합**이다. 기존 #60 제품 프론트 작업도 열려 있으며 #125는 별도의 제품 지갑 패널로 web/PR60을 수정하지 않았다.
+
+#125는 참가자 Privy Google 내장 EOA와 운영자 MetaMask를 기존 TEST 실행기의 신청·원천 승인·별도 V2 등록 서명·동일 판정 양측 동의·영수증 화면에 연결하는 후보를 추가했다. 입력별 AI 외부전송/비용 직접 승인과 명시적 사용자 서명을 유지한다. 이 준비와 오프라인 검증을 실제 Google/지갑·원천·지급 완주 또는 main 제공 기능으로 표시하지 않는다.
+
+[최종 head의 공개 수정/검증 기록](https://github.com/gw020328-oss/clear-education-v4/blob/550a657f24353afba627de5a6d5bac1dd31744fd/docs/current/PUBLICATION_COMMIT_CLOCK.ko.md)은 publishReview의 순방향 초 경계 BC_VIEW_STALE를 결정적으로 재현하고, 명령/임시 게시1회 뒤 기존 완료 시점 검증을 적용했다고 보고한다. 읽기 최종 검증만 최대1회 재확인하며 원래 publishedAt/confirmAt/reviewCapAt·CAS·권한/원천 lease·기한을 유지한다. 두 번째 충돌·역행·만료/변경은 rollback하고 명령·서명·게시·봉인/송신 재실행이나 TTL 연장은 없다. 공개 로컬 저장/실행792/792 안에 신규18개·관련85개가 포함되므로 서로 합산하지 않는다. 격리 합성 S3 1/1·소스 인수37/37은 별도 검사이며 실제 사용자 지급 시험이 아니다. 과거 head5842cbb의8/9 실패와 단독 재현 결과는 보존한다.
+
+**차단·미검증:** 공개 보고서가 저장한 2026-10-29 10:50:46 UTC의 같은 SDK 연결은 HTTP403/awselb/HTML118바이트로 거부됐다. 공개 address도403 관측이며 WAF/정책/장애 중 실제 원인은 미확정이다. 지원 문의·이번403 답변 대기는 공개 보고서의 상태이며 이 자동화는 비공개 메일을 조회/발송하거나 원격 연결을 재확인하지 않았다. 과거 포털 세션 답변을 이번403 원인으로 사용하지 않는다. 새 로그인·유료 AI·proof·사용자 지급은 이 후보의 후속 검증에서 실행하지 않았고, 공식 연결 정상화와 제품 실제 완주를 준비 완료로 표시하지 않는다. PR이 보고한 Zod3 자원 소모·viem peer 불일치 잔여 위험도 해소된 것으로 쓰지 않는다.
+
+### 정확한 최신 head CI
+
+#125 head **550a657f24353afba627de5a6d5bac1dd31744fd**의 표시 검사 **9/9 COMPLETED·SUCCESS**를 확인했다. E5 A·E5 B·Privy bundle/offline 각1개와 공개 이력·합성 시험·Mac 복구 각2개다. 아래6개 workflow의 검사 수이며 시험 사례 수가 아니다. CI 성공은 공식 Attestor 연결 복구·실제 지갑/100 TEST 수령·병합 승인·배포 완료가 아니다.
+
+[run 40859948772](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40859948772) · [run 40859948992](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40859948992) · [run 40859948760](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40859948760) · [run 40859948867](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40859948867) · [run 40859941976](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40859941976)
+
+이전 날짜별 병합·실패·준비 상태는 당시 기록이다. 현재 범위는 이 절을 우선한다. 기존 r20은 V1 로컬100 TEST·INCLUDED/finalized=false의 저장 결과로 보존하고 새 V2/Privy 제품 완주로 재사용하지 않는다. 이번 자동화는 공개 코드·문서·정확한 CI만 대조했으며 실제 원문/proof·쿠키·개인키·민감 로그 접근, 새 로그인/유료 호출/서명/거래/배포를 하지 않았다.
+
 ## 2026-10-29 제품 호스트 병합·프론트 인계 현황
 
 원격 확인 **2026-10-29 11:02 KST**. develop은 [68c800b](https://github.com/gw020328-oss/clear-education-v4/commit/68c800bfc5ae68de7b40a1635005dc053ec0c776)로 [#120](https://github.com/gw020328-oss/clear-education-v4/pull/120) 제품 호스트 연결과 [#123](https://github.com/gw020328-oss/clear-education-v4/pull/123) 프론트 인계 정렬이 병합됐다. main은 [3255cab](https://github.com/gw020328-oss/clear-education-v4/commit/3255cab1429f11c12422d8befeb7c6efb0a8c9a5)이며 기능 코드는 미반영이다. 아래는 **develop 기준, main 미반영**이며 이번 문서 자동화의 실제 재실행 결과가 아니다.
