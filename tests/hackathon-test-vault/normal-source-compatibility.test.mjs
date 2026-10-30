@@ -5,7 +5,8 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {normalE2Hash,NORMAL_E2_PATH,NORMAL_SOURCE_INTAKE,NORMAL_SOURCE_INTAKE_SHA} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
 const root=new URL('../../',import.meta.url),actualRead=p=>readFileSync(new URL(p,root));
-const v40Read=p=>["src/bootcamp/procedure.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','5842cbb0ac49cd12fc05445f4df2f01554301f43:'+p],{cwd:root}):actualRead(p);
+const v41Read=p=>["src/embedded-wallet/package-lock.json", "src/embedded-wallet/package.json", "tools/embedded-wallet/build-product.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','aeefce226dfdb6e628deeed317561588b75b7e1d:'+p],{cwd:root}):actualRead(p);
+const v40Read=p=>["src/bootcamp/procedure.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','5842cbb0ac49cd12fc05445f4df2f01554301f43:'+p],{cwd:root}):v41Read(p);
 const v39Read=p=>["tools/bootcamp/frontend-server.mjs", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-host-flow.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','267002a8bab25e51bbcb8f7a629539a8f9115c3b:'+p],{cwd:root}):v40Read(p);
 const v38Read=p=>['src/application/http.mjs','src/hackathon-test-vault/memory-stage-harness.mjs','tests/hackathon-test-vault/e5/preservation.mjs','tests/hackathon-test-vault/e5b/source-pins.mjs'].includes(p)?execFileSync('git',['show','97ac3ab100242fefd98180bb672d2e1ec6062ad8:'+p],{cwd:root}):v39Read(p);
 const v37Read=p=>["src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-operations.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs", ".github/workflows/hackathon-e5b.yml"].includes(p)?execFileSync('git',['show','a2024af8a74f833070c12c90ebf8fc3b12809f19:'+p],{cwd:root}):v38Read(p);
@@ -564,4 +565,29 @@ test('v41 pins only publication clock validation and preserves every v40 boundar
  for(const k of Object.keys(old))if(!['version','date','status','currentSourceCandidateHead','previousCompatibilityRecord','sourceArtifactSha256','changedFromV39','sourceDelta','sourceAdditions'].includes(k))assert.deepEqual(v[k],old[k],k);
  assert.deepEqual(v.publicationCommitClockBoundary,{"action": "PUBLISH_REVIEW", "maximumFinalValidationRechecks": 1, "commandOrPublicationRepeated": false, "originalPublicationTimesAndDeadlinesPreserved": true, "currentSourceLeasesAndReviewCapRequired": true, "casPortsFinalAuthorityAndRollbackPreserved": true, "actualUserExecution": false});
  for(const p of [v.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v40.mjs'])assert.deepEqual(actualRead(p),execFileSync('git',['show',v.previousCompatibilityRecord.guardHead+':'+p],{cwd:root}),p);
+});
+
+
+test('v42 pins reviewed dependency artifacts, preserves v1–v41 and leaves all product source boundaries unchanged',()=>{
+ const v=JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v42.json')),old=JSON.parse(actualRead(v.previousCompatibilityRecord.path));
+ assert.equal(sha(actualRead(v.previousCompatibilityRecord.path)),v.previousCompatibilityRecord.sha256);
+ assert.deepEqual(v.sourceArtifactSha256,old.sourceArtifactSha256);assert.deepEqual(v.changedFromV41,[]);
+ assert.deepEqual(Object.keys(v.productWalletDelta),['src/embedded-wallet/package-lock.json','src/embedded-wallet/package.json','tools/embedded-wallet/build-product.mjs']);
+ assert.deepEqual(Object.keys(v.productWalletArtifactSha256),[...Object.keys(old.productWalletArtifactSha256),...Object.keys(v.productWalletAdditions)]);
+ for(const [p,h]of Object.entries(v.productWalletArtifactSha256)){
+  assert.equal(sha(actualRead(p)),h,p);assert.equal(sha(execFileSync('git',['show',v.currentSourceCandidateHead+':'+p],{cwd:root})),h,p);
+  assert.equal(h,v.productWalletDelta[p]?.after??v.productWalletAdditions[p]??old.productWalletArtifactSha256[p],p);
+  if(v.productWalletDelta[p])assert.equal(v.productWalletDelta[p].before,old.productWalletArtifactSha256[p],p);
+ }
+ for(const [p,h]of Object.entries(v.sourceArtifactSha256))assert.equal(sha(actualRead(p)),h,p);
+ for(let i=1;i<=41;i++){
+  const path=i===1?NORMAL_SOURCE_INTAKE:`specs/bootcamp/hackathon-test-memory-source-intake-v${i}.json`;
+  assert.deepEqual(actualRead(path),execFileSync('git',['show',v.previousCompatibilityRecord.guardHead+':'+path],{cwd:root}),path);
+ }
+ for(let i=9;i<=41;i++){
+  const path=`src/hackathon-test-vault/reviewed-source-v${i}.mjs`;
+  assert.deepEqual(actualRead(path),execFileSync('git',['show',v.previousCompatibilityRecord.guardHead+':'+path],{cwd:root}),path);
+ }
+ assert.equal(v.sdkBackportBoundary.officialAttestorTrustChanged,false);assert.equal(v.sdkBackportBoundary.selfAttestorProductFallback,false);
+ assert.equal(v.sdkBackportBoundary.unboundedCollectionsFixed,false);assert.equal(v.sdkBackportBoundary.typedDataValidationRemoved,false);
 });
