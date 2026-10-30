@@ -28,5 +28,5 @@
     "hostReceiptApprovalAndRegistration": 69,
     "immutableSourceAndTamper": 146
   },
-  "finalHeadCi": "PENDING"
+  "finalHeadCi": "SEE_PR125_FINAL_HEAD_CHECKS"
 }

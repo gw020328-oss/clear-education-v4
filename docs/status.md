@@ -1,5 +1,11 @@
 # 개발 현황
 
+## 2026-10-30 자체 Attestor 전용 TEST 후속 (PR125 Draft)
+
+[전용 실행 인계](current/SELF_ATTESTOR_TEST.ko.md)와 [합성 검증](current/SELF_ATTESTOR_TEST_VERIFICATION.json)을 추가했다. 명시적인 새 self-test 호스트에만 실행별 공증자/인증키·신뢰 프로필을 만들고, 신청·요청·매핑·새 체인에 결합한다. 공식 endpoint/registry 경로와 거부 검사는 유지하며 자동 fallback·임의 signer 입력은 없다. v43은 정확한 소스 187개와 지갑 산출물을 인수하고 v1–v42를 보존한다.
+
+합성 HTTPS HackerRank pair를 실제 SDK로 수집/검증하고 같은 신청의 합성 Moodle·회고·AI와 연결해 새 Geth에서 V2 등록·양측 동의·정확 100000000 atoms 수령·canonical receipt·중복 거부를 확인했다. 실제 사용자 로그인·AI 호출·사용자 지갑 지급 성공이 아니며 자체 공증은 공식 hosted/독립 공증 보장이 아니다. 실제 로그인 공개 경로는 익명 GET 403으로 남아 있다. 최종 HEAD CI는 PR125 Checks를 기준으로 보고하며 자동 병합하지 않는다.
+
 ## 2026-10-30 미병합 지갑·공식 연결 차단 현황
 
 원격 확인 **2026-10-30 11:17 KST**. develop은 [d44b012](https://github.com/gw020328-oss/clear-education-v4/commit/d44b01216241d120064145016a99d73b1b361e34), main은 [3ffd46d](https://github.com/gw020328-oss/clear-education-v4/commit/3ffd46d7986c31b47e0a5f011d9d918e8d84f735)이며 어제 이후 새 기능 병합은 없다. [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)는 **develop 작업 브랜치 기준, develop/main 미병합**이다. 기존 #60 제품 프론트 작업도 열려 있으며 #125는 별도의 제품 지갑 패널로 web/PR60을 수정하지 않았다.
