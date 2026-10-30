@@ -1,5 +1,7 @@
 # 서준형 Claude Code 복사 지침
 
+2026-10-30 우선순위: [현행 계획의 조건 초안 시연·코드 공백·D0–D2](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)를 우선한다. **Privy 참가자·MetaMask 운영자의 새 정상100 TEST 완주가 먼저**다. 이후 한 가상 Python 반의 개설 전 초안 변경/도구 계획과 기존 판정 근거 표시를 작게 연결한다. 이번은 문서 인계이며 후속 구현·유료 호출을 지금 시작하는 지시가 아니다. SDK 검토 결과는 [별도 기록](SDK_DEPENDENCY_REVIEW_20261030.ko.md)을 따른다. 기존 `web/`/PR60과 로컬 자산을 보존한다.
+
 2026-10-29 현행 인계: 참가자 Privy 내장 EOA·운영자 MetaMask의 정상100 TEST 완주가 우선이다. PR125 독립 제품 패널은 구현됐지만 미병합이며 팀원 최신 web/ 인수와 실제 새 증빙/V2/지급은 미완료다. 인증 전용 SIWE만 운영자 스크린샷/참가자 완료 보고로 확인했다. 공식 Attestor403의 서비스 측 정책 사유는 미확정이고 Zod3/viem peer 잔여 위험이 있다. 현재는 재로그인하지 않는다. [현행 계획](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)과 [실행 인계](PRODUCT_WALLET_RUN.ko.md)를 먼저 따른다.
 
 PR125의 `src/embedded-wallet/product-panel.jsx`와 `product-session.mjs`는 기존 normal-client/검토시간 driver를 재사용한다. 두 역할의 제품 SIWE 뒤에만 마운트하고, HR collector owner와 V2 runtime은 인증된 session의 `signingContext`에서 받아 서명 packet과 독립 대조한다. `clear-wallet-app.html` marker가 있는 공개 bundle과 product mount 인수가 필요하며 운영자에게 참가자 서명 문맥을 제공하지 않는다.
@@ -22,6 +24,14 @@ PR120 검증 HEAD `cd659370a6264b1fa8592c85f7585ae125ee9275`의 CI 8/8 성공 �
 ## Claude Code에 복사할 본문
 
 ```text
+2026-10-30 추가 인계: 정상 내장지갑100 TEST 완주를 먼저 끝내고, 다음 작은 작업에서 한 가상 Python 반의 개설 전 운영자 초안→AI 구조화→필요 증거/도구 계획→지원 여부 검사→운영자 확인→버전 고정을 연결해. 기존 참여/서명/배정된 반의 정책·해시·권리·실지급 기록을 수정하지 마. 새 사이트 자동 연동/코드 생성·CP-SAT은 정상 완주의 선행 조건이 아니야. 준비된 Moodle/HackerRank 도구와 회고 텍스트 검토가 범위야.
+
+후속 화면은 원문, 구조화 조건, 도구와 선택 이유, 실제 읽기 호출 근거, 모호·미지원 차단 사유를 구분해. 필수 강의 완료→활동 조회, 과제 제출 추가→과제 조회, 수행/해결/배운 점 회고→회고 조회+텍스트 AI로 계획과 호출이 달라져야 해. 성실 참여는 구체화 질문 후 확정 차단, 미지원 점수·출석은 미지원으로 표시해. 강좌 설정의 도구 매핑을 저장하고 학생별로 불필요하게 다시 생성하지 마. 예문 외 표현·부정·모순·미지원 입력으로 하드코딩 여부를 검증해.
+
+현재 compileBootcampPolicy는 P0와 정확히 같아야 하고 normal-source-sequence는 네 조건 고정 순서야. 변형 초안은 우선 별도 읽기 전용 검증 시연이고 실제 지급은 검증된 고정 네 조건 정책이라고 분명히 표시해. JSON만 바뀌는 화면이나 가짜 호출 근거로 완료하지 마. 기존 producer도 P0 hash/고정 target을 요구하므로 임의 endpoint를 만들거나 검증을 제거하지 말고 D0 계약과 기존 담당의 읽기 연결을 인수해. 수치·기한·제출·증명 유효성은 결정론 규칙, AI는 의미·모순·회고 근거·안내를 담당해. AI에 승인키/송금 권한을 주거나 사용자 로그인·서명·이번 입력 비용 승인·동의를 대신하게 하지 마. 회고 사람 검토는 아직 미확정이야.
+
+정상 완주 후 조건 초안/도구 계획과 기존 decision-evidence 표시를 우선하고, Moodle 제한 재조회·회고 보완, 중단 독립청구/자산 이동, 운영자 충전은 각각 후속으로 구분해. 전부 정상 완주 전에 만들지 마. 8분 발표는 초안 변경40~60초→검증된 정책 실제 환급→회고 부족/보완 중심을 권장하되 리허설로 조정해. 아직 구현되지 않은 보완 경로는 설명/합성 표시를 명확히 해. 교수님 피드백의 자동 사이트 연동은 향후 개발도구 연구이며 다른 실험 세션 중단 메시지는 필요 없어.
+
 CLEAR 기존 프론트에 한 신청의 원천 확인·운영자의 이번 입력 AI 승인·네 조건 → 별도 V2 수령인 등록 서명 → 참가자/운영자의 같은 판정 명시 동의 → 100 TEST 수령 확인을 연결해줘. 현재 확인한 병합 기준은 develop d44b01216241d120064145016a99d73b1b361e34이며 PR120/123은 병합됐어. PR125는 미병합 Draft이므로 연결 코드 인수와 배포 완료를 구분해. PR115 V2 등록·PR116 S3 내부 체인 연결/조회·PR117 S4 판정 근거 조회가 포함돼. 내부 구현, 제품 HTTPS 호스트의 경로 노출, 새 실제 사용자 시험 완료를 구분해. PR120의 제품 호스트 V2 등록 GET/POST·S3 조회 GET도 병합됐어. 정확한 검증 HEAD는 cd659370a6264b1fa8592c85f7585ae125ee9275, 최종 CI는 8/8 성공(E5 B 74/74·API 774/774, E5 46/46·E4 164/164)이야. PR125 독립 제품 패널은 구현됐고 팀원 최신 web/ 인수와 새 실제 사용자 완주는 미완료야. Issue106의 최신 병합 기준과 docs/current/BOOTCAMP_S5_HOST_MOUNT.ko.md의 경로·검증 이력을 함께 확인해. 그 인수 문서의 Draft/병합 대기는 당시 기록이야. 해당 코드의 docs/current/BOOTCAMP_NORMAL_HOST.ko.md, BOOTCAMP_S3_CHAIN_REVIEW.ko.md, BOOTCAMP_S4_DECISION_EVIDENCE.ko.md, BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md와 src/bootcamp/normal-client.mjs, tools/bootcamp/frontend-server.mjs, tools/bootcamp/test-client/driver.js를 대조해. 과거 PR102/V1 설명은 역사 참고이며 새 연결의 고정 기준이 아니야.
 
 기존 프론트 PR #60(codex/frontend-shell)과 최신 로컬 변경·미추적 파일을 먼저 확인하고 안전하게 보존해. 기존 작업 브랜치에 최신 origin/develop을 병합하며 충돌은 양쪽 의도를 확인해 해결해. reset·덮어쓰기·강제 푸시로 정리하거나 이미 통합된 backend PR을 개별 cherry-pick하지 마. 현재 라우팅·디자인·지갑 adapter·빌드 방식을 재사용해. adapter가 없다면 아래 공개 계약에 필요한 최소 browser adapter를 구현해. web/와 관련 프론트 검사를 소유 범위로 삼고 backend/컨트랙트/수집기 변경이 필요하면 통합 담당과 조율해.
