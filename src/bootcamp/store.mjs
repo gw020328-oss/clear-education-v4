@@ -19,6 +19,7 @@ import {migrateExecutionAuthority,createFenceWitness} from './execution-authorit
 import {createE4BridgePorts} from './execution-e4b-ports.mjs';
 import {migrateExecutionBridge} from './execution-b-ledger.mjs';
 import {createDecisionEvidenceReader} from './decision-evidence.mjs';
+import {executionErrorSummary} from './execution-diagnostics.mjs';
 
 const mapping=JSON.parse(readFileSync(new URL('../../specs/bootcamp/p0-runtime-mapping.json',import.meta.url)));
 export const DEFAULT_MAPPING_HASH=p0Hash('RUNTIME-MAPPING',mapping);
@@ -64,7 +65,7 @@ const requestGuardHash=(g,version)=>version==='clear-bootcamp-bound-request.2'?p
 // authentication and in-process producer/source authority; HTTP never supplies it.
 export function createBootcampStore({directory,authentication,instanceId,demoStartedAt,courseOperatorRef='course-operator-demo',
   mode='DISABLED',runtimeMappingHash=DEFAULT_MAPPING_HASH,producers={},resolveSource=()=>null,
-  now=()=>Math.floor(Date.now()/1000),fault=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null,executionConnection=null,executionFenceWitness=null,executionBridge=null}){
+  now=()=>Math.floor(Date.now()/1000),fault=()=>{},onCollectionFailure=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null,executionConnection=null,executionFenceWitness=null,executionBridge=null}){
   id(instanceId);id(courseOperatorRef);epoch(demoStartedAt);hash(runtimeMappingHash);
   check(['DISABLED','SYNTHETIC_FIXTURE','ISOLATED_LIVE_TEST'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
   check(typeof authentication?.authorizeWorkflow==='function','BC_AUTHENTICATION');
@@ -332,7 +333,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       });
       if(started.prior)return started.prior;
       const controller=new AbortController(),abort=()=>controller.abort();signal?.addEventListener('abort',abort,{once:true});
-      if(signal?.aborted)abort();let timer,candidate,failure;
+      if(signal?.aborted)abort();let timer,candidate,failure,phase='PREFLIGHT';
       // Read-only lease authority: no recursive source resolution/transaction.
       // A consumed request retains raw access only while its exact accepted
       // evidence is the valid head. A new decision never revives a retired head.
@@ -340,10 +341,24 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       try{
         candidate=await Promise.race([Promise.resolve().then(()=>{
           check(!controller.signal.aborted,'BC_CANCELLED');
-          access(context,applicationId,true,a=>{cas(a,started.request.expectedRevision);check(isAuthorized(),'BC_COMMIT_AUTHORITY');});
-          return started.producer.verify(started.request,{signal:controller.signal,isAuthorized});}),
+          const validateStart=(a,time)=>{
+            const r=started.request,row=get('SELECT * FROM requests WHERE id=? AND application_id=?',r.requestId,a.id);
+            ready(a);cas(a,r.expectedRevision);window(a,time);
+            check(row?.status==='PENDING'&&canonical(decode(row))===canonical(r),'BC_REQUEST_NOT_PENDING');
+            const g=source(a,r.criterionId,time);
+            check(time>=r.issuedAt&&time<r.expiresAt&&time<r.receiptWindowUntilExclusive&&g&&requestGuardHash(g,r.version)===r.sourceGuardHash,'BC_REQUEST_STALE');
+            check(isAuthorized(),'BC_COMMIT_AUTHORITY');
+          };
+          // The STARTED attempt already exists. Revalidate that same request
+          // before the single producer invocation; do not retry collection.
+          access(context,applicationId,true,(a,wallet,time)=>validateStart(a,time),validateStart);
+          phase='PRODUCER';return started.producer.verify(started.request,{signal:controller.signal,isAuthorized});}),
           new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('BC_PRODUCER_TIMEOUT'));},mode==='ISOLATED_LIVE_TEST'?Math.min(timeoutMs,Math.max(0,(started.request.expiresAt-epoch(now()))*1000)):timeoutMs);})]);
-      }catch(error){failure=error;}finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
+      }catch(error){failure=error;
+        // Constructor-owned diagnostics receive fixed labels/codes only, never
+        // raw errors, request/source data, wallet identifiers or producer output.
+        try{onCollectionFailure(freeze({phase,...executionErrorSummary(error)}));}catch{}
+      }finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
       reconcile(applicationId);
       let validateCollected=()=>{};
       try{return access(context,applicationId,true,(a,wallet,time)=>{

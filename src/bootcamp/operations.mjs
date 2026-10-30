@@ -23,7 +23,7 @@ export function createOperations({db,transaction,authentication,operatorBindings
   }
   function access(context,applicationId,write,fn,finalCheck=()=>{},{retryClockBoundary=false,consentCommitClock=false}={}){
     id(applicationId);
-    // Only internal registration opts in. Retry one rolled-back transaction,
+    // Internal registration and the read-only procedure GET opt in. Retry one rolled-back transaction,
     // never a caller's stale CAS/decision, changed source, port or authority.
     for(let attempt=0;;attempt++){
     const result=transaction(()=>{

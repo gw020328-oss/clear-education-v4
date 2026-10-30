@@ -1,5 +1,19 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+## 2026-10-28 현재 담당·다음 순서
+
+확인한 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에는 PR115 V2 등록/PR116 S3 내부 체인 연결/PR117 S4 근거 조회와 PR120 제품 호스트 V2 GET/POST·S3 GET이 병합됐다. PR120 검증 HEAD `cd659370a6264b1fa8592c85f7585ae125ee9275`의 CI 8/8 성공 후 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에 정상 병합됐고 병합 트리는 검증 HEAD와 같다. [최종 E5 B 74/74·API/store 774/774](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016882), [E5 46/46·E4 164/164](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016840), [PR 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016836), [push 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679011653)을 확인했다. 정확한 경로·client·초 경계 보정과 이전 실패 이력은 [S5 호스트 인수 기록](BOOTCAMP_S5_HOST_MOUNT.ko.md) 및 [PR120](https://github.com/gw020328-oss/clear-education-v4/pull/120)을 따른다. 호스트 인수 문서의 Draft/병합 대기 표현은 당시 기록이다. 내부 구현·제품 노출·실제 검증을 구분하고 아래 날짜별 후보 표현은 당시 기록으로 읽는다.
+
+- 본부: [프론트 복사 지침](BOOTCAMP_FRONTEND_CLAUDE_PROMPT.ko.md) 전체 기준 정리, PR120 검증 HEAD/merge SHA·노출 메서드 인수 완료, PR123 최종 CI·리뷰·승인된 병합 후 Issue106 최신 기준 갱신.
+- 기존 S5 담당: PR120 실패 최소 수정·최종 CI8/8·실질 리뷰·승인된 병합 완료. 새 이의 실행 기능은 포함하지 않음.
+- 서준형/Claude: 기존 web/·PR60/로컬 변경을 보존하며 V2 등록·S3 조회·S4 근거·동의·영수증 화면 준비, 프론트 커밋/web 절대 경로/자산·검사 결과 인계.
+- 다음 공동 관문: 프론트/API 인수 후 새 신청의 실제 네 조건·이번 입력 AI 승인·별도 등록 서명·동일판정 양측동의·100 TEST 정상 완주.
+- 정상 완주 이후: [후속 R0~R2](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)의 사용자 이의 요청 계약 → 평가 authority/원천·AI 승인 → 실질 재검증/정정/미해결·체인 반영. 계약/화면 문서 준비만 병행 가능. 내부 평가/관리 API 일괄 노출 금지.
+
+제품 목표는 일반 로그인·내장 지갑·명시적 수령인 확인·서비스 가스비 부담이고 현재 외부 지갑은 시험 경로다. 공급자/계약 호환성은 미확정. 합성 demo는 명시 모드로 실제 서명·저장·지급과 격리한다. 본 문서 반영은 새 실제 시험이나 후속 구현 착수 지시가 아니다. 문서 자동화 PR121과 팀원 프론트 소유는 보존한다.
+
+## 이전 계획·상태 기록
+
 2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.
 
 
