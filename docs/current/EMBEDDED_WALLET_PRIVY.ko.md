@@ -1,5 +1,11 @@
 # Privy 내장 EOA 연결 준비
 
+## 2026-10-30 후속 SDK 적용
+
+[공식 Zod backport·viem 호환 검토](SDK_DEPENDENCY_REVIEW_20261030.ko.md)를 반영했다. 고정 lock 설치 뒤 `./tools/node tools/embedded-wallet/reviewed-dependencies.mjs --apply`를 명시 실행하고 빌드한다. 모든 Zod 복사본/ESM/CJS·실제 chunk 검사와 관련 회귀296개를 통과했다. viem2.57.13의 정상 wire 서명과 malformed struct 거부를 유지하며 v42로 소스 지문을 인수한다. 아래 미수정 검토/이전 audit 수치는 해당 시점 이력이다.
+
+공식 Attestor의 정상 연결은 아직403이며 격리 self Attestor 공개 예제 성공은 공식 서비스/실제 지급 성공이 아니다. 실제 사용자 로그인·유료 AI·지갑 거래를 다시 실행하지 않았다. 기존 인증 호스트와 두 지갑은 보존하고 운영자 MetaMask의 입력별 AI 승인 지정을 유지한다.
+
 2026-10-30: [SDK 의존성 재검토](SDK_DEPENDENCY_REVIEW_20261030.ko.md)를 우선한다. 새 설치/번들 및 관련 회귀230/230은 통과했으나 Zod 3 호환 배포 미반영과 viem peer 충돌은 남아 있다. 경고 없는 후보의 typed-data 검증 후퇴를 확인해 SDK/lock은 유지했다. 현재 audit은 영향31패키지(high20/moderate11)·고유 advisory6건이며 아래 이전 수치는 당시 기록이다. 운영자 MetaMask의 입력별 AI 승인 지정은 유지하며 실제 호출 승인을 대신하지 않는다.
 
 최신 실행 결과: 독립 제품 화면 연결·로컬 준비 검사는 완료했지만 공식 Attestor WebSocket의 HTTP403으로 로그인 창 준비 전에 중단됐다. 실제 신청/증빙/AI/지급은 미실행이다. [실행 인계](PRODUCT_WALLET_RUN.ko.md)를 따른다.

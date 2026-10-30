@@ -1,5 +1,11 @@
 # 서준형 Claude Code 복사 지침
 
+## 2026-10-30 SDK 수정 인수 추가
+
+기존 web/PR60을 보존하고 PR125의 최신 코드/최종 CI를 인수한다. SDK 설치는 `./tools/npm --prefix src/embedded-wallet ci --strict-peer-deps --ignore-scripts --no-audit --no-fund` 다음 **`./tools/node tools/embedded-wallet/reviewed-dependencies.mjs --apply`**를 명시적으로 실행한다. `build.mjs`와 `build-product.mjs`는 패치 지문/모든 Zod 복사본이 맞지 않으면 중단한다. lifecycle script나 임의 postinstall로 바꾸지 않는다. v42 source pin과 [후속 검토](SDK_DEPENDENCY_REVIEW_20261030.ko.md)를 함께 인수한다.
+
+운영자 MetaMask가 AI 승인 지갑이다. 현재 입력·모델·전송/비용을 확인한 1회 직접 승인과, 참가자 원천 승인·수령 등록·양측 지급 동의를 구분한다. 원문과 입력 지문이 바뀌면 이전 확인/승인을 재사용하지 않는다. SDK 관련 회귀296개는 통과했지만 공식 Attestor403이 남아 실제 완료로 표시할 수 없다. 공개 예제용 self Attestor는 제품 UI 선택지나 자동 fallback으로 연결하지 않는다.
+
 2026-10-30 우선순위: [현행 계획의 조건 초안 시연·코드 공백·D0–D2](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)를 우선한다. **Privy 참가자·MetaMask 운영자의 새 정상100 TEST 완주가 먼저**다. 이후 한 가상 Python 반의 개설 전 초안 변경/도구 계획과 기존 판정 근거 표시를 작게 연결한다. 이번은 문서 인계이며 후속 구현·유료 호출을 지금 시작하는 지시가 아니다. SDK 검토 결과는 [별도 기록](SDK_DEPENDENCY_REVIEW_20261030.ko.md)을 따른다. 기존 `web/`/PR60과 로컬 자산을 보존한다.
 
 2026-10-29 현행 인계: 참가자 Privy 내장 EOA·운영자 MetaMask의 정상100 TEST 완주가 우선이다. PR125 독립 제품 패널은 구현됐지만 미병합이며 팀원 최신 web/ 인수와 실제 새 증빙/V2/지급은 미완료다. 인증 전용 SIWE만 운영자 스크린샷/참가자 완료 보고로 확인했다. 공식 Attestor403의 서비스 측 정책 사유는 미확정이고 Zod3/viem peer 잔여 위험이 있다. 현재는 재로그인하지 않는다. [현행 계획](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)과 [실행 인계](PRODUCT_WALLET_RUN.ko.md)를 먼저 따른다.

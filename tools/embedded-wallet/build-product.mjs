@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {loadPublicAssets} from '../../src/dev/public-assets.mjs';
 import {assetSnapshot} from '../bootcamp/normal-host-config.mjs';
+import {reviewedDependencies} from './reviewed-dependencies.mjs';
+reviewedDependencies();
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const {appId}=JSON.parse(readFileSync(root+'var/embedded-wallet-onboarding/settings.json'));
 if(!/^[a-z0-9]{10,80}$/.test(appId??''))throw Error('EMBEDDED_APP_ID');

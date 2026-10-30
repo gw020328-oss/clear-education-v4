@@ -28,7 +28,8 @@ jobs:
           ./tools/npm ci --ignore-scripts --no-audit --no-fund
           ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts --no-audit --no-fund
           ./tools/npm --prefix src/ybm-collector ci --ignore-scripts --no-audit --no-fund
-          ./tools/npm --prefix src/embedded-wallet ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/embedded-wallet ci --strict-peer-deps --ignore-scripts --no-audit --no-fund
+          ./tools/node tools/embedded-wallet/reviewed-dependencies.mjs --apply
       - name: Build real SDK, no account or secret
         run: ./tools/npm --prefix src/embedded-wallet run build
       - name: Synthetic identity, real CLEAR verifiers, isolated HTTPS host

@@ -1,6 +1,8 @@
 import {mkdirSync, copyFileSync, writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
+import {reviewedDependencies} from './reviewed-dependencies.mjs';
+reviewedDependencies();
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const require = createRequire(new URL('../../src/embedded-wallet/package.json', import.meta.url));
 const {build} = require('esbuild');

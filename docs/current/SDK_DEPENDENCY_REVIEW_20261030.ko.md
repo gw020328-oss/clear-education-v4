@@ -1,5 +1,21 @@
 # Privy 의존성 재검토 — 2026-10-30
 
+## 후속 적용 — 공식 backport와 viem 최소 호환 선언
+
+이전의 미수정 검토 뒤, 명시 승인된 후속 범위에서 SDK manifest/lock과 오프라인 패치·빌드 관문을 변경했다. Zod 공식 [PR6699](https://github.com/colinhacks/zod/pull/6699) commit `540f40974ff131ab96130b8fcc29af14bb750395`를 고정했다. 3.25.76의 v3와 동봉 v4/core, Porto 4.6.7의 v3 export까지 **설치된 2개 Zod 패키지·12개 파일**을 검증/패치한다. npm 버전 번호는 그대로다. source/ESM/CJS, core/classic/mini와 실제 production chunk를 확인했다. 적용 순서와 지문·실패 처리: [패치 안내](../../tools/embedded-wallet/patches/README.md).
+
+Privy react-auth 3.51.0/ethereum 0.2.5에 scoped override로 viem **2.57.13 / ox 0.14.59**를 유지한다. ethereum의 upstream exact peer 선언을 수정된 공식 버전처럼 설명하지 않는다. 이는 로컬 검증된 호환 예외다. `npm ci --strict-peer-deps --ignore-scripts` 649개 설치가 경고 없이 peer 검증을 통과했다(deprecation 안내는 남음). 정상 personal-sign, 실제 V2 wire digest/복구, 잘못된 struct 거부를 모두 유지했다. 강제 downgrade나 typed-data 검사 제거는 없다.
+
+지갑/인증·등록/V2·화면 회귀 **296/296**, 그 안의 SDK 의존성·실제 entrypoint 검사 **28개**와 로컬 Attestor 격리 검사 **2개**를 통과했다. 크기 32의 작은 초과 입력으로 원소 방문 0회, 정상 값/async/상위 refinement/정확 길이, 무제한 입력의 잔여 위험을 구분했다. 패치 drift면 앞의 유효한 파일도 쓰지 않으며, 중복 적용은 no-op이다. source pin은 새 v42로 인수하며 v1–v41 원문은 보존한다. 최종 커밋 CI는 PR125 결과를 따로 확인한다.
+
+현재 audit은 **영향 패키지 32개(high25/moderate7/critical0), 고유 advisory 4개**다: Zod GHSA-mrhx-c7xc-m3w5, decode-uri-component GHSA-qr28-fpjm-wq7f/GHSA-vcc3-ghjq-m6fr, uuid GHSA-w5hq-g745-h8pq. lock dedupe로 기존 ws advisory 2개가 빠졌지만 전파 노드의 등급/수는 달라졌다. 버전 기반 audit은 이 로컬 Zod 패치를 인식하지 않는다. 감사 숨김/제외/강제 수정은 하지 않았다. **상한 없는 x402 컬렉션·나머지 advisory·SDK 전체 도달성은 미해결**이며, 완전한 안전 판정이 아니다.
+
+공식 endpoint는 2026-10-30 04:20:58 UTC(13:20 KST) 정상 경로 각 1회에서 `/address`403·SDK WebSocket403이었다. 03:06 UTC 다른 관측의 `/address`200·WS403과 구분한다. 로그인/claim은 0건이며 반복·우회 접속은 없다. 공식 문서와 npm5.1.4 gitHead를 고정한 별도 self Attestor는 공개 example.com 증명 생성/서명 검증, 미인증·다른 host 거부, **실제 제품 verifier의 공식 signer 신뢰 목록에서 UNTRUSTED_SIGNER 거부**까지 확인했다. [격리 실행·제약](../../tools/local-attestor-review/README.md). 이 로컬 결과는 공식 hosted 복구·독립 공증·제품 proof 수락이 아니다. BGP 검사는 이 랩에서만 비활성이고, 제품 trust/fallback은 바꾸지 않았다.
+
+기존 인증 호스트·DB·체인·사용자 권리와 web/PR60은 보존했다. 실제 계정 로그인·개인 자료 수집·유료 AI·사용자 지갑 서명/거래·100 TEST 지급은 이번 후속에서 실행하지 않았다. 운영자 MetaMask 지정은 입력별 직접 승인 이전 단계이며 자동 AI 호출을 허용하지 않는다.
+
+## 이전 미수정 검토 이력
+
 검토 코드 HEAD는 `550a657f24353afba627de5a6d5bac1dd31744fd`다. **안전한 최소 수정으로 확인된 후보가 없어 SDK manifest·lock·실행 코드를 변경하지 않았다.** 설치 성공과 감사 위험 해소를 구분한다. 기존 사용자 인증 호스트·DB·체인·권리는 보존했고 로그인·유료 AI·증명·사용자 지갑 거래는 실행하지 않았다.
 
 ## 설치와 감사
