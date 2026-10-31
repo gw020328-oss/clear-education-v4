@@ -26,7 +26,7 @@ export function createNormalReceiptReader({selfAttestor=null,authorize,readRepor
    balance:{receivedAtoms:null,exactExpectedAmountVerified:null,measurement:'NOT_AVAILABLE'},
    source:{mode:r.sourceMode,actualSourceVerification:r.realSourceVerified===true&&selfAttestor?.sourceEnvironment!=='SYNTHETIC_HTTPS',...(selfAttestor?{selfAttestor}:{})},productionEnabled:false};
   // A submitted transaction or an accepted right alone is never a received payment.
-  if(r.completed===true&&claim?.amountAtoms==='100000000'&&H(claim.txHash)&&H(r.chainApplicationId)&&accepted&&target
+  if(claim&&H(claim.txHash)&&H(r.chainApplicationId)&&accepted&&target
    &&target.applicationId===applicationId&&target.policyHash===policyHash&&target.runtimeMappingHash===runtimeMappingHash){
    let receipt;try{receipt=await readCanonicalClaim({applicationId:r.chainApplicationId,txHash:claim.txHash});}catch{}
    let valid=false;try{
@@ -37,11 +37,11 @@ export function createNormalReceiptReader({selfAttestor=null,authorize,readRepor
      &&a.state==='6'&&a.recipient===recipient&&right.recipient===recipient&&right.token===token&&right.amountAtoms==='100000000'
      &&right.allocationId===receipt.allocationId&&right.authorizationDigest===receipt.authorizationDigest
      &&a.target.decisionHash===target.decisionHash&&a.target.revision===String(target.decisionRevision)
-     &&same(receipt.checkpoint,claim.checkpoint)&&same(o.checkpoint,receipt.checkpoint);
+     &&(!claim.checkpoint||same(receipt.checkpoint,claim.checkpoint))&&same(o.checkpoint,receipt.checkpoint);
    }catch{}
    if(valid){
     value.claim={state:'INCLUDED',transactionHash:claim.txHash,checkpoint:structuredClone(receipt.checkpoint),canonical:true,finalized:false,transferAmountAtoms:'100000000'};
-    value.balance={receivedAtoms:'100000000',exactExpectedAmountVerified:true,measurement:'OWNER_RUN_BALANCE_DELTA_AT_CLAIM'};
+    value.balance={receivedAtoms:'100000000',exactExpectedAmountVerified:true,measurement:r.completed===true&&claim.amountAtoms==='100000000'?'OWNER_RUN_BALANCE_DELTA_AT_CLAIM':'CANONICAL_TRANSFER_EVENT'};
    }
   }
   // Reauthorize after any asynchronous read. Accepted target is independent of a newer current decision.

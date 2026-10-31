@@ -1,3 +1,4 @@
+import {createNormalResumeControl} from '../../tools/bootcamp/normal-resume-control.mjs';
 import {normalFailureState} from '../../tools/bootcamp/normal-failure-wait.mjs';
 import {requireRule} from '../../src/policy/values.mjs';
 import test from 'node:test';
@@ -10,12 +11,16 @@ import {normalApprovalFixture} from './normal-approval-fixture.mjs';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
 import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server.mjs';
 
-async function fixture(t){
+async function fixture(t,{resume=false}={}){
  const x=await normalApprovalFixture(t),dir=join(x.f.directory,'tls');mkdirSync(dir,{mode:0o700});const fp=createCertificates(dir);
- let failure=null;const normalUi={assertWritable(){requireRule(!failure,'BC_NORMAL_FAILED_WAITING');},getSession(context){const a=x.f.service.authorizeWorkflow(context,false);x.readers.observe(a.role.toUpperCase());
+ let failure=null;
+ const resumeControl=resume?createNormalResumeControl({applicationId:()=>x.app,authorize:(c,w)=>x.f.service.authorizeWorkflow(c,w),
+  inspect(){const recovery=x.capability.recovery();return {...recovery,applicationRevision:x.f.view(x.app).revision,resumeAllowed:recovery.resumeAllowed&&x.prepared.isCurrent()};},
+  prepareResume(){x.capability.authorizeResume();}}):null;
+ const normalUi={...(resumeControl?{resume:(...a)=>resumeControl.request(...a)}:{}),assertWritable(path){requireRule(!failure||resumeControl&&path==='/bootcamp/v4/applications/'+x.app+'/resume','BC_NORMAL_FAILED_WAITING');},getSession(context){const a=x.f.service.authorizeWorkflow(context,false);x.readers.observe(a.role.toUpperCase());
    const view=x.f.store.getOperationsProjection(context,x.app);return {version:'clear-bootcamp-normal-session.1',role:a.role.toUpperCase(),applicationId:x.app,
     policyHash:view.policyHash,runtimeMappingHash:view.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
-    failure,aiApproval:failure?null:x.control.brief(context)};},approveReflection:(...args)=>x.control.approve(...args)};
+    failure:resumeControl?.view()??failure,aiApproval:failure?null:x.control.brief(context)};},approveReflection:(...args)=>x.control.approve(...args)};
  const web=join(dir,'web');mkdirSync(web);writeFileSync(join(web,'index.html'),'<h1>failure fixture</h1>');
  const mounted=createBootcampFrontendServer({authentication:x.f.service,store:x.f.store,tls:loadTls(dir,fp),sourceMode:'REGISTERED_TEST_SOURCE',
   chainId:x.f.config.chainId,normalUi,webRoot:web});mounted.server.listen(0,'127.0.0.1');await once(mounted.server,'listening');
@@ -35,7 +40,7 @@ async function fixture(t){
    assert.equal(q.status,200);const a=await raw('/auth/verify',{method:'POST',body:{nonce:q.body.nonce,signature:await wallet.signMessage(q.body.message)}});
    assert.equal(a.status,200);csrf=a.body.csrf;}};
  }
- return {...x,browser,fail(error,phase,paymentStarted=false){failure=normalFailureState(error,{phase,paymentStarted});},close:async()=>{mounted.server.closeAllConnections();await new Promise(r=>mounted.server.close(r));}};
+ return {...x,browser,fail(error,phase,paymentStarted=false){failure=normalFailureState(error,{phase,paymentStarted});resumeControl?.open(failure);},takeResume(){const ready=resumeControl.take();if(ready)failure=null;return ready;},close:async()=>{mounted.server.closeAllConnections();await new Promise(r=>mounted.server.close(r));}};
 }
 
 
@@ -69,4 +74,35 @@ test('one synthetic AI dispatch followed by failure cannot be replayed through r
  assert.equal((await operator.raw(path,{method:'POST',body:{},headers:{'idempotency-key':'one-ai'}})).status,409);
  assert.deepEqual(x.counts(),{fetches:1,keys:1});
  await x.close();await assert.rejects(operator.raw('/bootcamp/v4/session'));
+});
+
+
+test('same HTTPS sessions resume only durable pre-claim failure, then one AI result without another SIWE',async t=>{
+ const x=await fixture(t,{resume:true}),operator=x.browser(x.f.operator),participant=x.browser(x.f.alice);
+ await operator.login();await participant.login();
+ assert.equal((await operator.raw('/bootcamp/v4/applications/'+x.app+'/reflection-approval',{method:'POST',body:x.body(),headers:{'idempotency-key':'one-exact'}})).status,200);
+ const expires=x.packet.leaseExpiresAtMs;x.setApprovalCurrent(false);
+ await assert.rejects(x.run(),/NORMAL_CURRENT/);assert.equal(x.capability.recovery().status,'NOT_SENT');assert.deepEqual(x.counts(),{keys:0,fetches:0});
+ x.fail(Error('BC_PRODUCER_FAILED'),'SOURCE_reflection-topics');x.setApprovalCurrent(true);
+ const failure=(await operator.raw('/bootcamp/v4/session')).body.failure;
+ const path='/bootcamp/v4/applications/'+x.app+'/resume',body={failureRevision:failure.failureRevision,expectedRevision:failure.applicationRevision};
+ assert.equal((await participant.raw(path,{method:'POST',body})).status,403);
+ assert.equal((await operator.raw(path,{method:'POST',body:{...body,failureRevision:0}})).status,409);
+ const attempts=await Promise.all([operator.raw(path,{method:'POST',body}),operator.raw(path,{method:'POST',body})]);
+ assert.deepEqual(attempts.map(r=>r.status).sort(),[200,409]);assert.equal(x.takeResume(),true);assert.equal(x.takeResume(),false);
+ const result=await x.run();assert.equal(result.report.status,'RECEIVED_CURRENT');assert.deepEqual(x.counts(),{keys:1,fetches:1});result.close();
+ assert.equal(x.packet.leaseExpiresAtMs,expires);assert.equal((await participant.raw('/bootcamp/v4/session')).status,200);
+ await assert.rejects(x.run(),/NORMAL_RESUME_BLOCKED/);assert.deepEqual(x.counts(),{keys:1,fetches:1});
+});
+for(const kind of ['auth','evidence','revision','unknown'])test('resume rejects '+kind+' without another provider dispatch',async t=>{
+ const x=await fixture(t,{resume:true}),operator=x.browser(x.f.operator);await operator.login();
+ x.control.approve(x.actor,x.app,x.body(),'exact-one');x.setApprovalCurrent(false);await assert.rejects(x.run(),/NORMAL_CURRENT/);x.setApprovalCurrent(true);
+ x.fail(Error('BC_PRODUCER_FAILED'),'SOURCE_reflection-topics');const failure=(await operator.raw('/bootcamp/v4/session')).body.failure;
+ const body={failureRevision:failure.failureRevision,expectedRevision:failure.applicationRevision};
+ if(kind==='auth')x.f.setAuthenticationTime(9999999999);
+ if(kind==='evidence')x.state.rawAvailable=false;
+ if(kind==='revision')body.expectedRevision++;
+ if(kind==='unknown'){x.capability.authorizeResume();x.setUnknown();const result=await x.run();result.close();assert.equal(x.capability.recovery().status,'UNKNOWN');}
+ const r=await operator.raw('/bootcamp/v4/applications/'+x.app+'/resume',{method:'POST',body});assert.notEqual(r.status,200);
+ assert.equal(x.takeResume(),false);assert.equal(x.counts().fetches,kind==='unknown'?1:0);
 });

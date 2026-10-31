@@ -16,7 +16,7 @@ const allowed=(path,method)=>method==='GET'&&(path==='/__dev/config'||path==='/a
  ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure-operations\/[a-z][a-z0-9.-]{0,63}$/.test(path))
  ||method==='POST'&&(['/auth/nonce','/auth/verify','/auth/logout','/bootcamp/v1/applications'].includes(path)
  ||/^\/bootcamp\/v[34]\/applications\/[a-z][a-z0-9.-]{0,63}\/(source-session|source-signature|review-consents)$/.test(path)
- ||/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/reflection-approval$/.test(path));
+ ||/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/(reflection-approval|resume)$/.test(path));
 export function createTestWalletSession({origin,provider,fetchImpl=globalThis.fetch,onEnd=()=>{},timeoutMs=30000,now=()=>Date.now()}){
  const base=new URL(origin);if(base.protocol!=='https:'||base.origin!==origin||typeof fetchImpl!=='function')throw fail('TEST_ORIGIN');
  let connected=null,auth=null,chainId=null,generation=0,ended=false;const lifetime=new AbortController();

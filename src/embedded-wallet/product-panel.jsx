@@ -5,6 +5,18 @@ import {createTestDriver,createTestAutoReader} from '../../tools/bootcamp/test-c
 import {testActionAvailability} from '../../tools/bootcamp/test-client/review-window.js';
 const Details=({value})=><details><summary>확인할 상세 내용</summary><pre>{JSON.stringify(value,null,2)}</pre></details>;
 const criterionNames={'activity-complete':'학습 활동 완료','assignment-submitted':'과제 제출','reflection-topics':'회고 평가','python-basic-certificate':'Python (Basic) 인증서'};
+const recoveryReason={
+ NOT_SENT:'모델에 전송되지 않았고 승인도 사용되지 않았습니다. 같은 입력의 유효한 승인을 유지해 재개합니다.',
+ RESULT_READY:'완료된 결과가 남아 있습니다. 모델을 다시 호출하지 않고 이어갑니다.',
+ ALREADY_ACCEPTED:'회고 판정이 이미 반영됐습니다. 완료된 단계를 건너뜁니다.',
+ APPROVAL_SPENT_NOT_SENT:'승인 사용 기록이 있습니다. 새 유료 시도에는 별도 승인과 복구 검토가 필요합니다.',
+ UNKNOWN:'처리 결과가 불명확합니다. 기존 결과를 먼저 확인해야 하며 재호출할 수 없습니다.',
+ EVIDENCE_OR_APPROVAL_RENEWAL_REQUIRED:'해당 증거 또는 승인의 기한이 지났거나 유효성을 확인할 수 없습니다. 그 항목의 갱신이 필요합니다.',
+ AUTH_OR_EVIDENCE_RENEWAL_REQUIRED:'로그인 또는 증거의 유효성을 확인할 수 없습니다.',
+ SOURCE_REVISION_CHANGED:'신청이나 증거가 바뀌었습니다. 변경된 항목을 다시 확인해야 합니다.',
+ PAYMENT_RECEIPT_RECONCILIATION_REQUIRED:'지급을 다시 실행하지 말고 기존 거래의 지급 영수증을 확인하세요.',
+ RESUME_QUEUED:'재개 요청을 받았습니다. 다시 누르지 말고 상태를 확인하세요.',
+};
 export function ProductPanel({session,wallet,config}) {
   const [state,setState]=useState(null),[packet,setPacket]=useState(null),[regBusy,setRegBusy]=useState(false),[error,setError]=useState('');
   const [ack,setAck]=useState(null),[auto,setAuto]=useState(true),[tick,setTick]=useState(0);
@@ -39,7 +51,8 @@ export function ProductPanel({session,wallet,config}) {
   return <section>{s.bootstrap?.selfAttestor&&<aside role="note"><strong>자체 공증 TEST 시험</strong><p>공식 hosted 검증 성공이나 독립 공증을 의미하지 않습니다. BGP 검사는 꺼져 있습니다. {s.bootstrap.selfAttestor.sourceEnvironment==='SYNTHETIC_HTTPS'?'합성 HTTPS 원천을 사용한 리허설입니다.':'HackerRank 본인 계정 원천을 이 실행의 자체 공증자로 확인합니다.'}</p></aside>}<h2>{participant?'참가자 신청':'운영자 검토'} · 로컬 TEST</h2>
     <p>참가자 지갑으로 100 TEST를 지급하는 시험입니다. 각 승인과 서명은 내용을 확인한 뒤 직접 진행하세요.</p>
     <p>신청: {s.applicationId??'아직 생성되지 않음'} · 서버 단계: {s.bootstrap?.phase??'확인 중'}</p>
-    {s.bootstrap?.failure&&<aside role="alert"><strong>시험이 실패 대기 상태입니다</strong><p>{s.bootstrap.failure.phase} · {s.bootstrap.failure.code} · {s.bootstrap.failure.producerCode}</p><p>새 승인·서명·지급은 차단됐습니다. 처리 결과가 불명확하면 다시 실행하지 마세요. 상태를 확인한 뒤 실행 담당자에게 알리고 FINISH로 명시 종료하세요.</p></aside>}
+    {s.bootstrap?.failure&&<aside role="alert"><strong>시험이 실패 대기 상태입니다</strong><p>{s.bootstrap.failure.phase} · {s.bootstrap.failure.code} · {s.bootstrap.failure.producerCode} · {s.bootstrap.failure.recoveryStatus}</p><p>{recoveryReason[s.bootstrap.failure.recoveryStatus]??'이 단계는 자동 복구할 수 없습니다. 실행 담당자의 확인이 필요합니다.'}</p><p>새 승인·서명·지급은 차단됐습니다. 처리 결과가 불명확하면 다시 실행하지 마세요. 미전송과 원래 증거·승인 유효성이 확인된 경우에만 운영자가 실패한 단계를 재개할 수 있습니다. 그 외에는 표시된 갱신·결과 확인 사유를 확인하세요. FINISH는 명시 종료입니다.</p></aside>}
+    {!participant&&s.bootstrap?.failure?.resumeAllowed&&<button disabled={s.busy||regBusy||s.ended} onClick={readAction(()=>live.current.driver.resume())}>실패한 회고 단계만 재개</button>}
     <p role="status">{error|| (s.error?`${s.error.code} · ${s.error.outcome==='UNKNOWN'?'처리 결과 미확인 — 새 요청을 보내지 마세요.':'현재 상태를 확인하지 못했습니다.'}`:s.bootstrap?.failure?'실패 대기 · 현재 상태를 조회할 수 있습니다.':busy?'선택한 작업을 처리하고 있습니다.':'서버의 현재 상태를 표시합니다.')}</p>
     <button disabled={s.busy||regBusy||s.ended} onClick={readAction(()=>live.current.driver.refresh())}>최신 신청·판정 읽기</button>
     <label><input type="checkbox" checked={auto} disabled={regBusy} onChange={e=>{setAuto(e.target.checked);live.current.reader.setEnabled(e.target.checked);}}/>상태 자동 읽기</label>

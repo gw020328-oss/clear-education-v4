@@ -40,6 +40,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
     ||req.method==='POST'&&(/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/(review-consents|recipient-registration)$/.test(req.url)||req.url==='/bootcamp/v1/applications');
    if(allowed||normalUi&&(req.method==='GET'&&req.url==='/bootcamp/v4/session'&&typeof normalUi.getSession==='function'||req.method==='GET'&&typeof normalUi.getPaymentReceipt==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/payment-receipt$/.test(req.url)||(req.method==='GET'||req.method==='POST')&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-signature$/.test(req.url)
     ||req.method==='POST'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-session$/.test(req.url)
+    ||req.method==='POST'&&typeof normalUi.resume==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/resume$/.test(req.url)
     ||req.method==='POST'&&typeof normalUi.approveReflection==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/reflection-approval$/.test(req.url)))return bootcamp(req,res);
    res.writeHead(404,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end('{"error":"BC_NOT_FOUND"}');return;
   }

@@ -21,6 +21,7 @@ export function reflectionHostOptions(directory,managedRun=null){
  const readApproval=()=>JSON.parse(readPrivate(approvalPath));
  const currentApprovalHash=()=>{try{return hash(readApproval());}catch{return null;}};
  return {reflectionHost:{codeState,day:localDay,...(managedRun?{bindManagedRun:input=>managedRun.bind(input)}:{}),
+  recovery:()=>managedRun?.recovery()??{status:'UNOBSERVED',resumeAllowed:false},authorizeResume:()=>managedRun.authorizeResume(),
   createApprovalControl({authorize,getPreparation,getApplicationId,requireReaders,nowMs}){
    managedRun?.assertCurrent();const config=JSON.parse(readPrivate(join(directory,'host.json')));
    return createNormalReflectionApproval({directory,config,getPreparation,getApplicationId,requireReaders,nowMs,
@@ -64,7 +65,17 @@ export async function composeNormalFlow({source,config,directory,signal,ports}){
   ports.notify({event:'APPLICATION_BOUND',applicationId:context.report().applicationId});
   const prepared=await context.collectSources({prepareReflection:true});
   await ports.awaitApproval({directory,prepared,signal,onPrepared:()=>ports.notify({event:'AWAITING_EXACT_AI_APPROVAL',applicationId:context.report().applicationId,approvalRequestPath:join(directory,'approval-request.json')})});
-  await context.collectSources();fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
+  for(;;){
+   try{await context.collectSources();break;}catch(error){
+    if(!signal?.aborted&&context.enterFailureWait?.(error)&&context.report().failure?.resumeAllowed){
+     ports.notify({event:'NORMAL_HOST_MANUAL_RESUME_AVAILABLE',failure:context.report().failure});
+     const resumed=await (ports.awaitResume?ports.awaitResume({context,signal}):context.waitForResume({signal}));
+     if(resumed)continue;
+    }
+    throw error;
+   }
+  }
+  fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
   const result=await context.pay();fail(result.completed===true,'NORMAL_HOST_PAYMENT_INCOMPLETE');
   ports.notify({event:'PAYMENT_RECORDED_READ_RECEIPT_IN_BOTH_ROLE_SCREENS',applicationId:result.applicationId,origin:config.origin});
   await ports.finish({signal});return {applicationId:result.applicationId,completed:true};

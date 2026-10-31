@@ -47,35 +47,35 @@ test('fresh managed run isolates the legacy spent journal and consumes exactly o
  assert.deepEqual(x.counts(),{fetches:1,keys:1,reads:1});assert.deepEqual(readFileSync(join(legacy,'spent.paid-wire.v3.lock')),before);
  const saved=JSON.parse(readFileSync(join(x.directory,'ai-reflection/summary.paid-wire.v3.json')));assert.equal(saved.runBindingHash,x.binding.bindingHash);
  assert.equal(saved.runId,x.owner.runId);assert.equal(saved.paymentAuthority,false);
- await assert.rejects(run(x.capability,x.args),/SPENT|RECOVERY/);assert.equal(x.counts().fetches,1);
+ await assert.rejects(run(x.capability,x.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(x.counts().fetches,1);
  const reopened=openOfflineNormalReflectionRun(base,x.name);reopened.bind({packet:x.args.packet,context:x.args.context});
- await assert.rejects(run(reopened,x.args),/SPENT|RECOVERY/);assert.equal(x.counts().fetches,1);
+ await assert.rejects(run(reopened,x.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(x.counts().fetches,1);
 });
 test('changing only the run directory cannot reuse an approval or an application',async t=>{
  const base=root(t),a=fixture(base);(await run(a.capability,a.args)).close();
  const b=fixture(base,{name:'normal-offline-two',applicationId:'offline-application-two'});
- await assert.rejects(run(b.capability,b.args),/SPENT|RECOVERY/);assert.equal(b.counts().fetches,0);assert.equal(b.spent(),true);
+ await assert.rejects(run(b.capability,b.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(b.counts().fetches,0);assert.equal(b.spent(),true);
  const c=fixture(base,{name:'normal-offline-three',evidence:'d'.repeat(64)});
- await assert.rejects(run(c.capability,c.args),/SPENT|RECOVERY/);assert.equal(c.counts().fetches,0);assert.equal(c.spent(),true);
+ await assert.rejects(run(c.capability,c.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(c.counts().fetches,0);assert.equal(c.spent(),true);
  const d=fixture(base,{name:'normal-offline-four',applicationId:'offline-application-four',evidence:'e'.repeat(64)});
  (await run(d.capability,d.args)).close();assert.equal(d.counts().fetches,1);
 });
 test('clearing a synthetic per-run journal cannot bypass the global consumed claims',async t=>{
  const x=fixture(root(t));(await run(x.capability,x.args)).close();rmSync(join(x.directory,'ai-reflection'),{recursive:true});
- await assert.rejects(run(x.capability,x.args),/SPENT|RECOVERY/);assert.equal(x.counts().fetches,1);
+ await assert.rejects(run(x.capability,x.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(x.counts().fetches,1);
 });
 test('unknown provider outcome remains spent even under a different host and approval',async t=>{
  const base=root(t),x=fixture(base,{unknown:true}),r=await run(x.capability,x.args);assert.equal(r.report.dispatchStatus,'UNKNOWN_STOPPED');r.close();
  assert.equal(x.counts().fetches,1);assert.equal(x.spent(),true);
  const other=fixture(base,{name:'normal-offline-other',evidence:'d'.repeat(64)});
- await assert.rejects(run(other.capability,other.args),/SPENT|RECOVERY/);assert.equal(other.counts().fetches,0);
+ await assert.rejects(run(other.capability,other.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(other.counts().fetches,0);
 });
 test('cancellation after reservation burns the run without key access or dispatch',async t=>{
  const base=root(t),x=fixture(base);x.args.lease.readBody=async()=>{x.controller.abort();return x.f.text;};
  try{const r=await run(x.capability,x.args);r.close();}catch{}
  assert.equal(x.spent(),true);assert.equal(x.counts().keys,0);assert.equal(x.counts().fetches,0);
  const other=fixture(base,{name:'normal-offline-other',evidence:'d'.repeat(64)});
- await assert.rejects(run(other.capability,other.args),/SPENT|RECOVERY/);assert.equal(other.counts().fetches,0);
+ await assert.rejects(run(other.capability,other.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(other.counts().fetches,0);
 });
 for(const mutation of ['missing-run','wrong-run','old-code','wrong-plan','wrong-model','two-calls'])test('rejects '+mutation+' approval before consuming or reading a key',async t=>{
  const x=fixture(root(t));if(mutation==='missing-run')delete x.args.approval.runBindingHash;
@@ -134,5 +134,24 @@ test('legacy consumed authorization cannot be relabelled for a new managed run',
 test('checkpoint failure after reservation cannot be retried through a fresh journal',async t=>{
  const base=root(t),x=fixture(base);mkdirSync(join(x.directory,'ai-reflection'),{mode:0o700});mkdirSync(join(x.directory,'ai-reflection/summary.paid-wire.v3.json'),{mode:0o700});
  await assert.rejects(run(x.capability,x.args),/E6_WV3_CHECKPOINT_FAILED/);assert.equal(x.spent(),true);assert.equal(x.counts().keys,0);
- const y=fixture(base,{name:'normal-offline-two',evidence:'d'.repeat(64)});await assert.rejects(run(y.capability,y.args),/SPENT|RECOVERY/);assert.equal(y.counts().fetches,0);
+ const y=fixture(base,{name:'normal-offline-two',evidence:'d'.repeat(64)});await assert.rejects(run(y.capability,y.args),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.equal(y.counts().fetches,0);
+});
+
+test('pre-claim durable state requires explicit capability resume; incomplete and spent records never authorize it',async t=>{
+ const x=fixture(root(t));const original=x.args.currentApprovalHash;x.args.currentApprovalHash=()=>null;
+ await assert.rejects(run(x.capability,x.args),/NORMAL_CURRENT/);assert.equal(x.capability.recovery().status,'NOT_SENT');assert.equal(x.spent(),false);
+ await assert.rejects(run(x.capability,{...x.args,currentApprovalHash:original}),/NORMAL_RESUME_BLOCKED/);
+ x.args.currentApprovalHash=original;x.capability.authorizeResume();assert.throws(()=>x.capability.authorizeResume(),/NORMAL_RESUME_BLOCKED/);
+ (await run(x.capability,x.args)).close();assert.equal(x.counts().fetches,1);assert.equal(x.capability.recovery().status,'RESULT_RECORDED');
+ assert.throws(()=>x.capability.authorizeResume(),/NORMAL_RESUME_BLOCKED/);
+});
+
+test('missing and interrupted dispatch metadata cannot establish a resumable unsent attempt',async t=>{
+ const x=fixture(root(t));assert.equal(x.capability.recovery().status,'UNOBSERVED');assert.throws(()=>x.capability.authorizeResume(),/NORMAL_RESUME_BLOCKED/);
+ mkdirSync(join(x.directory,'ai-reflection'),{mode:0o700});
+ for(const phase of ['ENTERED','DISPATCH_INTENT','UNKNOWN']){
+  put(join(x.directory,'ai-reflection/attempt-state.json'),{version:'clear-normal-ai-attempt.1',bindingHash:x.binding.bindingHash,approvalHash:hash(x.args.approval),attempt:1,phase});
+  assert.equal(x.capability.recovery().status,'UNKNOWN');assert.throws(()=>x.capability.authorizeResume(),/NORMAL_RESUME_BLOCKED/);
+ }
+ assert.equal(x.counts().fetches,0);
 });

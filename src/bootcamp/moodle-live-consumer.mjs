@@ -86,9 +86,16 @@ export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,reso
     return Object.freeze({packet:entry.packet,codeState:fixed.codeState,day:fixed.day,managedRun,isCurrent:current,dispose});
    }catch(e){dispose();throw e;}
   },
+  recovery(r){
+   const entry=preparations.get(r.requestHash);try{
+    if(entry?.candidate){checked(entry.candidate,r);return {status:'RESULT_READY',resumeAllowed:true};}
+    if(entry?.state==='WAITING'&&entry.current())return reflectionHost?.recovery?.()??{status:'UNOBSERVED',resumeAllowed:false};
+   }catch{}return {status:'SOURCE_RENEWAL_REQUIRED',resumeAllowed:false};
+  },
   async verify(r,{signal,isAuthorized=()=>false}){
    const entry=preparations.get(r.requestHash);let iterator,abort,borrowedReview;
    try{
+    if(entry?.candidate){entry.authorize=isAuthorized;checked(entry.candidate,r);return entry.candidate;}
     if(entry){
      check(entry.requestHash===p0Hash('REFLECTION-PREPARED-REQUEST',r),'BC_LIVE_AI_PREPARATION_REQUEST');
      check(entry.state==='WAITING'&&entry.current(),'BC_LIVE_AI_PREPARATION_STALE');entry.state='RUNNING';entry.authorize=isAuthorized;
@@ -100,11 +107,16 @@ export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,reso
      const review=borrowedReview=await reviewReflection({...entry.args,signal,packet:entry.packet,codeState:entry.fixed.codeState,day:entry.fixed.day,
       currentCodeState:()=>reflectionHost.codeState(),currentDay:()=>reflectionHost.day()});
      check(entry.current(),'BC_LIVE_AI_PREPARATION_STALE');const done=await iterator.next(review);check(done.done,'BC_LIVE_AI_PREPARATION_STATE');
-     entry.state='CONSUMED';clearTimeout(entry.timer);return done.value;
+     entry.state='CONSUMED';entry.candidate=done.value;clearTimeout(entry.timer);return done.value;
     }
     iterator=candidateSteps(r,{signal,isAuthorized});let step=await iterator.next();
     if(!step.done)step=await iterator.next(await reviewReflection(step.value));check(step.done,'BC_LIVE_AI_PREPARATION_STATE');return step.value;
-   }catch(e){borrowedReview?.close();entry?.dispose();if(iterator)try{await iterator.throw(e);}catch{}throw e;}
+   }catch(e){
+    // Only a durable pre-claim failure can keep the existing prepared lease. Its original timer stays armed.
+    let preserve=false;try{preserve=entry?.state==='RUNNING'&&!signal?.aborted&&entry.current()&&reflectionHost?.recovery?.().status==='NOT_SENT';}catch{}
+    if(preserve){entry.state='WAITING';entry.authorize=isAuthorized;throw e;}
+    borrowedReview?.close();entry?.dispose();if(iterator)try{await iterator.throw(e);}catch{}throw e;
+   }
    finally{signal?.removeEventListener('abort',abort);}
   },
   recheck(candidate,r){checked(candidate,r);return true;},

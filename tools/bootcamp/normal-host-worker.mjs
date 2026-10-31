@@ -63,7 +63,11 @@ try{
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
      open:opts=>openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics}),tls:loadTls(directory,config.tlsFingerprint),listen:listenNormalServer,
-     notify,retainFailure:value=>{retainedFailure=value;},awaitApproval:awaitExactReflectionApproval,finish:async({signal})=>{notify({event:'BOTH_ROLE_RECEIPT_REVIEW_THEN_FINISH',command:'FINISH'});await waitForCommand('FINISH',{signal});}}})});
+     notify,async awaitResume({context,signal}){
+      const stop=new AbortController(),combined=AbortSignal.any([signal,stop.signal]);
+      try{return await Promise.race([context.waitForResume({signal:combined}),waitForCommand('FINISH',{signal:combined}).then(()=>{throw Error('NORMAL_HOST_EXPLICIT_FINISH');})]);}
+      finally{stop.abort();}
+     },retainFailure:value=>{retainedFailure=value;},awaitApproval:awaitExactReflectionApproval,finish:async({signal})=>{notify({event:'BOTH_ROLE_RECEIPT_REVIEW_THEN_FINISH',command:'FINISH'});await waitForCommand('FINISH',{signal});}}})});
   }finally{key?.fill(0);if(session){await stopRecordedBrowser(session.path);await removeSession(root,session.path);}}
   if(retainedFailure){
    // Managed browser/route/client/profile/key cleanup has completed above.

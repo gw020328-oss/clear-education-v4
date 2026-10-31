@@ -6,11 +6,11 @@ import {createNormalSourceSequence} from '../../tools/bootcamp/normal-source-seq
 import {createNormalReviewReaders,requireNormalSourceWindow,REVIEW_WINDOW} from '../../tools/bootcamp/normal-review-window.mjs';
 import {normalSourceTarget} from '../../tools/bootcamp/normal-current-view.mjs';
 import {waitForNormalReviewConsents,waitForExplicitConsents} from '../../tools/bootcamp/explicit-consents.mjs';
-async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240}={}){
- const windows=new Map(),events=[];let acquired=null,approved=false,models=0,prepared=null,f;
+async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240,failReflectionOnce=false,loseAcceptedReflection=false}={}){
+ const windows=new Map(),events=[];let acquired=null,approved=false,models=0,prepared=null,f,failed=false;
  f=await procedureFixture(t,{authority:{
   async beforeVerify(r){
-   if(r.criterionId==='reflection-topics'){assert.equal(approved,true);models++;advance(modelDelay);}
+   if(r.criterionId==='reflection-topics'){assert.equal(approved,true);if(failReflectionOnce&&!failed){failed=true;throw Error('NORMAL_CURRENT');}models++;advance(modelDelay);}
    else if(r.criterionId!=='python-basic-certificate')advance(sourceDelay);
   },
   transform(candidate,r){const cap=windows.get(r.criterionId);candidate.validUntilExclusive=sourceValiditySeconds===900?Math.min(cap,r.expiresAt):Math.min(cap,candidate.validUntilExclusive);
@@ -24,7 +24,7 @@ async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240}=
  function advance(seconds){assert.ok(Number.isSafeInteger(seconds)&&seconds>=0);
   for(let i=0;i<seconds;i++){f.setTime(f.time+1);f.setAuthenticationTime(f.time);}}
  const readers=createNormalReviewReaders({now:()=>f.time}),touch=()=>{readers.observe('PARTICIPANT');readers.observe('OPERATOR');};touch();
- const facade={getApplication:(...a)=>f.store.getApplication(...a),
+ const facade={getRequest:(c,a,r)=>f.store.getRequest(c,a,r),getApplication:(...a)=>f.store.getApplication(...a),
   issueBridgeRequest(c,a,b,k){events.push('issue:'+b.criterionId);return f.store.issueRequest(c,a,b,k);},
   async prepareBridgeReflection(c,a,b){
    acquired=f.time;const request=f.store.getRequest(c,a,b.requestId).record;
@@ -33,10 +33,10 @@ async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240}=
      &&f.store.getApplication(c,a).revision===request.expectedRevision};
    events.push('prepare:reflection-topics');return prepared;
   },
-  collectBridge(c,a,b,k){events.push('collect:'+f.store.getRequest(c,a,b.requestId).record.criterionId);return f.store.collect(c,a,b,k);},
+  async collectBridge(c,a,b,k){const criterion=f.store.getRequest(c,a,b.requestId).record.criterionId;events.push('collect:'+criterion);const result=await f.store.collect(c,a,b,k);if(loseAcceptedReflection&&criterion==='reflection-topics'){loseAcceptedReflection=false;throw Error('BC_VIEW_STALE');}return result;},
  };
  const sequence=createNormalSourceSequence({store:facade,getContext:()=>f.aliceContext,applicationId:app,sourceWindows:windows,
-  sourceValiditySeconds,startedAt:START,now:()=>f.time,signal:controller.signal,key:f.key,stage:name=>events.push(name),
+  getReflectionRecovery:()=>({status:'NOT_SENT',resumeAllowed:failed}),sourceValiditySeconds,startedAt:START,now:()=>f.time,signal:controller.signal,key:f.key,stage:name=>events.push(name),
   waitForReaders:async()=>readers.require(),requireReaders:()=>readers.require()});
  return {f,app,windows,events,sequence,readers,touch,advance,get models(){return models;},get prepared(){return prepared;},
   approve(){approved=true;},sourceTarget:()=>normalSourceTarget(f.store.getApplication(f.aliceContext,app))};
@@ -162,4 +162,24 @@ test('AI review deadline expires independently while the original source remains
  await assert.rejects(x.sequence.collect(),/REVIEW_WINDOW_REQUIRED/);assert.equal(x.models,0);
  await assert.rejects(x.sequence.collect(),/SINGLE_COLLECTION/);
  assert.equal(p.approvalWindowEndsAtMs,(START+300)*1000);
+});
+
+test('manual reflection continuation keeps the same request, HR evidence and login through both consents',async t=>{
+ const x=await fixture(t,{failReflectionOnce:true,sourceValiditySeconds:900});
+ const originalToken=x.f.aliceContext.token;const p=await x.sequence.collect({prepareReflection:true});x.approve();
+ const hr=x.f.store.getApplication(x.f.aliceContext,x.app).evidence[0].record;
+ await assert.rejects(x.sequence.collect(),/BC_PRODUCER_FAILED/);assert.equal(x.models,0);
+ assert.equal(x.sequence.recovery().resumeAllowed,true);x.sequence.requestResume();assert.throws(()=>x.sequence.requestResume(),/RESUME_BLOCKED/);
+ const result=await x.sequence.collect();assert.equal(result.decision.record.conditionsStatus,'MET');assert.equal(x.models,1);
+ assert.equal(x.events.filter(e=>e==='collect:python-basic-certificate').length,1);assert.equal(x.events.filter(e=>e==='issue:reflection-topics').length,1);
+ assert.equal(result.evidence.find(e=>e.record.criterionId==='python-basic-certificate').record.evidenceId,hr.evidenceId);
+ assert.equal(p.packet.leaseExpiresAtMs,(START+900)*1000);assert.equal(x.f.aliceContext.token,originalToken);
+ x.f.publish(x.app);x.f.consent(x.app);x.f.consent(x.app,x.f.operatorContext);assert.equal(x.f.view(x.app).consent.bothCurrent,true);
+});
+
+test('accepted reflection after a lost local response skips the completed model and acceptance step',async t=>{
+ const x=await fixture(t,{loseAcceptedReflection:true,sourceValiditySeconds:900});await x.sequence.collect({prepareReflection:true});x.approve();
+ await assert.rejects(x.sequence.collect(),/BC_VIEW_STALE/);assert.equal(x.models,1);assert.equal(x.sequence.recovery().status,'ALREADY_ACCEPTED');
+ x.sequence.requestResume();await x.sequence.collect();assert.equal(x.models,1);
+ assert.equal(x.events.filter(e=>e==='collect:reflection-topics').length,1);assert.equal(x.events.filter(e=>e==='collect:python-basic-certificate').length,1);
 });

@@ -65,6 +65,12 @@ export function createTestDriver({session,createNormalClient,id=()=>crypto.rando
    if(value==='AGREE')check(ready(state.view)&&!state.reviewStopped&&!state.consentTargetChanged
     &&(reviewWindow()?.remainingMs??0)>REVIEW_WINDOW.settlementReserveSeconds*1000,'TEST_REVIEW_WINDOW_REQUIRED');
    consentIntent={view:structuredClone(state.view),value,key:'test-consent-'+id()};return sendConsent(signal);}),
+  resume:()=>run(async signal=>{
+   const f=state.bootstrap?.failure;check(state.bootstrap?.role==='OPERATOR'&&f?.resumeAllowed,'BC_NORMAL_RESUME_BLOCKED');
+   // One explicit command only. A lost reply is resolved by GET, never a second POST.
+   state.bootstrap={...state.bootstrap,failure:{...f,resumeAllowed:false,recoveryStatus:'RESUME_OUTCOME_UNKNOWN'}};
+   return session.request('/bootcamp/v4/applications/'+app()+'/resume',{method:'POST',body:{failureRevision:f.failureRevision,expectedRevision:f.applicationRevision},signal});
+  }),
   approveAi:()=>run(async signal=>{writable();const a=state.bootstrap?.aiApproval;
    check(a?.permitted&&a.status==='WAITING'&&!state.aiApprovalUnknown&&a.applicationId===app(),'TEST_AI_APPROVAL_NOT_READY');
    check(aiRemaining()>=0,'TEST_AI_APPROVAL_NOT_READY');

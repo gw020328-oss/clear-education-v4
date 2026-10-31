@@ -100,7 +100,7 @@ export async function executeNormalPayment({store,connection,serviceContext,user
   await synchronizeReview();
   await execute('BIND_CONSENTS');step='PREPARE_AUTHORIZATION';await connection.refresh(app);const preparation=store.prepareReviewAuthorization(user,app,body(),key()).record.target.preparationId;
   await execute('PREPARE',preparation);const accepted=await execute('ACCEPT',preparation);ensure(accepted.claimJob,'BC_NORMAL_CLAIM_JOB_REQUIRED');
-  operation='CLAIM';stage('SEPARATE_CLAIM');step='BALANCE_BEFORE';const before=await token.balanceOf(recipient);step='CLAIM_SEND';const claim=await vault.connect(ownedTestWallet(id,'anycaller').connect(provider)).claim(chainApp);step='CLAIM_RECEIPT_WAIT';await waitSetupReceipt(provider,claim.hash);
+  operation='CLAIM';stage('SEPARATE_CLAIM');step='BALANCE_BEFORE';const before=await token.balanceOf(recipient);step='CLAIM_SEND';const claim=await vault.connect(ownedTestWallet(id,'anycaller').connect(provider)).claim(chainApp);report.claim={txHash:claim.hash,status:'SUBMITTED_UNKNOWN'};write();step='CLAIM_RECEIPT_WAIT';await waitSetupReceipt(provider,claim.hash);
   step='CLAIM_CANONICAL';const settlement=await bridge.directClaimReceipt(g,accepted.claimJob.jobId,claim.hash);ensure(settlement.status==='SETTLED','BC_NORMAL_CLAIM_PENDING');
   step='BALANCE_AFTER';const after=await token.balanceOf(recipient);ensure(after-before===100000000n,'BC_NORMAL_BALANCE');
   step='DUPLICATE_CHECK';let duplicateRejected=false;try{await vault.claim.staticCall(chainApp);}catch{duplicateRejected=true;}ensure(duplicateRejected,'BC_NORMAL_DUPLICATE');
