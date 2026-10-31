@@ -1,3 +1,4 @@
+import {oauthDiagnostic, readOAuthDiagnostic, saveOAuthDiagnostic, diagnosticLabel} from './oauth-diagnostics.mjs';
 import {ProductPanel} from './product-panel.jsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
@@ -20,11 +21,28 @@ function Setup({config}) {
 }
 function Onboarding({config}) {
   const privy = usePrivy(), {wallets, ready: walletsReady} = useWallets();
-  const {createWallet} = useCreateWallet(), {initOAuth} = useLoginWithOAuth();
+  const {createWallet} = useCreateWallet(), {initOAuth, state: oauthState, loading: oauthLoading} = useLoginWithOAuth();
   const [selection, setSelection] = useState(null), [status, setStatus] = useState('주소 확인 준비'), [busy, setBusy] = useState(false);
   const [networkReady, setNetworkReady] = useState(false), [authState, setAuthState] = useState(null);
   const snapshot = useRef(null), active = useRef(null), operation = useRef(null), step = useRef('');
   const authSession = useRef(null);
+  const [diagnostic, setDiagnostic] = useState(() => {
+    try { return readOAuthDiagnostic(window.sessionStorage); } catch { return null; }
+  });
+  const reportedOAuthError = useRef(null);
+  function report(error, stage) {
+    const d = oauthDiagnostic(error, stage);
+    setDiagnostic(d);
+    try { saveOAuthDiagnostic(window.sessionStorage, d); } catch {}
+    setStatus(`작업을 완료하지 못했습니다. 진단: ${diagnosticLabel(d)}. 다시 로그인하지 말고 이 진단 코드를 알려주세요.`);
+  }
+  // SDK handles the redirect return asynchronously, outside run()'s promise.
+  useEffect(() => {
+    if (oauthState.status === 'error' && reportedOAuthError.current !== oauthState.error) {
+      reportedOAuthError.current = oauthState.error;
+      report(oauthState.error, step.current === 'OAUTH_START' ? 'OAUTH_START' : 'OAUTH_RETURN');
+    }
+  }, [oauthState]);
   snapshot.current = {ready: privy.ready, authenticated: privy.authenticated, user: privy.user, walletsReady, wallets,
     externalWalletsDisabled: true}; // Fixed by privyConfig; never enabled by user input.
   const choices = walletChoices(privy.user, wallets);
@@ -57,7 +75,7 @@ function Onboarding({config}) {
     if (operation.current) return;
     setBusy(true); step.current = ''; const controller = new AbortController(); operation.current = controller;
     try { await bounded(() => fn(controller.signal), {signal: controller.signal, timeoutMs: 120000}); }
-    catch { cancel(); setStatus(`${step.current ? step.current + ' 단계에서 ' : ''}작업을 완료하지 못했습니다. 다시 로그인하지 말고 표시된 단계를 알려주세요.`); }
+    catch (error) { cancel(); report(error, step.current); }
     finally { setBusy(false); operation.current = null; }
   };
   const choose = async (c, signal) => { await clearAuth(); signal.throwIfAborted();
@@ -107,7 +125,7 @@ function Onboarding({config}) {
   }
   return <section><h2>참가자 Google 로그인과 주소 확인</h2>
     <p>이 화면은 참가자의 Google 내장 지갑용입니다. 운영자는 별도 Chrome 프로필의 /operator 화면에서 MetaMask를 연결하세요. 운영자 내장 지갑 로그인은 진행하지 않습니다.</p>
-    {!privy.authenticated && <button disabled={!privy.ready || busy || !!authSession.current} onClick={() => run(() => initOAuth({provider: 'google'}))}>Google로 로그인</button>}
+    {!privy.authenticated && <button disabled={!privy.ready || busy || oauthLoading || !!authSession.current} onClick={() => run(() => { step.current = 'OAUTH_START'; return initOAuth({provider: 'google'}); })}>Google로 로그인</button>}
     {privy.authenticated && <>
       <p>재로그인 후 아래 주소가 이전과 같은지 직접 비교하세요. 다른 주소이면 기존 신청을 이어 진행하지 마세요.</p>
       {choices.length === 0 && privy.user?.linkedAccounts?.some(a => a.type === 'wallet' && ['privy','privy-v2'].includes(a.walletClientType)) &&
@@ -133,7 +151,7 @@ function Onboarding({config}) {
     })}>CLEAR 세션 종료 확인</button>}
     {busy && <button onClick={cancel}>현재 작업 취소</button>}
     {config.phase==='ACTIVE_LOCAL_TEST'&&authState?.authenticated&&active.current&&authSession.current&&<ProductPanel config={config} wallet={active.current} session={authSession.current}/>}
-    <p role="status">{status}</p><p>{config.phase==='ACTIVE_LOCAL_TEST'?'신청·승인·지급은 위 제품 화면에서 현재 상태를 읽고 직접 진행합니다.':['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) ? '로그인 서명 확인만 제공하며, 거래 전송·ETH 충전·유료 호출은 실행하지 않습니다.' : '서명·거래 전송·ETH 충전·유료 호출 기능은 이 주소 확인 화면에 없습니다.'}</p>
+    <p role="status">{status}</p>{diagnostic && <p>최근 진단: {diagnosticLabel(diagnostic)}</p>}<p>{config.phase==='ACTIVE_LOCAL_TEST'?'신청·승인·지급은 위 제품 화면에서 현재 상태를 읽고 직접 진행합니다.':['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) ? '로그인 서명 확인만 제공하며, 거래 전송·ETH 충전·유료 호출은 실행하지 않습니다.' : '서명·거래 전송·ETH 충전·유료 호출 기능은 이 주소 확인 화면에 없습니다.'}</p>
   </section>;
 }
 
