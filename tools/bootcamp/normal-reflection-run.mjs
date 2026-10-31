@@ -99,7 +99,13 @@ export async function withManagedNormalReflectionStore(capability,{packet,contex
    check(identity.planHash===expected.planHash&&identity.contextHash===expected.contextHash&&identity.codeHead===expected.codeHead&&identity.approvalHash===approvalHash,'NORMAL_RUN_CONTEXT');
    // These durable, exclusive claims are deliberately never undone, including
    // partial reservation, cancellation and unknown provider outcomes.
-   const global=privateDirectory(join(s.base,'artifacts/e6-managed-normal-reflection-claims'),{create:true});
+   // Prepare each fixed component separately; never relax the shared non-recursive validator.
+   let global,failurePhase='NORMAL_CLAIMS_PARENT';
+   try{
+    const parent=privateDirectory(join(s.base,'artifacts'),{create:true});
+    failurePhase='NORMAL_CLAIMS_DIRECTORY';
+    global=privateDirectory(join(parent,'e6-managed-normal-reflection-claims'),{create:true});
+   }catch(cause){throw Object.assign(new Error('NORMAL_RUN_CLAIMS_DIRECTORY',{cause}),{failurePhase});}
    const evidence=approval.authorization?.evidenceSha256;check(/^[a-f0-9]{64}$/.test(evidence??''),'NORMAL_RUN_APPROVAL');
    const applicationHash=hash({applicationId:expected.applicationId});
    const reservation={version:'clear-normal-reflection-consumed.1',bindingHash:expected.bindingHash,runId:expected.runId,hostName:expected.hostName,
@@ -119,7 +125,8 @@ export async function withManagedNormalReflectionStore(capability,{packet,contex
    await store.checkpoint({...report,runBindingHash:expected.bindingHash,runId:expected.runId});},
   });}catch(error){
    const phase=record.phase==='ENTERED'?'FAILED_BEFORE_CLAIM':record.phase==='RESERVED'?'RESERVED':record.phase==='RECEIVED'?'RECEIVED':'UNKNOWN';
-   mark(phase,{code:executionErrorSummary(error).code});throw error;
+   const failure=executionErrorSummary(error);
+   mark(phase,{code:failure.code,failurePhase:failure.failurePhase??null,causes:failure.causes});throw error;
   }
  });}finally{s.busy=false;}
 }

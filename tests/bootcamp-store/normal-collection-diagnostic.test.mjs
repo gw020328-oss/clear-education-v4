@@ -10,3 +10,12 @@ test('producer failure preserves only bounded fixed AI code before outer produce
  assert.doesNotMatch(JSON.stringify(seen),/private/);assert.equal(seen[0].causes[0].code,'UNCLASSIFIED');
  const hostile=new Proxy({},{get(){throw Error('private');}});assert.equal(executionErrorSummary(hostile).code,'UNCLASSIFIED');
 });
+
+test('filesystem diagnostics retain fixed code and source-defined location without paths or raw exceptions',()=>{
+ for(const code of ['ENOENT','EACCES','EPERM','ELOOP','ENOTDIR','E5_PRIVATE_DIRECTORY','E5_PRIVATE_DIRECTORY_ALIAS']){
+  const cause=Object.assign(Error('sensitive source /private/path'),{code,path:'/private/path',syscall:'mkdir',stack:'private stack'});
+  const e=Object.assign(Error('NORMAL_RUN_CLAIMS_DIRECTORY',{cause}),{failurePhase:'NORMAL_CLAIMS_PARENT'});
+  const d=executionErrorSummary(e);assert.equal(d.code,'NORMAL_RUN_CLAIMS_DIRECTORY');assert.equal(d.causes[0].code,code);assert.equal(d.failurePhase,'NORMAL_CLAIMS_PARENT');assert.doesNotMatch(JSON.stringify(d),/private|sensitive|mkdir/);
+ }
+ assert.equal(executionErrorSummary(Object.assign(Error('ENOENT'),{failurePhase:'/private/path'})).failurePhase,undefined);
+});

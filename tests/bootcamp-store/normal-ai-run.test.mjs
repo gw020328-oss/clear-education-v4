@@ -1,7 +1,9 @@
 // All hosts, approvals, keys and responses below are invented, in private temp dirs.
 import test from 'node:test';
+import fs from 'node:fs';
+import {syncBuiltinESMExports} from 'node:module';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,existsSync,symlinkSync,realpathSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,existsSync,symlinkSync,realpathSync,chmodSync,lstatSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID,createHash} from 'node:crypto';
@@ -9,6 +11,8 @@ import {bootcampFixture,reflectionMock} from '../ai-review-precheck/bootcamp-fix
 import {E6_OPERATIONS_HASH} from '../../src/document-precheck/review/e6-leased-reflection.mjs';
 import {NORMAL_REFLECTION_MODEL,NORMAL_REFLECTION_COST_ACK} from '../../src/document-precheck/review/fixed-normal-reflection.mjs';
 import {prepareFirstNormalReflectionPacket,runManagedNormalReflection,runManagedNormalReflectionOfflineFixture as run,isFirstNormalReflectionResult} from '../ai-review-precheck/first-normal-reflection-entry.mjs';
+import {privateDirectory} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
+import {executionErrorSummary} from '../../src/bootcamp/execution-diagnostics.mjs';
 import {openOfflineNormalReflectionRun,normalReflectionJournalPath} from '../../tools/bootcamp/normal-reflection-run.mjs';
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
 const put=(p,v)=>writeFileSync(p,JSON.stringify(v),{mode:0o600});
@@ -154,4 +158,46 @@ test('missing and interrupted dispatch metadata cannot establish a resumable uns
   assert.equal(x.capability.recovery().status,'UNKNOWN');assert.throws(()=>x.capability.authorizeResume(),/NORMAL_RESUME_BLOCKED/);
  }
  assert.equal(x.counts().fetches,0);
+});
+
+// A previously pre-created artifacts fixture hid this fresh-checkout failure.
+test('missing parent reproduces ENOENT; fresh managed run prepares both private directories',async t=>{
+ const base=root(t);rmSync(join(base,'artifacts'),{recursive:true});
+ assert.throws(()=>privateDirectory(join(base,'artifacts/e6-managed-normal-reflection-claims'),{create:true}),e=>e.code==='ENOENT');
+ const x=fixture(base),expiry=x.args.packet.leaseExpiresAtMs,approval=JSON.stringify(x.args.approval);
+ (await run(x.capability,x.args)).close();
+ for(const p of ['artifacts','artifacts/e6-managed-normal-reflection-claims']){const st=lstatSync(join(base,p));assert.equal(st.mode&0o777,0o700);assert.equal(st.uid,process.getuid());assert.equal(st.isSymbolicLink(),false);}
+ assert.equal(x.counts().fetches,1);assert.equal(x.args.packet.leaseExpiresAtMs,expiry);assert.equal(JSON.stringify(x.args.approval),approval);
+ await assert.rejects(run(x.capability,x.args),/NORMAL_RESUME_BLOCKED/);assert.equal(x.counts().fetches,1);
+});
+for(const component of ['artifacts','artifacts/e6-managed-normal-reflection-claims'])for(const defect of ['permissions','symlink'])test('claim setup rejects '+component+' '+defect+' before keys or dispatch',async t=>{
+ const base=root(t),path=join(base,component),x=fixture(base),target=join(base,'private-target');mkdirSync(target,{mode:0o700});
+ if(existsSync(path))rmSync(path,{recursive:true});
+ if(defect==='symlink')symlinkSync(target,path);else{mkdirSync(path,{mode:0o700});chmodSync(path,0o755);}
+ const expiry=x.args.packet.leaseExpiresAtMs,approval=JSON.stringify(x.args.approval);
+ await assert.rejects(run(x.capability,x.args),error=>{
+  const d=executionErrorSummary(error);assert.equal(d.code,'NORMAL_RUN_CLAIMS_DIRECTORY');assert.equal(d.failurePhase,component==='artifacts'?'NORMAL_CLAIMS_PARENT':'NORMAL_CLAIMS_DIRECTORY');assert.equal(d.causes[0].code,'E5_PRIVATE_DIRECTORY');assert.ok(!JSON.stringify(d).includes(base));return true;
+ });
+ assert.equal(x.counts().keys,0);assert.equal(x.counts().fetches,0);assert.equal(x.spent(),false);assert.equal(x.capability.recovery().status,'NOT_SENT');
+ const attempt=JSON.parse(readFileSync(join(x.directory,'ai-reflection/attempt-state.json')));assert.equal(attempt.phase,'FAILED_BEFORE_CLAIM');assert.equal(attempt.causes[0].code,'E5_PRIVATE_DIRECTORY');assert.equal(attempt.failurePhase,component==='artifacts'?'NORMAL_CLAIMS_PARENT':'NORMAL_CLAIMS_DIRECTORY');assert.ok(!JSON.stringify(attempt).includes(base));
+ // Only this invented fixture is repaired. No automatic rerun follows the repair.
+ if(defect==='symlink'){rmSync(path);mkdirSync(path,{mode:0o700});}else chmodSync(path,0o700);
+ await assert.rejects(run(x.capability,x.args),/NORMAL_RESUME_BLOCKED/);assert.equal(x.counts().fetches,0);
+ x.capability.authorizeResume();(await run(x.capability,x.args)).close();assert.equal(x.counts().fetches,1);
+ assert.equal(x.args.packet.leaseExpiresAtMs,expiry);assert.equal(JSON.stringify(x.args.approval),approval);
+});
+
+test('claim parent with another owner is rejected without changing the shared storage validator',async t=>{
+ const base=root(t),x=fixture(base),target=join(base,'artifacts'),original=fs.lstatSync;
+ const mock=t.mock.method(fs,'lstatSync',(p,...args)=>{const st=original(p,...args);return p===target?{...st,uid:st.uid+1,isDirectory:()=>true,isSymbolicLink:()=>false}:st;});syncBuiltinESMExports();
+ try{await assert.rejects(run(x.capability,x.args),e=>executionErrorSummary(e).causes[0]?.code==='E5_PRIVATE_DIRECTORY');}
+ finally{mock.mock.restore();syncBuiltinESMExports();}
+ assert.equal(x.counts().keys,0);assert.equal(x.counts().fetches,0);assert.equal(x.spent(),false);
+});
+test('repairing a failed directory does not renew an expired input or permit dispatch',async t=>{
+ const base=root(t),x=fixture(base),parent=join(base,'artifacts'),expiry=x.args.packet.leaseExpiresAtMs;
+ chmodSync(parent,0o755);await assert.rejects(run(x.capability,x.args),/NORMAL_RUN_CLAIMS_DIRECTORY/);
+ chmodSync(parent,0o700);x.f.clock.value=expiry;x.capability.authorizeResume();
+ await assert.rejects(run(x.capability,x.args),/NORMAL_EXPIRED/);
+ assert.equal(x.args.packet.leaseExpiresAtMs,expiry);assert.equal(x.counts().keys,0);assert.equal(x.counts().fetches,0);
 });

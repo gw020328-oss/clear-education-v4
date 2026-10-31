@@ -57,7 +57,7 @@ for(const [phase,code,payment] of [['SOURCE_reflection-topics','BC_PRODUCER_FAIL
 });
 test('security, infrastructure and opaque failures are not recoverable waits',()=>{
  for(const code of ['FORBIDDEN','ERR_SQLITE_ERROR','PRIVATE_SECRET','NORMAL_RUN_CHANGED'])assert.equal(normalFailureState(Error(code),{}),null);
- for(const code of ['NORMAL_RUN_CHANGED','ERR_SQLITE_ERROR','FORBIDDEN']){
+ for(const code of ['NORMAL_RUN_CHANGED','ERR_SQLITE_ERROR','FORBIDDEN','E5_PRIVATE_DIRECTORY','E5_PRIVATE_DIRECTORY_ALIAS','E5_PRIVATE_FILE','EACCES','EPERM','ELOOP','ENOTDIR']){
   assert.equal(normalFailureState(Error('BC_PRODUCER_FAILED'),{collectionFailure:{code}}),null);
   assert.equal(normalFailureState(Error('BC_PRODUCER_FAILED'),{collectionFailure:{code:'UNCLASSIFIED',causes:[{code}]}}),null);
   assert.equal(normalFailureState(Error('BC_PRODUCER_FAILED',{cause:Error(code)})),null);
