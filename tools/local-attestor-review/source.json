@@ -1,0 +1,19 @@
+{
+  "version": "clear-isolated-attestor-review.1",
+  "upstreamRepository": "https://github.com/reclaimprotocol/attestor-core",
+  "upstreamCommit": "bc36dac3657fc46b79b4ecd545262c32440b05a6",
+  "npmVersion": "5.1.4",
+  "archiveUrl": "https://api.github.com/repos/reclaimprotocol/attestor-core/tarball/bc36dac3657fc46b79b4ecd545262c32440b05a6",
+  "archiveSha256": "99fadeedd21caddb253de9638a3a3f7d110e661e94cb92b580b082bd4ce23666",
+  "archiveRoot": "reclaimprotocol-attestor-core-bc36dac",
+  "dependencyLockSha256": "ea974445c89faf6619feda0107fb308c491382fb278e61621feb550c8db169a9",
+  "sourceListenerSha256": "c3820d7fed419d0bca9c71d95805bfed993e2d1ca7617db30827a1e663fad9c1",
+  "loopbackOnly": true,
+  "productFallback": false,
+  "officialTrustChanged": false,
+  "independentTrust": false,
+  "publicSource": "https://example.com/",
+  "maximumClaimAttempts": 1,
+  "maximumDurationMs": 90000,
+  "bgpCheckEnabled": false
+}

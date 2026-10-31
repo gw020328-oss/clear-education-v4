@@ -1,5 +1,9 @@
 # 개발 현황
 
+## 2026-10-31 Privy 로그인 비교·진단 후속 (PR125 Draft)
+
+[구성 비교와 재시험 조건](current/PRIVY_LOGIN_DIAGNOSIS_20261031.ko.md)을 기록했다. 이전9457의 Google/EOA 로그인 방식과 현재9467의 SDK3.51.0·initOAuth·Provider/CSP 설정은 같으며, origin/CA/새 세션·체인 차이가 있다. 이번 사용자 HackerRank 로그인 후 호스트 활성화는 확인됐으나 Privy Google 이동 전에 실패했다. sourceVerified=false/applicationId=null 상태로 정상 종료했고 원래 실패 원인은 미확정이다. 숨겨진 오류를 시작/복귀 단계·고정 SDK 코드·허용 HTTP 상태로만 표시/탭별 보존하는 최소 수정이다. 원시 예외/URL/토큰/쿠키를 기록하지 않는다. v44는 onboarding 한 파일과 진단 모듈만 새 지갑 지문으로 인수하며 v1–v43을 보존한다. 실제 재로그인·AI·지급 재시험은 미실행, 최신 CI는 PR125에서 확인한다.
+
 ## 2026-10-31 자체 TEST 리허설·미병합 프론트 현황
 
 원격 확인 **2026-10-31 13:22 KST**. develop은 [61dc021](https://github.com/gw020328-oss/clear-education-v4/commit/61dc02111ae17a1b12047ee008cf1b0902237beb), main은 [937a51d](https://github.com/gw020328-oss/clear-education-v4/commit/937a51db6f98b757fedb36afba98f238eea5a4b9)이며 어제 이후 새 기능 병합은 없다. 아래 [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)와 [#128](https://github.com/gw020328-oss/clear-education-v4/pull/128)은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 공개 보고서의 저장된 결과이며 이번 자동화의 재실행 결과가 아니다.
@@ -26,6 +30,12 @@
 | [#128](https://github.com/gw020328-oss/clear-education-v4/pull/128) | d7c6c77710a07225aec7a4aec0fed2a8e5bacdf4 | 4/6 | [run 41007429268](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41007429268) · [run 41007422589](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41007422589) |
 
 #125의12개 검사는 모두 COMPLETED·SUCCESS이며 #128은4/6 성공·2개 FAILURE다. 이는 검사 수이지 고유 시험/실제 사용자 성공 수가 아니다. 이전 날짜별 준비/실패·수치는 당시 기록이다. 이번 자동화는 공개 근거·CI만 대조했고 실제 원문/proof·쿠키·개인키·민감 로그 접근, 비공개 메일 조회/발송·새 로그인/유료 호출/서명/거래/배포를 하지 않았다. 기능 PR은 이 자동화의 병합 대상이 아니다.
+
+## 2026-10-30 자체 Attestor 전용 TEST 후속 (PR125 Draft)
+
+[전용 실행 인계](current/SELF_ATTESTOR_TEST.ko.md)와 [합성 검증](current/SELF_ATTESTOR_TEST_VERIFICATION.json)을 추가했다. 명시적인 새 self-test 호스트에만 실행별 공증자/인증키·신뢰 프로필을 만들고, 신청·요청·매핑·새 체인에 결합한다. 공식 endpoint/registry 경로와 거부 검사는 유지하며 자동 fallback·임의 signer 입력은 없다. v43은 정확한 소스 187개와 지갑 산출물을 인수하고 v1–v42를 보존한다.
+
+합성 HTTPS HackerRank pair를 실제 SDK로 수집/검증하고 같은 신청의 합성 Moodle·회고·AI와 연결해 새 Geth에서 V2 등록·양측 동의·정확 100000000 atoms 수령·canonical receipt·중복 거부를 확인했다. 실제 사용자 로그인·AI 호출·사용자 지갑 지급 성공이 아니며 자체 공증은 공식 hosted/독립 공증 보장이 아니다. 실제 로그인 공개 경로는 익명 GET 403으로 남아 있다. 최종 HEAD CI는 PR125 Checks를 기준으로 보고하며 자동 병합하지 않는다.
 
 ## 2026-10-30 미병합 지갑·공식 연결 차단 현황
 

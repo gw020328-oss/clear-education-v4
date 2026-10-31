@@ -100,11 +100,11 @@ export function createHackerRankCollector({trustConfig,commitmentKey,clock,diagn
       complete();
      }finally{cookieStr=undefined;result=undefined;}
      if(role==='account'){
-      stage('ACCOUNT_OFFICIAL_VERIFY');username=await accountUsername(proofPair.account,config,request,now());guard();
+      stage(config.selfAttestor?'ACCOUNT_SELF_VERIFY':'ACCOUNT_OFFICIAL_VERIFY');username=await accountUsername(proofPair.account,config,request,now());guard();
       if(usesWorkerSource(config.recipe))check(readWorkerSource(workerSources.account,{config,request,role,proof:proofPair.account}).username===username,'WORKER_SIGNED_FIELDS');complete();
      }
     }
-    stage('PAIR_OFFICIAL_VERIFY');
+    stage(config.selfAttestor?'PAIR_SELF_VERIFY':'PAIR_OFFICIAL_VERIFY');
     const candidate=await verifier.verify({envelope:snapshot,proofs:proofPair},expected,{workerSources});guard();
     if(candidate.status!=='VERIFIED_CANDIDATE')observeSource(diagnostics,diagnosticStage,'FAILED',{code:candidate.code});
     check(candidate.status==='VERIFIED_CANDIDATE','COLLECTOR_PAIR_REJECTED');complete();stage('CANDIDATE_LEASE');

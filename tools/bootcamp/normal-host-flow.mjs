@@ -1,3 +1,4 @@
+import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs';
 // Narrow owner composition. The production worker supplies concrete native ports; no HTTP supplies these functions.
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -49,14 +50,15 @@ export async function awaitExactReflectionApproval({directory,prepared,signal,on
 export async function composeNormalFlow({source,config,directory,signal,ports}){
  // Called only inside the managed source's after-ready useSource callback.
  fail(source?.pins?.()?.dataMode==='RECLAIM_SIGNED_RECORD','NORMAL_HOST_REAL_SOURCE_REQUIRED');
+ requireProfileMode(source.pins().selfAttestor,config.attestorMode??'OFFICIAL',config.attestorMode==='SELF_ATTESTOR_TEST'?source.pins().selfAttestor:null);
  let context,mounted;const stop=()=>context?.close();signal?.addEventListener('abort',stop,{once:true});
  try{
   fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
-  const preparation=await ports.prepare({hackerRankPins:source.pins(),uiIdentity:{participantWallet:config.participantWallet,operatorWallet:config.operatorWallet,origin:config.origin}});
+  const preparation=await ports.prepare({hackerRankPins:source.pins(),attestorMode:config.attestorMode??'OFFICIAL',uiIdentity:{participantWallet:config.participantWallet,operatorWallet:config.operatorWallet,origin:config.origin}});
   fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
-  context=await ports.open({preparationPath:join(preparation.directory,'preparation.json'),hackerRank:source});
+  context=await ports.open({preparationPath:join(preparation.directory,'preparation.json'),hackerRank:source,attestorMode:config.attestorMode??'OFFICIAL'});
   if(signal?.aborted){context.close();throw Error('NORMAL_HOST_CANCELLED');}
-  mounted=context.createFrontend({tls:ports.tls,webRoot:config.webRoot});await ports.listen(mounted.server,config.origin);
+  mounted=context.createFrontend({tls:ports.tls,webRoot:config.webRoot});await mounted.ready;await ports.listen(mounted.server,config.origin);
   ports.notify({event:'NORMAL_HOST_ACTIVE',origin:config.origin,chainId:mounted.config.chainId,network:mounted.config.network,applicationId:null,sourceVerified:false});
   await waitUntil(()=>!!context.report().applicationId,{signal,timeoutMs:Math.max(1,(context.report().startedAt+1800)*1000-Date.now())});
   ports.notify({event:'APPLICATION_BOUND',applicationId:context.report().applicationId});

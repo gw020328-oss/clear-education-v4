@@ -1,3 +1,4 @@
+import type {SelfAttestorRuntime} from '../../tools/local-attestor-review/host.mjs';
 import type {SourceDiagnostics} from './diagnostics.mjs';
 import type {Buffer} from 'node:buffer';
 import type {PreparedHackerRankSource} from './prepared-source.mjs';
@@ -5,6 +6,7 @@ import type {PreparedHackerRankSource} from './prepared-source.mjs';
  * returning; closing this scope invalidates the source and every retained lease.
  * The enclosing storage worker remains responsible for profile deletion. */
 export declare function withManagedHackerRankSource<T>(session:{path:string;expiresAt:number}|null,options?:{
+ selfAttestor?:SelfAttestorRuntime|null;
  trustConfig?:Readonly<Record<string,unknown>>;
  commitmentKey?:Buffer;
  diagnostics?:SourceDiagnostics;

@@ -1,10 +1,22 @@
 # 서준형 Claude Code 복사 지침
 
-2026-10-28 정리. 아래 복사 블록 전체가 현재 지침이다. 이전 PR별 구현/실패 이력은 각 PR과 검증 문서에 보존하며 현재 실행 지시와 섞지 않는다.
+2026-10-30 자체 공증 후속: [전용 TEST 실행·프론트 표시·실제 실행 인계](SELF_ATTESTOR_TEST.ko.md)를 따른다. 공식 경로는 기본값이며 자체 시험으로 자동 전환하지 않는다. `selfAttestor`가 있는 서버 세션·영수증에는 자체 공증/공식 hosted 성공 아님/독립 공증 아님을 표시한다. 기존 web/PR60 소유·운영자 입력별 AI 승인·양측 지급 동의는 유지한다. 합성 HTTPS→격리 V2 지급 리허설과 실제 사용자 완주를 구분한다.
+
+## 2026-10-30 SDK 수정 인수 추가
+
+기존 web/PR60을 보존하고 PR125의 최신 코드/최종 CI를 인수한다. SDK 설치는 `./tools/npm --prefix src/embedded-wallet ci --strict-peer-deps --ignore-scripts --no-audit --no-fund` 다음 **`./tools/node tools/embedded-wallet/reviewed-dependencies.mjs --apply`**를 명시적으로 실행한다. `build.mjs`와 `build-product.mjs`는 패치 지문/모든 Zod 복사본이 맞지 않으면 중단한다. lifecycle script나 임의 postinstall로 바꾸지 않는다. v42 source pin과 [후속 검토](SDK_DEPENDENCY_REVIEW_20261030.ko.md)를 함께 인수한다.
+
+운영자 MetaMask가 AI 승인 지갑이다. 현재 입력·모델·전송/비용을 확인한 1회 직접 승인과, 참가자 원천 승인·수령 등록·양측 지급 동의를 구분한다. 원문과 입력 지문이 바뀌면 이전 확인/승인을 재사용하지 않는다. SDK 관련 회귀296개는 통과했지만 공식 Attestor403이 남아 실제 완료로 표시할 수 없다. 공개 예제용 self Attestor는 제품 UI 선택지나 자동 fallback으로 연결하지 않는다.
+
+2026-10-30 우선순위: [현행 계획의 조건 초안 시연·코드 공백·D0–D2](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)를 우선한다. **Privy 참가자·MetaMask 운영자의 새 정상100 TEST 완주가 먼저**다. 이후 한 가상 Python 반의 개설 전 초안 변경/도구 계획과 기존 판정 근거 표시를 작게 연결한다. 이번은 문서 인계이며 후속 구현·유료 호출을 지금 시작하는 지시가 아니다. SDK 검토 결과는 [별도 기록](SDK_DEPENDENCY_REVIEW_20261030.ko.md)을 따른다. 기존 `web/`/PR60과 로컬 자산을 보존한다.
+
+2026-10-29 현행 인계: 참가자 Privy 내장 EOA·운영자 MetaMask의 정상100 TEST 완주가 우선이다. PR125 독립 제품 패널은 구현됐지만 미병합이며 팀원 최신 web/ 인수와 실제 새 증빙/V2/지급은 미완료다. 인증 전용 SIWE만 운영자 스크린샷/참가자 완료 보고로 확인했다. 공식 Attestor403의 서비스 측 정책 사유는 미확정이고 Zod3/viem peer 잔여 위험이 있다. 현재는 재로그인하지 않는다. [현행 계획](BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md)과 [실행 인계](PRODUCT_WALLET_RUN.ko.md)를 먼저 따른다.
+
+PR125의 `src/embedded-wallet/product-panel.jsx`와 `product-session.mjs`는 기존 normal-client/검토시간 driver를 재사용한다. 두 역할의 제품 SIWE 뒤에만 마운트하고, HR collector owner와 V2 runtime은 인증된 session의 `signingContext`에서 받아 서명 packet과 독립 대조한다. `clear-wallet-app.html` marker가 있는 공개 bundle과 product mount 인수가 필요하며 운영자에게 참가자 서명 문맥을 제공하지 않는다.
 
 ## 현재 기준과 세 가지 상태
 
-확인된 develop: `a395c6daac5220c38f6cadbbc8a4affa892e0a6a` (PR120 병합). [Issue106](https://github.com/gw020328-oss/clear-education-v4/issues/106)의 최신 확인된 병합 기준을 함께 사용한다.
+확인된 develop: `d44b01216241d120064145016a99d73b1b361e34` (PR120/123 병합). PR125 코드 검토 기준은 `d8dd973dad8e9f56e9eb5a8045eb16e1f4271a56`, CI9/9 성공이며 문서 후속 HEAD와 CI는 PR에서 별도로 확인한다. [Issue106](https://github.com/gw020328-oss/clear-education-v4/issues/106)의 최신 확인된 병합 기준을 함께 사용한다.
 
 | 기능 | 내부 구현 | 제품 HTTPS 호스트 | 새 실제 제품 시험 |
 | --- | --- | --- | --- |
@@ -20,7 +32,15 @@ PR120 검증 HEAD `cd659370a6264b1fa8592c85f7585ae125ee9275`의 CI 8/8 성공 �
 ## Claude Code에 복사할 본문
 
 ```text
-CLEAR 기존 프론트에 한 신청의 원천 확인·운영자의 이번 입력 AI 승인·네 조건 → 별도 V2 수령인 등록 서명 → 참가자/운영자의 같은 판정 명시 동의 → 100 TEST 수령 확인을 연결해줘. 현재 병합 기준은 develop a395c6daac5220c38f6cadbbc8a4affa892e0a6a야. PR115 V2 등록·PR116 S3 내부 체인 연결/조회·PR117 S4 판정 근거 조회가 포함돼. 내부 구현, 제품 HTTPS 호스트의 경로 노출, 새 실제 사용자 시험 완료를 구분해. PR120의 제품 호스트 V2 등록 GET/POST·S3 조회 GET도 병합됐어. 정확한 검증 HEAD는 cd659370a6264b1fa8592c85f7585ae125ee9275, 최종 CI는 8/8 성공(E5 B 74/74·API 774/774, E5 46/46·E4 164/164)이야. 제품 화면과 새 실제 사용자 완주는 아직 미완료야. Issue106의 최신 병합 기준과 docs/current/BOOTCAMP_S5_HOST_MOUNT.ko.md의 경로·검증 이력을 함께 확인해. 그 인수 문서의 Draft/병합 대기는 당시 기록이야. 해당 코드의 docs/current/BOOTCAMP_NORMAL_HOST.ko.md, BOOTCAMP_S3_CHAIN_REVIEW.ko.md, BOOTCAMP_S4_DECISION_EVIDENCE.ko.md, BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md와 src/bootcamp/normal-client.mjs, tools/bootcamp/frontend-server.mjs, tools/bootcamp/test-client/driver.js를 대조해. 과거 PR102/V1 설명은 역사 참고이며 새 연결의 고정 기준이 아니야.
+2026-10-30 추가 인계: 정상 내장지갑100 TEST 완주를 먼저 끝내고, 다음 작은 작업에서 한 가상 Python 반의 개설 전 운영자 초안→AI 구조화→필요 증거/도구 계획→지원 여부 검사→운영자 확인→버전 고정을 연결해. 기존 참여/서명/배정된 반의 정책·해시·권리·실지급 기록을 수정하지 마. 새 사이트 자동 연동/코드 생성·CP-SAT은 정상 완주의 선행 조건이 아니야. 준비된 Moodle/HackerRank 도구와 회고 텍스트 검토가 범위야.
+
+후속 화면은 원문, 구조화 조건, 도구와 선택 이유, 실제 읽기 호출 근거, 모호·미지원 차단 사유를 구분해. 필수 강의 완료→활동 조회, 과제 제출 추가→과제 조회, 수행/해결/배운 점 회고→회고 조회+텍스트 AI로 계획과 호출이 달라져야 해. 성실 참여는 구체화 질문 후 확정 차단, 미지원 점수·출석은 미지원으로 표시해. 강좌 설정의 도구 매핑을 저장하고 학생별로 불필요하게 다시 생성하지 마. 예문 외 표현·부정·모순·미지원 입력으로 하드코딩 여부를 검증해.
+
+현재 compileBootcampPolicy는 P0와 정확히 같아야 하고 normal-source-sequence는 네 조건 고정 순서야. 변형 초안은 우선 별도 읽기 전용 검증 시연이고 실제 지급은 검증된 고정 네 조건 정책이라고 분명히 표시해. JSON만 바뀌는 화면이나 가짜 호출 근거로 완료하지 마. 기존 producer도 P0 hash/고정 target을 요구하므로 임의 endpoint를 만들거나 검증을 제거하지 말고 D0 계약과 기존 담당의 읽기 연결을 인수해. 수치·기한·제출·증명 유효성은 결정론 규칙, AI는 의미·모순·회고 근거·안내를 담당해. AI에 승인키/송금 권한을 주거나 사용자 로그인·서명·이번 입력 비용 승인·동의를 대신하게 하지 마. 회고 사람 검토는 아직 미확정이야.
+
+정상 완주 후 조건 초안/도구 계획과 기존 decision-evidence 표시를 우선하고, Moodle 제한 재조회·회고 보완, 중단 독립청구/자산 이동, 운영자 충전은 각각 후속으로 구분해. 전부 정상 완주 전에 만들지 마. 8분 발표는 초안 변경40~60초→검증된 정책 실제 환급→회고 부족/보완 중심을 권장하되 리허설로 조정해. 아직 구현되지 않은 보완 경로는 설명/합성 표시를 명확히 해. 교수님 피드백의 자동 사이트 연동은 향후 개발도구 연구이며 다른 실험 세션 중단 메시지는 필요 없어.
+
+CLEAR 기존 프론트에 한 신청의 원천 확인·운영자의 이번 입력 AI 승인·네 조건 → 별도 V2 수령인 등록 서명 → 참가자/운영자의 같은 판정 명시 동의 → 100 TEST 수령 확인을 연결해줘. 현재 확인한 병합 기준은 develop d44b01216241d120064145016a99d73b1b361e34이며 PR120/123은 병합됐어. PR125는 미병합 Draft이므로 연결 코드 인수와 배포 완료를 구분해. PR115 V2 등록·PR116 S3 내부 체인 연결/조회·PR117 S4 판정 근거 조회가 포함돼. 내부 구현, 제품 HTTPS 호스트의 경로 노출, 새 실제 사용자 시험 완료를 구분해. PR120의 제품 호스트 V2 등록 GET/POST·S3 조회 GET도 병합됐어. 정확한 검증 HEAD는 cd659370a6264b1fa8592c85f7585ae125ee9275, 최종 CI는 8/8 성공(E5 B 74/74·API 774/774, E5 46/46·E4 164/164)이야. PR125 독립 제품 패널은 구현됐고 팀원 최신 web/ 인수와 새 실제 사용자 완주는 미완료야. Issue106의 최신 병합 기준과 docs/current/BOOTCAMP_S5_HOST_MOUNT.ko.md의 경로·검증 이력을 함께 확인해. 그 인수 문서의 Draft/병합 대기는 당시 기록이야. 해당 코드의 docs/current/BOOTCAMP_NORMAL_HOST.ko.md, BOOTCAMP_S3_CHAIN_REVIEW.ko.md, BOOTCAMP_S4_DECISION_EVIDENCE.ko.md, BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md와 src/bootcamp/normal-client.mjs, tools/bootcamp/frontend-server.mjs, tools/bootcamp/test-client/driver.js를 대조해. 과거 PR102/V1 설명은 역사 참고이며 새 연결의 고정 기준이 아니야.
 
 기존 프론트 PR #60(codex/frontend-shell)과 최신 로컬 변경·미추적 파일을 먼저 확인하고 안전하게 보존해. 기존 작업 브랜치에 최신 origin/develop을 병합하며 충돌은 양쪽 의도를 확인해 해결해. reset·덮어쓰기·강제 푸시로 정리하거나 이미 통합된 backend PR을 개별 cherry-pick하지 마. 현재 라우팅·디자인·지갑 adapter·빌드 방식을 재사용해. adapter가 없다면 아래 공개 계약에 필요한 최소 browser adapter를 구현해. web/와 관련 프론트 검사를 소유 범위로 삼고 backend/컨트랙트/수집기 변경이 필요하면 통합 담당과 조율해.
 
@@ -30,7 +50,11 @@ PR60 a0620cd39fe5cd44b62a1deb5806883503242227 기준은 npm/package/bundler/buil
 
 모듈은 같은 출처 /bootcamp-normal-client.mjs에서 import {createNormalBootcampClient} 해. request 포트에는 walletClient.request 형태의 인증 adapter를 연결해. 서버가 직접 제공하는 browser module은 normal-client 하나이고 src/application/wallet-client.mjs를 그 경로에서 자동 제공하지는 않아. 그 파일과 api-client.mjs는 지갑/세션 동작의 읽기 전용 구현 참고 자료야. wallet-client의 bare ethers import를 bundler 없는 정적 페이지에서 그대로 import하지 마. 최신 frontend에 이미 제공된 adapter가 있으면 재사용하고, 없으면 기존 정적 방식 안에서 필요한 EIP1193 connect/login/request/logout·세션 메모리 관리만 구현해. 기존 SIWE nonce→사용자 서명→verify→session, Secure HttpOnly cookie, credentials same-origin, wallet/chain 헤더, 쓰기 CSRF를 재사용해. 읽기 Origin은 브라우저가 관리하고 GET은 Sec-Fetch-Site same-origin 규칙을 따라. 두 역할은 서로 다른 주소/브라우저 쿠키 저장소를 써. accountsChanged/chainChanged/disconnect에서는 보존한 이전 세션의 헤더로 서버 logout을 시도하고 진행 요청·메모리 인증 상태를 정리해. 기존 참고 walletClient의 이벤트 invalidate는 메모리 정리만 하므로 그것만으로 서버 revoke가 됐다고 주장하지 마. 키/서명/토큰을 저장소나 로그에 남기지 마.
 
-제품 목표는 일반 로그인 → 내장 지갑 생성·복구 → 명시적 수령인 확인 → 서비스 거래 제출·가스비 부담이야. 일반 로그인/내장 지갑 연결·공급자·계약 호환성은 아직 검증 전이고 현재 EIP1193/SIWE 외부 지갑은 시험 수단이야. 전체 ERC4337/Paymaster 보류를 내장 지갑 목표 폐기로 해석하지 마. 기존 지갑 adapter는 유지하되 이번 연결 중 새 공급자/주소·서명 모델을 임의 확정하지 마. 현재 시험의 두 역할은 서로 다른 주소와 분리된 브라우저 프로필을 사용해. 우리 노트북 시연은 추천안이며 대회 장비 규정 확정이 아니야.
+사용자가 참가자는 Privy Google 로그인/내장 EOA, 운영자는 당분간 MetaMask로 확정했어. 참가자 기존 내장 주소 복원·명시 수령인 확인 → 운영자 MetaMask와 같은 판정 직접 확인 → 기존 서비스 거래 제출/가스 부담 → 정확100 TEST를 연결해. 두 역할은 서로 다른 주소와 분리된 Chrome 프로필을 써. 과거 운영자 내장 주소나 옛 MetaMask 주소를 자동 등록/치환하지 말고 이번 사용자가 지정한 주소를 서버 allowlist에 등록한 새 세션을 사용해. PR125 adapter/실제 검증 상태와 최신 팀원 자산 인수를 대조하고 기존 nonce/chain/domain/만료/판정 버전/수령인 검증은 유지해. 인증 전용 SIWE는 양측 완료 보고가 있으나 제품 HR/V2 서명·새 지급은 미검증이야. AA/Paymaster 확장은 이번 범위가 아니야. 우리 노트북 시연은 추천안이며 대회 장비 규정 확정이 아니야.
+
+개발용 외부 지갑은 사용자가 명시 선택할 때만 연결하고 Privy 오류 시 자동 fallback하지 마. “이 주소는 쓰이지 않습니다” 대신 “시험용 브라우저 지갑으로 연결했습니다. 이번 시험의 신청과 TEST 수령에는 이 주소가 사용됩니다. 실제 서비스의 내장 지갑 계정과는 별개입니다”라고 안내해. 지갑 전환으로 기존 신청/수령인/서명을 자동 치환하지 마.
+
+participantWallet, expectedClaimOwner, 수령인은 서로 다른 의미야. 현재 claim owner는 수집기가 이번 증명에 만든 임시 EOA이고 참가자는 그 owner와 신청·정책·nonce·만료에 결합한 관측 요청에 서명해. 두 proof owner와 signed request context, 동일 HackerRank username 검증은 기존 수집기/검증기를 유지해. 학생 주소를 claim owner로 치환하거나 학생 개인키를 서버로 보내지 마. PRODUCT_STORE.ko.md의 “합성만 허용”은 PR80 초기 이력이며 현재 pair proof 수집/검증/제품 소비 코드가 없다는 뜻이 아니야. r20의 이전 V1 실제 성공은 이번 Privy 완주를 대신하지 않아.
 
 합성 web/src/demo는 명시적으로 선택하는 별도 화면 검증 모드로 유지할 수 있어. 실제 서버 장애·미활성화·API 누락 때 자동 합성 전환하지 마. 합성 상태/세션은 실제 저장·서명·지급과 격리하고 합성 표시와 검사 성과를 구분해. 기존 디자인과 팀원 변경은 보존하되 이번 지침이 디자인/코드 리뷰 완료를 뜻하지는 않아. 추가 합성 기능 확장보다 정상 신청 한 건 연결을 우선해.
 
@@ -63,6 +87,16 @@ api.paymentReceipt(app)로 약정100 TEST, 배정, 제출, 수령 확인을 구�
 자동 GET 조회 중 명시 클릭이 조용히 유실되지 않게 하고 역할별 다음 행동·처리 중·비활성·실패 이유를 보여줘. 조회와 쓰기 요청의 충돌을 오프라인으로 재현·검사하고 쓰기 자동 재시도로 해결하지 마. 남은 시간은 서버 기준과 조회 경과 시간을 반영하며 브라우저 타이머로 원천·검토 기한을 연장하지 마. 현재 240초는 시험용 원천 유효기간이고 제품 지급기한이 아니야. 계정/체인 변경·원래 세션 폐기·만료 뒤 돌아온 원천 서명을 제출하지 마.
 
 교수 피드백 중 승인된 핵심 보완은 이번 정상 흐름에 포함해. docs/current/BOOTCAMP_SECURITY_COMPLETION_PLAN.ko.md의 담당·완료 기준을 따라 위에서 구현한 별도 수령인 등록 서명과 체인 등록 순서를 연결해. S3는 api.reviewChain(app)의 접수/체인 반영 상태를 병합된 GET에 연결하고, S4는 api.decisionEvidence(app,{decisionId:view.target.targetDecisionId})의 manifest.decision ID/revision/hash를 화면 판정과 대조해 표시해. 내부 POST review-objections/objection-assessments/review-revalidations는 제품 호스트에 노출되지 않았고 normal-client 사용자 요청 메서드도 없어. review-revalidations는 assessmentId에 결합된 검증 결과 기록이며 AI 재실행 버튼 API가 아니야. 학생 화면에서 관리/평가 API를 직접 호출하지 마. 이의 화면 준비는 가능하나 서버 접수가 없으면 접수 완료로 표시하지 말고, 정상 지급 제품 완주 후 별도 요청 계약·평가 공급 경로 연결로 진행해. 원천 서명을 수령인 등록에 재사용하지 말고 아직 없는 endpoint를 가정하지 마. 양측 직접 동의 뒤 서버의 자동 ACCEPT/CLAIM과 정확한 영수증까지 연결하되 브라우저 자동 POST 재시도로 구현하지 마. 그 외 새 기능은 이번 정상 흐름 연결 뒤로 미뤄. 예치·배정 정책 변경, 새 반/LMS/Windows 확장, 독립 청구, 새 AI 조건 연결, C4~C6·복구 프레임워크·대시보드 확장과 디자인 전면 개편은 제외해. 실제 로그인·원천 증명·유료 AI·사용자 서명·새 체인/호스트 실행은 오프라인 연결과 자산 확인 후 본부가 사용자와 준비해. 지금 재로그인이나 비밀번호 설정을 요구하지 마. 기존 r20 실행·AI 승인·DB·원천 lease를 재사용하지 마. 실제 AI 승인 파일/서버키는 통합 담당 영역이야.
+
+기존 decision-evidence GET으로 계정 증명/인증서 증명/연결 검증을 구분해 보여줘. HackerRank checks의 certificateName/issuerStatus/accountProofHash/certificateProofHash/accountProofIssuedAt/certificateProofIssuedAt/achievementAt을 사용하고 현재 achievementAt=null을 합격일로 만들어 표시하지 마. verification의 sourceStatus/participantBinding/requestBinding/integrity/freshness, reference의 RECORDED/UNAVAILABLE, availability를 함께 대조해. 두 해시가 있다는 이유만으로 연결 검증 성공을 표시하지 마. 조회는 저장된 당시 결과이고 실시간 원천 확인/독립 재검증이 아니야. 표현 근거가 부족하면 확인 필요로 남기고 별도 서버 요약 계약을 요청해. 원문/쿠키/계정 식별자를 임의 DTO로 추가하지 마.
+
+금고로 ERC20 transfer만 하라는 충전 안내를 제거해. 현재 V2의 지정 depositor는 approve 후 fund(operationId, amount)를 실행해야 내부 balance가 늘고 단순 송금은 surplus야. 운영자 SIWE와 depositor는 별개이며 운영자 MetaMask에 그 계약 권한이 있다고 가정하지 마. 정상 완주는 기존 시험 재원으로 먼저 진행하고 현재 문구는 “현재 화면에서는 재원 충전을 지원하지 않습니다”로 해. 충전 UI/권한/chain·instance·vault·token·decimals DTO/operationId/영수증·회계 확인은 후속 계약이야.
+
+기존 지급 relayer 대납은 금고→학생의 제한된 경로야. 학생 외부 송금과 중단 후 직접 청구의 네이티브 가스/독립 제출자 및 SDK·인증·RPC·호스팅 의존성은 후속 검증으로 남겨. 정상 완주 후 별도 수락·전액 배정·미청구 신청으로 새 브라우저 복구/직접 청구/자산 이동을 검사하고 이미 지급한 신청을 다시 청구하지 마. 키/복구문구는 사용자 비공개 UI에서만 취급해. 모든 송금 무료, 자동 AA/paymaster 채택, 한국 원화 현금화 지원을 약속하지 마. 현금화는 상용 미구현·미검증이야.
+
+normal-source-sequence의 단회 수집과 화면 GET polling을 구분해. polling을 Moodle 재수집으로 표시하거나 “곧 다시 확인합니다”를 약속하지 마. 후속에는 해당 조건만 제한 재조회하고 회고 원천 수정 후 새 증거/판정까지 연결해. 주기·최대 횟수·운영창·다음 확인 시각은 backend 계약 전 고정하지 마. Reclaim이나 유료 AI를 모든 재조회에서 자동 실행하지 않고 원래 만료·동의·재검증 정책을 유지해. 이의 쓰기 제품 노출은 위 허용 경로대로 미완료이며 review-revalidations는 신뢰 평가 결과 기록이지 학생 재실행 요청 API가 아니야.
+
+미해결 뒤 재개/구제는 정책 공백이야. 기존 신청·예약·수락권리·중복 방지를 확인하는 제안부터 하고 사람 검토/수동 지급/무조건 재신청/종료만으로 예약 해제를 확정 정책으로 표시하지 마. 후속 순서는 정상 완주 → 판단 근거 표시(기존 GET 인계는 병행 가능) → Moodle/회고 보완 재검증 → 중단 직접 청구/복구/자산 이동 → 운영자 충전이야. 어느 후속도 현재403 해결·정상 완주의 새 선행 기능으로 끼워 넣지 마.
 
 변경에 필요한 검사만 실행해. 기준 정적 트리 검사 명령은 ./tools/node --test web/tests/*.test.mjs이고 별도 build 명령은 없어. 현재 작업본에 이미 검사/빌드가 추가됐다면 그 명시된 절차를 확인해. fixture는 합성이라고 구분하고 실제 API 확인 항목과 분리해. 준비 상태·인증 취소/만료·조회와 클릭 충돌·AI 승인·오래된 동의 대상·영수증 null/성공을 검사해. 완료 시 프론트 커밋/변경 파일/검사 명령과 결과/실제 API 확인 범위/fixture 확인 범위/절대 web 경로/자산 변경/남은 차단 사유를 보고하고 Issue #106을 기존 프론트 PR에 연결해. 제품 프론트로 실제 정상 흐름을 검증하기 전에는 Issue #106을 완료 처리하지 마. 자동 merge/배포하지 마.
 ```

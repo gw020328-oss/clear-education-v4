@@ -1,7 +1,9 @@
+import type {SelfAttestorProfile} from './self-profile.mjs';
 import type {SourceDiagnostics} from './diagnostics.mjs';
 import type {Buffer} from 'node:buffer';
 import type {HackerRankRequest,CandidateLease,CollectionInput,CollectionClient} from './collector.mjs';
 export interface HackerRankSourcePins {
+ readonly selfAttestor?:SelfAttestorProfile;
  readonly audience:string;
  readonly trustConfigHash:string;
  readonly recipeHash:string;
