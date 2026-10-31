@@ -12,6 +12,7 @@ export function createNormalSourceSequence({store,getContext,applicationId,sourc
   const requireHr=()=>{const v=readNormalView(()=>store.getApplication(getContext(),applicationId));
     check(v.evidence.some(e=>e.current&&e.record.criterionId==='python-basic-certificate'&&e.record.condition==='MET'),'BC_NORMAL_NOT_MET');};
   return Object.freeze({
+    dispose(){pending?.preparation?.dispose();pending=null;state='FAILED';},
     get preparation(){return state==='WAITING'?pending?.preparation??null:null;},
     async collect({prepareReflection=false}={}){
       check(!signal?.aborted&&(state==='NEW'||state==='WAITING'&&!prepareReflection),'BC_LIVE_SINGLE_COLLECTION');

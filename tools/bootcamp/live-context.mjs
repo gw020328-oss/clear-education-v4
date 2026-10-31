@@ -1,3 +1,4 @@
+import {normalFailureState} from './normal-failure-wait.mjs';
 import {productSigningContext} from '../embedded-wallet/product-mount.mjs';
 // Constructor-only owner context. Opening is deferred until all source ports are ready.
 import {observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
@@ -56,7 +57,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
  const m=loadRuntime(prepared.environmentId);ensure(sha(m)===prepared.runtimeHash&&m.version===(prepared.runtimeVersion??'clear-e5-test-runtime.1')&&m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
- let auth,store,connection,provider,ui,mounted,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
+ let auth,store,connection,provider,ui,mounted,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
@@ -74,9 +75,9 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    return {environmentRef:mapping.environmentRef,runRef:mapping.runRef,sourceVersion:mapping.sourceVersion,apiVersion:mapping.apiVersion,fixtureReportHash:mapping.fixtureReportHash,courseId:mapping.courseId,participantMapping:{participantId,applicationId:app,moodleUserId:mapping.moodleUserId,accountBindingRef:mapping.accountBindingRef,revision:mapping.revision},target:{targetLogicalId:c==='activity-complete'?'python-intro-activity':c==='assignment-submitted'?'python-practice-task':'python-reflection',...t},completionSetupReceiptHash:c==='activity-complete'?mapping.completionSetupReceiptHash:null};};
   const producers=Object.fromEntries(['activity-complete','assignment-submitted','reflection-topics'].map(criterionId=>[criterionId,createLiveMoodleConsumer({criterionId,withReader,resolvePin,resolveLease,reviewReflection,modelVersion:'gemini-3.5-flash-lite',reflectionHost,sourceValiditySeconds:900,now})]));
   producers['python-basic-certificate']=createLiveReclaimConsumer({selfAttestor:mapping.selfAttestor??null,pins:hackerRank.pins,collectLease:(request,options)=>hackerRank.collectLease(request,{...options,signRequest:message=>ui.requestSignature(request,message,{signal:options.signal})}),resolveLease,now});
-  const services={version:'clear-bootcamp-test-execution-port.1',runtimeId:m.environmentId,runtimePinHash:prepared.runtimeHash,authorizeService(c){ensure(c===serviceContext&&!closed&&now()<startedAt+1800,'BC_LIVE_SERVICE');return {serviceId:'normal-worker',runtimeId:m.environmentId,expiresAt:startedAt+1800};},reader:{async snapshot(){throw Error('BC_NORMAL_LEGACY_READER_DISABLED');}},envelope:{async lookup(){throw Error('BC_NORMAL_LEGACY_ENVELOPE_DISABLED');}}};
+  const services={version:'clear-bootcamp-test-execution-port.1',runtimeId:m.environmentId,runtimePinHash:prepared.runtimeHash,authorizeService(c){ensure(c===serviceContext&&!closed&&!failureState&&now()<startedAt+1800,'BC_LIVE_SERVICE');return {serviceId:'normal-worker',runtimeId:m.environmentId,expiresAt:startedAt+1800};},reader:{async snapshot(){throw Error('BC_NORMAL_LEGACY_READER_DISABLED');}},envelope:{async lookup(){throw Error('BC_NORMAL_LEGACY_ENVELOPE_DISABLED');}}};
   connection=openDevelopmentConnection({environmentId:m.environmentId,sourceMode:'REGISTERED_TEST_SOURCE'});
-  store=createBootcampStore({directory:join(directory,'store'),authentication:auth,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
+  store=createBootcampStore({directory:join(directory,'store'),authentication:auth,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,onCollectionFailure:failure=>{report.collectionFailure=failure;write();},resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
   ui=createNormalUiSession({authentication:auth,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,getApplication:(c,a)=>store.getApplication(c,a),now,diagnostics});
   const bindParticipant=(context,applicationId)=>{
    ensure(!closed&&!app,'BC_LIVE_SINGLE_APPLICATION');ui.bindParticipant(context,applicationId,pins);user=ui.participant();app=applicationId;participantId=store.getApplication(user,app).participantId;
@@ -87,7 +88,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   const paymentReceipt=createNormalReceiptReader({selfAttestor:mapping.selfAttestor??null,authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,
    readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash,policyHash:m.policyHash,recipient:prepared.participantWallet,token:m.tokenAddress});
   const refreshProcedure=async(c,a)=>{
-   store.getOperationsProjection(c,a);requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
+   store.getOperationsProjection(c,a);if(failureState)return;requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
    await connection.refresh(a);store.getOperationsProjection(c,a);
   };
   const readers=createNormalReviewReaders({now});
@@ -96,15 +97,15 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   const reflectionApproval=reflectionHost?.createApprovalControl?.({
    authorize:(c,w)=>ui.authorize(c,w),getPreparation:()=>sourceSequence?.preparation,getApplicationId:()=>app,
    requireReaders:()=>readers.require(),nowMs:()=>Date.now()})??null;
-  const getSession=context=>{const actor=ui.authorize(context,false);if(app)readNormalView(()=>store.getOperationsProjection(context,app));
+  const getSession=context=>{const actor=ui.authorize(context,false);if(app&&!failureState)readNormalView(()=>store.getOperationsProjection(context,app));
    readers.observe(actor.role.toUpperCase());return Object.freeze({
-   version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,
+   version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,failure:failureState,
    signingContext:actor.role==='participant'?productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}):null,
    recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),receiptRequired:true,
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
-    amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:reflectionApproval?.brief(context)??null});};
+    amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:failureState?null:reflectionApproval?.brief(context)??null});};
   const recipientView=(c,a)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,authorize:(c,w)=>ui.authorize(c,w)});};
-  const normalUi=Object.freeze({walletRuntime:Object.freeze({instanceId:m.instanceId}),getRecipientRegistration:recipientView,
+  const normalUi=Object.freeze({walletRuntime:Object.freeze({instanceId:m.instanceId}),assertWritable(){requireUiRule(!failureState,'BC_NORMAL_FAILED_WAITING');},getRecipientRegistration:recipientView,
    beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
     requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},
@@ -114,7 +115,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   return Object.freeze({metadataPath:join(directory,'context.json'),
    createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
-    ui.participant();ensure(!closed,'BC_LIVE_CONTEXT');
+    ui.participant();ensure(!closed&&!failureState,'BC_LIVE_CONTEXT');
     sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,
      sourceWindows,startedAt,now,nowMs:()=>Date.now(),signal:controller.signal,key,stage,diagnostics,waitForReaders,requireReaders:()=>readers.require()});
     const result=await sourceSequence.collect({prepareReflection});if(prepareReflection)return result;
@@ -122,8 +123,13 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
      &&result.evidence.every(e=>e.current&&e.record.dataMode!=='SYNTHETIC_FIXTURE'),'BC_LIVE_ALL_CURRENT_MET');
     sourceTarget=normalSourceTarget(result);report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return result;
    },
-   async pay(){ui.participant();ensure(report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;try{return await executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),waitForRecipientRegistration:async()=>{await waitUntil(()=>{ui.participant();const r=readNormalView(()=>store.getRecipientRegistration(user,app));requireUiRule(!['STALE','EXPIRED'].includes(r.status),'BC_RECIPIENT_REGISTRATION_EXPIRED');return r.status==='SIGNED';},{signal:controller.signal,timeoutMs:Math.max(1,(Number(store.getRecipientRegistration(user,app).payload.message.deadline)-now())*1000)});},waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});}catch(error){try{report.executionDiagnostics=connection.diagnostics().slice(0,16);write();}catch{}throw error;}},
-   report:()=>structuredClone(report),close,
+   async pay(){ui.participant();ensure(!failureState&&report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;try{return await executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),waitForRecipientRegistration:async()=>{await waitUntil(()=>{ui.participant();const r=readNormalView(()=>store.getRecipientRegistration(user,app));requireUiRule(!['STALE','EXPIRED'].includes(r.status),'BC_RECIPIENT_REGISTRATION_EXPIRED');return r.status==='SIGNED';},{signal:controller.signal,timeoutMs:Math.max(1,(Number(store.getRecipientRegistration(user,app).payload.message.deadline)-now())*1000)});},waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});}catch(error){try{report.executionDiagnostics=connection.diagnostics().slice(0,16);write();}catch{}throw error;}},
+   enterFailureWait(error){
+    const state=normalFailureState(error,{phase:report.stage,collectionFailure:report.collectionFailure,paymentStarted});
+    if(!state||closed)return false;
+    failureState=state;controller.abort();sourceSequence?.dispose();sourceWindows.clear();for(const producer of Object.values(producers))producer.close?.();
+    report.failure=state;stage('FAILED_WAITING');return true;
+   },report:()=>structuredClone(report),close,
   });
  }catch(error){report.failureCode=/^(BC|E5|E5B)_[A-Z0-9_]+$/.test(error?.message)?error.message:'BC_LIVE_OPEN_FAILED';write();close();throw Error(report.failureCode);}
 }

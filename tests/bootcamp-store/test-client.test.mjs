@@ -12,9 +12,9 @@ const historicalAsset=p=>execFileSync('git',['show','1421c5ff2105694461f6d470d6b
 const historicalRuntime=p=>p.startsWith('tools/bootcamp/test-client/')||p==='src/bootcamp/normal-client.mjs';
 const root=new URL('../../tools/bootcamp/test-client/',import.meta.url);
 async function fixture(t){
- const f=await procedureFixture(t),H=x=>p0Hash('TEST-CLIENT-OFFLINE',x),pins={dataMode:'RECLAIM_SIGNED_RECORD',audience:'test-client',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:f.alice.address.toLowerCase(),selectedCertificateId:null};let bound=null;
+ const f=await procedureFixture(t),H=x=>p0Hash('TEST-CLIENT-OFFLINE',x),pins={dataMode:'RECLAIM_SIGNED_RECORD',audience:'test-client',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:f.alice.address.toLowerCase(),selectedCertificateId:null};let bound=null,failure=null;
  const ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time});
- const normalUi={getSession(c){const a=ui.authorize(c);if(bound)f.store.getOperationsProjection(c,bound);return {version:'clear-bootcamp-normal-session.1',role:a.role.toUpperCase(),applicationId:bound,phase:'AWAITING_AUTHENTICATED_APP_CONSENTS',
+ const normalUi={getSession(c){const a=ui.authorize(c);if(bound)f.store.getOperationsProjection(c,bound);return {version:'clear-bootcamp-normal-session.1',role:a.role.toUpperCase(),applicationId:bound,failure,phase:'AWAITING_AUTHENTICATED_APP_CONSENTS',
   policyHash:p0PolicyHash(P0_POLICY),runtimeMappingHash:H('unused'),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,
   expectedPayment:{recipient:f.alice.address.toLowerCase(),token:'0x'+'33'.repeat(20),amountAtoms:'100000000',symbol:'TEST',decimals:6}};},
   bindParticipant(c,a){ui.bindParticipant(c,a,pins);bound=a;return {applicationId:a,paymentAuthorization:false};},pendingSignature:c=>ui.pendingSignature(c),submitSignature:(c,a,b)=>ui.submitSignature(c,b)};
@@ -36,7 +36,7 @@ async function fixture(t){
   let ended=0;const session=createTestWalletSession({origin:f.config.origin,provider,fetchImpl,now:()=>f.time*1000,onEnd:()=>ended++}),driver=createTestDriver({session,createNormalClient:createNormalBootcampClient,now:()=>f.time*1000});
   t.after(()=>session.dispose());return {provider,session,driver,counts,cookies,get ended(){return ended;},setAccount:x=>{account=x;provider.emit('accountsChanged',[x]);},setHook:x=>{hook=x;},setWalletHook:x=>{walletHook=x;},loseNext:x=>{losePath=x;},fetchImpl};
  }
- return {f,browser,ui,pins,mounted,setReceipt:value=>{receiptOverride=value;}};
+ return {f,browser,ui,pins,mounted,setFailure:value=>{failure=value;},setReceipt:value=>{receiptOverride=value;}};
 }
 test('static test assets are same-origin and two real HTTPS login sessions create/bind/read one app',async t=>{
  const x=await fixture(t),a=x.browser(x.f.alice),o=x.browser(x.f.operator);
@@ -358,84 +358,84 @@ test('v14 pins six current browser assets and the reviewed v22 human review wind
 
 test('v15 pins the rebalanced budget and current action explanations',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show',(p==='src/bootcamp/normal-client.mjs'?'c4d61be65cd2e912006060a4eb62183efad9cadc':'893903aca197669a5063ceb8cdc5502c0746679d')+':'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V15.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V15.json'),'bd5ef7fbb97b7f7b18c415d400c30635452ec45751ee934d5e77459f3f6452d8');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.15');
  assert.equal(sha(m.previousRecord.path),'8b423a94d31c7482388835201d89e5af20a6fcbc1fde9ec271eb2e36448cdd40');assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','893903aca197669a5063ceb8cdc5502c0746679d:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),'a950980645917f3353759dd01065766e2859e29af928a434106b6566a524ca3c');assert.equal(m.existingCoreIntake.sources,170);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
 
 test('v16 preserves browser assets and consumes exact post-send recovery clock checks',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show',(p==='src/bootcamp/normal-client.mjs'?'c4d61be65cd2e912006060a4eb62183efad9cadc':'893903aca197669a5063ceb8cdc5502c0746679d')+':'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V16.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V16.json'),'c5132921fc82cb4879c05a19b6a2c0943de44b88c7258fac5a61cf4adbc3c103');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.16');
  assert.equal(sha(m.previousRecord.path),'bd5ef7fbb97b7f7b18c415d400c30635452ec45751ee934d5e77459f3f6452d8');assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','893903aca197669a5063ceb8cdc5502c0746679d:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),'8ec4832c29f6717b32d47d1266798600994bc17190027b19be604ee6591512fc');assert.equal(m.existingCoreIntake.sources,170);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
 
 test('v17 preserves browser assets and pins bounded normal-payment diagnostics',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show',(p==='src/bootcamp/normal-client.mjs'?'c4d61be65cd2e912006060a4eb62183efad9cadc':'893903aca197669a5063ceb8cdc5502c0746679d')+':'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V17.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V17.json'),'0d6dfc4e3aac5311e42428c11a7262f09026f6c4361bca427567ee8146b25e6d');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.17');
  assert.equal(sha(m.previousRecord.path),'c5132921fc82cb4879c05a19b6a2c0943de44b88c7258fac5a61cf4adbc3c103');assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','893903aca197669a5063ceb8cdc5502c0746679d:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),'8c4b1dcca74ca3a350a08268d705e0c8332e849bfbb014c997a926d192398a16');assert.equal(m.existingCoreIntake.sources,171);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
 
 test('v18 preserves browser assets and pins bounded clock-only plan reads',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show',(p==='src/bootcamp/normal-client.mjs'?'c4d61be65cd2e912006060a4eb62183efad9cadc':'893903aca197669a5063ceb8cdc5502c0746679d')+':'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V18.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V18.json'),'b809c8ff51cc22031e02cf6d6768e31053820cbc3faf01e4458e4de207baeb8e');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.18');
  assert.equal(sha(m.previousRecord.path),'0d6dfc4e3aac5311e42428c11a7262f09026f6c4361bca427567ee8146b25e6d');assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','893903aca197669a5063ceb8cdc5502c0746679d:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),'f6bcbc3700bd6b7d8172da5afeb3786e3343a465c810df11f59d9ce3b700deb8');assert.equal(m.existingCoreIntake.sources,171);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
 
 test('v19 preserves browser assets and pins bounded witness revalidation',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show',(p==='src/bootcamp/normal-client.mjs'?'c4d61be65cd2e912006060a4eb62183efad9cadc':'893903aca197669a5063ceb8cdc5502c0746679d')+':'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V19.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V19.json'),'79ae10d83f2752cdfda146a1a4c414c4fce40257ac0e69b8c3950d4258026a97');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.19');
  assert.equal(sha(m.previousRecord.path),'b809c8ff51cc22031e02cf6d6768e31053820cbc3faf01e4458e4de207baeb8e');assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','893903aca197669a5063ceb8cdc5502c0746679d:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),'309b79a1a8c1c490f602c9cc1e7daa4bf387efed942f87dc40271436506302f9');assert.equal(m.existingCoreIntake.sources,171);
  assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);assert.equal(m.existingApiContractsRetained,true);
 });
 
 test('v20 preserves browser assets and binds single-write consent and capability validation',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show',(p==='src/bootcamp/normal-client.mjs'?'c4d61be65cd2e912006060a4eb62183efad9cadc':'893903aca197669a5063ceb8cdc5502c0746679d')+':'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V20.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V20.json'),'c14eba63cf67ccf3e3173241883ec218930ceb09fe745d6992165e57bc9aad45');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.20');
  assert.equal(sha(m.previousRecord.path),m.previousRecord.sha256);assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','893903aca197669a5063ceb8cdc5502c0746679d:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),m.existingCoreIntake.sha256);assert.equal(m.existingCoreIntake.sources,171);
  assert.deepEqual(m.changedFromV19,[]);assert.equal(m.apiContractsChanged,false);assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);
 });
 
 test('v21 preserves browser assets and binds atomic metadata and canonical clock readiness',async()=>{
  const {createHash}=await import('node:crypto'),{assetSnapshot}=await import('../../tools/bootcamp/normal-host-config.mjs');
- const sha=p=>createHash('sha256').update(p==='src/bootcamp/normal-client.mjs'?execFileSync('git',['show','c4d61be65cd2e912006060a4eb62183efad9cadc:'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
+ const sha=p=>createHash('sha256').update(historicalRuntime(p)?execFileSync('git',['show',(p==='src/bootcamp/normal-client.mjs'?'c4d61be65cd2e912006060a4eb62183efad9cadc':'893903aca197669a5063ceb8cdc5502c0746679d')+':'+p]):readFileSync(new URL('../../'+p,import.meta.url))).digest('hex');
  const m=JSON.parse(readFileSync(new URL('../../docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V21.json',import.meta.url)));
  assert.equal(sha('docs/current/BOOTCAMP_TEST_CLIENT_ASSETS_V21.json'),'4f29daafc472b1f5706fb83de7903707e51ae64f9560c29e89a2e36732d82825');assert.equal(m.version,'clear-bootcamp-backend-test-client-assets.21');
  assert.equal(sha(m.previousRecord.path),m.previousRecord.sha256);assert.equal(Object.keys(m.sourceArtifacts).length,6);
  for(const [p,h]of Object.entries(m.sourceArtifacts))assert.equal(sha(p),h,p);
- assert.equal(assetSnapshot(fileURLToPath(root).replace(/\/$/,'')),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
+ const paths=['/',...Object.keys(m.sourceArtifacts).map(p=>'/'+p.split('/').at(-1))].sort((a,b)=>a.localeCompare(b));const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8'};const bytes=Buffer.concat(paths.flatMap(path=>{const p='tools/bootcamp/test-client/'+(path==='/'?'index.html':path.slice(1));return [Buffer.from(path+'\n'+types[p.split('.').at(-1)]+'\n'),execFileSync('git',['show','893903aca197669a5063ceb8cdc5502c0746679d:'+p])];}));assert.equal(createHash('sha256').update(bytes).digest('hex'),m.publicAssetSnapshotSha256);assert.equal(sha(m.normalClient.path),m.normalClient.sha256);
  assert.equal(sha(m.existingCoreIntake.path),m.existingCoreIntake.sha256);assert.equal(m.existingCoreIntake.sources,172);
  assert.deepEqual(m.changedFromV20,[]);assert.equal(m.apiContractsChanged,false);assert.equal(m.productFrontendAccepted,false);assert.equal(m.actualExecutionApprovedByThisRecord,false);
 });
@@ -446,4 +446,14 @@ test('V31–V33 browser clients are pinned independently of preserved V15–V21 
  const p='src/bootcamp/normal-client.mjs', {execFileSync}=await import('node:child_process');assert.equal(createHash('sha256').update(execFileSync('git',['show','dce9ab18c25f2eee288de9c7bde05209e24af430:'+p])).digest('hex'),intake.sourceArtifactSha256[p]);
  const prior=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-memory-source-intake-v32.json',import.meta.url)));assert.equal(createHash('sha256').update(execFileSync('git',['show','19e1c1473165cdea52a42040e740b79ba3e50c03:'+p])).digest('hex'),prior.sourceArtifactSha256[p]);
  const next=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-memory-source-intake-v33.json',import.meta.url)));assert.equal(createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex'),next.sourceArtifactSha256[p]);
+});
+
+test('failure wait keeps GETs available and stops cached wallet actions before signing or posting',async t=>{
+ const x=await fixture(t),a=x.browser(x.f.alice);await a.driver.config();await a.driver.login();await a.driver.create();await a.driver.bind();
+ x.setFailure({status:'FAILED_WAITING',retryAllowed:false,outcome:'UNKNOWN'});await a.driver.refresh();
+ const before={signs:a.counts.signs,posts:a.counts.posts};
+ for(const action of [()=>a.driver.create(),()=>a.driver.bind(),()=>a.driver.sign(),()=>a.driver.approveAi(),()=>a.driver.consent('AGREE'),()=>a.driver.replayConsent()])await assert.rejects(action(),/BC_NORMAL_FAILED_WAITING/);
+ assert.deepEqual({signs:a.counts.signs,posts:a.counts.posts},before);
+ await a.driver.refresh();await a.driver.receipt();assert.equal(a.driver.snapshot().bootstrap.failure.status,'FAILED_WAITING');
+ await a.driver.end();assert.equal(a.counts.logout.loggedOut,true);
 });

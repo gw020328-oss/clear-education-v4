@@ -92,3 +92,16 @@ test('approval template exposes and binds the managed run without authorizing a 
  assert.equal(template.runBindingHash,managedRun.bindingHash);assert.equal(template.authorization.kind,'PENDING_DIRECT_HUMAN_CONFIRMATION');assert.deepEqual(request.managedRun,managedRun);
  await assert.rejects(awaitExactReflectionApproval({directory,prepared:{...prepared,managedRun:null}}),/NORMAL_HOST_RUN_BINDING_REQUIRED/);
 });
+
+for(const failedAt of ['before-ai','after-ai','before-payment','after-payment'])test('failure wait retains HTTP ownership without replay: '+failedAt,async()=>{
+ const f=flowFixture();let retained,failed=false;
+ const open=f.ports.open;
+ f.ports.open=async()=>{const c=await open();return {...c,enterFailureWait(){failed=true;return true;},
+  async collectSources(options){if(failedAt==='before-ai'||failedAt==='after-ai'&&!options?.prepareReflection)throw Error('BC_PRODUCER_FAILED');return c.collectSources(options);},
+  async pay(){if(failedAt==='after-payment')await c.pay();throw Error('BC_NORMAL_RECEIPT_PENDING');}};};
+ f.ports.retainFailure=x=>{retained=x;};
+ const result=await composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports});
+ assert.equal(result.completed,false);assert.equal(result.failureWaiting,true);assert.equal(failed,true);assert.equal(f.closed,0);assert.ok(retained);
+ assert.equal(f.paid,failedAt==='after-payment'?1:0);
+ retained.context.close();await retained.mounted.drain();assert.equal(f.closed,1);
+});

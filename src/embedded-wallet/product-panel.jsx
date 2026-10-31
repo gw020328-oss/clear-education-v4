@@ -24,8 +24,9 @@ export function ProductPanel({session,wallet,config}) {
   const approvalKey=JSON.stringify(a?[a.applicationId,a.bodySha256,a.planHash,a.contextHash,a.runBindingHash,a.model]:null);
   const s=live.current?.driver.snapshot()??state;
   if(!s)return <section><p>신청 화면을 준비하고 있습니다.</p></section>;
-  const participant=s.bootstrap?.role==='PARTICIPANT',bound=!!s.bootstrap?.applicationId,busy=s.busy||regBusy||s.ended;
+  const participant=s.bootstrap?.role==='PARTICIPANT',bound=!!s.bootstrap?.applicationId,busy=s.busy||regBusy||s.ended||!!s.bootstrap?.failure;
   const availability=testActionAvailability(s,{ack:!!a&&ack===approvalKey,readerEnabled:auto,visible:document.visibilityState==='visible'});
+  const readAction=fn=>async()=>{if(s.busy||regBusy||s.ended)return;setError('');try{await fn();}catch{}live.current?.reader.sync();};
   const action=fn=>async()=>{if(busy)return;setError('');setPacket(null);try{await fn();}catch{}live.current?.reader.sync();};
   const register=submit=>async()=>{
     if(busy)return;setRegBusy(true);setError('');live.current.reader.setEnabled(false);
@@ -38,8 +39,9 @@ export function ProductPanel({session,wallet,config}) {
   return <section>{s.bootstrap?.selfAttestor&&<aside role="note"><strong>자체 공증 TEST 시험</strong><p>공식 hosted 검증 성공이나 독립 공증을 의미하지 않습니다. BGP 검사는 꺼져 있습니다. {s.bootstrap.selfAttestor.sourceEnvironment==='SYNTHETIC_HTTPS'?'합성 HTTPS 원천을 사용한 리허설입니다.':'HackerRank 본인 계정 원천을 이 실행의 자체 공증자로 확인합니다.'}</p></aside>}<h2>{participant?'참가자 신청':'운영자 검토'} · 로컬 TEST</h2>
     <p>참가자 지갑으로 100 TEST를 지급하는 시험입니다. 각 승인과 서명은 내용을 확인한 뒤 직접 진행하세요.</p>
     <p>신청: {s.applicationId??'아직 생성되지 않음'} · 서버 단계: {s.bootstrap?.phase??'확인 중'}</p>
-    <p role="status">{error|| (s.error?`${s.error.code} · ${s.error.outcome==='UNKNOWN'?'처리 결과 미확인 — 새 요청을 보내지 마세요.':'현재 상태를 확인하지 못했습니다.'}`:busy?'선택한 작업을 처리하고 있습니다.':'서버의 현재 상태를 표시합니다.')}</p>
-    <button disabled={busy} onClick={action(()=>live.current.driver.refresh())}>최신 신청·판정 읽기</button>
+    {s.bootstrap?.failure&&<aside role="alert"><strong>시험이 실패 대기 상태입니다</strong><p>{s.bootstrap.failure.phase} · {s.bootstrap.failure.code} · {s.bootstrap.failure.producerCode}</p><p>새 승인·서명·지급은 차단됐습니다. 처리 결과가 불명확하면 다시 실행하지 마세요. 상태를 확인한 뒤 실행 담당자에게 알리고 FINISH로 명시 종료하세요.</p></aside>}
+    <p role="status">{error|| (s.error?`${s.error.code} · ${s.error.outcome==='UNKNOWN'?'처리 결과 미확인 — 새 요청을 보내지 마세요.':'현재 상태를 확인하지 못했습니다.'}`:s.bootstrap?.failure?'실패 대기 · 현재 상태를 조회할 수 있습니다.':busy?'선택한 작업을 처리하고 있습니다.':'서버의 현재 상태를 표시합니다.')}</p>
+    <button disabled={s.busy||regBusy||s.ended} onClick={readAction(()=>live.current.driver.refresh())}>최신 신청·판정 읽기</button>
     <label><input type="checkbox" checked={auto} disabled={regBusy} onChange={e=>{setAuto(e.target.checked);live.current.reader.setEnabled(e.target.checked);}}/>상태 자동 읽기</label>
     <p>양쪽 Chrome 창을 보이는 상태로 유지하세요. 자동 읽기는 승인이나 서명을 실행하지 않습니다.</p>
     {participant&&<><button disabled={busy||!!s.applicationId} onClick={action(()=>live.current.driver.create())}>새 신청 만들기</button>
@@ -66,7 +68,7 @@ export function ProductPanel({session,wallet,config}) {
     <button disabled={busy||!availability.consent.enabled} onClick={action(()=>live.current.driver.consent('AGREE'))}>표시한 같은 판정에 동의</button>
     <button disabled={busy||!s.view||s.consentReplayPending} onClick={action(()=>live.current.driver.consent('WITHDRAW'))}>이 판정의 동의 철회</button>
     {s.consentReplayPending&&<button disabled={busy} onClick={action(()=>live.current.driver.replayConsent())}>같은 동의 요청의 결과 확인</button>}
-    <h3>100 TEST 수령 확인</h3><button disabled={busy||!bound} onClick={action(()=>live.current.driver.receipt())}>지급 영수증 읽기</button>
+    <h3>100 TEST 수령 확인</h3><button disabled={s.busy||regBusy||s.ended||!bound} onClick={readAction(()=>live.current.driver.receipt())}>지급 영수증 읽기</button>
     {s.receipt&&<><p>{s.receipt.claim.state==='INCLUDED'?'100 TEST 수령 검증 완료 · 블록 포함 확인, 최종 확정은 아님':'아직 수령을 확인하지 못했습니다.'}</p><Details value={s.receipt}/></>}
     {(s.busy||regBusy)&&<button onClick={()=>{registrationAbort.current?.abort();live.current.driver.cancel();}}>진행 요청 취소</button>}
   </section>;

@@ -51,7 +51,7 @@ export async function composeNormalFlow({source,config,directory,signal,ports}){
  // Called only inside the managed source's after-ready useSource callback.
  fail(source?.pins?.()?.dataMode==='RECLAIM_SIGNED_RECORD','NORMAL_HOST_REAL_SOURCE_REQUIRED');
  requireProfileMode(source.pins().selfAttestor,config.attestorMode??'OFFICIAL',config.attestorMode==='SELF_ATTESTOR_TEST'?source.pins().selfAttestor:null);
- let context,mounted;const stop=()=>context?.close();signal?.addEventListener('abort',stop,{once:true});
+ let context,mounted,retained=false;const stop=()=>context?.close();signal?.addEventListener('abort',stop,{once:true});
  try{
   fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
   const preparation=await ports.prepare({hackerRankPins:source.pins(),attestorMode:config.attestorMode??'OFFICIAL',uiIdentity:{participantWallet:config.participantWallet,operatorWallet:config.operatorWallet,origin:config.origin}});
@@ -68,5 +68,12 @@ export async function composeNormalFlow({source,config,directory,signal,ports}){
   const result=await context.pay();fail(result.completed===true,'NORMAL_HOST_PAYMENT_INCOMPLETE');
   ports.notify({event:'PAYMENT_RECORDED_READ_RECEIPT_IN_BOTH_ROLE_SCREENS',applicationId:result.applicationId,origin:config.origin});
   await ports.finish({signal});return {applicationId:result.applicationId,completed:true};
- }finally{signal?.removeEventListener('abort',stop);context?.close();await mounted?.drain();}
+ }catch(error){
+  if(!signal?.aborted&&typeof ports.retainFailure==='function'&&context?.enterFailureWait(error)){
+   ports.retainFailure({context,mounted});retained=true;
+   return {completed:false,failureWaiting:true};
+  }
+  throw error;
+ }finally{signal?.removeEventListener('abort',stop);if(!retained){context?.close();await mounted?.drain();}}
+
 }
