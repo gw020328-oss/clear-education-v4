@@ -30,6 +30,10 @@ LOG_LEVEL=silent CLEAR_SELF_PAYMENT_TEST=1 ./tools/node --test tests/hackathon-t
 
 로컬 검증은 HTTPS pair 1/1, 관련 지갑·원천 경계 279/279, 호스트·영수증·승인·등록 69/69, 소스 세대/변조 146/146과 전체 합성 지급 1/1 통과다. [합성 지급 기록](SELF_ATTESTOR_TEST_VERIFICATION.json)을 참고한다. 최종 HEAD CI 상태는 PR125에 별도로 기록한다.
 
+## 2026-10-31 실제 시작 후속
+
+사용자 HackerRank 자체 로그인과 새 CA 신뢰 후 호스트 활성화에 도달했으나, 새 origin 허용 뒤 Privy Google 이동 전에 실패했다. 해당 실행은 정상 중단했으며 sourceVerified=false/applicationId=null이다. 사용 완료 host/run.used와 실패·중단 기록은 보존하며 재사용하지 않는다. [최소 로그인 진단과 다음 새 실행 조건](PRIVY_LOGIN_DIAGNOSIS_20261031.ko.md)을 따른다. 실제 실패 코드가 없으므로 원인은 아직 미확정이며 아래 합성 리허설 결과로 실제 로그인을 성공 처리하지 않는다.
+
 ## 실제 실행 준비와 사용자 단계
 
 새 불변 소스 세대/최종 HEAD CI 확인 후 새 product bundle과 새 `--self-attestor-test` 호스트를 만든다. `check`는 로컬 빌드·Docker/Geth·관리형 Chrome·소유 Moodle·당일 가격 확인·기존 Gemini 키 소스 존재·새 HEAD에 결합한 운영자 AI 승인자 지정·새 프론트 지문을 검사한다. `check --registry`는 자체 시험에서 거부하며 공식 registry 검사와 혼동하지 않는다. 준비는 수집/AI/지급 실행이 아니다.

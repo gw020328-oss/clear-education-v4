@@ -601,7 +601,7 @@ test('v43 pins the explicit self profile; all prior generations remain immutable
   assert.equal(sha(execFileSync('git',['show',v.currentSourceCandidateHead+':'+p],{cwd:root})),h,p);
  }
  for(const p of [v.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v42.mjs'])assert.deepEqual(actualRead(p),execFileSync('git',['show',v.previousCompatibilityRecord.guardHead+':'+p],{cwd:root}),p);
- 
+
  assert.equal(v.selfAttestorBoundary.automaticFallback,false);assert.equal(v.selfAttestorBoundary.liveAiAcceptanceWeakened,false);
 });
 

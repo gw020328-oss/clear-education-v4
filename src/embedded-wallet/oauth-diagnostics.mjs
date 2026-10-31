@@ -12,14 +12,15 @@ export function oauthDiagnostic(error, stage) {
   let code = 'UNCLASSIFIED', type = 'UNKNOWN', httpStatus = null;
   // SDK 3.51.0 has several plain Error branches without privyErrorCode.
   try {
-    if (codes.has(error?.privyErrorCode)) code = error.privyErrorCode;
-    else if (error?.message === "It looks like you're using an in-app browser.  To log in, please try again using an external browser.") code = 'EXTERNAL_BROWSER_REQUIRED';
-    else if (error?.message === 'Method called before `ready`. Ensure you wait until `ready` is true before calling.') code = 'SDK_NOT_READY';
-    else if (error?.message === 'WALLET_TIMEOUT') code = 'ACTION_TIMEOUT';
-    else if (error?.message === 'WALLET_CONTEXT_CANCELLED') code = 'ACTION_CANCELLED';
-    else if (error instanceof TypeError && error.message === 'Failed to fetch') code = 'FETCH_FAILED';
-    if (types.has(error?.type)) type = error.type;
-    if ([400,401,403,404,408,409,422,429,500,502,503,504].includes(error?.status)) httpStatus = error.status;
+    const sdkCode = error?.privyErrorCode, message = error?.message, kind = error?.type, status = error?.status;
+    if (codes.has(sdkCode)) code = sdkCode;
+    else if (message === "It looks like you're using an in-app browser.  To log in, please try again using an external browser.") code = 'EXTERNAL_BROWSER_REQUIRED';
+    else if (message === 'Method called before `ready`. Ensure you wait until `ready` is true before calling.') code = 'SDK_NOT_READY';
+    else if (message === 'WALLET_TIMEOUT') code = 'ACTION_TIMEOUT';
+    else if (message === 'WALLET_CONTEXT_CANCELLED') code = 'ACTION_CANCELLED';
+    else if (error instanceof TypeError && message === 'Failed to fetch') code = 'FETCH_FAILED';
+    if (types.has(kind)) type = kind;
+    if ([400,401,403,404,408,409,422,429,500,502,503,504].includes(status)) httpStatus = status;
   } catch {} // Hostile getters cannot expose data or prevent safe reporting.
   return Object.freeze({version: 1, stage: stages.has(stage) ? stage : 'WALLET_ACTION', code, type, httpStatus});
 }

@@ -12,6 +12,8 @@ test('unknown fields, messages, status and getters never escape',()=>{
  const e={privyErrorCode:'token-secret',message:'email token cookie',type:'private',status:123456};
  assert.deepEqual(oauthDiagnostic(e,'secret'),{version:1,stage:'WALLET_ACTION',code:'UNCLASSIFIED',type:'UNKNOWN',httpStatus:null});
  assert.doesNotThrow(()=>oauthDiagnostic({get privyErrorCode(){throw Error('secret');}},'OAUTH_RETURN'));
+ let calls=0;const changing={get privyErrorCode(){return ++calls===1?'invalid_captcha':'secret-token';}};
+ assert.equal(oauthDiagnostic(changing,'OAUTH_START').code,'invalid_captcha');assert.equal(calls,1);
  assert.equal(oauthDiagnostic(new TypeError('Failed to fetch'),'OAUTH_START').code,'FETCH_FAILED');
 });
 test('latest safe event persists across redirect, excludes injected storage fields and tolerates denied storage',()=>{
