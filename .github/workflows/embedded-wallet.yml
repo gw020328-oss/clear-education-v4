@@ -1,0 +1,39 @@
+name: Embedded wallet preparation
+on:
+  pull_request:
+    branches: [develop, main]
+    paths: ['src/bootcamp/**', 'src/bootcamp-authorization/**', 'src/review-evidence/moodle/**', 'tools/bootcamp/**', 'tests/bootcamp-store/**', 'tests/bootcamp-authorization/**', 'tests/moodle-review/**', 'src/application/http.mjs', 'tests/application/**', 'src/embedded-wallet/**', 'tools/embedded-wallet/**', 'tools/local-attestor-review/**', 'tests/embedded-wallet/**', '.github/workflows/embedded-wallet.yml']
+  push:
+    branches: ['codex/**']
+    paths: ['src/bootcamp/**', 'src/bootcamp-authorization/**', 'src/review-evidence/moodle/**', 'tools/bootcamp/**', 'tests/bootcamp-store/**', 'tests/bootcamp-authorization/**', 'tests/moodle-review/**', 'src/application/http.mjs', 'tests/application/**', 'src/embedded-wallet/**', 'tools/embedded-wallet/**', 'tools/local-attestor-review/**', 'tests/embedded-wallet/**', '.github/workflows/embedded-wallet.yml']
+permissions:
+  contents: read
+concurrency:
+  group: embedded-wallet-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  sdk-preparation:
+    name: Privy bundle and offline boundaries
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '24.21.0'
+      - name: Locked dependencies, lifecycle scripts disabled
+        run: |
+          ./tools/npm ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/hackerrank-evidence ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/ybm-collector ci --ignore-scripts --no-audit --no-fund
+          ./tools/npm --prefix src/embedded-wallet ci --strict-peer-deps --ignore-scripts --no-audit --no-fund
+          ./tools/node tools/embedded-wallet/reviewed-dependencies.mjs --apply
+      - name: Build real SDK, no account or secret
+        run: ./tools/npm --prefix src/embedded-wallet run build
+      - name: Synthetic identity, real CLEAR verifiers, isolated HTTPS host
+        run: ./tools/node --test tests/embedded-wallet/*.test.mjs tests/application/*.test.mjs
+      - name: Source and review deadlines, legacy expiry and replay regression (offline)
+        run: ./tools/node --test tests/bootcamp-store/*.test.mjs tests/bootcamp-authorization/test-encoding-v3.test.mjs tests/moodle-review/*.test.mjs

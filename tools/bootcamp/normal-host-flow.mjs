@@ -1,3 +1,4 @@
+import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs';
 // Narrow owner composition. The production worker supplies concrete native ports; no HTTP supplies these functions.
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -20,6 +21,7 @@ export function reflectionHostOptions(directory,managedRun=null){
  const readApproval=()=>JSON.parse(readPrivate(approvalPath));
  const currentApprovalHash=()=>{try{return hash(readApproval());}catch{return null;}};
  return {reflectionHost:{codeState,day:localDay,...(managedRun?{bindManagedRun:input=>managedRun.bind(input)}:{}),
+  recovery:()=>managedRun?.recovery()??{status:'UNOBSERVED',resumeAllowed:false},authorizeResume:()=>managedRun.authorizeResume(),
   createApprovalControl({authorize,getPreparation,getApplicationId,requireReaders,nowMs}){
    managedRun?.assertCurrent();const config=JSON.parse(readPrivate(join(directory,'host.json')));
    return createNormalReflectionApproval({directory,config,getPreparation,getApplicationId,requireReaders,nowMs,
@@ -49,22 +51,40 @@ export async function awaitExactReflectionApproval({directory,prepared,signal,on
 export async function composeNormalFlow({source,config,directory,signal,ports}){
  // Called only inside the managed source's after-ready useSource callback.
  fail(source?.pins?.()?.dataMode==='RECLAIM_SIGNED_RECORD','NORMAL_HOST_REAL_SOURCE_REQUIRED');
- let context,mounted;const stop=()=>context?.close();signal?.addEventListener('abort',stop,{once:true});
+ requireProfileMode(source.pins().selfAttestor,config.attestorMode??'OFFICIAL',config.attestorMode==='SELF_ATTESTOR_TEST'?source.pins().selfAttestor:null);
+ let context,mounted,retained=false;const stop=()=>context?.close();signal?.addEventListener('abort',stop,{once:true});
  try{
   fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
-  const preparation=await ports.prepare({hackerRankPins:source.pins(),uiIdentity:{participantWallet:config.participantWallet,operatorWallet:config.operatorWallet,origin:config.origin}});
+  const preparation=await ports.prepare({hackerRankPins:source.pins(),attestorMode:config.attestorMode??'OFFICIAL',uiIdentity:{participantWallet:config.participantWallet,operatorWallet:config.operatorWallet,origin:config.origin}});
   fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
-  context=await ports.open({preparationPath:join(preparation.directory,'preparation.json'),hackerRank:source});
+  context=await ports.open({preparationPath:join(preparation.directory,'preparation.json'),hackerRank:source,attestorMode:config.attestorMode??'OFFICIAL'});
   if(signal?.aborted){context.close();throw Error('NORMAL_HOST_CANCELLED');}
-  mounted=context.createFrontend({tls:ports.tls,webRoot:config.webRoot});await ports.listen(mounted.server,config.origin);
+  mounted=context.createFrontend({tls:ports.tls,webRoot:config.webRoot});await mounted.ready;await ports.listen(mounted.server,config.origin);
   ports.notify({event:'NORMAL_HOST_ACTIVE',origin:config.origin,chainId:mounted.config.chainId,network:mounted.config.network,applicationId:null,sourceVerified:false});
   await waitUntil(()=>!!context.report().applicationId,{signal,timeoutMs:Math.max(1,(context.report().startedAt+1800)*1000-Date.now())});
   ports.notify({event:'APPLICATION_BOUND',applicationId:context.report().applicationId});
   const prepared=await context.collectSources({prepareReflection:true});
   await ports.awaitApproval({directory,prepared,signal,onPrepared:()=>ports.notify({event:'AWAITING_EXACT_AI_APPROVAL',applicationId:context.report().applicationId,approvalRequestPath:join(directory,'approval-request.json')})});
-  await context.collectSources();fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
+  for(;;){
+   try{await context.collectSources();break;}catch(error){
+    if(!signal?.aborted&&context.enterFailureWait?.(error)&&context.report().failure?.resumeAllowed){
+     ports.notify({event:'NORMAL_HOST_MANUAL_RESUME_AVAILABLE',failure:context.report().failure});
+     const resumed=await (ports.awaitResume?ports.awaitResume({context,signal}):context.waitForResume({signal}));
+     if(resumed)continue;
+    }
+    throw error;
+   }
+  }
+  fail(!signal?.aborted,'NORMAL_HOST_CANCELLED');
   const result=await context.pay();fail(result.completed===true,'NORMAL_HOST_PAYMENT_INCOMPLETE');
   ports.notify({event:'PAYMENT_RECORDED_READ_RECEIPT_IN_BOTH_ROLE_SCREENS',applicationId:result.applicationId,origin:config.origin});
   await ports.finish({signal});return {applicationId:result.applicationId,completed:true};
- }finally{signal?.removeEventListener('abort',stop);context?.close();await mounted?.drain();}
+ }catch(error){
+  if(!signal?.aborted&&typeof ports.retainFailure==='function'&&context?.enterFailureWait(error)){
+   ports.retainFailure({context,mounted});retained=true;
+   return {completed:false,failureWaiting:true};
+  }
+  throw error;
+ }finally{signal?.removeEventListener('abort',stop);if(!retained){context?.close();await mounted?.drain();}}
+
 }

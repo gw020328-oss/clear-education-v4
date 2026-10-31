@@ -1,4 +1,5 @@
 // Constructor-owned run capability. HTTP/approval inputs never choose a path.
+import {executionErrorSummary} from '../../src/bootcamp/execution-diagnostics.mjs';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {existsSync,readdirSync} from 'node:fs';
@@ -44,8 +45,22 @@ function openRun(base,hostName,offline){
    hostIdentityHash:hash({origin:host.origin,privacyKeyId:host.privacyKeyId,participantWallet:host.participantWallet,operatorWallet:host.operatorWallet})};
  };
  const owner=read(),bindingPath=join(directory,'ai-reflection-binding.json');
- const state={directory,base,owner,offline,binding:null,assertCurrent(){check(hash(read())===hash(owner),'NORMAL_RUN_CHANGED');}};
- const capability=Object.freeze({assertCurrent(){
+ const state={directory,base,owner,offline,binding:null,busy:false,resumePermit:null,assertCurrent(){check(hash(read())===hash(owner),'NORMAL_RUN_CHANGED');}};
+ const journalPath=join(directory,'ai-reflection'),attemptPath=join(journalPath,'attempt-state.json');
+ const readAttempt=()=>existsSync(attemptPath)?JSON.parse(readPrivate(attemptPath)):null;
+ const recovery=()=>{
+  state.assertCurrent();if(state.binding)check(hash(JSON.parse(readPrivate(bindingPath)))===hash(state.binding),'NORMAL_RUN_CHANGED');const a=readAttempt();
+  if(!a)return Object.freeze({status:'UNOBSERVED',resumeAllowed:false});
+  check(a.version==='clear-normal-ai-attempt.1'&&a.bindingHash===state.binding?.bindingHash,'NORMAL_RUN_CHANGED');
+  const busy=state.busy||existsSync(join(journalPath,'execution.paid-wire.v3.lock'));
+  const status=busy?'BUSY':a.phase==='FAILED_BEFORE_CLAIM'&&!existsSync(join(journalPath,'spent.paid-wire.v3.lock'))?'NOT_SENT':
+   a.phase==='RESERVED'?'APPROVAL_SPENT_NOT_SENT':a.phase==='RECEIVED'?'RESULT_RECORDED':'UNKNOWN';
+  return Object.freeze({status,resumeAllowed:status==='NOT_SENT',attempt:a.attempt,approvalHash:a.approvalHash,code:a.code??null});
+ };
+ state.readAttempt=readAttempt;state.attemptPath=attemptPath;
+ const capability=Object.freeze({recovery,authorizeResume(){
+  const r=recovery();check(r.resumeAllowed&&!state.resumePermit,'NORMAL_RESUME_BLOCKED');state.resumePermit={attempt:r.attempt,approvalHash:r.approvalHash};
+ },assertCurrent(){
   state.assertCurrent();if(state.binding)check(hash(JSON.parse(readPrivate(bindingPath)))===hash(state.binding),'NORMAL_RUN_CHANGED');
  },bind({packet,context}){
   state.assertCurrent();validateReflectionContext(context);
@@ -71,7 +86,14 @@ export async function withManagedNormalReflectionStore(capability,{packet,contex
  check(approval.runBindingHash===expected.bindingHash,'NORMAL_RUN_APPROVAL');
  rejectLegacyReuse(s.base,approval,packet);
  const journal=privateDirectory(join(s.directory,'ai-reflection'),{create:true});
- return withE6PaidWireV3Store(journal,store=>action({
+ check(!s.busy,'NORMAL_RESUME_BUSY');s.busy=true;
+ try{return await withE6PaidWireV3Store(journal,async store=>{
+  const old=s.readAttempt(),permit=s.resumePermit;s.resumePermit=null;
+  check(!old||old.phase==='FAILED_BEFORE_CLAIM'&&permit?.attempt===old.attempt&&permit.approvalHash===approvalHash
+   &&old.approvalHash===approvalHash&&!existsSync(join(journal,'spent.paid-wire.v3.lock')),'NORMAL_RESUME_BLOCKED');
+  let record={version:'clear-normal-ai-attempt.1',bindingHash:expected.bindingHash,approvalHash,attempt:(old?.attempt??0)+1,phase:'ENTERED'};
+  const mark=(phase,extra={})=>{record={...record,phase,...extra};atomicPrivate(s.attemptPath,record);};mark('ENTERED');
+  try{return await action({
   async claim(identity){
    s.assertCurrent();check(hash(JSON.parse(readPrivate(join(s.directory,'ai-reflection-binding.json'))))===hash(expected),'NORMAL_RUN_CHANGED');
    check(identity.planHash===expected.planHash&&identity.contextHash===expected.contextHash&&identity.codeHead===expected.codeHead&&identity.approvalHash===approvalHash,'NORMAL_RUN_CONTEXT');
@@ -82,12 +104,22 @@ export async function withManagedNormalReflectionStore(capability,{packet,contex
    const applicationHash=hash({applicationId:expected.applicationId});
    const reservation={version:'clear-normal-reflection-consumed.1',bindingHash:expected.bindingHash,runId:expected.runId,hostName:expected.hostName,
     applicationHash,authorizationEvidenceSha256:evidence,...identity};
+   mark('RESERVED');
    await store.claim({...identity,runBindingHash:expected.bindingHash,runId:expected.runId,applicationHash,authorizationEvidenceSha256:evidence});
    try{
     atomicPrivate(join(global,'application-'+applicationHash+'.spent.json'),reservation,{exclusive:true});
     atomicPrivate(join(global,'approval-'+evidence+'.spent.json'),reservation,{exclusive:true});
    }catch{throw Error('NORMAL_RUN_SPENT_OR_RECOVERY_REQUIRED');}
   },
-  async checkpoint(report){s.assertCurrent();await store.checkpoint({...report,runBindingHash:expected.bindingHash,runId:expected.runId});},
- }));
+  async checkpoint(report){s.assertCurrent();
+   // Write intent before any native transport/key access. Missing or partial history is never proof of non-dispatch.
+   if(report.status==='DISPATCH_RESERVED')mark('DISPATCH_INTENT');
+   else if(report.status==='RECEIVED')mark('RECEIVED');
+   else if(report.status==='UNKNOWN_STOPPED')mark('UNKNOWN');
+   await store.checkpoint({...report,runBindingHash:expected.bindingHash,runId:expected.runId});},
+  });}catch(error){
+   const phase=record.phase==='ENTERED'?'FAILED_BEFORE_CLAIM':record.phase==='RESERVED'?'RESERVED':record.phase==='RECEIVED'?'RECEIVED':'UNKNOWN';
+   mark(phase,{code:executionErrorSummary(error).code});throw error;
+  }
+ });}finally{s.busy=false;}
 }

@@ -92,3 +92,37 @@ test('approval template exposes and binds the managed run without authorizing a 
  assert.equal(template.runBindingHash,managedRun.bindingHash);assert.equal(template.authorization.kind,'PENDING_DIRECT_HUMAN_CONFIRMATION');assert.deepEqual(request.managedRun,managedRun);
  await assert.rejects(awaitExactReflectionApproval({directory,prepared:{...prepared,managedRun:null}}),/NORMAL_HOST_RUN_BINDING_REQUIRED/);
 });
+
+for(const failedAt of ['before-ai','after-ai','before-payment','after-payment'])test('failure wait retains HTTP ownership without replay: '+failedAt,async()=>{
+ const f=flowFixture();let retained,failed=false;
+ const open=f.ports.open;
+ f.ports.open=async()=>{const c=await open();return {...c,enterFailureWait(){failed=true;return true;},
+  async collectSources(options){if(failedAt==='before-ai'||failedAt==='after-ai'&&!options?.prepareReflection)throw Error('BC_PRODUCER_FAILED');return c.collectSources(options);},
+  async pay(){if(failedAt==='after-payment')await c.pay();throw Error('BC_NORMAL_RECEIPT_PENDING');}};};
+ f.ports.retainFailure=x=>{retained=x;};
+ const result=await composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports});
+ assert.equal(result.completed,false);assert.equal(result.failureWaiting,true);assert.equal(failed,true);assert.equal(f.closed,0);assert.ok(retained);
+ assert.equal(f.paid,failedAt==='after-payment'?1:0);
+ retained.context.close();await retained.mounted.drain();assert.equal(f.closed,1);
+});
+
+test('explicit resume continues reflection then payment without opening a new UI or repeating completed preparation',async()=>{
+ const f=flowFixture(),open=f.ports.open;let failure=null,attempts=0,manual=0;
+ f.ports.open=async()=>{const c=await open();return {...c,report:()=>({...c.report(),failure}),
+  enterFailureWait(){failure={resumeAllowed:true};return true;},
+  async waitForResume(){manual++;failure=null;return true;},
+  async collectSources(options){if(!options?.prepareReflection&&attempts++===0)throw Error('BC_PRODUCER_FAILED');return c.collectSources(options);}};};
+ const result=await composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports});
+ assert.equal(result.completed,true);assert.equal(manual,1);assert.equal(attempts,2);assert.equal(f.paid,1);
+ for(const event of ['prepare-realm','open-context','prepare-reflection','approval','listen'])assert.equal(f.events.filter(e=>e===event).length,1);
+});
+
+test('explicit finish while waiting for manual resume closes ownership and never pays',async()=>{
+ const f=flowFixture(),open=f.ports.open;let failure=null;
+ f.ports.open=async()=>{const c=await open();return {...c,report:()=>({...c.report(),failure}),
+  enterFailureWait(){failure={resumeAllowed:true};return true;},
+  async collectSources(options){if(!options?.prepareReflection)throw Error('BC_PRODUCER_FAILED');return c.collectSources(options);}};};
+ f.ports.awaitResume=async()=>{throw Error('NORMAL_HOST_EXPLICIT_FINISH');};
+ await assert.rejects(composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports}),/EXPLICIT_FINISH/);
+ assert.equal(f.paid,0);assert.equal(f.closed,1);assert.equal(f.events.at(-1),'drain');
+});

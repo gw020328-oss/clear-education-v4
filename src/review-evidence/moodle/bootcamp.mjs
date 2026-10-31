@@ -7,8 +7,9 @@ const h=(kind,value)=>p0Hash('MOODLE-'+kind,value);
 const pos=v=>check(Number.isSafeInteger(v)&&v>0,'BCM_ID');
 const epochMs=v=>check(Number.isSafeInteger(v)&&v>=0&&v<=4102444800000,'BCM_CLOCK');
 export const BOOTCAMP_MOODLE_SOURCE='moodle-4.5.15-215f4438';
+const maxAgeMs=q=>(q.version==='clear-moodle-bootcamp-read.2-review900'?900:P0_POLICY.time.maxMoodleObservationAgeSeconds)*1000;
 function validate(q){
- exactKeys(q,['version','context','pin'],'BCM_REQUEST');check(q.version==='clear-moodle-bootcamp-read.1','BCM_VERSION');
+ exactKeys(q,['version','context','pin'],'BCM_REQUEST');check(['clear-moodle-bootcamp-read.1','clear-moodle-bootcamp-read.2-review900'].includes(q.version),'BCM_VERSION');
  const c=q.context,p=q.pin;
  exactKeys(c,['participantId','applicationId','policyHash','criterionId','capability','evidenceId','evidenceRevision','runtimeMappingHash','fixtureReportHash','sourceRunId','sourceGeneration','attempt','issuedAtMs','expiresAtMs'],'BCM_CONTEXT');
  for(const k of ['participantId','applicationId','criterionId','evidenceId','sourceRunId'])identifier(c[k]);
@@ -17,7 +18,7 @@ function validate(q){
  check(c.policyHash===p0PolicyHash(P0_POLICY),'BCM_POLICY');
  const criterion=P0_POLICY.criteria.find(r=>r.criterionId===c.criterionId);
  check(criterion&&criterion.source!=='RECLAIM_HACKERRANK'&&criterion.capability===c.capability,'BCM_CAPABILITY');
- epochMs(c.issuedAtMs);epochMs(c.expiresAtMs);check(c.expiresAtMs>c.issuedAtMs&&c.expiresAtMs-c.issuedAtMs<=P0_POLICY.time.maxMoodleObservationAgeSeconds*1000,'BCM_LEASE');
+ epochMs(c.issuedAtMs);epochMs(c.expiresAtMs);check(c.expiresAtMs>c.issuedAtMs&&c.expiresAtMs-c.issuedAtMs<=maxAgeMs(q),'BCM_LEASE');
  exactKeys(p,['environmentRef','runRef','sourceVersion','apiVersion','fixtureReportHash','courseId','participantMapping','target','completionSetupReceiptHash'],'BCM_PIN');
  for(const k of ['environmentRef','runRef'])identifier(p[k]);
  check(p.sourceVersion===BOOTCAMP_MOODLE_SOURCE,'BCM_SOURCE_VERSION');
@@ -32,7 +33,7 @@ function validate(q){
  if(c.criterionId==='activity-complete')hash32(p.completionSetupReceiptHash);else check(p.completionSetupReceiptHash===null,'BCM_PIN');
  return criterion;
 }
-export function createBootcampMoodleRequest({context,pin}){const q=structuredClone({version:'clear-moodle-bootcamp-read.1',context,pin});validate(q);return freeze(q);}
+export function createBootcampMoodleRequest({context,pin,version='clear-moodle-bootcamp-read.1'}){const q=structuredClone({version,context,pin});validate(q);return freeze(q);}
 export const bootcampMoodleRequestHash=q=>{validate(q);return h('REQUEST',q);};
 export const bootcampMoodleReceiptHash=r=>h('RECEIPT',r);
 function uniqueRows(rows,key){check(Array.isArray(rows)&&rows.length<=200,'BCM_RESPONSE');check(rows.every(x=>x&&Number.isSafeInteger(x[key]))&&new Set(rows.map(x=>x[key])).size===rows.length,'BCM_DUPLICATE');return rows;}
@@ -138,6 +139,6 @@ export function validateBootcampMoodleResult(result,{request,expectedReceiptHash
  epochMs(a.observed.startedAtMs);epochMs(a.observed.finishedAtMs);
  check(a.observed.startedAtMs>=request.context.issuedAtMs&&a.observed.finishedAtMs>=a.observed.startedAtMs
   &&a.observed.finishedAtMs-a.observed.startedAtMs<=30000&&a.expiresAtMs===request.context.expiresAtMs,'BCM_CLOCK');
- check(nowMs>=a.observed.finishedAtMs&&nowMs<a.expiresAtMs&&nowMs-a.observed.startedAtMs<=P0_POLICY.time.maxMoodleObservationAgeSeconds*1000,'BCM_EXPIRED');
+ check(nowMs>=a.observed.finishedAtMs&&nowMs<a.expiresAtMs&&nowMs-a.observed.startedAtMs<=maxAgeMs(request),'BCM_EXPIRED');
  return result;
 }

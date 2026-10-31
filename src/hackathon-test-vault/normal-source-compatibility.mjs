@@ -15,5 +15,8 @@ export function normalE2Hash(path,expected){
  for(const [p,hash]of Object.entries(record.immutableInputs))ensure(sha(read(p))===hash);
  const change=record.sourceChanges[NORMAL_E2_PATH];ensure(change.before===expected&&change.reviewedOwnerHead==='4d0f0b55614c3ad2e04b63d6946844eca391309b');
  ensure(record.invariants.registeredSourceClockInjectionAllowed===false&&record.invariants.provenanceLabelIsSourceAuthority===false&&record.invariants.defaultProductionActivation===false);
- ensure(sha(read(path))===change.after);return change.after;
+ const reviewPath='specs/bootcamp/hackathon-test-review-window-source-delta-v1.json';
+ ensure(sha(read(reviewPath))==='a609096c8419e6a70862fe008653fc603b000ce80a8c4e1f9fef6022a13a1bdf');const delta=JSON.parse(read(reviewPath));
+ const next=delta.changes[path];ensure(next.before===change.after&&delta.existingDeadlinesExtended===false&&delta.productionEnabled===false);
+ ensure(sha(read(path))===next.after);return next.after;
 }

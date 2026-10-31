@@ -1,4 +1,5 @@
 // First-normal-demo-only fixed transport. No source collection, credential search or new product protocol.
+import {executionErrorSummary} from '../../bootcamp/execution-diagnostics.mjs';
 import {createHash} from 'node:crypto';
 import {freeze,requireRule as check} from '../../policy/values.mjs';
 import {p0Hash,P0_POLICY} from '../../../specs/bootcamp/p0-contract.mjs';
@@ -101,7 +102,7 @@ function buildFixedNormalReflectionAdapter({packet,approval,codeState,day,curren
     state.report.providerResponsesReceived++;await guard();check(!signal?.aborted,'NORMAL_CANCELLED');const received=readResponse(response);
     state.report.status='RECEIVED';state.report.cost=received.usage;state.report.responseSha256=received.responseSha256;
     await store.checkpoint(structuredClone(state.report));return received.output;
-   }catch(e){state.report.status='UNKNOWN_STOPPED';if(!signal?.aborted)await store.checkpoint(structuredClone(state.report));throw Error('NORMAL_MODEL_STOPPED');}
+   }catch(e){state.report.failure=executionErrorSummary(e);state.report.status='UNKNOWN_STOPPED';if(!signal?.aborted)await store.checkpoint(structuredClone(state.report));throw Error('NORMAL_MODEL_STOPPED',{cause:e});}
   },summary:()=>freeze(structuredClone(state.report))});
  adapters.set(adapter,state);return adapter;
 }

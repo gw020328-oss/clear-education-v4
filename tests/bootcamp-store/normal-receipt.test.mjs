@@ -25,9 +25,9 @@ test('canonical receipt and measured exact delta expose fixed recipient 100 TEST
  assert.notEqual(r.accept.transactionHash,r.claim.transactionHash);assert.equal(r.accept.canonicalNow,null);assert.equal(r.source.actualSourceVerification,false);
  assert.deepEqual(r.acceptedTarget,operator.acceptedTarget);assert.equal(operator.role,'OPERATOR');assert.equal(JSON.stringify(r).includes(x.f.aliceContext.token),false);
 });
-test('submitted or accepted-only state never supplies received amount or invokes receipt readback',async t=>{
- const x=await fixture(t);x.report.completed=false;let r=await x.read(x.f.aliceContext,x.a);
- assert.equal(r.claim.state,'READBACK_UNAVAILABLE');assert.equal(r.balance.receivedAtoms,null);assert.equal(r.claim.canonical,null);assert.equal(x.calls(),0);
+test('submitted state performs canonical readback; absent or unknown receipt never promotes amount',async t=>{
+ const x=await fixture(t);x.report.completed=false;x.setRead(async()=>null);let r=await x.read(x.f.aliceContext,x.a);
+ assert.equal(r.claim.state,'READBACK_UNAVAILABLE');assert.equal(r.balance.receivedAtoms,null);assert.equal(r.claim.canonical,null);assert.equal(x.calls(),1);
  delete x.report.claim;r=await x.read(x.f.aliceContext,x.a);assert.equal(r.accept.state,'RECORDED_INCLUDED');assert.equal(r.claim.state,'NOT_OBSERVED');assert.equal(r.balance.receivedAtoms,null);
 });
 test('unknown, reorged, unavailable or mismatched canonical reads remain null without retry or promotion',async t=>{
@@ -51,9 +51,16 @@ test('source expiry and a newer current decision preserve the separately recorde
  assert.notEqual(r.currentDecision.decisionHash,old);assert.equal(r.claim.canonical,true);
 });
 test('browser receipt adapter rejects tx-only promotion and preserves unknown amounts',async t=>{
- const x=await fixture(t);x.report.completed=false;let response=await x.read(x.f.aliceContext,x.a);
+ const x=await fixture(t);x.report.completed=false;x.setRead(async()=>null);let response=await x.read(x.f.aliceContext,x.a);
  const client=createNormalBootcampClient({request:async(path,options)=>{assert.equal(path,`/bootcamp/v4/applications/${x.a}/payment-receipt`);assert.notEqual(options?.method,'POST');return response;}});
  assert.equal((await client.paymentReceipt(x.a)).balance.receivedAtoms,null);
  response=structuredClone(response);response.balance.receivedAtoms='100000000';await assert.rejects(client.paymentReceipt(x.a),/BC_NORMAL_RECEIPT/);
- x.report.completed=true;response=await x.read(x.f.aliceContext,x.a);assert.equal((await client.paymentReceipt(x.a)).claim.canonical,true);
+ x.report.completed=true;x.setRead(async()=>x.receipt);response=await x.read(x.f.aliceContext,x.a);assert.equal((await client.paymentReceipt(x.a)).claim.canonical,true);
+});
+
+test('lost claim receipt reply reconciles exact canonical transfer without resending or claiming measured delta',async t=>{
+ const x=await fixture(t);x.report.completed=false;x.report.claim={txHash:x.receipt.txHash,status:'SUBMITTED_UNKNOWN'};
+ const first=await x.read(x.f.aliceContext,x.a),second=await x.read(x.f.operatorContext,x.a);
+ assert.equal(first.claim.state,'INCLUDED');assert.equal(first.balance.measurement,'CANONICAL_TRANSFER_EVENT');
+ assert.equal(second.balance.receivedAtoms,'100000000');assert.equal(x.calls(),2);assert.equal(x.report.completed,false);
 });

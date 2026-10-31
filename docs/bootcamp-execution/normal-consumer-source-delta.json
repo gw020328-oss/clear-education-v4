@@ -3,12 +3,13 @@
   "baselinePins": "specs/bootcamp/hackathon-test-consumer-pins-v1.json",
   "baselineCommit": "4dec3bd94ad786d2f1b52d00b5bfa1eab8f82ec0",
   "ownerChangeCommit": "4d0f0b55614c3ad2e04b63d6946844eca391309b",
-  "scope": "REGISTERED_TEST_SOURCE_ENUM_ONLY_REAL_CLOCK_REQUIRED_PRESERVED",
+  "scope": "REGISTERED_TEST_SOURCE_AND_VERSIONED_REVIEW_WINDOW_REAL_CLOCK_REQUIRED_PRESERVED",
   "changes": {
     "src/bootcamp-authorization/test-encoding-v3.mjs": {
       "before": "eb535f3f30e0bee8c1f3e7dff16c202baa72108ae1417f8b0e077870312d3c5a",
-      "after": "e348a687265fd89c9a98e977dc20d213ed87bf4169da2063b8b68279a2ce9d7f"
+      "after": "052a01d984675f45d780b8fb375dcf8ee9ae045dee0c4520891dc093383fe5f7"
     }
   },
-  "productionEnabled": false
+  "productionEnabled": false,
+  "reviewWindowChange": "New .review900 evidence only; legacy evidence and previously issued shorter approval deadlines remain capped. No production activation."
 }

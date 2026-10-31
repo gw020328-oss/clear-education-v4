@@ -102,7 +102,7 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    fault('e3-before-command');
    const saved=command(a,s.wallet,route,key,body,{decisionId:st.d.decisionId,...target},time,{...attempt,extraEvent:'AUTO_OPERATION_COMPLETED'});fault('e3-after-command');
    return operation(a,saved,time);
-  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:['consent','recipient-registration','prepare','objection','assess-objection','revalidate','termination-intent'].includes(name)});}catch(error){
+  },(_a,_s,time)=>observers.forEach(f=>f(time)),{retryClockBoundary:name==='register-target',consentCommitClock:['publish','consent','recipient-registration','prepare','objection','assess-objection','revalidate','termination-intent'].includes(name)});}catch(error){
    if(attempt)transaction(()=>ledger.emit({...attempt,eventType:'OPERATION_FAILED'}));throw error;
   }
  }
@@ -250,6 +250,13 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
    if(!p){p={version:VERSION,procedureId:procedureId('procedure'),applicationId:a,firstStartedAt:time,reviewCapAt:time+600,profileHash:PROFILE_HASH,
     obligationId:st.funding.obligationId};l.create(a,p);fault('e3-after-procedure');}
    check(p.obligationId===st.funding.obligationId,'BC_E3_OBLIGATION_CHANGED');
+   // Keep the single provisional publication and its original timestamps. A
+   // forward clock tick only revalidates the same source leases/review cap;
+   // access still checks CAS, port snapshots and final authority before commit.
+   observers.unshift(asOf=>{
+    active({...st,p},asOf);
+    check(sameSnapshot(src,currentSourceWindow(st.a,heads,source,asOf)),'BC_E3_PORT_CHANGED');
+   });
    const old=l.publications(a).find(r=>r.decisionId===st.d.decisionId);
    if(old){check(old.allocationId===st.funding.allocationId&&BigInt(st.funding.allocationVersion)>=BigInt(old.allocationVersion),'BC_E3_ALLOCATION_CHANGED');return {procedureId:p.procedureId,publicationId:old.publicationId};}
    if(st.pub){const replacement=st.funding.replacement;

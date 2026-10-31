@@ -1,3 +1,7 @@
+2026-10-31 후속 [회고 수동 재개 계약](BOOTCAMP_REFLECTION_RESUME.ko.md): 실패 session 응답에 `failureRevision/applicationRevision/resumeAllowed/recoveryStatus`를 추가한다. 운영자의 `POST /bootcamp/v4/applications/:id/resume`만 조건부 허용하며 body는 `failureRevision/expectedRevision`이다. 영수증은 완료 응답 유실 시에도 기존 거래의 canonical transfer를 별도 측정으로 표시할 수 있다.
+
+2026-10-31 정상 TEST 호스트의 [실패 대기 계약](BOOTCAMP_FAILURE_WAIT.ko.md): 알려진 단계 실패 뒤 세션 GET·영수증 조회와 유효 인증을 유지한다. 제품 POST는 `BC_NORMAL_FAILED_WAITING`/409로 차단하며, UNKNOWN을 재시도 허가로 해석하지 않는다. 로그아웃·만료·회수·지갑 변경 검사는 유지한다.
+
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
 2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.

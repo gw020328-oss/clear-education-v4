@@ -42,7 +42,7 @@ export async function normalApprovalFixture(t,{approver='operator'}={}){
   reviewedOn:day,inputNanoUsdPerToken:'300',outputIncludingThinkingNanoUsdPerToken:'2500',basis:'PUBLIC_PRICE_REVIEW_NOT_BILLING_AUTHENTICATION'});
  try{await awaitExactReflectionApproval({directory,prepared,onPrepared(){throw Error('OFFLINE_DISPLAY_ONLY');}});}catch(e){if(e.message!=='OFFLINE_DISPLAY_ONLY')throw e;}
  const readers=createNormalReviewReaders({now:()=>f.time});const touch=()=>{readers.observe('PARTICIPANT');readers.observe('OPERATOR');};touch();
- let pending=prepared,fetches=0,keys=0,unknown=false,wireWait=async()=>{};
+ let pending=prepared,fetches=0,keys=0,unknown=false,approvalCurrent=true,wireWait=async()=>{};
  const control=createNormalReflectionApproval({directory,config,authorize:(c,w)=>{capability.assertCurrent();return f.service.authorizeWorkflow(c,w);},
   getPreparation:()=>pending,getApplicationId:()=>app,currentCodeState:()=>code,currentDay:()=>day,
   requireReaders:()=>readers.require(),nowMs:()=>f.time*1000});
@@ -52,7 +52,7 @@ export async function normalApprovalFixture(t,{approver='operator'}={}){
   codeHead:a.codeHead,model:a.model,action:'APPROVE_THIS_INPUT_ONCE',costAcknowledgment:a.costAcknowledgment};};
  const readApproval=()=>JSON.parse(readFileSync(join(directory,'approval.json')));
  const run=()=>runManagedNormalReflectionOfflineFixture(capability,{packet,approval:readApproval(),codeState:code,day,
-  currentCodeState:()=>code,currentDay:()=>day,currentApprovalHash:()=>hash(readApproval()),
+  currentCodeState:()=>code,currentDay:()=>day,currentApprovalHash:()=>approvalCurrent?hash(readApproval()):null,
   context:source.context,decisionRef:null,messageFormat:2,nowMs:()=>f.time*1000,resolveCurrent:()=>({...state,rawAvailable:prepared.isCurrent()}),
   lease:{isCurrent:()=>state.rawAvailable,async readBody(){return source.text;},release(){}},
   transportOptions:{keyReader:()=>{keys++;return 'invented-offline-provider-key';},fetchImpl:async()=>{
@@ -60,7 +60,7 @@ export async function normalApprovalFixture(t,{approver='operator'}={}){
    return new Response(JSON.stringify({modelVersion:'gemini-3.5-flash-lite',usageMetadata:{promptTokenCount:300,candidatesTokenCount:200,totalTokenCount:500,serviceTier:'standard'},
     candidates:[{finishReason:'STOP',content:{role:'model',parts:[{text:JSON.stringify(await reflectionMock(source).observe())}]}}]}));}}});
  return {f,app,base,directory,code,day,config,authority,authorityPath,source,state,packet,capability,binding,prepared,control,
-  readers,touch,actor,body,run,counts:()=>({fetches,keys}),setPending:v=>pending=v,setUnknown:()=>unknown=true,
+  readers,touch,actor,body,run,counts:()=>({fetches,keys}),setPending:v=>pending=v,setUnknown:()=>unknown=true,setApprovalCurrent:v=>approvalCurrent=v,
   setWireWait:fn=>wireWait=fn,
   advance(seconds){if(!Number.isSafeInteger(seconds)||seconds<0)throw Error('FORWARD_SECONDS_ONLY');
    for(let i=0;i<seconds;i++){f.setTime(f.time+1);f.setAuthenticationTime(f.time);source.clock.value=f.time*1000;}}};

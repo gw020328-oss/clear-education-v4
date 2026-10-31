@@ -124,7 +124,14 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
       if (!response.ok) {
         const value = await errorBody(response, scope);
         if (scope.aborted) throw interruptedFailure();
-        const code = codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED';
+        // The normal runner uses {error}, unlike the application API's {code}.
+        // Preserve only this read-only preparation signal on its exact route.
+        // Other failures must still invalidate the displayed approval packet.
+        const normalProcedureWaiting = method === 'GET' && response.status === 409
+          && /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure$/.test(url.pathname)
+          && value?.error === 'BC_NORMAL_PROCEDURE_NOT_READY';
+        const code = normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
+          : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED';
         throw failure(code, { method, status: response.status, requestId: uuid(value?.requestId) ? value.requestId : null,
           outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true });
       }
