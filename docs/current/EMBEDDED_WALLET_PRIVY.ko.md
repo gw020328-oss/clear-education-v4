@@ -139,3 +139,14 @@ CSP는 `auth.privy.io` frame/connect, Cloudflare Turnstile script/frame 및 정�
 - [Zod advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), [uuid advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq), [ws memory](https://github.com/advisories/GHSA-58qx-3vcg-4xpx), [ws DoS](https://github.com/advisories/GHSA-96hv-2xvq-fx4p), [decode advisory](https://github.com/advisories/GHSA-vcc3-ghjq-m6fr).
 
 - [MetaMask EIP-1193/제공자 API](https://github.com/MetaMask/metamask-docs/blob/main/metamask-connect/evm/reference/provider-api.md), [EIP-6963 명시 제공자 탐색](https://eips.ethereum.org/EIPS/eip-6963), [EIP-3326 체인 전환](https://eips.ethereum.org/EIPS/eip-3326).
+
+
+## 2026-10-31 제품 대기 응답 연결 보정
+
+실제 자체 Attestor 시험에서 참가자 SIWE·원천 승인과 계정/인증서 자체 서명 검증을 완료했고, 실행기는 회고 AI 승인 준비까지 도달했다. 공식 hosted 공증 또는 실제 지급 완료를 뜻하지 않는다. AI 유료 호출과 지급은 이 실행에서 완료하지 않았다.
+
+제품 화면이 사용하는 application API 전송기는 `{code}` 오류만 처리하지만 normal 실행기의 준비 전 procedure 조회는 HTTP 409 `{error:"BC_NORMAL_PROCEDURE_NOT_READY"}`를 반환한다. 기존 driver가 이 정상 대기를 operations 조회로 전환하기 전에 코드가 `API_REQUEST_FAILED`로 바뀌어 AI 승인 자료까지 지워졌다.
+
+보정은 GET `/bootcamp/v3/applications/:id/procedure`의 정확한 409/고정 오류 코드에만 적용한다. 이때 기존 operations 조회와 AI 승인 표시가 유지되며 자동 승인은 없다. 다른 경로·POST·상태 코드·알 수 없는 오류는 기존 실패 처리, 승인 자료 폐기와 지급 차단을 유지한다. 원천/AI 만료, 양쪽 화면 조회, 수령인 서명, 지급 동의 및 금액은 변경하지 않는다.
+
+회귀 시험은 실제 제품 HTTP 전송기를 거쳐 정상 대기 → operations 조회 → AI 자료 표시 → 명시 승인 기록을 검사한다. 합성 입력만 사용하며 모델 호출·키 읽기 0회다. 실제 오류에서 승인 자료 폐기와 지급 차단도 검사한다. 실행 중이던 기존 불변 번들을 교체하지 않으며, 새 번들·새 시험으로 실제 지급은 별도 확인해야 한다.

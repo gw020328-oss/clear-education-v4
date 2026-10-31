@@ -146,3 +146,16 @@ test('only the C2 raw deletion route allows DELETE and a lost mutation response 
  assert.equal((await errorOf(api('/applications',{method:'DELETE'}))).outcome,'NOT_SENT');
  assert.equal((await errorOf(api(path,{method:'DELETE',body:{}}))).outcome,'NOT_SENT');assert.equal(calls,1);
 });
+
+for (const [path,method,status,body,expected] of [
+ ['/bootcamp/v3/applications/application-fixture/procedure','GET',409,{error:'BC_NORMAL_PROCEDURE_NOT_READY'},'BC_NORMAL_PROCEDURE_NOT_READY'],
+ ['/applications','GET',409,{error:'BC_NORMAL_PROCEDURE_NOT_READY'},'API_REQUEST_FAILED'],
+ ['/bootcamp/v3/applications/application-fixture/procedure','POST',409,{error:'BC_NORMAL_PROCEDURE_NOT_READY'},'API_REQUEST_FAILED'],
+ ['/bootcamp/v3/applications/application-fixture/procedure','GET',500,{error:'BC_NORMAL_PROCEDURE_NOT_READY'},'API_REQUEST_FAILED'],
+ ['/bootcamp/v3/applications/application-fixture/procedure','GET',409,{error:'BC_VIEW_STALE'},'API_REQUEST_FAILED'],
+ ['/bootcamp/v3/applications/application-fixture/procedure','GET',409,{error:{code:'BC_NORMAL_PROCEDURE_NOT_READY'}},'API_REQUEST_FAILED'],
+]) test('normal procedure waiting envelope is scoped: '+JSON.stringify([path,method,status,body]),async()=>{
+ let calls=0;const e=await errorOf(apiFor(()=>{calls++;return Response.json({...body,message:'secret',nextAction:'PAY'},{status});})(path,{method}));
+ assert.equal(e.code,expected);assert.equal(calls,1);assert.equal(e.message,'API_REQUEST_FAILED');
+ assert.ok(!JSON.stringify(e).includes('secret'));assert.ok(!JSON.stringify(e).includes('PAY'));
+});
