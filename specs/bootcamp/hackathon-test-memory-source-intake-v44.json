@@ -15,7 +15,7 @@
   "version": "clear-hackathon-test-memory-source-intake.44",
   "date": "2026-10-31",
   "status": "REVIEWED_SAFE_OAUTH_FAILURE_DIAGNOSTICS",
-  "currentSourceCandidateHead": "9831450bde7c99106b374f9009a89355f4934d0a",
+  "currentSourceCandidateHead": "fb3a19339b9d14ddbdb81c03d1fb26967f40e144",
   "previousCompatibilityRecord": {
     "path": "specs/bootcamp/hackathon-test-memory-source-intake-v43.json",
     "sha256": "4c13e8a7634d8830430325d301168387ff5a7b5c59b5622574cc2d309984da1e",
@@ -756,7 +756,7 @@
     "tools/embedded-wallet/reviewed-dependencies.mjs": "d9bd9963d1d48a21e52e65d7624df50bf55687ab576bdc375cfe1bb1825d3bb7",
     "tools/embedded-wallet/patches/zod-6699.json": "1b8a104fe71ba7177a0f9e96ade94b42ec6c34332cdaf55a3001ca967c9ce9d7",
     "tools/embedded-wallet/patches/ZOD-LICENSE": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8",
-    "src/embedded-wallet/oauth-diagnostics.mjs": "14ac6c730cf1363659ca52caf1c19b44531c19d47877e60aba84f96957d577a9"
+    "src/embedded-wallet/oauth-diagnostics.mjs": "c4de9edabe7114786fc9fc6a6fb18978438d5462d12b8455db387f163592f5e4"
   },
   "productWalletBoundary": {
     "explicitReviewedAssetOptIn": true,
@@ -784,7 +784,7 @@
     }
   },
   "productWalletAdditions": {
-    "src/embedded-wallet/oauth-diagnostics.mjs": "14ac6c730cf1363659ca52caf1c19b44531c19d47877e60aba84f96957d577a9"
+    "src/embedded-wallet/oauth-diagnostics.mjs": "c4de9edabe7114786fc9fc6a6fb18978438d5462d12b8455db387f163592f5e4"
   },
   "sdkBackportBoundary": {
     "officialZodCommit": "540f40974ff131ab96130b8fcc29af14bb750395",
