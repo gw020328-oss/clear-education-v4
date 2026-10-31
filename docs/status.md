@@ -1,5 +1,32 @@
 # 개발 현황
 
+## 2026-10-31 자체 TEST 리허설·미병합 프론트 현황
+
+원격 확인 **2026-10-31 13:22 KST**. develop은 [61dc021](https://github.com/gw020328-oss/clear-education-v4/commit/61dc02111ae17a1b12047ee008cf1b0902237beb), main은 [937a51d](https://github.com/gw020328-oss/clear-education-v4/commit/937a51db6f98b757fedb36afba98f238eea5a4b9)이며 어제 이후 새 기능 병합은 없다. 아래 [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)와 [#128](https://github.com/gw020328-oss/clear-education-v4/pull/128)은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 공개 보고서의 저장된 결과이며 이번 자동화의 재실행 결과가 아니다.
+
+### 진행 — 자체 Attestor 전용 TEST와 지갑 후보 #125
+
+[고정 head의 합성 검증](https://github.com/gw020328-oss/clear-education-v4/blob/ea716c3b2ed45ad825a0dd0cb239fe159763e19e/docs/current/SELF_ATTESTOR_TEST_VERIFICATION.json)은 SELF_ATTESTOR_TEST에서 합성 HackerRank HTTPS 입력을 실제 TLS/SDK로 수집·pair 검증하고, 같은 신청의 합성 Moodle/회고/AI와 새 격리 Geth에서 V2 등록·양측 동의·canonical receipt·정확100000000 atoms·중복/원천 재사용 거부를 확인했다. 참가자 가스 거래0·actualUserLogin=false·paidAiCalls=0·finalized=false다. **공식 hosted 성공=false·독립 신뢰=false**이며 실제 계정/사용자 지갑 지급·유료 AI 성공과 구분한다. 과거 r20의 V1 실제 성공을 이 후보의 실제 V2 완주로 재사용하지 않는다.
+
+[전용 인계](https://github.com/gw020328-oss/clear-education-v4/blob/ea716c3b2ed45ad825a0dd0cb239fe159763e19e/docs/current/SELF_ATTESTOR_TEST.ko.md)는 명시적으로 준비한 전용 self-test에만 실행별 signer/auth/profile·신청/DB/체인 격리를 적용하며 공식 endpoint·registry·서명자 거부를 유지한다고 보고한다. BGP 검사 비활성은 해당 시험 자식 프로세스 범위다. 공식 장애의 자동 fallback이나 독립 공증 대체를 의미하지 않는다. 별도 호스트 준비/readiness 기록은 활성화·실제 로그인·실제100 TEST 수령을 입증하지 않는다. 사용자의 새 origin/CA·로그인·지갑/해당 입력 AI 승인·양측 동의는 별도 실제 실행에 남는다. 이 자동화는 이를 요청/실행하지 않았다.
+
+보고된 로컬 지갑/원천279·호스트/영수증/승인/등록69·소스/변조146·HTTPS pair1·전체 합성 지급1은 각각의 범위다. 과거 회귀나 CI 검사 수와 합산하지 않는다. 고정 Zod backport·viem 호환 예외 검증은 공식 npm 안정 수정이나 전면 위험 해소로 표시하지 않으며 공개 인계의 잔여 의존성/무제한 입력 위험을 유지한다. 공식 연결의 10월30일04:20:58 UTC address/SDK403 및 다른 시점 address200/WS403은 저장 관측이며 현재 정상화·원인을 이 자동화가 재확인하지 않았다.
+
+### 진행·차단 — 프론트 시연 후보 #128
+
+작성자의 [PR #128](https://github.com/gw020328-oss/clear-education-v4/pull/128)은 운영자·학생이 같은 합성 상태를 공유하는 시연 월드와 명시적 지갑 선택·오류/준비 상태 표시 후속을 보고한다. 보고된 테스트252건·화면2773장 검사와 오프라인27건은 각각의 범위이며 합산하지 않는다. **실제 API 확인0건**으로, 합성 조건 전환/충전/자동 지급 표시를 실제 수집·판정·충전·지급 연동 완료로 안내하지 않는다. develop에는 web 디렉터리가 아직 없으므로 이 시연 도구를 현재 base의 실행 명령으로 제공하지 않는다.
+
+#128은 공개 이력 검사 PR/push2개가 FAILURE여서 전체 성공이 아니다. 실패 원인을 추정하거나 실패 로그/개인 경로·민감 값을 복사하지 않았으며 작성자의 원인 확인과 공개 가능 여부 검토가 필요하다. 다른 합성/Mac 성공으로 이 실패를 대신하지 않는다. 현재 #60·#125·#128이 열려 있고 작성자의 #60 대체 후보 안내를 기존 PR 종료/병합 완료로 취급하지 않는다. 실제 API/decision-evidence·운영자 충전·사용자 오류 신고·원천 제한 재조회와 실제 제품 완주는 남는다.
+
+### 정확한 head CI
+
+| PR | 확인 head SHA | 완료 SUCCESS / 표시 검사 | 실행 근거 |
+| --- | --- | --- | --- |
+| [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125) | ea716c3b2ed45ad825a0dd0cb239fe159763e19e | 12/12 | [run 41015674843](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015674843) · [run 41015675034](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015675034) · [run 41015674758](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015674758) · [run 41015669660](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015669660) · [run 41015674895](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015674895) · [run 41015674693](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015674693) · [run 41015674863](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015674863) · [run 41015669498](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41015669498) |
+| [#128](https://github.com/gw020328-oss/clear-education-v4/pull/128) | d7c6c77710a07225aec7a4aec0fed2a8e5bacdf4 | 4/6 | [run 41007429268](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41007429268) · [run 41007422589](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41007422589) |
+
+#125의12개 검사는 모두 COMPLETED·SUCCESS이며 #128은4/6 성공·2개 FAILURE다. 이는 검사 수이지 고유 시험/실제 사용자 성공 수가 아니다. 이전 날짜별 준비/실패·수치는 당시 기록이다. 이번 자동화는 공개 근거·CI만 대조했고 실제 원문/proof·쿠키·개인키·민감 로그 접근, 비공개 메일 조회/발송·새 로그인/유료 호출/서명/거래/배포를 하지 않았다. 기능 PR은 이 자동화의 병합 대상이 아니다.
+
 ## 2026-10-30 미병합 지갑·공식 연결 차단 현황
 
 원격 확인 **2026-10-30 11:17 KST**. develop은 [d44b012](https://github.com/gw020328-oss/clear-education-v4/commit/d44b01216241d120064145016a99d73b1b361e34), main은 [3ffd46d](https://github.com/gw020328-oss/clear-education-v4/commit/3ffd46d7986c31b47e0a5f011d9d918e8d84f735)이며 어제 이후 새 기능 병합은 없다. [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)는 **develop 작업 브랜치 기준, develop/main 미병합**이다. 기존 #60 제품 프론트 작업도 열려 있으며 #125는 별도의 제품 지갑 패널로 web/PR60을 수정하지 않았다.
