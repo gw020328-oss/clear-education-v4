@@ -34,3 +34,5 @@ jobs:
         run: ./tools/npm --prefix src/embedded-wallet run build
       - name: Synthetic identity, real CLEAR verifiers, isolated HTTPS host
         run: ./tools/node --test tests/embedded-wallet/*.test.mjs tests/application/*.test.mjs
+      - name: Source and review deadlines, legacy expiry and replay regression (offline)
+        run: ./tools/node --test tests/bootcamp-store/*.test.mjs tests/bootcamp-authorization/test-encoding-v3.test.mjs tests/moodle-review/*.test.mjs

@@ -52,6 +52,8 @@ export function ProductPanel({session,wallet,config}) {
     {a&&<><h3>이번 회고의 AI 평가 승인</h3>
       <p>생성된 로컬 Moodle 회고 1건을 Gemini로 전송합니다. 원문 최대 2048 bytes, 전체 요청 최대 8192 bytes, 출력 최대 1024 tokens, 호출 1회이며 자동 재시도는 없습니다. 지급 동의와 별개입니다.</p>
       <p>예상 가격 시나리오는 USD 0.00346이며 실제 청구액이나 공급자의 금액 상한을 보장하지 않습니다. 전송 중 USD 0.05를 넘을 가능성도 있습니다.</p>
+      <p>AI 승인 남은 시간: {Math.max(0,Math.floor((s.aiApprovalRemainingMs??0)/1000))}초 · 이 기한 이후에는 승인할 수 없습니다.</p>
+      <p>원천 유효 기한: {new Date(a.leaseExpiresAtMs).toLocaleString()} · 지급 검토는 별도 기한이며 원천 만료를 넘길 수 없습니다.</p>
       <Details value={a}/><label><input type="checkbox" checked={!!a&&ack===approvalKey} disabled={busy} onChange={e=>setAck(e.target.checked?approvalKey:null)}/>이번 입력·모델·외부 전송·비용 안내를 확인했습니다.</label>
       <p>{availability.ai.reason}</p><button disabled={busy||!availability.ai.enabled} onClick={action(()=>live.current.driver.approveAi())}>이번 입력의 AI 평가 1회 승인</button></>}
     {participant&&bound&&<><h3>수령 지갑 등록</h3><p>등록 서명과 참가자·수령 주소가 로컬 체인의 공개 거래 데이터에 포함됩니다. 100 TEST의 수령 지갑을 고정하는 별도 서명입니다.</p>

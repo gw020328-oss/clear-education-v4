@@ -2,10 +2,12 @@
 import {observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
 import {requireRule as check} from '../../src/policy/values.mjs';
 import {readNormalView} from './normal-current-view.mjs';
-import {requireNormalModelWindow} from './normal-review-window.mjs';
+import {requireNormalModelWindow,REVIEW_WINDOW} from './normal-review-window.mjs';
 
 export function createNormalSourceSequence({store,getContext,applicationId,sourceWindows,startedAt,now,
-  signal,key,stage,diagnostics,waitForReaders,requireReaders,onPrepared,nowMs=()=>now()*1000}){
+  signal,key,stage,diagnostics,waitForReaders,requireReaders,onPrepared,nowMs=()=>now()*1000,
+  sourceValiditySeconds=900}){
+  check(Number.isSafeInteger(sourceValiditySeconds)&&sourceValiditySeconds>0&&sourceValiditySeconds<=900,'BC_NORMAL_SOURCE_WINDOW');
   let state='NEW',pending=null;
   const requireHr=()=>{const v=readNormalView(()=>store.getApplication(getContext(),applicationId));
     check(v.evidence.some(e=>e.current&&e.record.criterionId==='python-basic-certificate'&&e.record.condition==='MET'),'BC_NORMAL_NOT_MET');};
@@ -26,13 +28,14 @@ export function createNormalSourceSequence({store,getContext,applicationId,sourc
           if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','STARTED');
           if(resuming&&criterionId==='reflection-topics')request=pending.request;
           else{
-            sourceWindows.set(criterionId,Math.min(now()+(criterionId==='python-basic-certificate'?900:240),startedAt+1800));
+            sourceWindows.set(criterionId,now()+(criterionId==='python-basic-certificate'?Math.max(900,sourceValiditySeconds):sourceValiditySeconds));
             request=store.issueBridgeRequest(context,applicationId,{criterionId,
               expectedRevision:readNormalView(()=>store.getApplication(context,applicationId)).revision},key());
           }
           const body={requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision};
           if(prepareReflection&&criterionId==='reflection-topics'){
-            const preparation=await store.prepareBridgeReflection(context,applicationId,body,{signal,timeoutMs:30000});
+            const original=await store.prepareBridgeReflection(context,applicationId,body,{signal,timeoutMs:30000});
+            const preparation=Object.freeze({...original,approvalWindowEndsAtMs:Math.min(nowMs()+300000,original.packet.leaseExpiresAtMs-REVIEW_WINDOW.beforeModelSeconds*1000)});
             pending={request,preparation};state='WAITING';onPrepared?.(preparation);
             stage('AWAITING_EXACT_REFLECTION_APPROVAL');return preparation;
           }

@@ -6,18 +6,19 @@ import {createNormalSourceSequence} from '../../tools/bootcamp/normal-source-seq
 import {createNormalReviewReaders,requireNormalSourceWindow,REVIEW_WINDOW} from '../../tools/bootcamp/normal-review-window.mjs';
 import {normalSourceTarget} from '../../tools/bootcamp/normal-current-view.mjs';
 import {waitForNormalReviewConsents,waitForExplicitConsents} from '../../tools/bootcamp/explicit-consents.mjs';
-async function fixture(t,{modelDelay=0,sourceDelay=1}={}){
+async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240}={}){
  const windows=new Map(),events=[];let acquired=null,approved=false,models=0,prepared=null,f;
  f=await procedureFixture(t,{authority:{
   async beforeVerify(r){
    if(r.criterionId==='reflection-topics'){assert.equal(approved,true);models++;advance(modelDelay);}
    else if(r.criterionId!=='python-basic-certificate')advance(sourceDelay);
   },
-  transform(candidate,r){const cap=windows.get(r.criterionId);candidate.validUntilExclusive=Math.min(cap,candidate.validUntilExclusive);
+  transform(candidate,r){const cap=windows.get(r.criterionId);candidate.validUntilExclusive=sourceValiditySeconds===900?Math.min(cap,r.expiresAt):Math.min(cap,candidate.validUntilExclusive);
    candidate.rawLocator.expiresAt=cap;if(r.criterionId==='reflection-topics')candidate.acquiredAt=acquired;},
  }});
  const resolve=f.configuration.resolveSource;
  f.configuration.resolveSource=r=>{const g=resolve(r),cap=windows.get(r.criterionId);
+  if(sourceValiditySeconds===900)g.sourceVersion='fixture.review900';
   if(cap!==undefined)g.authExpiresAt=g.rawExpiresAt=g.queryExpiresAt=cap;return g;};f.restart();
  const app=f.create(),controller=new AbortController();t.after(()=>controller.abort());
  function advance(seconds){assert.ok(Number.isSafeInteger(seconds)&&seconds>=0);
@@ -35,7 +36,7 @@ async function fixture(t,{modelDelay=0,sourceDelay=1}={}){
   collectBridge(c,a,b,k){events.push('collect:'+f.store.getRequest(c,a,b.requestId).record.criterionId);return f.store.collect(c,a,b,k);},
  };
  const sequence=createNormalSourceSequence({store:facade,getContext:()=>f.aliceContext,applicationId:app,sourceWindows:windows,
-  startedAt:START,now:()=>f.time,signal:controller.signal,key:f.key,stage:name=>events.push(name),
+  sourceValiditySeconds,startedAt:START,now:()=>f.time,signal:controller.signal,key:f.key,stage:name=>events.push(name),
   waitForReaders:async()=>readers.require(),requireReaders:()=>readers.require()});
  return {f,app,windows,events,sequence,readers,touch,advance,get models(){return models;},get prepared(){return prepared;},
   approve(){approved=true;},sourceTarget:()=>normalSourceTarget(f.store.getApplication(f.aliceContext,app))};
@@ -140,4 +141,25 @@ test('90-second AI approval and 30-second processing leave an 80-second dual rev
  assert.equal(x.f.view(x.app).consent.bothCurrent,true);assert.equal(x.models,1);assert.equal(x.f.time,START+205);
  assert.equal(x.f.view(x.app).evidence.validUntilExclusive,START+240);assert.equal(240-(x.f.time-START),35);
  x.advance(35);assert.throws(()=>x.f.consent(x.app),/SOURCE|CURRENT|EXPIRED/);assert.equal(x.models,1);
+});
+
+
+test('normal source budget permits four minutes AI review and five minutes dual consent without extending a source',async t=>{
+ const x=await fixture(t,{sourceValiditySeconds:900,modelDelay:20});
+ const p=await complete(x,{approvalDelay:240});
+ assert.equal(p.approvalWindowEndsAtMs,(START+300)*1000);
+ assert.equal(p.packet.leaseExpiresAtMs,(START+900)*1000);
+ x.f.publish(x.app);const original=x.f.view(x.app),pending=wait(t,x);await new Promise(r=>setImmediate(r));
+ x.advance(150);x.touch();x.f.consent(x.app);x.advance(150);x.touch();x.f.consent(x.app,x.f.operatorContext);await pending;
+ assert.equal(x.f.view(x.app).consent.bothCurrent,true);assert.equal(x.models,1);
+ assert.equal(x.f.view(x.app).evidence.validUntilExclusive,original.evidence.validUntilExclusive);
+ assert.equal(x.f.view(x.app).procedure.reviewCapAt,original.procedure.reviewCapAt);
+});
+
+test('AI review deadline expires independently while the original source remains valid; no call or retry',async t=>{
+ const x=await fixture(t,{sourceValiditySeconds:900});const p=await x.sequence.collect({prepareReflection:true});
+ x.advance(301);x.touch();x.approve();assert.ok(x.f.time*1000<p.packet.leaseExpiresAtMs);
+ await assert.rejects(x.sequence.collect(),/REVIEW_WINDOW_REQUIRED/);assert.equal(x.models,0);
+ await assert.rejects(x.sequence.collect(),/SINGLE_COLLECTION/);
+ assert.equal(p.approvalWindowEndsAtMs,(START+300)*1000);
 });

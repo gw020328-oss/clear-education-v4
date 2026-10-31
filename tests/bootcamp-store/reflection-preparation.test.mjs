@@ -7,9 +7,9 @@ import {runFirstNormalReflection} from '../ai-review-precheck/first-normal-refle
 import {reflectionContextHash} from '../../src/document-precheck/review/bootcamp-reflection.mjs';
 
 // All source responses are invented. No network, model/key/journal or real identity is used.
-async function fixture(t,{bindManagedRun}={}){
+async function fixture(t,{bindManagedRun,sourceValiditySeconds=null}={}){
  const f=await storeFixture(t,{store:{mode:'ISOLATED_LIVE_TEST',producers:{},resolveSource:()=>null}});
- const state={available:true,authExpiresAt:START+240,rawExpiresAt:START+240,queryExpiresAt:START+240};
+ const state={available:true,authExpiresAt:START+(sourceValiditySeconds??240),rawExpiresAt:START+(sourceValiditySeconds??240),queryExpiresAt:START+(sourceValiditySeconds??240)};
  let review=async()=>{throw Error('OFFLINE_CALLBACK_STOP');};
  let code={head:'a'.repeat(40),clean:true},day='2026-10-20',body='<p>Synthetic work, checked input, learned loops.</p>',format=1,calls=0,aiCalls=0,seen,hook=async()=>{};
  const pin=r=>({environmentRef:'offline-preparation',runRef:'offline-run',sourceVersion:'moodle-4.5.15-215f4438',apiVersion:'2024100715',fixtureReportHash:p0Hash('TEST','report'),courseId:2,
@@ -21,7 +21,7 @@ async function fixture(t,{bindManagedRun}={}){
    mod_forum_get_discussion_post:{post:{id:41,discussionid:42,author:{id:3},subject:'Invented reflection',message:body,messageformat:format,
     timecreated:START-50,timemodified:START-10,capabilities:{view:true},isdeleted:false,isprivatereply:false},warnings:[]}};
   assert.ok(method in responses,'unexpected network method');return structuredClone(responses[method]);}});
- const consumer=createLiveMoodleConsumer({criterionId:'reflection-topics',withReader,resolvePin:pin,resolveLease:()=>state,modelVersion:'gemini-3.5-flash-lite',now:()=>f.time,
+ const consumer=createLiveMoodleConsumer({criterionId:'reflection-topics',sourceValiditySeconds,withReader,resolvePin:pin,resolveLease:()=>state,modelVersion:'gemini-3.5-flash-lite',now:()=>f.time,
   reflectionHost:{bindManagedRun,codeState(){assert.equal(this.marker,true);return code;},day(){assert.equal(this.marker,true);return day;},marker:true},reviewReflection:async args=>{aiCalls++;seen=args;return review(args);}});
  f.configuration.producers={'reflection-topics':consumer};f.configuration.resolveSource=consumer.resolveSource;f.restart();
  const app=f.create(),issue=()=>f.store.issueBridgeRequest(f.aliceContext,app,{criterionId:'reflection-topics',expectedRevision:f.view(app).revision},f.key());
@@ -110,4 +110,15 @@ test('managed run binding receives the exact prepared source context before any 
  const x=await fixture(t,{bindManagedRun(value){seen=value;return binding;}}),p=await x.prepare();
  assert.equal(p.managedRun,binding);assert.equal(seen.packet,p.packet);assert.equal(seen.context.applicationId,x.app);
  assert.equal(reflectionContextHash(seen.context),p.packet.contextHash);assert.equal(x.aiCalls,0);assert.equal(x.status(),'PENDING');
+});
+
+test('new review window is bound to prepared Moodle source and never grows with renewed leases',async t=>{
+ let context;const x=await fixture(t,{sourceValiditySeconds:900,bindManagedRun(v){context=v.context;}}),p=await x.prepare();
+ assert.equal(context.sourceVersion,'moodle-4.5.15-215f4438.review900');
+ assert.equal(p.packet.leaseExpiresAtMs,(START+900)*1000);assert.equal(x.aiCalls,0);
+ x.f.setTime(START+301);assert.equal(p.isCurrent(),true);
+ x.state.authExpiresAt=x.state.rawExpiresAt=x.state.queryExpiresAt=START+1800;
+ assert.equal(p.packet.leaseExpiresAtMs,(START+900)*1000);
+ x.f.setTime(START+900);assert.equal(p.isCurrent(),false);
+ await assert.rejects(x.collect());assert.equal(x.aiCalls,0);
 });
