@@ -2,10 +2,10 @@ name: Embedded wallet preparation
 on:
   pull_request:
     branches: [develop, main]
-    paths: ['src/application/http.mjs', 'tests/application/**', 'src/embedded-wallet/**', 'tools/embedded-wallet/**', 'tools/local-attestor-review/**', 'tests/embedded-wallet/**', '.github/workflows/embedded-wallet.yml']
+    paths: ['src/bootcamp/**', 'src/bootcamp-authorization/**', 'src/review-evidence/moodle/**', 'tools/bootcamp/**', 'tests/bootcamp-store/**', 'tests/bootcamp-authorization/**', 'tests/moodle-review/**', 'src/application/http.mjs', 'tests/application/**', 'src/embedded-wallet/**', 'tools/embedded-wallet/**', 'tools/local-attestor-review/**', 'tests/embedded-wallet/**', '.github/workflows/embedded-wallet.yml']
   push:
     branches: ['codex/**']
-    paths: ['src/application/http.mjs', 'tests/application/**', 'src/embedded-wallet/**', 'tools/embedded-wallet/**', 'tools/local-attestor-review/**', 'tests/embedded-wallet/**', '.github/workflows/embedded-wallet.yml']
+    paths: ['src/bootcamp/**', 'src/bootcamp-authorization/**', 'src/review-evidence/moodle/**', 'tools/bootcamp/**', 'tests/bootcamp-store/**', 'tests/bootcamp-authorization/**', 'tests/moodle-review/**', 'src/application/http.mjs', 'tests/application/**', 'src/embedded-wallet/**', 'tools/embedded-wallet/**', 'tools/local-attestor-review/**', 'tests/embedded-wallet/**', '.github/workflows/embedded-wallet.yml']
 permissions:
   contents: read
 concurrency:
