@@ -5,7 +5,8 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {normalE2Hash,NORMAL_E2_PATH,NORMAL_SOURCE_INTAKE,NORMAL_SOURCE_INTAKE_SHA} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
 const root=new URL('../../',import.meta.url),actualRead=p=>readFileSync(new URL(p,root));
-const v51Read=p=>["src/embedded-wallet/product-session.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','20b15027b448acb8cf4f48f86e57b3aa507e75ef:'+p],{cwd:root}):actualRead(p);
+const v52Read=p=>["src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-diagnostics.mjs", "src/bootcamp/execution-operations.mjs", "src/bootcamp/procedure.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','a8d5f88f686d20091fe66845f1d6a51d199eebd0:'+p],{cwd:root}):actualRead(p);
+const v51Read=p=>["src/embedded-wallet/product-session.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','20b15027b448acb8cf4f48f86e57b3aa507e75ef:'+p],{cwd:root}):v52Read(p);
 const v50Read=p=>["src/embedded-wallet/product-session.mjs", "tools/bootcamp/frontend-server.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','1b63d7d487354f46fe0eaa6072400e8413356d57:'+p],{cwd:root}):v51Read(p);
 const v49Read=p=>["src/bootcamp/execution-development.mjs", "src/bootcamp/http.mjs", "src/bootcamp/normal-client.mjs", "src/bootcamp/recipient-registration-ui.mjs", "src/embedded-wallet/approvals.mjs", "src/embedded-wallet/product-panel.jsx", "src/embedded-wallet/product-session.mjs", "tools/bootcamp/live-context.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','2effc31319eb79de7325cc58f61959b25c9d614f:'+p],{cwd:root}):v50Read(p);
 const v48Read=p=>["src/bootcamp/execution-diagnostics.mjs", "src/embedded-wallet/product-panel.jsx", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs", "tools/bootcamp/normal-current-view.mjs", "tools/bootcamp/normal-host-flow.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','3047ddbe66f6eddd8a27918f4dae3a67a5b69ac3:'+p],{cwd:root}):v49Read(p);
@@ -691,11 +692,20 @@ test('v51 pins bounded checkpoint product route and fixed diagnostics only',asyn
 test('v52 pins bounded browser checkpoint route and scoped error codes',async()=>{
  const d=JSON.parse(actualRead('specs/bootcamp/hackathon-test-browser-checkpoint-source-delta-v1.json'));
  assert.equal(sha(actualRead(d.previousRecord.path)),d.previousRecord.sha256);
- for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v51Read(p)),x.before,p);assert.equal(sha(actualRead(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
- const {consumeReviewedV52Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v52.mjs');
- const current=consumeReviewedV52Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
- assert.equal(current.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(current.sources).length,192);
+ for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v51Read(p)),x.before,p);assert.equal(sha(v52Read(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
+ assert.deepEqual(actualRead('src/hackathon-test-vault/reviewed-source-v52.mjs'),execFileSync('git',['show','a8d5f88f686d20091fe66845f1d6a51d199eebd0:src/hackathon-test-vault/reviewed-source-v52.mjs'],{cwd:root}));
  assert.deepEqual(Object.keys(d.changes),['src/embedded-wallet/product-session.mjs']);
- for(const [p,h]of Object.entries(d.sourceAdditions)){assert.equal(sha(actualRead(p)),h,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',d.previousRecord.guardHead+':'+p],{cwd:root})),d.previousUnpinnedSourceSha256[p],p);}
+ for(const [p,h]of Object.entries(d.sourceAdditions)){assert.equal(sha(v52Read(p)),h,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),h,p);assert.equal(sha(execFileSync('git',['show',d.previousRecord.guardHead+':'+p],{cwd:root})),d.previousUnpinnedSourceSha256[p],p);}
  assert.equal(d.boundary.singleEncodedCheckpointGetOnly,true);assert.equal(d.boundary.strictParserAndCanonicalChecksPreserved,true);assert.equal(d.boundary.writeRetry,false);
+});
+
+test('v53 pins real-clock preparation and bounded seal intent validation',async()=>{
+ const d=JSON.parse(actualRead('specs/bootcamp/hackathon-test-live-preparation-clock-source-delta-v1.json'));
+ assert.equal(sha(actualRead(d.previousRecord.path)),d.previousRecord.sha256);
+ for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v52Read(p)),x.before,p);assert.equal(sha(actualRead(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
+ const {consumeReviewedV53Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v53.mjs');
+ const current=consumeReviewedV53Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
+ assert.equal(current.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(current.sources).length,192);
+ assert.deepEqual(Object.keys(d.changes),["src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-diagnostics.mjs", "src/bootcamp/execution-operations.mjs", "src/bootcamp/procedure.mjs"]);
+ assert.equal(d.boundary.registeredSourcesRequireRealClock,true);assert.equal(d.boundary.sealIntentWrittenOnce,true);assert.equal(d.boundary.automaticRetry,false);
 });

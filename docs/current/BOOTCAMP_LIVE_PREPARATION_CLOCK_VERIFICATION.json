@@ -38,7 +38,7 @@
       "command": "CLEAR_SEAL_REQUEST_TEST=1 LOG_LEVEL=silent ./tools/node --test tests/hackathon-test-vault/e5b/seal-request-clock.test.mjs",
       "passed": 7,
       "failed": 0,
-      "followup": "expiry case narrowed to original 60-second worker lease; targeted verification recorded in CI"
+      "followup": "Original 60-second worker lease expiry narrowed to +61 seconds; targeted native case passed 1/1 with BC_E5_FENCED, zero additional keys/signatures/broadcasts."
     }
   ],
   "rehearsal": {
@@ -92,5 +92,7 @@
     "contractOrDbSchemaChanged": false,
     "merged": false
   },
-  "ci": "MUST_CHECK_EXACT_FINAL_PR_HEAD; local results do not imply CI success"
+  "ci": "MUST_CHECK_EXACT_FINAL_PR_HEAD; local results do not imply CI success",
+  "sourcePinGeneration": 53,
+  "reviewedSourceCount": 192
 }
