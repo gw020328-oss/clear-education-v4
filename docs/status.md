@@ -1,5 +1,9 @@
 # 개발 현황
 
+## 2026-11-01 PR131 지급 준비 시계 검사 후속
+
+[원인·수정·재시험 경계](current/BOOTCAMP_LIVE_PREPARATION_CLOCK.ko.md)와 [검증 기록](current/BOOTCAMP_LIVE_PREPARATION_CLOCK_VERIFICATION.json)을 추가했다. 실제 실행은 동의 반영 4거래 뒤 지급 준비에서 중단됐고 최초 검토 기한이 만료됐다. 별도 ISOLATED_LIVE_TEST·실제 벽시계·제품 HTTPS/API·새 Geth V2 합성 리허설로 같은 오류를 재현한 뒤 PREPARE→ACCEPT→claim·canonical 정확100 TEST·중복 거부를 확인했다. 원천/AI/사용자 지갑은 명시적 시험 대체이며 실제 사용자 지급 완료가 아니다. 기존 실제 기록은 보존하고 자동 재실행·기한 연장·병합을 하지 않는다. 정확한 최종 HEAD CI는 PR131에서 확인한다.
+
 ## 2026-10-31 Privy 로그인 비교·진단 후속 (PR125 Draft)
 
 [구성 비교와 재시험 조건](current/PRIVY_LOGIN_DIAGNOSIS_20261031.ko.md)을 기록했다. 이전9457의 Google/EOA 로그인 방식과 현재9467의 SDK3.51.0·initOAuth·Provider/CSP 설정은 같으며, origin/CA/새 세션·체인 차이가 있다. 이번 사용자 HackerRank 로그인 후 호스트 활성화는 확인됐으나 Privy Google 이동 전에 실패했다. sourceVerified=false/applicationId=null 상태로 정상 종료했고 원래 실패 원인은 미확정이다. 숨겨진 오류를 시작/복귀 단계·고정 SDK 코드·허용 HTTP 상태로만 표시/탭별 보존하는 최소 수정이다. 원시 예외/URL/토큰/쿠키를 기록하지 않는다. v44는 onboarding 한 파일과 진단 모듈만 새 지갑 지문으로 인수하며 v1–v43을 보존한다. 실제 재로그인·AI·지급 재시험은 미실행, 최신 CI는 PR125에서 확인한다.

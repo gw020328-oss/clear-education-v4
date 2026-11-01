@@ -136,11 +136,21 @@ export function createApiExecutionBridge({db,ports,service:baseService,live,basi
   },
   async seal(g,h,b){
    check(ports.executionEnabled,'BC_E5B_FINAL_PACKET_ACTIVATION_PENDING');
+   let requested;
    const request=run(g,h,'B_SEAL_REQUEST',(s,time)=>{
     check(!ledger.event(h.intentId,'SEAL_REQUESTED'),'BC_E5B_SEAL_LOOKUP_REQUIRED');
     const request={binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)};
-    ledger.append(h.intentId,'SEAL_REQUESTED','seal-'+h.intentId,{bindingHash:e4Hash(b),recordedAt:time});
+    requested={bindingHash:e4Hash(b),recordedAt:time};ledger.append(h.intentId,'SEAL_REQUESTED','seal-'+h.intentId,requested);
     event(s.i,'E4_SEAL_REQUESTED',{bindingHash:e4Hash(b)},time,'e5b-seal-'+h.intentId);fault('e5b-after-seal-request');return request;
+   },(s,time,authority,value)=>{
+    // Commit this one intent before invoking native sealing. A clock crossing
+    // rechecks only the original authority/command, never writes or signs again.
+    const record=bound(b);sameBasis(record.basis,cas(s,time,authority),time);
+    check(b.purpose==='EXECUTE'&&time<Math.min(b.expiresAt,b.business.businessValidUntil)
+     &&canonical(record.globalHandle)===canonical(g)&&canonical(record.localHandle)===canonical(h),'BC_E5B_BINDING_AUTHORITY');
+    check(canonical(value)===canonical({binding:b,command:ledger.request(h.intentId).command,capability:authorized(b)})
+     &&e4Hash(value.command)===b.commandHash,'BC_E5B_COMMAND_CHANGED');
+    check(canonical(ledger.event(h.intentId,'SEAL_REQUESTED'))===canonical(requested),'BC_E5B_SEAL_LOOKUP_REQUIRED');
    });
    const result=await ports.seal(request);
    return run(g,h,'B_SEAL_REFERENCE',()=>{const r=ports.consume(result,'REFERENCE');ledger.append(h.intentId,'REFERENCE','reference-'+r.ref,r);fault('e5b-after-reference');return r;

@@ -331,7 +331,9 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
     // new nonce/window or repeat preparation/command writes across the clock.
     const fresh=state(st.a,at,[]),rebuilt=draft(fresh,Number(record.payload.message.issuedAt),[]);
     check(canonical(rebuilt.payload)===canonical(record.payload)&&rebuilt.sourceCommitment===record.sourceCommitment,'BC_E3_PREPARATION_STALE');
-    const inspected=createTestDraftInspector(record.snapshot,{clock:()=>at}).inspect(record.payload,rebuilt.current);
+    // Registered sources must use the inspector's real clock at commit too.
+    // Only synthetic fixtures may inject the transaction's test clock.
+    const inspected=createTestDraftInspector(record.snapshot,mode==='ISOLATED_LIVE_TEST'?{}:{clock:()=>at}).inspect(record.payload,rebuilt.current);
     check(inspected.status==='UNSIGNED_PREFLIGHT_ONLY','BC_E3_PREPARATION_STALE');
    });
    return {procedureId:st.p.procedureId,publicationId:st.pub.publicationId,preparationId:record.preparationId};

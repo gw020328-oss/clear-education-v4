@@ -39,4 +39,6 @@ jobs:
         run: |
           CLEAR_SELF_HTTPS_TEST=1 ./tools/node --test tests/hackerrank-evidence/self-attestor-https.test.mjs
           CLEAR_SELF_PAYMENT_TEST=1 ./tools/node --test tests/hackathon-test-vault/e5b/self-attestor-payment.test.mjs
+          CLEAR_REGISTERED_PAYMENT_TEST=1 ./tools/node --test tests/hackathon-test-vault/e5b/registered-product-payment.test.mjs
+          CLEAR_SEAL_REQUEST_TEST=1 ./tools/node --test tests/hackathon-test-vault/e5b/seal-request-clock.test.mjs
           ./tools/node --test tests/hackerrank-evidence/self-profile.test.mjs

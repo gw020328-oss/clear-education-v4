@@ -71,6 +71,14 @@ test('snapshot is deep copied; input and state are not mutated; result contains 
  assert.equal(r.signature,undefined);assert.equal(r.sourceWindow,undefined);
 });
 test('clock overrides restricted to synthetic fixture provenance',()=>{const f=fixtureV3();f.snapshot.provenance='SERVER_OWNED_UNCONFIGURED';assert.throws(()=>createTestDraftInspector(f.snapshot,{clock:()=>f.now}),/REAL_CLOCK_REQUIRED/);});
+test('registered source inspector rejects injected clocks and checks its current real-clock reading',t=>{
+ const f=fixtureV3();f.snapshot.provenance='REGISTERED_TEST_SOURCE';
+ assert.throws(()=>createTestDraftInspector(f.snapshot,{clock:()=>f.now}),/REAL_CLOCK_REQUIRED/);
+ let at=f.now;t.mock.method(Date,'now',()=>at*1000);const inspector=createTestDraftInspector(f.snapshot);
+ assert.equal(inspector.inspect(f.input,f.state).status,'UNSIGNED_PREFLIGHT_ONLY');
+ at=Number(f.input.message.expiresAt);assert.equal(inspector.inspect(f.input,f.state).code,'FIRST_ACCEPT_TIME');
+ assert.equal(f.snapshot.message.expiresAt,f.input.message.expiresAt);
+});
 for(const [field,value] of [
  ['decisionId',b32('ee')],['decisionRevision','2'],['decisionHash',b32('ee')],['firstReviewStartedAt','2000000010'],
  ['decisionPublishedAt','2000000021'],['procedureId',b32('ee')],['runtimeMappingHash',b32('ee')],['allocationId',b32('ee')],
