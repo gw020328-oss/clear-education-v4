@@ -1,5 +1,32 @@
 # 개발 현황
 
+## 2026-11-01 회고 수동 재개·만료 입력과 로그인 진단 현황
+
+원격 확인 **2026-11-01 11:00 KST**. develop은 [a6372f5](https://github.com/gw020328-oss/clear-education-v4/commit/a6372f50bc1e757d724bb064c723d7103ff064e1), main은 [dc012be](https://github.com/gw020328-oss/clear-education-v4/commit/dc012be5adec29229d21dbdca24ee97f01e735d1)이며 어제 이후 새 기능 병합은 없다. [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)와 [#131](https://github.com/gw020328-oss/clear-education-v4/pull/131)은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 아래는 공개 보고서의 저장된 결과이며 이번 자동화가 실제 시험을 재실행한 결과가 아니다.
+
+### 진행 — 로그인 진단과 명시적 회고 재개 후보
+
+[현재 #125 로그인 진단](https://github.com/gw020328-oss/clear-education-v4/blob/911be028a79ac669e494dbffb4669bea261176af/docs/current/PRIVY_LOGIN_DIAGNOSIS_20261031.ko.md)은 UI catch/단계 표시와 OAuth 복귀 state.error 누락을 보완했다. 과거 Google/EOA 구성 성공·사용자 보고 SIWE와 현재 실패 원인·실제 V2 지급 완주는 별개다. 공개 기록의 실제 활성화는 sourceVerified=false/applicationId=null에서 중단했으며 원천 검증 성공이 아니다. 실제 실패 SDK 코드는 미보존이므로 redirectUri/경고/포트 문제로 원인을 단정하지 않는다. 새 안전 진단 번들은 미활성이며 이번 후속에서 실제 재로그인·원천·유료 AI·전체 지급 재시험을 수행하지 않았다.
+
+[고정 #131 회고 재개 계약](https://github.com/gw020328-oss/clear-education-v4/blob/3047ddbe66f6eddd8a27918f4dae3a67a5b69ac3/docs/current/BOOTCAMP_REFLECTION_RESUME.ko.md)은 같은 살아 있는 호스트/신청/인증에서 운영자가 실패 회고 단계만 명시 재개하는 후보를 정의한다. NOT_SENT는 원자적인 전송 전 실패 기록과 미소비 승인·원래 입력/코드/기한 결합이 입증돼야 한다. 빈 journal·기록 없음은 미전송 증거가 아니다. 같은 producer의 RESULT_READY는 모델 재호출 없이 사용하고 이미 수락된 같은 회고는 건너뛴다. 전송 후 UNKNOWN·만료·철회·중복/동시/옛 revision은 차단하며 기존 HR·SIWE·완료 호출이나 POST/claim을 자동 재전송하지 않는다. 재개 자체는 새 유료 호출 승인이 아니다.
+
+이번 폴더 후속은 새 작업본의 고정 상위/하위 폴더를 각각 기존 검증 helper로 준비하며 UID·권한·심링크/alias 거부를 유지한다. 실행 코드3개·v48 정확 인수 외 과거 세대/실패 기록을 보존하고 공용 recursive 완화·권한 자동 수리·hotpatch·codeHead 위조·기한 연장은 하지 않았다고 보고한다. 상위 폴더 부재·FAILED_BEFORE_CLAIM/NOT_SENT와 같은 호출의 ENOENT 재현이 직접 근거지만 당시 원본 하위 예외가 없어 역사적 원인 확정은 아니다. **해당 입력의 원래 만료는2026-10-31 23:52:21 KST로 이미 지났으므로 폴더 준비만으로 기존 입력/승인을 재개할 수 없다.** 새 코드가 보존 중인 기존 프로세스에 자동 반영된 것도 아니다.
+
+### 검증과 남은 범위
+
+#131은 집중39/39·API/store829/829·소스 호환/변조167/167을 보고한다. 각각의 범위이며 합산하지 않는다. E5B job은75 PASS·별도 opt-in self-profile1건 SKIP이며 미실행을 통과로 세지 않는다. 별도 self-profile 합성 workflow 성공은 해당 실행의 근거다. 자체 Attestor/인공 원천·AI·지갑과 새 격리 Geth의 V2/100 TEST·중복 거부 검증을 실제 계정·유료 모델·사용자 지급 완주로 확대하지 않는다. 기존 r20도 V1 로컬 INCLUDED/finalized=false의 저장 결과이며 새 V2 재시험이 아니다.
+
+공개 기록상 기존 실제 회고 실패의 정확한 내부 원인·새 수정의 실제 사용자 시험과 V2 제품 완주는 미검증이다. 수정 단위는 기존 프로세스/작업본·DB·체인을 종료/재개/재시작하지 않았다. 현재 #60·#125·#128·#131이 열려 있고 #131 전체 base diff에는 #125 등 선행 기능 이력이 포함돼 문서 전용 PR이 아니다. #128은 같은 head의 공개 이력 PR/push2개 FAILURE를 유지하며 세부 민감 로그를 읽거나 원인을 추정하지 않았다. 이 자동화는 기능 PR을 수정/병합하거나 새 실제 시험을 요청하지 않는다.
+
+### 정확한 최신 head CI
+
+| PR | 확인 head SHA | 표시 job COMPLETED·SUCCESS | 실행 근거 |
+| --- | --- | --- | --- |
+| [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125) | 911be028a79ac669e494dbffb4669bea261176af | 12/12 | [run 41169656260](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169656260) · [run 41169656346](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169656346) · [run 41169656342](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169656342) · [run 41169652061](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169652061) · [run 41169656276](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169656276) · [run 41169656284](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169656284) · [run 41169656295](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169656295) · [run 41169652057](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41169652057) |
+| [#131](https://github.com/gw020328-oss/clear-education-v4/pull/131) | 3047ddbe66f6eddd8a27918f4dae3a67a5b69ac3 | 12/12 | [run 41233343231](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233343231) · [run 41233343018](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233343018) · [run 41233343006](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233343006) · [run 41233337561](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233337561) · [run 41233343303](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233343303) · [run 41233342966](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233342966) · [run 41233343158](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233343158) · [run 41233337537](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41233337537) |
+
+각12개 job은 모두 SUCCESS지만 내부 opt-in 미실행 사례와 고유 테스트 수를 분리한다. CI 성공은 실제 로그인/원천/유료 호출/지급·병합·배포 완료가 아니다. 이전 날짜별 실패·준비·미병합은 당시 기록이다. 이번 자동화는 공개 문서/코드·CI만 대조했으며 실제 원문/proof·쿠키·개인키·민감 로그 접근, 비공개 메일 조회/발송·새 로그인/유료 호출/서명/거래/배포를 하지 않았다.
+
 ## 2026-10-31 자체 TEST 리허설·미병합 프론트 현황
 
 원격 확인 **2026-10-31 13:22 KST**. develop은 [61dc021](https://github.com/gw020328-oss/clear-education-v4/commit/61dc02111ae17a1b12047ee008cf1b0902237beb), main은 [937a51d](https://github.com/gw020328-oss/clear-education-v4/commit/937a51db6f98b757fedb36afba98f238eea5a4b9)이며 어제 이후 새 기능 병합은 없다. 아래 [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)와 [#128](https://github.com/gw020328-oss/clear-education-v4/pull/128)은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 공개 보고서의 저장된 결과이며 이번 자동화의 재실행 결과가 아니다.
