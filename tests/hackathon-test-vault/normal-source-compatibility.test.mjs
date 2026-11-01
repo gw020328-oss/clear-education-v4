@@ -5,7 +5,8 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {normalE2Hash,NORMAL_E2_PATH,NORMAL_SOURCE_INTAKE,NORMAL_SOURCE_INTAKE_SHA} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
 const root=new URL('../../',import.meta.url),actualRead=p=>readFileSync(new URL(p,root));
-const v49Read=p=>["src/bootcamp/execution-development.mjs", "src/bootcamp/http.mjs", "src/bootcamp/normal-client.mjs", "src/bootcamp/recipient-registration-ui.mjs", "src/embedded-wallet/approvals.mjs", "src/embedded-wallet/product-panel.jsx", "src/embedded-wallet/product-session.mjs", "tools/bootcamp/live-context.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','2effc31319eb79de7325cc58f61959b25c9d614f:'+p],{cwd:root}):actualRead(p);
+const v50Read=p=>["src/embedded-wallet/product-session.mjs", "tools/bootcamp/frontend-server.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','1b63d7d487354f46fe0eaa6072400e8413356d57:'+p],{cwd:root}):actualRead(p);
+const v49Read=p=>["src/bootcamp/execution-development.mjs", "src/bootcamp/http.mjs", "src/bootcamp/normal-client.mjs", "src/bootcamp/recipient-registration-ui.mjs", "src/embedded-wallet/approvals.mjs", "src/embedded-wallet/product-panel.jsx", "src/embedded-wallet/product-session.mjs", "tools/bootcamp/live-context.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','2effc31319eb79de7325cc58f61959b25c9d614f:'+p],{cwd:root}):v50Read(p);
 const v48Read=p=>["src/bootcamp/execution-diagnostics.mjs", "src/embedded-wallet/product-panel.jsx", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs", "tools/bootcamp/normal-current-view.mjs", "tools/bootcamp/normal-host-flow.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','3047ddbe66f6eddd8a27918f4dae3a67a5b69ac3:'+p],{cwd:root}):v49Read(p);
 const v47Read=p=>["src/bootcamp/execution-diagnostics.mjs", "tools/bootcamp/normal-failure-wait.mjs", "tools/bootcamp/normal-reflection-run.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','a43cbe221c51d4fd734d5f7a64fffe141d85d66e'+':'+p],{cwd:root}):v48Read(p);
 const v46Read=p=>["src/bootcamp/execution-diagnostics.mjs", "src/bootcamp/http.mjs", "src/bootcamp/moodle-live-consumer.mjs", "src/bootcamp/normal-receipt.mjs", "src/document-precheck/review/fixed-normal-reflection.mjs", "src/embedded-wallet/product-panel.jsx", "tools/bootcamp/frontend-server.mjs", "tools/bootcamp/live-context.mjs", "tools/bootcamp/normal-chain.mjs", "tools/bootcamp/normal-failure-wait.mjs", "tools/bootcamp/normal-host-flow.mjs", "tools/bootcamp/normal-host-worker.mjs", "tools/bootcamp/normal-reflection-run.mjs", "tools/bootcamp/normal-source-sequence.mjs", "tools/bootcamp/test-client/driver.js", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','8205da827cf093ee7ebbfecaf6bd79ec8c2241ab:'+p],{cwd:root}):v47Read(p);
@@ -672,9 +673,18 @@ test('v49 pins read-only boundary refresh and a suspended recipient wait without
 test('v50 pins registration observations while preserving signed target CAS and canonical ancestry',async()=>{
  const d=JSON.parse(actualRead('specs/bootcamp/hackathon-test-registration-observation-source-delta-v1.json'));
  assert.equal(sha(actualRead(d.previousRecord.path)),d.previousRecord.sha256);
- for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v49Read(p)),x.before,p);assert.equal(sha(actualRead(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
- const {consumeReviewedV50Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v50.mjs');
- const current=consumeReviewedV50Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
- assert.equal(current.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(current.sources).length,191);
+ for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v49Read(p)),x.before,p);assert.equal(sha(v50Read(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
+ assert.deepEqual(actualRead('src/hackathon-test-vault/reviewed-source-v50.mjs'),execFileSync('git',['show','1b63d7d487354f46fe0eaa6072400e8413356d57:src/hackathon-test-vault/reviewed-source-v50.mjs'],{cwd:root}));
  assert.equal(d.boundary.signedPacketAndCasPreserved,true);assert.equal(d.boundary.canonicalAncestryBeforeAndAfterSignature,true);assert.equal(d.boundary.writeRetry,false);
+});
+
+test('v51 pins bounded checkpoint product route and fixed diagnostics only',async()=>{
+ const d=JSON.parse(actualRead('specs/bootcamp/hackathon-test-registration-route-source-delta-v1.json'));
+ assert.equal(sha(actualRead(d.previousRecord.path)),d.previousRecord.sha256);
+ for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v50Read(p)),x.before,p);assert.equal(sha(actualRead(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
+ const {consumeReviewedV51Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v51.mjs');
+ const current=consumeReviewedV51Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
+ assert.equal(current.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(current.sources).length,191);
+ assert.deepEqual(Object.keys(d.changes),['src/embedded-wallet/product-session.mjs','tools/bootcamp/frontend-server.mjs']);
+ assert.equal(d.boundary.singleEncodedCheckpointGetOnly,true);assert.equal(d.boundary.strictParserAndCanonicalChecksPreserved,true);assert.equal(d.boundary.writeRetry,false);
 });
