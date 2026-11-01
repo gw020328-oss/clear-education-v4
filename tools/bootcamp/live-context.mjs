@@ -122,7 +122,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),receiptRequired:true,
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:failureState?null:reflectionApproval?.brief(context)??null});};
-  const recipientView=(c,a)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,authorize:(c,w)=>ui.authorize(c,w)});};
+  const recipientView=(c,a,checkpoint)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,checkpoint,authorize:(c,w)=>ui.authorize(c,w)});};
   const normalUi=Object.freeze({walletRuntime:Object.freeze({instanceId:m.instanceId}),assertWritable(path){requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
    beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');

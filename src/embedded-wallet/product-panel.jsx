@@ -1,5 +1,5 @@
 import React, {useEffect,useRef,useState} from 'react';
-import {createProductSession} from './product-session.mjs';
+import {createProductSession,registrationFailure} from './product-session.mjs';
 import {createNormalBootcampClient} from '../bootcamp/normal-client.mjs';
 import {createTestDriver,createTestAutoReader} from '../../tools/bootcamp/test-client/driver.js';
 import {testActionAvailability} from '../../tools/bootcamp/test-client/review-window.js';
@@ -47,7 +47,7 @@ export function ProductPanel({session,wallet,config}) {
     const controller=new AbortController();registrationAbort.current=controller;
     try{if(submit){await live.current.product.submitRegistration(packet,{signal:controller.signal});if(alive.current)setPacket(null);}
       else{const p=await live.current.product.readRegistration({signal:controller.signal});if(alive.current)setPacket(p);}}
-    catch{if(alive.current){setPacket(null);setError(live.current.product.registrationUnknown?'수령 지갑 등록 결과가 불명확합니다. 다시 서명하지 말고 실행 담당자에게 알려주세요.':'수령 지갑 등록 상태가 바뀌었거나 확인에 실패했습니다. 최신 상태를 다시 읽어주세요.');}}
+    catch(error){if(alive.current){const diagnostic=registrationFailure(error,{submit,unknown:live.current.product.registrationUnknown});setPacket(null);setError((live.current.product.registrationUnknown?'수령 지갑 등록 결과가 불명확합니다. 다시 서명하지 말고 실행 담당자에게 알려주세요.':'수령 지갑 등록 상태가 바뀌었거나 확인에 실패했습니다. 최신 상태를 다시 읽어주세요.')+' ['+diagnostic.stage+' / '+diagnostic.code+']');}}
     finally{registrationAbort.current=null;if(alive.current){setRegBusy(false);live.current.reader.setEnabled(auto);}}
   };
   return <section>{s.bootstrap?.selfAttestor&&<aside role="note"><strong>자체 공증 TEST 시험</strong><p>공식 hosted 검증 성공이나 독립 공증을 의미하지 않습니다. BGP 검사는 꺼져 있습니다. {s.bootstrap.selfAttestor.sourceEnvironment==='SYNTHETIC_HTTPS'?'합성 HTTPS 원천을 사용한 리허설입니다.':'HackerRank 본인 계정 원천을 이 실행의 자체 공증자로 확인합니다.'}</p></aside>}<h2>{participant?'참가자 신청':'운영자 검토'} · 로컬 TEST</h2>

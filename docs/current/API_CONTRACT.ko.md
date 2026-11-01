@@ -1,3 +1,11 @@
+## 수령 등록 관측 갱신 (2026-11-01 후속)
+
+기존 `GET /bootcamp/v3/applications/:id/recipient-registration`은 서명 전후 확인용으로 선택적 `checkpoint` JSON query를 받는다. 정확한 `{number,hash,time}`와 최대 256자만 허용한다. 인증/소유자 검사를 유지하고, 원래 관측 블록이 현재 canonical 체인의 조상임을 기존 reader로 확인한 경우만 `checkpointContinuity: {status: CANONICAL_ANCESTOR, from, to}`를 반환한다. 재조직·블록 회귀·누락·불확실한 결과·이미 등록된 체인은 서명용 확인에서 거부한다. RPC 뒤 인증과 등록 대상/결정/CAS를 다시 확인한다. query 없는 조회는 기존 표시 응답을 유지한다.
+
+지갑 서명기는 `observedAt`, `checkpoint`, 검증된 `checkpointContinuity`만 관측 메타데이터로 분리한다. 전체 EIP-712 payload, 신청 ID, 등록 대상, application revision, ledger sequence, decision ID/revision/hash 및 나머지 서버 필드는 동일해야 한다. chain/instance/contract/policy/runtimeMapping/participant/recipient/nonce/deadline 결합과 기존 POST CAS·재사용 방지는 유지한다. 서명 전후 canonical/NOT_REGISTERED, signatureAccepted=false, 미등록 recipient/sequence, 정확한 chainApplicationId를 요구한다. 기한을 갱신하지 않는다.
+
+UI 실패 안내는 `READ_CONTENT`, `VERIFY_CONTEXT`, `PRE_SIGN_READ`, `WALLET_REQUEST`, `POST_SIGN_READ`, `SUBMIT` 등 고정 단계와 허용 목록의 오류 코드만 표시한다. 원문 예외·토큰·서명·stack은 표시하거나 기록하지 않는다. POST 응답 불명확 시 기존 재서명/재전송 차단을 유지한다.
+
 2026-11-01 수령 등록 대기: 같은 `/resume`에서 `RECIPIENT_WAIT_NOT_SENT` 체크포인트를 조건부 재개한다. 기존 등록 target·기한을 보존하고 지급 함수 재호출·AI/원천 반복은 없다. [상세 계약](BOOTCAMP_REFLECTION_RESUME.ko.md)의 수령 등록 대기 절을 따른다.
 
 2026-10-31 후속 [회고 수동 재개 계약](BOOTCAMP_REFLECTION_RESUME.ko.md): 실패 session 응답에 `failureRevision/applicationRevision/resumeAllowed/recoveryStatus`를 추가한다. 운영자의 `POST /bootcamp/v4/applications/:id/resume`만 조건부 허용하며 body는 `failureRevision/expectedRevision`이다. 영수증은 완료 응답 유실 시에도 기존 거래의 canonical transfer를 별도 측정으로 표시할 수 있다.

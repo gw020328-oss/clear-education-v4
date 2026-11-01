@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
 import {Wallet,id,getBytes,verifyMessage} from 'ethers';
 import {pinnedWallet} from '../../src/embedded-wallet/provider-boundary.mjs';
-import {createProductSession} from '../../src/embedded-wallet/product-session.mjs';
+import {createProductSession,registrationFailure} from '../../src/embedded-wallet/product-session.mjs';
 import {recipientRegistration,verifyRecipientRegistration} from '../../src/bootcamp/recipient-registration.mjs';
 import {requestMessage,requestHash,POLICY_HASH,CRITERION} from '../../src/hackerrank-evidence/request.mjs';
 import {productWalletMount,productSigningContext} from '../../tools/embedded-wallet/product-mount.mjs';
@@ -18,13 +18,13 @@ function fixture(t){
  const r={version:'clear-hackerrank-request.1',audience:'fixture',participantId:'participant-fixture',participantWallet:w.address.toLowerCase(),applicationId:'application-fixture',criterionId:CRITERION,policyHash:POLICY_HASH,runtimeMappingHash:id('mapping'),trustConfigHash:id('trust'),recipeHash:id('recipe'),expectedClaimOwner:Wallet.createRandom().address.toLowerCase(),nonce:id('nonce'),issuedAt:now,expiresAt:now+120,selectedCertificateId:null};
  const source={applicationId:r.applicationId,approvalId:'approval-fixture',requestHash:requestHash(r),message:requestMessage(r),expiresAt:r.expiresAt,purpose:'HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION'};
  const payload=recipientRegistration({chainId:CHAIN,verifyingContract:Wallet.createRandom().address,instanceId:config.instanceId,policyHash:POLICY_HASH,runtimeMappingHash:r.runtimeMappingHash,participant:w.address,applicationSalt:id('salt'),nonce:id('reg'),deadline:now+100});
- const packet={version:'clear-bootcamp-recipient-registration.1',applicationId:r.applicationId,role:'PARTICIPANT',status:'AWAITING_SIGNATURE',purpose:'REGISTER_FIXED_RECIPIENT',calldataPublic:true,registrationTargetId:'registration-fixture',payload,observedAt:now};
+ const packet={version:'clear-bootcamp-recipient-registration.1',applicationId:r.applicationId,role:'PARTICIPANT',status:'AWAITING_SIGNATURE',purpose:'REGISTER_FIXED_RECIPIENT',calldataPublic:true,registrationTargetId:'registration-fixture',payload,signatureAccepted:false,canonical:true,finalized:false,chainStatus:'NOT_REGISTERED',registrationSequence:null,recipient:null,chainApplicationId:payload.message.applicationId,checkpoint:{number:'10',hash:id('block10'),time:String(now)},observedAt:now};
  const b={version:'clear-bootcamp-normal-session.1',role:'PARTICIPANT',applicationId:r.applicationId,policyHash:POLICY_HASH,runtimeMappingHash:r.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,expectedPayment:{recipient:w.address.toLowerCase()},signingContext:{source:{...r},registration:{applicationId:r.applicationId,instanceId:config.instanceId,verifyingContract:payload.domain.verifyingContract,policyHash:POLICY_HASH,runtimeMappingHash:r.runtimeMappingHash,participant:w.address.toLowerCase()}}};
  let submitted=null;
  const session={assertSession:async()=>({wallet:w.address,role}),dispose:async()=>{},request:async(path,opts={})=>{
   if(path==='/bootcamp/v4/session')return structuredClone(b);
   if(path.endsWith('/source-signature'))return structuredClone(source);
-  if(path.endsWith('/recipient-registration')){if(opts.method==='POST'){posts++;submitted=opts.body.signature;if(postError)throw postError;return{version:'clear-bootcamp-procedure-operation.1',record:{applicationId:r.applicationId},current:true,usableForPayment:false};}return structuredClone(packet);}
+  if(path.split('?')[0].endsWith('/recipient-registration')){if(opts.method==='POST'){posts++;submitted=opts.body.signature;if(postError)throw postError;return{version:'clear-bootcamp-procedure-operation.1',record:{applicationId:r.applicationId},current:true,usableForPayment:false};}const checkpoint=new URL(path,'https://fixture.invalid').searchParams.get('checkpoint');return {...structuredClone(packet),...(checkpoint?{checkpointContinuity:{status:'CANONICAL_ANCESTOR',from:JSON.parse(checkpoint),to:packet.checkpoint}}:{})};}
   throw Error('UNEXPECTED_PATH');}};
  const product=createProductSession({session,wallet,config});
  return {product,b,source,packet,config,w,r,now,get calls(){return calls;},get posts(){return posts;},get submitted(){return submitted;},after:fn=>{after=fn;},role:v=>{role=v;},failPost:e=>{postError=e;}};
@@ -56,4 +56,12 @@ test('server anchors use runtime and collector pins, never participant as proof 
  assert.equal(productSigningContext({applicationId:null}),null);
  const c=productSigningContext({runtime,pins,applicationId:'application-fixture',participantId:'participant-fixture',participant});
  assert.equal(c.source.expectedClaimOwner,pins.expectedClaimOwner);assert.equal(c.registration.participant,participant);assert.equal(c.registration.verifyingContract,runtime.vaultAddress);
+});
+
+test('registration error display contains only fixed stage and code, never raw error data',()=>{
+ const secret='token signature private example';
+ assert.deepEqual(registrationFailure(Object.assign(Error(secret),{registrationStage:secret,stack:secret,code:secret}),{submit:true}),{stage:'SIGN_SUBMIT',code:'REGISTRATION_FAILED'});
+ assert.deepEqual(registrationFailure(Object.assign(Error('REGISTRATION_STALE'),{registrationStage:'PRE_SIGN_READ'}),{submit:true}),{stage:'PRE_SIGN_READ',code:'REGISTRATION_STALE'});
+ assert.deepEqual(registrationFailure(Error(secret),{unknown:true,submit:true}),{stage:'SIGN_SUBMIT',code:'REGISTRATION_RESULT_UNKNOWN'});
+ assert.deepEqual(registrationFailure(Error('BC_RECIPIENT_REGISTRATION_CHAIN')),{stage:'READ_CONTENT',code:'BC_RECIPIENT_REGISTRATION_CHAIN'});
 });

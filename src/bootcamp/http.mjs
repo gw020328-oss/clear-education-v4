@@ -51,11 +51,19 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         else check(false,'BC_NOT_FOUND');
       }
       else if(v3){
-        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(decision-evidence|review-chain|procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations|recipient-registration)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
+        let registrationCheckpoint;
+        const url=new URL(path,expected);
+        if(path.includes('?')){
+          check(req.method==='GET'&&url.pathname.endsWith('/recipient-registration')&&[...url.searchParams.keys()].length===1&&url.searchParams.has('checkpoint'),'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+          const value=url.searchParams.get('checkpoint');check(value.length<=256,'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+          try{registrationCheckpoint=JSON.parse(value);}catch{throw new RuleError('BC_RECIPIENT_REGISTRATION_CHECKPOINT');}
+          check(registrationCheckpoint!==undefined&&typeof normalUi?.getRecipientRegistration==='function','BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+        }
+        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(decision-evidence|review-chain|procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations|recipient-registration)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path.split('?')[0]);
         check(m,'BC_NOT_FOUND');const [,a,resource,target]=m;
         if(req.method==='GET'){
           if(resource==='decision-evidence')result=store.getDecisionEvidence(context,a,target);
-          else if(!target&&resource==='recipient-registration'){result=normalUi?.getRecipientRegistration?await normalUi.getRecipientRegistration(context,a):store.getRecipientRegistration(context,a);}
+          else if(!target&&resource==='recipient-registration'){result=normalUi?.getRecipientRegistration?await normalUi.getRecipientRegistration(context,a,registrationCheckpoint):store.getRecipientRegistration(context,a);}
           else if(!target&&resource==='review-chain')result=await store.execution.reviewChain(context,a);
           else if(!target&&resource==='procedure'){if(normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=store.getProcedure(context,a);}
           else if(target&&resource==='procedure-operations')result=store.getProcedureOperation(context,a,target);

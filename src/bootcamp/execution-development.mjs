@@ -87,6 +87,16 @@ export function openDevelopmentConnection({environmentId,sourceMode='SYNTHETIC_T
    await reader.block(o.checkpoint.hash);b.nonce=nonce;b.nonceEpoch=a.epoch;cache.set(applicationId,{observation:o,replacement,until:now()+5});return o;
    }catch(error){cache.delete(applicationId);throw error;}
   },
+  async verifyRecipientRegistrationCheckpoint(applicationId,previous){
+   const v=cache.get(applicationId);check(v&&now()<v.until,'BC_E5_CURRENT_CHANGED');
+   const current=v.observation.checkpoint;
+   try{
+    const old=await reader.block(previous.hash);
+    check(BigInt(old.number).toString()===previous.number&&BigInt(old.timestamp).toString()===previous.time,'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+    check((await reader.compare(previous,current)).status==='CANONICAL_ANCESTOR','BC_RECIPIENT_REGISTRATION_CHAIN');
+   }catch{check(false,'BC_RECIPIENT_REGISTRATION_CHAIN');}
+   check(cache.get(applicationId)===v&&now()<v.until,'BC_E5_CURRENT_CHANGED');
+  },
   recipientRegistrationState(applicationId){const b=binding({applicationId}),v=cache.get(applicationId);check(v&&now()<v.until,'BC_E5_CURRENT_CHANGED');const a=v.observation.business.application;if(a.state!=='0')check(a.recipient===b.wallet&&b.decisions.has(a.target.decisionId),'BC_E3_REGISTERED_BINDING');return {chainStatus:a.state==='0'?'NOT_REGISTERED':'INCLUDED',canonical:true,finalized:false,checkpoint:v.observation.checkpoint,registrationSequence:a.state==='0'?null:a.target.acceptanceSequence,recipient:a.state==='0'?null:a.recipient,chainApplicationId:b.chainApplicationId};},
   diagnostics:diagnostic.snapshot,failureState:()=>owner.owner.failureState(),metrics:()=>owner.owner.metrics(),close:()=>owner.owner.close(),
  });

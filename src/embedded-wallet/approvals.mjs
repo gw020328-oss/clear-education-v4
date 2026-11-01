@@ -52,14 +52,32 @@ export function createApprovalSigner({wallet, session, normal, now = () => Math.
         && p.message.policyHash === expected.policyHash && p.message.runtimeMappingHash === expected.runtimeMappingHash
         && getAddress(expected.participant) === wallet.pin.address && p.message.participant === wallet.pin.address
         && p.message.recipient === wallet.pin.address, 'REGISTRATION_BINDING');
-      const comparable = v => { const out = structuredClone(v); delete out.observedAt; return out; };
-      const current = () => normal.recipientRegistration(reviewed.applicationId, {signal});
-      check(equal(comparable(await current()), comparable(reviewed)), 'REGISTRATION_STALE');
-      const signature = await wallet.typed(p, {signal, expiresAt: Number(p.message.deadline), now});
-      await participant(signal);
-      check(equal(comparable(await current()), comparable(reviewed)), 'REGISTRATION_STALE');
-      check(now() < Number(p.message.deadline) && !signal?.aborted, 'REGISTRATION_EXPIRED');
-      return signature;
+      const validObservation=v=>{
+        check(v.canonical===true&&v.chainStatus==='NOT_REGISTERED'&&v.finalized===false
+          &&v.signatureAccepted===false&&v.registrationSequence===null&&v.recipient===null
+          &&v.chainApplicationId===p.message.applicationId,'REGISTRATION_CHAIN');
+        check(v.checkpoint&&['number','time'].every(k=>typeof v.checkpoint[k]==='string'&&/^(0|[1-9][0-9]{0,19})$/.test(v.checkpoint[k]))
+          &&typeof v.checkpoint.hash==='string'&&/^0x[0-9a-f]{64}$/.test(v.checkpoint.hash),'REGISTRATION_CHAIN');
+      };
+      validObservation(reviewed);
+      // Only the observation timestamp/block and its ancestry proof may move.
+      // The entire signed payload and every server CAS/decision field stay equal.
+      const comparable=v=>{const {observedAt,checkpoint,checkpointContinuity,...fixed}=v;return fixed;};
+      const current=async()=>{
+        const v=await normal.recipientRegistration(reviewed.applicationId,{signal,checkpoint:reviewed.checkpoint});validObservation(v);
+        check(v.checkpointContinuity?.status==='CANONICAL_ANCESTOR'
+          &&equal(v.checkpointContinuity.from,reviewed.checkpoint)&&equal(v.checkpointContinuity.to,v.checkpoint),'REGISTRATION_CHAIN');
+        check(equal(comparable(v),comparable(reviewed)),'REGISTRATION_STALE');
+      };
+      let stage='PRE_SIGN_READ';
+      try{
+        await current();check(now()<Number(p.message.deadline)&&!signal?.aborted,'REGISTRATION_EXPIRED');
+        stage='WALLET_REQUEST';
+        const signature=await wallet.typed(p,{signal,expiresAt:Number(p.message.deadline),now});
+        stage='POST_SIGN_READ';await participant(signal);await current();
+        check(now()<Number(p.message.deadline)&&!signal?.aborted,'REGISTRATION_EXPIRED');
+        return signature;
+      }catch(error){if(error instanceof Error)error.registrationStage=stage;throw error;}
     },
   });
 }

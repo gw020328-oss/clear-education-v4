@@ -26,10 +26,10 @@ function fixture(t) {
   expectedClaimOwner:Wallet.createRandom().address.toLowerCase(),nonce:id('nonce'),issuedAt:NOW,expiresAt:NOW+120,selectedCertificateId:null};
  const source={applicationId:r.applicationId,approvalId:'approval-fixture',requestHash:requestHash(r),message:requestMessage(r),expiresAt:r.expiresAt,purpose:'HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION'};
  const payload=recipientRegistration({chainId:CHAIN,verifyingContract:Wallet.createRandom().address,instanceId:id('instance'),policyHash:POLICY_HASH,runtimeMappingHash:id('mapping'),participant:w.address,applicationSalt:id('salt'),nonce:id('registration-nonce'),deadline:NOW+100});
- const registration={version:'clear-bootcamp-recipient-registration.1',applicationId:r.applicationId,role:'PARTICIPANT',status:'AWAITING_SIGNATURE',purpose:'REGISTER_FIXED_RECIPIENT',calldataPublic:true,registrationTargetId:'registration-fixture',payload,observedAt:NOW};
+ const registration={version:'clear-bootcamp-recipient-registration.1',applicationId:r.applicationId,role:'PARTICIPANT',status:'AWAITING_SIGNATURE',purpose:'REGISTER_FIXED_RECIPIENT',calldataPublic:true,registrationTargetId:'registration-fixture',payload,signatureAccepted:false,canonical:true,finalized:false,chainStatus:'NOT_REGISTERED',registrationSequence:null,recipient:null,chainApplicationId:payload.message.applicationId,checkpoint:{number:'10',hash:id('block10'),time:String(NOW)},observedAt:NOW};
  let currentSource=structuredClone(source),currentRegistration=structuredClone(registration);
  const signer=createApprovalSigner({wallet,now:()=>time,session:{assertSession:async()=>({role,wallet:w.address})},
-  normal:{pendingSourceSignature:async()=>structuredClone(currentSource),recipientRegistration:async()=>structuredClone(currentRegistration)}});
+  normal:{pendingSourceSignature:async()=>structuredClone(currentSource),recipientRegistration:async(a,{checkpoint}={})=>({...structuredClone(currentRegistration),...(checkpoint?{checkpointContinuity:{status:'CANONICAL_ANCESTOR',from:checkpoint,to:currentRegistration.checkpoint}}:{})})}});
  return {w,r,trust,source,registration,signer,get calls(){return calls;},after:fn=>{after=fn;},role:v=>{role=v;},time:v=>{time=v;},
   changeSource:patch=>{Object.assign(currentSource,patch);},changeRegistration:patch=>{Object.assign(currentRegistration,patch);},
   anchors:{applicationId:r.applicationId,instanceId:payload.domain.salt,verifyingContract:payload.domain.verifyingContract,policyHash:POLICY_HASH,runtimeMappingHash:id('mapping'),participant:w.address}};
@@ -60,4 +60,26 @@ test('registration decision CAS changes while prompt is open discard signature',
 test('operator session cannot sign participant source or recipient registration',async t=>{
  const f=fixture(t);f.role('operator');await assert.rejects(f.signer.source(f.source,f.r),/FORBIDDEN/);
  await assert.rejects(f.signer.registration(f.registration,f.anchors),/FORBIDDEN/);assert.equal(f.calls,0);
+});
+
+test('canonical checkpoint advances before and during prompt without changing signed content',async t=>{
+ const f=fixture(t);f.changeRegistration({observedAt:NOW+1,checkpoint:{number:'11',hash:id('block11'),time:String(NOW+1)}});
+ f.after(()=>f.changeRegistration({observedAt:NOW+2,checkpoint:{number:'12',hash:id('block12'),time:String(NOW+2)}}));
+ const signature=await f.signer.registration(f.registration,f.anchors);assert.equal(f.calls,1);
+ verifyRecipientRegistration(f.registration.payload,signature,{applicationOwner:f.w.address,nowSeconds:NOW,sourceValidUntilExclusive:NOW+120});
+});
+for(const phase of ['before','after'])for(const field of ['applicationId','registrationTargetId','applicationRevision','ledgerSequence','decisionId','decisionRevision','decisionHash','payload'])test('registration keeps fixed '+field+' '+phase+' prompt',async t=>{
+ const f=fixture(t),patch={[field]:field==='payload'?{...f.registration.payload,message:{...f.registration.payload.message,deadline:String(NOW+101)}}:'changed'};
+ if(phase==='before')f.changeRegistration(patch);else f.after(()=>f.changeRegistration(patch));
+ await assert.rejects(f.signer.registration(f.registration,f.anchors),/REGISTRATION_STALE/);assert.equal(f.calls,phase==='before'?0:1);
+});
+for(const patch of [{canonical:false},{chainStatus:'UNKNOWN'},{chainStatus:'INCLUDED'},{signatureAccepted:true},{registrationSequence:'1'},{recipient:'0x'+'11'.repeat(20)},{chainApplicationId:id('other')},{checkpoint:null}])test('registration rejects unavailable or already registered chain '+JSON.stringify(patch),async t=>{
+ const f=fixture(t);f.changeRegistration(patch);await assert.rejects(f.signer.registration(f.registration,f.anchors),/REGISTRATION_CHAIN/);assert.equal(f.calls,0);
+});
+for(const field of ['recipient','participant','nonce','applicationId','deadline'])test('registration cannot replace signed '+field,async t=>{
+ const f=fixture(t),payload=structuredClone(f.registration.payload);payload.message[field]=field==='deadline'?String(NOW+101):field==='participant'||field==='recipient'?Wallet.createRandom().address:id('other');
+ f.changeRegistration({payload});await assert.rejects(f.signer.registration(f.registration,f.anchors),/REGISTRATION_STALE/);assert.equal(f.calls,0);
+});
+test('expired displayed registration never requests wallet',async t=>{
+ const f=fixture(t);f.time(NOW+100);await assert.rejects(f.signer.registration(f.registration,f.anchors),/REGISTRATION_EXPIRED/);assert.equal(f.calls,0);
 });

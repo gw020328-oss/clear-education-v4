@@ -3,6 +3,14 @@ import {createApprovalSigner} from './approvals.mjs';
 import {validateConfig} from './config.mjs';
 const check = (ok, code) => { if (!ok) throw Error(code); };
 const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
+const registrationCodes=new Set(['REGISTRATION_REVIEW','REGISTRATION_REVIEW_REQUIRED','REGISTRATION_BINDING','REGISTRATION_CHAIN','REGISTRATION_STALE','REGISTRATION_EXPIRED','REGISTRATION_RESULT_UNKNOWN','WALLET_REJECTED','WALLET_TIMEOUT','WALLET_SIGN_FAILED','WALLET_CONTEXT_CANCELLED','WALLET_IDENTITY_CHANGED','WALLET_CHAIN_CHANGED','WALLET_ACCOUNT_CHANGED','WALLET_SIGNATURE_INVALID','SIGNATURE_EXPIRED','FORBIDDEN','AUTH_REQUIRED','PRODUCT_BINDING','PRODUCT_ROLE_CHANGED','BC_VIEW_STALE','BC_E5_CURRENT_CHANGED','BC_RECIPIENT_REGISTRATION_CHECKPOINT','BC_RECIPIENT_REGISTRATION_CHAIN','BC_RECIPIENT_REGISTRATION_TARGET','BC_RECIPIENT_REGISTRATION_ALREADY_SIGNED','BC_RECIPIENT_REGISTRATION_SESSION','BC_RECIPIENT_REGISTRATION_SOURCE','BC_RECIPIENT_REGISTRATION_SIGNATURE']);
+const registrationStages=new Set(['VERIFY_CONTEXT','PRE_SIGN_READ','WALLET_REQUEST','POST_SIGN_READ','SUBMIT']);
+// Only fixed stage/code labels leave this boundary. Never render raw SDK/server exceptions.
+export function registrationFailure(error,{submit=false,unknown=false}={}){
+ const stage=submit?(registrationStages.has(error?.registrationStage)?error.registrationStage:'SIGN_SUBMIT'):'READ_CONTENT';
+ const code=unknown?'REGISTRATION_RESULT_UNKNOWN':registrationCodes.has(error?.message)?error.message:'REGISTRATION_FAILED';
+ return {stage,code};
+}
 
 // Adapter for the existing button-driven normal runner. Login has already been
 // explicitly signed on this product host; no old diagnostic cookie is adopted.
@@ -50,18 +58,19 @@ export function createProductSession({session, wallet, config}) {
     },
     async submitRegistration(reviewed,{signal} = {}) {
       check(!registrationPending && !registrationUnknown && registration && same(reviewed,registration.packet), 'REGISTRATION_REVIEW_REQUIRED');
-      registrationPending = true; let sent = false;
+      registrationPending = true; let sent = false, stage='VERIFY_CONTEXT';
       try {
         const b = await context(signal);
         check(same(b.signingContext.registration, registration.expected), 'REGISTRATION_BINDING');
         const signature = await signer.registration(reviewed,registration.expected,{signal});
-        signal?.throwIfAborted();
+        stage='POST_SIGN_READ';signal?.throwIfAborted();
         const latest = await context(signal);
         check(same(latest.signingContext.registration,registration.expected), 'REGISTRATION_BINDING');
-        sent = true;
+        stage='SUBMIT';sent = true;
         return await normal.submitRecipientRegistration(b.applicationId,reviewed,signature,
           {idempotencyKey:'wallet-register-'+crypto.randomUUID(),signal});
       } catch(error) {
+        if(error instanceof Error&&!registrationStages.has(error.registrationStage))error.registrationStage=stage;
         if (sent && (error.outcome === 'UNKNOWN' || !Number.isInteger(error.status))) registrationUnknown = true;
         throw error;
       } finally {registrationPending=false; registration=null;}
