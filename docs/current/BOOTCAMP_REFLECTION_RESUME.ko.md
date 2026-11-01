@@ -63,3 +63,12 @@ claim 거래 해시를 받은 즉시 보고서에 저장한다. 지급 완료 �
 별도 `clear-registration-observation-fix`에서 개발했다. 실행 중인 `clear-recipient-wait-fix` HEAD 2effc31319eb79de7325cc58f61959b25c9d614f, 프로세스/브라우저/로그인/증거/승인은 변경하거나 종료하지 않았다. 실제 실행의 코드 지문에 새 코드가 자동 적용되지 않는다. 새 지문으로 기존 실행을 이어 붙이거나 hotpatch하지 않으며, 이 수정 검증만으로 기존 실행의 원래 만료·증거·동의가 유효하다고 판단할 수 없다. 실제 재개/새 로그인/새 AI/새 지급은 수행하지 않았다.
 
 합성 검증은 정상 codec, 서명 전후 블록 전진, 전체 고정 필드·수령인·payload·deadline·결정/CAS 변경 거부, canonical 불명확/재조직/등록됨 거부, RPC 뒤 logout/대상 변경 거부, 안전한 오류 표시와 POST UNKNOWN 차단을 포함한다. 새 격리 Geth의 실제 HTTP 관측 overlay를 거쳐 지갑 서명 요청 1회, 같은 등록 payload/CAS의 제출, 100 TEST 지급과 중복 차단을 확인한다. 합성 키·합성 로그인/원천/AI fixture이며 사용자 로그인·외부 SDK·유료 API 호출이 아니다.
+
+
+## 제품 서버 allowlist 누락 후속 (2026-11-01)
+
+1b63d7d 기준 제품 frontend-server는 req.url 전체에 `/recipient-registration$`를 적용하여 normal-client의 checkpoint query 재조회를 404 BC_NOT_FOUND로 차단했다. 실제 HTTPS frontend-server→제품 session→normal-client 경로의 합성 시험에서 PRE_SIGN_READ / 404 BC_NOT_FOUND를 재현했다. 종전 격리 Geth 시험은 하위 createBootcampHandler만 경유하여 이 앞단 allowlist를 검사하지 못했다. 실제 사용자 클릭 HTTP 원문을 캡처한 것은 아니므로 제품 서버 재현과 실제 원인 확정을 구분한다.
+
+최소 변경은 frontend-server의 해당 GET 단일 encoded checkpoint 허용과 product-session의 안전한 BC_NOT_FOUND 표시 두 파일이다. 하위 파서·canonical ancestry·서명 payload·수령인·nonce·원래 기한·결정/CAS·중복/UNKNOWN 차단은 변경하지 않았다. 실제 제품 HTTPS 서버를 통해 plain read → checkpoint PRE_SIGN_READ → wallet mock 1회 → POST_SIGN_READ → submit을 검증하며 잘못된/중복/초과 query, 다른 경로, 수령인/payload/기한/결정 변경과 재사용을 거부한다.
+
+개발은 별도 clear-registration-route-fix에서 진행했다. 실제 clear-registration-observation-fix HEAD 1b63d7d487354f46fe0eaa6072400e8413356d57, PTY80537 / host privy-registration-fix-20261101의 프로세스·자산·로그인·AI 기록·증거는 변경하지 않았다. 이 수정은 기존 서버의 메모리 allowlist나 로드된 자산에 자동 반영되지 않는다. 기한 연장·codeHead 위조·hotpatch로 기존 실행을 이어 붙이지 않는다. 수정 적용에는 검증된 새 코드의 실행이 필요하며, 기존 실행의 증거·승인·서명을 새 실행으로 이전할 수 있다고 가정하지 않는다. 실제 재시험·재로그인·AI 재호출은 수행하지 않았다.

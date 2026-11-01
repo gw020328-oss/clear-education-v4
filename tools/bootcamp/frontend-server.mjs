@@ -36,6 +36,8 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
    const allowed=req.method==='GET'&&(/^\/bootcamp\/v[23]\/applications\/[a-z][a-z0-9.-]{0,63}\/(operations|procedure)$/.test(req.url)
     ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure-operations\/[a-z][a-z0-9.-]{0,63}$/.test(req.url)
     ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/(recipient-registration|review-chain)$/.test(req.url)
+    // Only the encoded single checkpoint query reaches the existing strict parser.
+    ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/recipient-registration\?checkpoint=[A-Za-z0-9%._~-]{1,768}$/.test(req.url)
     ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/decision-evidence(?:\/[a-z][a-z0-9.-]{0,63})?$/.test(req.url))
     ||req.method==='POST'&&(/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/(review-consents|recipient-registration)$/.test(req.url)||req.url==='/bootcamp/v1/applications');
    if(allowed||normalUi&&(req.method==='GET'&&req.url==='/bootcamp/v4/session'&&typeof normalUi.getSession==='function'||req.method==='GET'&&typeof normalUi.getPaymentReceipt==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/payment-receipt$/.test(req.url)||(req.method==='GET'||req.method==='POST')&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-signature$/.test(req.url)

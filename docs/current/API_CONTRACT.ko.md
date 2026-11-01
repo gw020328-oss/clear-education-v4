@@ -1,3 +1,7 @@
+## 제품 HTTPS checkpoint 경로 (2026-11-01 후속)
+
+제품 frontend-server도 기존 recipient-registration GET의 단일 `?checkpoint=<encoded JSON>`을 전달한다. 이 경로만 URL-safe 인코딩 값 1–768자로 허용하고, 다른 query·중복 파라미터·다른 경로·POST query·fragment는 계속 거부한다. 기존 하위 handler의 256자/정확한 number·hash·time 파서, 인증/소유자·canonical 연속성·CAS 검사는 그대로 수행한다. `BC_NOT_FOUND`는 등록 실패 UI의 고정 코드 허용 목록에 추가되어 PRE_SIGN_READ 단계의 route 실패를 원문 없이 구분한다.
+
 ## 수령 등록 관측 갱신 (2026-11-01 후속)
 
 기존 `GET /bootcamp/v3/applications/:id/recipient-registration`은 서명 전후 확인용으로 선택적 `checkpoint` JSON query를 받는다. 정확한 `{number,hash,time}`와 최대 256자만 허용한다. 인증/소유자 검사를 유지하고, 원래 관측 블록이 현재 canonical 체인의 조상임을 기존 reader로 확인한 경우만 `checkpointContinuity: {status: CANONICAL_ANCESTOR, from, to}`를 반환한다. 재조직·블록 회귀·누락·불확실한 결과·이미 등록된 체인은 서명용 확인에서 거부한다. RPC 뒤 인증과 등록 대상/결정/CAS를 다시 확인한다. query 없는 조회는 기존 표시 응답을 유지한다.
