@@ -1,5 +1,7 @@
 # CLEAR 팀원·LLM 인계
 
+2026-11-01 최신 목표: [CLEAR 모듈 공개·독립 재현 계획](CLEAR_MODULE_DELIVERY_PLAN.ko.md)을 우선한다. 현재 checkpoint 오류 최소 수정·최신 CI → 실제 100 TEST 완주 → 팀원 프론트 전체 연결 → 외부 개발자용 최소 공개 자료 → 다른 컴퓨터 인수 순서다. 후속은 지금 계획만 반영하며 실제 로그인/서명/AI/지급은 본부 조율을 유지한다. 공개 테스트넷은 실자산 선행 검증이고 소액 실자산은 모듈 공개·독립 재현 이후 별도 승인 목표로 보류한다. 아래 날짜별 상태는 당시 기록이다.
+
 2026-10-18 승인 TEST 운영 정본: [해커톤 TEST 운영/E0·계획 revision4](HACKATHON_TEST_OPERATIONS.ko.md), profile `clear-hackathon-test-operations.1`을 우선한다. P0/v1·R2/R3는 보존하며 120초·1회·600초,150+50 TEST·현재 MET ledger순, 미수락 원자 종료·수락권리 만료/회수 없음이 확정됐다. 기존 미완료 인수→격리 TEST 지급 연결을 단계별 실행하며, 과거 HOLD를 영구 개발 중지로 해석하지 않는다. production/main·자동 merge·상용 자금은 제외한다. 정책 확정과 실제 인수/활성화는 분리한다.
 
 2026-10-17 추가 승인·계획 revision2: [MVP 보완 계약·실행 백로그](PYTHON_BOOTCAMP_R2.ko.md)를 우선한다. 기존 P0 동결03fa643과 네 조건/100 TEST·P1/P2는 유지한다. Oracle 승인·부족알림/영향 대기열·학생/운영자 두 화면·기존 relayer 가스 UX·실측 이벤트를 P3→P4→P5의 실제 구현 범위에 추가했다. 별도 v2 envelope/이행 인수이며 기존 v1 wire·ABI는 바꾸지 않는다. 현재 지급/production을 켜지 않으며 P4 권한·자금 코드는 Astra/High 경계 리뷰 후 격리 TEST로 진행한다. 아래의 종전 P3/P4/P5 계획만 정리한다는 문구는 이 추가 승인 이전 범위다.
