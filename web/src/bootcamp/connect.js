@@ -36,10 +36,22 @@ import { createDemoAccount, fakeRegisterRecipient } from './demo-wallet.js';
 import { createBootcampTransport, BootcampError } from './transport.js';
 
 /** 서버 모듈에서 찾는 공장 함수 이름. 첫 번째로 있는 것을 쓴다 */
-const FACTORY_NAMES = Object.freeze(['createNormalClient', 'normalClient', 'default']);
+/**
+ * 서버 모듈의 공장 함수 이름.
+ *
+ * 전에는 `['createNormalClient', 'normalClient', 'default']` 중 **먼저 있는
+ * 것**을 썼다. 셋 다 우리가 지어낸 이름이고 실제 export 는
+ * `createNormalBootcampClient` 다. 그래서 호스트가 켜지고 지갑 로그인이
+ * 성공해도 **이 줄에서 연결이 끊겼다** — 2026-11-01 백엔드가 실제 모듈을
+ * 붙인 재현으로 찾았다.
+ *
+ * 이름을 짐작하는 목록을 두지 않는다. 하나만 쓰고, 어긋나면
+ * BC_CLIENT_SHAPE 가 받은 export 목록을 그대로 알려 준다.
+ */
+const FACTORY_NAME = 'createNormalBootcampClient';
 
 /** panels.js 가 부르는 메서드. 하나라도 없으면 붙이지 않는다 */
-const REQUIRED = Object.freeze([
+export const REQUIRED = Object.freeze([
   'view', 'consent', 'operation', 'paymentReceipt',
   'bindSourceSession', 'pendingSourceSignature', 'submitSourceSignature',
 ]);
@@ -52,7 +64,27 @@ const REQUIRED = Object.freeze([
  * 이름을 짐작해 부르면 엉뚱한 걸 호출한다. **있으면 켜고 없으면 왜 못 하는지
  * 적는다** — 서버가 추가하는 날 코드를 안 고쳐도 버튼이 살아난다.
  */
-export const OPTIONAL = Object.freeze(['objection', 'revalidation', 'registerRecipient']);
+export const OPTIONAL = Object.freeze([
+  'recipientRegistration', 'submitRecipientRegistration', 'decisionEvidence', 'reviewChain',
+]);
+
+/**
+ * 화면이 쓰고 싶지만 **제품 서버에 아직 없는** 경로.
+ *
+ * 전에는 이 셋이 OPTIONAL 에 섞여 있었다 — `objection`, `revalidation`,
+ * `registerRecipient`. 그런데 실제 모듈에는 **셋 다 없다.**
+ *
+ *   objection          오류 신고 쓰기. 내부 API 는 있고 제품 서버 미노출
+ *   revalidation       `review-revalidations` 는 조회이지 요청 API 가 아니다.
+ *                      학생 버튼에서 직접 부르지 않는다
+ *   registerRecipient  **우리가 지어낸 이름이다.** 실제로는
+ *                      recipientRegistration / submitRecipientRegistration 둘로
+ *                      나뉘고 EIP-712 서명이 사이에 들어간다
+ *
+ * 없는 이름을 OPTIONAL 에 두면 "서버가 추가하면 살아난다" 처럼 읽히는데,
+ * 앞의 둘은 정책상 안 열리는 것이고 마지막은 이름 자체가 틀린 것이라 다르다.
+ */
+export const ABSENT = Object.freeze(['objection', 'revalidation', 'registerRecipient']);
 
 /**
  * 지갑 공급자를 고른다.
@@ -163,13 +195,14 @@ export async function loadApi(session, { origin, importImpl } = {}) {
     throw fail('BC_CLIENT_UNAVAILABLE', error?.message ?? null);
   }
 
-  const name = FACTORY_NAMES.find((key) => typeof module?.[key] === 'function');
-  if (!name) {
+  const factory = module?.[FACTORY_NAME];
+  if (typeof factory !== 'function') {
     // 이름을 짐작하지 않는다. 받은 것을 그대로 알려주면 고치기 쉽다.
-    throw fail('BC_CLIENT_SHAPE', `기대: ${FACTORY_NAMES.join(' / ')} · 받음: ${Object.keys(module ?? {}).join(', ') || '없음'}`);
+    throw fail('BC_CLIENT_SHAPE', `기대: ${FACTORY_NAME} · 받음: ${Object.keys(module ?? {}).join(', ') || '없음'}`);
   }
 
-  const api = module[name]({ request: session.request, origin: base });
+  // 실제 공장은 { request } 만 읽는다. origin 은 넘겨도 무시된다.
+  const api = factory({ request: session.request, origin: base });
   const missing = REQUIRED.filter((key) => typeof api?.[key] !== 'function');
   if (missing.length > 0) throw fail('BC_CLIENT_SHAPE', `없는 메서드: ${missing.join(', ')}`);
   return api;

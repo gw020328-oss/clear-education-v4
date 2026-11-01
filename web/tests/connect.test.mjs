@@ -78,7 +78,8 @@ test('메서드가 빠지면 붙이지 않고 무엇이 없는지 말한다', as
   await assert.rejects(
     () => loadApi(session, {
       origin: ORIGIN,
-      importImpl: async () => ({ createNormalClient: () => partial }),
+      // 공장 이름은 맞는데 메서드가 모자란 경우를 본다
+      importImpl: async () => ({ createNormalBootcampClient: () => partial }),
     }),
     (error) => {
       assert.equal(error.code, 'BC_CLIENT_SHAPE');
@@ -187,4 +188,66 @@ test('학생의 시험용 지갑은 눌러야만 켜진다', async () => {
   } finally {
     if (saved === undefined) delete globalThis.window; else globalThis.window = saved;
   }
+});
+
+// ── 실제 서버 모듈과의 호환 ─────────────────────────────────────────────
+//
+// 여기 있는 시험들은 **저장소의 진짜 `src/bootcamp/normal-client.mjs` 를
+// import 한다.** 가짜를 주입하는 시험은 우리가 지어낸 이름에 맞춰 통과하므로,
+// 실제와 어긋난 것을 끝까지 못 잡는다.
+//
+// 실제로 못 잡았다. `createNormalClient` 라는 이름을 셋이나 늘어놓고도 전부
+// 틀렸고, 시험 251건이 통과하는 채로 남아 있었다. 2026-11-01 백엔드가 실제
+// 모듈을 붙여 보고서야 나왔다.
+//
+// 네트워크는 쓰지 않는다 — request 를 mock 으로 넣으면 공장은 그대로 돈다.
+
+import * as realClient from '../../src/bootcamp/normal-client.mjs';
+import { REQUIRED, OPTIONAL, ABSENT } from '../src/bootcamp/connect.js';
+
+/** 네트워크로 나가지 않는 요청기 */
+const mockRequest = async () => ({});
+
+test('loadApi 가 저장소의 실제 클라이언트 모듈을 받아들인다', async () => {
+  const api = await loadApi(
+    { request: mockRequest },
+    { origin: ORIGIN, importImpl: async () => realClient },
+  );
+  assert.equal(typeof api.view, 'function');
+});
+
+test('REQUIRED 가 실제 클라이언트에 전부 있다', () => {
+  const api = realClient.createNormalBootcampClient({ request: mockRequest });
+  const missing = REQUIRED.filter((key) => typeof api[key] !== 'function');
+  assert.deepEqual(missing, [], '화면이 반드시 쓰는데 실제 클라이언트에 없는 메서드');
+});
+
+test('OPTIONAL 은 실제로 있는 것만, ABSENT 는 실제로 없는 것만', () => {
+  const api = realClient.createNormalBootcampClient({ request: mockRequest });
+  // 있다고 적어 둔 것이 없으면 화면이 엉뚱한 걸 부른다
+  assert.deepEqual(
+    OPTIONAL.filter((key) => typeof api[key] !== 'function'), [],
+    'OPTIONAL 인데 실제 클라이언트에 없다',
+  );
+  // 없다고 적어 둔 것이 생겼으면 화면을 고쳐 쓸 때가 된 것이다
+  assert.deepEqual(
+    ABSENT.filter((key) => typeof api[key] === 'function'), [],
+    'ABSENT 인데 실제 클라이언트에 생겼다 — 화면을 연결할 때다',
+  );
+});
+
+test('공장 이름이 어긋나면 받은 export 를 그대로 알려 준다', async () => {
+  await assert.rejects(
+    () => loadApi(
+      { request: mockRequest },
+      // 옛 이름으로 바뀐 모듈. 예전 우리 허용 목록이 이걸 통과시켰다.
+      { origin: ORIGIN, importImpl: async () => ({ createNormalClient: () => ({}) }) },
+    ),
+    (error) => {
+      assert.equal(error.code, 'BC_CLIENT_SHAPE');
+      assert.match(error.detail, /createNormalBootcampClient/);
+      assert.match(error.detail, /createNormalClient/);
+      return true;
+    },
+  );
 });
