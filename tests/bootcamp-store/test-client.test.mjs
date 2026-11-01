@@ -445,7 +445,8 @@ test('V31–V33 browser clients are pinned independently of preserved V15–V21 
  const intake=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-memory-source-intake-v31.json',import.meta.url)));
  const p='src/bootcamp/normal-client.mjs', {execFileSync}=await import('node:child_process');assert.equal(createHash('sha256').update(execFileSync('git',['show','dce9ab18c25f2eee288de9c7bde05209e24af430:'+p])).digest('hex'),intake.sourceArtifactSha256[p]);
  const prior=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-memory-source-intake-v32.json',import.meta.url)));assert.equal(createHash('sha256').update(execFileSync('git',['show','19e1c1473165cdea52a42040e740b79ba3e50c03:'+p])).digest('hex'),prior.sourceArtifactSha256[p]);
- const next=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-memory-source-intake-v33.json',import.meta.url)));assert.equal(createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex'),next.sourceArtifactSha256[p]);
+ const next=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-memory-source-intake-v33.json',import.meta.url)));assert.equal(createHash('sha256').update(execFileSync('git',['show','2effc31319eb79de7325cc58f61959b25c9d614f:'+p])).digest('hex'),next.sourceArtifactSha256[p]);
+ const delta=JSON.parse(readFileSync(new URL('../../specs/bootcamp/hackathon-test-registration-observation-source-delta-v1.json',import.meta.url)));assert.equal(delta.changes[p].before,next.sourceArtifactSha256[p]);assert.equal(createHash('sha256').update(readFileSync(new URL('../../'+p,import.meta.url))).digest('hex'),delta.changes[p].after);
 });
 
 test('failure wait keeps GETs available and stops cached wallet actions before signing or posting',async t=>{

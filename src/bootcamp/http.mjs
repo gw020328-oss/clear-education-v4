@@ -54,7 +54,8 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         let registrationCheckpoint;
         const url=new URL(path,expected);
         if(path.includes('?')){
-          check(req.method==='GET'&&url.pathname.endsWith('/recipient-registration')&&[...url.searchParams.keys()].length===1&&url.searchParams.has('checkpoint'),'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+          check(req.method==='GET'&&url.pathname.endsWith('/recipient-registration'),'BC_NOT_FOUND');
+          check([...url.searchParams.keys()].length===1&&url.searchParams.has('checkpoint'),'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
           const value=url.searchParams.get('checkpoint');check(value.length<=256,'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
           try{registrationCheckpoint=JSON.parse(value);}catch{throw new RuleError('BC_RECIPIENT_REGISTRATION_CHECKPOINT');}
           check(registrationCheckpoint!==undefined&&typeof normalUi?.getRecipientRegistration==='function','BC_RECIPIENT_REGISTRATION_CHECKPOINT');
