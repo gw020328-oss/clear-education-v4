@@ -126,3 +126,15 @@ test('explicit finish while waiting for manual resume closes ownership and never
  await assert.rejects(composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports}),/EXPLICIT_FINISH/);
  assert.equal(f.paid,0);assert.equal(f.closed,1);assert.equal(f.events.at(-1),'drain');
 });
+for(const finish of [false,true])test('recipient wait resume stays inside one payment call, no collection or approval replay; finish='+finish,async()=>{
+ const f=flowFixture(),open=f.ports.open;let failed=false,waits=0,payCalls=0,continued=0;
+ f.ports.open=async()=>{const c=await open();return {...c,
+  report(){return {...c.report(),failure:failed?{resumeAllowed:true,recoveryStatus:'RECIPIENT_WAIT_NOT_SENT'}:null};},
+  enterFailureWait(){failed=true;return true;},
+  async pay({onRecipientWaitFailure}){payCalls++;assert.equal(await onRecipientWaitFailure(Error('BC_VIEW_STALE')),true);continued++;return c.pay();},
+ };};
+ f.ports.awaitResume=async()=>{waits++;if(finish)throw Error('NORMAL_HOST_EXPLICIT_FINISH');failed=false;return true;};
+ const work=composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:f.controller.signal,ports:f.ports});
+ if(finish)await assert.rejects(work,/NORMAL_HOST_EXPLICIT_FINISH/);else assert.equal((await work).completed,true);
+ assert.equal(payCalls,1);assert.equal(waits,1);assert.equal(continued,finish?0:1);assert.equal(f.resumed,1);assert.equal(f.events.filter(x=>x==='approval').length,1);assert.equal(f.closed,1);
+});

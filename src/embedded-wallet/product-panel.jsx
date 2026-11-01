@@ -6,6 +6,8 @@ import {testActionAvailability} from '../../tools/bootcamp/test-client/review-wi
 const Details=({value})=><details><summary>확인할 상세 내용</summary><pre>{JSON.stringify(value,null,2)}</pre></details>;
 const criterionNames={'activity-complete':'학습 활동 완료','assignment-submitted':'과제 제출','reflection-topics':'회고 평가','python-basic-certificate':'Python (Basic) 인증서'};
 const recoveryReason={
+ RECIPIENT_WAIT_RENEWAL_REQUIRED:'수령 등록 대기의 인증·증거·원래 기한 또는 무전송 조건을 확인할 수 없습니다. 자동 재개하지 않고 실행 담당자의 확인이 필요합니다.',
+ RECIPIENT_WAIT_NOT_SENT:'등록 요청과 원래 기한을 유지하여 수령인 서명 대기만 재개합니다. 완료한 증거·AI 처리는 반복하지 않습니다.',
  NOT_SENT:'모델에 전송되지 않았고 승인도 사용되지 않았습니다. 같은 입력의 유효한 승인을 유지해 재개합니다.',
  RESULT_READY:'완료된 결과가 남아 있습니다. 모델을 다시 호출하지 않고 이어갑니다.',
  ALREADY_ACCEPTED:'회고 판정이 이미 반영됐습니다. 완료된 단계를 건너뜁니다.',
@@ -52,7 +54,7 @@ export function ProductPanel({session,wallet,config}) {
     <p>참가자 지갑으로 100 TEST를 지급하는 시험입니다. 각 승인과 서명은 내용을 확인한 뒤 직접 진행하세요.</p>
     <p>신청: {s.applicationId??'아직 생성되지 않음'} · 서버 단계: {s.bootstrap?.phase??'확인 중'}</p>
     {s.bootstrap?.failure&&<aside role="alert"><strong>시험이 실패 대기 상태입니다</strong><p>{s.bootstrap.failure.phase} · {s.bootstrap.failure.code} · {s.bootstrap.failure.producerCode} · {s.bootstrap.failure.recoveryStatus}</p><p>{recoveryReason[s.bootstrap.failure.recoveryStatus]??'이 단계는 자동 복구할 수 없습니다. 실행 담당자의 확인이 필요합니다.'}</p><p>새 승인·서명·지급은 차단됐습니다. 처리 결과가 불명확하면 다시 실행하지 마세요. 미전송과 원래 증거·승인 유효성이 확인된 경우에만 운영자가 실패한 단계를 재개할 수 있습니다. 그 외에는 표시된 갱신·결과 확인 사유를 확인하세요. FINISH는 명시 종료입니다.</p></aside>}
-    {!participant&&s.bootstrap?.failure?.resumeAllowed&&<button disabled={s.busy||regBusy||s.ended} onClick={readAction(()=>live.current.driver.resume())}>실패한 회고 단계만 재개</button>}
+    {!participant&&s.bootstrap?.failure?.resumeAllowed&&<button disabled={s.busy||regBusy||s.ended} onClick={readAction(()=>live.current.driver.resume())}>실패한 단계만 재개</button>}
     <p role="status">{error|| (s.error?`${s.error.code} · ${s.error.outcome==='UNKNOWN'?'처리 결과 미확인 — 새 요청을 보내지 마세요.':'현재 상태를 확인하지 못했습니다.'}`:s.bootstrap?.failure?'실패 대기 · 현재 상태를 조회할 수 있습니다.':busy?'선택한 작업을 처리하고 있습니다.':'서버의 현재 상태를 표시합니다.')}</p>
     <button disabled={s.busy||regBusy||s.ended} onClick={readAction(()=>live.current.driver.refresh())}>최신 신청·판정 읽기</button>
     <label><input type="checkbox" checked={auto} disabled={regBusy} onChange={e=>{setAuto(e.target.checked);live.current.reader.setEnabled(e.target.checked);}}/>상태 자동 읽기</label>

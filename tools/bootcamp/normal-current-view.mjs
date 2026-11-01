@@ -2,13 +2,11 @@ import {RuleError,requireRule as check} from '../../src/policy/values.mjs';
 
 // Read-only owner callbacks. Discard a failed projection and ask the store for
 // one fresh, fully authenticated view. Never wrap collection, approval or writes.
+export function normalViewConflict(error){
+ try{return Object.getPrototypeOf(error)===RuleError.prototype&&Object.getOwnPropertyDescriptor(error,'message')?.value==='BC_VIEW_STALE';}catch{return false;}
+}
 export function readNormalView(read){
- try{return read();}catch(error){
-  let conflict=false;
-  try{conflict=Object.getPrototypeOf(error)===RuleError.prototype&&Object.getOwnPropertyDescriptor(error,'message')?.value==='BC_VIEW_STALE';}catch{}
-  if(!conflict)throw error;
-  return read();
- }
+ try{return read();}catch(error){if(!normalViewConflict(error))throw error;return read();}
 }
 export function normalSourceTarget(v){
  check(v.status==='ACTIVE'&&v.decision.current&&v.decision.record.conditionsStatus==='MET'

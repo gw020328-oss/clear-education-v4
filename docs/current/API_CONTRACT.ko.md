@@ -1,3 +1,5 @@
+2026-11-01 수령 등록 대기: 같은 `/resume`에서 `RECIPIENT_WAIT_NOT_SENT` 체크포인트를 조건부 재개한다. 기존 등록 target·기한을 보존하고 지급 함수 재호출·AI/원천 반복은 없다. [상세 계약](BOOTCAMP_REFLECTION_RESUME.ko.md)의 수령 등록 대기 절을 따른다.
+
 2026-10-31 후속 [회고 수동 재개 계약](BOOTCAMP_REFLECTION_RESUME.ko.md): 실패 session 응답에 `failureRevision/applicationRevision/resumeAllowed/recoveryStatus`를 추가한다. 운영자의 `POST /bootcamp/v4/applications/:id/resume`만 조건부 허용하며 body는 `failureRevision/expectedRevision`이다. 영수증은 완료 응답 유실 시에도 기존 거래의 canonical transfer를 별도 측정으로 표시할 수 있다.
 
 2026-10-31 정상 TEST 호스트의 [실패 대기 계약](BOOTCAMP_FAILURE_WAIT.ko.md): 알려진 단계 실패 뒤 세션 GET·영수증 조회와 유효 인증을 유지한다. 제품 POST는 `BC_NORMAL_FAILED_WAITING`/409로 차단하며, UNKNOWN을 재시도 허가로 해석하지 않는다. 로그아웃·만료·회수·지갑 변경 검사는 유지한다.

@@ -41,3 +41,14 @@ claim 거래 해시를 받은 즉시 보고서에 저장한다. 지급 완료 �
 이번 실제 실패에서는 상위 폴더 부재, `FAILED_BEFORE_CLAIM/NOT_SENT`, 같은 호출의 `ENOENT` 재현이 가장 강한 직접 원인 근거다. 당시 하위 원본 예외가 남지 않았으므로 역사적 원인을 확정했다고 기록하지 않는다. 본부가 확인한 해당 입력의 원래 만료는 **2026-10-31 23:52:21 KST**이며, 확인 시점 **2026-11-01 04:10 KST**에 이미 지났다. 최소 폴더 준비만으로 해당 입력/승인을 재개할 수 없고 새 실제 시험은 사용자 단계로 남긴다.
 
 수정은 별도 worktree에서 수행하여 기존 프로세스와 실행 작업본의 HEAD·파일·데이터를 보존한다. 실행 중 hotpatch·codeHead 변경/위조·만료 연장은 하지 않는다. 새 코드가 기존 프로세스에 자동 반영되지 않는다. 일반적으로 폴더만 준비하여 기존 코드를 재개하려면 원래 프로세스·코드 지문·미전송 증거·미소비 승인·모든 원천/인증 기한이 여전히 유효하고 운영자가 수동 재개해야 한다. 이번 입력은 만료되어 이 조건을 충족하지 않는다.
+
+
+## 2026-11-01 수령 등록 대기 체크포인트
+
+`WAIT_RECIPIENT_SIGNATURE`의 기존 초기 timeout 계산은 raw `store.getRecipientRegistration`을 사용했고 poll의 `ui.participant()`도 raw 호출이었다. SQLite 현재성 검사가 두 번 읽는 사이 초 경계가 넘어가면 두 위치 모두 typed `RuleError/BC_VIEW_STALE`을 낼 수 있음을 결정적 합성 시험으로 재현했다. 실제 wall-clock 경계 시험도 수행했다. 당시 보고서는 `SETUP/WAIT_RECIPIENT_SIGNATURE`까지만 기록하므로 실제 어느 호출이었는지는 확정할 수 없다. 새 대기 함수는 초기 기한/참가자/등록 상태의 읽기만 기존 `readNormalView`로 최대 1회 재조회하며, 반복 충돌은 `RECIPIENT_DEADLINE_READ`, `RECIPIENT_POLL_AUTH`, `RECIPIENT_POLL_REGISTRATION`으로 구별한다. 쓰기·서명·등록·지급을 재시도하는 wrapper가 아니다.
+
+수동 재개는 실행 중인 단일 지급 함수의 **수령 등록 대기 위치**만 유지한다. 이미 만든 registration target·payload·nonce·deadline을 재사용하며 `registerNormalSourceTarget`, 원천 수집, AI 호출을 다시 실행하지 않는다. 운영자가 기존 `/resume`에서 승인하면 메모리의 1회 permit을 소비한다. 인증·기존 code head/clean·신청 revision/판정/정책/mapping·현재 네 증거·원래 source/signature 기한·양측 화면 현재성을 확인한다. 재개 후 canonical chain refresh에서 미등록 상태를 다시 확인하고 source review window도 재검증한다. key/signature/broadcast 카운터가 모두 0이고 envelope·stages·claim이 없을 때만 가능하다. 기존 유효 수령인 서명은 유지하며 중복 등록 target·변경된 payload·이미 등록된 체인·결과 불명은 차단한다. 승인/원천/인증 기한은 연장하지 않는다.
+
+이 체크포인트는 보고서에서 복원할 수 없는 프로세스 내부 capability다. `FINISH`/취소/만료는 기존 정리 경로를 따르고 전송 후 지급은 재개 대상이 아니다. 실패 위치는 성공적으로 재개한 뒤에도 `recipientWaitFailure`에 고정 진단으로 남긴다. 새 화면은 기존 재개 버튼의 문구와 사유만 구별한다.
+
+현재 실제 실행은 이전 HEAD `3047ddb`의 `paymentStarted` 실패 처리에서 원천 lease/producer 정리 경로에 들어간 상태이며 새 체크포인트를 갖고 있지 않다. 따라서 원래 로그인이나 완료 AI 결과가 남아 있어도 현 프로세스에 새 코드를 주입하거나 보고서만으로 재개할 수 없다. 보고서의 시작 시각으로 계산한 서비스 권한 상한은 **2026-11-01 12:12:53 KST**다. 실제 자료 원문을 읽거나 복사하지 않았으며 source별 정확한 잔여 기한을 새로 확인했다고 주장하지 않는다. 상한이 지나면 폴더·코드 수정만으로 재개하는 것도 불가하다. 현재 실행의 종료/재시작/로그인/AI 재호출/재수집/지급 재전송은 이번 작업에서 수행하지 않는다.

@@ -1,3 +1,4 @@
+import {createNormalRecipientWaitCheckpoint} from './normal-recipient-wait.mjs';
 // One isolated TEST application. Synthetic evidence is explicit and never a
 // claim that Moodle, Reclaim or a paid model was verified in this run.
 import {randomBytes} from 'node:crypto';
@@ -21,7 +22,7 @@ import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(condition,code)=>{if(!condition)throw Error(code);};
-export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,waitForRecipientRegistration,signal,sourceTarget,requireReviewReaders}){
+export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,waitForRecipientRegistration,signal,sourceTarget,requireReviewReaders,onRecipientWaitFailure,assertRecipientWaitCurrent}){
  const started=performance.now();let step='VALIDATE',operation='SETUP';
  try{
  const automatic=connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'&&waitForConsents===undefined;
@@ -40,7 +41,15 @@ export async function executeNormalPayment({store,connection,serviceContext,user
   if(m.version==='clear-e5-test-runtime.2'){
    ensure(typeof waitForRecipientRegistration==='function','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
    step='WAIT_RECIPIENT_SIGNATURE';stage('AWAITING_RECIPIENT_REGISTRATION_SIGNATURE');
-   await waitForRecipientRegistration({applicationId:app,registrationTargetId:intake.record.id,signal});
+   const checkpoint=typeof onRecipientWaitFailure==='function'?createNormalRecipientWaitCheckpoint({store,connection,user,app,target,intake,report,signal,assertCurrent:assertRecipientWaitCurrent}):null;
+   try{for(;;){try{await waitForRecipientRegistration({applicationId:app,registrationTargetId:intake.record.id,deadlineMs:Number(intake.record.recipientRegistration.message.deadline)*1000,signal});break;}
+    catch(error){
+     if(!checkpoint)throw error;checkpoint.pause(error);
+     report.paymentFailure={operation,step,...executionErrorSummary(error),atUnixMs:Date.now(),offsetMs:Math.max(0,performance.now()-started),metrics:connection.metrics(),native:connection.failureState()};write();
+     if(!checkpoint.inspect().resumeAllowed||!await onRecipientWaitFailure(error,checkpoint))throw error;
+     await checkpoint.resume();report.recipientWaitFailure??=report.paymentFailure;delete report.paymentFailure;write();
+    }
+   }}finally{checkpoint?.close();}
    ensure(readNormalView(()=>store.getRecipientRegistration(user,app)).status==='SIGNED','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
   }
   await reviewWindow();
