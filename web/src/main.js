@@ -23,6 +23,10 @@ import { brandHeader, navBar, pillButton, siteFooter } from './ui/brand.js';
 import { STEP_ORDER } from './ui/state-labels.js';
 import { studentSection, conditionDetail } from './bootcamp/student-view.js';
 import { onboardingView } from './bootcamp/onboarding.js';
+import { runRecipientRegistration } from './bootcamp/recipient-panel.js';
+import { newKey } from './bootcamp/panels.js';
+import { pickMode, MODE } from './bootcamp/mode.js';
+import { viewStatusView } from './bootcamp/view-status.js';
 import { operatorSection } from './bootcamp/operator-view.js';
 import { bootcampView, BOOTCAMP_CASES } from './fixtures/bootcamp.js';
 import { createConnection } from './bootcamp/connect.js';
@@ -64,6 +68,9 @@ function measureScrollbar() {
  * 그것을 그린다. **둘을 섞지 않는다** — 섞으면 어느 줄이 진짜인지 알 수 없다.
  */
 let liveView = null;
+// 서버가 말하는 수령 계정 등록 상태. **세션의 기대 주소와 다른 것이다.**
+// 온보딩이 이것을 보고 3단계를 끝났다고 표시한다.
+let registration = null;
 const connection = createConnection({
   onChange: () => { if (parseRoute().name === 'bootcamp') render(); },
 });
@@ -310,14 +317,28 @@ function renderBootcamp(route, { keepScroll = false } = {}) {
   connection.setRole(pickedRole);
   const conn = connection.current;
 
-  // 서버가 준 판정이 있으면 그것을, 없으면 합성 예시를 그린다.
-  const live = conn.state === 'LIVE' && liveView !== null;
+  // 무엇을 그릴지 고른다. 규칙은 mode.js 에 있고 거기서 시험한다.
+  //
+  // 핵심은 하나다 — **로그인한 세션은 절대 합성으로 떨어지지 않는다.**
+  // 조회가 실패했거나 절차가 아직 준비되지 않았으면 그 사실을 적고 다시
+  // 읽을 길을 준다. 가짜 기록으로 메우지 않는다(2026-11-01 리뷰).
+  const mode = pickMode({ connState: conn.state, liveView, pickedCase });
+
+  if (mode === MODE.LIVE_NO_VIEW) {
+    shell(viewStatusView({
+      conn,
+      onRetry: async () => { liveView = await connection.refresh(); render(); },
+    }), { keepScroll });
+    return;
+  }
+
+  const live = mode === MODE.LIVE;
 
   // ── 라이브 월드 ────────────────────────────────────────────────────
   //
   // **서버가 진짜 판정을 주면 쓰지 않는다.** 진짜 기록 위에 조작판을 얹으면
   // 그건 시연이 아니라 기록을 갈아끼우는 것이다.
-  const sim = !live && pickedCase === 'live';
+  const sim = mode === MODE.SIM;
   const d = sim ? world.derive() : null;
   const me = sim ? (d.byId.get(world.state.me) ?? d.rows[0]) : null;
   const simApi = sim ? worldApi(world, pickedRole) : null;
@@ -347,13 +368,25 @@ function renderBootcamp(route, { keepScroll = false } = {}) {
   const registerRecipient = async () => {
     const conn2 = connection.current;
     if (conn2.demo) { await connection.demoRegister(); render(); return; }
+    // 전에는 api.registerRecipient 를 불렀다. **그런 메서드는 없었다** —
+    // 우리가 지어낸 이름이라 눌러도 조용히 끝났다(2026-11-01 리뷰).
     const api = conn2.api;
-    if (typeof api?.registerRecipient !== 'function') return;
-    try { await api.registerRecipient(conn2.applicationId); } catch { /* 화면이 오류를 띄운다 */ }
+    if (typeof api?.recipientRegistration !== 'function' || !conn2.signTypedData) return;
+    try {
+      registration = await runRecipientRegistration({
+        api,
+        signTypedData: conn2.signTypedData,
+        applicationId: conn2.applicationId,
+        idempotencyKey: newKey('recipient'),
+      });
+    } catch {
+      // 자세한 사유는 아래 등록 패널이 그린다. 여기서는 상태만 비워 둔다.
+      registration = null;
+    }
     liveView = await connection.refresh();
     render();
   };
-  const signOut = async () => { liveView = null; await connection.signOut(); };
+  const signOut = async () => { liveView = null; registration = null; await connection.signOut(); };
   // 라이브 월드에는 새로고침할 서버가 없다. 월드가 이미 바뀌어 있으므로
   // 다시 그리기만 한다 — 없는 서버에 물으러 가면 오류만 돌아온다.
   const onChange = async () => {
@@ -418,6 +451,7 @@ function renderBootcamp(route, { keepScroll = false } = {}) {
     !route.criterionId && !onboarded(conn, pickedRole)
       ? onboardingView({
         conn,
+        registration,
         role: pickedRole,
         onStart: signIn,
         onRegister: registerRecipient,

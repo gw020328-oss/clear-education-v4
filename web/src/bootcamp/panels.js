@@ -21,7 +21,7 @@ import { seoulText } from '../ui/policy-view.js';
 import { item, pairBlock } from './pairs.js';
 
 /** 멱등 키. 서버 id 규칙(^[a-z][a-z0-9.-]{0,63}$)을 지킨다 */
-function newKey(prefix) {
+export function newKey(prefix) {
   const rand = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
   return `${prefix}-${rand}`;
 }
@@ -69,6 +69,16 @@ const ERROR_TEXT = Object.freeze({
   BC_UI_CONTEXT_UNAVAILABLE: '신청 정보를 읽지 못했습니다. 다시 불러와 주세요.',
   BC_E3_REGISTERED_SNAPSHOT_EXPIRED: '등록 정보가 만료됐습니다. 다시 불러와 주세요.',
   BC_E3_REVIEW_CLOSED: '확인 기간이 끝났습니다.',
+  BC_E3_CURRENT_MET_REQUIRED: '조건을 모두 충족해야 수령 계정을 등록할 수 있습니다.',
+  BC_E3_ID_BINDING: '신청 식별값이 맞지 않습니다. 다시 불러와 주세요.',
+
+  // V2 수령인 등록
+  BC_RECIPIENT_REGISTRATION_TARGET: '등록 대상이 바뀌었습니다. 다시 불러온 뒤 서명해 주세요.',
+  BC_RECIPIENT_REGISTRATION_SESSION: '로그인한 계정이 등록 대상과 다릅니다. 다시 로그인해 주세요.',
+  BC_RECIPIENT_REGISTRATION_SIGNATURE: '서명을 확인하지 못했습니다. 다시 서명해 주세요.',
+  BC_RECIPIENT_REGISTRATION_ALREADY_SIGNED: '이미 서명을 제출했습니다. 다시 보내지 않으셔도 됩니다.',
+  BC_RECIPIENT_REGISTRATION_SOURCE: '근거가 바뀌었습니다. 다시 불러온 뒤 서명해 주세요.',
+  BC_SIGN_TYPED_DATA: '서명할 등록 자료가 올바르지 않습니다.',
 
   // 서버에 닿는 길. 코드 자체는 진단용이라 사람 말로 바꿔 적는다.
   BC_TRANSPORT_HTTP: '서버가 요청을 처리하지 못했습니다. 잠시 뒤 다시 시도해 주세요.',
@@ -106,7 +116,7 @@ function outcomeNote(error) {
 }
 
 /** 결과 줄 — 성공·오류·미확인 */
-function resultLines(status) {
+export function resultLines(status) {
   if (!status) return [];
   if (status.kind === 'ok') return [el('p.bcx-ok', { text: status.text })];
   if (status.kind === 'error') {
@@ -115,7 +125,7 @@ function resultLines(status) {
   return [];
 }
 
-function actionButton({ label, busy, onClick }) {
+export function actionButton({ label, busy, onClick }) {
   return el('button.bcx-btn', {
     type: 'button',
     disabled: busy ? 'disabled' : null,

@@ -98,12 +98,22 @@ const OPERATOR_STEPS = Object.freeze([
   },
 ]);
 
-/** 지금 몇 번째 걸음인가. 0 = 아직 시작 전 */
-function stepOf(conn, steps) {
+/**
+ * 지금 몇 번째 걸음인가. 0 = 아직 시작 전
+ *
+ * 3단계(수령 계정 등록)는 **서버의 등록 응답**으로 판단한다. 전에는
+ * `conn.recipient` 만 봤는데 그건 세션이 말하는 **기대 주소**라, 등록을
+ * 한 적이 없어도 걸음이 끝난 것처럼 보였다(2026-11-01 리뷰).
+ *
+ * 서명이 접수되면 **학생이 할 일은 끝난 것**이라 여기서는 끝으로 센다.
+ * 체인 반영은 서버·체인 몫이고 등록 패널이 따로 적는다.
+ */
+function stepOf(conn, steps, registration) {
   const connected = conn?.state === 'LIVE' || conn?.demo;
   if (!connected) return 0;
   if (steps.length === 2) return 2;
-  return conn.recipient ? 3 : 2;
+  const done = conn?.demo ? Boolean(conn.recipient) : registration?.signatureAccepted === true;
+  return done ? 3 : 2;
 }
 
 /**
@@ -165,12 +175,12 @@ function stepRow(step, index, { current }) {
  */
 export function onboardingView({
   conn, role = 'participant', onStart = () => {}, onRegister = () => {},
-  onTestWallet = () => {},
+  onTestWallet = () => {}, registration = null,
 }) {
   const box = el('section.ob', {});
   const operator = role === 'operator';
   const steps = operator ? OPERATOR_STEPS : PARTICIPANT_STEPS;
-  const current = stepOf(conn, steps);
+  const current = stepOf(conn, steps, registration);
   // 서버에 붙어 있을 때만 지갑 안내가 의미가 있다
   const live = conn?.state === 'SIGNED_OUT' || conn?.state === 'LIVE';
   const kindNote = live

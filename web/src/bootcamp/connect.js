@@ -77,14 +77,14 @@ export const OPTIONAL = Object.freeze([
  *   objection          오류 신고 쓰기. 내부 API 는 있고 제품 서버 미노출
  *   revalidation       `review-revalidations` 는 조회이지 요청 API 가 아니다.
  *                      학생 버튼에서 직접 부르지 않는다
- *   registerRecipient  **우리가 지어낸 이름이다.** 실제로는
- *                      recipientRegistration / submitRecipientRegistration 둘로
- *                      나뉘고 EIP-712 서명이 사이에 들어간다
+ * `registerRecipient` 도 여기 있었다. 그건 **우리가 지어낸 이름**이었고 실제로는
+ * recipientRegistration / submitRecipientRegistration 둘로 나뉘며 사이에 EIP-712
+ * 서명이 들어간다. 실제 이름으로 OPTIONAL 에 옮겼다.
  *
  * 없는 이름을 OPTIONAL 에 두면 "서버가 추가하면 살아난다" 처럼 읽히는데,
  * 앞의 둘은 정책상 안 열리는 것이고 마지막은 이름 자체가 틀린 것이라 다르다.
  */
-export const ABSENT = Object.freeze(['objection', 'revalidation', 'registerRecipient']);
+export const ABSENT = Object.freeze(['objection', 'revalidation']);
 
 /**
  * 지갑 공급자를 고른다.
@@ -243,6 +243,9 @@ export function createConnection({
   let sessionReadAtMs = null;
   let error = null;
   let busy = false;
+  // 마지막 판정 조회가 왜 실패했나. **삼키지 않는다** — null 로만 돌려주면
+  // 화면이 그걸 '서버가 없다' 로 읽고 합성 월드로 떨어진다(2026-11-01 리뷰).
+  let viewError = null;
   // 시연용 계정. 서버가 없을 때만 쓴다 — demo-wallet.js 머리말 참고.
   let demo = null;
 
@@ -253,8 +256,14 @@ export function createConnection({
     address: wallet?.wallet ?? demo?.address ?? null,
     applicationId: session?.applicationId ?? null,
     role: session?.role ?? null,
-    // 멘토 §2 — 수령인을 체인에 등록했나. 서버가 주면 그 값, 아니면 미확인.
-    recipient: session?.recipient ?? demo?.recipient ?? null,
+    // 세션이 말하는 **기대 수령 주소**다. 등록이 끝났다는 뜻이 아니다.
+    //
+    // 전에는 이 값만 있으면 온보딩이 '수령 계정 등록 완료' 로 넘어갔다.
+    // 서명 수락과 체인 등록은 다른 단계라, 등록 상태는 서버의 등록 응답
+    // (recipientRegistration)에서 읽어야 한다 — 2026-11-01 리뷰.
+    expectedRecipient: session?.recipient ?? demo?.recipient ?? null,
+    // 시연 계정만 즉시 '등록됨' 이다. 실서버는 등록 응답이 정한다.
+    recipient: demo?.recipient ?? null,
     // 이번 입력의 AI 승인 자료. 서버가 세션에 실어 준다.
     aiApproval: session?.aiApproval ?? null,
     sessionReadAtMs,
@@ -267,10 +276,17 @@ export function createConnection({
     demoHow: demo?.how ?? null,
     api,
     error,
+    // 마지막 판정 조회의 실패 사유. 화면이 이걸 보고 무엇을 적을지 정한다.
+    viewError,
     busy,
     // panels 에 넘길 서명 함수. 서버가 준 문구를 그대로 서명한다.
     sign: wallet && state === 'LIVE'
       ? (message) => wallet.signMessage(message)
+      : null,
+    // V2 수령인 등록용. personal_sign 과 **같은 자리에 두지 않는다** —
+    // 섞어 쓰면 서버의 typed-data 검증을 통과하지 못한다.
+    signTypedData: wallet && state === 'LIVE'
+      ? (payload) => wallet.signTypedData(payload)
       : null,
   });
 
@@ -406,16 +422,28 @@ export function createConnection({
     async signOut() {
       demo = null;
       if (wallet) await wallet.signOut().catch(() => {});
-      wallet = null; api = null; session = null; error = null;
+      wallet = null; api = null; session = null; error = null; viewError = null;
       state = config?.phase === 'ACTIVE_LOCAL_TEST' ? 'SIGNED_OUT' : 'OFFLINE';
       settle();
       return snapshot();
     },
 
-    /** 서버에서 현재 판정을 다시 읽는다. 쓰기 뒤에 부른다 */
+    /**
+     * 서버에서 현재 판정을 다시 읽는다. 쓰기 뒤에 부른다.
+     *
+     * 실패를 **삼키지 않는다.** 전에는 catch 에서 null 만 돌려줬고, 화면은
+     * null 을 '서버 없음' 으로 읽어 합성 월드를 켰다. 이제 사유를 남긴다.
+     */
     async refresh() {
       if (state !== 'LIVE' || !api || !session?.applicationId) return null;
-      try { return await api.view(session.applicationId); } catch { return null; }
+      try {
+        const view = await api.view(session.applicationId);
+        viewError = null;
+        return view;
+      } catch (failure) {
+        viewError = failure;
+        return null;
+      }
     },
   });
 }

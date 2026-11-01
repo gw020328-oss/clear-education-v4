@@ -43,6 +43,7 @@ import {
   statusPill, pillButton, ticker, iconChip, icon, ghostWord, monoLabel,
 } from '../ui/brand.js';
 import { item, pairBlock } from './pairs.js';
+import { recipientPanel } from './recipient-panel.js';
 
 const PROCEDURE = Object.freeze({
   FUNDING_WAIT: '환급 재원 확보 대기',
@@ -389,9 +390,12 @@ function heroSection(view, { conn, blocked, onSignIn }) {
 // 로그인 인증 계정과 실제 수령 주소를 구분하라고 했고, 둘을 같다고 적으면
 // 나중에 내장 지갑이 들어올 때 틀린 주소를 보여주게 된다.
 
-function joinSection(view, { conn }) {
+function joinSection(view, { conn, api, blocked, onChange }) {
   const live = conn?.state === 'LIVE' || conn?.demo;
+  // **등록이 끝난 주소**만 여기 적는다. 세션이 말하는 기대 주소는 아직
+  // 등록된 것이 아니라 따로 적는다 — 둘을 합치면 학생이 끝난 줄 안다.
   const recipient = conn?.recipient ?? null;
+  const expected = conn?.expectedRecipient ?? null;
 
   return el('section.bcx-block.panel', {}, [
     iconChip('key'),
@@ -405,11 +409,23 @@ function joinSection(view, { conn }) {
     ...pairBlock([
       item('수령 주소', recipient, recipient ? '체인에 등록돼 있습니다' : null,
         { always: true }),
+      // 등록 전이면 '어디로 갈 예정인가' 만 말한다. 등록됐다고 적지 않는다.
+      !recipient && expected
+        ? item('등록할 주소', expected, '아직 등록 전입니다')
+        : null,
       item('참여 반', 'Python 부트캠프'),
       item('로그인', live ? '완료' : null),
-    ]),
+    ].filter(Boolean)),
     !recipient && live
       ? el('p.bcx-warn', { text: '아직 등록되지 않았습니다. 등록해야 지급이 진행됩니다.' })
+      : null,
+    // 시연 계정은 등록 절차가 없다. 실서버에서만 그린다.
+    live && !conn?.demo
+      ? recipientPanel({
+        view, api, blocked, quiet: true,
+        signTypedData: conn?.signTypedData ?? null,
+        onDone: onChange,
+      })
       : null,
   ].filter(Boolean));
 }
@@ -862,7 +878,7 @@ export function studentSection({
       el('div.band.band--soft', {}, [el('div.band-inner', {}, [fundingSection(view, { api, blocked })])]),
       el('div.band.band--card', {}, [el('div.band-inner', {}, [consentSection(view, { api, blocked, onChange, conn })])]),
 
-      joinSection(view, { conn }),
+      joinSection(view, { conn, api, blocked, onChange }),
       decisionDetailSection(view),
       historySection(view, { api, blocked, onChange }),
       recoverySection(view),

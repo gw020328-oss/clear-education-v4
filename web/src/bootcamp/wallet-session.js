@@ -28,6 +28,21 @@ const isWallet = (v) => typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v) &
 const isCsrf = (v) => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v);
 const fail = (code, outcome = 'NOT_SENT') => new BootcampError(code, { outcome });
 
+/**
+ * EIP712Domain 타입을 domain 에 실제로 있는 칸으로만 만든다.
+ *
+ * 순서는 EIP-712 가 정한 것이고 바꾸면 해시가 달라진다. 없는 칸을 끼워 넣어도
+ * 마찬가지다 — 그래서 **받은 domain 에 있는 것만** 고른다.
+ */
+const DOMAIN_FIELDS = Object.freeze([
+  ['name', 'string'], ['version', 'string'], ['chainId', 'uint256'],
+  ['verifyingContract', 'address'], ['salt', 'bytes32'],
+]);
+
+const domainFields = (domain) => DOMAIN_FIELDS
+  .filter(([key]) => domain[key] !== undefined && domain[key] !== null)
+  .map(([name, type]) => ({ name, type }));
+
 /** personal_sign 은 바이트 hex 를 받는다. 문자열을 그대로 주면 안 된다 */
 export const toHex = (text) =>
   '0x' + Array.from(new TextEncoder().encode(text), (b) => b.toString(16).padStart(2, '0')).join('');
@@ -219,6 +234,49 @@ export function createWalletSession({ origin, provider, onEnd = () => {}, fetchI
       const stamp = generation;
       await assertSameWallet(stamp, signal2);
       const signature = await rpc('personal_sign', [toHex(message), wallet], signal2);
+      await assertSameWallet(stamp, signal2);
+      return signature;
+    },
+
+    /**
+     * V2 수령인 등록 자료에 서명한다. **사용자 버튼에서만 부른다.**
+     *
+     * personal_sign 과 **다른 것**이다. 등록은 EIP-712 typed data 를 요구하고,
+     * 서버가 `verifyTypedData` 로 검증한다. personal_sign 으로 만든 서명을
+     * 거기 넣으면 통과하지 못한다 — 2026-11-01 리뷰가 짚은 자리다.
+     *
+     * 지키는 것 셋.
+     *
+     *   1  도메인·타입·메시지를 **우리가 만들지 않는다.** 서버가 준 payload 를
+     *      그대로 서명한다
+     *   2  **메시지의 participant·recipient 가 내 주소일 때만** 서명한다.
+     *      아니면 남의 등록에 내 서명을 붙이는 것이다
+     *   3  서명 앞뒤로 지갑을 확인한다. signMessage 와 같은 이유다
+     *
+     * `eth_signTypedData_v4` 는 types 에 EIP712Domain 을 요구한다. 서버 payload
+     * 에는 없으므로 **domain 에 실제로 있는 칸만** 골라 EIP-712 표준 순서로
+     * 만들어 붙인다. 없는 칸을 넣으면 해시가 달라져 검증이 깨진다.
+     */
+    async signTypedData(payload, { signal } = {}) {
+      if (!csrf) throw fail('AUTH_REQUIRED');
+      const message = payload?.message;
+      const ok = payload?.domain && payload.types?.[payload.primaryType]
+        && payload.primaryType === 'RecipientRegistration'
+        && isWallet(message?.participant) && isWallet(message?.recipient)
+        && message.participant.toLowerCase() === wallet
+        && message.recipient.toLowerCase() === wallet;
+      if (!ok) throw fail('BC_SIGN_TYPED_DATA');
+
+      const signal2 = scoped(signal);
+      const stamp = generation;
+      await assertSameWallet(stamp, signal2);
+      const signature = await rpc('eth_signTypedData_v4', [
+        wallet,
+        JSON.stringify({
+          ...payload,
+          types: { EIP712Domain: domainFields(payload.domain), ...payload.types },
+        }),
+      ], signal2);
       await assertSameWallet(stamp, signal2);
       return signature;
     },
