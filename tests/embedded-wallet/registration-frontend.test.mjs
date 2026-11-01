@@ -12,6 +12,7 @@ import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
 import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server.mjs';
 import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {createProductSession,registrationFailure} from '../../src/embedded-wallet/product-session.mjs';
+import {createSameOriginApi} from '../../src/application/api-client.mjs';
 import {requireRule as check} from '../../src/policy/values.mjs';
 async function fixture(t){
  const f=await procedureFixture(t),reg=f.configuration.procedurePorts.registration;f.auth.domain.chainId=String(f.config.chainId);
@@ -36,7 +37,13 @@ async function fixture(t){
    headers:{host:new URL(f.config.origin).host,origin:f.config.origin,cookie:'__Host-clear-session='+actor.token,'x-wallet':actor.wallet,'x-chain-id':String(actor.chainId),'x-csrf-token':actor.csrf,'content-type':'application/json',...(idempotencyKey?{'idempotency-key':idempotencyKey}:{}),...headers}},res=>{
     const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(Buffer.concat(chunks))}));});req.on('error',reject);req.end(body===undefined?undefined:JSON.stringify(body));
  });
- const request=async(path,options)=>{const r=await raw(path,options);if(options?.method==='POST'&&lost)throw Object.assign(Error('TRANSPORT'),{outcome:'UNKNOWN'});if(r.status!==200)throw Object.assign(Error(r.body.error),{status:r.status});return r.body;};
+ const api=createSameOriginApi({origin,fetch:async(url,options)=>{
+  const u=new URL(url);assert.equal(u.origin,origin);
+  const r=await raw(u.pathname+u.search,{method:options.method,body:options.body===undefined?undefined:JSON.parse(options.body),idempotencyKey:options.headers.get('idempotency-key')??undefined});
+  if(options.method==='POST'&&lost)throw Error('lost response');
+  return Response.json(r.body,{status:r.status});
+ }});
+ const request=(path,{idempotencyKey,...options}={})=>api(path,{...options,headers:idempotencyKey?{'idempotency-key':idempotencyKey}:{}});
  t.mock.method(Date,'now',()=>f.time*1000);
  const product=createProductSession({session:{assertSession:async()=>f.service.authorizeWorkflow(f.aliceContext,false),request},
   wallet:{pin:{address:f.alice.address,chainId:f.config.chainId},async typed(payload){walletCalls++;events.push('WALLET');await walletHook();return f.alice.signTypedData(payload.domain,payload.types,payload.message);}},
@@ -78,13 +85,13 @@ for(const phase of ['before','during'])for(const field of ['recipient','payload'
  assert.equal(x.stats().walletCalls,phase==='before'?0:1);assert.equal(x.stats().posts,0);
 });
 test('product HTTPS refuses unknown/registered canonical state before wallet and uncertain POST never signs again',async t=>{
- const x=await fixture(t);let packet;for(const state of [{chainStatus:'UNKNOWN'},{chainStatus:'INCLUDED'},{canonical:false}]){x.chain({});packet=await x.product.readRegistration();x.chain(state);await assert.rejects(x.product.submitRegistration(packet),/REGISTRATION_CHAIN/);assert.equal(x.stats().walletCalls,0);}
- x.chain({});packet=await x.product.readRegistration();x.loseReply();await assert.rejects(x.product.submitRegistration(packet),/TRANSPORT/);
+ const x=await fixture(t);let packet;for(const state of [{chainStatus:'UNKNOWN'},{chainStatus:'INCLUDED'},{canonical:false}]){x.chain({});packet=await x.product.readRegistration();x.chain(state);await assert.rejects(x.product.submitRegistration(packet),e=>e.code==='BC_RECIPIENT_REGISTRATION_CHAIN'||e.message==='REGISTRATION_CHAIN');assert.equal(x.stats().walletCalls,0);}
+ x.chain({});packet=await x.product.readRegistration();x.loseReply();await assert.rejects(x.product.submitRegistration(packet),/API_NETWORK/);
  assert.equal(x.product.registrationUnknown,true);assert.equal(x.stats().walletCalls,1);assert.equal(x.stats().posts,1);
  await assert.rejects(x.product.readRegistration(),/REGISTRATION_RESULT_UNKNOWN/);await assert.rejects(x.product.submitRegistration(packet));assert.equal(x.stats().walletCalls,1);
 });
 test('fixed diagnostic preserves missing product route code without exposing arbitrary exception',()=>{
- assert.deepEqual(registrationFailure(Object.assign(Error('BC_NOT_FOUND'),{registrationStage:'PRE_SIGN_READ'}),{submit:true}),{stage:'PRE_SIGN_READ',code:'BC_NOT_FOUND'});
+ assert.deepEqual(registrationFailure(Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_NOT_FOUND',registrationStage:'PRE_SIGN_READ'}),{submit:true}),{stage:'PRE_SIGN_READ',code:'BC_NOT_FOUND'});
  assert.deepEqual(registrationFailure(Object.assign(Error('token=private signature=private'),{registrationStage:'PRE_SIGN_READ'}),{submit:true}),{stage:'PRE_SIGN_READ',code:'REGISTRATION_FAILED'});
 });
 

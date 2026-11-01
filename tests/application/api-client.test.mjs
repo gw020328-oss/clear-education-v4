@@ -159,3 +159,25 @@ for (const [path,method,status,body,expected] of [
  assert.equal(e.code,expected);assert.equal(calls,1);assert.equal(e.message,'API_REQUEST_FAILED');
  assert.ok(!JSON.stringify(e).includes('secret'));assert.ok(!JSON.stringify(e).includes('PAY'));
 });
+
+const registration='/bootcamp/v3/applications/application-fixture/recipient-registration';
+const checkpoint=encodeURIComponent(JSON.stringify({number:'10',hash:'0x'+'11'.repeat(32),time:'1900000000'}));
+test('browser transport allows only bounded single registration checkpoint GET, with no write or foreign query expansion',async()=>{
+ let calls=0;const api=apiFor(async url=>{calls++;assert.equal(url,origin+registration+'?checkpoint='+checkpoint);return Response.json({ok:true});});
+ assert.deepEqual(await api(registration+'?checkpoint='+checkpoint),{ok:true});
+ for(const [path,method] of [[registration+'?x=1','GET'],[registration+'?checkpoint='+checkpoint+'&checkpoint='+checkpoint,'GET'],[registration+'?checkpoint='+checkpoint+'&x=1','GET'],[registration+'?checkpoint=','GET'],[registration+'?checkpoint='+('a'.repeat(769)),'GET'],[registration+'?checkpoint='+checkpoint+'#fragment','GET'],[registration+'?checkpoint='+checkpoint,'POST'],['/bootcamp/v3/applications/application-fixture/procedure?checkpoint='+checkpoint,'GET']]){
+  const e=await errorOf(api(path,{method}));assert.equal(e.code,'API_ORIGIN');assert.equal(e.outcome,'NOT_SENT');
+ }
+ assert.equal(calls,1);
+});
+for(const [path,status,body,expected] of [
+ [registration+'?checkpoint='+checkpoint,404,{error:'BC_NOT_FOUND'},'BC_NOT_FOUND'],
+ [registration,409,{error:'BC_RECIPIENT_REGISTRATION_CHAIN'},'BC_RECIPIENT_REGISTRATION_CHAIN'],
+ [registration,409,{error:'BC_VIEW_STALE'},'BC_VIEW_STALE'],
+ [registration,500,{error:'BC_NOT_FOUND'},'API_REQUEST_FAILED'],
+ [registration,409,{error:'secret-body'},'API_REQUEST_FAILED'],
+ ['/applications',404,{error:'BC_NOT_FOUND'},'API_REQUEST_FAILED'],
+])test('registration browser errors preserve only route/status-scoped fixed codes '+expected+' '+status+' '+path,async()=>{
+ const e=await errorOf(apiFor(()=>Response.json({...body,message:'secret-detail'},{status}))(path));
+ assert.equal(e.message,'API_REQUEST_FAILED');assert.equal(e.code,expected);assert.ok(!JSON.stringify(e).includes('secret'));
+});

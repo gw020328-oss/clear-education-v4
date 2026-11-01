@@ -1,6 +1,6 @@
 ## 제품 HTTPS checkpoint 경로 (2026-11-01 후속)
 
-제품 frontend-server도 기존 recipient-registration GET의 단일 `?checkpoint=<encoded JSON>`을 전달한다. 이 경로만 URL-safe 인코딩 값 1–768자로 허용하고, 다른 query·중복 파라미터·다른 경로·POST query·fragment는 계속 거부한다. 기존 하위 handler의 256자/정확한 number·hash·time 파서, 인증/소유자·canonical 연속성·CAS 검사는 그대로 수행한다. `BC_NOT_FOUND`는 등록 실패 UI의 고정 코드 허용 목록에 추가되어 PRE_SIGN_READ 단계의 route 실패를 원문 없이 구분한다.
+제품 frontend-server와 브라우저 createSameOriginApi 전송 계층은 기존 recipient-registration GET의 단일 `?checkpoint=<encoded JSON>`을 전달한다. 이 경로만 URL-safe 인코딩 값 1–768자로 허용하고, 다른 query·중복 파라미터·다른 경로·POST query·fragment는 계속 거부한다. 기존 하위 handler의 256자/정확한 number·hash·time 파서, 인증/소유자·canonical 연속성·CAS 검사는 그대로 수행한다. `BC_NOT_FOUND`/`API_ORIGIN`은 등록 실패 UI의 고정 코드 허용 목록에 추가되어 PRE_SIGN_READ 단계의 route/전송 거부를 원문 없이 구분한다. 브라우저 전송 계층은 해당 등록 경로의 고정 HTTP status/error만 안전한 `.code`로 보존하며, UI는 허용 목록의 `.code`를 사용한다. 기존 HTTP `.message` 호환성과 다른 경로의 오류 가림은 유지한다.
 
 ## 수령 등록 관측 갱신 (2026-11-01 후속)
 

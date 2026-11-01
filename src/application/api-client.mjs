@@ -1,6 +1,9 @@
 // Browser-only transport. No Node imports, wallet keys, persistence or retries.
 const MAX_ERROR_BYTES = 4096;
 const codes = new Map();
+const registrationPath=/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/recipient-registration$/;
+const registrationQuery=/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/recipient-registration\?checkpoint=[A-Za-z0-9%._~-]{1,768}$/;
+const registrationErrors=new Set(['BC_VIEW_STALE','BC_E5_CURRENT_CHANGED','BC_RECIPIENT_REGISTRATION_CHECKPOINT','BC_RECIPIENT_REGISTRATION_CHAIN','BC_RECIPIENT_REGISTRATION_TARGET','BC_RECIPIENT_REGISTRATION_ALREADY_SIGNED','BC_RECIPIENT_REGISTRATION_SESSION','BC_RECIPIENT_REGISTRATION_SOURCE','BC_RECIPIENT_REGISTRATION_SIGNATURE']);
 for (const [status, names] of [
   [401, ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE']],
   [403, ['FORBIDDEN', 'SPONSOR_REQUIRED', 'NOT_INVITED', 'ORIGIN', 'CSRF', 'WALLET_CONTEXT_CHANGED', 'TRANSPORT', 'PROOF_BROWSER_SESSION']],
@@ -92,7 +95,7 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
     try {
       if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//') || /[\\\u0000-\u0020\u007f]/.test(path)) throw new Error();
       url = new URL(path, origin);
-      if (url.origin !== origin || url.search || url.hash) throw new Error();
+      if (url.origin !== origin || url.hash || (url.search && !(method==='GET'&&registrationQuery.test(path)))) throw new Error();
     } catch { throw failure('API_ORIGIN', { method, outcome: 'NOT_SENT' }); }
     try {
       const documentDelete=method==='DELETE'&&/^\/mvp\/applications\/0x[0-9a-f]{64}\/submissions\/[a-z][a-z0-9.-]{0,63}\/raw$/.test(url.pathname);
@@ -130,8 +133,10 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
         const normalProcedureWaiting = method === 'GET' && response.status === 409
           && /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure$/.test(url.pathname)
           && value?.error === 'BC_NORMAL_PROCEDURE_NOT_READY';
-        const code = normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
-          : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED';
+        const registrationCode=registrationPath.test(url.pathname)&&
+          (response.status===404&&value?.error==='BC_NOT_FOUND'||response.status===409&&registrationErrors.has(value?.error))?value.error:null;
+        const code = registrationCode ?? (normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
+          : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
         throw failure(code, { method, status: response.status, requestId: uuid(value?.requestId) ? value.requestId : null,
           outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true });
       }
