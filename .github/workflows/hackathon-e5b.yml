@@ -11,8 +11,6 @@ on:
       - 'specs/bootcamp/hackathon-test-memory-source-intake-*.json'
       - 'docs/hackathon-test-vault/e5b/**'
       - '.github/workflows/hackathon-e5b.yml'
-  push:
-    branches: [codex/hackathon-e5-api-bridge]
 permissions:
   contents: read
 concurrency:

@@ -3,8 +3,6 @@ name: Public synthetic CI
 on:
   pull_request:
     branches: [develop, main]
-  push:
-    branches: ['codex/**']
 
 permissions:
   contents: read
