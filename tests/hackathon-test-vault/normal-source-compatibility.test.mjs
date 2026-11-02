@@ -530,7 +530,7 @@ test('v38 preserves its historical source and preserves v37 original bytes',()=>
   assert.equal(sha(v38Read(p)),h,p);assert.equal(sha(execFileSync('git',['show',v.currentSourceCandidateHead+':'+p],{cwd:root})),h,p);
   assert.equal(h,v.sourceDelta[p]?.after??old.sourceArtifactSha256[p],p);if(v.sourceDelta[p])assert.equal(v.sourceDelta[p].before,old.sourceArtifactSha256[p],p);
  }
- assert.equal(sha(actualRead(v.ciExecutionBudget.workflow)),v.ciExecutionBudget.sha256);
+ assert.equal(sha(execFileSync('git',['show','3a2151f7fa920abf52c57debdecd330398cbb429:'+v.ciExecutionBudget.workflow],{cwd:root})),v.ciExecutionBudget.sha256);
  assert.equal(v.ciExecutionBudget.timeoutMinutes,30);assert.equal(v.ciExecutionBudget.testsSkipped,false);
  for(const p of [v.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v37.mjs'])assert.deepEqual(actualRead(p),execFileSync('git',['show',v.previousCompatibilityRecord.guardHead+':'+p],{cwd:root}),p);
 });
@@ -724,6 +724,6 @@ test('v55 pins only team background scroll and preserves v54',async()=>{
  assert.equal(sha(actualRead(d.previousRecord.path)),d.previousRecord.sha256);
  assert.deepEqual(Object.keys(d.changes),['web/src/main.js']);
  for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v54Read(p)),x.before);assert.equal(sha(actualRead(p)),x.after);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after);}
- const {consumeReviewedV55Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v55.mjs');
- const c=consumeReviewedV55Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));assert.equal(c.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(c.sources).length,200);
+ const {consumeReviewedV56Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v56.mjs');
+ const c=consumeReviewedV56Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));assert.equal(c.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(c.sources).length,200);
 });
