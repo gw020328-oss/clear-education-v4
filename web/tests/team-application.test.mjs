@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {bootcampView} from '../src/fixtures/bootcamp.js';
 import {COHORT} from '../src/fixtures/cohort.js';
 import {operatorSection} from '../src/bootcamp/operator-view.js';
-import {teamApplicationSection} from '../src/bootcamp/team-application.js';
+import {teamApplicationSection,teamReceiptStatus} from '../src/bootcamp/team-application.js';
 import {testActionAvailability} from '../src/bootcamp/review-window.js';
 import {createSameOriginApi} from '../../src/application/api-client.mjs';
 import {createTestAutoReader,createTestDriver} from '../../tools/bootcamp/test-client/driver.js';
@@ -30,4 +30,10 @@ test('authenticated team entry uses one controller and never loads the fixture-c
 test('the existing GET-only auto reader recovers a route-scoped transport clock conflict without any POST',async()=>{
  const f=await fixture();const api=createSameOriginApi({origin:'https://clear.example.invalid',fetch:async()=>Response.json({error:'BC_VIEW_STALE'},{status:409})});let error;try{await api('/bootcamp/v3/applications/application-current/procedure')}catch(e){error=e}
  assert.equal(error.code,'BC_VIEW_STALE');f.setViewError(error);await assert.rejects(f.driver.readLive());let callback;const reader=createTestAutoReader({driver:f.driver,setTimer:fn=>{callback=fn;return 1},clearTimer:()=>{}});reader.sync();assert.ok(callback);await callback();assert.ok(f.driver.snapshot().view);assert.equal(f.driver.snapshot().error,null);assert.equal(f.calls.length,0);reader.close();
+});
+
+test('a receipt is a 100 TEST receipt only for this application, role, recipient, token and verified canonical transfer',()=>{
+ const expectedPayment={recipient:address,token,amountAtoms:'100000000',decimals:6,symbol:'TEST'},bootstrap={applicationId:'application-current',role:'OPERATOR',expectedPayment};
+ const receipt={version:'clear-bootcamp-normal-payment-receipt.1',applicationId:bootstrap.applicationId,role:bootstrap.role,expectedPayment:structuredClone(expectedPayment),claim:{state:'INCLUDED',canonical:true,finalized:false,transferAmountAtoms:'100000000'},balance:{receivedAtoms:'100000000',exactExpectedAmountVerified:true}};assert.equal(teamReceiptStatus({bootstrap,receipt}).verified,true);
+ for(const mutate of [r=>r.applicationId='application-other',r=>r.role='PARTICIPANT',r=>r.expectedPayment.recipient=token,r=>r.expectedPayment.token=address,r=>r.balance.receivedAtoms='1',r=>r.claim.canonical=false,r=>r.claim.state='READBACK_UNAVAILABLE',r=>r.balance.exactExpectedAmountVerified=false]){const changed=structuredClone(receipt);mutate(changed);assert.equal(teamReceiptStatus({bootstrap,receipt:changed}).verified,false);}
 });
