@@ -11,6 +11,8 @@
 ## 2026-10-31 Privy 로그인 비교·진단 후속 (PR125 Draft)
 
 [구성 비교와 재시험 조건](current/PRIVY_LOGIN_DIAGNOSIS_20261031.ko.md)을 기록했다. 이전9457의 Google/EOA 로그인 방식과 현재9467의 SDK3.51.0·initOAuth·Provider/CSP 설정은 같으며, origin/CA/새 세션·체인 차이가 있다. 이번 사용자 HackerRank 로그인 후 호스트 활성화는 확인됐으나 Privy Google 이동 전에 실패했다. sourceVerified=false/applicationId=null 상태로 정상 종료했고 원래 실패 원인은 미확정이다. 숨겨진 오류를 시작/복귀 단계·고정 SDK 코드·허용 HTTP 상태로만 표시/탭별 보존하는 최소 수정이다. 원시 예외/URL/토큰/쿠키를 기록하지 않는다. v44는 onboarding 한 파일과 진단 모듈만 새 지갑 지문으로 인수하며 v1–v43을 보존한다. 실제 재로그인·AI·지급 재시험은 미실행, 최신 CI는 PR125에서 확인한다.
+아래 일일 현황은 당시 확인 범위의 기록이며, 위 실제 지급 결과와 구분해 보존한다.
+
 ## 2026-11-02 등록·지급 준비 경계와 실제 미완료 현황
 
 원격 확인 **2026-11-02 11:04 KST**. develop은 [a6372f5](https://github.com/gw020328-oss/clear-education-v4/commit/a6372f50bc1e757d724bb064c723d7103ff064e1), main은 [6e1c403](https://github.com/gw020328-oss/clear-education-v4/commit/6e1c4038f9ccf5f1adb96d85b2eebd07b2fd4212)이며 어제 이후 새 기능 병합은 없다. [#131](https://github.com/gw020328-oss/clear-education-v4/pull/131)의 아래 후속은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 공개 기록의 저장 결과이며 이번 자동화가 실행한 결과가 아니다.

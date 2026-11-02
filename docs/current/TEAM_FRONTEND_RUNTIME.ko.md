@@ -10,7 +10,7 @@ TeamPanel이 인증된 메모리 세션의 제한된 capability를 해당 iframe
 
 검증: web+embedded 452개 통과(로컬에서는 CI 전용 새 bundle 시험 1개 제외), 실제 제품 TLS/인증/CAS를 거친 team recipient 경로에서 anchored GET2/지갑요청1/POST1 및 중간 판정 변경 시 POST0 확인. 새 ISOLATED_LIVE_TEST + 팀원 capability + 제품 HTTPS + fresh Geth에서 REGISTER/ALLOCATE/START_REVIEW/BIND_CONSENTS/PREPARE/ACCEPT/claim·canonical 정확100000000 atoms·중복 거부 통과. HR은 self Attestor 합성 HTTPS, Moodle은 가상 자료, AI는 차단된 가상 응답·가짜 키, 사용자 서명은 새 시험 EOA다. 실제 Privy/MetaMask 브라우저 및 팀원 DOM 실증은 이후 본부가 수행한다.
 
-최종 준비 host 이름은 `team-frontend-final-20261102`, origin은 https://127.0.0.1:9467 이다. 새 CA는 작업본 var/bootcamp-normal-host/team-frontend-final-20261102/ca.pem에 있다. 실제 활성화 전 최종 코드 HEAD/자산 SHA/새 host 전용 비용 승인 지갑 지정·가격 검토·역할 설정을 일치시켜야 한다. 기존 유료 승인/used/spent를 복사하지 않는다. 실제 run을 시작하거나 로그인·원천·유료 호출을 실행하지 않았다. 최종 인수 값과 준비 명령은 비공개 var/verification의 인계 기록에 남긴다. 예치 정책은 미확정이며 새 기능은 추가하지 않는다.
+기존 준비 host `team-frontend-final-20261102`는 이전 HEAD 기준 기록이다. PR131 병합 후 기존 준비 listener는 종료됐다. 새 실제 실행 준비는 최종 CI가 통과한 HEAD에서 새 host/CA로 수행한다. 실제 활성화 전 최종 코드 HEAD/자산 SHA/새 host 전용 비용 승인 지갑 지정·가격 검토·역할 설정을 일치시켜야 한다. 기존 유료 승인/used/spent를 복사하지 않는다. 실제 run을 시작하거나 로그인·원천·유료 호출을 실행하지 않았다. 최종 인수 값과 준비 명령은 비공개 var/verification의 인계 기록에 남긴다. 예치 정책은 미확정이며 새 기능은 추가하지 않는다.
 
 ## 서명 후 GET의 실제 초 경계 보완
 
@@ -19,3 +19,5 @@ TeamPanel이 인증된 메모리 세션의 제한된 capability를 해당 iframe
 readRecipientRegistration에서 정확한 내부 RuleError/BC_VIEW_STALE인 로컬 projection만 1회 새로 읽는다. RPC refresh/ancestry 확인·지갑 서명·등록 POST는 반복하지 않는다. 원래 packet·등록 대상·nonce·deadline·stable 비교·권한 검사는 유지한다. 두 번째 충돌, 역행, 권한 철회, 임의 오류는 계속 거부한다. 실제 store 초 경계와 제품 HTTPS 시험으로 확인하며 실제 사용자 재시험의 근거는 아니다. 서명·시간 경계의 추가 리뷰는 Astra/High 권장이고 현재 구현·합성 검증은 Sol에서 수행했다.
 
 이전 ff8a8d0의 Mac CI는 BROWSER_SIGNAL_TERM/kill에서 STALE_RECOVERY:EPERM 1건으로 중단됐다. Mac 복구 소스는 이번 범위에서 수정하지 않았다. 원인 미확정 기록을 보존하고 최신 HEAD CI와 구분하며 성공으로 덮지 않는다.
+
+최신 develop 병합: PR131 병합 `c9d2f77`을 이력으로 통합했다. 현재 실제 지급 실행은 별도 PR131 작업본에서 로그인 대기 중이며 이 팀원 프론트의 실제 완주 근거가 아니다. 이번 등록 GET 보완의 관련 로컬 시험은 23/23 통과했다. workflow/CI 운영 문서는 이 후속에서 편집하지 않는다.
