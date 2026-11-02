@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {procedureFixture,START} from './procedure-fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {createNormalReceiptReader} from '../../src/bootcamp/normal-receipt.mjs';
+import {RuleError} from '../../src/policy/values.mjs';
 import {createNormalBootcampClient} from '../../src/bootcamp/normal-client.mjs';
 const H=x=>p0Hash('OFFLINE-RECEIPT',x);
 async function fixture(t){
@@ -13,10 +14,10 @@ async function fixture(t){
   stages:[{kind:'ACCEPT',txHash:H('accept-tx'),checkpoint:{hash:H('accept-block'),number:'10',time:String(START)}}],claim:{txHash:H('claim-tx'),checkpoint,amountAtoms:'100000000',duplicateRejected:true},completed:true};
  const receipt={version:'clear-e5b-direct-claim-receipt.1',runtimeHash,applicationId:report.chainApplicationId,txHash:report.claim.txHash,status:'INCLUDED',checkpoint,recipient,token,amountAtoms:'100000000',finalized:false,allocationId:H('allocation'),authorizationDigest:H('digest'),
   observation:{runtimeHash,checkpoint,business:{applicationId:report.chainApplicationId,application:{state:'6',recipient,target:{decisionHash:v.decisionHash,revision:String(v.decisionRevision)}},right:{recipient,token,amountAtoms:'100000000',allocationId:H('allocation'),authorizationDigest:H('digest')}}}};
- let calls=0,onRead=async()=>structuredClone(receipt);
- const read=createNormalReceiptReader({authorize:(c,id)=>f.store.getOperationsProjection(c,id),readReport:()=>report,readCanonicalClaim:async q=>{
+ let calls=0,onRead=async()=>structuredClone(receipt),authorize=(c,id)=>f.store.getOperationsProjection(c,id);
+ const read=createNormalReceiptReader({authorize:(c,id)=>authorize(c,id),readReport:()=>report,readCanonicalClaim:async q=>{
   calls++;assert.deepEqual(q,{applicationId:report.chainApplicationId,txHash:report.claim.txHash});return onRead();},runtimeHash,runtimeMappingHash:v.runtimeMappingHash,policyHash:v.policyHash,recipient,token});
- return {f,a,read,report,receipt,recipient,token,calls:()=>calls,setRead:fn=>{onRead=fn;}};
+ return {f,a,read,report,receipt,recipient,token,calls:()=>calls,setRead:fn=>{onRead=fn;},setAuthorize:fn=>{authorize=fn;}};
 }
 test('canonical receipt and measured exact delta expose fixed recipient 100 TEST separately from accept and finality',async t=>{
  const x=await fixture(t),r=await x.read(x.f.aliceContext,x.a),operator=await x.read(x.f.operatorContext,x.a);
@@ -63,4 +64,31 @@ test('lost claim receipt reply reconciles exact canonical transfer without resen
  const first=await x.read(x.f.aliceContext,x.a),second=await x.read(x.f.operatorContext,x.a);
  assert.equal(first.claim.state,'INCLUDED');assert.equal(first.balance.measurement,'CANONICAL_TRANSFER_EVENT');
  assert.equal(second.balance.receivedAtoms,'100000000');assert.equal(x.calls(),2);assert.equal(x.report.completed,false);
+});
+
+for(const phase of ['before','after'])for(const kind of ['forward','repeat','reverse'])test(`receipt ${phase} canonical read: real store ${kind} clock boundary never replays canonical read`,async t=>{
+ const x=await fixture(t),f=x.f,before=f.counts(),base=f.configuration.now;let armed=false,ticks=0;
+ f.configuration.now=()=>{if(armed){ticks++;if(ticks===2||kind==='repeat'&&ticks===6)f.setTime(f.time+(kind==='reverse'?-1:1));}return base();};f.restart();
+ if(phase==='before')armed=true;else x.setRead(async()=>{armed=true;return x.receipt;});
+ try{
+  if(kind==='forward'){const r=await x.read(f.aliceContext,x.a);assert.equal(r.claim.canonical,true);assert.equal(r.balance.receivedAtoms,'100000000');assert.equal(x.calls(),1);}
+  else{await assert.rejects(x.read(f.aliceContext,x.a),/BC_VIEW_STALE|BC_CLOCK_REVERSED/);assert.equal(x.calls(),phase==='before'?0:1);}
+ }finally{armed=false;}
+ assert.equal(f.counts().commands,before.commands);
+});
+
+for(const phase of ['before','after'])for(const kind of ['plain','subclass','forbidden','scope','revoked'])test(`receipt ${phase} projection recovery rejects ${kind} without replay`,async t=>{
+ const x=await fixture(t);let attempts=0;
+ const install=()=>x.setAuthorize((c,id)=>{
+  attempts++;
+  if(kind==='plain')throw Error('BC_VIEW_STALE');
+  if(kind==='subclass')throw new(class extends RuleError {})('BC_VIEW_STALE');
+  if(kind==='forbidden')throw new RuleError('FORBIDDEN');
+  if(attempts===1)throw new RuleError('BC_VIEW_STALE');
+  if(kind==='revoked'){x.f.service.logout(c);return x.f.store.getOperationsProjection(c,id);}
+  return {...x.f.store.getOperationsProjection(c,id),applicationId:'other-application'};
+ });
+ if(phase==='before')install();else x.setRead(async()=>{install();return x.receipt;});
+ await assert.rejects(x.read(x.f.aliceContext,x.a),/BC_VIEW_STALE|FORBIDDEN|BC_RECEIPT_SCOPE|AUTH_REQUIRED/);
+ assert.equal(attempts,['scope','revoked'].includes(kind)?2:1);assert.equal(x.calls(),phase==='before'?0:1);
 });

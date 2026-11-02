@@ -1,15 +1,21 @@
 import {requireProfileMode} from '../hackerrank-evidence/self-profile.mjs';
 // Read-only owner composition. No tx hash, recipient, amount, proof or verified flag comes from HTTP.
-import {freeze,requireRule as check,canonical} from '../policy/values.mjs';
+import {freeze,requireRule as check,canonical,RuleError} from '../policy/values.mjs';
 const H=x=>typeof x==='string'&&/^0x[0-9a-f]{64}$/.test(x);
 const A=x=>typeof x==='string'&&/^0x[0-9a-f]{40}$/.test(x)&&x!=='0x'+'00'.repeat(20);
 const same=(a,b)=>canonical(a)===canonical(b);
+const viewConflict=error=>{
+ try{return Object.getPrototypeOf(error)===RuleError.prototype&&Object.getOwnPropertyDescriptor(error,'message')?.value==='BC_VIEW_STALE';}catch{return false;}
+};
 export const NORMAL_RECEIPT_VERSION='clear-bootcamp-normal-payment-receipt.1';
 export function createNormalReceiptReader({selfAttestor=null,authorize,readReport,readCanonicalClaim,runtimeHash,runtimeMappingHash,policyHash,recipient,token}){
  check([authorize,readReport,readCanonicalClaim].every(x=>typeof x==='function')&&[runtimeHash,runtimeMappingHash,policyHash].every(H)
   &&A(recipient)&&A(token)&&recipient!==token,'BC_RECEIPT_CONFIG');
  const access=(context,applicationId)=>{
-  const v=authorize(context,applicationId);check(v.applicationId===applicationId&&v.policyHash===policyHash&&v.runtimeMappingHash===runtimeMappingHash
+  // One fresh fully authenticated local projection after a rolled-back read.
+  // Never repeat the asynchronous canonical receipt read or any payment command.
+  let v;try{v=authorize(context,applicationId);}catch(error){if(!viewConflict(error))throw error;v=authorize(context,applicationId);}
+  check(v.applicationId===applicationId&&v.policyHash===policyHash&&v.runtimeMappingHash===runtimeMappingHash
    &&['PARTICIPANT','OPERATOR'].includes(v.role),'BC_RECEIPT_SCOPE');return v;
  };
  return async(context,applicationId)=>{
