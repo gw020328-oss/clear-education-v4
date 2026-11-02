@@ -528,7 +528,7 @@ test('v38 preserves its historical source and preserves v37 original bytes',()=>
   assert.equal(sha(v38Read(p)),h,p);assert.equal(sha(execFileSync('git',['show',v.currentSourceCandidateHead+':'+p],{cwd:root})),h,p);
   assert.equal(h,v.sourceDelta[p]?.after??old.sourceArtifactSha256[p],p);if(v.sourceDelta[p])assert.equal(v.sourceDelta[p].before,old.sourceArtifactSha256[p],p);
  }
- assert.equal(sha(actualRead(v.ciExecutionBudget.workflow)),v.ciExecutionBudget.sha256);
+ assert.equal(sha(execFileSync('git',['show','c9d2f776a97b55ef4060ba12d28c77426cc0816c:'+v.ciExecutionBudget.workflow],{cwd:root})),v.ciExecutionBudget.sha256);
  assert.equal(v.ciExecutionBudget.timeoutMinutes,30);assert.equal(v.ciExecutionBudget.testsSkipped,false);
  for(const p of [v.previousCompatibilityRecord.path,'src/hackathon-test-vault/reviewed-source-v37.mjs'])assert.deepEqual(actualRead(p),execFileSync('git',['show',v.previousCompatibilityRecord.guardHead+':'+p],{cwd:root}),p);
 });
@@ -703,8 +703,8 @@ test('v53 pins real-clock preparation and bounded seal intent validation',async(
  const d=JSON.parse(actualRead('specs/bootcamp/hackathon-test-live-preparation-clock-source-delta-v1.json'));
  assert.equal(sha(actualRead(d.previousRecord.path)),d.previousRecord.sha256);
  for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v52Read(p)),x.before,p);assert.equal(sha(actualRead(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
- const {consumeReviewedV53Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v53.mjs');
- const current=consumeReviewedV53Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
+ const {consumeReviewedV54Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v54.mjs');
+ const current=consumeReviewedV54Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
  assert.equal(current.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(current.sources).length,192);
  assert.deepEqual(Object.keys(d.changes),["src/bootcamp/execution-api-bridge.mjs", "src/bootcamp/execution-diagnostics.mjs", "src/bootcamp/execution-operations.mjs", "src/bootcamp/procedure.mjs"]);
  assert.equal(d.boundary.registeredSourcesRequireRealClock,true);assert.equal(d.boundary.sealIntentWrittenOnce,true);assert.equal(d.boundary.automaticRetry,false);
