@@ -43,6 +43,7 @@ import { objectionPanel, revalidationPanel } from './panels.js';
 import { aiApprovalSection } from './ai-approval.js';
 import { item, pairBlock } from './pairs.js';
 import { sessionPanel } from './session-panel.js';
+import {liveDashboard} from './live-dashboard.js';
 import { statusPill, ticker, icon, iconChip, heroRings, ghostWord, monoLabel } from '../ui/brand.js';
 import { COHORT, stageTotal } from '../fixtures/cohort.js';
 
@@ -579,7 +580,7 @@ function consentSection(view, cohort, { api, blocked, onConfirm, live = false })
 // ── 전체 ────────────────────────────────────────────────────────────────
 
 export function operatorSection({
-  view, phase = null, procedureReady = true, api = null, onChange = () => {},
+  workflow = null, view, phase = null, procedureReady = true, api = null, onChange = () => {},
   conn = null, onSignIn = () => {}, onSignOut = () => {}, onConfirm = () => {},
   // 기수 집계. 서버에 조회가 생기면 그 값을 넘긴다.
   cohort = null,
@@ -593,6 +594,7 @@ export function operatorSection({
   // 이번 입력의 AI 승인. { data, remainingMs, send } — 서버가 주면 온다.
   aiApproval = null,
 }) {
+  if(workflow)return liveDashboard({view,workflow,operator:true});
   // A real single-application response is not a cohort projection.
   if (conn?.state === 'LIVE') {
     return el('section.bcx', {}, [

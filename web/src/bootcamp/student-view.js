@@ -30,6 +30,7 @@
 //   '다시 해도 안 돼요'를 화면이 추측하지 않는다 — 보완 가능성은 서버가 준다
 //   비용을 모르는 직접 청구 버튼을 띄우지 않는다 (§7.5)
 
+import {liveDashboard} from './live-dashboard.js';
 import { el, clear } from '../ui/dom.js';
 import { seoulText } from '../ui/policy-view.js';
 import {
@@ -534,7 +535,7 @@ function sharedNotes(view) {
   return out;
 }
 
-function progressSection(view, { onOpen, onToggle = null }) {
+export function progressSection(view, { onOpen, onToggle = null }) {
   const met = metCount(view);
   const status = view.decision.conditionsStatus;
 
@@ -837,11 +838,12 @@ function recoverySection(view) {
 // ── 전체 ────────────────────────────────────────────────────────────────
 
 export function studentSection({
-  view, phase = null, procedureReady = true, api = null, sign = null, onChange = () => {},
+  workflow = null, view, phase = null, procedureReady = true, api = null, sign = null, onChange = () => {},
   conn = null, onSignIn = () => {}, onSignOut = () => {}, onOpen = () => {},
   // 라이브 월드에서만 온다. 조건 카드를 눌러 충족·미충족을 바꾼다.
   onToggle = null,
 }) {
+  if(workflow)return liveDashboard({view,workflow});
   // 막는 이유는 맨 위에서 한 번만 말한다. 패널마다 반복하면 읽는 사람이
   // 문제가 여럿 있는 줄 안다.
   const blocked = phase && phase !== 'ACTIVE_LOCAL_TEST'
