@@ -528,7 +528,8 @@ function sharedNotes(view) {
   // 사람에게 필요한 정보라 남긴다.
   const out = [];
   if (every((c) => c.originalReadable === false)) {
-    out.push('원문 보관 기한 경과 · 판정과 해시는 보존');
+    const reasons = new Set(all.map(c => c.originalUnavailableReason));
+    out.push(reasons.size === 1 ? (all[0].originalUnavailableReason ?? '원문 조회가 제공되지 않았습니다') : '원문 조회가 제공되지 않았습니다. 조건별 상세를 확인해 주세요.');
   }
   return out;
 }
@@ -592,7 +593,7 @@ function detailRow(row) {
       item('원문 조회', c.originalReadable === null ? null
         // §10.1 — 해시만 남고 원문이 만료된 상태를 화면에서 말한다
         : c.originalReadable ? '가능' : '불가',
-      c.originalReadable === false ? '보관 기한 경과. 판정과 해시는 보존됩니다' : null),
+      c.originalReadable === false ? c.originalUnavailableReason : null),
       item('내 열람 권한', c.originalAuthorized === null ? null
         : c.originalAuthorized ? '있음' : '없음'),
     ]),
@@ -1067,7 +1068,7 @@ export function conditionDetail({
           item('근거 유효 기한', row.expiresAt ? seoulText(row.expiresAt) : null),
           item('원문 조회', c.originalReadable === null ? null
             : c.originalReadable ? '가능' : '불가',
-          c.originalReadable === false ? '보관 기한 경과. 판정과 해시는 보존됩니다' : null),
+          c.originalReadable === false ? c.originalUnavailableReason : null),
           item('내 열람 권한', c.originalAuthorized === null ? null
             : c.originalAuthorized ? '있음' : '없음'),
         ]),
