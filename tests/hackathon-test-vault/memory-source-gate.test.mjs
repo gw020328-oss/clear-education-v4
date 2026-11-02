@@ -10,6 +10,8 @@ import {createFreshMemoryStage,memoryStageTotals} from '../../src/hackathon-test
 const root=new URL('../../',import.meta.url);
 for(const [path,code]of [
  ['.github/workflows/hackathon-e5b.yml','STAGE_CI_TRIGGER_PIN'],
+ ['src/hackathon-test-vault/reviewed-source-v56.mjs','STAGE_SOURCE_PIN'],
+ ['specs/bootcamp/hackathon-test-team-scroll-source-delta-v1.json','STAGE_TEAM_SCROLL_PIN'],
  ['src/hackathon-test-vault/reviewed-source-v55.mjs','STAGE_SOURCE_PIN'],
  ['specs/bootcamp/hackathon-test-team-frontend-source-delta-v1.json','STAGE_LIVE_CLOCK_PIN'],
  ['src/hackathon-test-vault/reviewed-source-v54.mjs','STAGE_SOURCE_PIN'],

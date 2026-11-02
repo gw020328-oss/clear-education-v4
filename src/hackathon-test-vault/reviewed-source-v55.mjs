@@ -3,16 +3,12 @@ import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const read=p=>readFileSync(new URL('../../'+p,import.meta.url));
 const sha=p=>createHash('sha256').update(read(p)).digest('hex');
-// Exact PR-only workflow equivalence for the preserved historical CI budget.
-const historicalBudgetSha=p=>{const h=sha(p);return p==='.github/workflows/hackathon-e5b.yml'&&h==='95ac2a1182881421161dc5b8227146fd3a3a824d7e89269a3fc98ff3c7794386'?'bca8d128e698939a1082e0c4d6372631682cee2a1a8c873906f3a7f56baa408a':h;};
 const check=(ok,code)=>{if(!ok)throw Error(code);};
 const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 export const V9_PATH='specs/bootcamp/hackathon-test-memory-source-intake-v9.json';
 export const V9_SHA='19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2870fc';
 export const V9_SOURCE_HEAD='26d451701186632ba7a37729b9937f28ce3a1f83';
 export function consumeReviewedV55Sources(v6){
- check(sha('src/hackathon-test-vault/reviewed-source-v54.mjs')==='825cc9eff9aa5d4a9268ec0c75fb6ab59be40c4407e2da39efe577dd56409417','STAGE_SOURCE_PIN');
- check(sha('.github/workflows/hackathon-e5b.yml')==='95ac2a1182881421161dc5b8227146fd3a3a824d7e89269a3fc98ff3c7794386','STAGE_CI_TRIGGER_PIN');
  check(sha(V9_PATH)===V9_SHA,'STAGE_V9_FILE_PIN');const v9=JSON.parse(read(V9_PATH)),previous=v9.previousCompatibilityRecord;
  check(v9.version==='clear-hackathon-test-memory-source-intake.9'&&v9.currentSourceCandidateHead===V9_SOURCE_HEAD,'STAGE_V9_GENERATION');
  check(previous.path==='specs/bootcamp/hackathon-test-memory-source-intake-v8.json'&&previous.sha256==='ca37fb5574a293ac6873d4d22e136fcc2f214f58a60b0a8d7f46e09dd786ed33'
@@ -328,7 +324,7 @@ export function consumeReviewedV55Sources(v6){
  for(const [p,before]of Object.entries(v37.sourceArtifactSha256)){const after=v38.sourceArtifactSha256[p],d=v38.sourceDelta[p];check(d?d.before===before&&d.after===after&&before!==after:before===after,'STAGE_V38_DELTA');}
  for(const k of Object.keys(v37))if(!['version','date','status','currentSourceCandidateHead','previousCompatibilityRecord','sourceArtifactSha256','changedFromV36','sourceDelta','sourceAdditions'].includes(k))check(eq(v38[k],v37[k]),'STAGE_V38_SCOPE');
  check(eq(v38.dispatchRecoveryClockBoundaries,{"actions":["B_DISPATCH_REQUEST","B_RECOVER_REQUEST"],"maximumFinalValidationRechecks":1,"nativeDispatchOrRecoveryRepeated":false,"originalBindingRequestAuthorityAndDeadlinesRequired":true,"receiptRecoverySurvivesSourceWithdrawal":true,"dispatchRequiresCurrentBusinessAndAdoption":true,"actualUserExecution":false}),'STAGE_V38_BOUNDARIES');
- check(eq(v38.ciExecutionBudget,{"workflow":".github/workflows/hackathon-e5b.yml","sha256":"bca8d128e698939a1082e0c4d6372631682cee2a1a8c873906f3a7f56baa408a","timeoutMinutes":30,"testsSkipped":false,"runtimeAuthorityOrBusinessDeadlinesChanged":false})&&historicalBudgetSha(v38.ciExecutionBudget.workflow)===v38.ciExecutionBudget.sha256,'STAGE_V38_CI_BUDGET');
+ check(eq(v38.ciExecutionBudget,{"workflow":".github/workflows/hackathon-e5b.yml","sha256":"bca8d128e698939a1082e0c4d6372631682cee2a1a8c873906f3a7f56baa408a","timeoutMinutes":30,"testsSkipped":false,"runtimeAuthorityOrBusinessDeadlinesChanged":false})&&sha(v38.ciExecutionBudget.workflow)===v38.ciExecutionBudget.sha256,'STAGE_V38_CI_BUDGET');
  check(sha('src/hackathon-test-vault/reviewed-source-v38.mjs')==='ef280295dce58520cb327f448f7552ef1f05eeb480b8cbecb68b6a7505dc9801','STAGE_SOURCE_PIN');
  const cookiePath='specs/bootcamp/hackathon-test-memory-source-intake-v39.json';check(sha(cookiePath)==='993cb0687974f0f828a0076ed3025a55374b0fad4c21907d151de9c4f570ec78','STAGE_V39_FILE_PIN');const v39=JSON.parse(read(cookiePath));
  check(v39.version==='clear-hackathon-test-memory-source-intake.39'&&v39.currentSourceCandidateHead==='50f7a82b2a8e4a61e07301ea68e611a52665d8ee','STAGE_V39_GENERATION');
@@ -463,6 +459,11 @@ export function consumeReviewedV55Sources(v6){
  check(sha(teamFrontend.previousRecord.path)===teamFrontend.previousRecord.sha256,'STAGE_LIVE_CLOCK_PIN');
  for(const [p,h]of Object.entries(teamFrontend.sourceAdditions)){check(!Object.hasOwn(sources,p)&&!Object.hasOwn(wallet,p),'STAGE_LIVE_CLOCK_SCOPE');sources[p]=h;}
  for(const [p,d]of Object.entries(teamFrontend.changes)){const tables=[sources,wallet].filter(t=>Object.hasOwn(t,p));check(tables.length>0,'STAGE_LIVE_CLOCK_SCOPE');for(const table of tables){check(table[p]===d.before&&d.before!==d.after,'STAGE_LIVE_CLOCK_DELTA');table[p]=d.after;}}
+ check(sha('src/hackathon-test-vault/reviewed-source-v54.mjs')==='825cc9eff9aa5d4a9268ec0c75fb6ab59be40c4407e2da39efe577dd56409417','STAGE_SOURCE_PIN');
+ const scrollPath='specs/bootcamp/hackathon-test-team-scroll-source-delta-v1.json';check(sha(scrollPath)==='824a154ed2c07f81f360c808c156dcb553010893cc1fb9cf41661b6e47841a8d','STAGE_TEAM_SCROLL_PIN');const scroll=JSON.parse(read(scrollPath));
+ check(eq(scroll,{"version":"clear-team-scroll-source-delta.1","candidateHead":"a0cb3f524be3d465693d5005a14e25e285632f33","previousRecord":{"path":"specs/bootcamp/hackathon-test-team-frontend-source-delta-v1.json","sha256":"28c535ddfd2fdc0281bd7b984e5ba4965e923ac1234924ffecf2a05dc8ea4d83","guardHead":"b1295163a2d855136279669afaa5c42171949941"},"changes":{"web/src/main.js":{"before":"bb9127842cc71f181a20b80ff062f5567db6add00cd1af7b83f3e6deed8a9f21","after":"91ce8f2e4eed44cac0760b71c12192b34aabb86db56b26aeabdc2749c19ce2de"}},"boundary":{"backgroundRefreshPreservesScroll":true,"failedReadClearsStaleView":true,"approvalAndDeadlineChanges":false,"automaticWriteOrSign":false}}),'STAGE_TEAM_SCROLL_SCOPE');
+ check(sha(scroll.previousRecord.path)===scroll.previousRecord.sha256,'STAGE_TEAM_SCROLL_PIN');
+ for(const [p,d]of Object.entries(scroll.changes)){check(Object.hasOwn(sources,p)&&sources[p]===d.before&&d.before!==d.after,'STAGE_TEAM_SCROLL_SCOPE');sources[p]=d.after;}
  for(const [table,code]of [[sources,'STAGE_SOURCE_PIN'],[wallet,'STAGE_PRODUCT_WALLET_PIN']])for(const [p,h]of Object.entries(table))check(sha(p)===h,code);
- return {sources,currentSourceCandidateHead:teamFrontend.candidateHead};
+ return {sources,currentSourceCandidateHead:scroll.candidateHead};
 }

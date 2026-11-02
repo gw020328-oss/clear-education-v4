@@ -72,7 +72,7 @@ let liveView = null;
 // 온보딩이 이것을 보고 3단계를 끝났다고 표시한다.
 let registration = null;
 const connection = createConnection({
-  onChange: () => { if (parseRoute().name === 'bootcamp') render(); },
+  onChange: () => { if (parseRoute().name === 'bootcamp') render({ keepScroll: !!window.clearTeamRuntime }); },
 });
 
 function currentScenario() {
@@ -695,4 +695,4 @@ world.subscribe(({ clockOnly }) => {
 boot();
 
 // Authenticated team iframe only; lifecycle remains in the owner session.
-if (window.clearTeamRuntime) { window.clearTeamConnection=connection; window.clearTeamRefresh=async()=>{try{await connection.refreshSession();liveView=await connection.refresh();}catch{liveView=null;}render();}; }
+if (window.clearTeamRuntime) { window.clearTeamConnection=connection; window.clearTeamRefresh=async()=>{try{await connection.refreshSession();liveView=await connection.refresh();}catch{liveView=null;}render({ keepScroll: true });}; }
