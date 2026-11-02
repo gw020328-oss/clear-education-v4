@@ -1,5 +1,15 @@
 // Heuristic pre-push/CI check. Values are never printed. Review remains necessary.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+// Exact reviewed public assets only; provenance in web/fonts/README.ko.md.
+const reviewedBinaries = new Map([
+ ['web/fonts/inter-variable.woff2', new Set(['f052ee44c3728dfd23aba8a4567150bc314d23903026fbb6ad089422c2df56af'])],
+ ['web/fonts/pretendard-std.woff2', new Set([
+  '64a2b7110454edf0e5f555785273b5817d7e3a0a107a55acf8e4150e09a31557',
+  // Historical upstream bytes after the former global CRLF normalization.
+  '3a178c75a4e3fc7d295d2135a25aaf8a84a7adc9c6eacfc7a11446153cc1ef56',
+ ])],
+]);
 const git=(...args)=>execFileSync('git',args,{maxBuffer:32*1024*1024});
 const revisions=process.argv.slice(2);if(!revisions.length)revisions.push('HEAD');
 for(const ref of revisions)if(ref.startsWith('-')||!/^[A-Za-z0-9_./-]+$/.test(ref))throw new Error('INVALID_REVISION');
@@ -13,7 +23,10 @@ for(const commit of commits){
   const [,mode,type,oid,path]=match;
   if(forbidden.test(path)||profile.test(path))findings.push({rule:'PRIVATE_OR_RUNTIME_PATH',path,commit});
   if(mode==='120000')findings.push({rule:'SYMLINK_REQUIRES_REVIEW',path,commit});
-  if(type==='blob'&&!objects.has(oid))objects.set(oid,path);
+  if(type==='blob'){
+   if(!objects.has(oid))objects.set(oid,new Set());
+   objects.get(oid).add(path);
+  }
  }
 }
 const rules=[
@@ -26,9 +39,16 @@ const rules=[
  ['MNEMONIC_LITERAL',/["']?(?:mnemonic|seedPhrase|seed_phrase)["']?\s*[=:]\s*['"](?:[a-z]+ ){11,23}[a-z]+['"]/gi],
  ['COOKIE_LITERAL',/["']?(?:cookieStr|cookieHeader|authorization)["']?\s*[=:]\s*['"](?:Bearer\s+)?[A-Za-z0-9_./+=;-]{32,}['"]/gi],
 ];
-for(const [oid,path] of objects){
+for(const [oid,paths] of objects){
+ const path=paths.values().next().value;
  const bytes=git('cat-file','blob',oid);
- if(bytes.includes(0)){findings.push({rule:'BINARY_REQUIRES_REVIEW',path,blob:oid});continue;}
+ if(bytes.includes(0)){
+  const digest=createHash('sha256').update(bytes).digest('hex');
+  for(const binaryPath of paths){
+   if(!reviewedBinaries.get(binaryPath)?.has(digest))findings.push({rule:'BINARY_REQUIRES_REVIEW',path:binaryPath,blob:oid});
+  }
+  continue;
+ }
  const text=bytes.toString('utf8');
  for(const [rule,pattern] of rules){
   pattern.lastIndex=0;
