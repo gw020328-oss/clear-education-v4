@@ -1,0 +1,123 @@
+/* 재설계 시안 — 버릴 파일
+ *
+ * 실제 화면(web/src)을 고치기 전에 배치만 보려고 만든 것이다. 재설계 PR 에서
+ * 실제 화면이 이 모양이 되면 이 폴더째 지운다.
+ *
+ * 가져온 원칙 셋.
+ *
+ *   1. 완료된 항목에는 표식을 붙이지 않는다. 조치가 필요한 줄만 눈에 띈다.
+ *      (GOV.UK Task list — Completed 는 평문, Incomplete 만 태그)
+ *   2. 한 줄은 이름(주) + 설명(보조) + 오른쪽 상태로 고정한다.
+ *      (토스 TDS ListRow — top 이 주, bottom 이 보조)
+ *   3. 흰 배경, 카드 대신 구분선. 중첩 카드와 배지를 걷어낸다.
+ *
+ * 지금 화면과 같은 제약을 지킨다 — 인라인 style·script 없음, 외부 연결 없음.
+ */
+
+:root {
+  --ink: #16181d;
+  --ink-soft: #3d4654;
+  --muted: #5a6472;
+  --line: #e5e8ec;
+  --ground: #ffffff;
+  --shade: #f6f7f9;
+  --link: #1b4fd1;
+  --link-hover: #15409f;
+  --flag-bg: #fdf3d8;
+  --flag-fg: #6b4a00;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+}
+
+a { color: var(--link); }
+a:hover { color: var(--link-hover); }
+
+.wrap { max-width: 640px; margin: 0 auto; padding: 14px 24px 96px; }
+
+.demo { margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.back { margin: 0; font-size: 15px; }
+
+h1 {
+  margin: 28px 0 0;
+  font-size: 30px; font-weight: 700; line-height: 1.35; letter-spacing: -0.4px;
+  text-wrap: balance;
+}
+h2 { margin: 44px 0 0; font-size: 20px; font-weight: 700; line-height: 1.4; }
+h2.tight { margin-top: 40px; }
+
+.lede { margin: 10px 0 0; font-size: 16px; line-height: 1.6; color: var(--muted); }
+.lede strong { color: var(--ink); font-weight: 700; }
+.say { margin: 12px 0 0; font-size: 17px; line-height: 1.7; color: var(--ink-soft); }
+.say strong { color: var(--ink); font-weight: 700; }
+.note { margin: 6px 0 0; font-size: 14px; line-height: 1.7; color: var(--muted); }
+.note strong { color: var(--ink); font-weight: 500; }
+
+/* 지금 할 일 — 한 화면에 하나만 둔다 */
+.todo { margin: 28px 0 0; padding: 22px 24px; border: 1px solid var(--ink); border-radius: 4px; }
+.todo-tag { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.4px; color: var(--muted); }
+.todo h2 { margin: 8px 0 0; font-size: 20px; }
+.todo p { margin: 8px 0 0; font-size: 15px; line-height: 1.7; color: var(--ink-soft); }
+
+.btn {
+  display: inline-block; margin: 18px 0 0; padding: 14px 22px; min-height: 44px;
+  background: var(--ink); color: var(--ground);
+  font-size: 16px; font-weight: 700; text-decoration: none; border-radius: 4px;
+}
+.btn.ghost { background: var(--ground); color: var(--ink); border: 1px solid var(--ink); }
+.btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.btns .btn { margin-top: 0; }
+
+/* 조건 목록 — GOV.UK Task list */
+.tasks { margin: 14px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.tasks li {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline;
+  padding: 18px 0; border-bottom: 1px solid var(--line);
+}
+.task-main { flex: 1 1 280px; min-width: 0; }
+.task-name { margin: 0; font-size: 17px; font-weight: 500; line-height: 1.5; }
+.task-hint { margin: 4px 0 0; font-size: 14px; line-height: 1.65; color: var(--muted); }
+/* 완료에는 표식을 붙이지 않는다 */
+.state { flex: none; font-size: 14px; font-weight: 500; color: var(--muted); }
+.state.flag {
+  padding: 4px 10px; background: var(--flag-bg); color: var(--flag-fg);
+  font-weight: 700; border-radius: 3px;
+}
+
+/* 값 목록 — GOV.UK Summary list */
+.pairs { margin: 14px 0 0; border-top: 1px solid var(--line); }
+.pair {
+  display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline;
+  padding: 16px 0; border-bottom: 1px solid var(--line);
+}
+.pair dt { flex: 1 1 200px; margin: 0; font-size: 16px; font-weight: 500; }
+.pair dd { flex: 1 1 200px; margin: 0; font-size: 16px; color: var(--muted); min-width: 0; }
+.pair dd.known { color: var(--ink); }
+
+.steps { margin: 12px 0 0; padding: 0 0 0 20px; font-size: 16px; line-height: 1.9; color: var(--ink-soft); }
+.steps strong { color: var(--ink); font-weight: 500; }
+
+/* 이 화면이 말하지 않는 것 — 맨 아래, 작게 */
+.limits {
+  margin: 40px 0 0; padding: 18px 20px; background: var(--shade);
+  font-size: 14px; line-height: 1.75; color: var(--ink-soft); border-radius: 4px;
+}
+
+.more { margin: 12px 0 0; font-size: 16px; }
+.more a { font-weight: 500; }
+
+/* 다른 경로. 지금 고른 경로를 막지 않으면서 '또 다른 길이 있다' 를 알린다.
+   OR 를 AND 로 뭉개면 출석으로 가는 사람에게 성적을 요구하게 된다 */
+.other { margin: 28px 0 0; padding: 18px 20px; background: var(--shade); border-radius: 4px; }
+.other-head { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.4px; color: var(--muted); }
+.tasks.tight { margin-top: 10px; border-top: none; }
+.tasks.tight li { padding: 10px 0 0; border-bottom: none; }
+.other .note { margin-top: 10px; }

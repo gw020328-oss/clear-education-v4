@@ -1,3 +1,6 @@
 * text eol=lf
 legacy/** -text
 docs/reference/** -text
+
+# WOFF2 is binary; newline conversion corrupts compressed font data.
+*.woff2 -text
