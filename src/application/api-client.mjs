@@ -133,9 +133,15 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
         const normalProcedureWaiting = method === 'GET' && response.status === 409
           && /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure$/.test(url.pathname)
           && value?.error === 'BC_NORMAL_PROCEDURE_NOT_READY';
+        // Only a rolled-back observation conflict on the two read projections.
+        // Preserve its code for the existing GET-only reader; never retry writes.
+        const bootcampReadConflict = method === 'GET' && response.status === 409
+          && (/^\/bootcamp\/v2\/applications\/[a-z][a-z0-9.-]{0,63}\/operations$/.test(url.pathname)
+            || /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure$/.test(url.pathname))
+          && value?.error === 'BC_VIEW_STALE';
         const registrationCode=registrationPath.test(url.pathname)&&
           (response.status===404&&value?.error==='BC_NOT_FOUND'||response.status===409&&registrationErrors.has(value?.error))?value.error:null;
-        const code = registrationCode ?? (normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
+        const code = registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
           : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
         throw failure(code, { method, status: response.status, requestId: uuid(value?.requestId) ? value.requestId : null,
           outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true });

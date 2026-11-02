@@ -152,7 +152,7 @@ for (const [path,method,status,body,expected] of [
  ['/applications','GET',409,{error:'BC_NORMAL_PROCEDURE_NOT_READY'},'API_REQUEST_FAILED'],
  ['/bootcamp/v3/applications/application-fixture/procedure','POST',409,{error:'BC_NORMAL_PROCEDURE_NOT_READY'},'API_REQUEST_FAILED'],
  ['/bootcamp/v3/applications/application-fixture/procedure','GET',500,{error:'BC_NORMAL_PROCEDURE_NOT_READY'},'API_REQUEST_FAILED'],
- ['/bootcamp/v3/applications/application-fixture/procedure','GET',409,{error:'BC_VIEW_STALE'},'API_REQUEST_FAILED'],
+ ['/bootcamp/v3/applications/application-fixture/procedure','GET',409,{error:'BC_VIEW_STALE'},'BC_VIEW_STALE'],
  ['/bootcamp/v3/applications/application-fixture/procedure','GET',409,{error:{code:'BC_NORMAL_PROCEDURE_NOT_READY'}},'API_REQUEST_FAILED'],
 ]) test('normal procedure waiting envelope is scoped: '+JSON.stringify([path,method,status,body]),async()=>{
  let calls=0;const e=await errorOf(apiFor(()=>{calls++;return Response.json({...body,message:'secret',nextAction:'PAY'},{status});})(path,{method}));
@@ -180,4 +180,17 @@ for(const [path,status,body,expected] of [
 ])test('registration browser errors preserve only route/status-scoped fixed codes '+expected+' '+status+' '+path,async()=>{
  const e=await errorOf(apiFor(()=>Response.json({...body,message:'secret-detail'},{status}))(path));
  assert.equal(e.message,'API_REQUEST_FAILED');assert.equal(e.code,expected);assert.ok(!JSON.stringify(e).includes('secret'));
+});
+
+for(const [method,path,status,code,expected]of [
+ ['GET','/bootcamp/v2/applications/application-one/operations',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
+ ['GET','/bootcamp/v3/applications/application-one/procedure',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
+ ['POST','/bootcamp/v3/applications/application-one/review-consents',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+ ['GET','/bootcamp/v2/applications/application-one/procedure',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+ ['GET','/bootcamp/v3/applications/application-one/operations',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+ ['GET','/bootcamp/v3/applications/application-one/procedure',403,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+ ['GET','/bootcamp/v3/applications/application-one/procedure',409,'PRIVATE_UNKNOWN','API_REQUEST_FAILED'],
+])test('bootcamp projection conflict is fixed-code, exact-route, GET-only: '+method+' '+path+' '+code+' '+status,async()=>{
+ let calls=0;const api=apiFor(()=>{calls++;return Response.json({error:code,detail:'secret-text'},{status})});
+ const e=await errorOf(api(path,{method}));assert.equal(e.code,expected);assert.equal(calls,1,'transport never retries');assert.ok(!JSON.stringify(e).includes('secret'));
 });

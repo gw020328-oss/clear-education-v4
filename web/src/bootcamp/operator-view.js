@@ -582,7 +582,7 @@ export function operatorSection({
   view, phase = null, procedureReady = true, api = null, onChange = () => {},
   conn = null, onSignIn = () => {}, onSignOut = () => {}, onConfirm = () => {},
   // 기수 집계. 서버에 조회가 생기면 그 값을 넘긴다.
-  cohort = COHORT,
+  cohort = null,
   // 라이브 월드일 때만 온다. 없으면 충전 버튼을 그리지 않는다.
   onDeposit = null,
   // 명단에서 한 사람을 골라 그 학생 화면으로 넘어간다
@@ -593,6 +593,16 @@ export function operatorSection({
   // 이번 입력의 AI 승인. { data, remainingMs, send } — 서버가 주면 온다.
   aiApproval = null,
 }) {
+  // A real single-application response is not a cohort projection.
+  if (conn?.state === 'LIVE') {
+    return el('section.bcx', {}, [
+      el('h1', {text:'현재 연결된 신청'}),
+      el('p', {text:view.applicationId}),
+      ...['기수 현황','검증 현황','재원 현황','이의·정정','운영 효과'].map(title => el('section', {}, [el('h2',{text:title}),el('p',{text:'기수 전체 조회가 연결되지 않았습니다. 예시 명단과 집계는 표시하지 않습니다.'})])),
+      el('p',{text:'지급 동의는 인증된 제품 화면의 현재 신청·판정·수령 주소를 확인한 뒤 진행하세요.'}),
+    ]);
+  }
+  cohort ??= COHORT;
   // 여기는 **기수 대시보드**다. 한 신청의 사정으로 화면 전체를 막지 않는다.
   // 신청 하나에 오류 신고가 걸렸다고 운영자가 반 전체를 못 보면 안 된다 —
   // 그 신청의 사정은 이의·정정 구역이 말한다.

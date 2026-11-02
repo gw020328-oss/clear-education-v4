@@ -260,13 +260,13 @@ test('버튼은 자기 차례인 상태에서만 나온다', async () => {
     // 않으므로 버튼이 없는 게 맞다. 아직 안 한 운영자 쪽에는 있어야 한다.
     assert.ok(!during.includes('바로 받기'), `이미 한 확인을 또 시킨다: ${during}`);
 
-    // 운영자 화면은 기수 대시보드다. 확인은 **큐에서** 누른다 —
-    // 신청 한 건에 매달린 '바로 받기' 버튼이 아니다.
+    // 실제 운영자 응답 한 건에 예시 큐의 확인 버튼을 붙이지 않는다.
+    // 인증된 제품 경로의 동의는 별도의 단일 신청 컨트롤러가 담당한다.
     const { operatorSection } = await import('../src/bootcamp/operator-view.js');
     const asOperator = BUTTONS(operatorSection({
       view: bootcampView('waitingForOperatorConsent', 'operator'), conn: live, api: FULL_API,
     })).join(' | ');
-    assert.ok(asOperator.includes('확인'), asOperator);
+    assert.equal(asOperator, '', '실제 단일 신청에 예시 동의 버튼을 붙이면 안 된다');
     assert.ok(!asOperator.includes('바로 받기'), `운영자에 학생용 버튼이 있다: ${asOperator}`);
 
     // 재원이 모자라면 확인 기간이 시작도 안 한다(§8.3) — 버튼이 없어야 맞다
@@ -516,7 +516,7 @@ test('신청 목록이 기수 집계와 맞는다', async () => {
   assert.equal(new Set(COHORT.applicants.map((a) => a.name)).size, COHORT.participants);
 });
 
-test('운영자 화면에 개개인이 보인다', async () => {
+test('로그인하지 않은 예시 운영자 화면에는 예시 명단이 보인다', async () => {
   const restore = installDom();
   try {
     const { operatorSection } = await import('../src/bootcamp/operator-view.js');
@@ -524,7 +524,7 @@ test('운영자 화면에 개개인이 보인다', async () => {
     const { COHORT } = await import('../src/fixtures/cohort.js');
     const text = operatorSection({
       view: bootcampView('paid', 'operator'),
-      conn: { state: 'LIVE', address: '0xa' },
+      conn: { state: 'SIGNED_OUT', address: '0xa' },
       api: FULL_API,
     }).textContent;
 
