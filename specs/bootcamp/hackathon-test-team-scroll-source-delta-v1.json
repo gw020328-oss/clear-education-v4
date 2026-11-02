@@ -1,0 +1,21 @@
+{
+  "version": "clear-team-scroll-source-delta.1",
+  "candidateHead": "a0cb3f524be3d465693d5005a14e25e285632f33",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-team-frontend-source-delta-v1.json",
+    "sha256": "28c535ddfd2fdc0281bd7b984e5ba4965e923ac1234924ffecf2a05dc8ea4d83",
+    "guardHead": "b1295163a2d855136279669afaa5c42171949941"
+  },
+  "changes": {
+    "web/src/main.js": {
+      "before": "bb9127842cc71f181a20b80ff062f5567db6add00cd1af7b83f3e6deed8a9f21",
+      "after": "91ce8f2e4eed44cac0760b71c12192b34aabb86db56b26aeabdc2749c19ce2de"
+    }
+  },
+  "boundary": {
+    "backgroundRefreshPreservesScroll": true,
+    "failedReadClearsStaleView": true,
+    "approvalAndDeadlineChanges": false,
+    "automaticWriteOrSign": false
+  }
+}
