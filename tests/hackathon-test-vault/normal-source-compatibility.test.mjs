@@ -715,7 +715,7 @@ test('v54 pins real-clock preparation and bounded seal intent validation',async(
  for(const [p,x]of Object.entries(d.changes)){assert.equal(sha(v53Read(p)),x.before,p);assert.equal(sha(actualRead(p)),x.after,p);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),x.after,p);}
  const {consumeReviewedV54Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v54.mjs');
  const current=consumeReviewedV54Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
- assert.equal(current.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(current.sources).length,199);
+ assert.equal(current.currentSourceCandidateHead,d.candidateHead);assert.equal(Object.keys(current.sources).length,200);
  assert.deepEqual(Object.keys(d.changes),["src/embedded-wallet/onboarding.jsx", "src/embedded-wallet/operator.jsx", "tools/bootcamp/frontend-server.mjs", "tools/embedded-wallet/build-product.mjs", "tools/embedded-wallet/product-mount.mjs"]);
  assert.equal(d.boundary.registeredSourcesRequireRealClock,true);assert.equal(d.boundary.sealIntentWrittenOnce,true);assert.equal(d.boundary.automaticRetry,false);
 });

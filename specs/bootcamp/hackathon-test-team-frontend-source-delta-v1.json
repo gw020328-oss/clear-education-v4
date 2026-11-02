@@ -1,6 +1,6 @@
 {
   "version": "clear-team-frontend-source-delta.1",
-  "candidateHead": "778d5a620cacaada7a1569de23aecf423dac073e",
+  "candidateHead": "6449e329a51379b0e403e9cdfa901e994014b7b2",
   "previousRecord": {
     "path": "specs/bootcamp/hackathon-test-live-preparation-clock-source-delta-v1.json",
     "sha256": "b809a7f5197ee51eea4d38e56c24f445fdaaae974b21c840a21f2f4b2b86b27f",
@@ -40,12 +40,13 @@
     "actualUserExecution": false
   },
   "sourceAdditions": {
-    "src/embedded-wallet/team-port.mjs": "2d0ce3cf362075c18f7616054a4744132d64fa3e2899de6c18ff1fd231b27ac8",
+    "src/embedded-wallet/team-port.mjs": "f2602e2aca496ac0e997f32993c45177a95ab7aee53b9efb556297b6dfbbb195",
     "src/embedded-wallet/team-panel.jsx": "87293a5cf75470f5766605cf3bd8d772a0f4cdca8d4bed4f0f2535c4514d2df5",
-    "web/src/bootcamp/team-entry.js": "d6f6fdc75aaf799379d2a087770765865b2d8955e3645644b55a48ad1f99ca75",
+    "web/src/bootcamp/team-entry.js": "552af229ce28165c3f94fd4d72572c794d50f136794b1449c6229599b05d86e9",
     "web/src/main.js": "bb9127842cc71f181a20b80ff062f5567db6add00cd1af7b83f3e6deed8a9f21",
     "web/src/bootcamp/connect.js": "1218f0ebac88377ceee5bf8a8865b35d44c38fd76d671dfe6e2cec672dadfdc8",
     "web/src/bootcamp/recipient-panel.js": "9dbdfc06ad0fca8cc29405811f51368a4f2d839ba15041a508743807657917c0",
-    "web/src/bootcamp/review-window.js": "8d39f3a6eedd09077d5b5846e97079dc9839fa9f7850c623d30a07ea0b107062"
+    "web/src/bootcamp/review-window.js": "8d39f3a6eedd09077d5b5846e97079dc9839fa9f7850c623d30a07ea0b107062",
+    "web/src/bootcamp/team-render.js": "e96ac772fb693355c1216a0097e1c218152ff7ea9abe4562a1b8d5e08d545d55"
   }
 }
