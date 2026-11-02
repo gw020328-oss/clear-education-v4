@@ -108,6 +108,7 @@ test('team recipient flow uses product checkpoint guards through real product HT
  const result=await runRecipientRegistration({api:x.port.normal,signTypedData:()=>{raw++;throw Error('RAW_SIGN_FORBIDDEN');},applicationId:x.app,idempotencyKey:'team-test'});
  assert.equal(result.status,'SIGNED');assert.equal(raw,0);assert.deepEqual(x.stats(),{proofs:2,walletCalls:1,posts:1});
  assert.throws(()=>x.port.normal.submitRecipientRegistration(x.app,{},'raw'),/TEAM_REGISTRATION_GUARDED_ONLY/);
+ assert.throws(()=>x.port.bridge.request('/bootcamp/v3/applications/'+x.app+'/recipient-registration',{method:'post'}),/TEAM_REGISTRATION_GUARDED_ONLY/);
  const attached=await x.port.attach('participant');assert.throws(()=>attached.signTypedData({}),/TEAM_REGISTRATION_GUARDED_ONLY/);
  await assert.rejects(x.port.attach('operator'),/TEAM_ROLE_CHANGED/);
 });

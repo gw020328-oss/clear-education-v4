@@ -4,7 +4,7 @@ import {createNormalBootcampClient} from '../bootcamp/normal-client.mjs';
 export function createTeamPort({session,wallet,config}){
  const product=createProductSession({session,wallet,config});
  const request=(path,options={})=>{
-  if(options.method==='POST'&&path.includes('/recipient-registration'))throw Error('TEAM_REGISTRATION_GUARDED_ONLY');
+  if(options.method?.toUpperCase()==='POST'&&path.includes('/recipient-registration'))throw Error('TEAM_REGISTRATION_GUARDED_ONLY');
   return session.request(path,options);
  };
  const normal=createNormalBootcampClient({request});
@@ -16,6 +16,6 @@ export function createTeamPort({session,wallet,config}){
   normal:Object.freeze({...normal,recipientRegistration:()=>product.readRegistration(),
    registerReviewedRecipient:async packet=>{const b=await normal.session();if(b.failure)throw Error('TEAM_EXECUTION_FAILED');return product.submitRegistration(packet);},
    submitRecipientRegistration(){throw Error('TEAM_REGISTRATION_GUARDED_ONLY');}}),
-  bridge:product.bridge,
+  bridge:Object.freeze({...product.bridge,request,publicRead:request}),
  });
 }
