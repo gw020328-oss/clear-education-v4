@@ -40,8 +40,9 @@ export async function runRecipientRegistration({
 }) {
   const packet = await api.recipientRegistration(applicationId);
   if (packet?.status !== 'AWAITING_SIGNATURE') return packet;
-  const signature = await signTypedData(packet.payload);
-  await api.submitRecipientRegistration(applicationId, packet, signature, { idempotencyKey });
+  if (api.registerReviewedRecipient) await api.registerReviewedRecipient(packet);
+  else { const signature = await signTypedData(packet.payload);
+  await api.submitRecipientRegistration(applicationId, packet, signature, { idempotencyKey }); }
   // 제출 결과를 우리가 단정하지 않고 다시 읽는다.
   return await api.recipientRegistration(applicationId);
 }
@@ -111,10 +112,9 @@ export function recipientPanel({
     run(async () => {
       status = null;
       // 서버가 준 자료를 그대로 서명한다. 우리가 도메인·타입을 만들지 않는다.
-      const signature = await signTypedData(packet.payload);
-      await api.submitRecipientRegistration(
-        view.applicationId, packet, signature, { idempotencyKey: pendingKey },
-      );
+      if (api.registerReviewedRecipient) await api.registerReviewedRecipient(packet);
+      else { const signature = await signTypedData(packet.payload);
+      await api.submitRecipientRegistration(view.applicationId, packet, signature, { idempotencyKey: pendingKey }); }
       // 제출 결과를 우리가 단정하지 않고 **다시 읽는다.**
       packet = await api.recipientRegistration(view.applicationId);
       status = { kind: 'ok', text: '서명을 접수했습니다.' };

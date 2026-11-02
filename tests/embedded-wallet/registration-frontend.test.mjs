@@ -1,3 +1,5 @@
+import {createTeamPort} from '../../src/embedded-wallet/team-port.mjs';
+import {runRecipientRegistration} from '../../web/src/bootcamp/recipient-panel.js';
 // Real product HTTPS mount, handler, store and CAS. Invented actors/chain observation only.
 // No browser/Privy SDK, external login, paid model or chain transaction.
 import test from 'node:test';
@@ -13,14 +15,15 @@ import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server
 import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {createProductSession,registrationFailure} from '../../src/embedded-wallet/product-session.mjs';
 import {createSameOriginApi} from '../../src/application/api-client.mjs';
-import {requireRule as check} from '../../src/policy/values.mjs';
-async function fixture(t){
+import {RuleError,requireRule as check} from '../../src/policy/values.mjs';
+async function fixture(t,{team=false}={}){
  const f=await procedureFixture(t),reg=f.configuration.procedurePorts.registration;f.auth.domain.chainId=String(f.config.chainId);
  f.configuration.procedurePorts.registration=(...args)=>({...reg(...args),version:'clear-bootcamp-procedure-registration-port.2'});f.restart();
  const app=f.create();await f.complete(app);f.store.registerCurrentMetForE4(f.aliceContext,app,f.body(app),f.key());
  const initial=f.store.getRecipientRegistration(f.aliceContext,app),p=initial.payload;
  let block=10,patch={},chainPatch={},proofs=0,walletCalls=0,posts=0,lost=false,walletHook=()=>{};const events=[];
- const store={...f.store,getRecipientRegistration(c,a){return {...f.store.getRecipientRegistration(c,a),...patch};}};
+ let storeReadHook=()=>{};
+ const store={...f.store,getRecipientRegistration(c,a){storeReadHook();return {...f.store.getRecipientRegistration(c,a),...patch};}};
  const connection={async refresh(){block++;},recipientRegistrationState(){return {chainStatus:'NOT_REGISTERED',canonical:true,finalized:false,checkpoint:{number:String(block),hash:id('block-'+block),time:String(f.time)},registrationSequence:null,recipient:null,chainApplicationId:p.message.applicationId,...chainPatch};},
   async verifyRecipientRegistrationCheckpoint(a,checkpoint){proofs++;assert.equal(a,app);check(checkpoint.hash===id('block-'+checkpoint.number)&&BigInt(checkpoint.number)<=BigInt(block),'BC_RECIPIENT_REGISTRATION_CHAIN');}};
  const bootstrap={version:'clear-bootcamp-normal-session.1',role:'PARTICIPANT',applicationId:app,policyHash:p.message.policyHash,runtimeMappingHash:p.message.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,expectedPayment:{recipient:f.alice.address.toLowerCase()},
@@ -45,10 +48,11 @@ async function fixture(t){
  }});
  const request=(path,{idempotencyKey,...options}={})=>api(path,{...options,headers:idempotencyKey?{'idempotency-key':idempotencyKey}:{}});
  t.mock.method(Date,'now',()=>f.time*1000);
- const product=createProductSession({session:{assertSession:async()=>f.service.authorizeWorkflow(f.aliceContext,false),request},
+ const options={session:{assertSession:async()=>f.service.authorizeWorkflow(f.aliceContext,false),request},
   wallet:{pin:{address:f.alice.address,chainId:f.config.chainId},async typed(payload){walletCalls++;events.push('WALLET');await walletHook();return f.alice.signTypedData(payload.domain,payload.types,payload.message);}},
-  config:{appId:'synthetic00001',origin,redirectUri:origin+'/onboarding',phase:'ACTIVE_LOCAL_TEST',chainId:f.config.chainId,rpcUrl:'http://127.0.0.1:19999',instanceId:p.domain.salt}});
- return {f,app,base,product,raw,request,initial,events,stats:()=>({proofs,walletCalls,posts}),patch:v=>{patch=v;},chain:v=>{chainPatch=v;},duringWallet:fn=>{walletHook=fn;},loseReply:()=>{lost=true;}};
+  config:{appId:'synthetic00001',origin,redirectUri:origin+'/onboarding',phase:'ACTIVE_LOCAL_TEST',chainId:f.config.chainId,rpcUrl:'http://127.0.0.1:19999',instanceId:p.domain.salt}};
+ const port=team?createTeamPort(options):null;const product=team?{readRegistration:()=>port.normal.recipientRegistration(app),submitRegistration:packet=>port.normal.registerReviewedRecipient(packet),get registrationUnknown(){return false;}}:createProductSession(options);
+ return {f,app,base,product,port,raw,request,initial,events,stats:()=>({proofs,walletCalls,posts}),patch:v=>{patch=v;},chain:v=>{chainPatch=v;},duringStoreRead:fn=>{storeReadHook=fn;},duringWallet:fn=>{walletHook=fn;},loseReply:()=>{lost=true;}};
 }
 test('product HTTPS completes plain read, anchored pre-read, one wallet request, anchored post-read and one submit',async t=>{
  const x=await fixture(t),packet=await x.product.readRegistration();const before=x.f.counts();
@@ -98,4 +102,32 @@ test('fixed diagnostic preserves missing product route code without exposing arb
 test('product HTTPS keeps original expired deadline closed without wallet request',async t=>{
  const x=await fixture(t),packet=await x.product.readRegistration();x.f.setTime(Number(packet.payload.message.deadline));
  await assert.rejects(x.product.submitRegistration(packet),/REGISTRATION_STALE|REGISTRATION_EXPIRED/);assert.equal(x.stats().walletCalls,0);assert.equal(x.stats().posts,0);
+});
+
+test('team recipient flow uses product checkpoint guards through real product HTTPS',async t=>{
+ const x=await fixture(t,{team:true});let raw=0;
+ const result=await runRecipientRegistration({api:x.port.normal,signTypedData:()=>{raw++;throw Error('RAW_SIGN_FORBIDDEN');},applicationId:x.app,idempotencyKey:'team-test'});
+ assert.equal(result.status,'SIGNED');assert.equal(raw,0);assert.deepEqual(x.stats(),{proofs:2,walletCalls:1,posts:1});
+ assert.throws(()=>x.port.normal.submitRecipientRegistration(x.app,{},'raw'),/TEAM_REGISTRATION_GUARDED_ONLY/);
+ assert.throws(()=>x.port.bridge.request('/bootcamp/v3/applications/'+x.app+'/recipient-registration',{method:'post'}),/TEAM_REGISTRATION_GUARDED_ONLY/);
+ const attached=await x.port.attach('participant');assert.throws(()=>attached.signTypedData({}),/TEAM_REGISTRATION_GUARDED_ONLY/);
+ await assert.rejects(x.port.attach('operator'),/TEAM_ROLE_CHANGED/);
+});
+test('team registration rejects target change during wallet request with no submit',async t=>{
+ const x=await fixture(t,{team:true});const packet=await x.port.normal.recipientRegistration(x.app);
+ x.duringWallet(()=>x.patch({decisionRevision:packet.decisionRevision+1}));
+ await assert.rejects(x.port.normal.registerReviewedRecipient(packet),/REGISTRATION_STALE/);assert.equal(x.stats().posts,0);assert.equal(x.stats().walletCalls,1);
+});
+
+for(const phase of ['before','after'])test('team '+phase+' signing read crosses a second with no repeated signature or RPC',async t=>{
+ const x=await fixture(t,{team:true});const packet=await x.port.normal.recipientRegistration(x.app);let armed=phase==='before',conflicts=0;
+ if(phase==='after')x.duringWallet(()=>{armed=true;});
+ x.duringStoreRead(()=>{if(armed&&conflicts++===0)throw new RuleError('BC_VIEW_STALE');});
+ await x.port.normal.registerReviewedRecipient(packet);assert.equal(x.stats().walletCalls,1);assert.equal(x.stats().posts,1);assert.equal(x.stats().proofs,2);
+ assert.equal(x.f.store.getRecipientRegistration(x.f.aliceContext,x.app).payload.message.deadline,packet.payload.message.deadline);
+});
+for(const kind of ['repeat-conflict','forbidden','untrusted-error'])test('team post-sign '+kind+' rejects before registration submission',async t=>{
+ const x=await fixture(t,{team:true});const packet=await x.port.normal.recipientRegistration(x.app);let armed=false,calls=0;x.duringWallet(()=>{armed=true;});
+ x.duringStoreRead(()=>{if(!armed)return;calls++;throw kind==='untrusted-error'?Error('BC_VIEW_STALE'):new RuleError(kind==='forbidden'?'FORBIDDEN':'BC_VIEW_STALE');});
+ await assert.rejects(x.port.normal.registerReviewedRecipient(packet));assert.equal(calls,kind==='repeat-conflict'?2:1);assert.equal(x.stats().walletCalls,1);assert.equal(x.stats().posts,0);
 });

@@ -667,7 +667,7 @@ function boot() {
   render();
   // 서버가 켜져 있는지만 본다. 읽기 한 번이고 지갑 창은 뜨지 않는다.
   // 결과가 오면 onChange 가 화면을 다시 그린다.
-  void connection.probe();
+  if (!window.clearTeamRuntime) void connection.probe();
 }
 
 window.addEventListener('hashchange', () => render());
@@ -693,3 +693,6 @@ world.subscribe(({ clockOnly }) => {
 });
 
 boot();
+
+// Authenticated team iframe only; lifecycle remains in the owner session.
+if (window.clearTeamRuntime) { window.clearTeamConnection=connection; window.clearTeamRefresh=async()=>{try{await connection.refreshSession();liveView=await connection.refresh();}catch{liveView=null;}render();}; }

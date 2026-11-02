@@ -55,6 +55,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
   if(!valid){res.writeHead(403,{'Content-Type':'application/json'});res.end('{"error":"ORIGIN"}');return;}
   if(wallets?.handle(req,res))return;
   if(req.method==='GET'&&req.url==='/__dev/config'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(config));return;}
+  if(wallets?.config.teamFrontend&&req.url==='/team/index.html')res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'");
   const path=req.url.split('?')[0],asset=assets.get(path)??(/^\/ui\/[a-zA-Z0-9/_-]*$/.test(path)?assets.get('/'):undefined);
   if(['GET','HEAD'].includes(req.method)&&asset){res.writeHead(200,{'Content-Type':asset.type});res.end(req.method==='HEAD'?undefined:asset.body);return;}
   res.writeHead(404,{'Content-Type':'application/json'});res.end('{"error":"BC_NOT_FOUND"}');
