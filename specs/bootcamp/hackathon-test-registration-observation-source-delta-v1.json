@@ -1,0 +1,53 @@
+{
+  "version": "clear-registration-observation-source-delta.1",
+  "candidateHead": "540d5d386817e656602bb1696870a67cdc585623",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-recipient-wait-source-delta-v1.json",
+    "sha256": "2e05d3e90b1cd4d4bf83709059eb73340ae47378f19b3a95ed047c0bd93742cc",
+    "guardHead": "2effc31319eb79de7325cc58f61959b25c9d614f"
+  },
+  "changes": {
+    "src/bootcamp/execution-development.mjs": {
+      "before": "ae67f41c79c3342b52c56c5b11bf8cdd7c0f01c5ac061ef8f79eba5bd14a6582",
+      "after": "a2923c3f36312258d6151e9a85d91f6d2fb3f170434097888ad1fc8eeca1c86c"
+    },
+    "src/bootcamp/http.mjs": {
+      "before": "184e3a2da287777f4b0460ff38c8d1b218dfb886a323bbf87171ae483b60eb45",
+      "after": "b67d8fc96fff36ecf0331c651a11e36a63eaa3475500e69183a3242e4924ac9c"
+    },
+    "src/bootcamp/normal-client.mjs": {
+      "before": "b63bec02a3ca75bd79e5d4060b0b293b6c5870d492d9ce52986d1845e530a7d0",
+      "after": "3273af52386ac89c0f407fa0d34861734abb541d080cf96361dcf434ffa7efcb"
+    },
+    "src/bootcamp/recipient-registration-ui.mjs": {
+      "before": "cdead0a8b09897af7dabe33f9f571506e65b2678f7b6cf4ebbc6bdf960f4bbeb",
+      "after": "564c30bd264e14d625553572ccced38328f8cbfc1b4d21a8dd5857873b5896bb"
+    },
+    "src/embedded-wallet/approvals.mjs": {
+      "before": "889a0c4c20fa925e62c39c202b95b2fee9a72d386e71d8f8e9e95be39dc5d54b",
+      "after": "47e1b1d4abc77e2e36fa1bd04f82fa1ff8b86b3aee7998b3f9f4e0cb6b2474e5"
+    },
+    "src/embedded-wallet/product-panel.jsx": {
+      "before": "bf44c8b985e92b06c0cd1e3c178c3783acf73e24838f8b62634dd342b3396964",
+      "after": "d92917792ba0a4a8c2b5e1447e58f4c25d8c2059d3eb996b01675b1d631630f9"
+    },
+    "src/embedded-wallet/product-session.mjs": {
+      "before": "67d3b61ce0440f2b78e678b2045733bb7f5bda2f7a061e9b4b785cd733573eb8",
+      "after": "e6789f9b365e6cb816ab30b3796e6542566a1d73aa9ce76cf3510a835f344d84"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "5ff8223c1283271afa799b54641d959545e5719f436e02ecabe73d5ecf62c305",
+      "after": "d8bedf485776ecf0a029f58425ff0492cd766f30e298f681495a0d20df377588"
+    }
+  },
+  "boundary": {
+    "signedPacketAndCasPreserved": true,
+    "canonicalAncestryBeforeAndAfterSignature": true,
+    "originalDeadlinesPreserved": true,
+    "fixedDiagnosticLabelsOnly": true,
+    "writeRetry": false,
+    "automaticRetry": false,
+    "productionEnabled": false,
+    "actualExecution": false
+  }
+}

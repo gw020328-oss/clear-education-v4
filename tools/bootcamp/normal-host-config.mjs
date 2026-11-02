@@ -1,3 +1,5 @@
+import {SELF_MODE} from '../../src/hackerrank-evidence/self-profile.mjs';
+import {verifyPrepared} from '../local-attestor-review/prepare.mjs';
 // Local owner configuration only. Never an HTTP/body configuration or source authority.
 import {mkdirSync,existsSync,readFileSync,lstatSync,accessSync,constants} from 'node:fs';
 import {join,resolve,dirname} from 'node:path';
@@ -22,6 +24,7 @@ export const localDay=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'
 export function codeState(){try{return {head:execFileSync('git',['rev-parse','HEAD'],{cwd:API_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim(),clean:execFileSync('git',['status','--porcelain','--untracked-files=all'],{cwd:API_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim()===''};}catch{throw Error('NORMAL_HOST_CODE_STATE');}}
 export function hostDirectory(name){fail(/^[a-z][a-z0-9-]{0,40}$/.test(name??''),'NORMAL_HOST_NAME');return join(HOST_PARENT,name);}
 export function validateHostConfig(c){
+ fail(c.attestorMode===undefined||['OFFICIAL',SELF_MODE].includes(c.attestorMode),'NORMAL_HOST_ATTESTOR_MODE');
  fail(c?.version===HOST_CONFIG_VERSION&&c.apiRoot===API_ROOT&&c.keySourceId===KEY_SOURCE&&c.moodleReader===MOODLE_READER&&c.moodleOwnerHead===MOODLE_OWNER_HEAD,'NORMAL_HOST_CONFIG');
  const u=new URL(c.origin);fail(u.origin===c.origin&&u.protocol==='https:'&&u.hostname==='127.0.0.1'&&Number(u.port)>=1024&&Number(u.port)<=65535,'NORMAL_HOST_ORIGIN');
  fail(c.audience==='clear-python-normal-local'&&/^hr-run\.[0-9a-f-]{36}$/.test(c.privacyKeyId??'')&&/^[0-9a-f]{64}$/.test(c.moodleReaderSha256??''),'NORMAL_HOST_CONFIG');
@@ -38,10 +41,11 @@ export function assetSnapshot(webRoot){
  const assets=loadPublicAssets(webRoot);return sha(Buffer.concat([...assets].sort(([a],[b])=>a.localeCompare(b)).flatMap(([path,a])=>[Buffer.from(path+'\n'+a.type+'\n'),a.body])));
 }
 export function loadHostConfig(name){const directory=privateDirectory(hostDirectory(name));return {directory,config:validateHostConfig(JSON.parse(readPrivate(join(directory,'host.json'))))};}
-export function initializeHost({name,origin='https://127.0.0.1:9445',webRoot=null}){
+export function initializeHost({name,origin='https://127.0.0.1:9445',webRoot=null,selfAttestorTest=false}){
+ fail(typeof selfAttestorTest==='boolean','NORMAL_HOST_ATTESTOR_MODE');
  mkdirSync(HOST_PARENT,{recursive:true,mode:0o700});privateDirectory(HOST_PARENT);const directory=hostDirectory(name);mkdirSync(directory,{mode:0o700});privateDirectory(directory);
  const st=lstatSync(MOODLE_READER);fail(st.isFile()&&!st.isSymbolicLink(),'NORMAL_HOST_MOODLE_READER');
- const c=validateHostConfig({version:HOST_CONFIG_VERSION,apiRoot:API_ROOT,origin,audience:'clear-python-normal-local',privacyKeyId:'hr-run.'+randomUUID(),
+ const c=validateHostConfig({version:HOST_CONFIG_VERSION,attestorMode:selfAttestorTest?SELF_MODE:'OFFICIAL',apiRoot:API_ROOT,origin,audience:'clear-python-normal-local',privacyKeyId:'hr-run.'+randomUUID(),
   participantWallet:null,operatorWallet:null,selectedCertificateId:null,webRoot:webRoot?resolve(webRoot):null,frontendAccepted:false,frontendAssetSha256:null,
   aiApprovalWallet:null,aiApprovalAuthoritySha256:null,
   moodleReader:MOODLE_READER,moodleOwnerHead:MOODLE_OWNER_HEAD,moodleReaderSha256:sha(readFileSync(MOODLE_READER)),keySourceId:KEY_SOURCE,createdAt:Math.floor(Date.now()/1000)});
@@ -66,6 +70,7 @@ export function readPriceReview(directory){
 }
 export function hostReadiness({directory,config:c}){
  const blockers=[];
+ if(c.attestorMode===SELF_MODE)try{verifyPrepared();}catch{blockers.push('SELF_ATTESTOR_BUILD_REQUIRED');}
  const probe=fn=>{try{return fn();}catch{return false;}};
  const dockerAvailable=!!probe(()=>execFileSync('docker',['info','--format','{{.ServerVersion}}'],{stdio:['ignore','pipe','pipe'],timeout:10000}).length);
  const gethAvailable=!!probe(()=>execFileSync('docker',['image','inspect','ethereum/client-go@sha256:abf3605177f8bdcfce436985a8054cca4ae59256323a4ffb72c56c04f3d1fadd','--format','{{.Id}}'],{stdio:['ignore','pipe','pipe'],timeout:10000}).length);
@@ -87,7 +92,7 @@ export function hostReadiness({directory,config:c}){
  const aiApprovalAuthorityConfigured=!!probe(()=>readNormalAiAuthority({directory,config:c,codeHead:code.head}));
  if(!aiApprovalAuthorityConfigured)blockers.push('AI_COST_APPROVER_DESIGNATION_REQUIRED');
  loadTls(directory,c.tlsFingerprint);
- return {version:'clear-bootcamp-normal-host-readiness.1',origin:c.origin,sourceMode:'REGISTERED_TEST_SOURCE',readyForActivation:blockers.length===0,blockers,
+ return {version:'clear-bootcamp-normal-host-readiness.1',attestorMode:c.attestorMode??'OFFICIAL',origin:c.origin,sourceMode:'REGISTERED_TEST_SOURCE',readyForActivation:blockers.length===0,blockers,
   dockerAvailable,gethAvailable,chromeAvailable,moodleRunning,keyAvailable,keySourceId:KEY_SOURCE,moodleOwnerSourceMatches:ownerMatches,moodleReaderCodeMatches:readerMatches,frontendAssetsAvailable:!!asset,frontendAccepted:c.frontendAccepted,
   priceReview:priceReview?{reviewedOn:priceReview.reviewedOn,officialSource:PRICING_SOURCE,inputNanoUsdPerToken:'300',outputIncludingThinkingNanoUsdPerToken:'2500',scenarioUsd:'0.00346',hardCashCapVerified:false}:null,
   aiApprovalAuthorityConfigured,aiApprovalWallet:c.aiApprovalWallet??null,code,chainId:null,rpcUrl:null,applicationId:null,actualSourceVerified:false,actualCalls:0};

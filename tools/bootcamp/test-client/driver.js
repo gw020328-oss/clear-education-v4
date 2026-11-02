@@ -17,6 +17,7 @@ export function createTestDriver({session,createNormalClient,id=()=>crypto.rando
   try{const result=await action(active.signal);state.error=null;return result;}catch(e){state.view=null;state.operations=null;if(state.bootstrap?.aiApproval)state.bootstrap={...state.bootstrap,aiApproval:null};if(!reading)state.approval=null;state.error={code:/^(?:(?:TEST_|BC_|AUTH_|WALLET_)[A-Z0-9_]{1,100}|FORBIDDEN|CSRF|ORIGIN|TRANSPORT|SIGNATURE)$/.test(e.code??e.message)?(e.code??e.message):'TEST_ACTION_FAILED',outcome:e.outcome??'NOT_SENT'};throw e;}
   finally{state.busy=false;active=null;emit();}}
  const app=()=>{check(state.applicationId,'TEST_APPLICATION_REQUIRED');return state.applicationId;};
+ const writable=()=>check(!state.bootstrap?.failure,'BC_NORMAL_FAILED_WAITING');
  const participant=()=>check(state.bootstrap?.role==='PARTICIPANT','TEST_PARTICIPANT_ONLY');
  const normalSession=async signal=>{state.aiApprovalReadStartedAtMs=elapsedNow();const b=await api.session({signal});check(b.policyHash===state.config.policyHash,'TEST_POLICY');
   if(b.expectedPayment)check(/^0x[0-9a-f]{40}$/.test(b.expectedPayment.recipient)&&/^0x[0-9a-f]{40}$/.test(b.expectedPayment.token)
@@ -45,7 +46,7 @@ export function createTestDriver({session,createNormalClient,id=()=>crypto.rando
   }catch(e){if(e.code!=='BC_NORMAL_PROCEDURE_NOT_READY')throw e;
    const o=await session.request('/bootcamp/v2/applications/'+app()+'/operations',{signal});check(o.version==='clear-bootcamp-operations-projection.2'&&o.applicationId===app()&&o.policyHash===state.bootstrap.policyHash&&o.runtimeMappingHash===state.bootstrap.runtimeMappingHash,'TEST_OPERATIONS');state.operations=o;}
  },{reading:automatic});
- const sendConsent=async signal=>{const intent=consentIntent;check(intent,'TEST_NO_PENDING_CONSENT');try{
+ const sendConsent=async signal=>{writable();const intent=consentIntent;check(intent,'TEST_NO_PENDING_CONSENT');try{
   const r=await api.consent(app(),intent.view,intent.value,{idempotencyKey:intent.key,signal});state.operationId=r.record.operationId;consentIntent=null;state.view=null;return r;
  }catch(e){if(!unknown(e))consentIntent=null;throw e;}};
  return Object.freeze({snapshot,
@@ -54,17 +55,23 @@ export function createTestDriver({session,createNormalClient,id=()=>crypto.rando
   login:()=>run(async signal=>{state.identity=await session.login(state.config,{signal});await normalSession(signal);}),
   refresh:()=>refresh(false),
   readLive:()=>refresh(true),
-  create:()=>run(async signal=>{participant();check(!state.applicationId,'TEST_APPLICATION_EXISTS');createKey??='test-create-'+id();
+  create:()=>run(async signal=>{writable();participant();check(!state.applicationId,'TEST_APPLICATION_EXISTS');createKey??='test-create-'+id();
    const r=await session.request('/bootcamp/v1/applications',{method:'POST',body:{},idempotencyKey:createKey,signal});check(/^[a-z][a-z0-9.-]{0,63}$/.test(r.record?.applicationId??''),'TEST_APPLICATION');state.applicationId=r.record.applicationId;}),
-  bind:()=>run(async signal=>{participant();await api.bindSourceSession(app(),{signal});await normalSession(signal);}),
+  bind:()=>run(async signal=>{writable();participant();await api.bindSourceSession(app(),{signal});await normalSession(signal);}),
   approval:()=>run(async signal=>{participant();state.approval=await api.pendingSourceSignature(app(),{signal});}),
-  sign:()=>run(async signal=>{participant();const a=state.approval;check(a&&now()<a.expiresAt*1000,'TEST_APPROVAL_EXPIRED');state.approval=null;
+  sign:()=>run(async signal=>{writable();participant();const a=state.approval;check(a&&now()<a.expiresAt*1000,'TEST_APPROVAL_EXPIRED');state.approval=null;
    const signature=await session.sign(a.message,{signal});check(!signal.aborted&&now()<a.expiresAt*1000,'TEST_APPROVAL_EXPIRED');await api.submitSourceSignature(app(),a,signature,{signal});}),
-  consent:value=>run(async signal=>{check(state.view&&!consentIntent&&['AGREE','WITHDRAW'].includes(value),'TEST_REFRESH_BEFORE_CONSENT');
+  consent:value=>run(async signal=>{writable();check(state.view&&!consentIntent&&['AGREE','WITHDRAW'].includes(value),'TEST_REFRESH_BEFORE_CONSENT');
    if(value==='AGREE')check(ready(state.view)&&!state.reviewStopped&&!state.consentTargetChanged
     &&(reviewWindow()?.remainingMs??0)>REVIEW_WINDOW.settlementReserveSeconds*1000,'TEST_REVIEW_WINDOW_REQUIRED');
    consentIntent={view:structuredClone(state.view),value,key:'test-consent-'+id()};return sendConsent(signal);}),
-  approveAi:()=>run(async signal=>{const a=state.bootstrap?.aiApproval;
+  resume:()=>run(async signal=>{
+   const f=state.bootstrap?.failure;check(state.bootstrap?.role==='OPERATOR'&&f?.resumeAllowed,'BC_NORMAL_RESUME_BLOCKED');
+   // One explicit command only. A lost reply is resolved by GET, never a second POST.
+   state.bootstrap={...state.bootstrap,failure:{...f,resumeAllowed:false,recoveryStatus:'RESUME_OUTCOME_UNKNOWN'}};
+   return session.request('/bootcamp/v4/applications/'+app()+'/resume',{method:'POST',body:{failureRevision:f.failureRevision,expectedRevision:f.applicationRevision},signal});
+  }),
+  approveAi:()=>run(async signal=>{writable();const a=state.bootstrap?.aiApproval;
    check(a?.permitted&&a.status==='WAITING'&&!state.aiApprovalUnknown&&a.applicationId===app(),'TEST_AI_APPROVAL_NOT_READY');
    check(aiRemaining()>=0,'TEST_AI_APPROVAL_NOT_READY');
    const body={version:'clear-normal-ai-approval-action.1',applicationId:app(),bodySha256:a.bodySha256,planHash:a.planHash,

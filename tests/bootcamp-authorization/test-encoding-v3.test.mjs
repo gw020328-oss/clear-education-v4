@@ -71,6 +71,14 @@ test('snapshot is deep copied; input and state are not mutated; result contains 
  assert.equal(r.signature,undefined);assert.equal(r.sourceWindow,undefined);
 });
 test('clock overrides restricted to synthetic fixture provenance',()=>{const f=fixtureV3();f.snapshot.provenance='SERVER_OWNED_UNCONFIGURED';assert.throws(()=>createTestDraftInspector(f.snapshot,{clock:()=>f.now}),/REAL_CLOCK_REQUIRED/);});
+test('registered source inspector rejects injected clocks and checks its current real-clock reading',t=>{
+ const f=fixtureV3();f.snapshot.provenance='REGISTERED_TEST_SOURCE';
+ assert.throws(()=>createTestDraftInspector(f.snapshot,{clock:()=>f.now}),/REAL_CLOCK_REQUIRED/);
+ let at=f.now;t.mock.method(Date,'now',()=>at*1000);const inspector=createTestDraftInspector(f.snapshot);
+ assert.equal(inspector.inspect(f.input,f.state).status,'UNSIGNED_PREFLIGHT_ONLY');
+ at=Number(f.input.message.expiresAt);assert.equal(inspector.inspect(f.input,f.state).code,'FIRST_ACCEPT_TIME');
+ assert.equal(f.snapshot.message.expiresAt,f.input.message.expiresAt);
+});
 for(const [field,value] of [
  ['decisionId',b32('ee')],['decisionRevision','2'],['decisionHash',b32('ee')],['firstReviewStartedAt','2000000010'],
  ['decisionPublishedAt','2000000021'],['procedureId',b32('ee')],['runtimeMappingHash',b32('ee')],['allocationId',b32('ee')],
@@ -108,7 +116,7 @@ test('overall 600 cutoff is exclusive and cannot reset from current server proce
 });
 test('revalidation one permits valid snapshot, new valid error blocks even after budget used',()=>{const f=fixtureV3();f.snapshot.message.revalidationCount='1';rebind(f);assert.equal(inspect(f).status,'UNSIGNED_PREFLIGHT_ONLY');f.state.newValidError=true;rejects(f);});
 for(const [name,edit,expected] of [
- ['Moodle oldest',s=>s.moodleObservedAt[2]='1999999990',2000000290n],
+ ['Moodle oldest',s=>s.moodleObservedAt[2]='1999999390',2000000290n],
  ['Reclaim first',s=>s.reclaimIssuedAt[0]='1999999300',2000000200n],
  ['Reclaim second',s=>s.reclaimIssuedAt[1]='1999999301',2000000201n],
  ['raw maximum',s=>s.rawAcquiredAt='1999998400',2000000200n],
@@ -119,7 +127,7 @@ test('source exclusive expiry/future times/missing evidence are rejected',()=>{
  f.state.sourceWindow.moodleObservedAt[0]='2000000161';rejects(f);f.state.sourceWindow.moodleObservedAt.pop();rejects(f);
 });
 test('raw acquiredAt cannot refresh old observed source and all uint64 additions checked',()=>{
- const f=fixtureV3();f.state.sourceWindow.rawAcquiredAt='2000000160';assert.equal(sourceCutoff(f.state.sourceWindow,BigInt(f.now)),2000000300n);
+ const f=fixtureV3();f.state.sourceWindow.rawAcquiredAt='2000000160';assert.equal(sourceCutoff(f.state.sourceWindow,BigInt(f.now)),2000000800n);
  f.state.sourceWindow.moodleObservedAt[0]=((1n<<64n)-1n).toString();assert.throws(()=>sourceCutoff(f.state.sourceWindow,(1n<<64n)-1n),/SOURCE_TIME_OVERFLOW/);
 });
 test('accepted-right path has no current key/epoch/source/approval claim expiry guard, and cannot authorize claim',()=>{
@@ -158,3 +166,13 @@ test('published v3 proposal and unsigned example are reproducible, no signature'
 });
 
 test('facts acquired after issuance cannot retroactively justify that unsigned issuance',()=>{const f=fixtureV3();f.state.sourceWindow.rawAcquiredAt='2000000151';assert.equal(inspect(f).code,'SOURCE_FUTURE');});
+
+test('longer current source window cannot extend previously issued approval or mutate its deadline',()=>{
+ const f=fixtureV3(),before=JSON.stringify(f.input);
+ f.state.sourceWindow.verifiedValidUntilExclusive='2000000900';
+ assert.ok(sourceCutoff(f.state.sourceWindow,BigInt(f.now))>BigInt(f.input.message.sourceValidUntilExclusive));
+ assert.equal(inspect(f,2000000249).status,'UNSIGNED_PREFLIGHT_ONLY');
+ assert.equal(inspect(f,2000000250).code,'FIRST_ACCEPT_TIME');
+ assert.equal(inspect(f,2000000300).status,'REJECTED');
+ assert.equal(JSON.stringify(f.input),before);
+});

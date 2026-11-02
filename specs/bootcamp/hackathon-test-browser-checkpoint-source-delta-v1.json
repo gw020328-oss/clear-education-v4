@@ -1,0 +1,32 @@
+{
+  "version": "clear-browser-checkpoint-source-delta.1",
+  "candidateHead": "2b09f7dde0f476d333e51f12ac86cc44dd1628b4",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-registration-route-source-delta-v1.json",
+    "sha256": "800c93b1efb8d85807ee7dc98101c89cff74ae380f8125386ca2261963f3c8de",
+    "guardHead": "20b15027b448acb8cf4f48f86e57b3aa507e75ef"
+  },
+  "changes": {
+    "src/embedded-wallet/product-session.mjs": {
+      "before": "11c29334d87e3b29191039447ab0f8c9ef389d06777f1abaa3359bdb1c289043",
+      "after": "4fca85fb51e3e374f8a5d10178c238a1dd9141fe6ddd8f1dc2dfbd3fb90a6fff"
+    }
+  },
+  "sourceAdditions": {
+    "src/application/api-client.mjs": "d268a8a03bfd9028d1a0a905fb2c7e74e05e58ea2249b15ee95fe46e10917780"
+  },
+  "previousUnpinnedSourceSha256": {
+    "src/application/api-client.mjs": "834984ce0d0bc528b5e9aa460714c7ae7fc1013e7edd332847091ad8fc52070e"
+  },
+  "boundary": {
+    "singleEncodedCheckpointGetOnly": true,
+    "strictParserAndCanonicalChecksPreserved": true,
+    "signedPacketAndCasPreserved": true,
+    "originalDeadlinesPreserved": true,
+    "fixedDiagnosticLabelsOnly": true,
+    "writeRetry": false,
+    "automaticRetry": false,
+    "productionEnabled": false,
+    "actualExecution": false
+  }
+}

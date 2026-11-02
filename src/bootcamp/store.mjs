@@ -7,7 +7,7 @@ import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.
 import {same} from '../policy/mvp/contract.mjs';
 import {openPrivateDb} from '../product-workflow/private-db.mjs';
 import {P0_GATES,p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
-import {compiled,criterion,id,epoch,revision,hash,validateGuard,guardExpiry,guardHash,snapshotCandidate,validateCandidate,evidenceRecord,decisionRecord} from './model.mjs';
+import {sourceAgeSeconds,compiled,criterion,id,epoch,revision,hash,validateGuard,guardExpiry,guardHash,snapshotCandidate,validateCandidate,evidenceRecord,decisionRecord} from './model.mjs';
 import {migrateR2,r2Ledger} from './r2-ledger.mjs';
 import {createOperations} from './operations.mjs';
 import {migrateProcedure} from './procedure-ledger.mjs';
@@ -142,7 +142,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
     let changed=false;
     for(const h of heads(a).filter(h=>h.valid)){
       const g=source(a,h.criterion_id,time),e=h.evidence,c=criterion(h.criterion_id);
-      const age=c.source==='RECLAIM_HACKERRANK'?900:300;
+      const age=sourceAgeSeconds(c,e);
       const expired=time<e.verifiedAt||time-e.acquiredAt>age||time>=h.valid_until||time>=e.rawLocator.expiresAt
         ||(c.source==='RECLAIM_HACKERRANK'&&['accountProofIssuedAt','certificateProofIssuedAt'].some(k=>time-e.facts[k]>900));
       if(clockReversed||a.status!=='ACTIVE'||!g||!same(g,h.guard)||expired){

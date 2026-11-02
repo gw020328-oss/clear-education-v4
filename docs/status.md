@@ -1,5 +1,18 @@
 # 개발 현황
 
+## 2026-11-02 Privy 참가자 실제 100 TEST 지급 성공
+
+[실제 시험 결과와 범위](current/PRIVY_100_TEST_SUCCESS_20261102.ko.md): 코드 `7f59697`에서 실제 HackerRank 자체 공증·로컬 Moodle 시연 기록·실제 Gemini·Privy 등록 서명·양측 동의 후 정확100 TEST 잔액 증가와 중복 거부를 확인했다. 양쪽 영수증 확인 후 정상 종료했다. `canonical=true`, `finalized=false`; 공식 hosted/독립 공증·실자산·팀원 프론트 완주 성공과 구분한다. 다음은 이슈 #106의 팀원 프론트 연결이며 새 기능은 완료 후로 보류한다. 아래 실패 기록은 이전 실행 이력이다.
+
+## 2026-11-01 PR131 지급 준비 시계 검사 후속
+
+[원인·수정·재시험 경계](current/BOOTCAMP_LIVE_PREPARATION_CLOCK.ko.md)와 [검증 기록](current/BOOTCAMP_LIVE_PREPARATION_CLOCK_VERIFICATION.json)을 추가했다. 실제 실행은 동의 반영 4거래 뒤 지급 준비에서 중단됐고 최초 검토 기한이 만료됐다. 별도 ISOLATED_LIVE_TEST·실제 벽시계·제품 HTTPS/API·새 Geth V2 합성 리허설로 같은 오류를 재현한 뒤 PREPARE→ACCEPT→claim·canonical 정확100 TEST·중복 거부를 확인했다. 원천/AI/사용자 지갑은 명시적 시험 대체이며 실제 사용자 지급 완료가 아니다. 기존 실제 기록은 보존하고 자동 재실행·기한 연장·병합을 하지 않는다. 정확한 최종 HEAD CI는 PR131에서 확인한다.
+
+## 2026-10-31 Privy 로그인 비교·진단 후속 (PR125 Draft)
+
+[구성 비교와 재시험 조건](current/PRIVY_LOGIN_DIAGNOSIS_20261031.ko.md)을 기록했다. 이전9457의 Google/EOA 로그인 방식과 현재9467의 SDK3.51.0·initOAuth·Provider/CSP 설정은 같으며, origin/CA/새 세션·체인 차이가 있다. 이번 사용자 HackerRank 로그인 후 호스트 활성화는 확인됐으나 Privy Google 이동 전에 실패했다. sourceVerified=false/applicationId=null 상태로 정상 종료했고 원래 실패 원인은 미확정이다. 숨겨진 오류를 시작/복귀 단계·고정 SDK 코드·허용 HTTP 상태로만 표시/탭별 보존하는 최소 수정이다. 원시 예외/URL/토큰/쿠키를 기록하지 않는다. v44는 onboarding 한 파일과 진단 모듈만 새 지갑 지문으로 인수하며 v1–v43을 보존한다. 실제 재로그인·AI·지급 재시험은 미실행, 최신 CI는 PR125에서 확인한다.
+아래 일일 현황은 당시 확인 범위의 기록이며, 위 실제 지급 결과와 구분해 보존한다.
+
 ## 2026-11-02 등록·지급 준비 경계와 실제 미완료 현황
 
 원격 확인 **2026-11-02 11:04 KST**. develop은 [a6372f5](https://github.com/gw020328-oss/clear-education-v4/commit/a6372f50bc1e757d724bb064c723d7103ff064e1), main은 [6e1c403](https://github.com/gw020328-oss/clear-education-v4/commit/6e1c4038f9ccf5f1adb96d85b2eebd07b2fd4212)이며 어제 이후 새 기능 병합은 없다. [#131](https://github.com/gw020328-oss/clear-education-v4/pull/131)의 아래 후속은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 공개 기록의 저장 결과이며 이번 자동화가 실행한 결과가 아니다.
@@ -80,6 +93,12 @@
 | [#128](https://github.com/gw020328-oss/clear-education-v4/pull/128) | d7c6c77710a07225aec7a4aec0fed2a8e5bacdf4 | 4/6 | [run 41007429268](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41007429268) · [run 41007422589](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41007422589) |
 
 #125의12개 검사는 모두 COMPLETED·SUCCESS이며 #128은4/6 성공·2개 FAILURE다. 이는 검사 수이지 고유 시험/실제 사용자 성공 수가 아니다. 이전 날짜별 준비/실패·수치는 당시 기록이다. 이번 자동화는 공개 근거·CI만 대조했고 실제 원문/proof·쿠키·개인키·민감 로그 접근, 비공개 메일 조회/발송·새 로그인/유료 호출/서명/거래/배포를 하지 않았다. 기능 PR은 이 자동화의 병합 대상이 아니다.
+
+## 2026-10-30 자체 Attestor 전용 TEST 후속 (PR125 Draft)
+
+[전용 실행 인계](current/SELF_ATTESTOR_TEST.ko.md)와 [합성 검증](current/SELF_ATTESTOR_TEST_VERIFICATION.json)을 추가했다. 명시적인 새 self-test 호스트에만 실행별 공증자/인증키·신뢰 프로필을 만들고, 신청·요청·매핑·새 체인에 결합한다. 공식 endpoint/registry 경로와 거부 검사는 유지하며 자동 fallback·임의 signer 입력은 없다. v43은 정확한 소스 187개와 지갑 산출물을 인수하고 v1–v42를 보존한다.
+
+합성 HTTPS HackerRank pair를 실제 SDK로 수집/검증하고 같은 신청의 합성 Moodle·회고·AI와 연결해 새 Geth에서 V2 등록·양측 동의·정확 100000000 atoms 수령·canonical receipt·중복 거부를 확인했다. 실제 사용자 로그인·AI 호출·사용자 지갑 지급 성공이 아니며 자체 공증은 공식 hosted/독립 공증 보장이 아니다. 실제 로그인 공개 경로는 익명 GET 403으로 남아 있다. 최종 HEAD CI는 PR125 Checks를 기준으로 보고하며 자동 병합하지 않는다.
 
 ## 2026-10-30 미병합 지갑·공식 연결 차단 현황
 

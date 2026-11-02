@@ -1,6 +1,6 @@
 import {freeze,requireRule as check} from '../policy/values.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
-import {compiled,id,epoch} from './model.mjs';
+import {sourceAgeSeconds,compiled,id,epoch} from './model.mjs';
 
 export const DECISION_EVIDENCE_VERSION='clear-bootcamp-decision-evidence.1';
 const unavailable=()=>({status:'UNAVAILABLE',value:null});
@@ -45,7 +45,7 @@ export function createDecisionEvidenceReader({db,authentication,operatorBindings
     if(b)check(b.ledgerRequestHash===e.requestHash,'BC_DECISION_TARGET');
     const events=e?db.prepare('SELECT record FROM events WHERE application_id=?').all(a.id).map(decode).filter(v=>v.target===e.evidenceId):[];
     const deleted=events.some(v=>v.reason==='DELETED'),sameHead=!!e&&h?.evidence_id===e.evidenceId;
-    const expired=!!e&&(time<e.verifiedAt||time-e.acquiredAt>(c.source==='RECLAIM_HACKERRANK'?900:300)
+    const expired=!!e&&(time<e.verifiedAt||time-e.acquiredAt>sourceAgeSeconds(c,e)
      ||time>=e.rawLocator.expiresAt||(sameHead&&time>=h.valid_until)||(b?.validUntilExclusive!==undefined&&time>=b.validUntilExclusive)
      ||c.source==='RECLAIM_HACKERRANK'&&['accountProofIssuedAt','certificateProofIssuedAt'].some(k=>time-e.facts[k]>900));
     availability.push({criterionId:c.criterionId,evidenceId:r.evidenceId,

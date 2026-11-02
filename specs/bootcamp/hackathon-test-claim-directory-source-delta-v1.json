@@ -1,0 +1,32 @@
+{
+  "version": "clear-claim-directory-source-delta.1",
+  "candidateHead": "c42f1644f804c31971ebde7b833013709f045eab",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-reflection-resume-source-delta-v1.json",
+    "sha256": "60d4c4349f0741f56b215504f10f41de001b8543b16240d91f17b08c80fbd66c",
+    "guardHead": "a43cbe221c51d4fd734d5f7a64fffe141d85d66e"
+  },
+  "changes": {
+    "src/bootcamp/execution-diagnostics.mjs": {
+      "before": "b17667856fa9053c7811a09ec358aecca1092b3e89e7bb9ff71adb04e4863504",
+      "after": "57b8b8907d2c07579c0f27224b44025b259c605f0cf092c6662b65e7d358a871"
+    },
+    "tools/bootcamp/normal-failure-wait.mjs": {
+      "before": "fb848f67f4bed8fcde9b68e800e6bd68c6acefea54f8ecaf75455dfcd8ac1b44",
+      "after": "7b443260e7d5ea21dd3d9f09af3a44e392b4c839f38f20d10a4e7108e314b4e3"
+    },
+    "tools/bootcamp/normal-reflection-run.mjs": {
+      "before": "22de4bce4fb8fca0f723a32baf115c5f4f0a89155979418ea89037674a132689",
+      "after": "d763963d8e16c11d5cae7a382125d53da9d31f1ef6a6b555fdc44abd378d3d9b"
+    }
+  },
+  "boundary": {
+    "fixedParentAndChildValidatedSeparately": true,
+    "sharedPrivateStorageUnchanged": true,
+    "rawExceptionOrPathPersisted": false,
+    "originalApprovalAndDeadlinesPreserved": true,
+    "automaticRetry": false,
+    "productionEnabled": false,
+    "actualExecution": false
+  }
+}

@@ -20,7 +20,7 @@ test('only the separately designated native cost approver can record one exact U
  assert.throws(()=>x.control.approve(x.actor,x.app,x.body(),'test-ai-second'),/ALREADY_RECORDED/);
  assert.deepEqual(x.counts(),{fetches:0,keys:0});
  const response=await x.run();assert.equal(response.report.status,'RECEIVED_CURRENT');response.close();
- assert.deepEqual(x.counts(),{fetches:1,keys:1});await assert.rejects(x.run(),/SPENT|RECOVERY/);
+ assert.deepEqual(x.counts(),{fetches:1,keys:1});await assert.rejects(x.run(),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);
  assert.deepEqual(x.counts(),{fetches:1,keys:1});
 });
 
@@ -102,14 +102,14 @@ test('a partial approval record is retained and cannot be overwritten or retried
 test('changed exact text after approval stops without a wire call; its spent reservation cannot be reused',async t=>{
  const x=await normalApprovalFixture(t);x.control.approve(x.actor,x.app,x.body(),'test-ai-original');x.source.text='invented changed text';
  const result=await x.run();assert.notEqual(result.report.status,'RECEIVED_CURRENT');result.close();
- assert.deepEqual(x.counts(),{fetches:0,keys:0});await assert.rejects(x.run(),/SPENT|RECOVERY/);
+ assert.deepEqual(x.counts(),{fetches:0,keys:0});await assert.rejects(x.run(),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);
 });
 
 test('unknown provider response remains one spent call and never enables another UI approval',async t=>{
  const x=await normalApprovalFixture(t);x.control.approve(x.actor,x.app,x.body(),'test-ai-original');x.setUnknown();
  const result=await x.run();assert.equal(result.report.dispatchStatus,'UNKNOWN_STOPPED');result.close();
  assert.deepEqual(x.counts(),{fetches:1,keys:1});assert.throws(()=>x.control.approve(x.actor,x.app,x.body(),'test-ai-retry'),/ALREADY_RECORDED/);
- await assert.rejects(x.run(),/SPENT|RECOVERY/);assert.deepEqual(x.counts(),{fetches:1,keys:1});
+ await assert.rejects(x.run(),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);assert.deepEqual(x.counts(),{fetches:1,keys:1});
 });
 
 test('a controlled 30-second model timeout cannot accept a late response or dispatch again',async t=>{
@@ -120,6 +120,6 @@ test('a controlled 30-second model timeout cannot accept a late response or disp
  const pending=x.run();await started;x.advance(30);t.mock.timers.tick(30000);
  const result=await pending;assert.notEqual(result.report.status,'RECEIVED_CURRENT');result.close();
  release();await new Promise(r=>setImmediate(r));t.mock.timers.reset();
- assert.deepEqual(x.counts(),{fetches:1,keys:1});await assert.rejects(x.run(),/SPENT|RECOVERY/);
+ assert.deepEqual(x.counts(),{fetches:1,keys:1});await assert.rejects(x.run(),/SPENT|RECOVERY|NORMAL_RESUME_BLOCKED/);
  assert.equal(x.packet.leaseExpiresAtMs,x.source.context.issuedAtMs+240000);
 });

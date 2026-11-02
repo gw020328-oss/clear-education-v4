@@ -1,3 +1,21 @@
+## 제품 HTTPS checkpoint 경로 (2026-11-01 후속)
+
+제품 frontend-server와 브라우저 createSameOriginApi 전송 계층은 기존 recipient-registration GET의 단일 `?checkpoint=<encoded JSON>`을 전달한다. 이 경로만 URL-safe 인코딩 값 1–768자로 허용하고, 다른 query·중복 파라미터·다른 경로·POST query·fragment는 계속 거부한다. 기존 하위 handler의 256자/정확한 number·hash·time 파서, 인증/소유자·canonical 연속성·CAS 검사는 그대로 수행한다. `BC_NOT_FOUND`/`API_ORIGIN`은 등록 실패 UI의 고정 코드 허용 목록에 추가되어 PRE_SIGN_READ 단계의 route/전송 거부를 원문 없이 구분한다. 브라우저 전송 계층은 해당 등록 경로의 고정 HTTP status/error만 안전한 `.code`로 보존하며, UI는 허용 목록의 `.code`를 사용한다. 기존 HTTP `.message` 호환성과 다른 경로의 오류 가림은 유지한다.
+
+## 수령 등록 관측 갱신 (2026-11-01 후속)
+
+기존 `GET /bootcamp/v3/applications/:id/recipient-registration`은 서명 전후 확인용으로 선택적 `checkpoint` JSON query를 받는다. 정확한 `{number,hash,time}`와 최대 256자만 허용한다. 인증/소유자 검사를 유지하고, 원래 관측 블록이 현재 canonical 체인의 조상임을 기존 reader로 확인한 경우만 `checkpointContinuity: {status: CANONICAL_ANCESTOR, from, to}`를 반환한다. 재조직·블록 회귀·누락·불확실한 결과·이미 등록된 체인은 서명용 확인에서 거부한다. RPC 뒤 인증과 등록 대상/결정/CAS를 다시 확인한다. query 없는 조회는 기존 표시 응답을 유지한다.
+
+지갑 서명기는 `observedAt`, `checkpoint`, 검증된 `checkpointContinuity`만 관측 메타데이터로 분리한다. 전체 EIP-712 payload, 신청 ID, 등록 대상, application revision, ledger sequence, decision ID/revision/hash 및 나머지 서버 필드는 동일해야 한다. chain/instance/contract/policy/runtimeMapping/participant/recipient/nonce/deadline 결합과 기존 POST CAS·재사용 방지는 유지한다. 서명 전후 canonical/NOT_REGISTERED, signatureAccepted=false, 미등록 recipient/sequence, 정확한 chainApplicationId를 요구한다. 기한을 갱신하지 않는다.
+
+UI 실패 안내는 `READ_CONTENT`, `VERIFY_CONTEXT`, `PRE_SIGN_READ`, `WALLET_REQUEST`, `POST_SIGN_READ`, `SUBMIT` 등 고정 단계와 허용 목록의 오류 코드만 표시한다. 원문 예외·토큰·서명·stack은 표시하거나 기록하지 않는다. POST 응답 불명확 시 기존 재서명/재전송 차단을 유지한다.
+
+2026-11-01 수령 등록 대기: 같은 `/resume`에서 `RECIPIENT_WAIT_NOT_SENT` 체크포인트를 조건부 재개한다. 기존 등록 target·기한을 보존하고 지급 함수 재호출·AI/원천 반복은 없다. [상세 계약](BOOTCAMP_REFLECTION_RESUME.ko.md)의 수령 등록 대기 절을 따른다.
+
+2026-10-31 후속 [회고 수동 재개 계약](BOOTCAMP_REFLECTION_RESUME.ko.md): 실패 session 응답에 `failureRevision/applicationRevision/resumeAllowed/recoveryStatus`를 추가한다. 운영자의 `POST /bootcamp/v4/applications/:id/resume`만 조건부 허용하며 body는 `failureRevision/expectedRevision`이다. 영수증은 완료 응답 유실 시에도 기존 거래의 canonical transfer를 별도 측정으로 표시할 수 있다.
+
+2026-10-31 정상 TEST 호스트의 [실패 대기 계약](BOOTCAMP_FAILURE_WAIT.ko.md): 알려진 단계 실패 뒤 세션 GET·영수증 조회와 유효 인증을 유지한다. 제품 POST는 `BC_NORMAL_FAILED_WAITING`/409로 차단하며, UNKNOWN을 재시도 허가로 해석하지 않는다. 로그아웃·만료·회수·지갑 변경 검사는 유지한다.
+
 # 프론트·백엔드 연결 계약 — B2b 합성 수락·공통 오류 복구 기준
 
 2026-10-27 PR117 연결 기준: S4 [판정 근거 GET·normal-client 계약](BOOTCAMP_S4_DECISION_EVIDENCE.ko.md)과 캐시 소비 전 canonical 갱신·조회 요청 최종 검증 보정을 포함한다. 최종 검증 HEAD·CI·develop 병합 SHA는 [PR117](https://github.com/gw020328-oss/clear-education-v4/pull/117)과 [Issue106 최상단](https://github.com/gw020328-oss/clear-education-v4/issues/106)을 기준으로 한다. 기존 PR115/PR116의 V2/S3는 보존한다. S5 제품 호스트의 V2/S3 경로 연결·화면·실제 제품 완주는 남아 있다.

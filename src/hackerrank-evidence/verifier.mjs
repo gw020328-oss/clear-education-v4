@@ -1,3 +1,4 @@
+import {validateSelfProfile} from './self-profile.mjs';
 import {assertValidClaimSignatures,getIdentifierFromClaimInfo,hashProviderParams} from '@reclaimprotocol/attestor-core';
 import {check,keys,canonical,freeze,hash,privateHash,isAddress,isId,isHash,isSourceId,epoch,strictJson,EvidenceError} from './values.mjs';
 import {CAPABILITY,CRITERION,verifyParticipant,validateRequest,requestHash} from './request.mjs';
@@ -9,7 +10,9 @@ const blocked=()=>freeze({version:'clear-hackerrank-candidate.1',status:'BLOCKED
 export function createHackerRankVerifier({trustConfig,commitmentKey,clock}={}){
  if(!trustConfig||trustConfig.status!=='REVIEWED')return {verify:async()=>blocked(),recheck:()=>{throw new EvidenceError('TRUST_NOT_CONFIGURED');}};
  const config=freeze(structuredClone(trustConfig));
- keys(config,['version','status','dataMode','approvalRef','sourceReview','contextReview','audience','notBefore','expiresAt','signers','epochs','recipe','privacyKeyId'],'TRUST_SHAPE');
+ keys(config,['version','status','dataMode','approvalRef','sourceReview','contextReview','audience','notBefore','expiresAt','signers','epochs','recipe','privacyKeyId',...(config.selfAttestor?['selfAttestor']:[])],'TRUST_SHAPE');
+ if(config.selfAttestor){validateSelfProfile(config.selfAttestor);check(config.dataMode==='RECLAIM_SIGNED_RECORD'&&config.approvalRef==='clear-self-attestor-test.1'&&canonical(config.signers)===canonical([config.selfAttestor.signer]),'SELF_TRUST');}
+ else check(config.approvalRef!=='clear-self-attestor-test.1','SELF_TRUST');
  check(config.version==='clear-hackerrank-trust.1'&&isId(config.audience)&&isId(config.approvalRef)&&isId(config.privacyKeyId),'TRUST_VERSION');
  const synthetic=config.dataMode==='SYNTHETIC_FIXTURE';
  const worker=usesWorkerSource(config.recipe);

@@ -1,0 +1,60 @@
+{
+  "version": "clear-failure-wait-source-delta.1",
+  "candidateHead": "31215f93e8cb4a848b74628ec60dc0cad4910239",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-review-window-source-delta-v1.json",
+    "sha256": "a609096c8419e6a70862fe008653fc603b000ce80a8c4e1f9fef6022a13a1bdf",
+    "guardHead": "893903aca197669a5063ceb8cdc5502c0746679d"
+  },
+  "changes": {
+    "src/bootcamp/execution-diagnostics.mjs": {
+      "before": "a5e27acd0ff8e87bdd3e93b2d4251b29ec1e8a14736ad88f74f00e46bb09d311",
+      "after": "acd15b9e98ad19470227c3523bac69caf4bca36bc84bd8537f7f349fc4c3e6e4"
+    },
+    "src/bootcamp/http.mjs": {
+      "before": "39cb7bd2a6c13006c96ec67cc360b10f283be4d8f960fb715737533434f162b9",
+      "after": "e1c1d367ae1f9223463a45bbe417defff1f5ae934d5c06a0764a7d15ad984388"
+    },
+    "src/embedded-wallet/product-panel.jsx": {
+      "before": "754d7dfcb2728e1633b345453fc772f71278252a67a646511eb22c2516a72a18",
+      "after": "e3447d834f0ca8bf73940707280bdcf890a49b08dffa4f751012a049233c7cfa"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "f3acb880a1ffb588eec185dbfac032f7688a51c670b6395214052ae5066ea25b",
+      "after": "f1be6b2b80dfc2f08322b1208a10651b940e4c0819944d1acb0216b55cc6f9a0"
+    },
+    "tools/bootcamp/normal-host-flow.mjs": {
+      "before": "7281d255c2c13f06329f744e81bff516b653c19d036a9fae82fce9a4a89d87d6",
+      "after": "66905c77a7b3559a48e92361f428d27f57ad31dd864169ee68d0d34361040e68"
+    },
+    "tools/bootcamp/normal-host-worker.mjs": {
+      "before": "69bcdb09ed91658922e4e7205a826f54479a45582ddfb8c75428c3639cdbf368",
+      "after": "89324b7427052c545cf69133d2fcc027e6a5fe9cf0761c476efa77ed2235f926"
+    },
+    "tools/bootcamp/normal-source-sequence.mjs": {
+      "before": "f430e203ed014f56a81ba14cc71563c112577eb1bb2ddd634a7400e5adf8a643",
+      "after": "b6536566af7f8dac4ad92ce71ef9b8a7161672a6430f8fd88c0e345c1c3e0aa8"
+    },
+    "tools/bootcamp/test-client/driver.js": {
+      "before": "ced3491d432e4aa31e6e5d578a18de856d1dfa1d7bf5c0fb00f955986370e8bf",
+      "after": "0c03ec308340072d7a83bb4976f9a9963f558975893798215e39bb0feae1c6a6"
+    },
+    "tools/bootcamp/test-client/review-window.js": {
+      "before": "c852be52294854c3073e46acb556645aa89a7d2bc15e55d15f05e63b5a0b7708",
+      "after": "3e10c9faa0c298e4f569584eaf84e53d89c08c13ecbb35ebf6bb61bb8ed9761d"
+    }
+  },
+  "sourceAdditions": {
+    "tools/bootcamp/normal-failure-wait.mjs": "eb2a63e1d2a66d8e61436dfbcb6c360ac41935eb724b43d12f0542be4c219853"
+  },
+  "boundary": {
+    "authenticatedReadOnlyWait": true,
+    "allProductWritesBlocked": true,
+    "sourceResourcesReleased": true,
+    "originalAuthExpiryPreserved": true,
+    "existingDeadlinesExtended": false,
+    "automaticRetry": false,
+    "productionEnabled": false,
+    "actualExecution": false
+  }
+}

@@ -1,3 +1,4 @@
+import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs';
 // Prepare identity and a new TEST realm; no source collection, model call or allocation.
 import {mkdirSync,readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
@@ -11,7 +12,8 @@ import {createApplicationService} from '../../src/application/service.mjs';
 import {LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 const now=()=>Math.floor(Date.now()/1000);
-export async function prepareLiveInput({hackerRankPins=null,identityPreparationPath=null,uiIdentity=null,executionVersion=2}={}){
+export async function prepareLiveInput({hackerRankPins=null,attestorMode='OFFICIAL',identityPreparationPath=null,uiIdentity=null,executionVersion=2}={}){
+ requireProfileMode(hackerRankPins?.selfAttestor,attestorMode,attestorMode==='SELF_ATTESTOR_TEST'?hackerRankPins?.selfAttestor:null);
  if(![1,2].includes(executionVersion))throw Error('E5_EXECUTION_VERSION');
  if(uiIdentity){
   const u=new URL(uiIdentity.origin);
@@ -36,7 +38,7 @@ export async function prepareLiveInput({hackerRankPins=null,identityPreparationP
  if(!uiIdentity)atomicPrivate(join(directory,'test-roles.json'),{instanceId,participant:participant.privateKey,operator:operator.privateKey},{exclusive:true});
  const {report,reportHash}=JSON.parse(readFileSync(new URL('../../spikes/moodle-review-api/e6/mapping-report.json',import.meta.url)));
  if(reportHash!==p0Hash('E6-FIXTURE-REPORT',report)||reportHash!=='0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28')throw Error('BC_LIVE_OWNER_PIN');
- const mapping={version:'clear-bootcamp-normal-runtime-mapping.1',revision:1,policyHash:p0PolicyHash(P0_POLICY),participantWallet:participant.address.toLowerCase(),
+ const mapping={version:'clear-bootcamp-normal-runtime-mapping.1',revision:1,...(hackerRankPins?.selfAttestor?{selfAttestor:hackerRankPins.selfAttestor}:{}),policyHash:p0PolicyHash(P0_POLICY),participantWallet:participant.address.toLowerCase(),
   sourceScope:'LOCAL_GENERATED_DEMO_ACCOUNT_NOT_REAL_IDENTITY',environmentRef:report.environmentRef,runRef:report.runRef,sourceVersion:report.sourceVersion,apiVersion:report.apiVersion,fixtureReportHash:reportHash,courseId:report.courseId,
   targets:{activity:report.activity,assignment:report.assignment,reflection:report.reflection},completionSetupReceiptHash:report.completionSetupReceiptHash,
   moodleUserId:3,accountBindingRef:'normal-demo-user3',hackerRank:{certificateName:'Python (Basic)',...(hackerRankPins?{trustStatus:'REVIEWED',audience:hackerRankPins.audience,trustConfigHash:hackerRankPins.trustConfigHash,recipeHash:hackerRankPins.recipeHash,expectedClaimOwner:hackerRankPins.expectedClaimOwner}:{trustStatus:'UNCONFIGURED_BLOCKED'})}};

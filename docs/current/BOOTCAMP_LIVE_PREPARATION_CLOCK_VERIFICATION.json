@@ -1,0 +1,98 @@
+{
+  "version": "clear-live-preparation-clock-verification.1",
+  "baseHead": "a8d5f88f686d20091fe66845f1d6a51d199eebd0",
+  "actualRun": {
+    "inspection": "READ_ONLY_RETAINED_REPORT_AND_SQLITE_METADATA",
+    "preserved": true,
+    "freshChainRead": false,
+    "completed": false,
+    "lastIncludedStage": "BIND_CONSENTS",
+    "failureStep": "PREPARE_AUTHORIZATION",
+    "storedFailureCode": "UNCLASSIFIED",
+    "preparedRows": 0,
+    "consents": 2,
+    "transactionSignatures": 4,
+    "paymentSignatures": 0,
+    "broadcasts": 4,
+    "originalReviewExpiryKst": "2026-11-01T16:39:15+09:00",
+    "resumeAllowed": false
+  },
+  "reproduction": {
+    "beforeFix": "REAL_CLOCK_REQUIRED at procedure commit after four included transactions",
+    "actualCauseAssessment": "CODE_AND_MATCHING_PATH_REPRODUCTION; original raw exception was not retained",
+    "additionalFailure": "B_SEAL_REQUEST crossed a second before native sealing",
+    "parallelRun": "source producer timed out while broad regression/native tests ran concurrently; no timeout changed; serialized rerun passed"
+  },
+  "checks": [
+    {
+      "command": "LOG_LEVEL=silent ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/bootcamp-execution/*.test.mjs tests/bootcamp-store/*.test.mjs tests/bootcamp-authorization/*.test.mjs",
+      "passed": 1031,
+      "failed": 0
+    },
+    {
+      "command": "CLEAR_REGISTERED_PAYMENT_TEST=1 LOG_LEVEL=silent ./tools/node --test tests/hackathon-test-vault/e5b/registered-product-payment.test.mjs",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "CLEAR_SEAL_REQUEST_TEST=1 LOG_LEVEL=silent ./tools/node --test tests/hackathon-test-vault/e5b/seal-request-clock.test.mjs",
+      "passed": 7,
+      "failed": 0,
+      "followup": "Original 60-second worker lease expiry narrowed to +61 seconds; targeted native case passed 1/1 with BC_E5_FENCED, zero additional keys/signatures/broadcasts."
+    }
+  ],
+  "rehearsal": {
+    "storeMode": "ISOLATED_LIVE_TEST",
+    "sourceMode": "REGISTERED_TEST_SOURCE",
+    "clock": "REAL_WALL_CLOCK",
+    "productHttpsMount": true,
+    "browserApiClient": true,
+    "productRegistrationSigningAdapter": true,
+    "registeredLiveConsumers": true,
+    "managedAiBindingAndJournal": true,
+    "nativeAuthorityControllerRelayer": true,
+    "chain": "FRESH_ISOLATED_GETH_V2_ONE_SECOND_BLOCKS",
+    "sequence": [
+      "REGISTER",
+      "ALLOCATE",
+      "START_REVIEW",
+      "BIND_CONSENTS",
+      "PREPARE",
+      "ACCEPT",
+      "SEPARATE_CLAIM"
+    ],
+    "canonicalReceipt": true,
+    "finalized": false,
+    "amountAtoms": "100000000",
+    "duplicateRejected": true,
+    "paymentSignatures": 1,
+    "nativeBroadcastsExcludingClaimAndSetup": 6,
+    "registrationSignatureRequests": 1,
+    "registrationPosts": 1,
+    "anchoredRegistrationGets": 2,
+    "consentPosts": 2
+  },
+  "substitutions": {
+    "moodle": "INVENTED_API_RECORDS",
+    "hackerrank": "SYNTHETIC_HTTPS_SELF_ATTESTOR",
+    "ai": "INTERCEPTED_HTTP_RESPONSE_AND_INVENTED_APPROVAL_WITH_DUMMY_KEY",
+    "wallet": "FRESH_TEST_EOA"
+  },
+  "limits": {
+    "actualLogin": false,
+    "privySdkOrMetaMaskUi": false,
+    "normalHostUserBootstrap": false,
+    "externalPaidAiCalls": 0,
+    "actualUserPayment": false,
+    "officialHostedAttestor": false,
+    "independentTrust": false,
+    "publicChain": false,
+    "originalDeadlinesExtended": false,
+    "automaticWriteRetry": false,
+    "contractOrDbSchemaChanged": false,
+    "merged": false
+  },
+  "ci": "MUST_CHECK_EXACT_FINAL_PR_HEAD; local results do not imply CI success",
+  "sourcePinGeneration": 53,
+  "reviewedSourceCount": 192
+}

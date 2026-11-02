@@ -57,9 +57,10 @@ export function createNormalReflectionApproval({directory,config,authorize,getPr
       const actor=authorize(context,false),code=currentCodeState();let authority=null;
       try{authority=readNormalAiAuthority({directory,config,codeHead:code.head});}catch{}
       if(!getPreparation()||!existsSync(paths.request)||!existsSync(paths.template))return null;
-      const {request,m,p}=current(),partial=existsSync(paths.evidence)&&!existsSync(paths.approval),
+      const {preparation,request,m,p}=current(),partial=existsSync(paths.evidence)&&!existsSync(paths.approval),
         recorded=existsSync(paths.approval)||partial||existsSync(paths.spent);
-      const remainingMs=p.leaseExpiresAtMs-nowMs();
+      const approvalWindowEndsAtMs=Math.min(preparation.approvalWindowEndsAtMs??Infinity,p.leaseExpiresAtMs-REVIEW_WINDOW.beforeModelSeconds*1000);
+      const remainingMs=approvalWindowEndsAtMs-nowMs();
       let screensReady=false;try{requireReaders();screensReady=true;}catch{}
       return Object.freeze({version:'clear-normal-exact-ai-approval-display.1',applicationId:m.applicationId,
         hostRunId:m.runId,bodySha256:p.bodySha256,inputHash:p.inputHash,planHash:p.planHash,contextHash:p.contextHash,
@@ -68,12 +69,12 @@ export function createNormalReflectionApproval({directory,config,authorize,getPr
         maxGenerationCalls:1,maxCountCalls:0,automaticRetries:0,continuations:0,fallbacks:0,
         scenarioUsd:'0.00346',hardCashCapVerified:false,invoiceVerified:false,costAcknowledgment:NORMAL_REFLECTION_COST_ACK,
         paymentConsentIncluded:false,leaseExpiresAtMs:p.leaseExpiresAtMs,observedAtMs:nowMs(),
-        approvalWindowEndsAtMs:p.leaseExpiresAtMs-REVIEW_WINDOW.beforeModelSeconds*1000,
+        approvalWindowEndsAtMs,
         minimumRemainingBeforeModelSeconds:REVIEW_WINDOW.beforeModelSeconds,
         authorityConfigured:!!authority,approvalWallet:authority?.wallet??null,reviewScreensReady:screensReady,
         permitted:!!authority&&actor.wallet.toLowerCase()===authority.wallet&&!recorded&&screensReady
-          &&remainingMs>=REVIEW_WINDOW.beforeModelSeconds*1000,
-        status:partial?'PARTIAL_STOPPED':recorded?'RECORDED':remainingMs<REVIEW_WINDOW.beforeModelSeconds*1000?'INSUFFICIENT_REVIEW_WINDOW':'WAITING'});
+          &&remainingMs>=0,
+        status:partial?'PARTIAL_STOPPED':recorded?'RECORDED':remainingMs<0?'INSUFFICIENT_REVIEW_WINDOW':'WAITING'});
     },
     approve(context,applicationId,body,key){
       const actor=authorize(context,true),code=currentCodeState();

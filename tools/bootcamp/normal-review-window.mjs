@@ -12,6 +12,8 @@ export function requireNormalReviewWindow(deadline,asOf,minimumSeconds=REVIEW_WI
 export function requireNormalModelWindow(prepared,nowMs=Date.now()){
   check(prepared?.isCurrent()===true,'BC_LIVE_AI_PREPARATION_STALE');
   const expiry=prepared.packet?.leaseExpiresAtMs;
+  if(prepared.approvalWindowEndsAtMs!==undefined)check(Number.isSafeInteger(prepared.approvalWindowEndsAtMs)
+    &&nowMs<=prepared.approvalWindowEndsAtMs,'BC_NORMAL_REVIEW_WINDOW_REQUIRED');
   check(Number.isSafeInteger(expiry)&&Number.isFinite(nowMs)
     &&expiry-nowMs>=REVIEW_WINDOW.beforeModelSeconds*1000,'BC_NORMAL_REVIEW_WINDOW_REQUIRED');
 }

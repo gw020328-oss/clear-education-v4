@@ -53,7 +53,7 @@ export function createNormalBootcampClient({request}){
     &&(decisionId===undefined||r.manifest.decision?.decisionId===decisionId)
     &&/^0x[0-9a-f]{64}$/.test(r.manifest.decision?.decisionHash)&&/^0x[0-9a-f]{64}$/.test(r.manifestHash)
     &&r.limitations?.usableForPayment===false&&r.limitations.liveSourceChecked===false,'BC_NORMAL_DECISION_EVIDENCE');return copy(r);},
-  async recipientRegistration(a,{signal}={}){id(a);const r=await request(base(a)+'/recipient-registration',{signal});
+  async recipientRegistration(a,{signal,checkpoint}={}){id(a);const suffix=checkpoint===undefined?'':'?checkpoint='+encodeURIComponent(JSON.stringify(checkpoint));const r=await request(base(a)+'/recipient-registration'+suffix,{signal});
    check(r?.version==='clear-bootcamp-recipient-registration.1'&&r.applicationId===a&&r.purpose==='REGISTER_FIXED_RECIPIENT'&&r.calldataPublic===true,'BC_NORMAL_RECIPIENT_REGISTRATION');return r;},
   async submitRecipientRegistration(a,packet,signature,{idempotencyKey,signal}={}){id(a);
    check(packet?.applicationId===a&&packet.status==='AWAITING_SIGNATURE'&&packet.role==='PARTICIPANT','BC_NORMAL_RECIPIENT_REGISTRATION');

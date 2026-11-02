@@ -1,0 +1,61 @@
+{
+  "version": "clear-review-window-source-delta.1",
+  "candidateHead": "229ae11b208c45ee60ad1abdce26a33ac1f675ed",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-memory-source-intake-v44.json",
+    "sha256": "6c05e278173d5af0e6094d0784ff34b28d89b56afdc590f1a6bc1d048ca593d9"
+  },
+  "changes": {
+    "src/bootcamp-authorization/test-encoding-v3.mjs": {
+      "before": "e348a687265fd89c9a98e977dc20d213ed87bf4169da2063b8b68279a2ce9d7f",
+      "after": "052a01d984675f45d780b8fb375dcf8ee9ae045dee0c4520891dc093383fe5f7"
+    },
+    "src/bootcamp/model.mjs": {
+      "before": "92aad7b638597573b96da1c5ecc1b5560ef8388e86ca0c3f3bcd77a59037195e",
+      "after": "548a427ff583c18c611082c0ea52f48ae04415683f462e07d7ad31777dd3e621"
+    },
+    "src/bootcamp/moodle-live-consumer.mjs": {
+      "before": "1e557044970be12940242a58e1102f29d21e3cea53670b97c85dd52c7b26b104",
+      "after": "1a166af83b7dd915ebae771bd845100333b80425e842c734c4f8d60b569db0ea"
+    },
+    "src/bootcamp/procedure-ports.mjs": {
+      "before": "7422fde775f10ffe07dfa599f2fcc7656f76042e43800d97f2eae0c821bfb4b3",
+      "after": "fd3e617221ca59835213c261781a9409694fff787cb17221893855ecc7e14a86"
+    },
+    "src/bootcamp/store.mjs": {
+      "before": "31fc5000c74bea102913d8f0fc4a3b604fc7565cc579b8e8376b19611a680fbe",
+      "after": "2397b8f4621cec9cf8eaca63c021a8b986dd3d1afadd014b57e14f5c34ffd859"
+    },
+    "src/review-evidence/moodle/bootcamp.mjs": {
+      "before": "0e77c68c856163c9f50a5d7b3e5ab0c159ae1a2bd1dbf6262c771d9d34bc2e98",
+      "after": "963026742f406de07b6a5cb9c0c26c4282dee99eee9ff29035b140dcfbd0d864"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "27e79dbff7fc3be6517b5fb5fd79cfb2291ec90cdca802d1c607f0c821d9fdd6",
+      "after": "f3acb880a1ffb588eec185dbfac032f7688a51c670b6395214052ae5066ea25b"
+    },
+    "tools/bootcamp/normal-reflection-approval.mjs": {
+      "before": "435d9f1519f4be26d74c47f2a50bdc9219e9bfd454ec7aae37a0e20ba97aea77",
+      "after": "ab35bd6ca939c276382e74962c5c03fd37ba76a7283ccbf2c75663c30355e0f2"
+    },
+    "tools/bootcamp/normal-review-window.mjs": {
+      "before": "9232bbe4b66ff96c05223e32e1e5eebfcf806f86ddbc6ceb37803bb4e447a70c",
+      "after": "3efe5383659dbb9893a00c8d603a43c2307580699ec3351eeaef3e81f37bfa9e"
+    },
+    "tools/bootcamp/normal-source-sequence.mjs": {
+      "before": "43e6a29dc3d00c60bd2f603a633d4787299059933ac7df2145089a040fe639df",
+      "after": "f430e203ed014f56a81ba14cc71563c112577eb1bb2ddd634a7400e5adf8a643"
+    },
+    "src/bootcamp/decision-evidence.mjs": {
+      "before": "8129bc0254d63ba19828f1122412c234a6a6e2f007512a0ef165cb9079b72fb9",
+      "after": "261bdba071f98df65373c67256a1ac87d95d45a0968346df30212827be7b007e"
+    },
+    "src/embedded-wallet/product-panel.jsx": {
+      "before": "bafcd0c3c4d75eafeb5805fea31c9bca9625d08411bc7cd0267221a21824c385",
+      "after": "754d7dfcb2728e1633b345453fc772f71278252a67a646511eb22c2516a72a18"
+    }
+  },
+  "existingDeadlinesExtended": false,
+  "automaticRetry": false,
+  "productionEnabled": false
+}

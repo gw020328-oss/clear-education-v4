@@ -1,3 +1,5 @@
+import {assertSelfRuntime} from '../../tools/local-attestor-review/host.mjs';
+import {requireProfileMode,SELF_MODE} from './self-profile.mjs';
 import {observeSource} from './diagnostics.mjs';
 import {openOfficialClient} from '../ybm-collector/client.mjs';
 import {createRoute} from '../ybm-collector/route.mjs';
@@ -14,7 +16,7 @@ import {check,freeze,isSourceId,EvidenceError} from './values.mjs';
 // worker still owns stopRecordedBrowser + removeSession after this settles.
 export async function withManagedHackerRankSource(session,{
  trustConfig,commitmentKey,selectedCertificateId=null,waitForReady,useSource,signal,diagnostics,
- openClient=openOfficialClient,openRoute=createRoute,launchBrowser=startChrome,
+ selfAttestor=null,openClient=openOfficialClient,openRoute=createRoute,launchBrowser=startChrome,
 }={}){
  if(trustConfig?.status!=='REVIEWED')return freeze({status:'BLOCKED',code:'TRUST_NOT_CONFIGURED',proofVerified:false,paymentAllowed:false});
  let config,key,connection,route,browser,source,live,onAbort;
@@ -22,6 +24,8 @@ export async function withManagedHackerRankSource(session,{
  try{
   config=freeze(structuredClone(trustConfig));
   check(config.dataMode==='RECLAIM_SIGNED_RECORD','LIVE_SOURCE_REQUIRED');
+  requireProfileMode(config.selfAttestor,selfAttestor?SELF_MODE:'OFFICIAL',selfAttestor?.profile);
+  if(selfAttestor){assertSelfRuntime(selfAttestor,config.selfAttestor);check(openClient===openOfficialClient,'SELF_CLIENT_OVERRIDE');}
   check(process.env.CLEAR_LOCKED==='1','LOCKED_LAUNCHER_REQUIRED');
   check(session&&typeof session.path==='string'&&Number.isSafeInteger(session.expiresAt)&&session.expiresAt>Date.now(),'COLLECTOR_SESSION');
   check(typeof waitForReady==='function'&&typeof useSource==='function','COLLECTOR_HOST_PORTS');
@@ -33,8 +37,8 @@ export async function withManagedHackerRankSource(session,{
   check(Math.floor(Date.now()/1000)>=config.notBefore&&duration>0,'TRUST_EXPIRED');
   const scope=AbortSignal.any([signal,cancelled.signal,AbortSignal.timeout(duration)].filter(Boolean));
   scope.throwIfAborted();process.env.LOG_LEVEL='silent';
-  connection=await openClient({signal:scope,proofMode:true});scope.throwIfAborted();
-  route=await openRoute({client:connection.client,signal:scope,allowHost:host=>['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d))});
+  connection=await (selfAttestor?selfAttestor.openClient:openClient)({signal:scope,proofMode:true});scope.throwIfAborted();
+  route=await openRoute({client:connection.client,signal:scope,allowHost:host=>selfAttestor?config.selfAttestor.hosts.includes(host):['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d))});
   const browserEnded=new AbortController();
   live=AbortSignal.any([scope,route.signal,browserEnded.signal]);live.throwIfAborted();
   browser=await launchBrowser(session,{synthetic:false,proxyUrl:route.proxyUrl,headless:false,signal:live});

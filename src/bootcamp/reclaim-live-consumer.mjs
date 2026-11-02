@@ -1,4 +1,5 @@
 // Receipt-only bridge: raw proof, cookies and attestor owner keys stay with P1.
+import {requireProfileMode,SELF_MODE} from '../hackerrank-evidence/self-profile.mjs';
 import {randomUUID} from 'node:crypto';
 import {freeze,exactKeys,requireRule as check} from '../policy/values.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
@@ -18,15 +19,15 @@ const consumers=new WeakSet();
 export const isLiveReclaimConsumer=value=>consumers.has(value);
 export function translateLiveReclaimRequest(r,p){
  check(r.version==='clear-bootcamp-bound-request.2'&&r.producerVersion===BRIDGE_VERSION&&r.dataMode==='RECLAIM_SIGNED_RECORD','BC_LIVE_HR_REQUEST');
- exactKeys(p,['audience','trustConfigHash','recipeHash','expectedClaimOwner','selectedCertificateId','dataMode'],'BC_LIVE_HR_PINS');
+ exactKeys(p,['audience','trustConfigHash','recipeHash','expectedClaimOwner','selectedCertificateId','dataMode',...(p.selfAttestor?['selfAttestor']:[])],'BC_LIVE_HR_PINS');
  check(p.dataMode==='RECLAIM_SIGNED_RECORD'&&r.producerTrustHash===p.trustConfigHash,'BC_LIVE_HR_TRUST');hash(p.recipeHash);hash(p.trustConfigHash);id(p.audience);
  return freeze({version:'clear-hackerrank-request.1',audience:p.audience,participantId:r.participantId,participantWallet:r.participantWallet,applicationId:r.applicationId,
   criterionId:r.criterionId,policyHash:r.policyHash,runtimeMappingHash:r.runtimeMappingHash,trustConfigHash:p.trustConfigHash,recipeHash:p.recipeHash,expectedClaimOwner:p.expectedClaimOwner,
   nonce:r.nonceHash,issuedAt:r.issuedAt,expiresAt:r.expiresAt,selectedCertificateId:p.selectedCertificateId});
 }
-export function createLiveReclaimConsumer({pins=()=>null,collectLease,resolveLease=()=>null,now=()=>Math.floor(Date.now()/1000)}={}){
+export function createLiveReclaimConsumer({pins=()=>null,collectLease,selfAttestor=null,resolveLease=()=>null,now=()=>Math.floor(Date.now()/1000)}={}){
  const issued=new WeakMap(),published=new Map(),owned=new Set(),generation='lease-'+randomUUID();let closed=false;
- const currentPins=()=>{const p=pins();return p?.dataMode==='RECLAIM_SIGNED_RECORD'&&p.recipeHash===LIVE_WORKER_RECIPE_HASH?structuredClone(p):null;};
+ const currentPins=()=>{const p=pins();if(p)requireProfileMode(p.selfAttestor,selfAttestor?SELF_MODE:'OFFICIAL',selfAttestor);return p?.dataMode==='RECLAIM_SIGNED_RECORD'&&p.recipeHash===LIVE_WORKER_RECIPE_HASH?structuredClone(p):null;};
  function guard(r){const p=currentPins(),l=resolveLease(r);check(!closed&&p&&l?.available===true&&now()<Math.min(l.authExpiresAt,l.rawExpiresAt,l.queryExpiresAt),'BC_LIVE_HR_AUTHORITY');return {p,l};}
  function resolveSource(r){let e=published.get(r.applicationId);let p,l;
   try{({p,l}=guard(r));if(e){readHackerRankCollectorLease(e.lease);check(e.isAuthorized()===true&&p0Hash('P1-PINS',p)===e.pinsHash,'BC_LIVE_HR_AUTHORITY');}}

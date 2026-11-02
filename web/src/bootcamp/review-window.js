@@ -1,8 +1,8 @@
 // 검토 창과 버튼 게이트 — **백엔드 제공본 복사**
 //
 // 원본   tools/bootcamp/test-client/review-window.js
-// 출처   origin/develop @ 3374c383e585f26ea712911ac6be5b6ac44c0a56 (2026-10-24)
-// 복사   2026-10-28
+// 출처   PR131 @ ad5416e04e379aca2eac1d1590167690ab080d3a (2026-11-02)
+// 복사   2026-11-02
 //
 // ── 왜 복사하나 ─────────────────────────────────────────────────────────
 //
@@ -50,6 +50,7 @@ export function testActionAvailability(s,{ack=false,readerEnabled=true,visible=t
  const yes=reason=>({enabled:true,code:'READY',reason});
  let common;
  if(s.ended)common=no('ENDED','이 시험 화면은 종료됐습니다. 버튼을 다시 누르지 말고 본부에 확인하세요.');
+ else if(s.bootstrap?.failure)common=no('BC_NORMAL_FAILED_WAITING','시험이 실패 대기 상태입니다. 새 승인·서명·지급을 진행하지 말고 상태를 확인한 뒤 FINISH로 명시 종료하세요.');
  else if(s.busy)common=no('BUSY','현재 요청을 처리 중입니다. 완료될 때까지 기다리세요.');
  else if(!s.identity)common=no('LOGIN_REQUIRED','먼저 표시한 네트워크에서 본인 지갑으로 로그인하세요.');
  else if(!s.bootstrap?.applicationId)common=no('APPLICATION_REQUIRED','참여자의 신청 생성·원천 세션 결합을 기다리세요.');

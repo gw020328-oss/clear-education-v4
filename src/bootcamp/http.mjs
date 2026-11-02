@@ -29,30 +29,42 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
       if(v2||v3||v4)store.authorizeOperations(context,req.method==='POST');else store.policy(context);
       let body;
       if(req.method==='POST'){
+        normalUi?.assertWritable?.(req.url);
         check(req.headers['content-type']==='application/json','BC_HTTP_CONTENT_TYPE');const chunks=[];let size=0;
         for await(const chunk of req){size+=chunk.length;check(size<=4096,'BC_HTTP_BODY_SIZE');chunks.push(chunk);}
         try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));}catch{throw new RuleError('BC_HTTP_JSON');}
       }
+      if(req.method==='POST')normalUi?.assertWritable?.(req.url);
       const path=req.url,key=req.headers['idempotency-key'];let result;
       if(v4&&path==='/bootcamp/v4/session'){
         check(req.method==='GET'&&typeof normalUi?.getSession==='function','BC_NOT_FOUND');result=normalUi.getSession(context);
       }
       else if(v4){
-        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt|reflection-approval)$/.exec(path);
+        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt|reflection-approval|resume)$/.exec(path);
         check(normalUi&&m,'BC_NOT_FOUND');const [,a,resource]=m;
         if(req.method==='GET'&&resource==='payment-receipt'){check(typeof normalUi.getPaymentReceipt==='function','BC_NOT_FOUND');result=await normalUi.getPaymentReceipt(context,a);}
         else if(req.method==='GET'&&resource==='source-signature')result=normalUi.pendingSignature(context,a);
         else if(req.method==='POST'&&resource==='source-signature')result=normalUi.submitSignature(context,a,body);
         else if(req.method==='POST'&&resource==='source-session'){exactKeys(body,[],'BC_UI_SESSION_BODY');result=normalUi.bindParticipant(context,a);}
+        else if(req.method==='POST'&&resource==='resume'){check(typeof normalUi.resume==='function','BC_NOT_FOUND');result=normalUi.resume(context,a,body);}
         else if(req.method==='POST'&&resource==='reflection-approval'){check(typeof normalUi.approveReflection==='function','BC_NOT_FOUND');result=normalUi.approveReflection(context,a,body,key);}
         else check(false,'BC_NOT_FOUND');
       }
       else if(v3){
-        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(decision-evidence|review-chain|procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations|recipient-registration)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
+        let registrationCheckpoint;
+        const url=new URL(path,expected);
+        if(path.includes('?')){
+          check(req.method==='GET'&&url.pathname.endsWith('/recipient-registration'),'BC_NOT_FOUND');
+          check([...url.searchParams.keys()].length===1&&url.searchParams.has('checkpoint'),'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+          const value=url.searchParams.get('checkpoint');check(value.length<=256,'BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+          try{registrationCheckpoint=JSON.parse(value);}catch{throw new RuleError('BC_RECIPIENT_REGISTRATION_CHECKPOINT');}
+          check(registrationCheckpoint!==undefined&&typeof normalUi?.getRecipientRegistration==='function','BC_RECIPIENT_REGISTRATION_CHECKPOINT');
+        }
+        const m=/^\/bootcamp\/v3\/applications\/([a-z][a-z0-9.-]{0,63})\/(decision-evidence|review-chain|procedure|review-publications|review-consents|review-objections|objection-assessments|review-revalidations|unsigned-preparations|termination-intents|procedure-operations|recipient-registration)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path.split('?')[0]);
         check(m,'BC_NOT_FOUND');const [,a,resource,target]=m;
         if(req.method==='GET'){
           if(resource==='decision-evidence')result=store.getDecisionEvidence(context,a,target);
-          else if(!target&&resource==='recipient-registration'){result=normalUi?.getRecipientRegistration?await normalUi.getRecipientRegistration(context,a):store.getRecipientRegistration(context,a);}
+          else if(!target&&resource==='recipient-registration'){result=normalUi?.getRecipientRegistration?await normalUi.getRecipientRegistration(context,a,registrationCheckpoint):store.getRecipientRegistration(context,a);}
           else if(!target&&resource==='review-chain')result=await store.execution.reviewChain(context,a);
           else if(!target&&resource==='procedure'){if(normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=store.getProcedure(context,a);}
           else if(target&&resource==='procedure-operations')result=store.getProcedureOperation(context,a,target);
@@ -60,7 +72,7 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         }else if(!target){
           const methods={'recipient-registration':'submitRecipientRegistration','review-publications':'publishReview','review-consents':'recordReviewConsent','review-objections':'submitReviewObjection',
             'objection-assessments':'assessReviewObjection','review-revalidations':'recordReviewRevalidation','unsigned-preparations':'prepareReviewAuthorization','termination-intents':'requestReviewTermination'};
-          check(methods[resource],'BC_NOT_FOUND');if(resource==='recipient-registration')normalUi?.beforeRecipientRegistration?.(context,a);if(resource==='review-consents'&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');
+          check(methods[resource],'BC_NOT_FOUND');if(resource==='recipient-registration')normalUi?.beforeRecipientRegistration?.(context,a);if(resource==='review-consents'&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');normalUi?.assertWritable?.(req.url);
           const consentOptions=resource==='review-consents'&&normalUi?.beforeReviewConsent
             ?{beforeNewConsent:view=>normalUi.beforeReviewConsent(context,a,body,view)}:undefined;
           result=store[methods[resource]](context,a,body,key,consentOptions);

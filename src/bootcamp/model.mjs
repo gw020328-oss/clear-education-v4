@@ -78,6 +78,9 @@ export function snapshotCandidate(candidate){
   if(Object.hasOwn(candidate,'originalBody'))Object.defineProperty(snapshot,'originalBody',{enumerable:true,get:()=>candidate.originalBody});
   return snapshot;
 }
+// The version is bound by the trusted producer guard and persisted with evidence.
+// Existing evidence keeps its original age limit across upgrades.
+export function sourceAgeSeconds(c,e){return c.source==='RECLAIM_HACKERRANK'||e.sourceVersion?.endsWith('.review900')?900:300;}
 export function validateCandidate(candidate,request,guard,now){
   exactKeys(candidate,['requestHash','nonceHash','proofBundleHash','source','sourceVersion','sourceHash','acquiredAt',
     'verifiedAt','validUntilExclusive','facts','rawLocator','originalBody'],'BC_CANDIDATE');
@@ -85,7 +88,7 @@ export function validateCandidate(candidate,request,guard,now){
   hash(candidate.proofBundleHash);epoch(candidate.acquiredAt);epoch(candidate.verifiedAt);epoch(candidate.validUntilExclusive);
   check(candidate.acquiredAt>=request.issuedAt&&candidate.acquiredAt<=candidate.verifiedAt&&candidate.verifiedAt<=now,'BC_SOURCE_TIME');
   check(same(candidate.source,guard.source)&&candidate.sourceVersion===guard.sourceVersion&&candidate.sourceHash===guard.sourceHash,'BC_SOURCE_CHANGED');
-  const c=criterion(request.criterionId),age=c.source==='RECLAIM_HACKERRANK'?900:300;
+  const c=criterion(request.criterionId),age=sourceAgeSeconds(c,candidate);
   check(now-candidate.acquiredAt<=age&&now<candidate.validUntilExclusive&&candidate.validUntilExclusive<=request.expiresAt,'BC_CANDIDATE_EXPIRED');
   if(c.source==='RECLAIM_HACKERRANK')for(const k of ['accountProofIssuedAt','certificateProofIssuedAt'])
     check(Number.isSafeInteger(candidate.facts[k])&&now-candidate.facts[k]<=900,'BC_PROOF_EXPIRED');

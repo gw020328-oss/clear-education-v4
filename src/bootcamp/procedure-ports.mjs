@@ -2,7 +2,7 @@ import {isCanonicalProcedurePorts} from './execution-development.mjs';
 import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 import {P0_POLICY,p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {same} from '../policy/mvp/contract.mjs';
-import {id,hash,epoch,revision,guardExpiry} from './model.mjs';
+import {sourceAgeSeconds,criterion,id,hash,epoch,revision,guardExpiry} from './model.mjs';
 import {sourceCutoff} from '../bootcamp-authorization/test-encoding-v3.mjs';
 
 const address=v=>check(typeof v==='string'&&/^0x[0-9a-f]{40}$/.test(v)&&!/^0x0+$/.test(v),'BC_E3_ADDRESS');
@@ -90,7 +90,7 @@ export function currentSourceWindow(a,heads,source,time,{allowExpired=false}={})
  const minimum=key=>Math.min(...guards.map(g=>g[key]));
  const window={moodleObservedAt:moodle.map(String),reclaimIssuedAt:[hr.facts.accountProofIssuedAt,hr.facts.certificateProofIssuedAt].map(String),
   authLeaseExpiresAt:String(minimum('authExpiresAt')),rawLeaseExpiresAt:String(minimum('rawExpiresAt')),queryLeaseExpiresAt:String(minimum('queryExpiresAt')),
-  rawAcquiredAt:String(Math.min(...hs.map(h=>h.evidence.acquiredAt))),verifiedValidUntilExclusive:String(Math.min(...hs.map(h=>Math.min(h.valid_until,h.evidence.rawLocator.expiresAt))))};
+  rawAcquiredAt:String(Math.min(...hs.map(h=>h.evidence.acquiredAt))),verifiedValidUntilExclusive:String(Math.min(...hs.map(h=>Math.min(h.valid_until,h.evidence.rawLocator.expiresAt,h.evidence.acquiredAt+sourceAgeSeconds(criterion(h.criterion_id),h.evidence)))))};
  const end=Number(sourceCutoff(window,BigInt(time)));check(allowExpired||time<end,'BC_E3_SOURCE_EXPIRED');
  return freeze({window,validUntilExclusive:end,commitment:p0Hash('E3-CURRENT-SOURCE',{evidence:hs.map(h=>[h.evidence.evidenceId,h.evidence.sourceHash]),guards})});
 }

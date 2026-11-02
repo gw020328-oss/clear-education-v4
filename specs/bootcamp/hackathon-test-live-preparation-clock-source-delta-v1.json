@@ -1,0 +1,38 @@
+{
+  "version": "clear-live-preparation-clock-source-delta.1",
+  "candidateHead": "bd2282fbf84b244d8dd9e1e855011dbdc2595c5b",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-browser-checkpoint-source-delta-v1.json",
+    "sha256": "1d2216f4cbff5d933e4955159bb00e500d16f51274d5987e722aa12ec8577392",
+    "guardHead": "a8d5f88f686d20091fe66845f1d6a51d199eebd0"
+  },
+  "changes": {
+    "src/bootcamp/execution-api-bridge.mjs": {
+      "before": "fd8b851cd68fbc3eaa82cf640ecc7629e9ad31d25ea32327977e29635b4efbde",
+      "after": "103cb8ee994db0df53b1a40978ba49c4f87fe38710f8b419d9c9a86ac845ccf3"
+    },
+    "src/bootcamp/execution-diagnostics.mjs": {
+      "before": "74beb4fec01c7240bf235047b97244f85f7f90b676b3ebf4d9559035f0aabf9c",
+      "after": "3e7b132bc7fb9de8ac6ce54db5a1bd25393f0358132a2deeab960644cf8d1588"
+    },
+    "src/bootcamp/execution-operations.mjs": {
+      "before": "d3dff07e8200702f543c976b82427a64ab77ffd6074e91fe626a059d2f6ca51e",
+      "after": "509fc759397fe2bc385ff9cf4ce196aa259e0942c970adf3ef8d8941e2168572"
+    },
+    "src/bootcamp/procedure.mjs": {
+      "before": "abddf5e2cf31e01250b66eae64a3e91f671abe6bc81aa4e45bbbc9e27cf932b6",
+      "after": "18d3160fd18f8c6f3a831b1be4855336b9d786f49fd9d638e7fc462e450c2a05"
+    }
+  },
+  "boundary": {
+    "registeredSourcesRequireRealClock": true,
+    "originalIssuedAtAndDeadlinesPreserved": true,
+    "sealIntentWrittenOnce": true,
+    "boundedReadOnlyCommitValidation": true,
+    "noAdditionalNativeSignatureOrSend": true,
+    "fixedDiagnosticLabelsOnly": true,
+    "automaticRetry": false,
+    "productionEnabled": false,
+    "actualUserExecution": false
+  }
+}

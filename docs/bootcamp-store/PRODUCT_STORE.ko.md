@@ -1,3 +1,5 @@
+> 2026-10-29 읽기 안내: 아래는 PR80 초기 합성 저장 단계의 원문 이력이다. 현재 pair proof 수집/검증/제품 소비 코드가 미구현이라는 뜻이 아니다. 현행 participant/claim owner/수령인, 판정 근거 GET 및 후속 범위는 [제품 연결 계획](../current/BOOTCAMP_PRODUCT_CONNECTION_PLAN.ko.md), 이전 r20 실제 결과는 [정상 실행 기록](../current/BOOTCAMP_NORMAL_RUN_READINESS.ko.md)을 따른다. PR125 Privy/V2 새100 TEST 완주는 아직 미검증이다. 아래 역사적 미구현·차단 문구를 현재 전체 기능 상태로 확장하거나 과거 성공을 현재 완료로 합산하지 않는다.
+
 # Python 부트캠프 P2: 단일 ledger 합성 수락 구현
 
 > PR80 첫 저장 단계의 역사적 기록이다. 이후 producer 연결·v2 운영 조회·원문 수명/최종 권한 보강과 최신 미구현 범위는 [R2_IMPLEMENTATION.ko.md](R2_IMPLEMENTATION.ko.md)를 따른다. 이 문서의 ‘미연결/OPEN’은 당시 상태이며 후속 TEST 운영 결정의 취소를 뜻하지 않는다.

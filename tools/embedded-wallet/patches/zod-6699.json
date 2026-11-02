@@ -1,0 +1,265 @@
+{
+  "version": "clear-reviewed-zod-backport.1",
+  "upstreamRepository": "https://github.com/colinhacks/zod",
+  "upstreamBase": "50606616c0d291caf3210a7521da51271b918333",
+  "upstreamCommit": "540f40974ff131ab96130b8fcc29af14bb750395",
+  "upstreamPullRequests": [
+    6699,
+    6696
+  ],
+  "notAnNpmRelease": true,
+  "packages": [
+    {
+      "version": "3.25.76",
+      "packageJsonSha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "files": [
+        {
+          "path": "src/v3/types.ts",
+          "beforeSha256": "70309a0877c35d036842e291fe7c8a4439d5db49411d233f8a22bf8a59c41419",
+          "afterSha256": "d85808e2139a49e2c4ca7c277fbfa63362dc5f5e4620797f14c710a1afb9116e",
+          "edits": [
+            {
+              "before": "//   /^[a-z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9\\-]+)*$/i;\n\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nconst _emojiRegex = `^(\\\\p{Extended_Pictographic}|\\\\p{Emoji_Component})+$`;\nlet emojiRegex: RegExp;\n\n// faster, simpler, safer\n",
+              "after": "//   /^[a-z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9\\-]+)*$/i;\n\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nconst _emojiRegex = `^[\\\\p{Extended_Pictographic}\\\\p{Emoji_Component}]+$`;\nlet emojiRegex: RegExp;\n\n// faster, simpler, safer\n"
+            },
+            {
+              "before": "      }\n    }\n\n    if (ctx.common.async) {\n      return Promise.all(\n        ([...ctx.data] as any[]).map((item, i) => {\n",
+              "after": "      }\n    }\n\n    // an oversized array fails before any element is parsed\n    if (\n      (def.exactLength !== null && ctx.data.length > def.exactLength.value) ||\n      (def.maxLength !== null && ctx.data.length > def.maxLength.value)\n    ) {\n      return INVALID;\n    }\n\n    if (ctx.common.async) {\n      return Promise.all(\n        ([...ctx.data] as any[]).map((item, i) => {\n"
+            },
+            {
+              "before": "    return { valid: true, data: a };\n  } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n    const bKeys = util.objectKeys(b);\n    const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);\n\n    const newObj: any = { ...a, ...b };\n    for (const key of sharedKeys) {\n",
+              "after": "    return { valid: true, data: a };\n  } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n    const bKeys = util.objectKeys(b);\n    // a set keeps the lookup linear for wide objects\n    const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n    const sharedKeys = util.objectKeys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n\n    const newObj: any = { ...a, ...b };\n    for (const key of sharedKeys) {\n"
+            },
+            {
+              "before": "          exact: false,\n          message: def.maxSize.message,\n        });\n        status.dirty();\n      }\n    }\n\n",
+              "after": "          exact: false,\n          message: def.maxSize.message,\n        });\n        // an oversized set fails before any element is parsed\n        return INVALID;\n      }\n    }\n\n"
+            }
+          ]
+        },
+        {
+          "path": "v3/types.js",
+          "beforeSha256": "9763a2938f0e7f983363ef4bf6530e7583e3f2d54f8a4a6684efad58febc6e8e",
+          "afterSha256": "b8f07e6fed158aab1cf0271b6becd434a26338dd2cfba6fea0ac44513e4ab82b",
+          "edits": [
+            {
+              "before": "// const emailRegex =\n//   /^[a-z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9\\-]+)*$/i;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nconst _emojiRegex = `^(\\\\p{Extended_Pictographic}|\\\\p{Emoji_Component})+$`;\nlet emojiRegex;\n// faster, simpler, safer\nconst ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;\n",
+              "after": "// const emailRegex =\n//   /^[a-z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9\\-]+)*$/i;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nconst _emojiRegex = `^[\\\\p{Extended_Pictographic}\\\\p{Emoji_Component}]+$`;\nlet emojiRegex;\n// faster, simpler, safer\nconst ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;\n"
+            },
+            {
+              "before": "                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n",
+              "after": "                status.dirty();\n            }\n        }\n        // Official v3 backport: reject oversized arrays before parsing elements.\n        if ((def.exactLength !== null && ctx.data.length > def.exactLength.value) ||\n            (def.maxLength !== null && ctx.data.length > def.maxLength.value)) {\n            return INVALID;\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n"
+            },
+            {
+              "before": "    }\n    else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n        const bKeys = util.objectKeys(b);\n        const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n",
+              "after": "    }\n    else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n        const bKeys = util.objectKeys(b);\n        const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n        const sharedKeys = util.objectKeys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n"
+            },
+            {
+              "before": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "after": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        },
+        {
+          "path": "v3/types.cjs",
+          "beforeSha256": "06487cc05ed45c5dd29789bf0aa75734d1ce06592a7f2665ba4ca90a68e8a3e1",
+          "afterSha256": "5ee2a158b55b5c53e0e8e954f42b042c2ccae37726f48fa12d562c9f99e51828",
+          "edits": [
+            {
+              "before": "// const emailRegex =\n//   /^[a-z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9\\-]+)*$/i;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nconst _emojiRegex = `^(\\\\p{Extended_Pictographic}|\\\\p{Emoji_Component})+$`;\nlet emojiRegex;\n// faster, simpler, safer\nconst ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;\n",
+              "after": "// const emailRegex =\n//   /^[a-z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9\\-]+)*$/i;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nconst _emojiRegex = `^[\\\\p{Extended_Pictographic}\\\\p{Emoji_Component}]+$`;\nlet emojiRegex;\n// faster, simpler, safer\nconst ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;\n"
+            },
+            {
+              "before": "                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n",
+              "after": "                status.dirty();\n            }\n        }\n        // Official v3 backport: reject oversized arrays before parsing elements.\n        if ((def.exactLength !== null && ctx.data.length > def.exactLength.value) ||\n            (def.maxLength !== null && ctx.data.length > def.maxLength.value)) {\n            return parseUtil_js_1.INVALID;\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n"
+            },
+            {
+              "before": "    }\n    else if (aType === util_js_1.ZodParsedType.object && bType === util_js_1.ZodParsedType.object) {\n        const bKeys = util_js_1.util.objectKeys(b);\n        const sharedKeys = util_js_1.util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n",
+              "after": "    }\n    else if (aType === util_js_1.ZodParsedType.object && bType === util_js_1.ZodParsedType.object) {\n        const bKeys = util_js_1.util.objectKeys(b);\n        const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n        const sharedKeys = util_js_1.util.objectKeys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n"
+            },
+            {
+              "before": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "after": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return parseUtil_js_1.INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        },
+        {
+          "path": "src/v4/core/schemas.ts",
+          "beforeSha256": "5910d2a181b6570189730578df0ff7c90bd7b2cda6ae1064026d236a47fb687d",
+          "afterSha256": "de91688b5c597307fd90cbe5dcd09d833fa7a468f25aa4159a6e967f74420f3b",
+          "edits": [
+            {
+              "before": "\nexport interface $ZodArray<T extends SomeType = $ZodType> extends $ZodType<any, any, $ZodArrayInternals<T>> {}\n\nfunction handleArrayResult(result: ParsePayload<any>, final: ParsePayload<any[]>, index: number) {\n  if (result.issues.length) {\n    final.issues.push(...util.prefixIssues(index, result.issues));\n",
+              "after": "\nexport interface $ZodArray<T extends SomeType = $ZodType> extends $ZodType<any, any, $ZodArrayInternals<T>> {}\n\n/** The leading size checks of `defChecks` that set an upper bound, each paired with it. */\nfunction sizeCaps(defChecks: checks.$ZodCheck<never>[] | undefined): [number, checks.$ZodCheck<never>][] {\n  const caps: [number, checks.$ZodCheck<never>][] = [];\n  for (const ch of defChecks ?? []) {\n    const d = ch._zod.def as any;\n    // a later check may rewrite the value\n    if (!/_(length|size)$|_equals$/.test(d.check)) break;\n    const max = d.maximum ?? d.length ?? d.size;\n    if (max >= 0) caps.push([max, ch]);\n  }\n  return caps;\n}\n\n// an oversized container fails its leading size checks before any element is parsed\nfunction capSize(inst: $ZodType, size: (input: any) => number): void {\n  const caps = sizeCaps(inst._zod.def.checks);\n  if (!caps.length) return;\n  const cap = Math.min(...caps.map((c) => c[0]));\n  // deferred, since a later `$ZodType.init` replaces `run`\n  inst._zod.deferred ??= [];\n  inst._zod.deferred.push(() => {\n    const run = inst._zod.run;\n    // rejecting before `run` skips every check, so none reads the raw input\n    inst._zod.run = (payload, ctx) => {\n      const n = size(payload.value);\n      if (n > cap) {\n        for (const [max, ch] of sizeCaps(inst._zod.def.checks)) {\n          if (n > max && ch._zod.def.when!(payload)) {\n            const start = payload.issues.length;\n            ch._zod.check(payload as ParsePayload<never>);\n            // the value is still the raw input, so no parent check may read it\n            (payload.issues[start] as { continue?: boolean }).continue = false;\n            return payload;\n          }\n        }\n      }\n      return run(payload, ctx);\n    };\n  });\n}\n\nconst arraySize = (input: unknown): number => (Array.isArray(input) ? input.length : -1);\nconst mapSize = (input: unknown): number => (input instanceof Map ? input.size : -1);\nconst setSize = (input: unknown): number => (input instanceof Set ? input.size : -1);\n\nfunction handleArrayResult(result: ParsePayload<any>, final: ParsePayload<any[]>, index: number) {\n  if (result.issues.length) {\n    final.issues.push(...util.prefixIssues(index, result.issues));\n"
+            },
+            {
+              "before": "\n    return payload; //handleArrayResultsAsync(parseResults, final);\n  };\n});\n\n//////////////////////////////////////////\n",
+              "after": "\n    return payload; //handleArrayResultsAsync(parseResults, final);\n  };\n  capSize(inst, arraySize);\n});\n\n//////////////////////////////////////////\n"
+            },
+            {
+              "before": "  }\n  if (util.isPlainObject(a) && util.isPlainObject(b)) {\n    const bKeys = Object.keys(b);\n    const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);\n\n    const newObj: any = { ...a, ...b };\n    for (const key of sharedKeys) {\n",
+              "after": "  }\n  if (util.isPlainObject(a) && util.isPlainObject(b)) {\n    const bKeys = Object.keys(b);\n    // a set keeps the lookup linear for wide objects\n    const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n    const sharedKeys = Object.keys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n\n    const newObj: any = { ...a, ...b };\n    for (const key of sharedKeys) {\n"
+            },
+            {
+              "before": "    if (proms.length) return Promise.all(proms).then(() => payload);\n    return payload;\n  };\n});\n\nfunction handleMapResult(\n",
+              "after": "    if (proms.length) return Promise.all(proms).then(() => payload);\n    return payload;\n  };\n  capSize(inst, mapSize);\n});\n\nfunction handleMapResult(\n"
+            },
+            {
+              "before": "    if (proms.length) return Promise.all(proms).then(() => payload);\n    return payload;\n  };\n});\n\nfunction handleSetResult(result: ParsePayload, final: ParsePayload<Set<any>>) {\n",
+              "after": "    if (proms.length) return Promise.all(proms).then(() => payload);\n    return payload;\n  };\n  capSize(inst, setSize);\n});\n\nfunction handleSetResult(result: ParsePayload, final: ParsePayload<Set<any>>) {\n"
+            }
+          ]
+        },
+        {
+          "path": "src/v4/core/regexes.ts",
+          "beforeSha256": "3d98827a5f73f4d748163a04860668fa321ce5bdfa5b0616d621af994e98f3ed",
+          "afterSha256": "90ec34fa5126780af20e357e774181fea60452c767a451dd3966478c8fe1075a",
+          "edits": [
+            {
+              "before": "  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\n\nexport const _emoji = `^(\\\\p{Extended_Pictographic}|\\\\p{Emoji_Component})+$`;\nexport function emoji(): RegExp {\n  return new RegExp(_emoji, \"u\");\n}\n",
+              "after": "  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\n\nexport const _emoji = `^[\\\\p{Extended_Pictographic}\\\\p{Emoji_Component}]+$`;\nexport function emoji(): RegExp {\n  return new RegExp(_emoji, \"u\");\n}\n"
+            }
+          ]
+        },
+        {
+          "path": "v4/core/schemas.js",
+          "beforeSha256": "d466582c022b08a3f9eb1a65d5970d8ca25064d73a5a838d76414ae36440a76b",
+          "afterSha256": "8970e8bd49414e66c0bd02fddaada5b1275a46e7d3415768f39c4f2d4ddf6ec5",
+          "edits": [
+            {
+              "before": "        return payload;\n    };\n});\nfunction handleArrayResult(result, final, index) {\n    if (result.issues.length) {\n        final.issues.push(...util.prefixIssues(index, result.issues));\n",
+              "after": "        return payload;\n    };\n});\nfunction sizeCaps(defChecks) {\n  const caps = [];\n  for (const ch of defChecks ?? []) {\n    const d = ch._zod.def;\n    if (!/_(length|size)$|_equals$/.test(d.check)) break;\n    const max = d.maximum ?? d.length ?? d.size;\n    if (max >= 0) caps.push([max, ch]);\n  }\n  return caps;\n}\nfunction capSize(inst, size) {\n  const caps = sizeCaps(inst._zod.def.checks);\n  if (!caps.length) return;\n  const cap = Math.min(...caps.map((c) => c[0]));\n  inst._zod.deferred ??= [];\n  inst._zod.deferred.push(() => {\n    const run = inst._zod.run;\n    inst._zod.run = (payload, ctx) => {\n      const n = size(payload.value);\n      if (n > cap) {\n        for (const [max, ch] of sizeCaps(inst._zod.def.checks)) {\n          if (n > max && ch._zod.def.when(payload)) {\n            const start = payload.issues.length;\n            ch._zod.check(payload);\n            payload.issues[start].continue = false;\n            return payload;\n          }\n        }\n      }\n      return run(payload, ctx);\n    };\n  });\n}\nconst arraySize = (input) => Array.isArray(input) ? input.length : -1;\nconst mapSize = (input) => input instanceof Map ? input.size : -1;\nconst setSize = (input) => input instanceof Set ? input.size : -1;\nfunction handleArrayResult(result, final, index) {\n    if (result.issues.length) {\n        final.issues.push(...util.prefixIssues(index, result.issues));\n"
+            },
+            {
+              "before": "        }\n        return payload; //handleArrayResultsAsync(parseResults, final);\n    };\n});\nfunction handleObjectResult(result, final, key) {\n    // if(isOptional)\n",
+              "after": "        }\n        return payload; //handleArrayResultsAsync(parseResults, final);\n    };\n    capSize(inst, arraySize);\n});\nfunction handleObjectResult(result, final, key) {\n    // if(isOptional)\n"
+            },
+            {
+              "before": "    }\n    if (util.isPlainObject(a) && util.isPlainObject(b)) {\n        const bKeys = Object.keys(b);\n        const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n",
+              "after": "    }\n    if (util.isPlainObject(a) && util.isPlainObject(b)) {\n        const bKeys = Object.keys(b);\n        const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n        const sharedKeys = Object.keys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n"
+            },
+            {
+              "before": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n});\nfunction handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {\n    if (keyResult.issues.length) {\n",
+              "after": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n    capSize(inst, mapSize);\n});\nfunction handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {\n    if (keyResult.issues.length) {\n"
+            },
+            {
+              "before": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n});\nfunction handleSetResult(result, final) {\n    if (result.issues.length) {\n",
+              "after": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n    capSize(inst, setSize);\n});\nfunction handleSetResult(result, final) {\n    if (result.issues.length) {\n"
+            }
+          ]
+        },
+        {
+          "path": "v4/core/schemas.cjs",
+          "beforeSha256": "f5d17a7db487c943c9d07cc624010ebb6d93683eabd14339846f4912cc88b51f",
+          "afterSha256": "4abc0b67bba366849dfa24f36d49bdea9be8968f6ddab53541b9a1c3a514fae2",
+          "edits": [
+            {
+              "before": "        return payload;\n    };\n});\nfunction handleArrayResult(result, final, index) {\n    if (result.issues.length) {\n        final.issues.push(...util.prefixIssues(index, result.issues));\n",
+              "after": "        return payload;\n    };\n});\nfunction sizeCaps(defChecks) {\n  const caps = [];\n  for (const ch of defChecks ?? []) {\n    const d = ch._zod.def;\n    if (!/_(length|size)$|_equals$/.test(d.check)) break;\n    const max = d.maximum ?? d.length ?? d.size;\n    if (max >= 0) caps.push([max, ch]);\n  }\n  return caps;\n}\nfunction capSize(inst, size) {\n  const caps = sizeCaps(inst._zod.def.checks);\n  if (!caps.length) return;\n  const cap = Math.min(...caps.map((c) => c[0]));\n  inst._zod.deferred ??= [];\n  inst._zod.deferred.push(() => {\n    const run = inst._zod.run;\n    inst._zod.run = (payload, ctx) => {\n      const n = size(payload.value);\n      if (n > cap) {\n        for (const [max, ch] of sizeCaps(inst._zod.def.checks)) {\n          if (n > max && ch._zod.def.when(payload)) {\n            const start = payload.issues.length;\n            ch._zod.check(payload);\n            payload.issues[start].continue = false;\n            return payload;\n          }\n        }\n      }\n      return run(payload, ctx);\n    };\n  });\n}\nconst arraySize = (input) => Array.isArray(input) ? input.length : -1;\nconst mapSize = (input) => input instanceof Map ? input.size : -1;\nconst setSize = (input) => input instanceof Set ? input.size : -1;\nfunction handleArrayResult(result, final, index) {\n    if (result.issues.length) {\n        final.issues.push(...util.prefixIssues(index, result.issues));\n"
+            },
+            {
+              "before": "        }\n        return payload; //handleArrayResultsAsync(parseResults, final);\n    };\n});\nfunction handleObjectResult(result, final, key) {\n    // if(isOptional)\n",
+              "after": "        }\n        return payload; //handleArrayResultsAsync(parseResults, final);\n    };\n    capSize(inst, arraySize);\n});\nfunction handleObjectResult(result, final, key) {\n    // if(isOptional)\n"
+            },
+            {
+              "before": "    }\n    if (util.isPlainObject(a) && util.isPlainObject(b)) {\n        const bKeys = Object.keys(b);\n        const sharedKeys = Object.keys(a).filter((key) => bKeys.indexOf(key) !== -1);\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n",
+              "after": "    }\n    if (util.isPlainObject(a) && util.isPlainObject(b)) {\n        const bKeys = Object.keys(b);\n        const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n        const sharedKeys = Object.keys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n        const newObj = { ...a, ...b };\n        for (const key of sharedKeys) {\n            const sharedValue = mergeValues(a[key], b[key]);\n"
+            },
+            {
+              "before": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n});\nfunction handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {\n    if (keyResult.issues.length) {\n",
+              "after": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n    capSize(inst, mapSize);\n});\nfunction handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {\n    if (keyResult.issues.length) {\n"
+            },
+            {
+              "before": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n});\nfunction handleSetResult(result, final) {\n    if (result.issues.length) {\n",
+              "after": "            return Promise.all(proms).then(() => payload);\n        return payload;\n    };\n    capSize(inst, setSize);\n});\nfunction handleSetResult(result, final) {\n    if (result.issues.length) {\n"
+            }
+          ]
+        },
+        {
+          "path": "v4/core/regexes.js",
+          "beforeSha256": "89c429d4e4c24a4e3127209dbc85cba96c220e9fcfafcdf5a8d877b4d32bd796",
+          "afterSha256": "16892727ad3b0c139be711f0092007bda6e362eb9c20f254da7a48aa9b91e814",
+          "edits": [
+            {
+              "before": "export const unicodeEmail = /^[^\\s@\"]{1,64}@[^\\s@]{1,255}$/u;\nexport const browserEmail = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nexport const _emoji = `^(\\\\p{Extended_Pictographic}|\\\\p{Emoji_Component})+$`;\nexport function emoji() {\n    return new RegExp(_emoji, \"u\");\n}\n",
+              "after": "export const unicodeEmail = /^[^\\s@\"]{1,64}@[^\\s@]{1,255}$/u;\nexport const browserEmail = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nexport const _emoji = `^[\\\\p{Extended_Pictographic}\\\\p{Emoji_Component}]+$`;\nexport function emoji() {\n    return new RegExp(_emoji, \"u\");\n}\n"
+            }
+          ]
+        },
+        {
+          "path": "v4/core/regexes.cjs",
+          "beforeSha256": "41d5ac4aff6305bf1e8cc6d7a8f504ccbd31d97e2f86147742b00ad5de89e445",
+          "afterSha256": "f4304169a6520417e1387a5f40800c96f5772ccec13a9b5861f330c5e28aafd4",
+          "edits": [
+            {
+              "before": "exports.unicodeEmail = /^[^\\s@\"]{1,64}@[^\\s@]{1,255}$/u;\nexports.browserEmail = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nexports._emoji = `^(\\\\p{Extended_Pictographic}|\\\\p{Emoji_Component})+$`;\nfunction emoji() {\n    return new RegExp(exports._emoji, \"u\");\n}\n",
+              "after": "exports.unicodeEmail = /^[^\\s@\"]{1,64}@[^\\s@]{1,255}$/u;\nexports.browserEmail = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;\n// from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression\nexports._emoji = `^[\\\\p{Extended_Pictographic}\\\\p{Emoji_Component}]+$`;\nfunction emoji() {\n    return new RegExp(exports._emoji, \"u\");\n}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "4.6.7",
+      "packageJsonSha256": "c2d190d9ee4e0bdb60332aaa2130a6a98d65ddb903fe1d29248b15de57832c45",
+      "files": [
+        {
+          "path": "src/v3/types.ts",
+          "beforeSha256": "73b9529564a34fc028a5a62c17e09148747b737039b78b124e84254cb886411a",
+          "afterSha256": "a9a31eb1b05884f51b8926d10624f8241dc90165ba4fc74ec46e76f06ba105ce",
+          "edits": [
+            {
+              "before": "      }\n    }\n\n    if (ctx.common.async) {\n      return Promise.all(\n        ([...ctx.data] as any[]).map((item, i) => {\n",
+              "after": "      }\n    }\n\n    // an oversized array fails before any element is parsed\n    if (\n      (def.exactLength !== null && ctx.data.length > def.exactLength.value) ||\n      (def.maxLength !== null && ctx.data.length > def.maxLength.value)\n    ) {\n      return INVALID;\n    }\n\n    if (ctx.common.async) {\n      return Promise.all(\n        ([...ctx.data] as any[]).map((item, i) => {\n"
+            },
+            {
+              "before": "    return { valid: true, data: a };\n  } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n    const bKeys = util.objectKeys(b);\n    const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);\n\n    const newObj: any = { ...a, ...b };\n    if (Object.prototype.hasOwnProperty.call(newObj, \"__proto__\")) delete newObj.__proto__;\n",
+              "after": "    return { valid: true, data: a };\n  } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n    const bKeys = util.objectKeys(b);\n    // a set keeps the lookup linear for wide objects\n    const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n    const sharedKeys = util.objectKeys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n\n    const newObj: any = { ...a, ...b };\n    if (Object.prototype.hasOwnProperty.call(newObj, \"__proto__\")) delete newObj.__proto__;\n"
+            },
+            {
+              "before": "          exact: false,\n          message: def.maxSize.message,\n        });\n        status.dirty();\n      }\n    }\n\n",
+              "after": "          exact: false,\n          message: def.maxSize.message,\n        });\n        // an oversized set fails before any element is parsed\n        return INVALID;\n      }\n    }\n\n"
+            }
+          ]
+        },
+        {
+          "path": "v3/types.js",
+          "beforeSha256": "d7214e1dacf9e6e70c9ca80247717b4be13b240510428fef132b7da3260d1a32",
+          "afterSha256": "520781f0f2c7182387e117912de0fd3f95bf5c3cf29b64df1b6bd058da8f7ab9",
+          "edits": [
+            {
+              "before": "                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n",
+              "after": "                status.dirty();\n            }\n        }\n        // Official v3 backport: reject oversized arrays before parsing elements.\n        if ((def.exactLength !== null && ctx.data.length > def.exactLength.value) ||\n            (def.maxLength !== null && ctx.data.length > def.maxLength.value)) {\n            return INVALID;\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n"
+            },
+            {
+              "before": "    }\n    else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n        const bKeys = util.objectKeys(b);\n        const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);\n        const newObj = { ...a, ...b };\n        if (Object.prototype.hasOwnProperty.call(newObj, \"__proto__\"))\n            delete newObj.__proto__;\n",
+              "after": "    }\n    else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {\n        const bKeys = util.objectKeys(b);\n        const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n        const sharedKeys = util.objectKeys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n        const newObj = { ...a, ...b };\n        if (Object.prototype.hasOwnProperty.call(newObj, \"__proto__\"))\n            delete newObj.__proto__;\n"
+            },
+            {
+              "before": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "after": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        },
+        {
+          "path": "v3/types.cjs",
+          "beforeSha256": "7a2f06d88e280bdd198c60e0d292ed7f1e3993e877be4415de07e6abc7746dd1",
+          "afterSha256": "4f5209358179d3967f43cbbfc703bfb59cf6565f6301e7801ff04d8dcb0319c4",
+          "edits": [
+            {
+              "before": "                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n",
+              "after": "                status.dirty();\n            }\n        }\n        // Official v3 backport: reject oversized arrays before parsing elements.\n        if ((def.exactLength !== null && ctx.data.length > def.exactLength.value) ||\n            (def.maxLength !== null && ctx.data.length > def.maxLength.value)) {\n            return parseUtil_js_1.INVALID;\n        }\n        if (ctx.common.async) {\n            return Promise.all([...ctx.data].map((item, i) => {\n                return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));\n"
+            },
+            {
+              "before": "    }\n    else if (aType === util_js_1.ZodParsedType.object && bType === util_js_1.ZodParsedType.object) {\n        const bKeys = util_js_1.util.objectKeys(b);\n        const sharedKeys = util_js_1.util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);\n        const newObj = { ...a, ...b };\n        if (Object.prototype.hasOwnProperty.call(newObj, \"__proto__\"))\n            delete newObj.__proto__;\n",
+              "after": "    }\n    else if (aType === util_js_1.ZodParsedType.object && bType === util_js_1.ZodParsedType.object) {\n        const bKeys = util_js_1.util.objectKeys(b);\n        const bKeySet = bKeys.length > 32 ? new Set(bKeys) : null;\n        const sharedKeys = util_js_1.util.objectKeys(a).filter((key) => (bKeySet ? bKeySet.has(key) : bKeys.indexOf(key) !== -1));\n        const newObj = { ...a, ...b };\n        if (Object.prototype.hasOwnProperty.call(newObj, \"__proto__\"))\n            delete newObj.__proto__;\n"
+            },
+            {
+              "before": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "after": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return parseUtil_js_1.INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

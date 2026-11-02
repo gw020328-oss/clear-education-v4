@@ -1,0 +1,49 @@
+{
+  "version": "clear-recipient-wait-source-delta.1",
+  "candidateHead": "ca64a27579d2e8d11057939ccb89dd031de06b5f",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-claim-directory-source-delta-v1.json",
+    "sha256": "3badfe55cbd73526cd47f21a4e3e3163ab4a44fcf116698ae15ad1d6541b0b57",
+    "guardHead": "3047ddbe66f6eddd8a27918f4dae3a67a5b69ac3"
+  },
+  "changes": {
+    "src/bootcamp/execution-diagnostics.mjs": {
+      "before": "57b8b8907d2c07579c0f27224b44025b259c605f0cf092c6662b65e7d358a871",
+      "after": "74beb4fec01c7240bf235047b97244f85f7f90b676b3ebf4d9559035f0aabf9c"
+    },
+    "src/embedded-wallet/product-panel.jsx": {
+      "before": "ff4f36a87e2cf043638cf929566d3fb63a1f54a518aac0a462f079db65151cf8",
+      "after": "bf44c8b985e92b06c0cd1e3c178c3783acf73e24838f8b62634dd342b3396964"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "49903a74314a8e169d4b87b2dbd9ddb67d1c4e3b8319b86b51e389ff15ff22b1",
+      "after": "5ff8223c1283271afa799b54641d959545e5719f436e02ecabe73d5ecf62c305"
+    },
+    "tools/bootcamp/normal-chain.mjs": {
+      "before": "567e0c761869f39432ce75f3425be8e7d03105ef2db66c927b9c9bce2649e925",
+      "after": "d08baa62f192cc3340a92602a2cd9ff36be5183a46a5e6591e3f0844fa70d0a3"
+    },
+    "tools/bootcamp/normal-current-view.mjs": {
+      "before": "18e4db029d297d34c217e06782b9cf83311f90123fcdf00b1f55e01b083f4e25",
+      "after": "a1a8caf8e21b19798f3f022b89115a61f016c83047717746844f76fd380d3fa0"
+    },
+    "tools/bootcamp/normal-host-flow.mjs": {
+      "before": "9a6559df0769024cc21ff4dbfda42646fef9e2cd50f602a389027b586cc05e61",
+      "after": "ceefa2daae1e0fe7e891af80c5f17ca3be9575af06279380db45b713bedc9c2e"
+    }
+  },
+  "sourceAdditions": {
+    "tools/bootcamp/normal-recipient-wait.mjs": "cdb6fbbf00701abdd48d98fd8610436c09960ca171c3c4b047c354e5ee5b0785"
+  },
+  "boundary": {
+    "oneAuthenticatedReadRefresh": true,
+    "sameInMemoryRecipientWaitOnly": true,
+    "zeroSideEffectsAndNoEnvelopeRequired": true,
+    "originalTargetAndDeadlinesPreserved": true,
+    "writeRetry": false,
+    "automaticRetry": false,
+    "completedSourceOrModelRepeated": false,
+    "productionEnabled": false,
+    "actualExecution": false
+  }
+}

@@ -2,6 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {executionErrorSummary,createExecutionFailureLog,observeExecutionFailure} from '../../src/bootcamp/execution-diagnostics.mjs';
 import {RuleError} from '../../src/policy/values.mjs';
+import {DraftError} from '../../src/bootcamp-authorization/encoding.mjs';
+
+test('registered draft real-clock failures retain only the fixed diagnostic code',()=>{
+ const error=new DraftError('REAL_CLOCK_REQUIRED');error.stack='PRIVATE_DRAFT';error.snapshot={secret:'PRIVATE_DRAFT'};
+ const summary=executionErrorSummary(error);assert.equal(summary.errorKind,'NATIVE_ERROR');assert.equal(summary.code,'REAL_CLOCK_REQUIRED');
+ assert.equal(summary.codeBasis,'OWN_CODE');assert.equal(JSON.stringify(summary).includes('PRIVATE_DRAFT'),false);
+ assert.equal(executionErrorSummary(new DraftError('PRIVATE_DRAFT')).code,'UNCLASSIFIED');
+});
 
 test('fixed internal codes survive, arbitrary message/stack/query/causes are redacted',()=>{
  const secret='PRIVATE_URL?token=never-copy-this';const e=new RuleError('BC_E5_CLOCK_CHANGED');

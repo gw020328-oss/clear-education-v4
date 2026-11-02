@@ -5,13 +5,13 @@ import { RuleError, exactKeys, requireRule } from '../policy/values.mjs';
 
 const SESSION = '__Host-clear-session', PREAUTH = '__Host-clear-preauth';
 const cookie = (name, value, age) => `${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${age}`;
-function cookies(header = '') {
+function cookies(header = '', names = [SESSION, PREAUTH]) {
   requireRule(header.length <= 4096, 'COOKIE');
   const out = {};
   for (const part of header.split(';')) {
     if (!part.trim()) continue;
     const [key, value, extra] = part.trim().split('=');
-    if (![SESSION, PREAUTH].includes(key)) continue;
+    if (!names.includes(key)) continue;
     requireRule(!Object.hasOwn(out, key) && !extra && /^[0-9a-f]{64}$/.test(value), 'COOKIE');
     out[key] = value;
   }
@@ -36,18 +36,24 @@ const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].inclu
 
 // The factory does not listen or deploy. HTTPS termination must preserve Host
 // and use an encrypted connection to this handler; proxy headers are not trusted.
-export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow } = {}) {
+export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace = null } = {}) {
   const makeServer = tls ? createHttpsServer : createServer;
   const server = makeServer({ ...tls, requestTimeout: 10000, headersTimeout: 10000, maxHeaderSize: 8192 },
-    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow }));
+    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace }));
   server.maxConnections = 32;
   return server;
 }
 
 // Composable handler; the same transport/origin/session checks apply when a
 // local development listener also serves a frontend build and synthetic RPC.
-export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow } = {}) {
+export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace = null } = {}) {
   const expected = new URL(service.origin);
+  // Cookies are scoped to hosts, not ports. Separate local diagnostic listeners
+  // must opt into their own names instead of replacing a product session.
+  requireRule(cookieNamespace === null || typeof cookieNamespace === 'string'
+    && /^[a-z][a-z0-9-]{0,31}$/.test(cookieNamespace), 'COOKIE_NAMESPACE_CONFIG');
+  const sessionCookie = cookieNamespace === null ? SESSION : `__Host-clear-${cookieNamespace}-session`;
+  const preauthCookie = cookieNamespace === null ? PREAUTH : `__Host-clear-${cookieNamespace}-preauth`;
   requireRule(!workflow || workflow.origin === service.origin, 'ORIGIN_CONFIG');
   requireRule(!studentWorkflow || studentWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
   requireRule(!documentWorkflow || documentWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
@@ -69,9 +75,9 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
       const origin = req.headers.origin;
       requireRule(origin === service.origin || (req.method === 'GET' && origin === undefined && req.headers['sec-fetch-site'] === 'same-origin'), 'ORIGIN');
       requireRule(!req.headers['sec-fetch-site'] || req.headers['sec-fetch-site'] === 'same-origin', 'ORIGIN');
-      const c = cookies(req.headers.cookie);
+      const c = cookies(req.headers.cookie, [sessionCookie, preauthCookie]);
       const chain = req.headers['x-chain-id'];
-      const context = { token: c[SESSION], wallet: req.headers['x-wallet'],
+      const context = { token: c[sessionCookie], wallet: req.headers['x-wallet'],
         chainId: typeof chain === 'string' && /^[1-9][0-9]{0,15}$/.test(chain) ? Number(chain) : null,
         csrf: req.headers['x-csrf-token'] ?? null };
       const path = req.url, key = req.headers['idempotency-key']; let result;
@@ -92,17 +98,17 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
           : await dispatchWorkflow(workflow, context, req.method, path, body, key, cancelled.signal);
       } else if (req.method === 'POST' && path === '/auth/nonce') {
         const challenge = service.challenge(body);
-        res.setHeader('Set-Cookie', cookie(PREAUTH, challenge.browserToken, 300));
+        res.setHeader('Set-Cookie', cookie(preauthCookie, challenge.browserToken, 300));
         result = { nonce: challenge.nonce, message: challenge.message, expiresAt: challenge.expiresAt };
       } else if (req.method === 'POST' && path === '/auth/verify') {
-        const login = service.login(body, c[PREAUTH], c[SESSION]);
-        res.setHeader('Set-Cookie', [cookie(SESSION, login.token, 3600), cookie(PREAUTH, '', 0)]);
+        const login = service.login(body, c[preauthCookie], c[sessionCookie]);
+        res.setHeader('Set-Cookie', [cookie(sessionCookie, login.token, 3600), cookie(preauthCookie, '', 0)]);
         const { token, ...publicSession } = login; result = publicSession;
       } else if (req.method === 'GET' && path === '/auth/session') result = service.whoami(context);
       else if (req.method === 'POST' && path === '/auth/logout') {
         exactKeys(body, [], 'LOGOUT_SCHEMA');
         documentWorkflow?.logout(context);
-        result = service.logout(context); res.setHeader('Set-Cookie', cookie(SESSION, '', 0));
+        result = service.logout(context); res.setHeader('Set-Cookie', cookie(sessionCookie, '', 0));
       } else if (req.method === 'POST' && path === '/policies') result = service.registerPolicy(context, body);
       else if (req.method === 'GET' && /^\/policies\/0x[0-9a-f]{64}$/.test(path)) result = service.getPolicy(context, path.split('/')[2]);
       else if (req.method === 'POST' && path === '/runtimes') result = await service.bindRuntime(context, body);

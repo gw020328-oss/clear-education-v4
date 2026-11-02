@@ -1,5 +1,11 @@
 # 두 사람·두 LLM의 역할과 PR 계획
 
+2026-11-01 최신 목표: [CLEAR 모듈 공개·독립 재현 계획](CLEAR_MODULE_DELIVERY_PLAN.ko.md)을 우선한다. 현재 checkpoint 오류 최소 수정·최신 CI → 실제 100 TEST 완주 → 팀원 프론트 전체 연결 → 외부 개발자용 최소 공개 자료 → 다른 컴퓨터 인수 순서다. 후속은 지금 계획만 반영하며 실제 로그인/서명/AI/지급은 본부 조율을 유지한다. 공개 테스트넷은 실자산 선행 검증이고 소액 실자산은 모듈 공개·독립 재현 이후 별도 승인 목표로 보류한다. 아래 날짜별 상태는 당시 기록이다.
+
+## 2026-10-29 Privy 연결 준비 후보
+
+최신 develop `d44b01216241d120064145016a99d73b1b361e34` 기준으로 별도 `codex/bootcamp-privy-sdk`에서 [Privy 연결 준비](EMBEDDED_WALLET_PRIVY.ko.md)를 진행한다. SDK3.51.0 고정/독립 onboarding/공통 서명·서버 revoke adapter와 합성73/73·기존회귀36/36은 준비 결과이며 실제 Google 로그인·주소복원·SDK서명·새100 TEST는 미완료다. App ID/로컬TLS 확인 및 의존성 audit 위험 처리가 남아 있고 Draft/제품미완료를 유지한다. 기존 web/PR60·제품 CSP·DB/체인은 보존한다. 최신 frontend branch/commit/develop 반영/web 절대경로/asset digest/build/test/adapter 인수는 Issue106에 요청했다. 기존 R0~R2와 r20 V1은 이번 작업에 합치지 않는다. 아래 날짜별 설명은 당시 상태다.
+
 ## 2026-10-28 현재 담당·다음 순서
 
 확인한 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에는 PR115 V2 등록/PR116 S3 내부 체인 연결/PR117 S4 근거 조회와 PR120 제품 호스트 V2 GET/POST·S3 GET이 병합됐다. PR120 검증 HEAD `cd659370a6264b1fa8592c85f7585ae125ee9275`의 CI 8/8 성공 후 develop `a395c6daac5220c38f6cadbbc8a4affa892e0a6a`에 정상 병합됐고 병합 트리는 검증 HEAD와 같다. [최종 E5 B 74/74·API/store 774/774](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016882), [E5 46/46·E4 164/164](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016840), [PR 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679016836), [push 공개/합성/Mac](https://github.com/gw020328-oss/clear-education-v4/actions/runs/40679011653)을 확인했다. 정확한 경로·client·초 경계 보정과 이전 실패 이력은 [S5 호스트 인수 기록](BOOTCAMP_S5_HOST_MOUNT.ko.md) 및 [PR120](https://github.com/gw020328-oss/clear-education-v4/pull/120)을 따른다. 호스트 인수 문서의 Draft/병합 대기 표현은 당시 기록이다. 내부 구현·제품 노출·실제 검증을 구분하고 아래 날짜별 후보 표현은 당시 기록으로 읽는다.

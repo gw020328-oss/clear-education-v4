@@ -8,7 +8,7 @@ export function createPreparedNormalServer({config:c,tls}){
  const expected=new URL(c.origin),assets=c.webRoot&&existsSync(c.webRoot)?loadPublicAssets(c.webRoot):new Map();
  assets.set('/bootcamp-normal-client.mjs',{type:'text/javascript; charset=utf-8',body:readFileSync(new URL('../../src/bootcamp/normal-client.mjs',import.meta.url))});
  if(!assets.has('/'))assets.set('/',{type:'text/html; charset=utf-8',body:Buffer.from('<!doctype html><html lang="ko"><meta charset="utf-8"><title>CLEAR 실제 실행 준비</title><h1>실행 환경 준비 중</h1><p>아직 지갑 로그인·신청·원천 수집·체인 지급을 시작하지 않았습니다. 프론트 연결과 사용자 입력 확인 뒤 활성화합니다.</p></html>')});
- const publicConfig=Object.freeze({version:NORMAL_HOST_VERSION,origin:c.origin,sourceMode:'REGISTERED_TEST_SOURCE',phase:'PREPARED_NOT_ACTIVATED',
+ const publicConfig=Object.freeze({version:NORMAL_HOST_VERSION,origin:c.origin,attestorMode:c.attestorMode??'OFFICIAL',sourceMode:'REGISTERED_TEST_SOURCE',phase:'PREPARED_NOT_ACTIVATED',
   policyHash:p0PolicyHash(P0_POLICY),chainId:null,network:null,applicationId:null,sourceCollectionConfigured:false,reviewConsentHttpImplemented:false,
   executionReceiptHttpImplemented:false,sourceSignatureHttpImplemented:false,signerInstalled:false,actualSourceVerification:null,productionEnabled:false});
  const server=createServer({...tls,requestTimeout:10000,headersTimeout:10000,maxHeaderSize:8192},(req,res)=>{

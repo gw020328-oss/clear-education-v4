@@ -60,9 +60,9 @@ export function sourceCutoff(source,at){
  check(Array.isArray(source.moodleObservedAt)&&source.moodleObservedAt.length===3&&Array.isArray(source.reclaimIssuedAt)&&source.reclaimIssuedAt.length===2,'SOURCE_WINDOW_COUNT');
  for(const t of [...source.moodleObservedAt,...source.reclaimIssuedAt,source.authLeaseExpiresAt,source.rawLeaseExpiresAt,source.queryLeaseExpiresAt,source.rawAcquiredAt,source.verifiedValidUntilExclusive])unsignedInteger(t,64);
  const observed=[...source.moodleObservedAt,...source.reclaimIssuedAt,source.rawAcquiredAt].map(BigInt);check(observed.every(t=>t<=at),'SOURCE_FUTURE');
- // Accept cutoff uses exclusive t+ageLimit, conservatively inside the v1
- // observation-age limit. This does not modify the v1 producer's age predicate.
- const cutoffs=[...source.moodleObservedAt.map(t=>BigInt(t)+300n),...source.reclaimIssuedAt.map(t=>BigInt(t)+900n),BigInt(source.rawAcquiredAt)+1800n,
+ // Source validity is independent of human review. Never extend an issued
+ // request or verified lease; their earlier bounds remain authoritative.
+ const cutoffs=[...source.moodleObservedAt.map(t=>BigInt(t)+900n),...source.reclaimIssuedAt.map(t=>BigInt(t)+900n),BigInt(source.rawAcquiredAt)+1800n,
   ...['authLeaseExpiresAt','rawLeaseExpiresAt','queryLeaseExpiresAt','verifiedValidUntilExclusive'].map(k=>BigInt(source[k]))];
  check(cutoffs.every(t=>t<(1n<<64n)),'SOURCE_TIME_OVERFLOW');
  const end=cutoffs.reduce((a,b)=>a<b?a:b);check(end<(1n<<64n),'SOURCE_TIME_OVERFLOW');return end;
@@ -100,7 +100,7 @@ export function createTestDraftInspector(serverSnapshot,{clock}={}){
    if(m.eligibilityRoute==='1')check(state.bothPartiesConsent,'CONSENT_REQUIRED');
    const at=now();check(BigInt(m.issuedAt)<=at&&at<BigInt(m.expiresAt)&&at<BigInt(m.firstReviewStartedAt)+600n,'FIRST_ACCEPT_TIME');
    if(m.eligibilityRoute==='2')check(at>=BigInt(m.decisionPublishedAt)+120n,'CONFIRMATION_WINDOW');
-   const sourceEnd=sourceCutoff(state.sourceWindow,BigInt(m.issuedAt));check(BigInt(m.sourceValidUntilExclusive)===sourceEnd&&at<sourceEnd,'SOURCE_CUTOFF');
+   const sourceEnd=sourceCutoff(state.sourceWindow,BigInt(m.issuedAt));check(BigInt(m.sourceValidUntilExclusive)<=sourceEnd&&at<BigInt(m.sourceValidUntilExclusive),'SOURCE_CUTOFF');
    return freeze({status:'UNSIGNED_PREFLIGHT_ONLY',version:VERSION,hashes:hashTestUnsignedPayload({domain:p.domain,message:m}),snapshotHash:auditHash('TARGET',s),stateSnapshotHash:auditHash('STATE',state),
     firstAcceptBoundsConsistent:true,sourceSignatureVerified:false,consentAuthenticityVerified:false,onchainStateVerified:false,profilePinMatchesE0:true,nonceConsumed:false,
     blockers:['E1_E3_CROSS_ACCEPTANCE_REQUIRED','E4_AUTHORITY_AND_FUNDING_RUNTIME_NOT_IMPLEMENTED'],gates:GATES});

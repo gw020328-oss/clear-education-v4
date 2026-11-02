@@ -93,3 +93,18 @@ test('cancelled application rejects a late registration signature and cannot reo
  assert.throws(()=>f.store.submitRecipientRegistration(f.aliceContext,f.app,body,f.key()),/BC_VIEW_STALE|CURRENT_MET/);
  assert.equal(f.packet().signatureAccepted,false);assert.equal(f.packet().status,'STALE');
 });
+
+for(const fault of ['reorg','unproven','logout','decision','registered','cache-changed'])test('anchored registration reread rejects '+fault+' after asynchronous canonical verification',async t=>{
+ const f=await setup(t),checkpoint={number:'10',hash:'0x'+'11'.repeat(32),time:String(f.time)};
+ let patch={},state={chainStatus:'NOT_REGISTERED',canonical:true,checkpoint:{...checkpoint,number:'11',hash:'0x'+'22'.repeat(32)}};
+ const store={getRecipientRegistration(c,a){return {...f.store.getRecipientRegistration(c,a),...patch};}};
+ const connection={async refresh(){},recipientRegistrationState(){return structuredClone(state);},async verifyRecipientRegistrationCheckpoint(a,p){
+  assert.equal(a,f.app);assert.deepEqual(p,checkpoint);
+  if(fault==='reorg'||fault==='unproven')throw Error('BC_RECIPIENT_REGISTRATION_CHAIN');
+  if(fault==='logout')f.service.logout(f.aliceContext);
+  if(fault==='decision')patch={decisionRevision:99};
+  if(fault==='registered')state={...state,chainStatus:'INCLUDED'};
+  if(fault==='cache-changed')state={...state,checkpoint:{...checkpoint,number:'12'}};
+ }};
+ await assert.rejects(readRecipientRegistration({store,connection,context:f.aliceContext,applicationId:f.app,checkpoint,authorize:(c,w)=>f.service.authorizeWorkflow(c,w)}),/REGISTRATION_CHAIN|REGISTRATION_TARGET|AUTH_REQUIRED/);
+});

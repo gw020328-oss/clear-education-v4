@@ -50,3 +50,14 @@ test('missing API completion configuration is UNKNOWN rather than inferred from 
 test('receipt and ephemeral raw/facts validate against independent retained hash',async()=>{const f=setup('reflection-topics'),r=await f.read();validateBootcampMoodleResult(r,{request:f.options.request,expectedReceiptHash:r.receiptHash,nowMs:f.time});for(const part of ['facts','source','acquisition']){const bad=structuredClone(r);if(part==='facts')bad.facts.authorAccountId=99;else if(part==='source')bad.source.body+='changed';else bad.acquisition.observedReaderId=99;assert.throws(()=>validateBootcampMoodleResult(bad,{request:f.options.request,expectedReceiptHash:r.receiptHash,nowMs:f.time}),/BCM_RESULT_CHANGED|BCM_RECEIPT_HASH/);}});
 test('new request and expired consumer cannot reuse historical successful receipt',async()=>{const f=setup(),r=await f.read(),q=structuredClone(f.options.request);q.context.sourceGeneration++;assert.throws(()=>validateBootcampMoodleResult(r,{request:q,expectedReceiptHash:r.receiptHash,nowMs:f.time}),/BCM_RECEIPT_BINDING/);assert.throws(()=>validateBootcampMoodleResult(r,{request:f.options.request,expectedReceiptHash:r.receiptHash,nowMs:q.context.expiresAtMs}),/BCM_EXPIRED/);});
 test('unexpected client and resolver diagnostics are sanitized',async()=>{const f=setup();f.setHook(()=>{throw Error('private provider details');});await assert.rejects(f.read(),{message:'REVIEW_UNAVAILABLE'});const g=setup();await assert.rejects(g.read({getCurrentRequest:()=>{throw Error('private resolver details');}}),{message:'REVIEW_UNAVAILABLE'});});
+
+test('long review request is explicit and cannot upgrade an old receipt deadline',async()=>{
+ const f=setup(),old=f.options.request,r=await f.read();
+ const context={...old.context,expiresAtMs:old.context.issuedAtMs+900000};
+ assert.throws(()=>createBootcampMoodleRequest({context,pin:old.pin}),/BCM_LEASE/);
+ const q=createBootcampMoodleRequest({context,pin:old.pin,version:'clear-moodle-bootcamp-read.2-review900'});
+ assert.notEqual(bootcampMoodleRequestHash(q),bootcampMoodleRequestHash(old));
+ assert.throws(()=>validateBootcampMoodleResult(r,{request:q,expectedReceiptHash:r.receiptHash,nowMs:f.time}),/BCM_RECEIPT_BINDING/);
+ assert.throws(()=>validateBootcampMoodleResult(r,{request:old,expectedReceiptHash:r.receiptHash,nowMs:old.context.expiresAtMs}),/BCM_EXPIRED/);
+ assert.throws(()=>createBootcampMoodleRequest({...q,context:{...context,expiresAtMs:context.expiresAtMs+1}}),/BCM_LEASE/);
+});

@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createSameOriginApi} from '../../src/application/api-client.mjs';
 import {normalApprovalFixture} from './normal-approval-fixture.mjs';
 import {createTestDriver,createTestAutoReader} from '../../tools/bootcamp/test-client/driver.js';
 import {createNormalBootcampClient} from '../../src/bootcamp/normal-client.mjs';
 import {displayedReviewWindow,testActionAvailability} from '../../tools/bootcamp/test-client/review-window.js';
-async function fixture(t,{lose=false}={}){
+async function fixture(t,{lose=false,httpTransport=false}={}){
  const x=await normalApprovalFixture(t);let posts=0,wall=x.f.time*1000,elapsed=1000,readsFailed=false,readConflict=false;
  const view=x.f.store.getApplication(x.f.aliceContext,x.app);
  const host={version:'clear-bootcamp-frontend-host.1',phase:'ACTIVE_LOCAL_TEST',sourceMode:'REGISTERED_TEST_SOURCE',productionEnabled:false,
@@ -24,6 +25,15 @@ async function fixture(t,{lose=false}={}){
    assert.fail(path);
   },end:async()=>{},
  };
+ if(httpTransport){
+  const dispatch=session.request;
+  const transport=createSameOriginApi({origin:x.f.config.origin,fetch:async(url,options)=>{
+   try{return Response.json(await dispatch(new URL(url).pathname,{...options,
+    body:options.body?JSON.parse(options.body):undefined,idempotencyKey:options.headers.get('idempotency-key')}));}
+   catch(error){return Response.json({error:error.code??error.message},{status:409});}
+  }});
+  session.request=(path,options={})=>transport(path,{...options,headers:options.idempotencyKey?{'idempotency-key':options.idempotencyKey}:{}});
+ }
  const driver=createTestDriver({session,createNormalClient:createNormalBootcampClient,now:()=>wall,elapsedNow:()=>elapsed});
  await driver.config();await driver.login();return {...x,driver,failNextRead:()=>{readConflict=true;},failReads:()=>{readsFailed=true;},get posts(){return posts;},setWall:v=>wall=v,advanceElapsed:ms=>elapsed+=ms};
 }
@@ -94,4 +104,22 @@ test('a successful fresh read clears a retryable observation error but requires 
  assert.equal(x.driver.snapshot().bootstrap.aiApproval,null);await x.driver.readLive();const s=x.driver.snapshot();
  assert.equal(s.error,null);assert.equal(s.bootstrap.aiApproval.status,'WAITING');
  assert.equal(testActionAvailability(s,{ack:false}).ai.code,'AI_ACK_REQUIRED');assert.equal(x.posts,0);
+});
+
+// Exercise the product transport, not a stub that already exposes Error.code.
+test('product HTTP waiting response retains the exact AI brief without approving or enabling payout',async t=>{
+ const x=await fixture(t,{httpTransport:true});await x.driver.readLive();
+ const s=x.driver.snapshot();assert.equal(s.error,null);assert.equal(s.bootstrap.aiApproval.status,'WAITING');
+ assert.ok(s.operations);assert.equal(s.canAgree,false);assert.equal(x.posts,0);
+ assert.equal(testActionAvailability(s,{ack:false}).ai.code,'AI_ACK_REQUIRED');
+ assert.equal(testActionAvailability(s,{ack:true}).ai.code,'READY');
+ assert.deepEqual(x.counts(),{fetches:0,keys:0});
+ await x.driver.approveAi();assert.equal(x.posts,1);assert.equal(x.driver.snapshot().aiApprovalReceipt.paymentConsentIncluded,false);
+ assert.deepEqual(x.counts(),{fetches:0,keys:0});
+});
+test('product HTTP real observation failure still clears AI approval and blocks payout',async t=>{
+ const x=await fixture(t,{httpTransport:true});await x.driver.readLive();x.failNextRead();
+ await assert.rejects(x.driver.readLive());const s=x.driver.snapshot();
+ assert.equal(s.bootstrap.aiApproval,null);assert.equal(s.canAgree,false);
+ await assert.rejects(x.driver.approveAi(),/TEST_AI_APPROVAL_NOT_READY/);assert.equal(x.posts,0);
 });

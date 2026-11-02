@@ -1,0 +1,93 @@
+{
+  "version": "clear-reflection-resume-source-delta.1",
+  "candidateHead": "a1b6d47ebca426e0ca4ab5242ca7bb2d3d9ff55b",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-failure-wait-source-delta-v1.json",
+    "sha256": "bb9dd9a7914f4db3cda07d5110a1a6645aff8e1fc90166c5273a26974c2faa28",
+    "guardHead": "8205da827cf093ee7ebbfecaf6bd79ec8c2241ab"
+  },
+  "changes": {
+    "src/bootcamp/execution-diagnostics.mjs": {
+      "before": "acd15b9e98ad19470227c3523bac69caf4bca36bc84bd8537f7f349fc4c3e6e4",
+      "after": "b17667856fa9053c7811a09ec358aecca1092b3e89e7bb9ff71adb04e4863504"
+    },
+    "src/bootcamp/http.mjs": {
+      "before": "e1c1d367ae1f9223463a45bbe417defff1f5ae934d5c06a0764a7d15ad984388",
+      "after": "184e3a2da287777f4b0460ff38c8d1b218dfb886a323bbf87171ae483b60eb45"
+    },
+    "src/bootcamp/moodle-live-consumer.mjs": {
+      "before": "1a166af83b7dd915ebae771bd845100333b80425e842c734c4f8d60b569db0ea",
+      "after": "caa492a9574db00905395d7e13836a8d7f77a5000835da03da134226208a2cbc"
+    },
+    "src/bootcamp/normal-receipt.mjs": {
+      "before": "93ea5de419d825c9b445e1f130020c72a79b936e6308d4212dd6949d8519c824",
+      "after": "39dc1ed1ccdb8540b13dc2cb6001949010532aac9c8a5c5cb650a8f95a7be0d2"
+    },
+    "src/document-precheck/review/fixed-normal-reflection.mjs": {
+      "before": "311ff5d3965c2dc08278248a2be2ce99efe58b7e1fbdd686dfebf68b33a191eb",
+      "after": "33ccb043f6983ecdd8f1ef254f75678c0ac5d82ad94988a10bc0ef25988b77c6"
+    },
+    "src/embedded-wallet/product-panel.jsx": {
+      "before": "e3447d834f0ca8bf73940707280bdcf890a49b08dffa4f751012a049233c7cfa",
+      "after": "ff4f36a87e2cf043638cf929566d3fb63a1f54a518aac0a462f079db65151cf8"
+    },
+    "tools/bootcamp/frontend-server.mjs": {
+      "before": "8448b9643d89c33c450d89d243172297ca251c46230d725151277b41465ed4d5",
+      "after": "83e4427b096f12170e5c8ffa546718c5a5d15d6178f78b940b62fe2cc09eb8ac"
+    },
+    "tools/bootcamp/live-context.mjs": {
+      "before": "f1be6b2b80dfc2f08322b1208a10651b940e4c0819944d1acb0216b55cc6f9a0",
+      "after": "49903a74314a8e169d4b87b2dbd9ddb67d1c4e3b8319b86b51e389ff15ff22b1"
+    },
+    "tools/bootcamp/normal-chain.mjs": {
+      "before": "657d80e2d9b3c3411f2aeb93fd24d3b9905ea48be38dc31575baa729119ec021",
+      "after": "567e0c761869f39432ce75f3425be8e7d03105ef2db66c927b9c9bce2649e925"
+    },
+    "tools/bootcamp/normal-failure-wait.mjs": {
+      "before": "eb2a63e1d2a66d8e61436dfbcb6c360ac41935eb724b43d12f0542be4c219853",
+      "after": "fb848f67f4bed8fcde9b68e800e6bd68c6acefea54f8ecaf75455dfcd8ac1b44"
+    },
+    "tools/bootcamp/normal-host-flow.mjs": {
+      "before": "66905c77a7b3559a48e92361f428d27f57ad31dd864169ee68d0d34361040e68",
+      "after": "9a6559df0769024cc21ff4dbfda42646fef9e2cd50f602a389027b586cc05e61"
+    },
+    "tools/bootcamp/normal-host-worker.mjs": {
+      "before": "89324b7427052c545cf69133d2fcc027e6a5fe9cf0761c476efa77ed2235f926",
+      "after": "c862abfb91731ba105f5e19d4b1de244bd37bbecaf44e6292a91881d0f8c08b6"
+    },
+    "tools/bootcamp/normal-reflection-run.mjs": {
+      "before": "e7ed93ee68943264056f9ff368be9a06ad3d2c31749b43a9c7b1dfdae6d24096",
+      "after": "22de4bce4fb8fca0f723a32baf115c5f4f0a89155979418ea89037674a132689"
+    },
+    "tools/bootcamp/normal-source-sequence.mjs": {
+      "before": "b6536566af7f8dac4ad92ce71ef9b8a7161672a6430f8fd88c0e345c1c3e0aa8",
+      "after": "59ee3fe7cfd94b1cf472064a5ce3517fe61e277eff162f16d7a13ee4e7e227ac"
+    },
+    "tools/bootcamp/test-client/driver.js": {
+      "before": "0c03ec308340072d7a83bb4976f9a9963f558975893798215e39bb0feae1c6a6",
+      "after": "95b9c77b786258d8d573ad8ce635afbfaeda1e8c023f94d5576340828cb7c435"
+    }
+  },
+  "sourceAdditions": {
+    "tools/bootcamp/normal-resume-control.mjs": "a00a31b1b03b3231018be4107696ce26f5fb4d7c3d24dd5954d9d56017eaf825",
+    "tools/bootcamp/test-client/session.js": "b037de2261fa8d30a5921172831537fde2c2e78c3c8637832be6593d286d1561"
+  },
+  "boundary": {
+    "sameSessionExplicitReflectionResume": true,
+    "durableUnsentAndUnusedApprovalRequired": true,
+    "completedResultReusedWithoutModelCall": true,
+    "originalEvidenceAndAuthExpiryPreserved": true,
+    "unknownReplayed": false,
+    "automaticRetry": false,
+    "newPaidAttemptEnabled": false,
+    "existingDeadlinesExtended": false,
+    "productionEnabled": false,
+    "actualExecution": false
+  },
+  "newlyPinnedExistingArtifacts": {
+    "tools/bootcamp/test-client/session.js": {
+      "before": "7ec877bafaf5d0b0ab8cb211c6d556380952afeb561c9d8d214151e3008f1677",
+      "after": "b037de2261fa8d30a5921172831537fde2c2e78c3c8637832be6593d286d1561"
+    }
+  }
+}
