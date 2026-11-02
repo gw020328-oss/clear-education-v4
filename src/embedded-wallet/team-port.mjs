@@ -13,7 +13,7 @@ export function createTeamPort({session,wallet,config}){
    return Object.freeze({wallet:actor.wallet,signIn:async()=>actor,signOut:()=>session.dispose(),request,
     bootcampSession:()=>normal.session(),signMessage:message=>product.bridge.sign(message),
     signTypedData(){throw Error('TEAM_REGISTRATION_GUARDED_ONLY');}});},
-  normal:Object.freeze({...normal,recipientRegistration:()=>product.readRegistration(),
+  normal:Object.freeze({...normal,get registrationUnknown(){return product.registrationUnknown;},recipientRegistration:()=>product.readRegistration(),
    registerReviewedRecipient:async packet=>{const b=await normal.session();if(b.failure)throw Error('TEAM_EXECUTION_FAILED');return product.submitRegistration(packet);},
    submitRecipientRegistration(){throw Error('TEAM_REGISTRATION_GUARDED_ONLY');}}),
   bridge:Object.freeze({...product.bridge,request,publicRead:request}),
