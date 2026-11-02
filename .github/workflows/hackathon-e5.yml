@@ -7,8 +7,6 @@ on:
       - 'tests/hackathon-test-vault/**'
       - 'docs/hackathon-test-vault/e5/**'
       - '.github/workflows/hackathon-e5.yml'
-  push:
-    branches: [codex/hackathon-e5-execution-service]
 permissions:
   contents: read
 concurrency:
