@@ -86,14 +86,15 @@ export function createExecutionOperations({db,transaction,authentication,operato
   }
  }
  function service(context,action,intentId,fn,validateCommit=null){
-  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REQUEST','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_DISPATCH_REQUEST','B_RECOVER_REQUEST','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
+  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REQUEST','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_DISPATCH_REQUEST','B_RECOVER_REQUEST','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','ACQUIRE_RUNTIME','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
    const corruption=global.audit(c.time);if(corruption)return {error:new Error('BC_E5_GLOBAL_STOPPED:'+corruption)};
    const i=l.intent(intentId);if(i)refresh(app(i.applicationId),c.time,c.reversed);db.exec('SAVEPOINT e5_service');
    try{const value=sync(fn(c.time,authority));
-    if(validateCommit){
+    // A fence-exhaustion stop retains its original blocked commit path.
+    if(validateCommit&&!(action==='ACQUIRE_RUNTIME'&&value?.status==='BLOCKED')){
      // The metadata operation and any preceding native work each happen once.
      // Only read-only validation can cross a second; the savepoint stays open.
      for(let validation=0;;validation++){
@@ -221,7 +222,8 @@ export function createExecutionOperations({db,transaction,authentication,operato
    return createApiExecutionBridge({db,ports:e4BridgePorts,service,live,basis,sameBasis,business,app,current,heads,source,global,runtime,event,fault},context);
   },
   acquireRuntime(context,body){exactKeys(body,['owner','expectedFence','generation','leaseSeconds'],'BC_E5_GLOBAL_ACQUIRE');
-   return service(context,'ACQUIRE_RUNTIME',null,(time,authority)=>global.acquire(time,authority,runtime(),body));},
+   return service(context,'ACQUIRE_RUNTIME',null,(time,authority)=>global.acquire(time,authority,runtime(),body),
+    (time,authority,h)=>global.validateAcquired(h,time,authority,runtime()));},
   heartbeatRuntime(context,h,seconds=30){return service(context,'HEARTBEAT_RUNTIME',null,(time,authority)=>global.heartbeat(h,time,authority,seconds));},
   bindRuntimeIntent(context,g,h){return service(context,'BIND_RUNTIME_INTENT',h.intentId,(time,authority)=>{
    live(h,time,authority.serviceId);return global.bind(g,h,time,authority);},(time,authority)=>{live(h,time,authority.serviceId);global.slot(g,h,time,authority);});},
