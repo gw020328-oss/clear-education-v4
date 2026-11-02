@@ -12,10 +12,11 @@ import {createApplicationService} from '../../src/application/service.mjs';
 import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server.mjs';
 async function port(){for(let n=0;n<100;n++){const p=20000+Math.floor(Math.random()*10000),a=netServer(),b=netServer();try{await new Promise((r,j)=>{a.once('error',j);a.listen(p,'127.0.0.1',r);});await new Promise((r,j)=>{b.once('error',j);b.listen(p+2,'127.0.0.1',r);});return p;}catch{}finally{await new Promise(r=>a.close(r));await new Promise(r=>b.close(r));}}throw Error('TEST_PORT_UNAVAILABLE');}
 function request(url,{ca,headers={},method='GET',body}={}){return new Promise((resolve,reject)=>{const q=(url.startsWith('https:')?httpsRequest:httpRequest)(url,{ca,headers,method,servername:'localhost'},r=>{let body='';r.on('data',x=>body+=x);r.on('end',()=>resolve({status:r.statusCode,headers:r.headers,body}));});q.on('error',reject);q.end(body);});}
-test('opt-in product HTTPS preserves auth, isolates OAuth navigation and exposes only pinned read RPC',async t=>{
+for(const team of [false,true])test((team?'team assets: ':'')+'opt-in product HTTPS preserves auth, isolates OAuth navigation and exposes only pinned read RPC',async t=>{
  const dir=realpathSync(mkdtempSync(join(tmpdir(),'clear-wallet-product-'))),web=join(dir,'web');mkdirSync(web);mkdirSync(join(web,'assets'));
  writeFileSync(join(web,'index.html'),'<h1>fixture</h1>');writeFileSync(join(web,'clear-wallet-app.html'),'<meta name="clear-wallet-app" content="synthetic00001">\n');
  for(const f of ['onboarding.js','operator.js'])writeFileSync(join(web,'assets',f),'// fixture');
+ if(team){mkdirSync(join(web,'team'));writeFileSync(join(web,'team/index.html'),'<h1>TEAM_FIXTURE</h1>');writeFileSync(join(web,'clear-team-app.html'),'<meta name="clear-team-app" content="1">\n');}
  const p=await port(),origin='https://127.0.0.1:'+p,chainId=1901234567,participant=Wallet.createRandom(),operator=Wallet.createRandom();
  const upstream=httpServer(async(req,res)=>{let input='';for await(const x of req)input+=x;const q=JSON.parse(input);res.setHeader('Content-Type','application/json');res.end(JSON.stringify({jsonrpc:'2.0',id:q.id,result:'0x'+chainId.toString(16)}));});
  await new Promise(r=>upstream.listen(0,'127.0.0.1',r));
@@ -28,7 +29,9 @@ test('opt-in product HTTPS preserves auth, isolates OAuth navigation and exposes
  const page=await get('/onboarding?privy_oauth_code=fixture',{headers:{'sec-fetch-site':'cross-site','sec-fetch-mode':'navigate','sec-fetch-dest':'document'}});
  assert.equal(page.status,200);assert.match(page.body,/assets\/onboarding.js/);assert.match(page.headers['content-security-policy'],/auth.privy.io/);
  assert.equal((await get('/__embedded/config',{headers:{'sec-fetch-site':'cross-site'}})).status,403);
- const c=JSON.parse((await get('/__embedded/config')).body);assert.equal(c.chainId,chainId);assert.equal(c.instanceId,id('product-http'));assert.equal(c.rpcUrl,'http://127.0.0.1:'+(p+2));
+ const c=JSON.parse((await get('/__embedded/config')).body);assert.equal(c.teamFrontend,team);
+ if(team){const page=await get('/team/index.html');assert.equal(page.status,200);assert.match(page.body,/TEAM_FIXTURE/);assert.match(page.headers['content-security-policy'],/frame-ancestors 'self'/);assert.doesNotMatch(page.headers['content-security-policy'],/unsafe-|auth.privy.io/);}
+ assert.equal(c.chainId,chainId);assert.equal(c.instanceId,id('product-http'));assert.equal(c.rpcUrl,'http://127.0.0.1:'+(p+2));
  assert.equal(JSON.parse((await get('/__dev/config')).body).network.rpcUrls[0],c.rpcUrl);
  const rpc=(method,o=origin)=>request(c.rpcUrl,{method:'POST',headers:{origin:o,'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params:[]})});
  assert.equal((await rpc('eth_chainId')).status,200);assert.equal((await rpc('eth_chainId')).headers['access-control-allow-origin'],origin);

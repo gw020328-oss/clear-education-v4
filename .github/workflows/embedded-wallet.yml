@@ -30,6 +30,8 @@ jobs:
           ./tools/node tools/embedded-wallet/reviewed-dependencies.mjs --apply
       - name: Build real SDK, no account or secret
         run: ./tools/npm --prefix src/embedded-wallet run build
+      - name: Immutable team SDK and public assets build with synthetic App ID
+        run: CLEAR_TEAM_BUILD_TEST=1 ./tools/node --test tests/embedded-wallet/team-build.test.mjs
       - name: Synthetic identity, real CLEAR verifiers, isolated HTTPS host
         run: ./tools/node --test tests/embedded-wallet/*.test.mjs tests/application/*.test.mjs
       - name: Source and review deadlines, legacy expiry and replay regression (offline)

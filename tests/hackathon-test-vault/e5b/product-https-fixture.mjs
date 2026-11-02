@@ -1,3 +1,4 @@
+import {createTeamPort} from '../../../src/embedded-wallet/team-port.mjs';
 // Product HTTPS mount + browser API + product signing adapter. Wallets are test EOAs.
 import assert from 'node:assert/strict';
 import {once} from 'node:events';
@@ -29,9 +30,10 @@ export async function productHttps(t,{store,authentication,context,key,normalUi,
  const product=({app,participant})=>{
   normalUi.getSession=c=>{const actor=authentication.authorizeWorkflow(c,false);return {version:'clear-bootcamp-normal-session.1',sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,role:actor.role.toUpperCase(),applicationId:app,policyHash:runtime.policyHash,runtimeMappingHash:runtime.runtimeMappingHash,expectedPayment:{recipient:participant.address.toLowerCase()},
    signingContext:{source:{applicationId:app,policyHash:runtime.policyHash,runtimeMappingHash:runtime.runtimeMappingHash},registration:{applicationId:app,instanceId:runtime.instanceId,verifyingContract:runtime.vaultAddress,policyHash:runtime.policyHash,runtimeMappingHash:runtime.runtimeMappingHash,participant:participant.address}}};};
-  return createProductSession({session:{assertSession:async()=>authentication.authorizeWorkflow(context,false),request:(path,{idempotencyKey,...options}={})=>api(path,{...options,headers:idempotencyKey?{'idempotency-key':idempotencyKey}:{}})},
+  const options={session:{assertSession:async()=>authentication.authorizeWorkflow(context,false),request:(path,{idempotencyKey,...options}={})=>api(path,{...options,headers:idempotencyKey?{'idempotency-key':idempotencyKey}:{}})},
    wallet:{pin:{address:participant.address,chainId:Number(runtime.chainId)},async typed(payload){events.push({method:'WALLET',path:'REGISTRATION'});return participant.signTypedData(payload.domain,payload.types,payload.message);}},
-   config:{appId:'synthetic00001',origin,redirectUri:origin+'/onboarding',phase:'ACTIVE_LOCAL_TEST',chainId:Number(runtime.chainId),rpcUrl:runtime.endpoint,instanceId:runtime.instanceId}});
+   config:{appId:'synthetic00001',origin,redirectUri:origin+'/onboarding',phase:'ACTIVE_LOCAL_TEST',chainId:Number(runtime.chainId),rpcUrl:runtime.endpoint,instanceId:runtime.instanceId}};
+  const team=createTeamPort(options);return {readRegistration:()=>team.normal.recipientRegistration(app),submitRegistration:packet=>team.normal.registerReviewedRecipient(packet)};
  };
  return {raw,request,product,events};
 }
