@@ -1,0 +1,38 @@
+{
+  "version": "clear-team-application-source-delta.1",
+  "candidateHead": "43cf444d1825106e7aa07d0f38a49eb6bdae1157",
+  "previousRecord": {
+    "path": "specs/bootcamp/hackathon-test-team-scroll-source-delta-v1.json",
+    "sha256": "824a154ed2c07f81f360c808c156dcb553010893cc1fb9cf41661b6e47841a8d",
+    "guardHead": "6b668682845d76821de37071913edc498ad32ef5"
+  },
+  "changes": {
+    "src/application/api-client.mjs": {
+      "before": "d268a8a03bfd9028d1a0a905fb2c7e74e05e58ea2249b15ee95fe46e10917780",
+      "after": "9f0a5ace6c99a559b7a3ba3e5cdef36fb2272beaedeb8d66467f0956ab9f5ba2"
+    },
+    "web/src/bootcamp/team-entry.js": {
+      "before": "552af229ce28165c3f94fd4d72572c794d50f136794b1449c6229599b05d86e9",
+      "after": "d0ee1111ef946f55a448c03d7d26699d49e7d7059edacdddf0c4a0761c185dff"
+    },
+    "web/src/bootcamp/team-render.js": {
+      "before": "e96ac772fb693355c1216a0097e1c218152ff7ea9abe4562a1b8d5e08d545d55",
+      "after": "d07f9b54508399fc04c3cc629f39c5d1fcdfd542df853290ff13b8a89f39b3d7"
+    }
+  },
+  "sourceAdditions": {
+    "web/src/bootcamp/team-application.js": "02d88afa60505edda1c98868df684f2274f59b7fe5ccb57066a08a930df50a43",
+    "web/src/bootcamp/operator-view.js": "de018ecfc603f91b8cd3ac3089008c9f3f66dca07a5cc405accbdfe66082fbf9",
+    "web/styles.css": "c69d935e2d2fa97a0a8d781574607fa6347662c29a48a721dba04466dfbe857d"
+  },
+  "boundary": {
+    "singleAuthenticatedApplicationOnly": true,
+    "noCohortFixtureFallback": true,
+    "existingExplicitConsentController": true,
+    "originalTargetAndDeadlinesPreserved": true,
+    "unknownConsentSameKeyManualOnly": true,
+    "readConflictRouteAndGetOnly": true,
+    "automaticWritesOrSignatures": false,
+    "actualUserCompletionClaimed": false
+  }
+}
