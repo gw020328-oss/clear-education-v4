@@ -1,6 +1,6 @@
 {
   "version": "clear-team-application-source-delta.1",
-  "candidateHead": "43cf444d1825106e7aa07d0f38a49eb6bdae1157",
+  "candidateHead": "d13e4a1fd8c5d396387a17042a3bd7de6b7c7219",
   "previousRecord": {
     "path": "specs/bootcamp/hackathon-test-team-scroll-source-delta-v1.json",
     "sha256": "824a154ed2c07f81f360c808c156dcb553010893cc1fb9cf41661b6e47841a8d",
@@ -18,6 +18,10 @@
     "web/src/bootcamp/team-render.js": {
       "before": "e96ac772fb693355c1216a0097e1c218152ff7ea9abe4562a1b8d5e08d545d55",
       "after": "d07f9b54508399fc04c3cc629f39c5d1fcdfd542df853290ff13b8a89f39b3d7"
+    },
+    "src/bootcamp/normal-receipt.mjs": {
+      "before": "39dc1ed1ccdb8540b13dc2cb6001949010532aac9c8a5c5cb650a8f95a7be0d2",
+      "after": "447bbdff2ff798b7f39be92ad8e41e024c37abd4b59af43b9a07e49094f0ec1b"
     }
   },
   "sourceAdditions": {
@@ -33,6 +37,8 @@
     "unknownConsentSameKeyManualOnly": true,
     "readConflictRouteAndGetOnly": true,
     "automaticWritesOrSignatures": false,
-    "actualUserCompletionClaimed": false
+    "actualUserCompletionClaimed": false,
+    "receiptLocalProjectionRefreshOnce": true,
+    "canonicalReadOrPaymentReplay": false
   }
 }
