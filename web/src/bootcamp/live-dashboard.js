@@ -7,7 +7,7 @@ export function liveDashboard({view,workflow,operator=false}){
  const section=el('section.bcx',{},[navBar({who:operator?'운영자':'참가자'}),el('section.hero.grid-bg',{},[el('div',{},[ghostWord('CLEAR'),statusPill(workflow.paid?'수령 확인':'신청 진행'),
   el('p.hero-kicker',{text:operator?'운영자 · 연결된 신청 1건':'참가자 · 내 신청'}),
   el('h1.hero-title',{text:workflow.paid?'100 TEST 수령 확인':operator?'신청 검토와 지급':'내 진행 현황'}),
-  el('p.hero-sub',{text:workflow.summary}),
+  el('p.hero-sub',{text:workflow.paid?'지급 영수증에서 수령 주소와 정확한 100 TEST 수령을 확인했습니다.':workflow.summary}),
  ])]),band('지금 할 일',workflow.preparation)]);
  if(view)section.append(band('조건별 진행 현황',progressSection(view,{onOpen:workflow.openCondition})));
  else section.append(band('조건별 진행 현황',el('p',{text:'증빙 확인 후 서버의 네 조건 판정을 표시합니다.'})));
