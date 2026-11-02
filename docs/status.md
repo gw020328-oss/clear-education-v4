@@ -1,5 +1,32 @@
 # 개발 현황
 
+## 2026-11-02 등록·지급 준비 경계와 실제 미완료 현황
+
+원격 확인 **2026-11-02 11:04 KST**. develop은 [a6372f5](https://github.com/gw020328-oss/clear-education-v4/commit/a6372f50bc1e757d724bb064c723d7103ff064e1), main은 [6e1c403](https://github.com/gw020328-oss/clear-education-v4/commit/6e1c4038f9ccf5f1adb96d85b2eebd07b2fd4212)이며 어제 이후 새 기능 병합은 없다. [#131](https://github.com/gw020328-oss/clear-education-v4/pull/131)의 아래 후속은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 공개 기록의 저장 결과이며 이번 자동화가 실행한 결과가 아니다.
+
+### 진행 — 제품 등록 조회·지급 준비 시계 경계 후보
+
+[고정 head의 공개 검증](https://github.com/gw020328-oss/clear-education-v4/blob/7f59697f8086180ab48a3d0852fb7868d42a0e04/docs/current/BOOTCAMP_LIVE_PREPARATION_CLOCK_VERIFICATION.json)과 [수정/인계](https://github.com/gw020328-oss/clear-education-v4/blob/7f59697f8086180ab48a3d0852fb7868d42a0e04/docs/current/BOOTCAMP_LIVE_PREPARATION_CLOCK.ko.md)는 등록 checkpoint GET을 제품 브라우저 API/HTTPS 허용 목록에 연결하고 ISOLATED_LIVE_TEST 지급 준비 commit에 실제 시계를 사용하도록 보완했다고 보고한다. REGISTERED_TEST_SOURCE의 시험용 시계 주입 금지는 유지한다. B_SEAL_REQUEST의 의도 메타데이터는1회 기록하며 기존 service/runtime/lease/CAS/명령/기한의 제한된 최종 읽기 검증 뒤 native sealing1회를 호출한다. 역행·반복 충돌·철회·만료는 키 접근 전에 차단하고 원래 만료·nonce·계약/DB schema·자동 재시도 정책은 바꾸지 않는다.
+
+공개 기록의 보존된 실제 실행은 BIND_CONSENTS까지4거래·양측 동의2건이며 preparedRows0·paymentSignatures0, PREPARE/ACCEPT/claim 완료가 아니다. 저장 실패 코드는 UNCLASSIFIED이고 원래 raw 예외는 미보존이다. 같은 실행 모드/경로에서 REAL_CLOCK_REQUIRED를 재현한 근거와 역사적 원인 확정을 구분한다. **원래 검토 기한2026-11-01 16:39:15 KST가 만료돼 resumeAllowed=false**이며 기존 DB/체인/승인/used·spent는 보존한다. 재현·수정으로 기존 실행을 재개/지급 완료 처리하지 않는다.
+
+### 합성 리허설과 실제 검증의 구분
+
+수정 후 리허설은 실제 벽시계·제품 HTTPS/client·등록 signing adapter/live 소비자·authority/relayer·새 격리 Geth V2를 사용했지만, HackerRank는 합성 HTTPS/self Attestor·Moodle은 가상 API·AI는 가짜 키/가상 승인/차단 HTTP 응답·지갑은 새 시험 EOA다. 등록→배정→검토→양측 동의→PREPARE→ACCEPT→별도 claim의 canonical receipt·100000000 atoms 및100 TEST 잔액 증가·중복 거부를 확인했다. **finalized=false이며 실제 Google/Privy/MetaMask UI·유료 AI·사용자 지급·공식 hosted/독립 신뢰 성공이 아니다.** normal-host 사용자 bootstrap 전체 브라우저 시험도 아니다. 기존 r20 V1 성공을 새 V2 제품 완주로 재사용하지 않는다.
+
+로컬 원장/실행/권한1031/1031·native seal7/7·원래60초 lease 만료의 좁힌1/1·소스 호환/변조183/183은 각각의 범위이며 합산하지 않는다. 병렬 검사 중 원천 timeout은 보존하고 시간 제한 변경 없이 단독 리허설을 검증했다고 보고한다. E5B job77 PASS와 분리된9개 self-profile 검사는 별도 job에서 실행/통과한 범위로 구분한다. v53의 변경 runtime4개·192개 source pin과 이전 세대/실패 기록을 보존한다. 실제 새 재실행은 사용자/본부의 별도 조율 단계이며 이 자동화는 로그인·원천·유료 호출·서명·지급을 요청/실행하지 않는다.
+
+### 정확한 head CI와 열린 PR
+
+| PR | 확인 head SHA | 표시 job COMPLETED·SUCCESS | 실행 근거 |
+| --- | --- | --- | --- |
+| [#131](https://github.com/gw020328-oss/clear-education-v4/pull/131) | 7f59697f8086180ab48a3d0852fb7868d42a0e04 | 12/12 | [run 41286313580](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286313580) · [run 41286313618](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286313618) · [run 41286313592](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286313592) · [run 41286310945](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286310945) · [run 41286313607](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286313607) · [run 41286313572](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286313572) · [run 41286313653](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286313653) · [run 41286310959](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41286310959) |
+| [#128](https://github.com/gw020328-oss/clear-education-v4/pull/128) | 2938655525fa4a2799cce8b6210784b9977e2b4b | 4/6 | [run 41306487844](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41306487844) · [run 41306481395](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41306481395) |
+
+#131의12개 job은 모두 SUCCESS이며 내부 분리 실행 사례/고유 테스트 수와 혼용하지 않는다. #128은 새 head2938655에서도 공개 이력 PR/push2개 FAILURE로 전체 성공이 아니며 실제 API0건인 합성 시연이라는 공개 설명을 유지한다. 민감 실패 로그·개인 경로를 읽거나 원인을 추정하지 않는다. 현재 열린 기능 PR은 #60·#125·#128·#131이며 문서 자동화 #132와 별개다. #131 전체 base diff에 미병합 선행 기능이 포함돼 문서 전용 PR으로 취급하지 않는다.
+
+이전 날짜별 회고 실패/만료·준비·합성 성공은 각각 당시 기록이다. 이번 자동화는 공개 문서/코드·CI만 대조했으며 실제 원문/proof·쿠키·개인키·민감 로그 접근, 비공개 메일 조회/발송·새 로그인/유료 호출/서명/거래/배포를 하지 않았다. 기능 PR은 수정/병합하지 않는다.
+
 ## 2026-11-01 회고 수동 재개·만료 입력과 로그인 진단 현황
 
 원격 확인 **2026-11-01 11:00 KST**. develop은 [a6372f5](https://github.com/gw020328-oss/clear-education-v4/commit/a6372f50bc1e757d724bb064c723d7103ff064e1), main은 [dc012be](https://github.com/gw020328-oss/clear-education-v4/commit/dc012be5adec29229d21dbdca24ee97f01e735d1)이며 어제 이후 새 기능 병합은 없다. [#125](https://github.com/gw020328-oss/clear-education-v4/pull/125)와 [#131](https://github.com/gw020328-oss/clear-education-v4/pull/131)은 **develop 작업 브랜치 기준, develop/main 미병합**이다. 아래는 공개 보고서의 저장된 결과이며 이번 자동화가 실제 시험을 재실행한 결과가 아니다.
