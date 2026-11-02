@@ -15,14 +15,15 @@ import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server
 import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {createProductSession,registrationFailure} from '../../src/embedded-wallet/product-session.mjs';
 import {createSameOriginApi} from '../../src/application/api-client.mjs';
-import {requireRule as check} from '../../src/policy/values.mjs';
+import {RuleError,requireRule as check} from '../../src/policy/values.mjs';
 async function fixture(t,{team=false}={}){
  const f=await procedureFixture(t),reg=f.configuration.procedurePorts.registration;f.auth.domain.chainId=String(f.config.chainId);
  f.configuration.procedurePorts.registration=(...args)=>({...reg(...args),version:'clear-bootcamp-procedure-registration-port.2'});f.restart();
  const app=f.create();await f.complete(app);f.store.registerCurrentMetForE4(f.aliceContext,app,f.body(app),f.key());
  const initial=f.store.getRecipientRegistration(f.aliceContext,app),p=initial.payload;
  let block=10,patch={},chainPatch={},proofs=0,walletCalls=0,posts=0,lost=false,walletHook=()=>{};const events=[];
- const store={...f.store,getRecipientRegistration(c,a){return {...f.store.getRecipientRegistration(c,a),...patch};}};
+ let storeReadHook=()=>{};
+ const store={...f.store,getRecipientRegistration(c,a){storeReadHook();return {...f.store.getRecipientRegistration(c,a),...patch};}};
  const connection={async refresh(){block++;},recipientRegistrationState(){return {chainStatus:'NOT_REGISTERED',canonical:true,finalized:false,checkpoint:{number:String(block),hash:id('block-'+block),time:String(f.time)},registrationSequence:null,recipient:null,chainApplicationId:p.message.applicationId,...chainPatch};},
   async verifyRecipientRegistrationCheckpoint(a,checkpoint){proofs++;assert.equal(a,app);check(checkpoint.hash===id('block-'+checkpoint.number)&&BigInt(checkpoint.number)<=BigInt(block),'BC_RECIPIENT_REGISTRATION_CHAIN');}};
  const bootstrap={version:'clear-bootcamp-normal-session.1',role:'PARTICIPANT',applicationId:app,policyHash:p.message.policyHash,runtimeMappingHash:p.message.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true,expectedPayment:{recipient:f.alice.address.toLowerCase()},
@@ -51,7 +52,7 @@ async function fixture(t,{team=false}={}){
   wallet:{pin:{address:f.alice.address,chainId:f.config.chainId},async typed(payload){walletCalls++;events.push('WALLET');await walletHook();return f.alice.signTypedData(payload.domain,payload.types,payload.message);}},
   config:{appId:'synthetic00001',origin,redirectUri:origin+'/onboarding',phase:'ACTIVE_LOCAL_TEST',chainId:f.config.chainId,rpcUrl:'http://127.0.0.1:19999',instanceId:p.domain.salt}};
  const port=team?createTeamPort(options):null;const product=team?{readRegistration:()=>port.normal.recipientRegistration(app),submitRegistration:packet=>port.normal.registerReviewedRecipient(packet),get registrationUnknown(){return false;}}:createProductSession(options);
- return {f,app,base,product,port,raw,request,initial,events,stats:()=>({proofs,walletCalls,posts}),patch:v=>{patch=v;},chain:v=>{chainPatch=v;},duringWallet:fn=>{walletHook=fn;},loseReply:()=>{lost=true;}};
+ return {f,app,base,product,port,raw,request,initial,events,stats:()=>({proofs,walletCalls,posts}),patch:v=>{patch=v;},chain:v=>{chainPatch=v;},duringStoreRead:fn=>{storeReadHook=fn;},duringWallet:fn=>{walletHook=fn;},loseReply:()=>{lost=true;}};
 }
 test('product HTTPS completes plain read, anchored pre-read, one wallet request, anchored post-read and one submit',async t=>{
  const x=await fixture(t),packet=await x.product.readRegistration();const before=x.f.counts();
@@ -116,4 +117,17 @@ test('team registration rejects target change during wallet request with no subm
  const x=await fixture(t,{team:true});const packet=await x.port.normal.recipientRegistration(x.app);
  x.duringWallet(()=>x.patch({decisionRevision:packet.decisionRevision+1}));
  await assert.rejects(x.port.normal.registerReviewedRecipient(packet),/REGISTRATION_STALE/);assert.equal(x.stats().posts,0);assert.equal(x.stats().walletCalls,1);
+});
+
+for(const phase of ['before','after'])test('team '+phase+' signing read crosses a second with no repeated signature or RPC',async t=>{
+ const x=await fixture(t,{team:true});const packet=await x.port.normal.recipientRegistration(x.app);let armed=phase==='before',conflicts=0;
+ if(phase==='after')x.duringWallet(()=>{armed=true;});
+ x.duringStoreRead(()=>{if(armed&&conflicts++===0)throw new RuleError('BC_VIEW_STALE');});
+ await x.port.normal.registerReviewedRecipient(packet);assert.equal(x.stats().walletCalls,1);assert.equal(x.stats().posts,1);assert.equal(x.stats().proofs,2);
+ assert.equal(x.f.store.getRecipientRegistration(x.f.aliceContext,x.app).payload.message.deadline,packet.payload.message.deadline);
+});
+for(const kind of ['repeat-conflict','forbidden','untrusted-error'])test('team post-sign '+kind+' rejects before registration submission',async t=>{
+ const x=await fixture(t,{team:true});const packet=await x.port.normal.recipientRegistration(x.app);let armed=false,calls=0;x.duringWallet(()=>{armed=true;});
+ x.duringStoreRead(()=>{if(!armed)return;calls++;throw kind==='untrusted-error'?Error('BC_VIEW_STALE'):new RuleError(kind==='forbidden'?'FORBIDDEN':'BC_VIEW_STALE');});
+ await assert.rejects(x.port.normal.registerReviewedRecipient(packet));assert.equal(calls,kind==='repeat-conflict'?2:1);assert.equal(x.stats().walletCalls,1);assert.equal(x.stats().posts,0);
 });
