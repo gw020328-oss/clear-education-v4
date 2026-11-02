@@ -1,0 +1,36 @@
+{
+  "version": "clear-existing-design-source-delta.1",
+  "candidateHead": "8938e36f5d7339a644222676c3fac25df01d3905",
+  "baseHead": "e7f77ed2105234ca9be6f2a0027474195c342c1b",
+  "previousGuardSha256": "72a3f1329dcd58afed129f74f5204b9fdff17028f653605318645e2ff8571dab",
+  "changes": {
+    "web/src/bootcamp/operator-view.js": {
+      "before": "de018ecfc603f91b8cd3ac3089008c9f3f66dca07a5cc405accbdfe66082fbf9",
+      "after": "1543ed1ddcb2cc2b74a7361d3660ec18acdabd5218243a16385ea4bc4fcd62ca"
+    },
+    "web/src/bootcamp/team-entry.js": {
+      "before": "d0ee1111ef946f55a448c03d7d26699d49e7d7059edacdddf0c4a0761c185dff",
+      "after": "cae2a87c4bc569f7ef9d2ff693045bc5b4243eccd17d235943d66392176cc3da"
+    },
+    "web/src/bootcamp/team-render.js": {
+      "before": "d07f9b54508399fc04c3cc629f39c5d1fcdfd542df853290ff13b8a89f39b3d7",
+      "after": "4199bcd60df9a337e3cada67e0eba8d1b3118ebeb8b3dfbc9ab3f28a2ca57c78"
+    },
+    "web/src/bootcamp/team-application.js": {
+      "before": "02d88afa60505edda1c98868df684f2274f59b7fe5ccb57066a08a930df50a43",
+      "after": "6abe0d6997aa9b74037b80313a9876b340068886903b5500d7f1430abf70187b"
+    }
+  },
+  "sourceAdditions": {
+    "web/src/bootcamp/student-view.js": "3bdd64a493a17ea1543642acdc65037f14ce370cfadcdb419aba3dfdc777a2e7",
+    "web/src/bootcamp/criteria.js": "fa50151b74a4a1cf1f094b4aad9a7f62321721bb61d349e0c26f7dba32c6712d",
+    "web/src/bootcamp/live-dashboard.js": "5fcc2e6f90ae966fd5d33d3939a9a064e1ebb39dbef54ca02cbb6e9ac0b3cf55",
+    "web/src/bootcamp/live-evidence.js": "b2cb3242a58f92f2cf8dad912aee7f193a4dafbe36ab22401c2e4065d46ac8b2"
+  },
+  "boundary": {
+    "sameAuthenticatedDriver": true,
+    "signingAndDeadlinesUnchanged": true,
+    "syntheticValidationOnly": true,
+    "actualRunStarted": false
+  }
+}
