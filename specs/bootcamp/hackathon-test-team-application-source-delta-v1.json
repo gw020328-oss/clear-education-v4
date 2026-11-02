@@ -1,6 +1,6 @@
 {
   "version": "clear-team-application-source-delta.1",
-  "candidateHead": "d13e4a1fd8c5d396387a17042a3bd7de6b7c7219",
+  "candidateHead": "8fa3a2557d9ad43e49c351e7a8bdcde049303215",
   "previousRecord": {
     "path": "specs/bootcamp/hackathon-test-team-scroll-source-delta-v1.json",
     "sha256": "824a154ed2c07f81f360c808c156dcb553010893cc1fb9cf41661b6e47841a8d",
@@ -22,6 +22,14 @@
     "src/bootcamp/normal-receipt.mjs": {
       "before": "39dc1ed1ccdb8540b13dc2cb6001949010532aac9c8a5c5cb650a8f95a7be0d2",
       "after": "447bbdff2ff798b7f39be92ad8e41e024c37abd4b59af43b9a07e49094f0ec1b"
+    },
+    "src/bootcamp/execution-authority.mjs": {
+      "before": "32e90985103078bd6565f57b4f235031293e3a0df70168a57d09cfc8f0aa1b07",
+      "after": "0043f1acac3f5971ff96d9b775ea67c11c2d91b175e75f287d1885388cb8e07a"
+    },
+    "src/bootcamp/execution-operations.mjs": {
+      "before": "509fc759397fe2bc385ff9cf4ce196aa259e0942c970adf3ef8d8941e2168572",
+      "after": "2ddd9d2a661fbca2b74752632a50eef8e453b3631c86fced6d7f0d041d9d8b2c"
     }
   },
   "sourceAdditions": {
@@ -39,6 +47,7 @@
     "automaticWritesOrSignatures": false,
     "actualUserCompletionClaimed": false,
     "receiptLocalProjectionRefreshOnce": true,
-    "canonicalReadOrPaymentReplay": false
+    "canonicalReadOrPaymentReplay": false,
+    "runtimeAcquisitionWriteOnceOriginalExpiry": true
   }
 }
