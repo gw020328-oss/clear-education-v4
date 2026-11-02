@@ -22,7 +22,7 @@ writeFileSync(directory+'/clear-wallet-app.html',`<meta name="clear-wallet-app" 
 if(process.argv.includes('--team')){
  mkdirSync(directory+'/team',{mode:0o700});
  for(const name of ['src','fonts','styles.css'])cpSync(root+'web/'+name,directory+'/team/'+name,{recursive:true});
- const html=readFileSync(root+'web/index.html','utf8').replace('./src/main.js','./src/bootcamp/team-entry.js');
+ const html=readFileSync(root+'web/index.html','utf8').replace('./src/main.js','./src/bootcamp/team-entry.js').replace('<main id="main"','<main hidden id="main"');
  writeFileSync(directory+'/team/index.html',html);
  writeFileSync(directory+'/clear-team-app.html','<meta name="clear-team-app" content="1">\n');
  copyFileSync(root+'tools/bootcamp/test-client/driver.js',directory+'/team-driver.js');

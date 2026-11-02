@@ -32,8 +32,9 @@ async function start(){
  }
  await driver.config();await driver.login();reader.sync();render();
  await import('../main.js');
- const attach=async()=>{await window.clearTeamConnection.probe();await window.clearTeamConnection.signIn();await window.clearTeamRefresh();};await attach();
+ const attach=async()=>{await window.clearTeamConnection.probe();await window.clearTeamConnection.signIn();await window.clearTeamRefresh();if(window.clearTeamConnection.current.state!=='LIVE')throw Error('TEAM_ATTACH_FAILED');document.querySelector('#main').hidden=false;};await attach();
  let refreshing=false;const tick=setInterval(()=>{reader.sync();render();if(!refreshing){refreshing=true;void window.clearTeamRefresh().finally(()=>{refreshing=false;});}},1000);
  addEventListener('pagehide',()=>{clearInterval(tick);reader.close();driver.cancel();},{once:true});
 }
-addEventListener('clear-team-ready',()=>{void start();});void start();
+const launch=()=>{void start().catch(()=>{const main=document.querySelector('#main');main.hidden=false;main.textContent='팀원 화면 연결을 확인하지 못했습니다. 현재 인증·서버 상태를 실행 담당자에게 알려주세요.';});};
+addEventListener('clear-team-ready',launch);launch();
