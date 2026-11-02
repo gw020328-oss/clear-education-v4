@@ -38,3 +38,14 @@ Std 는 KS X 1001 상용 한글 2,350자를 담는다 — 화면 문구에는 �
 둘 다 **SIL Open Font License 1.1** 이다. 재배포할 수 있고, 조건은 라이선스
 전문을 같이 두는 것이다 — `OFL-Inter.txt`, `OFL-Pretendard.txt` 가 그것이다.
 **지우지 말 것.** 글꼴 파일만 남기고 라이선스를 빼면 OFL 위반이다.
+
+## 공개 이력 검토 (2026-11-02)
+
+두 파일을 아래 고정 버전 원본과 바이트 단위로 비교했다. 라이선스 전문은 위 파일에 보존한다.
+
+- Inter: https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.1.0/files/inter-latin-wght-normal.woff2
+  SHA-256: `f052ee44c3728dfd23aba8a4567150bc314d23903026fbb6ad089422c2df56af`
+- Pretendard: https://cdn.jsdelivr.net/npm/pretendard-std@1.3.9/dist/web/variable/woff2/PretendardStdVariable.woff2
+  SHA-256: `64a2b7110454edf0e5f555785273b5817d7e3a0a107a55acf8e4150e09a31557`
+
+기존 전역 text 설정이 Pretendard의 CRLF 4곳을 LF로 변환했다. 원본으로 복구하고 .gitattributes에서 WOFF2 변환을 끈다. 과거 변형본(291,676바이트, SHA-256 `3a178c75a4e3fc7d295d2135a25aaf8a84a7adc9c6eacfc7a11446153cc1ef56`)은 원본의 CRLF→LF 변환과 정확히 일치함을 확인했다. 이력 검사에서는 이 두 경로와 검토된 해시만 허용한다. 다른 경로·수정된 바이너리는 계속 차단한다.
