@@ -14,6 +14,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  frontend-tests:
+    name: Frontend offline tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - name: Test frontend without login or paid calls
+        run: |
+          ./tools/node --test web/tests/*.test.mjs
+          ./tools/node web/tools/verify-screens.mjs
+          ./tools/node web/tools/verify-states.mjs
+
   public-content:
     name: Public content history
     runs-on: ubuntu-24.04
