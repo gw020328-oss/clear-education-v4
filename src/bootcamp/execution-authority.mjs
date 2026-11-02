@@ -97,14 +97,22 @@ export function createRuntimeAuthority({db,runtimeId,runtimePinHash,e4Runtime=nu
    &&row.lease_id===h.leaseId&&row.fence===h.workerFence&&row.generation===h.generation&&row.expires_at>time,'BC_E5_GLOBAL_FENCED');return row;}
  const handle=row=>freeze({runtimeId,scopeKey,owner:row.owner,incarnation:row.incarnation,leaseId:row.lease_id,workerFence:row.fence,generation:row.generation});
  const checkSeconds=n=>check(Number.isSafeInteger(n)&&n>=1&&n<=60,'BC_E5_LEASE');
+ function acquireWitness(previousFence,time){
+  if(!requireWitness)return;
+  const witnessed=decode(db.prepare('SELECT record FROM e5_worker_witnesses WHERE runtime_id=? ORDER BY rowid DESC LIMIT 1').get(runtimeId));
+  check(witnessed&&witnessed.incarnation===incarnation&&witnessed.apiFenceAtRead===previousFence&&witnessed.highestFence<=previousFence
+   &&time>=witnessed.recordedAt&&time-witnessed.recordedAt<=5,'BC_E5_GLOBAL_FENCE_PREFLIGHT_REQUIRED');
+ }
  return {incarnation,scopeKey,audit,live,
+  validateAcquired(h,time,authority,r){
+   live(h,time,authority.serviceId);check(['UNOBSERVED','ACTIVE'].includes(r.status)&&r.generation===h.generation,'BC_E5_RUNTIME_SUSPENDED');
+   acquireWitness(h.workerFence-1,time);
+  },
   acquire(time,authority,r,{owner,expectedFence=0,generation,leaseSeconds=30}){
    id(owner);revision(generation);checkSeconds(leaseSeconds);check(Number.isSafeInteger(expectedFence)&&expectedFence>=0,'BC_E5_FENCE');
    check(owner===authority.serviceId,'BC_E5_SERVICE_AUTHORITY');check(['UNOBSERVED','ACTIVE'].includes(r.status)&&r.generation===generation,'BC_E5_RUNTIME_SUSPENDED');
    const previous=get();check((previous?.fence??0)===expectedFence&&(!previous||previous.expires_at<=time),'BC_E5_GLOBAL_LEASE_BUSY');
-   if(requireWitness){const witnessed=decode(db.prepare('SELECT record FROM e5_worker_witnesses WHERE runtime_id=? ORDER BY rowid DESC LIMIT 1').get(runtimeId));
-    check(witnessed&&witnessed.incarnation===incarnation&&witnessed.apiFenceAtRead===(previous?.fence??0)&&witnessed.highestFence<=(previous?.fence??0)
-     &&time>=witnessed.recordedAt&&time-witnessed.recordedAt<=5,'BC_E5_GLOBAL_FENCE_PREFLIGHT_REQUIRED');}
+   acquireWitness(previous?.fence??0,time);
    check(!db.prepare('SELECT runtime_id FROM e5_runtime_workers WHERE runtime_id!=? AND (pin_hash=? OR scope_key=?)').get(runtimeId,runtimePinHash,scopeKey),'BC_E5_GLOBAL_SCOPE_CONFLICT');
    const fence=expectedFence+1;if(!Number.isSafeInteger(fence))return stop('GLOBAL_FENCE_EXHAUSTED',time);
    const record={version:'clear-bootcamp-runtime-worker-lease.1',runtimeId,runtimePinHash,scopeKey,fence,owner,incarnation,

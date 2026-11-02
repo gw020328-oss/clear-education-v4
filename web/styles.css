@@ -2536,3 +2536,7 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
   color: var(--muted);
 }
 .ob-test-btn:hover:not(:disabled) { color: var(--fg); border-color: var(--fg); }
+
+/* Current authenticated application identifiers must wrap inside the wallet iframe. */
+.team-application { overflow-wrap: anywhere; }
+.team-application button { white-space: normal; }

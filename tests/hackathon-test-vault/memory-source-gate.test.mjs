@@ -9,6 +9,11 @@ import {createFreshMemoryStage,memoryStageTotals} from '../../src/hackathon-test
 // Replace one read in memory, never rewrite a pinned file or start an EVM.
 const root=new URL('../../',import.meta.url);
 for(const [path,code]of [
+ ["specs/bootcamp/hackathon-test-team-application-source-delta-v1.json", "STAGE_TEAM_APPLICATION_PIN"],
+ ["src/hackathon-test-vault/reviewed-source-v57.mjs", "STAGE_SOURCE_PIN"],
+ ["web/src/bootcamp/team-application.js", "STAGE_SOURCE_PIN"],
+ ["web/src/bootcamp/operator-view.js", "STAGE_SOURCE_PIN"],
+ ["web/styles.css", "STAGE_SOURCE_PIN"],
  ['.github/workflows/hackathon-e5b.yml','STAGE_CI_TRIGGER_PIN'],
  ['src/hackathon-test-vault/reviewed-source-v56.mjs','STAGE_SOURCE_PIN'],
  ['specs/bootcamp/hackathon-test-team-scroll-source-delta-v1.json','STAGE_TEAM_SCROLL_PIN'],
