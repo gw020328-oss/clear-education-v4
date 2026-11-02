@@ -10,15 +10,18 @@ export function productWalletMount({assets, origin, chainId, network, runtime}) 
   if (!match || !runtime || !network || !assets.has('/assets/onboarding.js') || !assets.has('/assets/operator.js')) throw Error('EMBEDDED_PRODUCT_ASSETS');
   const config = validateConfig({appId: match[1], origin, chainId, rpcUrl: network.rpcUrls[0],
     redirectUri: origin + '/onboarding', phase: 'ACTIVE_LOCAL_TEST', instanceId: runtime.instanceId});
-  return Object.freeze({config,
+  const teamFrontend=assets.has('/clear-team-app.html');
+  if(teamFrontend&&assets.get('/clear-team-app.html').body.toString()!=='<meta name="clear-team-app" content="1">\n')throw Error('EMBEDDED_TEAM_ASSETS');
+  if(teamFrontend&&!assets.has('/team/index.html'))throw Error('EMBEDDED_TEAM_ASSETS');
+  return Object.freeze({config:{...config,teamFrontend},
     isDocument(req) { return req.method === 'GET' && ['/onboarding', '/operator'].includes(req.url.split('?')[0]); },
     handle(req, res) {
       if (req.method === 'GET' && req.url === '/__embedded/config') {
-        res.writeHead(200, {'Content-Type': 'application/json'}); res.end(JSON.stringify(config)); return true;
+        res.writeHead(200, {'Content-Type': 'application/json'}); res.end(JSON.stringify({...config,teamFrontend})); return true;
       }
       if (!this.isDocument(req)) return false;
       const nonce = randomBytes(24).toString('base64'), operator = req.url.split('?')[0] === '/operator';
-      res.setHeader('Content-Security-Policy', embeddedCsp(nonce, config.rpcUrl));
+      res.setHeader('Content-Security-Policy', teamFrontend ? embeddedCsp(nonce, config.rpcUrl).replace('frame-src ', "frame-src 'self' ") : embeddedCsp(nonce, config.rpcUrl));
       res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
       res.end(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="sc-nonce" content="${nonce}"><title>CLEAR ${operator ? '운영자 승인' : '참가자 신청'}</title><link rel="stylesheet" href="/assets/style.css"></head><body><div id="root"></div><script type="module" nonce="${nonce}" src="/assets/${operator ? 'operator' : 'onboarding'}.js"></script></body></html>`); return true;
     },

@@ -261,7 +261,7 @@ export function createConnection({
     // 전에는 이 값만 있으면 온보딩이 '수령 계정 등록 완료' 로 넘어갔다.
     // 서명 수락과 체인 등록은 다른 단계라, 등록 상태는 서버의 등록 응답
     // (recipientRegistration)에서 읽어야 한다 — 2026-11-01 리뷰.
-    expectedRecipient: session?.recipient ?? demo?.recipient ?? null,
+    expectedRecipient: session?.expectedPayment?.recipient ?? session?.recipient ?? demo?.recipient ?? null,
     // 시연 계정만 즉시 '등록됨' 이다. 실서버는 등록 응답이 정한다.
     recipient: demo?.recipient ?? null,
     // 이번 입력의 AI 승인 자료. 서버가 세션에 실어 준다.
@@ -370,9 +370,10 @@ export function createConnection({
       busy = true; error = null; onChange(snapshot());
       try {
         // 역할이 바뀌었을 수 있다. 누를 때 다시 고른다.
+        const team = typeof window !== 'undefined' ? window.clearTeamRuntime : null;
         const picked = provider ?? pickProvider(role, { test: testWallet }).provider;
-        if (!picked) throw fail('BC_WALLET_MISSING');
-        wallet = createWalletSession({
+        if (!picked && !team) throw fail('BC_WALLET_MISSING');
+        wallet = team ? await team.attach(role) : createWalletSession({
           origin: base,
           provider: picked,
           fetchImpl,
@@ -383,7 +384,7 @@ export function createConnection({
         await wallet.signIn(config);
         sessionReadAtMs = now();
         session = await wallet.bootcampSession();
-        api = await loadApi(wallet, { origin: base, importImpl });
+        api = team ? team.normal : await loadApi(wallet, { origin: base, importImpl });
         state = 'LIVE';
       } catch (caught) {
         error = caught instanceof BootcampError ? caught : fail('BC_SIGNIN_FAILED', caught?.message ?? null);

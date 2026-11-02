@@ -1,5 +1,6 @@
 import {oauthDiagnostic, readOAuthDiagnostic, saveOAuthDiagnostic, diagnosticLabel} from './oauth-diagnostics.mjs';
 import {ProductPanel} from './product-panel.jsx';
+import {TeamPanel} from './team-panel.jsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {PrivyProvider, usePrivy, useWallets, useCreateWallet, useLoginWithOAuth} from '@privy-io/react-auth';
@@ -150,7 +151,7 @@ function Onboarding({config}) {
       step.current = 'CLEAR 세션 종료'; await clearAuth(); setStatus('CLEAR 서버 세션 종료 확인 완료. 주소와 네트워크를 다시 확인할 수 있습니다.');
     })}>CLEAR 세션 종료 확인</button>}
     {busy && <button onClick={cancel}>현재 작업 취소</button>}
-    {config.phase==='ACTIVE_LOCAL_TEST'&&authState?.authenticated&&active.current&&authSession.current&&<ProductPanel config={config} wallet={active.current} session={authSession.current}/>}
+    {config.phase==='ACTIVE_LOCAL_TEST'&&authState?.authenticated&&active.current&&authSession.current&&(config.teamFrontend ? <TeamPanel config={config} wallet={active.current} session={authSession.current}/> : <ProductPanel config={config} wallet={active.current} session={authSession.current}/>)}
     <p role="status">{status}</p>{diagnostic && <p>최근 진단: {diagnosticLabel(diagnostic)}</p>}<p>{config.phase==='ACTIVE_LOCAL_TEST'?'신청·승인·지급은 위 제품 화면에서 현재 상태를 읽고 직접 진행합니다.':['AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase) ? '로그인 서명 확인만 제공하며, 거래 전송·ETH 충전·유료 호출은 실행하지 않습니다.' : '서명·거래 전송·ETH 충전·유료 호출 기능은 이 주소 확인 화면에 없습니다.'}</p>
   </section>;
 }
@@ -159,7 +160,7 @@ const root = createRoot(document.getElementById('root'));
 try {
   const response = await fetch('/__embedded/config', {credentials: 'same-origin', cache: 'no-store'});
   if (!response.ok) throw Error('CONFIG');
-  const config = validateConfig(await response.json());
+  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true};
   if (config.origin !== location.origin || location.pathname !== '/onboarding' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
   const setup = <Setup config={config}/>;
   root.render(<main><h1>CLEAR 내장 지갑 연결 준비</h1>{setup}{config.appId &&

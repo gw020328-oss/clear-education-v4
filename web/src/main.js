@@ -693,3 +693,6 @@ world.subscribe(({ clockOnly }) => {
 });
 
 boot();
+
+// Authenticated team iframe only; lifecycle remains in the owner session.
+if (window.clearTeamRuntime) { window.clearTeamConnection=connection; window.clearTeamRefresh=async()=>{await connection.refreshSession();liveView=await connection.refresh();render();}; }

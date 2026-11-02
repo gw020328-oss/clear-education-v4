@@ -1,4 +1,5 @@
 import {ProductPanel} from './product-panel.jsx';
+import {TeamPanel} from './team-panel.jsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {validateConfig} from './config.mjs';
@@ -88,7 +89,7 @@ function Operator({config}) {
       {!!session.current && <button disabled={busy} onClick={() => run(async () => { step.current = 'CLEAR 세션 종료'; await clear(); setStatus('CLEAR 세션 종료 확인 완료'); })}>CLEAR 세션 종료 확인</button>}
       {authState?.revocation === 'UNKNOWN' && <p role="alert">서버 세션 종료가 불명확합니다. 새 로그인은 차단됐습니다. 상태를 알려주세요.</p>}
       {busy && <button onClick={cancel}>현재 작업 취소</button>}
-      {config.phase==='ACTIVE_LOCAL_TEST'&&authState?.authenticated&&active.current&&session.current&&<ProductPanel config={config} wallet={active.current} session={session.current}/>}
+      {config.phase==='ACTIVE_LOCAL_TEST'&&authState?.authenticated&&active.current&&session.current&&(config.teamFrontend ? <TeamPanel config={config} wallet={active.current} session={session.current}/> : <ProductPanel config={config} wallet={active.current} session={session.current}/>)}
       <p role="status">{status}</p>
     </section></main>;
 }
@@ -96,7 +97,7 @@ const root = createRoot(document.getElementById('root'));
 try {
   const response = await fetch('/__embedded/config', {credentials: 'same-origin', cache: 'no-store'});
   if (!response.ok) throw Error('CONFIG');
-  const config = validateConfig(await response.json());
+  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true};
   if (config.origin !== location.origin || location.pathname !== '/operator' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
   root.render(<Operator config={config}/>);
 } catch { root.render(<main><h1>운영자 연결 설정을 확인할 수 없습니다</h1><p>호스트 설정 확인 후 다시 열어 주세요.</p></main>); }
