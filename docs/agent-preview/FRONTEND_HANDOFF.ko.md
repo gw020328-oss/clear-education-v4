@@ -38,3 +38,13 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 - 증빙은 기존 Moodle activity/assignment producer 및 receipt 검사와 Reclaim SDK 기반 HackerRank verifier를 호출한다. 임시 합성 signer의 서명 두 건을 검증하고 변조 인증서 서명을 거부한다. live source 또는 공식 운영 attestor를 사용했다는 뜻은 아니다.
 - 회고는 기존 grounding으로 고정 세 항목의 원문 위치를 확인한다. 기존 `bootcamp-reflection.mjs`의 프로필과 `fixed-normal-reflection.mjs`의 요청 준비 함수로 본문 지문을 계산한다. 별도로 노출한 Gemini 준비 함수는 조건 구조화용이다.
 - 정산 연결은 기존 `decisionRecord`와 `createDecisionEvidenceReader`를 고정 네 조건으로 호출한다. 실제 제품은 store가 이 reader를 인수하고 기존 S4 decision-evidence 조회에 연결한다. 데모는 입력 증거가 없는 UNKNOWN decision과 메모리 SQLite query-only view로 지문 일치를 확인한다. 실제 지급·서명·수락 흐름은 제품 호스트 소유다.
+
+## 0.3.0 Gemini 조건 구조화 인수
+
+`@clear/preview-core/gemini`의 `requestGeminiPreview(sourceText, {approvalRef, claimAndDispatch, signal})`는 고정 Gemini 요청을 만들고 호스트 포트를 한 번 호출한다. 운영 호스트가 인증과 본문 지문에 결합된 입력별 승인, 비용 검토, 영속 단회 소비 및 기존 Gemini 전송기를 제공해야 한다. 호스트 포트의 승인 확인과 단회 소비 구현은 본부 인수 사항이다. 함수는 키를 읽거나 자체적으로 네트워크에 연결하지 않는다.
+
+`inspectHostGeminiReply`와 `inspectFixtureReply`는 각각 HOST_SUPPLIED_PROVIDER_RESPONSE와 OFFLINE_RESPONSE_FIXTURE를 표시한다. 전자는 호스트가 전달한 응답이라는 표시이며 모델 실행 영수증이 아니다. 응답에 빠진 원문 범위, 중복 키, 예상 밖 도구·필드, 잘린 응답, 알려진 문구에 대한 잘못된 capability 매핑을 거부한다. 줄바꿈이나 세미콜론으로 나눈 각 원문 조항은 정확한 UTF-16 범위와 함께 한 번씩 돌아와야 한다. 새 표현의 의미는 운영자가 원문과 capability를 비교해 확인한다.
+
+`executeReviewedGeminiPreview(packet, reviewedHash)`는 운영자가 확인한 proposalHash가 현재 응답과 일치하고 미결 질문이 없을 때만 허용 manifest에서 계획을 만들고 검증한다. 검토 지문은 내용 결합 수단이며 운영자 인증은 호스트 책임이다. 실행은 기존 Moodle·회고 grounding·Reclaim 합성 모듈로 연결되며 결과의 PUBLIC_SYNTHETIC 범위와 지급 금지를 유지한다.
+
+실제 호출 검토용 공개 입력은 `examples/clear-core/gemini-preview-demo.mjs`의 두 문장이다. 모델 gemini-3.5-flash-lite에 입력마다 generateContent 1회, 재시도 0회, 출력 상한 2048 tokens를 적용한다. 전송 범위는 인공 안내문, 원문 위치, 허용 capability/회고 항목 목록과 고정 프롬프트·스키마다. 두 본문 지문은 `450794af7d0d7284a74c0a3790fa1fec396715b0490c7d011ac09f4c27872a25`, `197c51f2aeb8630594fa1f233d620135dc0e958244f0851545af47789d8beae8`이다. 최신 단가와 비용 검토 및 직접 입력별 승인 이후 실제 결과를 별도로 기록한다.

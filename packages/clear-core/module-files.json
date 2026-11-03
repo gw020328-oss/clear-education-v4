@@ -4,6 +4,7 @@
   "specs/bootcamp/p0-policy.json",
   "src/agent-preview/existing-module-demo.mjs",
   "src/agent-preview/gemini-preparation.mjs",
+  "src/agent-preview/gemini-response.mjs",
   "src/agent-preview/index.mjs",
   "src/agent-preview/packaged-modules.mjs",
   "src/ai-policy/field-review.mjs",

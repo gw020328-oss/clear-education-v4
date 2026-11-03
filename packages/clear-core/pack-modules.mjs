@@ -25,10 +25,11 @@ try {
   writeFileSync(join(stage, 'source-manifest.json'), JSON.stringify({files}, null, 2));
   writeFileSync(join(stage, 'package.json'), JSON.stringify({
     ...base,
-    version: '0.2.0',
+    version: '0.3.0',
     exports: {
       '.': './packages/clear-core/src/index.mjs',
-      './modules': './src/agent-preview/packaged-modules.mjs'
+      './modules': './src/agent-preview/packaged-modules.mjs',
+      './gemini': './src/agent-preview/gemini-response.mjs'
     },
     files: [...list, 'source-manifest.json'],
     dependencies: {'@reclaimprotocol/attestor-core': '5.1.4', ethers: '6.17.0', parse5: '8.0.1'}

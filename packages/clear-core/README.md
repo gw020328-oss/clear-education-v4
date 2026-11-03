@@ -11,8 +11,8 @@ Use `npm pack /path/to/packages/clear-core --ignore-scripts` and install the res
 
 From the repository with its pinned Node and npm on PATH, run
 `./tools/node packages/clear-core/pack-modules.mjs /tmp/clear-delivery`.
-Install the generated `clear-preview-core-0.2.0.tgz` in a clean directory with
-`npm install --ignore-scripts --no-audit --no-fund /tmp/clear-delivery/clear-preview-core-0.2.0.tgz`.
+Install the generated `clear-preview-core-0.3.0.tgz` in a clean directory with
+`npm install --ignore-scripts --no-audit --no-fund /tmp/clear-delivery/clear-preview-core-0.3.0.tgz`.
 Installation needs registry access or a populated npm cache. Copy
 `examples/clear-core/modules-demo.mjs` into that directory and run
 `node modules-demo.mjs`. The package exports the original core and the
@@ -23,3 +23,9 @@ records the SHA-256 of each staged file in the tarball. It leaves the source
 owners' files in place. The module entry points run on public synthetic
 inputs, including transient synthetic Reclaim signatures and an in-memory
 read-only S4 decision view. Gemini preparation returns a request body only.
+
+The 0.3.0 tarball also exports `@clear/preview-core/gemini`. Copy
+`examples/clear-core/gemini-preview-demo.mjs` into the installed directory
+and run it with Node to exercise the offline response fixture and its
+selected existing modules. See the repository handoff for the host approval
+and operator review integration requirements.

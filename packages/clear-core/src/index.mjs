@@ -41,7 +41,7 @@ const grammar = [
  /^(?:회고에 수행 내용, (?:문제해결|확인) 과정, 배운 점 포함|회고에는 수행 내용과 (?:문제해결|확인) 과정 및 배운 점이 필요하다)$/u,
  /^(?:HackerRank Python \(Basic\) 인증서 보유|HackerRank Python \(Basic\) 인증서를 보유한다)$/u
 ];
-export function structureSynthetic(sourceText) {
+export function sourceClauses(sourceText) {
  check(typeof sourceText === 'string' && sourceText.length > 0 && sourceText.length <= 4096 && sourceText.isWellFormed(), 'SOURCE_INVALID');
  const clauses = []; for (const match of sourceText.matchAll(/[^;\n]+/gu)) {
   const text = match[0].trim(); if (!text) continue;
@@ -49,6 +49,10 @@ export function structureSynthetic(sourceText) {
   clauses.push({id:`clause-${clauses.length+1}`,start,end:start+text.length,text});
  }
  check(clauses.length > 0 && clauses.length <= 16,'CLAUSE_LIMIT');
+ return freeze(clauses);
+}
+export function structureSynthetic(sourceText) {
+ const clauses=sourceClauses(sourceText);
  const conditions = [], questions = [];
  for (const c of clauses) {
   const index = grammar.findIndex(re => re.test(c.text));
@@ -60,8 +64,42 @@ export function structureSynthetic(sourceText) {
  return signed({version:'clear-preview-draft.1',executionMode:'SYNTHETIC_RULES',actualModelCall:false,sourceText,sourceHash:hash(sourceText),clauses,conditions,questions,
   status:questions.some(q=>q.reason==='UNSUPPORTED')?'UNSUPPORTED':questions.length?'NEEDS_CLARIFICATION':'READY'});
 }
+const reviewedDrafts = new WeakSet();
+export function reviewModelProposal(sourceText, rows, reviewedHash) {
+ plainJson(rows);
+ const clauses = sourceClauses(sourceText);
+ check(Array.isArray(rows) && rows.length === clauses.length, 'MODEL_CLAUSE_COVERAGE');
+ const conditions = [], questions = [];
+ rows.forEach((row, index) => {
+  exact(row, ['quote','start','end','status','capability','question'], 'MODEL_CLAUSE_FIELDS');
+  const clause = clauses[index];
+  check(row.quote === clause.text && row.start === clause.start && row.end === clause.end, 'MODEL_SOURCE_SPAN');
+  if (row.status !== 'SUPPORTED') {
+   check(['UNSUPPORTED','NEEDS_CLARIFICATION'].includes(row.status) && row.capability === null
+    && typeof row.question === 'string' && row.question.trim().length > 0 && row.question.length <= 240, 'MODEL_QUESTION');
+   questions.push({clauseId: clause.id, reason: row.status, question: row.question});
+   return;
+  }
+  const tool = TOOL_MANIFEST.find(entry => entry.capability === row.capability);
+  check(tool && row.question === null, 'MODEL_CAPABILITY');
+  const known = grammar.findIndex(pattern => pattern.test(clause.text));
+  check(known < 0 || TOOL_MANIFEST[known] === tool, 'MODEL_CAPABILITY_MISMATCH');
+  if (conditions.some(condition => condition.capability === tool.capability)) {
+   questions.push({clauseId: clause.id, reason: 'NEEDS_CLARIFICATION', question: '중복 조건의 적용 범위를 확인해 주세요.'});
+   return;
+  }
+  conditions.push({id: `condition-${conditions.length+1}`, clauseId: clause.id, capability: tool.capability, target: tool.target});
+ });
+ const proposalHash = hash({sourceText, rows});
+ const status = questions.some(question => question.reason === 'UNSUPPORTED') ? 'UNSUPPORTED'
+  : questions.length ? 'NEEDS_CLARIFICATION' : reviewedHash === proposalHash ? 'READY' : 'OPERATOR_REVIEW_REQUIRED';
+ const draft = signed({version: 'clear-preview-model-draft.1', executionMode: 'MODEL_PROPOSAL',
+  sourceText, sourceHash: hash(sourceText), proposalHash, clauses, conditions, questions, status});
+ reviewedDrafts.add(draft);
+ return draft;
+}
 function validateDraft(draft) {
- check(draft && hash(draft) === hash(structureSynthetic(draft.sourceText)), 'DRAFT_INVALID');
+ check(draft && (reviewedDrafts.has(draft) || hash(draft) === hash(structureSynthetic(draft.sourceText))), 'DRAFT_INVALID');
  check(draft.status === 'READY', 'DRAFT_NOT_READY');
 }
 export function buildPlan(draft) {
@@ -104,8 +142,8 @@ const PUBLIC_RECORDS=freeze({
 export function executePublicDemo(plan,draft) {
  // Snapshot and validate again at dispatch; no injected executor/callback or arbitrary URL.
  plainJson(plan);plainJson(draft);
- plan=structuredClone(plan);draft=structuredClone(draft);
  const validation=validatePlan(plan,draft);check(validation.ok,validation.errors[0]);
+ plan=structuredClone(plan);draft=structuredClone(draft);
  const observations=plan.steps.map(s=>{
   const r=PUBLIC_RECORDS[s.input.target];let met=false, evidence=[];
   if(r.kind==='ACTIVITY') met=r.completion==='COMPLETED'&&r.tracking==='AUTOMATIC';

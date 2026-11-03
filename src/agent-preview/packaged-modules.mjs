@@ -12,6 +12,10 @@ export {prepareGeminiStructureRequest} from './gemini-preparation.mjs';
 export async function runEvidenceDemo() {
   const draft = structureSynthetic('Moodle 활동 완료; Moodle 과제 제출');
   const {modules} = await executeExistingModuleDemo(buildPlan(draft), draft);
+  return {executionMode: 'PUBLIC_SYNTHETIC', moodle: modules, certificate: await runCertificateDemo(), paymentAllowed: false};
+}
+
+export async function runCertificateDemo() {
   const {verifier, input, request} = await fixture();
   const certificate = await verifier.verify(input, request);
   if (certificate.status !== 'VERIFIED_CANDIDATE' || certificate.dataMode !== 'SYNTHETIC_FIXTURE'
@@ -26,16 +30,11 @@ export async function runEvidenceDemo() {
     throw Error('PUBLIC_CERTIFICATE_TAMPER_CHECK_FAILED');
   }
   return {
-    executionMode: 'PUBLIC_SYNTHETIC',
-    moodle: modules,
-    certificate: {
-      status: certificate.status,
-      condition: certificate.condition,
-      syntheticSignaturesVerified: true,
-      invalidSignatureRejected: true,
-      productionTrustActivated: false
-    },
-    paymentAllowed: false
+    status: certificate.status,
+    condition: certificate.condition,
+    syntheticSignaturesVerified: true,
+    invalidSignatureRejected: true,
+    productionTrustActivated: false
   };
 }
 
