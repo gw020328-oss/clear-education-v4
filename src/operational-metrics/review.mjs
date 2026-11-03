@@ -1,6 +1,9 @@
 import { summarizeOperationalMetrics } from './index.mjs';
 
 export function recordReview({ scope, personRef, workKind = 'REVIEW', marks }) {
+  if (typeof personRef !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,95}$/i.test(personRef)) {
+    throw new Error('REVIEW_PERSON_REF');
+  }
   let state = 'IDLE';
   let startMs;
   let lastMs = 0;

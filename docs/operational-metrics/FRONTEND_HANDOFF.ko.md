@@ -4,12 +4,12 @@
 
 입력은 `{version, scope, coverage, events}`다. 한 묶음은 단일 신청·실행·시계 epoch·접근 범위에 해당한다. `scope` 필드는 `applicationRef, runId, epochRef, accessScopeRef, mode, source`다. 출처 조합은 `SYNTHETIC/FIXTURE`, `MEASURED/VERIFIED_SERVER_EXPORT`, `MEASURED/OBSERVED_REVIEW`다. 호출자는 서버에서 이미 권한이 확인된 scope와 검증된 출처만 전달한다. 함수의 검사는 구조와 일관성에 한정된다. 모드와 출처 선언 자체에는 권한이나 실측을 증명하는 효력이 없다.
 
-각 이벤트는 `{id, scope, kind, startMs, endMs}`와 다음 종류별 필드를 가진다. 시각은 같은 단조 시계 기준의 정수 밀리초다. 입력 순서는 기록 종료 시각의 오름차순이며 동시 종료는 허용한다.
+이벤트 ID는 최대 128자이며 사람 참조와 기타 참조는 최대 96자다. 관찰 이벤트 ID는 사람 참조와 구간 번호를 포함한다. 각 이벤트는 `{id, scope, kind, startMs, endMs}`와 다음 종류별 필드를 가진다. 시각은 같은 단조 시계 기준의 정수 밀리초다. 입력 순서는 기록 종료 시각의 오름차순이며 동시 종료는 허용한다.
 
 | kind | 추가 필드 |
 | --- | --- |
 | VERIFIED | `conditionRef, automation` |
-| ATTEMPT | `operationRef, attempt, outcome, automation, conditionRef`. 시도는 1부터 시작하고 결과는 `FAILED` 또는 `SUCCEEDED`. 도구 호출에 조건 연결이 없으면 `conditionRef: null` |
+| ATTEMPT | `operationRef, attempt, outcome, automation, conditionRef`. 완전 관찰에서 시도는 1부터 연속해야 한다. 부분 관찰은 번호 공백을 허용하며 증가 순서를 요구한다. 결과는 `FAILED` 또는 `SUCCEEDED`. 도구 호출에 조건 연결이 없으면 `conditionRef: null` |
 | MANDATORY | `actionRef, workKind`의 `LOGIN`, `SIGNATURE`, `PAYMENT_CONSENT` |
 | EXCEPTION | `actionRef` |
 | HUMAN | `personRef, workKind`. 작업 종류는 `REVIEW`, `LOGIN`, `SIGNATURE`, `PAYMENT_CONSENT`, `EXCEPTION` |
@@ -22,7 +22,7 @@
 | `scope.type, scope.mode, scope.source, coverage` | 단일 신청·실행의 범위, 출처, 관찰 완전성. 합성은 항상 눈에 띄게 표시 |
 | `verification.applicationsWithVerifiedConditions` | 검증 완료 조건이 하나 이상 기록된 신청 수. 값은 0 또는 1이며 전체 조건 완료나 자격 판정의 의미는 없다 |
 | `verification.verifiedConditions, automatedVerifiedConditions, conditions[]` | 중복 제거한 확인 조건 수와 그중 자동 확인된 조건 수. 항목은 `{conditionRef, automated}` |
-| `operations.logical, attempts, retries, failedAttempts, automatedCompleted` | 관찰된 작업, 시도, 첫 시도 이후 시도, 실패 시도, 성공한 자동 논리 작업을 별도 표시 |
+| `operations.logical, attempts, retries, failedAttempts, automatedCompleted` | 관찰된 작업, 시도, 관찰된 재시도(번호 2 이상), 실패 시도, 성공한 자동 논리 작업을 별도 표시 |
 | `interventions.mandatory, exceptions` | 의무 확인과 예외 개입 수 |
 | `time.overallElapsedMs` | 완료 창 전체 경과 시간 |
 | `time.recordedVerificationWallMs, recordedWaitingWallMs` | 종류별로 실제 기록된 시간 구간의 합집합 길이 |

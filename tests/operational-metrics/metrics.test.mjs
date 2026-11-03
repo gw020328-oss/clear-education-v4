@@ -65,3 +65,28 @@ test('comparison requires matched evidence, quality and complete coverage and pr
   zero.input.events = zero.input.events.filter(row => row.kind === 'CASE');
   assert.equal(compareReviewWork({ baseline: zero, assisted }).reason, 'ZERO_BASELINE');
 });
+
+test('maximum-length person references produce distinct accepted interval IDs', () => {
+  const refs = ['a'.repeat(96), 'a'.repeat(95) + 'b'];
+  const events = refs.flatMap(personRef => recordReview({
+    scope, personRef, marks: [
+      { action: 'START', atMs: 0 }, { action: 'PAUSE', atMs: 1 },
+      { action: 'RESUME', atMs: 2 }, { action: 'END', atMs: 3 },
+    ],
+  }).intervals).sort((a, b) => a.endMs - b.endMs);
+  assert.equal(new Set(events.map(row => row.id)).size, 4);
+  assert.equal(summarizeOperationalMetrics({ ...operationalInput, events }).time.recordedPersonMs, 4);
+  assert.throws(() => recordReview({ scope, personRef: 'a'.repeat(97), marks: [] }), /REVIEW_PERSON_REF/);
+});
+
+test('partial attempt coverage allows gaps and counts only observed retries', () => {
+  const [, first, second] = operationalInput.events;
+  const events = [first, { ...second, attempt: 3 }];
+  const partial = { ...operationalInput, events, coverage: { ...emptyCoverage } };
+  assert.deepEqual(summarizeOperationalMetrics(partial).operations,
+    { logical: 1, attempts: 2, retries: 1, failedAttempts: 1, automatedCompleted: 1 });
+  assert.throws(() => summarizeOperationalMetrics({ ...operationalInput, events }), /METRIC_ATTEMPT_SEQUENCE/);
+  assert.throws(() => summarizeOperationalMetrics({ ...partial,
+    events: [first, { ...second, attempt: 1 }],
+  }), /METRIC_ATTEMPT_SEQUENCE/);
+});

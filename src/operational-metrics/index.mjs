@@ -8,6 +8,7 @@ const scopeKeys = ['applicationRef', 'runId', 'epochRef', 'accessScopeRef', 'mod
 const coverageKeys = ['verification', 'attempts', 'mandatory', 'exceptions', 'human'];
 const require = (condition, code) => { if (!condition) throw new Error(code); };
 const ref = value => typeof value === 'string' && /^[a-z0-9][a-z0-9_-]{0,95}$/i.test(value);
+const eventId = value => typeof value === 'string' && /^[a-z0-9][a-z0-9_-]{0,127}$/i.test(value);
 const ms = value => Number.isSafeInteger(value) && value >= 0;
 const fields = (object, keys) => object && Object.keys(object).length === keys.length &&
   keys.every(key => Object.hasOwn(object, key));
@@ -56,7 +57,7 @@ export function summarizeOperationalMetrics(input) {
       EXCEPTION: ['actionRef'],
       WAIT: [], CASE: [],
     }[row.kind];
-    require(fields(row, ['id', 'scope', 'kind', 'startMs', 'endMs', ...extra]) && ref(row.id), 'METRIC_EVENT');
+    require(fields(row, ['id', 'scope', 'kind', 'startMs', 'endMs', ...extra]) && eventId(row.id), 'METRIC_EVENT');
     require(fields(row.scope, scopeKeys) && scopeKeys.every(key => row.scope[key] === scope[key]), 'METRIC_SCOPE_MIX');
     require(ms(row.startMs) && ms(row.endMs) && row.endMs >= row.startMs &&
       row.endMs >= lastEnd, 'METRIC_CLOCK');
@@ -68,7 +69,8 @@ export function summarizeOperationalMetrics(input) {
         ['FAILED', 'SUCCEEDED'].includes(row.outcome) && typeof row.automation === 'boolean' &&
         (row.conditionRef === null || ref(row.conditionRef)), 'METRIC_ATTEMPT');
       const prior = operations.get(row.operationRef);
-      if (prior) require(prior.outcome === 'FAILED' && prior.attempt + 1 === row.attempt &&
+      if (prior) require(prior.outcome === 'FAILED' && row.attempt > prior.attempt &&
+        (!coverage.attempts || row.attempt === prior.attempt + 1) &&
         prior.endMs <= row.startMs && prior.automation === row.automation &&
         prior.conditionRef === row.conditionRef, 'METRIC_ATTEMPT_SEQUENCE');
       else require(!coverage.attempts || row.attempt === 1, 'METRIC_ATTEMPT_SEQUENCE');
