@@ -1,5 +1,15 @@
 # 개발 현황
 
+## 2026-11-03 팀원 화면과 신청 동의 현황
+
+팀원 프런트엔드와 인증된 신청 연결이 develop에 병합됐다. 원격 확인 **2026-11-03 17:19 KST** 기준 [main df840a4](https://github.com/gw020328-oss/clear-education-v4/commit/df840a45721ebcfbba193f938865403124af34ef), [develop e7f77ed](https://github.com/gw020328-oss/clear-education-v4/commit/e7f77ed2105234ca9be6f2a0027474195c342c1b).
+
+- **병합 완료**. [#131](https://github.com/gw020328-oss/clear-education-v4/pull/#131)의 등록·지급 준비 보완에 이어 [#135](https://github.com/gw020328-oss/clear-education-v4/pull/#135)는 인증된 제품 세션에 팀원 화면을 연결했고 [#137](https://github.com/gw020328-oss/clear-education-v4/pull/#137)은 백그라운드 조회 시 스크롤을 보존했다. [#138](https://github.com/gw020328-oss/clear-education-v4/pull/#138)은 실제 단일 신청의 현재 판정과 양측 동의를 연결하고, 인증 화면에서 예시 기수로 대체하는 경로를 차단했다. 영수증과 실행 권한 획득의 초 경계 보완은 원래 만료와 권한 검사를 유지한다. [팀원 화면 보고서](https://github.com/gw020328-oss/clear-education-v4/blob/6d482c74ea1947ec78832fa43b8d3d2277810f95/docs/current/TEAM_FRONTEND_RUNTIME.ko.md), [신청·동의 보고서](https://github.com/gw020328-oss/clear-education-v4/blob/6d482c74ea1947ec78832fa43b8d3d2277810f95/docs/current/TEAM_LIVE_APPLICATION_FIX.ko.md). #138의 최종 head [6d482c7](https://github.com/gw020328-oss/clear-education-v4/commit/6d482c74ea1947ec78832fa43b8d3d2277810f95)는 develop 병합 커밋과 트리가 같고 [공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41422679154)와 [격리 리허설 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41422679162)를 포함한 PR 검사 8개가 성공했다.
+- **합성 검증과 실제 중단 기록**. 보고서의 격리 Geth·제품 HTTPS 합성 시험은 등록, 양측 동의, 수락, 정확히 100 TEST 청구, 양측 영수증 조회와 중복 청구 차단을 기록했다. 합성 HR, 가상 Moodle, 시험 AI 응답과 시험 지갑을 사용한 저장 결과다. 별도로 보고된 실제 시험은 원천 조건 검증·지갑 등록·검토 시작까지 진행한 뒤 화면이 예시 기수를 표시해 중단됐다. 수정 후 실제 사용자 지급 완주, 타 사용자 검증과 배포는 확인되지 않았다.
+- **진행 중**. [#139](https://github.com/gw020328-oss/clear-education-v4/pull/#139)의 역할별 기존 화면 연결과 최신 검토 조회 대기는 열린 PR 범위다. [head 8e70b83](https://github.com/gw020328-oss/clear-education-v4/commit/8e70b83879e48f61dd285e54f60ca14d5617d391)의 [공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41562406778)를 포함한 표시 검사 8개가 성공했다.
+- **CI 운영**. [#136](https://github.com/gw020328-oss/clear-education-v4/pull/#136) 병합으로 develop은 PR 기준으로 자동 검사해 push 중복 실행을 줄인다.
+
+
 ## 2026-11-02 Privy 참가자 실제 100 TEST 지급 성공
 
 [실제 시험 결과와 범위](current/PRIVY_100_TEST_SUCCESS_20261102.ko.md): 코드 `7f59697`에서 실제 HackerRank 자체 공증·로컬 Moodle 시연 기록·실제 Gemini·Privy 등록 서명·양측 동의 후 정확100 TEST 잔액 증가와 중복 거부를 확인했다. 양쪽 영수증 확인 후 정상 종료했다. `canonical=true`, `finalized=false`; 공식 hosted/독립 공증·실자산·팀원 프론트 완주 성공과 구분한다. 다음은 이슈 #106의 팀원 프론트 연결이며 새 기능은 완료 후로 보류한다. 아래 실패 기록은 이전 실행 이력이다.
