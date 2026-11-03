@@ -86,7 +86,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
   }
  }
  function service(context,action,intentId,fn,validateCommit=null){
-  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REQUEST','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_DISPATCH_REQUEST','B_RECOVER_REQUEST','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','ACQUIRE_RUNTIME','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
+  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REQUEST','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_DISPATCH_REQUEST','B_RECOVER_REQUEST','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','ACQUIRE_RUNTIME','INSPECT','BIND_RUNTIME_INTENT','COMMIT_RUNTIME_FENCE'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
@@ -94,7 +94,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
    const i=l.intent(intentId);if(i)refresh(app(i.applicationId),c.time,c.reversed);db.exec('SAVEPOINT e5_service');
    try{const value=sync(fn(c.time,authority));
     // A fence-exhaustion stop retains its original blocked commit path.
-    if(validateCommit&&!(action==='ACQUIRE_RUNTIME'&&value?.status==='BLOCKED')){
+    if(validateCommit&&!(['ACQUIRE_RUNTIME','COMMIT_RUNTIME_FENCE'].includes(action)&&value?.status==='BLOCKED')){
      // The metadata operation and any preceding native work each happen once.
      // Only read-only validation can cross a second; the savepoint stays open.
      for(let validation=0;;validation++){
@@ -232,7 +232,8 @@ export function createExecutionOperations({db,transaction,authentication,operato
   async observeRuntimeFence(context,g=null){
    const request=service(context,'READ_RUNTIME_FENCE',null,(time,authority)=>{runtime();if(g)global.live(g,time,authority.serviceId);check(fenceWitness.configured,'BC_E5_FENCE_WITNESS_UNCONFIGURED');return {query:global.witnessQuery(),basis:global.witnessBasis()};});
    const ticket=await fenceWitness.read(request.query);
-   return service(context,'COMMIT_RUNTIME_FENCE',null,(time,authority)=>{if(g)global.live(g,time,authority.serviceId);check(request.basis===global.witnessBasis(),'BC_E5_GLOBAL_WITNESS_CAS');return global.acceptWitness(fenceWitness.consume(ticket),time);});
+   return service(context,'COMMIT_RUNTIME_FENCE',null,(time,authority)=>{if(g)global.live(g,time,authority.serviceId);check(request.basis===global.witnessBasis(),'BC_E5_GLOBAL_WITNESS_CAS');return global.acceptWitness(fenceWitness.consume(ticket),time);},
+    (time,authority)=>{if(g)global.live(g,time,authority.serviceId);check(request.basis===global.witnessBasis(),'BC_E5_GLOBAL_WITNESS_CAS');});
   },
   connectCurrentController(context,g){
    configured();check(e4CurrentPorts.configured,'BC_E5_E4_UNCONFIGURED');
