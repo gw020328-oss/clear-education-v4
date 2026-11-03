@@ -1,5 +1,14 @@
 # 개발 현황
 
+## 2026-11-03 팀원 화면과 신청 동의 현황
+
+main의 기존 시작 명령과 ProofAdapter 합성 검사 36개가 공개 재현 범위다. 아래 팀원 UI와 동의·영수증 변경은 **develop 기준, main 미반영**이다. 원격 확인 **2026-11-03 17:19 KST** 기준 [main df840a4](https://github.com/gw020328-oss/clear-education-v4/commit/df840a45721ebcfbba193f938865403124af34ef), [develop e7f77ed](https://github.com/gw020328-oss/clear-education-v4/commit/e7f77ed2105234ca9be6f2a0027474195c342c1b).
+
+- **병합 완료**. [#131](https://github.com/gw020328-oss/clear-education-v4/pull/#131)의 등록·지급 준비 보완에 이어 [#135](https://github.com/gw020328-oss/clear-education-v4/pull/#135)는 인증된 제품 세션에 팀원 화면을 연결했고 [#137](https://github.com/gw020328-oss/clear-education-v4/pull/#137)은 백그라운드 조회 시 스크롤을 보존했다. [#138](https://github.com/gw020328-oss/clear-education-v4/pull/#138)은 실제 단일 신청의 현재 판정과 양측 동의를 연결하고, 인증 화면에서 예시 기수로 대체하는 경로를 차단했다. 영수증과 실행 권한 획득의 초 경계 보완은 원래 만료와 권한 검사를 유지한다. [팀원 화면 보고서](https://github.com/gw020328-oss/clear-education-v4/blob/6d482c74ea1947ec78832fa43b8d3d2277810f95/docs/current/TEAM_FRONTEND_RUNTIME.ko.md), [신청·동의 보고서](https://github.com/gw020328-oss/clear-education-v4/blob/6d482c74ea1947ec78832fa43b8d3d2277810f95/docs/current/TEAM_LIVE_APPLICATION_FIX.ko.md). #138의 최종 head [6d482c7](https://github.com/gw020328-oss/clear-education-v4/commit/6d482c74ea1947ec78832fa43b8d3d2277810f95)는 develop 병합 커밋과 트리가 같고 [공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41422679154)와 [격리 리허설 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41422679162)를 포함한 PR 검사 8개가 성공했다.
+- **합성 검증과 실제 중단 기록**. 보고서의 격리 Geth·제품 HTTPS 합성 시험은 등록, 양측 동의, 수락, 정확히 100 TEST 청구, 양측 영수증 조회와 중복 청구 차단을 기록했다. 합성 HR, 가상 Moodle, 시험 AI 응답과 시험 지갑을 사용한 저장 결과다. 별도로 보고된 실제 시험은 원천 조건 검증·지갑 등록·검토 시작까지 진행한 뒤 화면이 예시 기수를 표시해 중단됐다. 수정 후 실제 사용자 지급 완주, 타 사용자 검증과 배포는 확인되지 않았다.
+- **진행 중**. [#139](https://github.com/gw020328-oss/clear-education-v4/pull/#139)의 역할별 기존 화면 연결과 최신 검토 조회 대기는 열린 PR 범위다. [head 8e70b83](https://github.com/gw020328-oss/clear-education-v4/commit/8e70b83879e48f61dd285e54f60ca14d5617d391)의 [공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41562406778)를 포함한 표시 검사 8개가 성공했다.
+
+
 ## 2026-11-02 공개 현황
 
 main의 제공 코드·의존성·기존 시작 명령은 유지한다. 공개 재현 범위는 기존 ProofAdapter 합성 테스트36개와 문서 CI이며 아래 미병합 제품 등록/지급 준비 후속은 main의 로컬 기능·실행 명령이 아니다.
