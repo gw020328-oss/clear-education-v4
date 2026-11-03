@@ -1,7 +1,28 @@
 import {createHash} from 'node:crypto';
 const freeze = value => { if (value && typeof value === 'object') {Object.values(value).forEach(freeze); Object.freeze(value);} return value; };
 const canonical = v => Array.isArray(v) ? v.map(canonical) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, canonical(v[k])])) : v;
-export const hash = value => createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
+// JSON.stringify drops undefined, sparse slots and non-index array properties.
+// Reject those before hashing or cloning; do not invoke getters/toJSON hooks.
+function plainJson(value, depth=0) {
+ check(depth<=32, 'DTO_JSON_DEPTH');
+ if(value===null || typeof value==='string' || typeof value==='boolean') return;
+ if(typeof value==='number') {check(Number.isFinite(value) && !Object.is(value,-0),'DTO_JSON_NUMBER');return;}
+ check(value && typeof value==='object','DTO_JSON_VALUE');
+ const array=Array.isArray(value),keys=Reflect.ownKeys(value);
+ check(Object.getPrototypeOf(value)===(array?Array.prototype:Object.prototype),'DTO_JSON_PROTOTYPE');
+ if(array) {
+  check(value.length<=4096 && keys.length===value.length+1 && keys.includes('length'),'DTO_JSON_ARRAY');
+  for(let i=0;i<value.length;i++) check(Object.hasOwn(value,String(i)),'DTO_JSON_ARRAY');
+ }
+ for(const key of keys) {
+  if(array && key==='length') continue;
+  check(typeof key==='string' && (!array || /^(0|[1-9][0-9]*)$/.test(key) && Number(key)<value.length),'DTO_JSON_KEYS');
+  const descriptor=Object.getOwnPropertyDescriptor(value,key);
+  check(descriptor.enumerable && Object.hasOwn(descriptor,'value'),'DTO_JSON_DESCRIPTOR');
+  plainJson(descriptor.value,depth+1);
+ }
+}
+export const hash = value => {plainJson(value);return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');};
 const fail = code => {throw Object.assign(new Error(code), {code});};
 const check = (ok, code) => {if (!ok) fail(code);};
 const exact = (v, keys, code) => check(v && Object.getPrototypeOf(v) === Object.prototype && Object.keys(v).length === keys.length && keys.every(k => Object.hasOwn(v,k)), code);
@@ -51,6 +72,7 @@ export function buildPlan(draft) {
 }
 export function validatePlan(plan, draft) {
  try {
+  plainJson(plan);
   validateDraft(draft);
   exact(plan,['version','executionMode','sourceHash','draftHash','steps','planHash'],'PLAN_FIELDS');
   check(plan.version==='clear-preview-plan.1' && plan.executionMode==='PUBLIC_SYNTHETIC','PLAN_MODE');
@@ -81,6 +103,7 @@ const PUBLIC_RECORDS=freeze({
 });
 export function executePublicDemo(plan,draft) {
  // Snapshot and validate again at dispatch; no injected executor/callback or arbitrary URL.
+ plainJson(plan);plainJson(draft);
  plan=structuredClone(plan);draft=structuredClone(draft);
  const validation=validatePlan(plan,draft);check(validation.ok,validation.errors[0]);
  const observations=plan.steps.map(s=>{

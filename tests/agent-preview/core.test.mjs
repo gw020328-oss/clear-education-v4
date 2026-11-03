@@ -57,3 +57,34 @@ test('Gemini preparation binds exact input without sending or implying authoriza
  assert.notEqual(p.bodyHash,prepareGeminiStructureRequest('Moodle 과제 제출').bodyHash);
  assert.equal(p.costStatus,'NOT_REVIEWED_NO_SPEND_AUTHORIZATION');
 });
+for(const [label,mutate] of [
+ ['steps permission property',p=>p.steps.paymentAllowed=true],
+ ['dependency external property',p=>p.steps[0].dependsOn.external='outside'],
+ ['undefined input field',p=>p.steps[0].input.url=undefined],
+ ['array hole',p=>delete p.steps[0]],
+ ['symbol property',p=>p.steps[0][Symbol('hidden')]='outside'],
+ ['non-enumerable field',p=>Object.defineProperty(p.steps[0],'url',{value:'outside'})],
+ ['non-finite number',p=>p.steps[0].input.threshold=NaN],
+ ['custom prototype',p=>Object.setPrototypeOf(p.steps[0].input,{url:'outside'})],
+ ['cycle',p=>p.steps[0].input.self=p]
+])test(`plain JSON boundary: ${label}`,()=>{
+ const d=draft(),p=structuredClone(buildPlan(d));mutate(p);
+ assert.equal(validatePlan(p,d).ok,false);assert.throws(()=>executePublicDemo(p,d),/DTO_JSON/);assert.throws(()=>hash(p),/DTO_JSON/);
+});
+test('draft undefined field and array extension reject before hash/clone',()=>{
+ for(const mutate of [d=>d.conditions[0].url=undefined,d=>d.conditions.external='outside',d=>d.clauses.paymentAllowed=true]) {
+  const original=draft(),p=buildPlan(original),d=structuredClone(original);mutate(d);
+  assert.equal(validatePlan(p,d).ok,false);assert.throws(()=>buildPlan(d),/DTO_JSON/);assert.throws(()=>executePublicDemo(p,d),/DTO_JSON/);
+ }
+});
+test('getters and toJSON hooks are rejected without invocation',()=>{
+ const d=draft(),p=structuredClone(buildPlan(d));let calls=0;
+ Object.defineProperty(p.steps[0].input,'url',{enumerable:true,get(){calls++;return 'outside';}});
+ assert.equal(validatePlan(p,d).ok,false);assert.throws(()=>executePublicDemo(p,d),/DTO_JSON/);assert.equal(calls,0);
+ const q=structuredClone(buildPlan(d));q.toJSON=()=>{calls++;return {};};
+ assert.equal(validatePlan(q,d).ok,false);assert.throws(()=>executePublicDemo(q,d),/DTO_JSON/);assert.equal(calls,0);
+});
+test('canonical JSON roundtrip preserves valid frozen DTO hashes',()=>{
+ const d=draft(),p=buildPlan(d);assert.equal(hash(p),hash(JSON.parse(JSON.stringify(p))));
+ assert.equal(validatePlan(JSON.parse(JSON.stringify(p)),JSON.parse(JSON.stringify(d))).ok,true);
+});

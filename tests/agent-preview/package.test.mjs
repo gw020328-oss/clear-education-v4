@@ -17,6 +17,15 @@ test('tarball installs offline in clean directory and standalone example execute
   copyFileSync(join(root,'examples/clear-core/demo.mjs'),join(clean,'demo.mjs'));
   const output=execFileSync(process.execPath,['--import',join(root,'tests/agent-preview/network-block.mjs'),'demo.mjs'],{cwd:clean,encoding:'utf8'});
   const result=JSON.parse(output);assert.equal(result.observations.length,4);assert.equal(result.executionMode,'PUBLIC_SYNTHETIC');assert.equal(result.paymentAllowed,false);
+  execFileSync(process.execPath,['--input-type=module','-e',`
+   import assert from 'node:assert/strict';
+   import {structureSynthetic,buildPlan,validatePlan,executePublicDemo} from '@clear/preview-core';
+   const d=structureSynthetic('Moodle 활동 완료'),p=structuredClone(buildPlan(d));
+   p.steps.paymentAllowed=true;p.steps[0].dependsOn.external='outside';
+   assert.equal(validatePlan(p,d).ok,false);assert.throws(()=>executePublicDemo(p,d),/DTO_JSON/);
+   const original=structureSynthetic('Moodle 활동 완료'),valid=buildPlan(original),bad=structuredClone(original);
+   bad.conditions[0].url=undefined;assert.equal(validatePlan(valid,bad).ok,false);
+  `],{cwd:clean,encoding:'utf8'});
   assert.equal(JSON.parse(readFileSync(join(clean,'node_modules/@clear/preview-core/package.json'))).dependencies,undefined);
  } finally {rmSync(dir,{recursive:true,force:true});}
 });

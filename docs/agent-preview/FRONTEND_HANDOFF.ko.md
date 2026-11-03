@@ -26,3 +26,7 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 이 저장소 어댑터에는 루트 npm 의존성(ethers 등)이 필요하다. 독립 tarball에는 기존 producer를 복사하지 않는다. 현재 패키지 인수 범위는 (1)조건·계획뿐이며 (2)Moodle/Reclaim, (3)회고AI/근거, (4)기존정산 연결의 독립 패키징은 후속이다. 임의 콜백이나 금고 전송 기능을 공개하지 않는다.
 
 `src/agent-preview/gemini-preparation.mjs`의 `prepareGeminiStructureRequest(sourceText)`는 기존 Gemini 모델용 정확한 body/bodyHash·출력 schema만 준비한다. PREPARED_NOT_EXECUTED이며 API 호출·키 탐색·비용 승인이 없다. 실제 응답을 현재 SYNTHETIC_RULES draft로 위장하지 않는다. 가격/정확한 비용 검토, 해당 bodyHash 신규 직접 승인, 단회 store와 기존 전송기 소유자 연결, 응답 AST 검사가 필요하다. 현재 실제 모델 응답 재생 자료도 없으므로 SYNTHETIC을 REPLAY/ACTUAL로 표시하지 않는다.
+
+## 0.1.1 JSON 경계 보정
+
+해시/클론 전에 plain JSON DTO만 허용한다. undefined, 배열 extra field/빈 슬롯, symbol/non-enumerable/accessor, 사용자 정의 prototype, 함수/toJSON, 비유한 수/-0, 깊이 32 초과를 거부한다. 추가 필드를 JSON.stringify로 생략한 뒤 VERIFIED로 표시하지 않는다. 동일 오류는 validatePlan의 errors에 DTO_JSON_*로 표시되며 buildPlan/executePublicDemo/hash는 해당 code로 throw한다. 검사/해시는 JS 객체의 accessor를 호출하지 않는다.

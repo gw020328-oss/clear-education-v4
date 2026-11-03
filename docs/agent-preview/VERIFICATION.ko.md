@@ -25,3 +25,9 @@
 - 준비: Gemini 구조화 요청 본문/스키마와 정확한 지문. 실제 전송·응답검사·승인 소비는 미구현. 비용 검토 및 새 입력별 승인 전 호출 불가.
 - 미완료: HackerRank 공식 SDK 기반 합성 서명 시연 연결, 모듈 (2)~(4)의 설치 패키징, 실제 Gemini 해석의 다양한 표현 평가, 프론트/HTTP 인수. 현재 제한 문법은 범용 자연어 AI를 대신하지 않는다.
 - 기존 정상 4조건/100 TEST·입력별 회고 승인·기존 S4 원문 접근은 변경하지 않았다. 실제 수집·지급·로그인·공개 배포·자동 병합 없음.
+
+## 0.1.1 검토 보정
+
+1차 head 9884929에서 배열의 추가 enumerable field 및 undefined 필드가 해시에서 생략되는 문제가 검토에서 발견됐다. 지급은 계속 false였지만 strict DTO/VERIFIED 계약에 맞지 않아 수정했다. hash/validatePlan/executePublicDemo의 clone 전 plain JSON 검사로 거부한다.
+
+수정 검증: 네트워크 차단 core 41개(기존 29 + 집중 회귀 12), 클린 tarball 설치/실행 1개 성공. 설치한 패키지에서도 보고된 배열 권한/외부참조 및 draft undefined 재현이 거부된다. 기존 Moodle59/grounding10은 이 수정에서 반복하지 않았다. 배포물 버전은 @clear/preview-core 0.1.1이며 실제 API/로그인/서명은 여전히 미실행이다.
