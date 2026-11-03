@@ -1,6 +1,6 @@
 {
   "version": "clear-existing-design-source-delta.1",
-  "candidateHead": "a8612fb7a4f33d57ea83113bb376c003e726a8dd",
+  "candidateHead": "25233a25ab0a3f492455a27942f280846c4a5f4e",
   "baseHead": "e7f77ed2105234ca9be6f2a0027474195c342c1b",
   "previousGuardSha256": "72a3f1329dcd58afed129f74f5204b9fdff17028f653605318645e2ff8571dab",
   "changes": {
@@ -19,6 +19,14 @@
     "web/src/bootcamp/team-application.js": {
       "before": "02d88afa60505edda1c98868df684f2274f59b7fe5ccb57066a08a930df50a43",
       "after": "c12e21617658923af9fb8e4c1f99bcabe195591fab8fe28e775f23e5da42aa73"
+    },
+    "tools/bootcamp/normal-chain.mjs": {
+      "before": "d08baa62f192cc3340a92602a2cd9ff36be5183a46a5e6591e3f0844fa70d0a3",
+      "after": "4aa44b8fc137bb3f2673eb3ceed2f95f6a378f959a77b715bab3134a7ffc8f53"
+    },
+    "tools/bootcamp/normal-review-window.mjs": {
+      "before": "3efe5383659dbb9893a00c8d603a43c2307580699ec3351eeaef3e81f37bfa9e",
+      "after": "9e964ade73dd68650c092e426f766133cb51b48198cab708d9040531a6d172ac"
     }
   },
   "sourceAdditions": {
@@ -31,6 +39,14 @@
     "sameAuthenticatedDriver": true,
     "signingAndDeadlinesUnchanged": true,
     "syntheticValidationOnly": true,
-    "actualRunStarted": false
+    "actualRunStarted": false,
+    "boundedAuthenticatedReaderWait": {
+      "freshSeconds": 5,
+      "timeoutMs": 30000,
+      "pollMs": 1000,
+      "originalSignatureAndTarget": true,
+      "revalidateAfterRpc": true,
+      "repeatedTransactionOrAi": false
+    }
   }
 }
