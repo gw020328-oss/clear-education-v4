@@ -54,3 +54,18 @@ AI 시연 8개 중 정상, 부족, 애매함에 해당하는 공개 사례 3개�
 | 정상 | 미정 | 미측정 | 미측정 | 미확인 |
 | 부족 | 미정 | 미측정 | 미측정 | 미확인 |
 | 애매함 | 미정 | 미측정 | 미측정 | 미확인 |
+
+## 기존 원장 관찰 DTO
+
+develop `98a204f` 기준. 서버 전용 [ledger-adapter.mjs](../../src/operational-metrics/ledger-adapter.mjs)의 `projectLedgerObservations(projection, {applicationRef, runId})`는 기존 `getMetricEvents` 결과를 `clear-operational-metrics-ledger-observations.1`로 투영한다. 선택한 실행 범위의 관찰된 이벤트만 센다. 원시 이벤트·시각·행위자 참조는 응답에 포함하지 않는다. 결과는 정규 summary와 별도로 표시한다. 레코드가 없는 실행은 종류별 건수가 null이다. 레코드가 있는 실행의 0은 해당 종류의 기록이 없다는 의미다.
+
+| 항목 | 원장 및 조회 근거 | 연결 조건 |
+| --- | --- | --- |
+| 신청·실행 | `operations.mjs:getMetricEvents`가 `access` 내부에서 해당 신청만 조회. 레코드의 `applicationRef`, `scenarioRunId` 제공 | 인증된 신청 ID와 명시적인 실행 선택 전달 |
+| Epoch | `r2_metrics.clock_epoch`에 저장. `r2-ledger.mjs:events`는 JSON record만 반환 | 시간 집계 전에 신뢰된 epoch를 제공하고 혼합과 역행을 거부 |
+| 조건 | `store.mjs:command`가 collect 단위로 `CONDITION_VERIFIED` 발행. metric record에 condition ID 없음 | 고정 조건 ID와 실제 자동 여부 필요 |
+| 작업·시도 | metric record에 `operationId` 있음. 논리 이벤트 키에는 시도 번호 없음. `r2_attempts`에 일부 STARTED/FAILED 기록이 있고 `getMetricEvents`에는 미노출 | 작업과 시도 연결, 모든 시작·종료와 실제 결과를 별도 관측. 실패 이벤트 개수는 시도 횟수로 사용 불가 |
+| 출처·완전성 | emit이 `MEASURED_ISOLATED_TEST`를 기록하지만 입력 데이터 모드와 범위 완전성은 제공하지 않음 | 출처와 입력 모드를 별도 검증. 해당 종류의 기록 완전성은 계측 지점에서 확인 |
+| 사례 및 사람 | 명시 완료 창과 비교 관찰을 증명할 데이터가 조회에 없음 | 완료 창과 검토 구간의 별도 관찰 필요. 절감률 미측정 |
+
+담당 백엔드의 최소 호출 지점은 `src/bootcamp/operations.mjs:getMetricEvents`의 인가가 적용된 콜백 또는 동일 결과를 받는 서버 조립 계층이다. 기존 `src/bootcamp/http.mjs` 조회 계약을 유지하고, 소비 계층에 관찰 DTO를 함께 공급할 경우 버전을 명시한다. 권한 통합 시험은 본인/허용 운영자 정상 조회, 다른 신청자 및 범위 밖 운영자 거부, 세션 무효 시 DTO 미생성, 기존 조회 응답 호환성, 원시 기록 및 식별자 비노출을 확인해야 한다. 격리 회귀는 실제 원장 emit·저장·조회 코드와 인메모리 SQLite로 이벤트 형태 및 중복 처리만 확인했다.
