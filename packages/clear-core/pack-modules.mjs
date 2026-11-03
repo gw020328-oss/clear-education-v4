@@ -25,7 +25,7 @@ try {
   writeFileSync(join(stage, 'source-manifest.json'), JSON.stringify({files}, null, 2));
   writeFileSync(join(stage, 'package.json'), JSON.stringify({
     ...base,
-    version: '0.3.0',
+    version: '0.3.1',
     exports: {
       '.': './packages/clear-core/src/index.mjs',
       './modules': './src/agent-preview/packaged-modules.mjs',

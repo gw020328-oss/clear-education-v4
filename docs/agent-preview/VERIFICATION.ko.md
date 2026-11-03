@@ -50,3 +50,9 @@ npm install --ignore-scripts --no-audit --no-fund "$delivery/clear-preview-core-
 예제는 같은 패키지의 루트 조건 DTO, Moodle 두 결과, Reclaim 합성 서명과 변조 서명, 회고 세 위치와 요청 지문, 정산 판정과 S4 view의 일치 및 지급 차단을 검사한다. 의존성 준비는 시연 실행과 분리한다. 제품 연결점과 지원 범위는 FRONTEND_HANDOFF.ko.md에 기록했다.
 
 로컬 고정 Node 24.21.0에서 캐시를 채운 후 새 폴더에 offline 설치했다. 286개 npm 의존성 설치와 네트워크 차단 예제의 전체 assertion이 통과했다. SDK는 설치 스크립트를 끈 환경에서 선택적 RE2 native 모듈 대신 내장 경로를 사용했으며 합성 서명 검증 및 변조 거부가 성공했다. JSON 출력만 필요하면 예제 실행에 `LOG_LEVEL=error`를 설정한다.
+
+## 0.3.1 generateContent 응답 호환성
+
+Gemini A/B는 각각 응답을 받았으나 기존 어댑터가 GEMINI_RESPONSE_PARTS로 거부했다. 원본이 보존되지 않아 어떤 분기가 실패했는지는 확인할 수 없다. [Google generateContent 응답 명세](https://aistudio.google.com/api-reference/generate-content)는 Content.role의 생략 또는 빈 값과 Part의 thoughtSignature 및 thought 메타데이터를 정의한다. 기존 role 필수 검사와 text 단일 키 검사가 공식 형식도 거부함을 합성 사례에서 재현했다.
+
+수정은 STOP 후보 한 개의 최종 text part 한 개에서만 위 메타데이터를 허용한다. 실제 thought, 도구 및 미디어 데이터, 여러 part, 잘린 응답, 기존 JSON·원문·검토 지문 위반은 계속 거부한다. 서명 메타데이터는 결과 DTO에 전달하지 않는다. 새 모델 호출 없이 검증했으며 기존 승인은 이미 소비됐다.

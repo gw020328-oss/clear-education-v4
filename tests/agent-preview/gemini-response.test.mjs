@@ -67,3 +67,37 @@ test('unresolved model status cannot execute, and host seam dispatches once only
   assert.equal(calls, 1);
   assert.equal(result.draft.status, 'NEEDS_CLARIFICATION');
 });
+
+test('official optional role and final text signature preserve the reviewed proposal', async () => {
+  const input = packet('Moodle 활동 완료', [0]);
+  const baseline = inspectFixtureReply(input).draft;
+  const content = input.reply.candidates[0].content;
+  Object.assign(content.parts[0], {thoughtSignature: 'AQID', thought: false});
+  for (const role of ['model', '', undefined]) {
+    if (role === undefined) delete content.role;
+    else content.role = role;
+    const result = await executeReviewedGeminiPreview(input, baseline.proposalHash, {fixture: true});
+    assert.deepEqual(result.execution.calls, ['moodle.activity.public']);
+    assert.equal(result.execution.paymentAllowed, false);
+    assert.equal(JSON.stringify(result).includes('AQID'), false);
+  }
+});
+
+test('final text compatibility still rejects thoughts, tools, extra parts and unexpected roles', () => {
+  for (const mutate of [
+    c => c.role = 'user',
+    c => c.role = null,
+    c => c.parts[0].thought = true,
+    c => c.parts[0].thought = 'false',
+    c => c.parts[0].thoughtSignature = {},
+    c => c.parts[0].thoughtSignature = '',
+    c => c.parts[0].functionCall = {name: 'pay'},
+    c => c.parts[0].inlineData = {mimeType: 'application/json', data: 'AQID'},
+    c => c.parts.push({text: '{}'}),
+    c => c.parts[0] = {thoughtSignature: 'AQID'}
+  ]) {
+    const input = packet('Moodle 활동 완료', [0]);
+    mutate(input.reply.candidates[0].content);
+    assert.throws(() => inspectFixtureReply(input), /GEMINI_RESPONSE_PARTS/);
+  }
+});

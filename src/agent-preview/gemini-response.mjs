@@ -15,11 +15,21 @@ function decode({sourceText, bodyHash, reply}, provenance, reviewedHash) {
   }
   const {finishReason, content} = candidates[0] ?? {};
   const parts = content?.parts;
-  if (finishReason !== 'STOP' || content?.role !== 'model' || !Array.isArray(parts) || parts.length !== 1
-      || Object.keys(parts[0] ?? {}).length !== 1 || typeof parts[0]?.text !== 'string') {
+  if (finishReason !== 'STOP' || ![undefined, '', 'model'].includes(content?.role)
+      || !Array.isArray(parts) || parts.length !== 1) {
     throw Error('GEMINI_RESPONSE_PARTS');
   }
-  const parsed = strictJson(parts[0].text, 16384);
+  const part = parts[0];
+  // generateContent permits a signature alongside final text. It is opaque
+  // provider metadata and is neither interpreted nor carried into the draft.
+  if (typeof part?.text !== 'string'
+      || Object.keys(part).some(key => !['text', 'thought', 'thoughtSignature'].includes(key))
+      || (Object.hasOwn(part, 'thought') && part.thought !== false)
+      || (Object.hasOwn(part, 'thoughtSignature')
+        && (typeof part.thoughtSignature !== 'string' || !part.thoughtSignature.length))) {
+    throw Error('GEMINI_RESPONSE_PARTS');
+  }
+  const parsed = strictJson(part.text, 16384);
   if (!parsed || Object.keys(parsed).length !== 1 || !Array.isArray(parsed.clauses)) {
     throw Error('GEMINI_RESPONSE_SCHEMA');
   }
