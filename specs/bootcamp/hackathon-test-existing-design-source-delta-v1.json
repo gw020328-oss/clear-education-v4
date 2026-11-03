@@ -1,0 +1,52 @@
+{
+  "version": "clear-existing-design-source-delta.1",
+  "candidateHead": "25233a25ab0a3f492455a27942f280846c4a5f4e",
+  "baseHead": "e7f77ed2105234ca9be6f2a0027474195c342c1b",
+  "previousGuardSha256": "72a3f1329dcd58afed129f74f5204b9fdff17028f653605318645e2ff8571dab",
+  "changes": {
+    "web/src/bootcamp/operator-view.js": {
+      "before": "de018ecfc603f91b8cd3ac3089008c9f3f66dca07a5cc405accbdfe66082fbf9",
+      "after": "1543ed1ddcb2cc2b74a7361d3660ec18acdabd5218243a16385ea4bc4fcd62ca"
+    },
+    "web/src/bootcamp/team-entry.js": {
+      "before": "d0ee1111ef946f55a448c03d7d26699d49e7d7059edacdddf0c4a0761c185dff",
+      "after": "cae2a87c4bc569f7ef9d2ff693045bc5b4243eccd17d235943d66392176cc3da"
+    },
+    "web/src/bootcamp/team-render.js": {
+      "before": "d07f9b54508399fc04c3cc629f39c5d1fcdfd542df853290ff13b8a89f39b3d7",
+      "after": "4199bcd60df9a337e3cada67e0eba8d1b3118ebeb8b3dfbc9ab3f28a2ca57c78"
+    },
+    "web/src/bootcamp/team-application.js": {
+      "before": "02d88afa60505edda1c98868df684f2274f59b7fe5ccb57066a08a930df50a43",
+      "after": "c12e21617658923af9fb8e4c1f99bcabe195591fab8fe28e775f23e5da42aa73"
+    },
+    "tools/bootcamp/normal-chain.mjs": {
+      "before": "d08baa62f192cc3340a92602a2cd9ff36be5183a46a5e6591e3f0844fa70d0a3",
+      "after": "4aa44b8fc137bb3f2673eb3ceed2f95f6a378f959a77b715bab3134a7ffc8f53"
+    },
+    "tools/bootcamp/normal-review-window.mjs": {
+      "before": "3efe5383659dbb9893a00c8d603a43c2307580699ec3351eeaef3e81f37bfa9e",
+      "after": "9e964ade73dd68650c092e426f766133cb51b48198cab708d9040531a6d172ac"
+    }
+  },
+  "sourceAdditions": {
+    "web/src/bootcamp/student-view.js": "3bdd64a493a17ea1543642acdc65037f14ce370cfadcdb419aba3dfdc777a2e7",
+    "web/src/bootcamp/criteria.js": "fa50151b74a4a1cf1f094b4aad9a7f62321721bb61d349e0c26f7dba32c6712d",
+    "web/src/bootcamp/live-dashboard.js": "378fbb66e2fe416ed9fd8d1ee4c2ac5d7ac848c977be8bd2fb38c1d8156b0520",
+    "web/src/bootcamp/live-evidence.js": "b2cb3242a58f92f2cf8dad912aee7f193a4dafbe36ab22401c2e4065d46ac8b2"
+  },
+  "boundary": {
+    "sameAuthenticatedDriver": true,
+    "signingAndDeadlinesUnchanged": true,
+    "syntheticValidationOnly": true,
+    "actualRunStarted": false,
+    "boundedAuthenticatedReaderWait": {
+      "freshSeconds": 5,
+      "timeoutMs": 30000,
+      "pollMs": 1000,
+      "originalSignatureAndTarget": true,
+      "revalidateAfterRpc": true,
+      "repeatedTransactionOrAi": false
+    }
+  }
+}

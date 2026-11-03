@@ -250,6 +250,10 @@ export function collectionFrom(row) {
     collected: Boolean(row.evidenceId),
     // §10.1 — 해시만 남고 원문이 만료되면 상세 조회가 불가능함을 화면에서 말한다
     originalReadable: original ? original.httpAvailable === true : null,
+    originalExpired: original?.expired === true,
+    originalUnavailableReason: original?.expired === true ? '보관 기한 경과. 판정과 해시는 보존됩니다'
+      : original?.authorized === false ? '원문 조회 권한이 제공되지 않았습니다'
+      : original?.httpAvailable === false ? '이 화면의 원문 조회 API가 제공되지 않았습니다' : null,
     originalAuthorized: original ? original.authorized === true : null,
   });
 }

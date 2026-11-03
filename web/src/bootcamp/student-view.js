@@ -30,6 +30,7 @@
 //   '다시 해도 안 돼요'를 화면이 추측하지 않는다 — 보완 가능성은 서버가 준다
 //   비용을 모르는 직접 청구 버튼을 띄우지 않는다 (§7.5)
 
+import {liveDashboard} from './live-dashboard.js';
 import { el, clear } from '../ui/dom.js';
 import { seoulText } from '../ui/policy-view.js';
 import {
@@ -528,12 +529,13 @@ function sharedNotes(view) {
   // 사람에게 필요한 정보라 남긴다.
   const out = [];
   if (every((c) => c.originalReadable === false)) {
-    out.push('원문 보관 기한 경과 · 판정과 해시는 보존');
+    const reasons = new Set(all.map(c => c.originalUnavailableReason));
+    out.push(reasons.size === 1 ? (all[0].originalUnavailableReason ?? '원문 조회가 제공되지 않았습니다') : '원문 조회가 제공되지 않았습니다. 조건별 상세를 확인해 주세요.');
   }
   return out;
 }
 
-function progressSection(view, { onOpen, onToggle = null }) {
+export function progressSection(view, { onOpen, onToggle = null }) {
   const met = metCount(view);
   const status = view.decision.conditionsStatus;
 
@@ -592,7 +594,7 @@ function detailRow(row) {
       item('원문 조회', c.originalReadable === null ? null
         // §10.1 — 해시만 남고 원문이 만료된 상태를 화면에서 말한다
         : c.originalReadable ? '가능' : '불가',
-      c.originalReadable === false ? '보관 기한 경과. 판정과 해시는 보존됩니다' : null),
+      c.originalReadable === false ? c.originalUnavailableReason : null),
       item('내 열람 권한', c.originalAuthorized === null ? null
         : c.originalAuthorized ? '있음' : '없음'),
     ]),
@@ -836,11 +838,12 @@ function recoverySection(view) {
 // ── 전체 ────────────────────────────────────────────────────────────────
 
 export function studentSection({
-  view, phase = null, procedureReady = true, api = null, sign = null, onChange = () => {},
+  workflow = null, view, phase = null, procedureReady = true, api = null, sign = null, onChange = () => {},
   conn = null, onSignIn = () => {}, onSignOut = () => {}, onOpen = () => {},
   // 라이브 월드에서만 온다. 조건 카드를 눌러 충족·미충족을 바꾼다.
   onToggle = null,
 }) {
+  if(workflow)return liveDashboard({view,workflow});
   // 막는 이유는 맨 위에서 한 번만 말한다. 패널마다 반복하면 읽는 사람이
   // 문제가 여럿 있는 줄 안다.
   const blocked = phase && phase !== 'ACTIVE_LOCAL_TEST'
@@ -1067,7 +1070,7 @@ export function conditionDetail({
           item('근거 유효 기한', row.expiresAt ? seoulText(row.expiresAt) : null),
           item('원문 조회', c.originalReadable === null ? null
             : c.originalReadable ? '가능' : '불가',
-          c.originalReadable === false ? '보관 기한 경과. 판정과 해시는 보존됩니다' : null),
+          c.originalReadable === false ? c.originalUnavailableReason : null),
           item('내 열람 권한', c.originalAuthorized === null ? null
             : c.originalAuthorized ? '있음' : '없음'),
         ]),

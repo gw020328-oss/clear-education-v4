@@ -14,7 +14,7 @@ import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {syntheticAuthority} from '../../tests/bootcamp-store/fixture.mjs';
 import {waitForNormalReviewConsents} from './explicit-consents.mjs';
-import {requireNormalSourceWindow,REVIEW_WINDOW} from './normal-review-window.mjs';
+import {waitForNormalPaymentReview,REVIEW_WINDOW} from './normal-review-window.mjs';
 import {registerNormalSourceTarget,normalProcedureBody,readNormalView} from './normal-current-view.mjs';
 import {waitForNormalChainTime} from './normal-chain-time.mjs';
 import {executionErrorSummary} from '../../src/bootcamp/execution-diagnostics.mjs';
@@ -30,13 +30,11 @@ export async function executeNormalPayment({store,connection,serviceContext,user
  ensure(connection.configuration.sourceMode!=='REGISTERED_TEST_SOURCE'||sourceTarget,'BC_NORMAL_SOURCE_TARGET_REQUIRED');
  const m=connection.runtime.manifest,id=m.environmentId,reader=new ExecutionReader(m),bridge=store.execution.connectBridge(serviceContext);
   ensure(user.wallet.toLowerCase()===recipient.toLowerCase(),'BC_NORMAL_RECIPIENT');
-  const reviewWindow=async()=>{if(!automatic){
-   // Chain cache lifetime is independent of source/consent deadlines. RPC and
-   // receipt waits can outlive it; refresh before consuming, never extend it.
-   requireReviewReaders?.();readNormalView(()=>store.getApplication(user,app));
-   await connection.refresh(app);
-   requireReviewReaders?.();requireNormalSourceWindow({store,context:user,applicationId:app,sourceTarget:target});
-  }};
+  const reviewWindow=async()=>{if(!automatic)await waitForNormalPaymentReview({
+   store,connection,context:user,applicationId:app,sourceTarget:target,
+   registration:m.version==='clear-e5-test-runtime.2'?intake.record:null,
+   assertCurrent:assertRecipientWaitCurrent,requireReaders:requireReviewReaders,signal,
+  });};
   step='REGISTER_SOURCE_TARGET';const {target,intake}=await registerNormalSourceTarget({store,connection,user,app,key,sourceTarget});
   if(m.version==='clear-e5-test-runtime.2'){
    ensure(typeof waitForRecipientRegistration==='function','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
@@ -52,7 +50,7 @@ export async function executeNormalPayment({store,connection,serviceContext,user
    }}finally{checkpoint?.close();}
    ensure(readNormalView(()=>store.getRecipientRegistration(user,app)).status==='SIGNED','BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
   }
-  await reviewWindow();
+  step='REVIEW_WINDOW';await reviewWindow();
   const body=(context=user,extra={})=>normalProcedureBody(store,context,app,target,extra);
   const chainApp=intake.record.opaqueTarget.applicationId;report.chainApplicationId=chainApp;
   const token=new Contract(m.tokenAddress,reader.token,ownedTestWallet(id,'depositor').connect(provider));
