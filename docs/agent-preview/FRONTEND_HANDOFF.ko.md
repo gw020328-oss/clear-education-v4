@@ -19,7 +19,7 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 
 실제 S4 원문 HTTP는 이 패키지에서 제공하지 않는다. 실제 AI wire는 별도 준비 계약으로 인수하며 기존 MOCK를 ACTUAL로 바꾸지 않는다. 기존 회고의 3항목/입력별 승인·고정 4조건 정상 지급 경계는 보존한다.
 
-## 기존 모듈 실행과 실제 AI 준비
+## 0.1.x 저장소 시연과 구조화 요청 준비
 
 `src/agent-preview/existing-module-demo.mjs`의 `executeExistingModuleDemo(plan,draft)`는 선택한 Moodle 활동/과제에만 기존 `readBootcampMoodle`와 `validateBootcampMoodleResult`를 호출한다. 인공 API 응답·인공 ID·고정 P0 context이며 실제 LMS 접속이 아니다. 회고 선택 시 기존 `validateGroundedReview`가 세 항목의 인공 원문 인용 위치를 검사한다. 변형 preview 해시를 P0 정책 해시에 대입하지 않는다. 내부 producer의 LOCAL_LMS_RECORD receipt는 외부로 내보내지 않고 합성 모드의 facts/지문만 반환한다. HackerRank 선택은 `RECLAIM_SIGNATURE_DEMO_NOT_CONNECTED`, 전체 coverage는 PARTIAL이다. 이는 서명 시연 완료가 아니다.
 
@@ -30,3 +30,11 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 ## 0.1.1 JSON 경계 보정
 
 해시/클론 전에 plain JSON DTO만 허용한다. undefined, 배열 extra field/빈 슬롯, symbol/non-enumerable/accessor, 사용자 정의 prototype, 함수/toJSON, 비유한 수/-0, 깊이 32 초과를 거부한다. 추가 필드를 JSON.stringify로 생략한 뒤 VERIFIED로 표시하지 않는다. 동일 오류는 validatePlan의 errors에 DTO_JSON_*로 표시되며 buildPlan/executePublicDemo/hash는 해당 code로 throw한다. 검사/해시는 JS 객체의 accessor를 호출하지 않는다.
+
+## 0.2.0 독립 모듈 인수
+
+`@clear/preview-core/modules`는 `runEvidenceDemo`, `runReflectionGroundingDemo`, `runSettlementConnectionDemo`, `prepareGeminiStructureRequest`를 내보낸다. 앞의 세 함수는 고정 공개 합성 데이터로 실행한다. 패키지 작성 명령과 클린 폴더 예제는 패키지 README에 있다.
+
+- 증빙은 기존 Moodle activity/assignment producer 및 receipt 검사와 Reclaim SDK 기반 HackerRank verifier를 호출한다. 임시 합성 signer의 서명 두 건을 검증하고 변조 인증서 서명을 거부한다. live source 또는 공식 운영 attestor를 사용했다는 뜻은 아니다.
+- 회고는 기존 grounding으로 고정 세 항목의 원문 위치를 확인한다. 기존 `bootcamp-reflection.mjs`의 프로필과 `fixed-normal-reflection.mjs`의 요청 준비 함수로 본문 지문을 계산한다. 별도로 노출한 Gemini 준비 함수는 조건 구조화용이다.
+- 정산 연결은 기존 `decisionRecord`와 `createDecisionEvidenceReader`를 고정 네 조건으로 호출한다. 실제 제품은 store가 이 reader를 인수하고 기존 S4 decision-evidence 조회에 연결한다. 데모는 입력 증거가 없는 UNKNOWN decision과 메모리 SQLite query-only view로 지문 일치를 확인한다. 실제 지급·서명·수락 흐름은 제품 호스트 소유다.

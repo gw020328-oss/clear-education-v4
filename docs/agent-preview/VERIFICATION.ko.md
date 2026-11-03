@@ -31,3 +31,22 @@
 1차 head 9884929에서 배열의 추가 enumerable field 및 undefined 필드가 해시에서 생략되는 문제가 검토에서 발견됐다. 지급은 계속 false였지만 strict DTO/VERIFIED 계약에 맞지 않아 수정했다. hash/validatePlan/executePublicDemo의 clone 전 plain JSON 검사로 거부한다.
 
 수정 검증: 네트워크 차단 core 41개(기존 29 + 집중 회귀 12), 클린 tarball 설치/실행 1개 성공. 설치한 패키지에서도 보고된 배열 권한/외부참조 및 draft undefined 재현이 거부된다. 기존 Moodle59/grounding10은 이 수정에서 반복하지 않았다. 배포물 버전은 @clear/preview-core 0.1.1이며 실제 API/로그인/서명은 여전히 미실행이다.
+
+## 0.2.0 독립 모듈 예제
+
+고정 Node/npm 환경에서 다음 명령을 실행한다. 첫 설치는 공개 npm 의존성을 받을 수 있어야 한다. 캐시를 준비한 뒤에는 깨끗한 폴더에서 같은 설치 명령에 `--offline`을 추가할 수 있다.
+
+```sh
+repo="$PWD"
+delivery="$(mktemp -d)"
+./tools/node packages/clear-core/pack-modules.mjs "$delivery"
+trial="$(mktemp -d)"
+cp examples/clear-core/modules-demo.mjs tests/agent-preview/network-block.mjs "$trial/"
+cd "$trial"
+npm install --ignore-scripts --no-audit --no-fund "$delivery/clear-preview-core-0.2.0.tgz"
+"$repo/tools/node" --import ./network-block.mjs modules-demo.mjs
+```
+
+예제는 같은 패키지의 루트 조건 DTO, Moodle 두 결과, Reclaim 합성 서명과 변조 서명, 회고 세 위치와 요청 지문, 정산 판정과 S4 view의 일치 및 지급 차단을 검사한다. 의존성 준비는 시연 실행과 분리한다. 제품 연결점과 지원 범위는 FRONTEND_HANDOFF.ko.md에 기록했다.
+
+로컬 고정 Node 24.21.0에서 캐시를 채운 후 새 폴더에 offline 설치했다. 286개 npm 의존성 설치와 네트워크 차단 예제의 전체 assertion이 통과했다. SDK는 설치 스크립트를 끈 환경에서 선택적 RE2 native 모듈 대신 내장 경로를 사용했으며 합성 서명 검증 및 변조 거부가 성공했다. JSON 출력만 필요하면 예제 실행에 `LOG_LEVEL=error`를 설정한다.
