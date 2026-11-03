@@ -1,3 +1,4 @@
+import {projectLedgerObservations} from '../operational-metrics/ledger-adapter.mjs';
 import {isIP} from 'node:net';
 import {RuleError,exactKeys,requireRule as check} from '../policy/values.mjs';
 
@@ -86,11 +87,12 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
           const numeric=(key,fallback)=>{const v=u.searchParams.get(key);if(v===null)return fallback;check(/^(0|[1-9][0-9]{0,14})$/.test(v),'BC_PAGE');return Number(v);};
           result=store.listOperations(context,{limit:numeric('limit',20),after:u.searchParams.get('after'),expectedLedgerSequence:numeric('sequence',null)});
         }else{
-          const m=/^\/bootcamp\/v2\/applications\/([a-z][a-z0-9.-]{0,63})\/(operations|metric-events|consent-requests|objections|actions|operation-receipts|source-requests|source-collection)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
+          const m=/^\/bootcamp\/v2\/applications\/([a-z][a-z0-9.-]{0,63})\/(operations|metric-events|ledger-observations|consent-requests|objections|actions|operation-receipts|source-requests|source-collection)(?:\/([a-z][a-z0-9.-]{0,63}))?$/.exec(path);
           check(m,'BC_NOT_FOUND');const [,a,resource,target]=m;
           if(req.method==='GET'){
             if(!target&&resource==='operations')result=store.getOperationsProjection(context,a);
             else if(!target&&resource==='metric-events')result=store.getMetricEvents(context,a);
+            else if(target&&resource==='ledger-observations')result=projectLedgerObservations(store.getMetricEvents(context,a),{applicationRef:a,runId:target});
             else if(target&&resource==='actions')result=store.getAction(context,a,target);
             else if(target&&resource==='operation-receipts')result=store.getR2Operation(context,a,target);
             else if(target&&resource==='source-requests')result=store.getRequest(context,a,target,{bridge:true});

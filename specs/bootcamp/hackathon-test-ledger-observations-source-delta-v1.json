@@ -1,0 +1,15 @@
+{
+  "version": "clear-ledger-observations-source-delta.1",
+  "candidateHead": "c78ea3064126c2337119f54a2b65d38efdeba691",
+  "baseHead": "98a204f8082eb54cea5b7ae97b8c517becc8449b",
+  "previousGuardSha256": "271ccd78e81591f83a65f10123d3d2f94095b7eca126f7491843e920b1a446b4",
+  "changes": {
+    "src/bootcamp/http.mjs": {
+      "before": "b67d8fc96fff36ecf0331c651a11e36a63eaa3475500e69183a3242e4924ac9c",
+      "after": "48d6c899d85b182150a5c429689b1377f8af13447cb23c49f66a6ed7b33e4194"
+    }
+  },
+  "sourceAdditions": {
+    "src/operational-metrics/ledger-adapter.mjs": "39273c77d073ad12798a870b72b648b07938ce17b9a20ada3b8e590e2315b954"
+  }
+}
