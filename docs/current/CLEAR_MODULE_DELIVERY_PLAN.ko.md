@@ -26,6 +26,16 @@
 - 실제 모드에서 예시 명단과 자동 합성 fallback을 사용하지 않는다. 공개 합성 근거 시연과 실제 S4 hash/location을 구분하고 개인 원문 API는 추가하지 않는다.
 - 기존 증거에서 수령인·금액 변조, 만료, 이전 판정·해시, 중복 지급 거부를 대조한다. 이미 배정된 온체인 권리의 서버 중단 후 별도 청구는 지갑·RPC·가스까지 시험 범위를 명시한다.
 
+## 11/3 병렬 착수 기록
+
+| 담당 | 채팅 ID | 인수 자료 |
+| --- | --- | --- |
+| A 기존 Privy | `01a185bd-0f4f-7c43-b01f-2179f7060d36` | PR139 실제 실행·core web |
+| B AI 계획 검증·모듈화 | `01a1a09f-a32a-71e1-9d68-782580cd21bd` | `docs/agent-preview/FRONTEND_HANDOFF.ko.md` |
+| C 운영 효과 계측·비교 검증 | `01a1a0a0-5bd0-78f1-a21e-3bd6f4d3819f` | `docs/operational-metrics/FRONTEND_HANDOFF.ko.md` |
+
+B/C는 별도 작업트리에서 착수했다. B의 전용 시험·문서는 `tests/agent-preview`, `docs/agent-preview`, C의 전용 시험·문서·예제는 각각 `tests/operational-metrics`, `docs/operational-metrics`, `examples/operational-metrics`에 둔다. 인수 파일의 DTO·함수·fixture는 본부 대조 전까지 제안이다. 본부가 기준 SHA, DTO 버전과 필드, 통합 순서를 확정한다. D는 그전까지 어댑터와 명시적 합성 fixture로 진행한다.
+
 ## 사용자 접근과 개발자 연동
 
 - 사용자 접근은 준비된 서비스의 브라우저 화면에서 로그인·검토·서명·결과를 확인하는 경로다. 원격 서비스에 접속할 수 있다는 사실은 그 사용자의 OS에서 로컬 수집기를 실행할 수 있다는 뜻이 아니다.
