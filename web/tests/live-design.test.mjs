@@ -21,3 +21,23 @@ test('S4 detail is scoped to current app, role and decision; no original text is
  evidence.availability=[{criterionId:'reflection-topics',original:{status:'EXPIRED'}}];assert.match(read(),/보관 기한이 지났/);
  evidence.manifest.decision.decisionHash='other';assert.doesNotMatch(read(),/one · PRESENT/);
  }finally{restore();}});
+
+test('condition preview shows source, selected tools and synthetic outcome, then clears it on edit',async()=>{
+ const restore=dom();
+ try {
+  const {conditionPreview}=await import('../src/bootcamp/condition-preview.js');
+  const panel=conditionPreview(()=>import('../../packages/clear-core/src/index.mjs'));
+  const source=panel.children[2].children[1],run=panel.children[3],output=panel.children[4];
+  output.replaceChildren=(...children)=>{output.textContent='';output.append(...children);};
+  await run.events.click();
+  assert.match(output.textContent,/Moodle 과제 제출/);
+  assert.match(output.textContent,/moodle.assignment.public/);
+  assert.match(output.textContent,/합성 자료에서 충족/);
+  source.value='지원하지 않는 문장';
+  source.events.input();
+  assert.equal(output.textContent,'');
+  await run.events.click();
+  assert.match(output.textContent,/확인이 필요한 문구/);
+  assert.doesNotMatch(output.textContent,/선택 도구|실행 결과/);
+ } finally {restore();}
+});
