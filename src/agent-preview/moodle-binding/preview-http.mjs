@@ -8,6 +8,7 @@ export function createPreviewHttpHandler({ authentication, contexts, enabled = f
   const options = {cookieNamespace,allowLoopbackHttpForTests};
   const auth = createPreviewAuthenticationHandler(authentication,options);
   const routes = new Map([['/preview/context','issue'],['/preview/review','review'],['/preview/observe','observe']]);
+  if(typeof contexts.prepare === 'function') routes.set('/preview/prepare', 'prepare');
   if(typeof contexts.generate === 'function') routes.set('/preview/generate', 'generate');
   const send = (res,status,body) => {res.writeHead(status,{'content-type':'application/json','cache-control':'no-store',
     'x-content-type-options':'nosniff','content-security-policy':"default-src 'none'"});res.end(JSON.stringify(body));};
