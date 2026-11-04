@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { canonical, exact, hash, digest, hex, opaque, integer, requireRule as check } from './contract.mjs';
 import { validateTimePolicy } from './currentness.mjs';
+import { reviewModelProposal } from '../index.mjs';
 
 export const PREVIEW_CONTEXT_VERSION = 'clear-self-preview-context.1';
 // Owner-only composition. No raw session token, wallet, source text, or provider reply
@@ -79,11 +80,19 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
     },
     // Only the server's peer-verified D response consumer calls this method. It is
     // deliberately absent from HTTP dispatch and accepts no raw model response.
-    acceptVerifiedDraft(context, input) {
+    acceptVerifiedDraft(context, input, proposal) {
       exact(input, ['previewContextRef','draftId','proposalHash','sourceHash','bodyHash','approvalBindingHash']);
       const {r} = record(context, input.previewContextRef);
-      check(opaque(input.draftId) && hex(input.proposalHash) && input.sourceHash === r.sourceHash
+      check(opaque(input.draftId) && hex(input.proposalHash) && input.proposalHash !== '0'.repeat(64) && input.sourceHash === r.sourceHash
         && input.bodyHash === r.bodyHash && input.approvalBindingHash === r.approvalBindingHash, 'CONTEXT_DRAFT');
+      exact(proposal, ['sourceText','rows']);
+      const prepared = prepareModel(proposal.sourceText);
+      check(prepared.sourceHash === r.sourceHash && prepared.bodyHash === r.bodyHash
+        && prepared.model === r.model && prepared.actualModelCall === false, 'CONTEXT_PROPOSAL');
+      const validated = reviewModelProposal(proposal.sourceText, proposal.rows);
+      check(validated.sourceHash === r.sourceHash && validated.proposalHash === input.proposalHash
+        && validated.status === 'OPERATOR_REVIEW_REQUIRED', 'CONTEXT_PROPOSAL');
+      record(context, input.previewContextRef);
       check(!r.draft || r.draft.draftId === input.draftId && r.draft.proposalHash === input.proposalHash, 'CONTEXT_DRAFT_REPLACED');
       r.draft = { draftId:input.draftId, proposalHash:input.proposalHash };
     },

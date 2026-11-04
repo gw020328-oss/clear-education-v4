@@ -19,6 +19,8 @@ function metadata(m) {
   for (const k of ['keyRef','sender','receiver','audience','deploymentEpoch','contextRef']) check(opaque(m[k]), 'PEER_REF');
   for (const k of ['requestRef','sourceHash','proposalHash','bodyHash','requestHash']) check(hex(m[k]), 'PEER_HASH');
   check(m.sender !== m.receiver && m.method === 'POST' && paths.has(m.path), 'PEER_ROUTE');
+  const beforeDraft = m.path === '/v1/preview/prepare' || m.path === '/v1/preview/generate';
+  check(beforeDraft || m.proposalHash !== ZERO_HASH, 'PEER_PROPOSAL_REQUIRED');
   check(integer(m.issuedAt) && m.issuedAt > 0 && integer(m.expiresAtExclusive)
     && m.expiresAtExclusive > m.issuedAt && m.expiresAtExclusive - m.issuedAt <= lifetime(m.path), 'PEER_TIME');
   check(m.kind === 'REQUEST' ? m.status === 0 && m.requestHash === ZERO_HASH : m.status === 200 && m.requestHash !== ZERO_HASH, 'PEER_KIND');

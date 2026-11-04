@@ -5,6 +5,7 @@ import {createPreviewContexts,PREVIEW_CONTEXT_VERSION} from '../../src/agent-pre
 import {createPreviewHttpHandler} from '../../src/agent-preview/moodle-binding/preview-http.mjs';
 import {createPreviewDevelopmentHandler} from '../../src/product-workflow/http-development.mjs';
 import {prepareGeminiStructureRequest} from '../../src/agent-preview/gemini-preparation.mjs';
+import {sourceClauses,reviewModelProposal} from '../../src/agent-preview/index.mjs';
 import {hash} from '../../src/agent-preview/moodle-binding/contract.mjs';
 import {studentFixture} from './fixtures/binding-student-fixture.mjs';
 const sourceText='Moodle에서 첫 학습 활동을 마쳐야 한다';
@@ -16,21 +17,23 @@ async function fixture(t){
   targetRef:'page-manual',issuerEpoch:f.policy.issuerEpoch,deployment:()=>release,prepareModel:prepareGeminiStructureRequest,
   timePolicy:f.config.timePolicy,clock:()=>f.state.wall,monotonic:()=>mono});t.after(()=>contexts.close());
  const issued=contexts.issue(f.context,{version:PREVIEW_CONTEXT_VERSION,sourceText});
- const draft={previewContextRef:issued.previewContextRef,draftId:'draft-1',proposalHash:'b'.repeat(64),sourceHash:issued.sourceHash,bodyHash:issued.bodyHash,approvalBindingHash:issued.approvalBindingHash};
+ const proposal={sourceText,rows:sourceClauses(sourceText).map(c=>({quote:c.text,start:c.start,end:c.end,status:'SUPPORTED',capability:'MOODLE_ACTIVITY_COMPLETION.1',question:null}))};
+ const proposalHash=reviewModelProposal(sourceText,proposal.rows).proposalHash;
+ const draft={previewContextRef:issued.previewContextRef,draftId:'draft-1',proposalHash,sourceHash:issued.sourceHash,bodyHash:issued.bodyHash,approvalBindingHash:issued.approvalBindingHash};
  const input={version:PREVIEW_CONTEXT_VERSION,previewContextRef:issued.previewContextRef,draftId:draft.draftId,proposalHash:draft.proposalHash};
- return {f,release,contexts,issued,draft,input,setMono:v=>mono=v,ready(){contexts.acceptVerifiedDraft(f.context,draft);contexts.review(f.context,input);}};
+ return {f,release,contexts,issued,draft,input,proposal,setMono:v=>mono=v,ready(){contexts.acceptVerifiedDraft(f.context,draft,proposal);contexts.review(f.context,input);}};
 }
 test('real auth/C1/coordinator: explicit matched review gives only pinned triple',async t=>{
  const x=await fixture(t);await assert.rejects(x.contexts.observe(x.f.context,x.input),/CONTEXT_DRAFT/);
- assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,{...x.draft,sourceHash:'f'.repeat(64)}),/CONTEXT_DRAFT/);
- x.contexts.acceptVerifiedDraft(x.f.context,x.draft);await assert.rejects(x.contexts.observe(x.f.context,x.input),/CONTEXT_REVIEW_OR_BUSY/);
+ assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,{...x.draft,sourceHash:'f'.repeat(64)},x.proposal),/CONTEXT_DRAFT/);
+ x.contexts.acceptVerifiedDraft(x.f.context,x.draft,x.proposal);await assert.rejects(x.contexts.observe(x.f.context,x.input),/CONTEXT_REVIEW_OR_BUSY/);
  assert.throws(()=>x.contexts.review(x.f.context,{...x.input,proposalHash:'f'.repeat(64)}),/CONTEXT_DRAFT/);
  x.contexts.review(x.f.context,x.input);
  const result=await x.contexts.observe(x.f.context,x.input);assert.deepEqual(result,{targetRef:'page-manual',status:'COMPLETE',observedAt:1000});
  assert.deepEqual(Object.keys(result).sort(),['observedAt','status','targetRef']);
  let delivered; await x.contexts.deliverObservation(x.f.context,{previewContextRef:x.input.previewContextRef,draftId:x.input.draftId,proposalHash:x.input.proposalHash},result,{query(body,correlation){delivered={body,correlation};return Promise.resolve();}});
  assert.deepEqual(JSON.parse(delivered.body),result);assert.equal(delivered.correlation.contextRef,x.input.previewContextRef);
- assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,{...x.draft,draftId:'draft-2'}),/CONTEXT_DRAFT_REPLACED/);
+ assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,{...x.draft,draftId:'draft-2'},x.proposal),/CONTEXT_DRAFT_REPLACED/);
 });
 for(const [name,change] of [
  ['logout',x=>x.f.auth.logout(x.f.context)],
@@ -120,3 +123,14 @@ for(const scenario of ['close','expiry']){
   assert.equal(x.f.sql('main',"SELECT state FROM requests WHERE kind='OBSERVE'")[0].state,'CANCELLED');
  });
 }
+
+test('verified draft requires nonzero hash of the validated current-source AST',async t=>{
+ const x=await fixture(t);
+ assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,{...x.draft,proposalHash:'0'.repeat(64)},x.proposal),/CONTEXT_DRAFT/);
+ assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,{...x.draft,proposalHash:'e'.repeat(64)},x.proposal),/CONTEXT_PROPOSAL/);
+ assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,x.draft,{...x.proposal,sourceText:'다른 원문'}),/CONTEXT_PROPOSAL/);
+ assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,x.draft,{...x.proposal,rows:x.proposal.rows.map(row=>({...row,start:row.start+1}))}),/MODEL_SOURCE_SPAN/);
+ assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,x.draft),/DTO_KEYS/);
+ x.ready();
+ assert.equal((await x.contexts.observe(x.f.context,x.input)).status,'COMPLETE');
+});

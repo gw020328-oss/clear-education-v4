@@ -129,3 +129,37 @@ for (const scenario of ['close','synchronous caller abort']) {
   assert.equal(claims,0);
  });
 }
+
+test('valid MAC zero proposals are rejected on all post-draft request and response routes',async t=>{
+ const {createHmac}=await import('node:crypto');
+ const {PEER_FIELDS}=await import('../../src/agent-preview/moodle-binding/peer-transport.mjs');
+ const store=stores(t);
+ for(const path of ['/observations','/v1/preview/execute','/v1/preview/observation-result']){
+  const routePin={...pin,path}, replay=store(path.replaceAll('/','-'));
+  for(const kind of ['REQUEST','RESPONSE']){
+   const meta={...metadata(),path,kind,proposalHash:ZERO_HASH,
+    ...(kind==='RESPONSE'?{sender:'C',receiver:'B',status:200,requestHash:'a'.repeat(64)}:{})};
+   // Independent wire construction proves the rejected input has a valid MAC.
+   const bytes=Buffer.concat([Buffer.from('CLEAR\0PREVIEW\0PEER\0HMAC-SHA256\0V1\0'),...PEER_FIELDS.flatMap(field=>{
+    const value=Buffer.from(String(meta[field]),'ascii'),length=Buffer.alloc(4);
+    length.writeUInt32BE(value.length);return [length,value];
+   })]);
+   const mac=createHmac('sha256',key).update(bytes).digest('hex');
+   const wire=Buffer.from(canonical({meta,body:body.toString('base64'),mac}));
+   assert.throws(()=>decodePeer(wire,key),/PEER_PROPOSAL_REQUIRED/);
+   if(kind==='REQUEST')assert.throws(()=>acceptPeerRequest({wire,key,pin:routePin,replay}),/PEER_PROPOSAL_REQUIRED/);
+   assert.throws(()=>encodePeer(meta,body,key),/PEER_PROPOSAL_REQUIRED/);
+  }
+  assert.equal(acceptPeerRequest({wire:encodePeer({...metadata(),path},body,key),key,pin:routePin,replay}).meta.proposalHash,metadata().proposalHash);
+ }
+});
+test('prepare and generate retain zero proposal request and correlated response semantics',t=>{
+ const store=stores(t);
+ for(const path of ['/v1/preview/prepare','/v1/preview/generate']){
+  const routePin={...pin,path},meta={...metadata(),path,proposalHash:ZERO_HASH};
+  const request=acceptPeerRequest({wire:encodePeer(meta,body,key),key,pin:routePin,replay:store(path.replaceAll('/','-'))});
+  const response=decodePeer(encodePeerResponse({request,body,key,pin:routePin,now,expiresAtExclusive:now+5}),key);
+  assert.equal(response.meta.proposalHash,ZERO_HASH);
+  assert.equal(response.meta.requestHash,peerRequestHash(meta));
+ }
+});
