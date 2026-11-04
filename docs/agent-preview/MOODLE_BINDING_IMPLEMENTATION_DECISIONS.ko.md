@@ -1,5 +1,7 @@
 # Moodle 읽기 초안 바인딩: 저장소·운영 권한 결정안
 
+후속 상태: C head `26b0bc36`과의 [교차 리뷰](MOODLE_AUTHORITY_CROSS_REVIEW.ko.md)에서 세션 저장/전역 무효화, 로그인 권한 의존성 및 runtime trigger 권한의 추가 수정 조건을 확인했다. 아래 B의 SQLite 결정은 유지하며 실제 Moodle confirmation/학생 자료 연결은 해당 조건 해소 전 보류한다.
+
 2026-11-04, B의 권한 설계 보완. 기준 develop `a5653d64b939da9a1ededc85744d30b91c759f8f`, 입력 계약 head `41186a15fc4187429ceba9c70f290084575b5a2f`. [연결 계약](MOODLE_CLEAR_BINDING_CONTRACT.ko.md) revision 3과 함께 읽는다. 본부가 수용한 `READ_PREVIEW` / `OBSERVED_AT`, 고정 네 조건·100 TEST와의 분리를 전제로 한다. 이 문서는 구현 방식 선택과 합성 DB 실험의 결과이며, 제품 연결·기관 신원 확인·운영 승인을 의미하지 않는다.
 
 ## 결정과 실제 코드 근거
