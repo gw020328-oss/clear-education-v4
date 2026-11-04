@@ -6,7 +6,8 @@ import {START} from './fixture.mjs';
 export const hex=n=>n.toString(16).padStart(64,'0');
 export const createCommand=(key='native-create')=>({method:'POST',path:'/bootcamp/v1/applications',body:{},idempotencyKey:key});
 export async function commandFixture({authentication,contexts}={}){
- let wall=START,mono=0,seq=0,current=true,sessionRef=hex(99),afterAuth=()=>{};
+ let wall=START,mono=0,seq=0,current=true,sessionRef=hex(99),afterAuth=()=>{},authorityDenied=false;
+ const verificationOperations=[],records=new Map();let loseExecutionResponse=false;
  contexts??={PARTICIPANT:{token:hex(10),wallet:'0x'+'12'.repeat(20),chainId:12345,csrf:hex(11)},
   COURSE_OPERATOR:{token:hex(12),wallet:'0x'+'34'.repeat(20),chainId:12345,csrf:hex(13)}};
  const wallets=Object.fromEntries(Object.entries(contexts).map(([r,c])=>[r,c.wallet.toLowerCase()]));
@@ -16,8 +17,10 @@ export async function commandFixture({authentication,contexts}={}){
  const owner=createMoodleLoginIntents({ownerRunId:'run-fixture',runExpiresAtExclusive:START+1800,wallets,
   scope:{installationRef:'installation',courseRef:'course',subjectRef:'student',actorRefs:{PARTICIPANT:'student',COURSE_OPERATOR:'teacher'}},
   now:()=>wall,monotonic:()=>mono,deriveBrowserProof:proof,deriveFinishProof:proof,authenticateClear:auth,
-  verifyMoodle:async({request:q})=>({ownerRunId:q.ownerRunId,role:q.role,installationRef:'installation',courseRef:'course',subjectRef:'student',
-   actorRef:q.role==='PARTICIPANT'?'student':'teacher',sessionRef,expiresAtExclusive:START+1500})});
+  verifyMoodle:async({operation,request:q})=>{verificationOperations.push(operation);
+   if(operation==='execute-command'){if(!records.delete(q.requestRef))throw Error('COMMAND_ALREADY_TAKEN');if(loseExecutionResponse)throw Error('EXECUTE_RESPONSE_LOST');}
+   if(authorityDenied)throw Error('MOODLE_ROLE_REVOKED');return ({ownerRunId:q.ownerRunId,role:q.role,installationRef:'installation',courseRef:'course',subjectRef:'student',
+   actorRef:q.role==='PARTICIPANT'?'student':'teacher',sessionRef,expiresAtExclusive:START+1500});}});
  const signal=new AbortController();
  const lease=()=>({signal:signal.signal,assertCurrent(){if(!current)throw Error('LEASE_REVOKED');}});
  const request=(role,extra={})=>({version:MOODLE_LOGIN_INTENT,requestRef:hex(++seq),ownerRunId:'run-fixture',moodleAuthorityRef:hex(90),role,expiresAtExclusive:wall+5,...extra});
@@ -32,11 +35,12 @@ export async function commandFixture({authentication,contexts}={}){
   bindings[role]={intentRef:q.requestRef,commandBinding:redeemed.commandBinding};
  }
  let lastReservation;
- const scope=createMoodleCommandScope({enabled:()=>true,reserve:q=>(lastReservation=owner.reserveCommand(q))});
- return {owner,scope,contexts,bindings,signal,get lastReservation(){return lastReservation;},
+ const scope=createMoodleCommandScope({enabled:()=>true,reserve:async q=>(lastReservation=await owner.reserveCommand(q))});
+ return {owner,scope,contexts,bindings,signal,verificationOperations,loseExecute(){loseExecutionResponse=true;},revokeRole(){authorityDenied=true;},get lastReservation(){return lastReservation;},
   advance(n){wall+=n;mono+=n*1000;},drift(n){mono+=n;},invalidate(){current=false;},replaceSession(){sessionRef=hex(98);},onAuth(fn){afterAuth=fn;},
   async grant(command,role='PARTICIPANT'){
    const q=request(role,{version:MOODLE_COMMAND_VERSION,intentRef:bindings[role].intentRef,commandHash:moodleCommandDigest(command)});
+   records.set(q.requestRef,structuredClone(q));
    const result=await owner.authorizeCommand(q,lease());
    return {command,context:contexts[role],commandBinding:bindings[role].commandBinding,requestRef:result.requestRef,signal:signal.signal};
   },

@@ -3,7 +3,7 @@ import {request as httpsRequest} from 'node:https';
 import {exactKeys, requireRule as check} from '../../src/policy/values.mjs';
 
 const authorityPath = '/local/clearbridge/login_authority.php';
-const operations = ['start', 'status', 'end', 'finish', 'authorize-command'];
+const operations = ['start', 'status', 'end', 'finish', 'authorize-command', 'execute-command'];
 const grantKeys = ['ownerRunId', 'role', 'installationRef', 'courseRef', 'subjectRef', 'actorRef', 'sessionRef', 'expiresAtExclusive'];
 const correlationKeys = ['version', 'requestRef', 'moodleAuthorityRef', 'intentRef', 'status'];
 const digest = raw => createHash('sha256').update(raw).digest('hex');

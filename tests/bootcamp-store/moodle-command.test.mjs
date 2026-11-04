@@ -30,7 +30,7 @@ test('a lost response after actual store COMMIT keeps the grant spent and existi
 
 for(const changed of ['wall','monotonic','lease','abort','end','context','body'])test('reserved command is fenced after '+changed,async t=>{
  const x=await commandFixture();t.after(()=>x.owner.close());const input=await x.grant(createCommand());
- const r=x.owner.reserveCommand(input);r.assert();r.assertContext(input.context);
+ const r=await x.owner.reserveCommand(input);r.assert();r.assertContext(input.context);
  if(changed==='wall')x.advance(5);if(changed==='monotonic')x.drift(5000);if(changed==='lease')x.invalidate();
  if(changed==='abort')x.signal.abort();if(changed==='end')await x.end();
  if(changed==='context')input.context.csrf=hex(500);if(changed==='body')input.command.body.changed=true;
@@ -53,4 +53,22 @@ test('a store savepoint error followed by invalidation-only outer COMMIT cannot 
  assert.throws(()=>x.lastReservation.finish(),/NOT_COMMITTED/);
  await assert.rejects(x.scope.run(input,()=>{}),/BINDING/);
  assert.equal(f.store.getOperationsProjection(f.aliceContext,a).ledgerSequence,v.ledgerSequence);
+});
+
+for(const changed of ['session','role'])test('authorize then Moodle '+changed+' change before POST rejects before any real SQLite mutation',async t=>{
+ const f=await storeFixture(t),x=await commandFixture({authentication:f.service,contexts:{PARTICIPANT:f.aliceContext,COURSE_OPERATOR:f.operatorContext}});
+ t.after(()=>x.owner.close());f.configuration.commandScope=x.scope;f.restart();
+ const input=await x.grant(createCommand('native-recheck-'+changed));let calls=0;
+ if(changed==='session')x.replaceSession();else x.revokeRole();
+ await assert.rejects(x.scope.run(input,()=>{calls++;return x.scope.business(()=>f.store.createApplication(f.aliceContext,{},input.command.idempotencyKey));}),/MOODLE_COMMAND_IDENTITY|MOODLE_ROLE_REVOKED/);
+ assert.equal(calls,0);assert.equal(f.counts().commands,0);assert.equal(x.verificationOperations.at(-1),'execute-command');
+ await assert.rejects(x.scope.run(input,()=>{}),/BINDING/);
+});
+
+test('lost execute authority response consumes the C record model and permanently closes the A reservation',async t=>{
+ const x=await commandFixture();t.after(()=>x.owner.close());const input=await x.grant(createCommand());x.loseExecute();
+ let effects=0;await assert.rejects(x.scope.run(input,()=>{effects++;}),/EXECUTE_RESPONSE_LOST/);
+ await assert.rejects(x.scope.run(input,()=>{effects++;}),/BINDING/);assert.equal(effects,0);
+ assert.equal(x.verificationOperations.filter(op=>op==='execute-command').length,1);
+ await assert.rejects(x.grant(createCommand()),/UNAVAILABLE/);
 });

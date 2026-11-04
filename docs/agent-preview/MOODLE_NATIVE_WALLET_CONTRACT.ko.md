@@ -167,6 +167,19 @@ native redeem 단회 응답에만 발급하고 서버에는 hash만 저장한다
 수명은 늘리지 않는다. cookie/URL/storage/status/view에 쓰지 않고 client invalidate/
 end/logout/expiry/close 때 폐기한다. 같은 origin 악성 JS와의 격리를 주장하지 않는다.
 
+실행시 권한 재검증 보정(P1): authorize 응답 때의 C snapshot만으로 POST를 실행하지
+않는다. C는 최종 응답·check_origin·wall/mono 검사까지 성공한 authorize-command
+record만 원 5초 기한까지 보존한다. A 실제 POST가 binding/context/hash를 검사하고
+await 전 RESERVED_PENDING으로 단독 예약한 후, 원 exact8 q와 원 deadline으로
+reverse-only `execute-command`를 호출한다. 새 browser form/D route는 없다.
+C는 기존 registry lock/transaction 안에서 exact request와 authorize-command digest를
+대조해 단회 take한 record로 원 세션/현재 역할·등록/full scope/intent/hash/horizon을
+검사한다. 가져온 record는 검증 실패/응답 유실에도 복구하지 않는다. 다른 q의 불일치는
+해당 record를 소비하지 않는다. A는 새 identity와 원 CONNECTED identity를 대조하고
+원 lease를 연장하지 않는다. C 원자 take delta와 함께 결합 검사해야 한다.
+마지막 C 권한 관측과 A commit 사이 원격 변경을 원자적으로 막는다고 주장하지 않는다.
+보장은 실행시 재검증 + 원 5초 상한 + 최종 동기 local commit fence다.
+
 예약/상태는 기존 intent 안에만 보관한다. 같은 grant를 matching POST 하나가 예약하고
 actor 재검사는 소비하지 않는다. 원 C/D 5초 wall+monotonic/signal/assertCurrent를
 연장하지 않으며 await 뒤와 실제 outer COMMIT 직전에 다시 검사한다. 요청 범위는

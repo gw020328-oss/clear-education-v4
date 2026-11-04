@@ -293,7 +293,7 @@ export function createMoodleLoginIntents({
           expiresAtExclusive:q.expiresAtExclusive};
       } catch (error) { command.phase = 'UNKNOWN'; throw error; }
     },
-    reserveCommand({requestRef,commandBinding,context,command:input,signal}) {
+    async reserveCommand({requestRef,commandBinding,context,command:input,signal}) {
       check(hex(requestRef) && hex(commandBinding) && signal instanceof AbortSignal, 'MOODLE_COMMAND_REQUEST');
       const commandHash = moodleCommandDigest(input);
       const a = [...attempts.values()].find(a => a.commands?.has(requestRef));
@@ -301,6 +301,19 @@ export function createMoodleLoginIntents({
       check(a?.phase === 'CONNECTED' && command?.phase === 'AUTHORIZED'
         && command.hash === commandHash && matches(commandBinding,a.commandBindingHash)
         && canonical(context) === canonical(a.context), 'MOODLE_COMMAND_BINDING');
+      // Claim before awaiting C: only this POST can consume the original record.
+      // C rechecks its original session and full scope now, then retires that
+      // record. A lost response cannot release this reservation for replay.
+      command.phase = 'RESERVED_PENDING';
+      try {
+        const combined = AbortSignal.any([signal,command.signal]);
+        requireLive(a,combined); requireCurrentOperation(command.q,command.t,command.grant,combined);
+        command.assertCurrent();
+        const currentGrant = await authority('execute-command',command.q,command.t,combined);
+        check(a.phase === 'CONNECTED' && command.phase === 'RESERVED_PENDING'
+          && currentGrant.identity === a.identity, 'MOODLE_COMMAND_IDENTITY');
+        command.grant = {...currentGrant,expiresAtExclusive:Math.min(command.grant.expiresAtExclusive,currentGrant.expiresAtExclusive)};
+      } catch(error) { command.phase = 'UNKNOWN'; throw error; }
       const fence = () => {
         signal.throwIfAborted();
         check(['RESERVED','EFFECT'].includes(command.phase) && a.phase === 'CONNECTED'

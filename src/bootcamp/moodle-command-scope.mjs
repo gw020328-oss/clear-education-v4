@@ -10,7 +10,7 @@ export function createMoodleCommandScope({enabled, reserve}) {
     async run(input, work) {
       if (!enabled() || input.command.method !== 'POST') return work();
       check(!requests.getStore(),'MOODLE_COMMAND_NESTED');
-      const reservation = reserve(input), state = {reservation,business:false};
+      const reservation = await reserve(input), state = {reservation,business:false};
       return requests.run(state,async()=>{
         try { reservation.assert(); const result = await work(); reservation.finish(); return result; }
         finally { reservation.fail(); }
