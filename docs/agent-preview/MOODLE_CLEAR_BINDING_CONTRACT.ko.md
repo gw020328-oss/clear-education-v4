@@ -9,6 +9,8 @@
 - `src/review-evidence/moodle/bootcamp-client.mjs`는 loopback 고정 reader다. `bootcamp.mjs`는 고정 P0 정책, course/target pin, `participantMapping`, Moodle 서비스가 보고한 reader 계정의 일치를 검사한다. 플러그인 연결 확인서를 이 제품 evidence 입력으로 변환하지 않는다. 활동·과제·회고를 읽을 때도 서버가 확인한 단일 계정/강좌/대상으로 제한한다.
 - 활성 등록만으로 학생 권한이 성립하지 않는다. Moodle은 교사도 enrolled로 취급하므로, 플러그인 서버에서 활성 등록과 설치별 승인된 학생 capability를 함께 검사하고 게스트·중지·삭제 계정을 제외한다. [Moodle 4.5 Enrolment API](https://moodledev.io/docs/4.5/apis/subsystems/enrol) · [Access API](https://moodledev.io/docs/4.5/apis/subsystems/access)
 
+합성 구현: [독립 모듈 인수](MOODLE_BINDING_SYNTHETIC_MODULE.ko.md). 실제 verifier는 DISABLED이며 기존 제품 auth/workflow/HTTP는 미연결이다.
+
 ## 제안 흐름
 
 1. **CLEAR 시작.** 인증된 participant가 자기 기존 신청에서 시작한다. 서버는 신청과 사전 허용 설치·기관·강좌 매핑을 찾고, 32바이트 난수 `attemptRef`를 생성한다. 등록된 Moodle/CLEAR origin 쌍과 CLEAR 배포 audience, 신청/participant/지갑/체인/세션, 매핑 revision을 서버에 고정한다. 기관이 별도 확인한 명부 결합에서 expectedSubjectRef와 rosterRevision을 읽어 고정한다. 이 결합이 없으면 연결을 시작하지 않는다. 같은 신청의 기존 pending은 같은 트랜잭션에서 무효화한다. 요청은 현재 신청 소유자가 해당 연결을 시작했다는 의사를 표시한다.
@@ -26,11 +28,13 @@
 | --- | --- | --- |
 | CLEAR browser → CLEAR 시작 | `clear-moodle-start.3` | 신청 ID는 경로, JSON `{version}`. 서버 응답 `{version,attemptRef,expiresAtExclusive}`. 임의 site/URL/course/user/wallet 필드 거부. |
 | Moodle server ↔ CLEAR server | `clear-moodle-attempt.3` | lookup 요청 `{version,attemptRef,requestRef}`. 응답 `{version,attemptRef,requestRef,installationRef,courseRef,audience,bindingScopeHash,expectedSubjectRef,rosterRevision,trustEpoch,issuerEpoch,expiresAtExclusive}`. 서버가 고정된 설치 인증과 범위를 먼저 대조. |
-| CLEAR server ↔ Moodle server | `clear-moodle-confirmation.3` | lookup 요청 `{version,attemptRef,bindingScopeHash,issuerEpoch,requestRef}`. 응답 `{version,attemptRef,requestRef,installationRef,courseRef,subjectRef,accountHint,audience,bindingScopeHash,confirmationRef,moodleSessionGeneration,enrolmentRevision,rosterRevision,trustEpoch,issuerEpoch,confirmedAt,checkedAt,expiresAtExclusive}`. 해당 설치·강좌에 한정된 `subjectRef`는 Moodle 서버가 부여한 안정적인 가명. 로컬 학생 ID 매핑은 Moodle 서버에만 둔다. `confirmationRef`는 시도마다 하나이며, 반복 조회는 동일 확인을 읽고 새 확인을 만들지 않는다. |
+| CLEAR server ↔ Moodle server | `clear-moodle-confirmation.3` | lookup 요청 `{version,attemptRef,bindingScopeHash,issuerEpoch,requestRef}`. 응답 `{version,attemptRef,requestRef,installationRef,courseRef,subjectRef,accountHint,audience,bindingScopeHash,confirmationRef,moodleSessionGeneration,enrolmentRevision,rosterRevision,trustEpoch,issuerEpoch,confirmedAt,observedAt,checkedAt,expiresAtExclusive}`. 해당 설치·강좌에 한정된 `subjectRef`는 Moodle 서버가 부여한 안정적인 가명. 로컬 학생 ID 매핑은 Moodle 서버에만 둔다. `confirmationRef`는 시도마다 하나이며, 반복 조회는 동일 확인을 읽고 새 확인을 만들지 않는다. |
 | CLEAR browser ↔ CLEAR 미리보기 | `clear-moodle-confirm-preview.3` | same-origin POST `{version,attemptRef}`. 응답 `{version,attemptRef,installationRef,courseRef,accountHint,confirmationDigest,expiresAtExclusive}`. accountHint는 Moodle에서 확인한 최소 표시용 마스킹 값이며 저장·로그 대상에서 제외. 미리보기만으로 소비하지 않는다. |
 | CLEAR browser → CLEAR 완료 | `clear-moodle-complete.3` | JSON `{version,attemptRef,confirmationDigest}`. digest는 서버 생성 미리보기의 시도/설치/강좌/subject/확인 지문이며 인증 수단이 아니다. 응답 `{version,bindingRef,status,bindingRevision,expiresAtExclusive}`. |
 | CLEAR server ↔ Moodle server 관측 | `clear-moodle-observations.3` | 요청 `{version,requestRef,issuerEpoch,bindingScopeHash,confirmationRef}`. 응답 `{version,requestRef,installationRef,courseRef,subjectRef,audience,issuerEpoch,trustEpoch,rosterRevision,bindingScopeHash,confirmationRef,moodleSessionGeneration,enrolmentRevision,scope:'READ_PREVIEW',sourceStatus:'OBSERVED_AT',observedAt,checkedAt,expiresAtExclusive,observations}`. 학생/자료 대상은 서버 confirmation 및 설치 allowlist에서 결정하고 요청 userId/URL을 받지 않는다. |
 | CLEAR → CLEAR browser 초안 | `clear-moodle-read-preview.3` | `{version,applicationId,bindingRef,bindingRevision,scope:'READ_PREVIEW',sourceStatus:'OBSERVED_AT',enrolmentRevision,observedAt,expiresAtExclusive,observations,automaticEligibility:false,paymentAllowed:false}`. 관측 항목은 고정 논리 ID, 상태, 원천 확인 시각으로 제한. AI·정책 확정·원문 제공은 별도 경계. |
+
+confirmation 및 observations의 observedAt은 이번 server 요청 수락 뒤 새 snapshot을 획득한 시점이다. checkedAt은 그 snapshot의 검사 종료 시각이며 observedAt 이상이어야 한다. 두 값 모두 승인 오차를 적용한 이번 요청 구간 및 최대 관측 나이/expiry 안에 있어야 한다. 예전 snapshot에 새 requestRef/checkedAt만 붙이는 것은 거부한다.
 
 server observations 항목은 `{targetRef,status,observedAt}`이며 status는 `COMPLETE/INCOMPLETE/UNKNOWN/INACCESSIBLE` 중 하나다. targetRef는 설치 승인 allowlist에 있고 중복 없이 개수 상한을 적용한다. 학생 권한 실패는 부분 자료 대신 전체 거부이며 원문·자유 텍스트를 반환하지 않는다. 원천별 상태 변환은 C와 본부가 승인 대상 목록에 고정한다.
 
