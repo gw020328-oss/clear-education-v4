@@ -9,6 +9,9 @@
     <div class="card-body">
         <h2 id="clearbridge-policy-heading">{{#str}} policyheading, local_clearbridge {{/str}}</h2>
         <p>{{#str}} policyamount, local_clearbridge {{/str}}</p>
+        {{#synthetic}}
+        <p class="alert alert-info">{{#str}} syntheticprojection, local_clearbridge {{/str}}</p>
+        {{/synthetic}}
         {{#student}}
         <p>{{#str}} moodleenrolled, local_clearbridge {{/str}}</p>
         <p>{{#str}} clearregistrationunavailable, local_clearbridge {{/str}}</p>
@@ -33,9 +36,7 @@
         <p class="mb-0">{{#str}} currentnessunknown, local_clearbridge {{/str}}</p>
         {{/hasrecords}}
         {{^hasrecords}}
-        {{#student}}
         <p class="mb-0">{{#str}} conditionstatusunavailable, local_clearbridge {{/str}}</p>
-        {{/student}}
         {{/hasrecords}}
     </div>
 </section>
@@ -44,7 +45,23 @@
     <div class="card-body">
         <h2 id="clearbridge-decision-heading">{{#str}} decisionheading, local_clearbridge {{/str}}</h2>
         <p>{{#str}} decisionunavailable, local_clearbridge {{/str}}</p>
+        {{^payment}}
         <p class="mb-0">{{#str}} receiptunavailable, local_clearbridge {{/str}}</p>
+        {{/payment}}
     </div>
 </section>
 {{/student}}
+{{#payment}}
+<section aria-labelledby="clearbridge-recorded-payment-heading" class="card mb-3">
+    <div class="card-body">
+        <h2 id="clearbridge-recorded-payment-heading">{{#str}} recordedpaymentheading, local_clearbridge {{/str}}</h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-5">{{#str}} consentstudent, local_clearbridge {{/str}}</dt>
+            <dd class="col-sm-7">{{participant}}</dd>
+            <dt class="col-sm-5">{{#str}} consentteacher, local_clearbridge {{/str}}</dt>
+            <dd class="col-sm-7">{{operator}}</dd>
+        </dl>
+        <p class="mb-0">{{receiptstatus}}</p>
+    </div>
+</section>
+{{/payment}}

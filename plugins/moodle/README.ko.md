@@ -1,9 +1,9 @@
 # Moodle 강좌의 CLEAR 환급 확인
 
-`local_clearbridge` 0.1.3은 Moodle 4.5.15에서 학생의 환급 확인 진입과 교사의 기존 활동 매핑 폼을 제공합니다.
+`local_clearbridge` 0.1.4는 Moodle 4.5.15에서 학생의 환급 확인 진입과 교사의 기존 활동 매핑 폼을 제공합니다.
 
 ```sh
-python3 plugins/moodle/moodle-integration/build_peer_zip.py /tmp/local_clearbridge-0.1.3.zip
+python3 plugins/moodle/moodle-integration/build_peer_zip.py /tmp/local_clearbridge-0.1.4.zip
 ```
 
 관리자가 ZIP을 Moodle의 플러그인 설치 기능에 전달하거나, 압축의 `clearbridge` 디렉터리를 Moodle의 `local/clearbridge`에 배치하고 관리자 CLI 업그레이드를 실행합니다. 배포 전 대상 Moodle의 백업·설치 정책을 확인합니다.
@@ -18,3 +18,11 @@ python3 plugins/moodle/moodle-integration/build_peer_zip.py /tmp/local_clearbrid
 격리 검증은 새 DB·코드·moodledata 볼륨으로 Moodle을 설치하고, 플러그인 ZIP을 설치한 뒤 `moodle-integration/course_ui_fixture.php`와 `course_ui_http_test.py`를 사용합니다. fixture는 `http://127.0.0.1:18769` 및 `CLEAR_ISOLATED_COURSE_UI=1`의 비어 있는 시험 DB에서만 동작합니다. fixture JSON의 `course`를 시연 강좌로 설정한 다음 Python 시험에 JSON 파일 경로를 전달합니다.
 
 기존 합성 CLI adapter 및 서명 관측 경계는 [moodle-integration](moodle-integration/README.ko.md)을 참고하세요.
+
+## Moodle 화면 서버 조회 후보
+
+0.1.4는 기존 학생·교사 메뉴에서 운영자 설정의 `$CFG->local_clearbridge_projection_provider`를 호출할 수 있습니다. 설정은 Moodle 서버 PHP의 `Closure`로만 제공합니다. 호출 인수는 현재 Moodle에서 확인한 강좌 ID, 로그인 사용자 ID, 화면 역할입니다. provider는 별도 CLEAR 현재 인가와 B 신청↔지급 신청 매핑을 검증한 뒤 두 결과를 `local_clearbridge\course_projection`으로 반환합니다. 사용자의 HTTP 값으로 provider, 신청, 대상 사용자 또는 권한을 만들 수 없습니다. 설정이 없거나 조회에 실패하면 미연결 화면을 렌더링합니다.
+
+화면은 B 증거와 A 지급 표시 DTO의 역할·저장 판정 일치를 검사합니다. A 응답이 만료됐거나 두 결과가 불일치하면 투영을 숨깁니다. 현재 원천을 재검사하지 않은 저장 상태, 기록된 동의, 영수증 관측 상태만 표시합니다. 100 TEST 블록 포함 상태는 정확한 금액과 canonical·미확정 표시가 있는 경우에만 표시합니다. 지갑, 트랜잭션 식별자, 증명 원문과 서버 예외는 출력하지 않습니다. 기록 상태 다시 확인은 같은 Moodle 페이지를 서버에서 다시 읽습니다.
+
+이 설정은 내부 PHP 호출 지점입니다. 실제 owner 엔드포인트, 인증창 주소와 창 메시지 수신은 검토된 서버 권한·주소·요청 상관 계약이 필요합니다. `moodle-integration/connected_ui_provider.php`는 별도 loopback 시험에서만 쓰는 합성 provider로 0.1.4 ZIP에 들어가지 않습니다.

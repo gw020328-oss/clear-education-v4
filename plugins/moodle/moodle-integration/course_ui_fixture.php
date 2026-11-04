@@ -5,7 +5,7 @@ require '/var/www/html/config.php';
 require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->dirroot . '/user/lib.php');
 
-if (!in_array($CFG->wwwroot, ['http://127.0.0.1:18769', 'http://127.0.0.1:18770'], true) || getenv('CLEAR_ISOLATED_COURSE_UI') !== '1'
+if (!in_array($CFG->wwwroot, ['http://127.0.0.1:18769', 'http://127.0.0.1:18770', 'http://127.0.0.1:18771'], true) || getenv('CLEAR_ISOLATED_COURSE_UI') !== '1'
         || $DB->count_records('course') !== 1) {
     throw new RuntimeException('Expected a fresh isolated course UI installation');
 }

@@ -14,10 +14,12 @@ $PAGE->set_url(new moodle_url('/local/clearbridge/index.php', ['id' => $course->
 $PAGE->set_cacheable(false);
 $PAGE->set_title(get_string('pluginname', 'local_clearbridge'));
 $PAGE->set_heading(format_string($course->fullname));
+$view = \local_clearbridge\course_refund::is_demo_course($course->id)
+    ? \local_clearbridge\course_projection_page::data($course, true) : null;
 echo $OUTPUT->header();
-if (\local_clearbridge\course_refund::is_demo_course($course->id)) {
-    echo $OUTPUT->render_from_template('local_clearbridge/course_refund',
-        \local_clearbridge\course_refund::template_data(true));
+if ($view !== null) {
+    echo $OUTPUT->render_from_template('local_clearbridge/course_refund', $view);
+    echo html_writer::link($PAGE->url, get_string('refreshstatus', 'local_clearbridge'));
 } else {
     echo html_writer::tag('p', get_string('notconnected', 'local_clearbridge'));
 }

@@ -45,11 +45,12 @@ if ($data = $form->get_data()) {
 }
 $saved = json_decode((string)get_config('local_clearbridge', $key), true);
 $form->set_data(is_array($saved) ? $saved : []);
-echo $OUTPUT->header();
 $isdemocourse = \local_clearbridge\course_refund::is_demo_course($course->id);
-if ($isdemocourse) {
-    echo $OUTPUT->render_from_template('local_clearbridge/course_refund',
-        \local_clearbridge\course_refund::template_data(false));
+$view = $isdemocourse ? \local_clearbridge\course_projection_page::data($course, false) : null;
+echo $OUTPUT->header();
+if ($view !== null) {
+    echo $OUTPUT->render_from_template('local_clearbridge/course_refund', $view);
+    echo html_writer::link($url, get_string('refreshstatus', 'local_clearbridge'));
 }
 echo $OUTPUT->heading(get_string('mappingheading', 'local_clearbridge'), 2);
 echo html_writer::tag('p', get_string('mappingnotice', 'local_clearbridge'));
