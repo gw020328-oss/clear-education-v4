@@ -1,0 +1,46 @@
+name: Agent preview deployment
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/agent-preview-deploy.yml'
+      - 'deploy/agent-preview/**'
+      - 'src/**'
+      - 'packages/**'
+      - 'tools/node'
+      - 'tools/npm'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    name: Agent preview deployment offline tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.21.0'
+      - run: ./tools/npm ci --ignore-scripts
+      - name: Run tests with loopback only
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          sudo unshare --net -- bash -euc '
+            ip link set lo up
+            test "$(ip -o link show | wc -l)" -eq 1
+            test -z "$(ip route show default)"
+            test -z "$(ip -6 route show default)"
+            runner_user=$1
+            node_bin=$2
+            shift 2
+            exec runuser -u "$runner_user" -- env -i PATH=/usr/bin:/bin "$node_bin" --test "$@"
+          ' bash "$(id -un)" "$(command -v node)" deploy/agent-preview/tests/*.test.mjs

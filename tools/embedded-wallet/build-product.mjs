@@ -20,6 +20,12 @@ copyFileSync(root+'src/embedded-wallet/style.css',outdir+'/style.css');
 writeFileSync(directory+'/index.html','<!doctype html><html lang="ko"><meta charset="utf-8"><title>CLEAR 로컬 TEST</title><h1>CLEAR 로컬 TEST</h1><p>제품 호스트가 활성화된 후 역할별 화면에서 진행하세요.</p><a href="/onboarding">참가자 신청</a> · <a href="/operator">운영자 승인</a></html>');
 writeFileSync(directory+'/clear-wallet-app.html',`<meta name="clear-wallet-app" content="${appId}">\n`);
 if(process.argv.includes('--team')){
+ await build({
+  absWorkingDir:root,entryPoints:['packages/clear-core/src/index.mjs'],
+  outfile:outdir+'/condition-preview.js',bundle:true,format:'esm',platform:'browser',
+  target:['chrome120'],minify:true,legalComments:'external',
+  alias:{'node:crypto':'./tools/embedded-wallet/preview-browser-crypto.mjs'},
+ });
  mkdirSync(directory+'/team',{mode:0o700});
  for(const name of ['src','fonts','styles.css'])cpSync(root+'web/'+name,directory+'/team/'+name,{recursive:true});
  const html=readFileSync(root+'web/index.html','utf8').replace('./src/main.js','./src/bootcamp/team-entry.js').replace('<main id="main"','<main hidden id="main"');
