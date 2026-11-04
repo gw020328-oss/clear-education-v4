@@ -22,6 +22,7 @@ import {createLiveReclaimConsumer} from '../../src/bootcamp/reclaim-live-consume
 import {requireRule as requireUiRule,exactKeys,canonical,freeze} from '../../src/policy/values.mjs';
 import {openMoodlePaymentSnapshots} from '../../src/bootcamp/moodle-payment-snapshot.mjs';
 import {FIXED_MOODLE_MAPPING_VERSION,FIXED_MOODLE_SCOPE_VERSION} from '../../src/bootcamp/moodle-payment-projection.mjs';
+import {createNormalMoodleLogin} from './moodle-login-owner.mjs';
 import {createMoodleCourseReadHost} from './moodle-course-read-host.mjs';
 import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {createNormalReceiptReader} from '../../src/bootcamp/normal-receipt.mjs';
@@ -146,12 +147,12 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
  const m=loadRuntime(prepared.environmentId);ensure(sha(m)===prepared.runtimeHash&&m.version===(prepared.runtimeVersion??'clear-e5-test-runtime.1')&&m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
- let auth,store,connection,provider,ui,resumeControl,mounted,moodleRead,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
+ let auth,store,connection,provider,ui,resumeControl,mounted,moodleRead,moodleLogin,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
  const stage=name=>{report.stage=name;write();};
- const close=()=>{if(closed)return;closed=true;resumeControl?.cancel();controller.abort();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
+ const close=()=>{if(closed)return;closed=true;resumeControl?.cancel();controller.abort();moodleLogin?.close();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
  try{
   await startEnvironment(prepared.environmentId);started=true;
   const reader=new ExecutionReader(m);ensure((await reader.call('applicationIds',[],await reader.block()))[0].length===0,'BC_LIVE_REQUIRES_UNUSED_TEST_REALM');
@@ -229,7 +230,13 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   stage('AWAITING_EXTERNAL_UI_AUTHENTICATION');
   return Object.freeze({metadataPath:join(directory,'context.json'),
    createMoodleCourseReadHost:options=>moodleRead.createHost(options),
-   createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
+   configureMoodleLogin(options){
+    ensure(!closed&&!mounted&&!moodleLogin,'MOODLE_LOGIN_CONFIG');
+    moodleLogin=createNormalMoodleLogin({options,ownerRunId:runId,runExpiresAtExclusive:startedAt+1800,
+     authentication:auth,wallets:{PARTICIPANT:participant.address,COURSE_OPERATOR:operator.address},now,signal:controller.signal});
+    return moodleLogin.owner;
+   },
+   createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
     ui.participant();ensure(!closed&&!failureState,'BC_LIVE_CONTEXT');
     sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,moodleFirst,

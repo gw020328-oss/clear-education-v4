@@ -3,7 +3,7 @@ import {validateConfig, embeddedCsp} from '../../src/embedded-wallet/config.mjs'
 
 // Opt-in marker is part of the owner's reviewed public asset snapshot. No
 // request parameter can enable this mount or choose App ID/runtime/RPC.
-export function productWalletMount({assets, origin, chainId, network, runtime}) {
+export function productWalletMount({assets, origin, chainId, network, runtime, moodleLogin = false}) {
   const marker = assets.get('/clear-wallet-app.html');
   if (!marker) return null;
   const match = /^<meta name="clear-wallet-app" content="([a-z0-9]{10,80})">\n$/.exec(marker.body.toString());
@@ -17,7 +17,7 @@ export function productWalletMount({assets, origin, chainId, network, runtime}) 
     isDocument(req) { return req.method === 'GET' && ['/onboarding', '/operator'].includes(req.url.split('?')[0]); },
     handle(req, res) {
       if (req.method === 'GET' && req.url === '/__embedded/config') {
-        res.writeHead(200, {'Content-Type': 'application/json'}); res.end(JSON.stringify({...config,teamFrontend})); return true;
+        res.writeHead(200, {'Content-Type': 'application/json'}); res.end(JSON.stringify({...config,teamFrontend,...(moodleLogin?{moodleLogin:true}:{})})); return true;
       }
       if (!this.isDocument(req)) return false;
       const nonce = randomBytes(24).toString('base64'), operator = req.url.split('?')[0] === '/operator';

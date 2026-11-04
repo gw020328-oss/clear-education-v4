@@ -36,17 +36,17 @@ const statusFor = code => ['AUTH_REQUIRED', 'AUTH_CHALLENGE', 'SIGNATURE'].inclu
 
 // The factory does not listen or deploy. HTTPS termination must preserve Host
 // and use an encrypted connection to this handler; proxy headers are not trusted.
-export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace = null } = {}) {
+export function createApplicationServer(service, { allowLoopbackHttpForTests = false, tls, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace = null, completeMoodleLogin = null } = {}) {
   const makeServer = tls ? createHttpsServer : createServer;
   const server = makeServer({ ...tls, requestTimeout: 10000, headersTimeout: 10000, maxHeaderSize: 8192 },
-    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace }));
+    createApplicationHandler(service, { allowLoopbackHttpForTests, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace, completeMoodleLogin }));
   server.maxConnections = 32;
   return server;
 }
 
 // Composable handler; the same transport/origin/session checks apply when a
 // local development listener also serves a frontend build and synthetic RPC.
-export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace = null } = {}) {
+export function createApplicationHandler(service, { allowLoopbackHttpForTests = false, workflow, studentWorkflow, documentWorkflow, evaluationWorkflow, cookieNamespace = null, completeMoodleLogin = null } = {}) {
   const expected = new URL(service.origin);
   // Cookies are scoped to hosts, not ports. Separate local diagnostic listeners
   // must opt into their own names instead of replacing a product session.
@@ -58,6 +58,7 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
   requireRule(!studentWorkflow || studentWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
   requireRule(!documentWorkflow || documentWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
   requireRule(!evaluationWorkflow || evaluationWorkflow.origin === service.origin, 'ORIGIN_CONFIG');
+  requireRule(completeMoodleLogin === null || typeof completeMoodleLogin === 'function', 'MOODLE_LOGIN_CONFIG');
   return async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -104,6 +105,10 @@ export function createApplicationHandler(service, { allowLoopbackHttpForTests = 
         const login = service.login(body, c[preauthCookie], c[sessionCookie]);
         res.setHeader('Set-Cookie', [cookie(sessionCookie, login.token, 3600), cookie(preauthCookie, '', 0)]);
         const { token, ...publicSession } = login; result = publicSession;
+      } else if (completeMoodleLogin && req.method === 'POST' && path === '/auth/moodle-complete') {
+        exactKeys(body, [], 'MOODLE_LOGIN_CONTEXT');
+        service.authorizeWorkflow(context, true);
+        result = await completeMoodleLogin(context, req, res, cancelled.signal);
       } else if (req.method === 'GET' && path === '/auth/session') result = service.whoami(context);
       else if (req.method === 'POST' && path === '/auth/logout') {
         exactKeys(body, [], 'LOGOUT_SCHEMA');

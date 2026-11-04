@@ -201,6 +201,11 @@ export function createMoodleLoginIntents({
       browsers.set(a.browserHash, a);
       return {location: routes[a.request.role], browserBinding, expiresAtExclusive: a.expiresAtExclusive};
     },
+    browserPending(binding) {
+      if (!hex(binding)) return false;
+      const a = browsers.get(digest(binding).toString('hex'));
+      return a?.phase === 'WAITING' && live(a, time());
+    },
     async complete(browserBinding, context, {signal} = {}) {
       check(hex(browserBinding), 'MOODLE_LOGIN_BROWSER');
       const a = browsers.get(digest(browserBinding).toString('hex'));

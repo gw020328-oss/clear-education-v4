@@ -122,6 +122,15 @@ function Onboarding({config}) {
     await session.assertSession();
     signal.throwIfAborted();
     if (result.role !== 'participant') { await session.dispose(); throw Error('PARTICIPANT_REQUIRED'); }
+    if (config.moodleLogin) {
+      step.current = 'Moodle 연결 확인';
+      const connection = await session.request('/auth/moodle-complete', {method: 'POST', body: {}, signal});
+      if (connection.status === 'RETURN_TO_MOODLE') {
+        setStatus('CLEAR 로그인 확인 완료 · Moodle로 돌아가 연결 완료를 확인하세요.');
+        return;
+      }
+      if (connection.status !== 'NOT_REQUESTED') throw Error('MOODLE_LOGIN_UNAVAILABLE');
+    }
     setStatus(`CLEAR 로그인 서명 확인 완료 · 서버 역할: ${result.role === 'participant' ? '참가자' : '운영자'}`);
   }
   return <section><h2>참가자 Google 로그인과 주소 확인</h2>
@@ -160,7 +169,7 @@ const root = createRoot(document.getElementById('root'));
 try {
   const response = await fetch('/__embedded/config', {credentials: 'same-origin', cache: 'no-store'});
   if (!response.ok) throw Error('CONFIG');
-  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true};
+  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true, moodleLogin: input.moodleLogin === true};
   if (config.origin !== location.origin || location.pathname !== '/onboarding' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
   const setup = <Setup config={config}/>;
   root.render(<main><h1>CLEAR 내장 지갑 연결 준비</h1>{setup}{config.appId &&

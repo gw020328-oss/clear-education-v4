@@ -8,13 +8,14 @@ import {P0_POLICY,p0PolicyHash} from '../../specs/bootcamp/p0-contract.mjs';
 import {NORMAL_HOST_VERSION} from '../../src/bootcamp/normal-client.mjs';
 
 // Mount the existing two handlers on one existing HTTPS server; no RPC, collector or signer is installed.
-export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot,normalUi=null,network=null}){
+export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot,normalUi=null,network=null,moodleLogin=null}){
  if(normalUi&&sourceMode!=='REGISTERED_TEST_SOURCE')throw Error('BC_FRONTEND_CONFIG');
+ if(moodleLogin&&!normalUi)throw Error('MOODLE_LOGIN_WALLET_MOUNT');
  if(authentication.origin!==store.origin||authentication.chainId!==chainId||!tls||!['SYNTHETIC_TEST_SOURCE','REGISTERED_TEST_SOURCE'].includes(sourceMode))throw Error('BC_FRONTEND_CONFIG');
  let walletNetwork=null;
  if(network){const u=new URL(network.rpcUrl);if(sourceMode!=='REGISTERED_TEST_SOURCE'||!normalUi||network.chainId!==chainId||u.protocol!=='http:'||u.hostname!=='127.0.0.1'||!u.port||u.pathname!=='/'||u.search||u.hash||u.username||u.password)throw Error('BC_FRONTEND_NETWORK');
   walletNetwork=Object.freeze({chainId:'0x'+BigInt(chainId).toString(16),chainName:'CLEAR Local TEST',rpcUrls:[u.origin],nativeCurrency:{name:'Local test Ether',symbol:'ETH',decimals:18}});}
- const server=createApplicationServer(authentication,{tls}),auth=server.listeners('request')[0],bootcamp=createBootcampHandler(store,{normalUi});
+ const server=createApplicationServer(authentication,{tls,completeMoodleLogin:moodleLogin?.complete}),auth=server.listeners('request')[0],bootcamp=createBootcampHandler(store,{normalUi});
  const expected=new URL(store.origin),assets=webRoot&&existsSync(webRoot)?loadPublicAssets(webRoot):new Map();
  assets.set('/bootcamp-normal-client.mjs',{type:'text/javascript; charset=utf-8',body:readFileSync(new URL('../../src/bootcamp/normal-client.mjs',import.meta.url))});
  let rpc=null;
@@ -25,13 +26,15 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
   walletNetwork=Object.freeze({...walletNetwork,rpcUrls:[rpc.url]});
   server.once('close',()=>{void rpc.close();});
  }
- const wallets=productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi?.walletRuntime});
+ const wallets=productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi?.walletRuntime,moodleLogin:!!moodleLogin});
+ if(moodleLogin&&!wallets)throw Error('MOODLE_LOGIN_WALLET_MOUNT');
  const config=Object.freeze({version:NORMAL_HOST_VERSION,origin:store.origin,chainId,sourceMode,network:walletNetwork,phase:normalUi?'ACTIVE_LOCAL_TEST':'DISPLAY_ONLY',policyHash:p0PolicyHash(P0_POLICY),
   procedureHttpVersion:'clear-bootcamp-review-procedure.1',operationsHttpVersion:'clear-bootcamp-operations-projection.2',
   reviewConsentHttpImplemented:true,originalEvidenceHttpImplemented:false,executionReceiptHttpImplemented:typeof normalUi?.getPaymentReceipt==='function',
   sourceCollectionConfigured:normalUi!==null,sourceSignatureHttpImplemented:normalUi!==null,signerInstalled:false,actualSourceVerification:null,productionEnabled:false});
  server.removeListener('request',auth);const pending=new Set();
  const handle=async(req,res)=>{
+  if(moodleLogin?.matches(req.url))return moodleLogin.handle(req,res);
   if(/^\/bootcamp(?:\/|\?|$)/.test(req.url)){
    const allowed=req.method==='GET'&&(/^\/bootcamp\/v[23]\/applications\/[a-z][a-z0-9.-]{0,63}\/(operations|procedure)$/.test(req.url)
     ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure-operations\/[a-z][a-z0-9.-]{0,63}$/.test(req.url)

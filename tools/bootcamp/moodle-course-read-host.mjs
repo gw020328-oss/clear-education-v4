@@ -206,13 +206,13 @@ export async function loadNormalMoodleReadOwner({directory,sha256}){
 
 // Startup attaches only an explicitly supplied owner configuration. Application
 // mapping becomes available after the existing UI binds the participant. A new
-// authenticated request may then construct the one fixed reader; no polling,
-// automatic retries, fabricated mapping, new auth flow or payment call is added.
+// authenticated request may then construct the one fixed reader. The optional
+// pre-application login mount has its own authority and no read mapping.
 export async function attachNormalMoodleReadServer({context,options,signal}){
  if(options===null||options===undefined)return context;
- let server,closed=false,creating=null,readHost=null;
+ let server,loginHandler,closed=false,creating=null,readHost=null;
  const close=()=>{if(closed)return;closed=true;signal?.removeEventListener('abort',close);
-  try{server?.close();server?.closeAllConnections?.();}finally{context.close();}};
+  try{loginHandler?.close();server?.close();server?.closeAllConnections?.();}finally{context.close();}};
  try{
   signal?.throwIfAborted();
   check([context?.report,context?.close,context?.createMoodleCourseReadHost,options.createCourseReadServer,options.resolveReadOptions,options.listen].every(f=>typeof f==='function'),'COURSE_READ_OWNER_PORT');
@@ -232,6 +232,24 @@ export async function attachNormalMoodleReadServer({context,options,signal}){
   };
   server=options.createCourseReadServer({origin:options.origin,ownerRunId:run,secret:options.secret,tls:options.tls,readCourse,
    ...(options.clock===undefined?{}:{clock:options.clock}),...(options.monotonic===undefined?{}:{monotonic:options.monotonic})});
+  if(options.login!==undefined){
+   const {createCourseLoginHandler,...login}=options.login;
+   check(typeof createCourseLoginHandler==='function'&&typeof context.configureMoodleLogin==='function'
+    &&options.secret!==login.proofKey&&options.secret!==login.reverseKey,'MOODLE_LOGIN_CONFIG');
+   const core=context.configureMoodleLogin(login),[readHandler,...other]=server.listeners('request');
+   check(typeof readHandler==='function'&&!other.length,'MOODLE_LOGIN_CONFIG');
+   const owner=Object.freeze(Object.fromEntries(['issue','status','end','finish'].map(operation=>[
+    operation,(request,lease)=>{
+     check(lease?.signal instanceof AbortSignal&&typeof lease.assertCurrent==='function','MOODLE_LOGIN_TRANSPORT_LEASE');
+     return core[operation](request,lease);
+    },
+   ])));
+   loginHandler=createCourseLoginHandler({origin:options.origin,ownerRunId:run,secret:options.secret,owner,
+    clock:options.clock,monotonic:options.monotonic});
+   const paths=new Set(['start','status','end','finish'].map(operation=>'/v1/moodle/connect/'+operation));
+   server.removeListener('request',readHandler);
+   server.on('request',(req,res)=>paths.has(req.url)?loginHandler.handle(req,res):readHandler(req,res));
+  }
   server.once('error',close);signal?.addEventListener('abort',close,{once:true});
   await options.listen(server,options.origin);signal?.throwIfAborted();check(!closed,'COURSE_READ_CLOSED');
   return Object.freeze({...context,close});

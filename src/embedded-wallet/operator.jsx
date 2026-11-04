@@ -66,6 +66,15 @@ function Operator({config}) {
     session.current = auth;
     const result = await auth.authenticate(); await auth.assertSession(); signal.throwIfAborted();
     if (result.role !== 'operator') { await auth.dispose(); throw Error('OPERATOR_REQUIRED'); }
+    if (config.moodleLogin) {
+      step.current = 'Moodle 연결 확인';
+      const connection = await auth.request('/auth/moodle-complete', {method: 'POST', body: {}, signal});
+      if (connection.status === 'RETURN_TO_MOODLE') {
+        setStatus('CLEAR 로그인 확인 완료 · Moodle로 돌아가 연결 완료를 확인하세요.');
+        return;
+      }
+      if (connection.status !== 'NOT_REQUESTED') throw Error('MOODLE_LOGIN_UNAVAILABLE');
+    }
     setStatus('CLEAR 로그인 서명 확인 완료 · 서버 역할: 운영자');
   }
   return <main><h1>CLEAR 운영자 · MetaMask 연결</h1>
@@ -97,7 +106,7 @@ const root = createRoot(document.getElementById('root'));
 try {
   const response = await fetch('/__embedded/config', {credentials: 'same-origin', cache: 'no-store'});
   if (!response.ok) throw Error('CONFIG');
-  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true};
+  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true, moodleLogin: input.moodleLogin === true};
   if (config.origin !== location.origin || location.pathname !== '/operator' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
   root.render(<Operator config={config}/>);
 } catch { root.render(<main><h1>운영자 연결 설정을 확인할 수 없습니다</h1><p>호스트 설정 확인 후 다시 열어 주세요.</p></main>); }
