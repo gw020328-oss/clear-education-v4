@@ -29,10 +29,15 @@ try {
         $fields[] = 'challenge';
     } else if ($operation === 'finish') {
         $fields[] = 'finishProof';
+    } else {
+        $fields[] = 'intentTarget';
     }
     current::require_rule(wire::exact_keys($_POST, $fields) && is_string($_POST['id'])
         && preg_match('/\A[1-9][0-9]{0,15}\z/', $_POST['id']) === 1 && is_string($_POST['sesskey'])
         && file_get_contents('php://input', false, null, 0, 1025) === http_build_query($_POST, '', '&', PHP_QUERY_RFC1738));
+    if (in_array($operation, ['status', 'end'], true)) {
+        current::require_rule(login::hex($_POST['intentTarget']));
+    }
     require_sesskey();
     $config = login::config();
     $scope = login::scope($config['ownerRunId']);
@@ -63,7 +68,13 @@ try {
         $SESSION->local_clearbridge_login_intent = ['run' => $config['ownerRunId'], 'role' => $role, 'intent' => $intent,
             'scopeDigest' => login::scope_digest($scope)];
         $reply = ['status' => 'WAITING', 'expiresAtExclusive' => $result['expiresAtExclusive'],
-            'launchCode' => $result['launchCode']] + $proofs;
+            'launchCode' => $result['launchCode']] + $proofs
+            + ['intentTarget' => login::intent_target($config, $scope, $role, $intent, session_id())];
+    } else if (in_array($operation, ['status', 'end'], true) && (!login::hex($intent)
+            || !hash_equals(login::intent_target($config, $scope, $role, $intent, session_id()), $_POST['intentTarget']))) {
+        // A delayed request for an older tab must never select a later SESSION intent.
+        // This is neither an owner-revocation receipt nor a connection-success assertion.
+        $reply = ['status' => 'NOT_CURRENT'];
     } else if (login::hex($intent)) {
         $fields = ['intentRef' => $intent];
         if ($operation === 'finish') {

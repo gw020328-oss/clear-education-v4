@@ -67,6 +67,16 @@ final class course_login_authority {
         return hash('sha256', json_encode($scope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
     }
 
+    /** Opaque browser selector only; every use still requires the current original SESSION and scope. */
+    public static function intent_target(array $config, array $scope, string $role, string $intent,
+            string $sessionid): string {
+        course_authority_currentness::require_rule(self::hex($config['sessionKey']) && self::hex($intent)
+            && $sessionid !== '' && in_array($role, ['PARTICIPANT', 'COURSE_OPERATOR'], true)
+            && $config['ownerRunId'] === $scope['ownerRunId']);
+        return hash_hmac('sha256', implode("\n", ['CLEAR-MOODLE-LOGIN-INTENT-TARGET-1',
+            $config['ownerRunId'], $role, self::scope_digest($scope), $intent, $sessionid]), $config['sessionKey']);
+    }
+
     public static function attempt_intent(mixed $attempt, array $scope, string $role): ?string {
         if (!course_read_client::exact_keys($attempt, ['run', 'role', 'intent', 'scopeDigest'])
                 || $attempt['run'] !== $scope['ownerRunId'] || $attempt['role'] !== $role

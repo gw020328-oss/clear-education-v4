@@ -30,6 +30,7 @@ namespace {
     require CLASS_ROOT . '/course_authority_currentness.php';
     require CLASS_ROOT . '/course_login_authority.php';
     $case = json_decode(file_get_contents(__DIR__.'/case.json'), true);
+    session_id($case['sessionid'] ?? 'synthetic-session-one');
     $CFG = (object)['wwwroot' => 'http://127.0.0.1:18891',
         'local_clearbridge_login' => ['enabled'=>true,'origin'=>'https://owner.test:19473',
             'browserOrigin'=>'https://127.0.0.1:19473','ca'=>__DIR__.'/case.json','ownerRunId'=>'run-1',
@@ -77,6 +78,12 @@ try {
     $sorted=$scope;
     ksort($sorted,SORT_STRING);
     $digest=hash('sha256',json_encode($sorted,JSON_THROW_ON_ERROR|JSON_UNESCAPED_SLASHES));
+    $target = static function(array $scope, string $role, string $intent, string $sid = 'synthetic-session-one'): string {
+        ksort($scope, SORT_STRING);
+        $digest = hash('sha256', json_encode($scope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
+        return hash_hmac('sha256', implode("\n", ['CLEAR-MOODLE-LOGIN-INTENT-TARGET-1',
+            $scope['ownerRunId'], $role, $digest, $intent, $sid]), str_repeat('c',64));
+    };
     foreach (['same'=>[], 'subject'=>['subjectUserId'=>44], 'operator'=>['operatorUserId'=>44],
             'course'=>['courseId'=>8], 'legacy'=>[]] as $label=>$change) {
         $role=$label==='operator'?'PARTICIPANT':'COURSE_OPERATOR';
@@ -89,6 +96,7 @@ try {
             $body=['id'=>(string)$current['courseId'],'sesskey'=>'fixture','operation'=>$operation];
             if ($operation==='start') { $body['challenge']=str_repeat('2',64); }
             if ($operation==='finish') { $body['finishProof']=str_repeat('3',64); }
+            if (in_array($operation,['end','status'],true)) { $body['intentTarget']=$target($scope,$role,$attempt['intent']); }
             $context=stream_context_create(['http'=>['method'=>'POST','ignore_errors'=>true,
                 'header'=>"Origin: http://127.0.0.1:18891\r\nContent-Type: application/x-www-form-urlencoded;charset=UTF-8\r\n",
                 'content'=>http_build_query($body,'','&',PHP_QUERY_RFC1738)]]);
@@ -116,11 +124,63 @@ try {
                     if ($result['attempt']['scopeDigest']!==$newdigest || $result['attempt']['intent']!==str_repeat('9',64)) {
                         throw new RuntimeException('new attempt not pinned');
                     }
+                    if (count($reply)!==6 || $reply['intentTarget']!==$target($current,$role,$result['attempt']['intent'])) {
+                        throw new RuntimeException('new target not pinned');
+                    }
                 }
             }
         }
         echo "PASS actual PHP dispatch $label scope across status/finish/end/start\n";
     }
+    $send = static function(array $case, string $operation, array $extra = []) use ($root): array {
+        file_put_contents($root.'/case.json',json_encode($case));
+        $body=['id'=>(string)$case['scope']['courseId'],'sesskey'=>'fixture','operation'=>$operation]+$extra;
+        $context=stream_context_create(['http'=>['method'=>'POST','ignore_errors'=>true,
+            'header'=>"Origin: http://127.0.0.1:18891\r\nContent-Type: application/x-www-form-urlencoded;charset=UTF-8\r\n",
+            'content'=>http_build_query($body,'','&',PHP_QUERY_RFC1738)]]);
+        $raw=file_get_contents('http://127.0.0.1:18891/local/clearbridge/login_action.php',false,$context);
+        return [json_decode($raw,true,8,JSON_THROW_ON_ERROR),json_decode(file_get_contents($root.'/result.json'),true),
+            str_contains($http_response_header[0],'200')?200:403];
+    };
+    $old=['run'=>'run-1','role'=>'PARTICIPANT','intent'=>str_repeat('1',64),'scopeDigest'=>$digest];
+    $case=['scope'=>$scope,'attempt'=>$old,'user'=>42];
+    $oldtarget=$target($scope,'PARTICIPANT',$old['intent']);
+    [$started,$state,$status]=$send($case,'start',['challenge'=>str_repeat('2',64)]);
+    if ($status!==200 || array_column($state['calls'],'operation')!==['end','start']) {
+        throw new RuntimeException('replacement start did not retire original intent');
+    }
+    $case['attempt']=$state['attempt'];
+    foreach (['end','status'] as $operation) {
+        [$reply,$state,$status]=$send($case,$operation,['intentTarget'=>$oldtarget]);
+        if ($status!==200 || $reply!==['status'=>'NOT_CURRENT'] || $state['calls']!==[] || $state['attempt']!==$case['attempt']) {
+            throw new RuntimeException('late old operation touched replacement intent');
+        }
+        [$reply,$state,$status]=$send($case+['sessionid'=>'synthetic-session-two'],$operation,
+            ['intentTarget'=>$started['intentTarget']]);
+        if ($status!==200 || $reply!==['status'=>'NOT_CURRENT'] || $state['calls']!==[]) {
+            throw new RuntimeException('target crossed original PHP session');
+        }
+        foreach ([[],['intentTarget'=>'invalid'],['intentTarget'=>$started['intentTarget'],'extra'=>'bad']] as $extra) {
+            [$reply,$state,$status]=$send($case,$operation,$extra);
+            if ($status!==403 || $state['calls']!==[] || $state['attempt']!==$case['attempt']) {
+                throw new RuntimeException('bad target shape changed current intent');
+            }
+        }
+    }
+    echo "PASS delayed old end/status cannot touch replacement intent; missing/malformed/extra and other session reject\n";
+    [$reply,$state,$status]=$send($case,'end',['intentTarget'=>$started['intentTarget']]);
+    if ($status!==200 || $reply!==['status'=>'UNAVAILABLE'] || $state['attempt']!==null
+            || $state['calls']!==[['operation'=>'end','fields'=>['intentRef'=>$case['attempt']['intent']]]]) {
+        throw new RuntimeException('targeted normal end failed');
+    }
+    $case['attempt']=null;
+    foreach (['end','status'] as $operation) {
+        [$reply,$state,$status]=$send($case,$operation,['intentTarget'=>$started['intentTarget']]);
+        if ($status!==200 || $reply!==['status'=>'NOT_CURRENT'] || $state['calls']!==[] || $state['attempt']!==null) {
+            throw new RuntimeException('ended intent repeated operation was not inert');
+        }
+    }
+    echo "PASS targeted normal end and repeated end/status are isolated and idempotent without a new registry\n";
 } finally {
     proc_terminate($server);
     proc_close($server);

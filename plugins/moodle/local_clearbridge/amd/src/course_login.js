@@ -17,6 +17,7 @@ define([], function() {
         const label = root.querySelector('[data-clear-status]');
         let popup = null;
         let finishProof = null;
+        let intentTarget = null;
         let phase = 'idle';
         let busy = false;
         let active = false;
@@ -37,6 +38,12 @@ define([], function() {
             });
         };
         const action = async(operation, fields = {}) => {
+            if (operation === 'status' || operation === 'end') {
+                if (!isHex(intentTarget)) {
+                    throw new Error('Unavailable');
+                }
+                fields = {...fields, intentTarget};
+            }
             const body = new URLSearchParams({id: String(course), sesskey, operation, ...fields});
             const response = await fetch('/local/clearbridge/login_action.php', {
                 method: 'POST',
@@ -82,7 +89,7 @@ define([], function() {
             }
         };
         const refresh = async() => {
-            if (busy) {
+            if (busy || !isHex(intentTarget)) {
                 return;
             }
             busy = true;
@@ -114,6 +121,8 @@ define([], function() {
                 return;
             }
             reset();
+            intentTarget = null;
+            active = false;
             popup = window.open(origin + '/moodle/connect', '_blank', 'popup');
             if (!popup) {
                 render('blocked');
@@ -141,13 +150,14 @@ define([], function() {
             render('opening');
             try {
                 const reply = await action('start', {challenge});
-                if (!exact(reply, ['status', 'expiresAtExclusive', 'launchCode', 'browserProof', 'finishProof'])
+                if (!exact(reply, ['status', 'expiresAtExclusive', 'launchCode', 'browserProof', 'finishProof', 'intentTarget'])
                         || reply.status !== 'WAITING' || !Number.isSafeInteger(reply.expiresAtExclusive)
-                        || ![reply.launchCode, reply.browserProof, reply.finishProof].every(isHex)
+                        || ![reply.launchCode, reply.browserProof, reply.finishProof, reply.intentTarget].every(isHex)
                         || expectedPopup.closed || expectedPopup !== popup || expectedGeneration !== generation) {
                     throw new Error('Unavailable');
                 }
                 finishProof = reply.finishProof;
+                intentTarget = reply.intentTarget;
                 active = true;
                 expectedPopup.postMessage({type: 'clear-moodle-login-launch', challenge,
                     launchCode: reply.launchCode, browserProof: reply.browserProof}, origin);
@@ -201,6 +211,7 @@ define([], function() {
                     throw new Error('Unavailable');
                 }
                 active = false;
+                intentTarget = null;
                 render('idle');
             } catch {
                 render('unavailable');
@@ -210,7 +221,12 @@ define([], function() {
             }
         });
         // On reload, status may be read, but the original tab proof is gone.
-        window.addEventListener('pagehide', reset);
+        window.addEventListener('pagehide', () => {
+            reset();
+            intentTarget = null;
+            active = false;
+            render('idle');
+        });
         window.addEventListener('pageshow', event => {
             if (event.persisted) {
                 void refresh();
