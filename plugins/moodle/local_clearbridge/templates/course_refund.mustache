@@ -5,6 +5,7 @@
     Example context (json):
     {"student": true, "conditions": [{"name": "Lecture completion", "source": "Moodle activity"}]}
 }}
+<div data-clear-workflow>
 {{#showconnection}}
 <section aria-labelledby="clearbridge-connection-heading" class="card mb-3">
     <div class="card-body">
@@ -20,12 +21,33 @@
 <section aria-labelledby="clearbridge-application-heading" class="card mb-3">
     <div class="card-body">
         <h2 id="clearbridge-application-heading">{{#str}} nativeapplicationheading, local_clearbridge {{/str}}</h2>
+        <p data-workflow-status role="status">{{#str}} nativeworkflowunavailable, local_clearbridge {{/str}}</p>
+        <button type="button" class="btn btn-secondary" data-workflow-action="read-session" disabled>
+            {{#str}} nativeworkflowreadsession, local_clearbridge {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary" data-workflow-action="read-operation" disabled>
+            {{#str}} nativeworkflowreadoperation, local_clearbridge {{/str}}
+        </button>
+        <pre class="mt-3 text-wrap" hidden data-workflow-details="session operation registration" tabindex="0"></pre>
+        <div hidden>
+            <span data-workflow-message="unavailable">{{#str}} nativeworkflowunavailable, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="ready">{{#str}} nativeworkflowready, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="busy">{{#str}} nativeworkflowbusy, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="success">{{#str}} nativeworkflowsuccess, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="failure">{{#str}} nativeworkflowfailure, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="unknown">{{#str}} nativeworkflowunknown, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="received">{{#str}} nativeworkflowreceived, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="unconfirmed">{{#str}} nativeworkflowunconfirmed, local_clearbridge {{/str}}</span>
+        </div>
         {{#student}}
         <p>{{#str}} moodleenrolled, local_clearbridge {{/str}}</p>
         <p id="clearbridge-application-status" role="status">{{#str}} nativeworkflowapplicationpending, local_clearbridge {{/str}}</p>
         <button type="button" class="btn btn-primary" data-workflow-action="create-application"
                 aria-describedby="clearbridge-application-status" disabled>
             {{#str}} nativeworkflowcreate, local_clearbridge {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary mb-2" data-workflow-action="read-registration" disabled>
+            {{#str}} nativeworkflowreadregistration, local_clearbridge {{/str}}
         </button>
         <p id="clearbridge-registration-status" class="mt-3" role="status">{{#str}} nativeworkflowregistrationpending, local_clearbridge {{/str}}</p>
         <button type="button" class="btn btn-secondary" data-workflow-action="approve-registration"
@@ -34,7 +56,7 @@
         </button>
         {{/student}}
         {{^student}}
-        <p class="mb-0">{{#str}} nativeoperatorapplicationunavailable, local_clearbridge {{/str}}</p>
+        <p class="mb-0">{{#str}} nativeworkflowoperatorread, local_clearbridge {{/str}}</p>
         {{/student}}
     </div>
 </section>
@@ -48,7 +70,23 @@
         {{^hasrecords}}<p class="alert alert-warning">{{#str}} fixedscopereconnect, local_clearbridge {{/str}}</p>{{/hasrecords}}
         {{/fixedscope}}
         {{#showconnection}}
+        {{#student}}
+        <button type="button" class="btn btn-secondary mb-2" data-workflow-action="bind-source-session" disabled>
+            {{#str}} nativeworkflowbindsource, local_clearbridge {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary mb-2" data-workflow-action="read-source-signature" disabled>
+            {{#str}} nativeworkflowreadsource, local_clearbridge {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary mb-2" data-workflow-action="approve-source-signature" disabled>
+            {{#str}} nativeworkflowapprovesource, local_clearbridge {{/str}}
+        </button>
+        {{/student}}
+        <pre class="mt-3 text-wrap" hidden data-workflow-details="source reflection" tabindex="0"></pre>
         <p id="clearbridge-reflection-status" role="status">{{#str}} nativeworkflowreflectionpending, local_clearbridge {{/str}}</p>
+        <label class="d-block mb-2">
+            <input type="checkbox" data-workflow-ack disabled>
+            {{#str}} nativeworkflowack, local_clearbridge {{/str}}
+        </label>
         <button type="button" class="btn btn-secondary mb-3" data-workflow-action="approve-reflection"
                 aria-describedby="clearbridge-reflection-status" disabled>
             {{#str}} nativeworkflowreflection, local_clearbridge {{/str}}
@@ -85,6 +123,15 @@
 <section aria-labelledby="clearbridge-decision-heading" class="card mb-3">
     <div class="card-body">
         <h2 id="clearbridge-decision-heading">{{#str}} nativedecisionheading, local_clearbridge {{/str}}</h2>
+        {{#showconnection}}
+        <pre class="mt-3 text-wrap" hidden data-workflow-details="application evidence" tabindex="0"></pre>
+        <button type="button" class="btn btn-secondary mb-2" data-workflow-action="read-application" disabled>
+            {{#str}} nativeworkflowreadapplication, local_clearbridge {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary mb-2" data-workflow-action="decision-evidence" disabled>
+            {{#str}} nativeworkflowreadevidence, local_clearbridge {{/str}}
+        </button>
+        {{/showconnection}}
         {{#payment}}
         <p class="mb-0">{{decisionstatus}}</p>
         {{/payment}}
@@ -104,8 +151,7 @@
         </dl>
         {{#showconnection}}
         <p id="clearbridge-consent-status" role="status">
-            {{#student}}{{#str}} nativestudentconsentunavailable, local_clearbridge {{/str}}{{/student}}
-            {{^student}}{{#str}} nativeteacherconsentunavailable, local_clearbridge {{/str}}{{/student}}
+            {{#str}} nativeworkflowreviewconsent, local_clearbridge {{/str}}
         </p>
         <button type="button" class="btn btn-secondary" data-workflow-action="consent" data-workflow-choice="AGREE"
                 aria-describedby="clearbridge-consent-status" disabled>
@@ -121,6 +167,12 @@
 <section aria-labelledby="clearbridge-receipt-heading" class="card mb-3">
     <div class="card-body">
         <h2 id="clearbridge-receipt-heading">{{#str}} nativereceiptheading, local_clearbridge {{/str}}</h2>
+        {{#showconnection}}
+        <pre class="mt-3 text-wrap" hidden data-workflow-details="receipt" tabindex="0"></pre>
+        <button type="button" class="btn btn-secondary mb-2" data-workflow-action="payment-receipt" disabled>
+            {{#str}} nativeworkflowreadreceipt, local_clearbridge {{/str}}
+        </button>
+        {{/showconnection}}
         {{#payment}}
         <p class="mb-0">{{receiptstatus}}</p>
         {{/payment}}
@@ -129,3 +181,4 @@
         {{/payment}}
     </div>
 </section>
+</div>
