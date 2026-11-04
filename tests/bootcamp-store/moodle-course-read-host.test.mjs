@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdirSync,writeFileSync,symlinkSync} from 'node:fs';
+import {mkdirSync,writeFileSync,symlinkSync,readFileSync} from 'node:fs';
 import {EventEmitter} from 'node:events';
 import {join} from 'node:path';
 import {createServer} from 'node:https';
-import {randomBytes,createHash} from 'node:crypto';
+import {randomBytes,createHash,createHmac} from 'node:crypto';
 import {paymentFixture} from './moodle-payment-fixture.mjs';
 import {START} from './procedure-fixture.mjs';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
-import {createMoodleCourseReadHost,createMoodleCourseReadServer,loadNormalMoodleReadOwner,attachNormalMoodleReadServer,COURSE_READ_REQUEST,COURSE_READ_PATH} from '../../tools/bootcamp/moodle-course-read-host.mjs';
+import {createMoodleCourseReadHost,createMoodleCourseReadServer,loadNormalMoodleReadOwner,attachNormalMoodleReadServer,createFixedMoodleAuthorityVerifier,COURSE_READ_REQUEST,COURSE_READ_PATH} from '../../tools/bootcamp/moodle-course-read-host.mjs';
 import {createNormalMoodleReadBoundary} from '../../tools/bootcamp/live-context.mjs';
 
 // Owner-port double for adapter tests, not a Moodle authority implementation.
@@ -250,6 +250,42 @@ for(const action of ['logout','owner-change','abort','expired'])test('fixed curr
   if(action==='abort')controller.abort();
   if(action==='expired')z.x.setMono(5000);return z.x.receipt;
  });unavailable(await host.readCourse(z.handle(),{signal:controller.signal}));
+});
+
+test('fixed reverse HTTPS client pins logical Host, TLS CA, request, fresh nonce and rejects redirects/mixed data',async t=>{
+ const z=await fixture(t),directory=join(z.x.f.directory,'fixed-client-tls');mkdirSync(directory,{mode:0o700});
+ const fingerprint=createCertificates(directory),tls=loadTls(directory,fingerprint),secret=randomBytes(32).toString('hex'),nonces=new Set();
+ let mode='OK',hits=0;
+ const server=createServer(tls,(req,res)=>{let raw='';req.on('data',b=>raw+=b);req.on('end',()=>{
+  hits++;assert.equal(req.method,'POST');assert.equal(req.url,'/local/clearbridge/authority.php');assert.equal(req.headers.host,'127.0.0.1:18768');
+  assert.equal(req.headers.cookie,undefined);assert.equal(req.headers.authorization,undefined);
+  const nonce=req.headers['x-clear-nonce'];assert.ok(!nonces.has(nonce));nonces.add(nonce);
+  const signature=createHmac('sha256',secret).update(['CLEAR-MOODLE-AUTHORITY-A-TO-C-1',String(START),nonce,'POST',req.url,createHash('sha256').update(raw).digest('hex')].join('\n')).digest('hex');
+  assert.equal(req.headers['x-clear-signature'],signature);const request=JSON.parse(raw);
+  const result={...request,version:'clear-moodle-fixed-scope-check.1',status:'OK',installationRef:'fixed-moodle',courseRef:'fixed-course',
+   subjectRef:'fixed-student',actorRef:'fixed-student',applicationRef:z.x.a,displayOnly:true,authorityConsumptionAllowed:false};
+  if(mode==='redirect'){res.writeHead(302,{location:'https://127.0.0.1:1/never'});res.end();return;}
+  if(mode==='cookie')res.setHeader('set-cookie','unwanted=1');
+  if(mode==='epoch')result.authorityEpoch=1;
+  if(mode==='wrong-request')result.requestRef='f'.repeat(64);
+  if(mode==='expired')result.expiresAtExclusive=START;
+  if(mode==='old11'){delete result.applicationRef;delete result.displayOnly;delete result.authorityConsumptionAllowed;}
+  if(mode==='UNAVAILABLE'){result.status='UNAVAILABLE';for(const key of ['installationRef','courseRef','subjectRef','actorRef','applicationRef','expiresAtExclusive'])result[key]=null;}
+  res.setHeader('content-type','application/json');res.end(mode==='oversize'?'x'.repeat(4097):JSON.stringify(result));
+ });});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const options={ownerRunId:z.args.ownerRunId,secret,ca:readFileSync(join(directory,'ca.pem')),connectionPort:server.address().port,now:()=>START,monotonic:()=>0};
+ const client=createFixedMoodleAuthorityVerifier(options);t.after(()=>client.close());const request=z.handle();
+ assert.equal((await client.verify(request)).status,'OK');assert.equal((await client.verify(request)).status,'OK');assert.equal(hits,2);
+ for(const failure of ['redirect','cookie','epoch','wrong-request','expired','old11','oversize']){
+  mode=failure;const before=hits;await assert.rejects(client.verify(request));assert.equal(hits,before+1);
+ }
+ mode='UNAVAILABLE';assert.equal((await client.verify(request)).status,'UNAVAILABLE');
+ const untrusted=createFixedMoodleAuthorityVerifier({...options,ca:'untrusted CA'});t.after(()=>untrusted.close());const before=hits;
+ await assert.rejects(untrusted.verify(request));assert.equal(hits,before);
+ await assert.rejects(client.verify({...request,connectionPort:1}));assert.equal(hits,before);
+ const abort=new AbortController();abort.abort();await assert.rejects(client.verify(request,{signal:abort.signal}));assert.equal(hits,before);
+ client.close();await assert.rejects(client.verify(request),/CLOSED/);
 });
 
 test('worker owner module is absent by default and only exact private hash-checked bytes load',async t=>{

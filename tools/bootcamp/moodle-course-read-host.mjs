@@ -1,4 +1,5 @@
-import {createHash} from 'node:crypto';
+import {createHash,createHmac,randomBytes} from 'node:crypto';
+import {request as httpsRequest} from 'node:https';
 import {canonical,exactKeys,freeze,requireRule as check} from '../../src/policy/values.mjs';
 import {createMoodlePaymentReader,FIXED_MOODLE_MAPPING_VERSION,FIXED_MOODLE_SCOPE_VERSION,FIXED_MOODLE_PAYMENT_VERSION} from '../../src/bootcamp/moodle-payment-projection.mjs';
 import {join} from 'node:path';
@@ -7,12 +8,63 @@ import {readPrivate} from '../../src/hackathon-test-vault/e5/private-storage.mjs
 export const COURSE_READ_PATH='/v1/moodle/course/read';
 export const COURSE_READ_REQUEST='clear-moodle-course-read-request.1';
 export const COURSE_READ_RESPONSE='clear-moodle-course-read-response.1';
+export const FIXED_AUTHORITY_PATH='/local/clearbridge/authority.php';
 const hosts=new WeakSet();
 const ref=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v);
 const integer=v=>Number.isSafeInteger(v)&&v>0;
 const same=(a,b)=>canonical(a)===canonical(b);
 const digest=v=>createHash('sha256').update(canonical(v)).digest('hex');
 const roles=['PARTICIPANT','COURSE_OPERATOR'];
+
+// Owner-created reverse client. The student's existing HTTP origin and cookies
+// remain untouched. TLS terminates in Moodle, with a fixed logical HTTPS Host
+// matching Moodle's canonical port; only the private TCP route uses port 19468.
+// No caller/request can choose the target, Host, CA, redirect or credentials.
+export function createFixedMoodleAuthorityVerifier({ownerRunId,secret,ca,connectionPort=19468,
+ now=()=>Math.floor(Date.now()/1000),monotonic=()=>performance.now()}){
+ check(ref(ownerRunId)&&typeof secret==='string'&&/^[a-f0-9]{64}$/.test(secret)&&ca
+  &&Number.isInteger(connectionPort)&&connectionPort>=1024&&connectionPort<=65535,'COURSE_FIXED_AUTHORITY_CONFIG');
+ const time=clock(now,monotonic),key=Buffer.from(secret,'utf8'),authorityHost='127.0.0.1:18768';
+ const certificateAuthority=Buffer.from(ca);let closed=false;const requests=new Set();
+ const verify=async(input,{signal}={})=>{
+  check(!closed,'COURSE_FIXED_AUTHORITY_CLOSED');signal?.throwIfAborted();const body=requestShape(input,ownerRunId),start=time();
+  check(start.wall<body.expiresAtExclusive&&body.expiresAtExclusive<=start.wall+5,'COURSE_FIXED_AUTHORITY_EXPIRED');
+  const current=()=>{signal?.throwIfAborted();const t=time();check(!closed&&t.wall<body.expiresAtExclusive&&t.mono>=start.mono&&t.mono-start.mono<5000,'COURSE_FIXED_AUTHORITY_EXPIRED');};
+  const raw=Buffer.from(JSON.stringify(body)),timestamp=String(start.wall),nonce=randomBytes(16).toString('hex');
+  const signature=createHmac('sha256',key).update(['CLEAR-MOODLE-AUTHORITY-A-TO-C-1',timestamp,nonce,'POST',FIXED_AUTHORITY_PATH,
+   createHash('sha256').update(raw).digest('hex')].join('\n')).digest('hex');
+  const text=await new Promise((resolve,reject)=>{
+   let settled=false,timer,request;
+   const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);requests.delete(request);signal?.removeEventListener('abort',abort);
+    if(error){request?.destroy();reject(Error('COURSE_FIXED_AUTHORITY_UNAVAILABLE'));}else resolve(value);};
+   const abort=()=>finish(true);
+   request=httpsRequest({hostname:'127.0.0.1',port:connectionPort,path:FIXED_AUTHORITY_PATH,method:'POST',agent:false,ca:certificateAuthority,
+    rejectUnauthorized:true,minVersion:'TLSv1.2',headers:{host:authorityHost,'content-type':'application/json','content-length':raw.length,
+     'x-clear-timestamp':timestamp,'x-clear-nonce':nonce,'x-clear-signature':signature}},response=>{
+     if(response.statusCode!==200||response.headers['set-cookie']!==undefined||response.headers.location!==undefined
+      ||!/^application\/json(?:;\s*charset=utf-8)?$/i.test(response.headers['content-type']??'')){finish(true);return;}
+     const parts=[];let size=0;
+     response.on('data',part=>{size+=part.length;if(size>4096)finish(true);else parts.push(part);});
+     response.on('error',()=>finish(true));response.on('aborted',()=>finish(true));response.on('end',()=>finish(false,Buffer.concat(parts).toString('utf8')));
+    });
+   requests.add(request);request.on('error',()=>finish(true));signal?.addEventListener('abort',abort,{once:true});
+   timer=setTimeout(abort,Math.max(1,Math.min(5000,(body.expiresAtExclusive-start.wall)*1000)));timer.unref?.();
+   if(signal?.aborted)abort();else request.end(raw);
+  });
+  current();let result;try{result=JSON.parse(text);}catch{throw Error('COURSE_FIXED_AUTHORITY_RESPONSE');}
+  check(JSON.stringify(result)===text,'COURSE_FIXED_AUTHORITY_RESPONSE');
+  exactKeys(result,['version','requestRef','ownerRunId','moodleAuthorityRef','role','status','installationRef','courseRef','subjectRef','actorRef',
+   'applicationRef','expiresAtExclusive','displayOnly','authorityConsumptionAllowed'],'COURSE_FIXED_AUTHORITY_RESPONSE');
+  check(result.version===FIXED_MOODLE_SCOPE_VERSION&&result.displayOnly===true&&result.authorityConsumptionAllowed===false
+   &&['requestRef','ownerRunId','moodleAuthorityRef','role'].every(k=>result[k]===body[k]),'COURSE_FIXED_AUTHORITY_RESPONSE');
+  const scope=['installationRef','courseRef','subjectRef','actorRef','applicationRef'];
+  check(result.status==='UNAVAILABLE'?[...scope,'expiresAtExclusive'].every(k=>result[k]===null)
+   :result.status==='OK'&&scope.every(k=>ref(result[k]))&&integer(result.expiresAtExclusive)
+    &&now()<result.expiresAtExclusive&&result.expiresAtExclusive<=body.expiresAtExclusive,'COURSE_FIXED_AUTHORITY_RESPONSE');
+  current();return freeze(result);
+ };
+ return Object.freeze({verify,close(){if(!closed){closed=true;for(const request of requests)request.destroy();requests.clear();key.fill(0);}}});
+}
 function requestShape(value,ownerRunId){
  exactKeys(value,['version','requestRef','ownerRunId','moodleAuthorityRef','role','expiresAtExclusive'],'COURSE_READ_REQUEST');
  check(value.version===COURSE_READ_REQUEST&&/^[a-f0-9]{64}$/.test(value.requestRef)&&value.ownerRunId===ownerRunId
