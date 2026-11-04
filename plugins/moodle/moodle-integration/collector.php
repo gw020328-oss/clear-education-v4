@@ -64,7 +64,9 @@ function cfg_profile(): array {
         'enablecompletion','enableavailability','enablegroupmembersonly','defaultuserroleid','guestroleid','siteadmins',
         'sessiontimeout','sessiontimeoutwarning','session_update_timemodified_frequency','allowaccountssameemail',
         'customfrontpageinclude','contextlocking','forcepasswordchange','handlebounces'] as $key) {$p[$key]=$CFG->$key??null;}
-    require_rule(($p['session_handler_class']??'')==='\\core\\session\\database','SESSION_BACKEND');
+    $backend=getenv('CLEAR_HTTP_LIFECYCLE_PROBE')==='1'
+        ? '\\clear_moodle_probe\\http_database' : '\\core\\session\\database';
+    require_rule(($p['session_handler_class']??'')===$backend,'SESSION_BACKEND');
     foreach(['sitepolicy','sitepolicyhandler','sitepolicyguest','customfrontpageinclude','forcepasswordchange','handlebounces'] as $key) {
         require_rule(empty($p[$key]),'UNSUPPORTED_CFG');
     }

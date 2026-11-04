@@ -5,7 +5,7 @@ use function clear_synthetic\safe_int;
 
 // Existing-session-only, synthetic integration handler. Never configured on a live site.
 class guarded_database extends \clear_synthetic\strict_database_candidate {
-    private ?int $readgeneration=null;
+    protected ?int $readgeneration=null;
     public function read(string $sid): string|false {
         try {
             require_rule($this->requires_write_lock() && $this->recordid===null,'SESSION_LOCK_REQUIRED');

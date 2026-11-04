@@ -108,8 +108,9 @@ function lookup(array $request,array $profile,string $kind,?callable $snapshotba
         // First SQL read acquires a new snapshot after the request was checked.
         $column=$kind==='confirmation'?'attemptref':'ref';
         $value=$kind==='confirmation'?$request['attemptRef']:$request['confirmationRef'];
-        $result=pg_query_params($pg,'SELECT * FROM clear_probe.confirmations WHERE '.$column.'=$1',[$value]);
+        // Conservative lower bound: SQL execution/transfer delay must not make an old snapshot look new.
         $observed=time();
+        $result=pg_query_params($pg,'SELECT * FROM clear_probe.confirmations WHERE '.$column.'=$1',[$value]);
         require_rule($result!==false && pg_num_rows($result)===1,'CONFIRMATION');
         $c=pg_fetch_assoc($result);
         if($snapshotbarrier!==null){$snapshotbarrier();}
