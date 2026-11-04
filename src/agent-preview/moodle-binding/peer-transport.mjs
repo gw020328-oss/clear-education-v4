@@ -161,6 +161,10 @@ export function createPeerTransport({ pin, key, replay, clock = () => Math.floor
         proposalHash: correlation.proposalHash, bodyHash: digest(body), issuedAt: now,
         expiresAtExclusive: Math.min(now + lifetime(p.path), correlation.expiresAtExclusive), requestHash: ZERO_HASH, status: 0 };
       window(meta, now, p.maxClockSkewSeconds);
+      // A seconds-only clock can be anywhere within this second. Use its next
+      // boundary so cancellation never gains the discarded fractional second.
+      const remainingMs = (meta.expiresAtExclusive - now - p.maxClockSkewSeconds - 1) * 1000;
+      const deadlineMono = start + Math.min(timeoutMs, remainingMs);
       const wire = encodePeer(meta, body, k), controller = new AbortController();
       const cancel = () => controller.abort(Error('PEER_ABORTED'));
       pending.add(controller);
@@ -168,11 +172,12 @@ export function createPeerTransport({ pin, key, replay, clock = () => Math.floor
       let timer;
       try {
         signal?.throwIfAborted();
+        check(monotonic() < deadlineMono, 'PEER_TIMEOUT');
         const cancelled = new Promise((_, reject) => {
           controller.signal.addEventListener('abort', () => reject(controller.signal.reason), { once: true });
         });
         timer = setTimeout(() => controller.abort(Error('PEER_TIMEOUT')),
-          Math.min(timeoutMs, (meta.expiresAtExclusive - now - p.maxClockSkewSeconds) * 1000));
+          Math.max(0, deadlineMono - monotonic()));
         const job = (async () => {
           const response = await fetchImpl(p.origin + p.path, { method: 'POST', redirect: 'error', cache: 'no-store',
             credentials: 'omit', headers: { 'content-type': 'application/json' }, body: wire, signal: controller.signal });
@@ -181,7 +186,7 @@ export function createPeerTransport({ pin, key, replay, clock = () => Math.floor
         })();
         const bytes = await Promise.race([job, cancelled]);
         controller.signal.throwIfAborted(); check(!closed, 'PEER_CLOSED');
-        const end = monotonic(); check(end >= start && end - start < timeoutMs, 'PEER_TIMEOUT');
+        const end = monotonic(); check(end >= start && end < deadlineMono, 'PEER_TIMEOUT');
         const result = decodePeer(bytes, k); pinned(result.meta, p, 'RESPONSE');
         for (const field of ['requestRef','contextRef','sourceHash','proposalHash']) check(result.meta[field] === meta[field], 'PEER_CORRELATION');
         check(result.meta.requestHash === peerRequestHash(meta) && result.meta.expiresAtExclusive <= meta.expiresAtExclusive

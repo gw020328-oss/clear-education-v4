@@ -9,13 +9,13 @@ import {sourceClauses,reviewModelProposal} from '../../src/agent-preview/index.m
 import {hash} from '../../src/agent-preview/moodle-binding/contract.mjs';
 import {studentFixture} from './fixtures/binding-student-fixture.mjs';
 const sourceText='Moodle에서 첫 학습 활동을 마쳐야 한다';
-async function fixture(t){
+async function fixture(t, options = {}){
  const f=await studentFixture(t),attempt=f.start(),preview=await f.preview(attempt);await f.complete(attempt,preview);
  const release={deploymentEpoch:'preview-epoch-1',artifactHash:'a'.repeat(64),model:'gemini-3.5-flash-lite',limitsHash:hash({calls:1,input:4096,output:2048}),validUntil:2000};
  let mono=0;
  const contexts=createPreviewContexts({authentication:f.auth,student:f.student,coordinator:f.runtime,applicationId:f.registry.applicationId,
   targetRef:'page-manual',issuerEpoch:f.policy.issuerEpoch,deployment:()=>release,prepareModel:prepareGeminiStructureRequest,
-  timePolicy:f.config.timePolicy,clock:()=>f.state.wall,monotonic:()=>mono});t.after(()=>contexts.close());
+  timePolicy:f.config.timePolicy,clock:()=>f.state.wall,monotonic:()=>mono,...options});t.after(()=>contexts.close());
  const issued=contexts.issue(f.context,{version:PREVIEW_CONTEXT_VERSION,sourceText});
  const proposal={sourceText,rows:sourceClauses(sourceText).map(c=>({quote:c.text,start:c.start,end:c.end,status:'SUPPORTED',capability:'MOODLE_ACTIVITY_COMPLETION.1',question:null}))};
  const proposalHash=reviewModelProposal(sourceText,proposal.rows).proposalHash;
@@ -133,4 +133,25 @@ test('verified draft requires nonzero hash of the validated current-source AST',
  assert.throws(()=>x.contexts.acceptVerifiedDraft(x.f.context,x.draft),/DTO_KEYS/);
  x.ready();
  assert.equal((await x.contexts.observe(x.f.context,x.input)).status,'COMPLETE');
+});
+
+test('fractional-second context expires naturally while observation stays idle',{timeout:5000},async t=>{
+ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+ await delay((650-Date.now()%1000+1000)%1000);
+ const epoch=Math.floor(Date.now()/1000);
+ const x=await fixture(t,{ttlSeconds:2,clock:()=>1000+Math.floor(Date.now()/1000)-epoch,monotonic:()=>performance.now()});
+ x.ready();
+ let sourceSignal,settled=false,entered;
+ const started=new Promise(resolve=>entered=resolve);
+ x.f.state.query=(_request,options)=>{sourceSignal=options.signal;entered();return new Promise(()=>{});};
+ const pending=x.contexts.observe(x.f.context,x.input)
+  .then(()=>assert.fail('idle observation returned'),error=>{assert.match(error.message,/CONTEXT_EXPIRED/);settled=true;});
+ try {
+  await started;
+  const deadlineMs=(epoch+x.issued.expiresAtExclusive-1000)*1000;
+  await delay(Math.max(0,deadlineMs-Date.now()+30));
+  assert.equal(sourceSignal.aborted,true);
+  assert.equal(settled,true);
+  assert.equal(x.f.sql('main',"SELECT state FROM requests WHERE kind='OBSERVE'")[0].state,'CANCELLED');
+ } finally {x.contexts.close();await pending;}
 });

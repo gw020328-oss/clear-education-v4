@@ -163,3 +163,20 @@ test('prepare and generate retain zero proposal request and correlated response 
   assert.equal(response.meta.requestHash,peerRequestHash(meta));
  }
 });
+
+test('fractional-second parent deadline aborts idle transport without another query',{timeout:4000},async()=>{
+ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+ await delay((650-Date.now()%1000+1000)%1000);
+ const expiry=Math.floor(Date.now()/1000)+2;
+ let receivedSignal,settled=false;
+ const transport=createPeerTransport({pin:{...pin,path:'/v1/preview/generate'},key,
+  replay:{claim(){assert.fail('late replay claim');}},activation:'OFFLINE_TEST',
+  fetchImpl(_url,options){receivedSignal=options.signal;return new Promise(()=>{});}});
+ const pending=transport.query(body,{...correlation,expiresAtExclusive:expiry})
+  .then(()=>assert.fail('idle transport returned'),error=>{assert.match(error.message,/PEER_TIMEOUT/);settled=true;});
+ try {
+  await delay(Math.max(0,expiry*1000-Date.now()+30));
+  assert.equal(receivedSignal.aborted,true);
+  assert.equal(settled,true);
+ } finally {transport.close();await pending;}
+});

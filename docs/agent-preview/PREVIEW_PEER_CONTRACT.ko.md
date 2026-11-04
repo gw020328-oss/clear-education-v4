@@ -62,13 +62,14 @@ ASCII("CLEAR\0PREVIEW\0PEER\0HMAC-SHA256\0V1\0")
 - reader 검증/MAC/pin 검증 후 전용 SQLite `BEGIN EXCLUSIVE`로 잠금을 획득한 다음 fresh clock을 샘플한다. 수명·전진 clock floor 검사, replay INSERT, floor 갱신을 한 transaction으로 commit한다. commit 후 다시 만료를 검사하고 실패해도 nonce는 소비된 상태로 남긴다.
 - 허용 skew는 배포에서 명시0..2초. 수락 조건은 issuedAt≤now+skew, now−issuedAt+skew<5, now<expiresAtExclusive−skew다. 이미 수락한 request의 응답 생성/최종 correlation에서는 elapsed를 그 경로의 완료 한도(5초/생성45초)와 비교한다. response 자체의 issuedAt 신선도는 여전히5초다. 모델 단회 승인 expiry는 이 transport 완료 한도와 별개이며 두 모델 dispatch 직전에 D가 검사한다. 이미 만료된 메시지를 재시도용으로 갱신하지 않는다. retry는 새로운 사용자 의도/권한 확인과 새로운 requestRef이며 모델 단회 승인을 복구하지 않는다.
 - 고정 HTTPS origin+허용 path만 사용한다. TLS 검증을 끄는 옵션/환경은 허용하지 않으며 credentials:omit, redirect:error, cache:no-store. proxy 헤더나 요청 URL/host를 peer identity로 승격하지 않는다. 실제 활성화 인수에는 고정 DNS/인증서·egress 정책이 별도로 필요하다.
+- 취소 timer는 초 단위 clock의 다음 초 경계를 현재 시각의 보수적 상한으로 사용한다. peer deadlineMono = startMono + min(timeoutMs, (expiresAtExclusive - sampledSeconds - skew - 1) * 1000)이다. timer arm 및 최종 결과 수락은 같은 monotonic deadline을 사용한다. 잔여 시간이 없으면 dispatch 전 거부한다. clock/monotonic injection 인자와 wire Unix seconds DTO는 유지한다.
 - 전송·body stream을 합쳐 관측/prepare/execute/result 최대5초, generate만 최대45초, monotonic 검증, AbortSignal 및 Promise.race로 늦은 응답 차단. 크기·content-type·HTTP200·response URL/redirect·응답 서명과 correlation을 확인한 후만 body를 반환한다. network/MAC 실패 상세를 공개 HTTP 오류에 포함하지 않는다. origin/key/request/body/식별자 로그는 금지한다.
 - replay DB는 독립 private0700 directory/0600 file, 단일 링크와 실제 경로를 검사한다. 상태를 지급 DB에 저장하거나 D에 지급 DB를 mount하지 않는다.
 - trusted clock/DB·프로세스 소유권은 전제다. whole backup rollback을 내부 floor로 탐지한다고 주장하지 않는다. DB 손실/복원 또는 key/배포 복구에는 새로운 deploymentEpoch와 peer key가 필수이며 이전 승인은 무효화한다. 이 회전은 운영 owner의 원자 프로비저닝 의무이며 코드가 자동 회전하거나 구 epoch를 허용하지 않는다.
 
 ## context 수명과 HTTP
 
-context 수명은 최대120초(현 기본60), binding/session/release expiry 중 최소값 이내다. wall exclusive expiry와 monotonic 수명을 검사하고 실제 timer로 레코드를 제거한다. 최대16개(설정 상한64), context당 observation 하나만 진행한다. 원문/원시 모델응답/토큰/지갑은 저장하지 않으며 scope digest만 유지한다. 재시작으로 context는 소실되고 D의 단회 과금 승인은 복구되지 않는다.
+context 수명은 최대120초(현 기본60), binding/session/release expiry 중 최소값 이내다. wall exclusive expiry와 monotonic 수명을 검사하고 실제 timer로 레코드를 제거한다. 초 단위 clock이 버린 fractional second를 보수적으로 반영해 expiresMono = sampledMono + (expiresAtExclusive - sampledSeconds - 1) * 1000으로 정한다. timer arm 시까지 경과한 monotonic 시간을 차감한다. 따라서 최대1초 조기 만료할 수 있으며 잔여 보장 시간이 없으면 발급을 거부한다. 최대16개(설정 상한64), context당 observation 하나만 진행한다. 원문/원시 모델응답/토큰/지갑은 저장하지 않으며 scope digest만 유지한다. 재시작으로 context는 소실되고 D의 단회 과금 승인은 복구되지 않는다.
 
 별도 handler 경로는 auth 4개와 POST `/preview/context`, `/preview/review`, `/preview/observe`만이다. browser request는 HTTPS, exact Host/Origin, same-origin fetch, 별도 `__Host-clear-preview-session`, wallet/chain/CSRF를 요구한다. HTTP handler는 내부 acceptVerifiedDraft나 peer listener를 노출하지 않는다. 지급/runtimes/policies/applications/proof/RPC/admin/정적 파일을 mount하지 않는다. 단순 `enabled:true`는 peer 활성화를 뜻하지 않는다.
 

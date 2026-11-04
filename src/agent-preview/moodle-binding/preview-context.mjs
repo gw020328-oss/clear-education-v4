@@ -66,14 +66,17 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
       for(const [ref,r] of records) if(r.expiresAtExclusive <= live.at.now || r.expiresMono <= live.at.mono) forget(ref);
       check(records.size < maximumContexts, 'CONTEXT_LIMIT');
       const ref = randomBytes(32).toString('hex'), expiresAtExclusive = Math.min(live.expiry, live.at.now + ttlSeconds);
+      // The next second is the conservative upper bound of a truncated clock.
+      const expiresMono = live.at.mono + (expiresAtExclusive - live.at.now - 1) * 1000;
+      check(monotonic() < expiresMono, 'CONTEXT_EXPIRED');
       const scopeHash = hash(live.scope), approvalBindingHash = hash({ domain:'CLEAR_SELF_PREVIEW_APPROVAL_1',
         contextRef:ref, scopeHash, sourceHash:prepared.sourceHash, bodyHash:prepared.bodyHash,
         model:live.scope.model, limitsHash:live.scope.limitsHash, artifactHash:live.scope.artifactHash,
         deploymentEpoch:live.scope.deploymentEpoch, expiresAtExclusive });
-      const timer = setTimeout(() => forget(ref), (expiresAtExclusive - live.at.now) * 1000); timer.unref();
+      const timer = setTimeout(() => forget(ref), Math.max(0, expiresMono - monotonic())); timer.unref();
       records.set(ref, { scopeHash, bindingRef:live.scope.bindingRef, sourceHash:prepared.sourceHash, bodyHash:prepared.bodyHash,
         approvalBindingHash, model:prepared.model, expiresAtExclusive, beganMono:live.at.mono,
-        expiresMono:live.at.mono + (expiresAtExclusive - live.at.now)*1000, timer, lifetime:new AbortController(), draft:null, reviewed:false, active:false });
+        expiresMono, timer, lifetime:new AbortController(), draft:null, reviewed:false, active:false });
       return { version:PREVIEW_CONTEXT_VERSION, previewContextRef:ref, sourceHash:prepared.sourceHash,
         bodyHash:prepared.bodyHash, model:prepared.model, approvalBindingHash, expiresAtExclusive,
         automaticEligibility:false, paymentAllowed:false };
