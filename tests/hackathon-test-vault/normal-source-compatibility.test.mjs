@@ -758,3 +758,16 @@ test('v59 pins the authorized ledger HTTP delta and adapter while preserving v58
  }
  for(const [p,h]of Object.entries(d.sourceAdditions))assert.equal(sha(actualRead(p)),h);
 });
+
+test('v62 integrates both reviewed parents with exact guards and source deltas',async()=>{
+ const record=JSON.parse(actualRead('specs/bootcamp/hackathon-test-preview-fence-integration-v1.json'));
+ assert.deepEqual(Object.keys(record.preservedGuards),[
+  'src/hackathon-test-vault/reviewed-source-v60.mjs',
+  'src/hackathon-test-vault/reviewed-source-v61.mjs',
+ ]);
+ for(const [path,expected]of Object.entries(record.preservedGuards))assert.equal(sha(actualRead(path)),expected);
+ const {consumeReviewedV62Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v62.mjs');
+ const current=consumeReviewedV62Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
+ for(const path of ['src/bootcamp/execution-operations.mjs','web/src/bootcamp/team-entry.js','tools/embedded-wallet/build-product.mjs'])assert.equal(current.sources[path],sha(actualRead(path)));
+ assert.equal(Object.keys(current.sources).length,211);
+});
