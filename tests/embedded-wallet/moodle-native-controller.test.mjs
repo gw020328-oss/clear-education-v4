@@ -9,13 +9,15 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   surface: 'MOODLE_NATIVE', phase: 'ACTIVE_LOCAL_TEST', chainId: 12345, rpcUrl: 'http://127.0.0.1:9479',
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
-function fixture({accountGate, endGate, rejectedRevoke = false, serverRole = 'operator'} = {}) {
+function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
+  rejectedRevoke = false, serverRole = 'operator'} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   const provider = new EventEmitter(), calls = [], stages = [], views = [];
+  let currentAddress = address;
   provider.request = async ({method}) => {
     calls.push(method);
     if (method === 'eth_requestAccounts') { await accountGate; return [address]; }
-    if (method === 'eth_accounts') return [address];
+    if (method === 'eth_accounts') return [currentAddress];
     if (method === 'eth_chainId') return '0x3039';
     if (method === 'wallet_switchEthereumChain') return null;
     throw Error('UNEXPECTED_WALLET_REQUEST');
@@ -29,13 +31,16 @@ function fixture({accountGate, endGate, rejectedRevoke = false, serverRole = 'op
     fetch: async (_url, options) => {
       const q = JSON.parse(options.body); return {ok: true, redirected: false, json: async () => ({result: q.method === 'eth_chainId' ? '0x3039' : '0x'})};
     },
-    sessionFactory: () => ({
+    sessionFactory: ({wallet}) => ({
       async authenticate() { stages.push('authenticate'); return {role: serverRole}; },
-      async assertSession() { stages.push('assert-session'); return {wallet: address, role: serverRole, expiresAt: Math.floor(Date.now()/1000)+60}; },
+      async assertSession(signal) { stages.push('assert-session'); await wallet.guard(signal);
+        return {wallet: address, role: serverRole, expiresAt: Math.floor(Date.now()/1000)+60}; },
       async dispose() { stages.push('revoke'); if (rejectedRevoke) throw Error('synthetic'); },
     }),
     loginFactory: () => Object.fromEntries(['begin','complete','finish','end'].map(method => [method, async () => {
-      stages.push(method); if(method==='end')await endGate;
+      stages.push(method);
+      if (method === 'finish' && changeAccountsOnFinish) currentAddress = '0x'+'34'.repeat(20);
+      if (method === 'end') { await endGate; if (rejectedEnd) throw Error('synthetic lost end response'); }
     }]))});
   const view = () => views.at(-1);
   async function ready() {
@@ -56,7 +61,7 @@ test('Moodle mount/discovery do not request accounts, switch chain or sign; ever
   assert.deepEqual(f.stages, ['begin','authenticate','assert-session','complete']);
   assert(!f.stages.includes('finish'));
   await f.controller.dispatch({action: 'finish-connection'});
-  assert.equal(f.view().phase, 'CONNECTED'); assert.equal(f.stages.at(-1), 'finish');
+  assert.equal(f.view().phase, 'CONNECTED'); assert.deepEqual(f.stages.slice(-3), ['assert-session','finish','assert-session']);
   assert(!f.calls.some(method => method === 'eth_sendTransaction'));
   await f.controller.destroy(); assert.equal(f.view().phase, 'CLOSED');
 });
@@ -103,6 +108,35 @@ test('unknown revocation blocks reconnect and late provider events cannot restor
   assert.equal(f.view().authenticated, false); assert.equal(f.view().selectedChoiceId, null);
   assert.equal(f.view().error.code, 'REVOCATION_UNKNOWN'); assert.deepEqual(f.view().allowedActions, ['sign-out']);
   await assert.rejects(f.controller.dispatch({action:'connect-metamask',providerId:'provider-1'})); await f.controller.destroy();
+});
+
+test('unknown Moodle end blocks reconnect after cancellation or dispatch failure, without resending end', async () => {
+  for (const failure of ['cancel', 'dispatch', 'sign-out']) {
+    const f = fixture({rejectedEnd: true, serverRole: failure === 'dispatch' ? 'participant' : 'operator'});
+    await f.ready(); await f.controller.dispatch({action:'sign-in'});
+    if (failure === 'cancel') { f.provider.emit('accountsChanged'); await new Promise(r => setImmediate(r)); }
+    if (failure === 'sign-out') await f.controller.dispatch({action:'sign-out'});
+    assert.equal(f.view().authenticated, false, failure);
+    assert.deepEqual(f.view().allowedActions, [], failure);
+    assert.equal(f.view().error.outcome, 'UNKNOWN', failure);
+    assert.equal(f.stages.filter(s => s === 'end').length, 1, failure);
+    await assert.rejects(f.controller.dispatch({action:'connect-metamask', providerId:f.view().providers[0].providerId}));
+    await assert.rejects(f.controller.dispatch({action:'sign-in'}));
+    await f.controller.destroy();
+    assert.equal(f.stages.filter(s => s === 'end').length, 1, failure);
+  }
+});
+
+test('silent account change during Moodle finish never renders CONNECTED and retires the captured session', async () => {
+  const f = fixture({changeAccountsOnFinish:true});
+  await f.ready(); await f.controller.dispatch({action:'sign-in'});
+  await f.controller.dispatch({action:'finish-connection'});
+  await new Promise(r => setImmediate(r));
+  assert(f.stages.includes('finish'));
+  assert(!f.views.some(v => v.phase === 'CONNECTED'));
+  assert.equal(f.view().authenticated, false);
+  assert(f.stages.includes('revoke')); assert(f.stages.includes('end'));
+  await f.controller.destroy();
 });
 
 test('native handshake confines sesskey to C and lost finish response invokes only status, never a second finish', async () => {

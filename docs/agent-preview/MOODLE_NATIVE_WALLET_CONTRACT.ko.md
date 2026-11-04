@@ -137,6 +137,14 @@ Basics → Advanced의 Allowed OAuth redirect URLs에는 같은 세 origin의
 
 ## 사업 action 권한 계약 검토 요청
 
+2026-11-05 연결 수명 검토 보정: Moodle end 응답이 불명확하면 CLEAR 세션 취소와
+별도인 latch를 유지한다. 기존 C end는 처리 시 현재 SESSION intent를 선택하므로,
+재전송이나 후속 status만으로 지연된 이전 end의 완료를 보장할 수 없다. 현재 후보는
+이 경우 새 연결을 허용하지 않으며 destroy에서도 불확실한 end를 재전송하지 않는다.
+안전한 복구는 기존 intent에 결합된 C 종료 계약 검토 후 추가한다. finish 응답 이후에도
+캡처한 동일 CLEAR 세션과 실제 지갑을 재검사하고 epoch/객체 동일성을 확인한 후에만
+CONNECTED를 표시한다. 이 검사는 실제 로그인/지급 검증이 아닌 합성 회귀 검증이다.
+
 아래는 미구현 검토안이다. 지갑 UI를 활성화했다는 이유로 기존 모든 `/bootcamp/**`
 API를 front door에 넣지 않는다. 신청/증빙/AI/등록/동의/영수증의 기존 검증 코드를
 재사용하되 현재 C 권한과 연결하는 마지막 서버 경계를 검토해야 한다.

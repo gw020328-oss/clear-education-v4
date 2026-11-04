@@ -17,13 +17,14 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   let epoch = 0, sequence = 0, closed = false, revoking = false, revokeUnknown = false;
   let phase = 'IDLE', error = null, busy = null, selected = null, network = false, authenticated = false;
   let wallet = null, session = null, closing = null, candidates = [], providers = [];
-  let cancellation = null;
+  let cancellation = null, moodleEndUnknown = false, endingMoodle = null;
   let authExpiry = 0, expiryTimer;
   let snapshot = {ready: false, authenticated: false, user: null, wallets: [], walletsReady: false, externalWalletsDisabled: true};
   const selector = kind => kind + '-' + epoch + '-' + (++sequence);
   function allowed() {
     if (closed) return [];
     if (cancellation) return [];
+    if (moodleEndUnknown) return revokeUnknown && !busy ? ['sign-out'] : [];
     if (revoking || revokeUnknown) return ['sign-out'];
     if (busy) return ['cancel'];
     if (phase === 'CONNECTION_PENDING') return ['finish-connection', 'sign-out'];
@@ -46,6 +47,25 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     return view;
   }
   function current(stamp, signal) { check(!closed && stamp === epoch && !signal.aborted, 'CANCELLED'); }
+  async function endMoodle(signal) {
+    if (endingMoodle) return endingMoodle;
+    // C currently resolves end against its session's current intent. Retrying an
+    // uncertain end, or accepting a later status, cannot retire a delayed request
+    // safely before a new start. Keep this latch independent of CLEAR revocation.
+    check(!moodleEndUnknown, 'MOODLE_END_UNKNOWN');
+    endingMoodle = (async () => {
+      try { await moodle.end(signal); }
+      catch (error) { moodleEndUnknown = true; throw error; }
+      finally { endingMoodle = null; }
+    })();
+    return endingMoodle;
+  }
+  async function retire() {
+    let failure;
+    try { await release(); } catch (error) { failure = error; }
+    try { await endMoodle(AbortSignal.timeout(13000)); } catch (error) { failure ??= error; }
+    if (failure) throw failure;
+  }
   async function release() {
     if (closing) return closing;
     const priorSession = session, priorWallet = wallet;
@@ -70,7 +90,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     // Retire selector generations even when discovery metadata stays unchanged.
     providers = providers.map(p => ({...p, selector: selector('provider')}));
     cancellation = (async () => {
-      try { await release(); await moodle.end(AbortSignal.timeout(13000)); }
+      try { await retire(); }
       catch { error = {code: revokeUnknown ? 'REVOCATION_UNKNOWN' : 'UNAVAILABLE', outcome: 'UNKNOWN'}; }
       finally { cancellation = null; emit(); }
     })();
@@ -150,11 +170,17 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
           authenticated = true; phase = 'AUTHENTICATED'; emit();
           await moodle.complete(session, signal); current(stamp,signal); phase = 'CONNECTION_PENDING';
         } else if (command.action === 'finish-connection') {
-          phase = 'CONFIRMING_CONNECTION'; emit(); await session.assertSession(signal); current(stamp,signal);
-          await moodle.finish(signal); current(stamp,signal); phase = 'CONNECTED';
+          const finishingSession = session, finishingWallet = wallet;
+          check(finishingSession && finishingWallet, 'AUTH_REQUIRED');
+          phase = 'CONFIRMING_CONNECTION'; emit(); await finishingSession.assertSession(signal); current(stamp,signal);
+          await moodle.finish(signal); current(stamp,signal);
+          await finishingSession.assertSession(signal); current(stamp,signal);
+          await finishingWallet.guard(signal); current(stamp,signal);
+          check(session === finishingSession && wallet === finishingWallet && authenticated, 'AUTH_REQUIRED');
+          phase = 'CONNECTED';
         } else if (command.action === 'sign-out') {
           phase = 'REVOKING'; emit(); await release(); current(stamp,signal);
-          await moodle.end(signal); current(stamp,signal);
+          await endMoodle(signal); current(stamp,signal);
           if (role === 'participant') { await sdk.logout(); current(stamp,signal); }
           epoch++; selected = null; candidates = []; phase = 'IDLE';
           providers = providers.map(p => ({...p, selector: selector('provider')}));
@@ -164,8 +190,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       if (stamp === epoch && !closed) {
         controller.abort();
         // A timed out signature is never reused. Revoke even an uncertain login.
-        try { await release(); } catch {}
-        try { await moodle.end(AbortSignal.timeout(13000)); } catch {}
+        try { await retire(); } catch {}
         phase = 'ERROR';
         const code = revokeUnknown ? 'REVOCATION_UNKNOWN' : ['STALE_SELECTION','NETWORK_UNAVAILABLE','AUTH_REQUIRED','ROLE_CHANGED','CANCELLED'].includes(cause?.message)
           ? cause.message : cause?.code === 4001 || cause?.message === 'WALLET_REJECTED' ? 'WALLET_REJECTED' : 'UNAVAILABLE';
@@ -179,7 +204,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     closed = true; epoch++; busy?.abort(); busy = null; stopDiscovery();
     moodle.invalidate?.();
     selected = null; candidates = []; providers = []; phase = 'CLOSED'; network = authenticated = false;
-    try { await cancellation; await release(); await moodle.end(AbortSignal.timeout(13000)); } catch {}
+    try { await cancellation; await retire(); } catch {}
     emit();
   }});
 }
