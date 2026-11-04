@@ -313,11 +313,24 @@ test('worker owner module is absent by default and only exact private hash-check
  const source='export const createMoodleReadOptions = () => ({syntheticLoaderTest: true});',sha256=createHash('sha256').update(source).digest('hex');
  writeFileSync(join(directory,'moodle-read-owner.mjs'),source,{mode:0o600});
  await assert.rejects(loadNormalMoodleReadOwner({directory,sha256:'0'.repeat(64)}),/COURSE_READ_OWNER_PIN/);
- const create=await loadNormalMoodleReadOwner({directory,sha256});assert.deepEqual(create(),{syntheticLoaderTest:true});
+ const legacy=await loadNormalMoodleReadOwner({directory,sha256});
+ assert.equal(legacy.moodleFirst,false);assert.deepEqual(legacy.createMoodleReadOptions(),{syntheticLoaderTest:true});
  writeFileSync(join(directory,'moodle-read-owner.mjs'),source+'\n',{mode:0o600});
  await assert.rejects(loadNormalMoodleReadOwner({directory,sha256}),/COURSE_READ_OWNER_PIN/);
  const alias=join(z.x.f.directory,'alias-owner');symlinkSync(directory,alias);
  await assert.rejects(loadNormalMoodleReadOwner({directory:alias,sha256}));
+});
+test('only the hash-pinned owner module can explicitly select Moodle-first',async t=>{
+ const z=await fixture(t),directory=join(z.x.f.directory,'private-owner');mkdirSync(directory,{mode:0o700});
+ const path=join(directory,'moodle-read-owner.mjs');
+ for(const sourceOrder of ['MOODLE_FIRST','unknown',true]){
+  const source='export const createMoodleReadOptions = () => ({}); export const sourceOrder = '+JSON.stringify(sourceOrder)+';';
+  writeFileSync(path,source,{mode:0o600});
+  const sha256=createHash('sha256').update(source).digest('hex');
+  assert.equal(await loadNormalMoodleReadOwner({directory}),null);
+  if(sourceOrder==='MOODLE_FIRST')assert.equal((await loadNormalMoodleReadOwner({directory,sha256})).moodleFirst,true);
+  else await assert.rejects(loadNormalMoodleReadOwner({directory,sha256}),/COURSE_READ_OWNER_SOURCE_ORDER/);
+ }
 });
 function mountFixture(){
  let closed=0,stopped=0,listens=0,mapped=0,reads=0,bind=false,callback,resolveHook=null;

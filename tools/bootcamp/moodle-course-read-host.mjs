@@ -199,7 +199,9 @@ export async function loadNormalMoodleReadOwner({directory,sha256}){
  check(Buffer.byteLength(source)<=65536&&createHash('sha256').update(source).digest('hex')===sha256,'COURSE_READ_OWNER_PIN');
  const module=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
  check(typeof module.createMoodleReadOptions==='function','COURSE_READ_OWNER_PORT');
- return module.createMoodleReadOptions;
+ // Legacy owners omit the export and retain the normal source lifecycle.
+ check(module.sourceOrder===undefined||module.sourceOrder==='MOODLE_FIRST','COURSE_READ_OWNER_SOURCE_ORDER');
+ return Object.freeze({createMoodleReadOptions:module.createMoodleReadOptions,moodleFirst:module.sourceOrder==='MOODLE_FIRST'});
 }
 
 // Startup attaches only an explicitly supplied owner configuration. Application

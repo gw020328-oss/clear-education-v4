@@ -29,7 +29,8 @@ try{
  fail(process.env.CLEAR_LOCKED==='1'&&!process.env.CLEAR_TEST_ROOT&&process.versions.node==='24.21.0'&&process.platform==='darwin'&&process.arch==='arm64','NORMAL_HOST_LOCKED_PLATFORM');
  const [mode,name,...extra]=process.argv.slice(2);fail(['registry','run'].includes(mode)&&extra.length===0,'NORMAL_HOST_WORKER_ARGUMENT');
  const {directory,config}=loadHostConfig(name);
- const createMoodleReadOptions=mode==='run'?await loadNormalMoodleReadOwner({directory,sha256:config.moodleReadOwnerSha256}):null;
+ const moodleOwner=mode==='run'?await loadNormalMoodleReadOwner({directory,sha256:config.moodleReadOwnerSha256}):null;
+ const {createMoodleReadOptions,moodleFirst=false}=moodleOwner??{};
  const {loadManagedHackerRankTrust}=await import('../../src/hackerrank-evidence/worker-trust.mjs');
  const loadTrust=async()=>{if(config.attestorMode!=='SELF_ATTESTOR_TEST')return loadManagedHackerRankTrust({audience:config.audience,privacyKeyId:config.privacyKeyId,signal});
   selfAttestor=await (await import('../local-attestor-review/host.mjs')).startSelfAttestorTest({signal});
@@ -62,11 +63,11 @@ try{
   try{
    await clearAbandoned(root,stopRecordedBrowser);signal.throwIfAborted();session=await createSession(root,Date.now(),process.pid);key=randomBytes(32);
    complete=await withManagedHackerRankSource(session,{selfAttestor,trustConfig:trust,commitmentKey:key,selectedCertificateId:config.selectedCertificateId,signal,diagnostics,
-    deferReadyUntilCollection:!!createMoodleReadOptions,
+    deferReadyUntilCollection:moodleFirst,
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
      open:async opts=>{
-      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics,moodleFirst:!!createMoodleReadOptions});
+      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics,moodleFirst});
       if(!createMoodleReadOptions)return context;
       try{const options=await createMoodleReadOptions({directory,report:context.report,signal});
        fail(options&&typeof options==='object','COURSE_READ_OWNER_PORT');
