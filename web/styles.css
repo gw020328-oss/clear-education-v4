@@ -2745,3 +2745,14 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
 .fp-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent, #1d4ed8); }
 .fp-check:has(input:checked) { border-color: var(--accent, #1d4ed8); background: color-mix(in srgb, var(--accent, #1d4ed8) 8%, transparent); }
 .fp-flow { margin: 18px 0 6px; color: var(--muted); font-size: 0.92rem; }
+
+/* ── 도구별 실행 상태 (③ 과 ④ 사이) ─────────────────────────────── */
+.fp-runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fp-run { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; }
+.fp-run-tool { font-weight: 600; }
+.fp-run-state { font-size: 0.82rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: #f1f5f9; color: #475569; white-space: nowrap; }
+.fp-run[data-run="done"] .fp-run-state { background: #dcfce7; color: #166534; }
+.fp-run[data-run="running"] .fp-run-state { background: #fef3c7; color: #92400e; }
+.fp-run[data-run="failed"] .fp-run-state, .fp-run[data-run="expired"] .fp-run-state { background: #fee2e2; color: #991b1b; }
+.fp-run[data-run="stale"] .fp-run-state, .fp-run[data-run="blocked"] .fp-run-state { background: #e2e8f0; color: #334155; }
+.fp-run-note { grid-column: 1 / -1; font-size: 0.84rem; color: var(--muted); }

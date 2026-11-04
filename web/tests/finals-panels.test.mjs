@@ -527,3 +527,47 @@ test('화면은 찾은 조건만 펴고 나머지는 접는다', () => {
     assert.ok(!foundList.textContent.includes('만족도'), '찾은 목록에 못 읽은 문장이 섞였다');
   } finally { restore(); }
 });
+
+// ── ③ 도구 선택 근거와 도구별 실행 상태 ──────────────────────────────────
+
+import { runStateOf } from '../src/bootcamp/finals-panels/ai-compare.js';
+
+test('③ 도구 카드마다 읽는 조건과 "모델이 고른 것이 아니다" 가 적힌다', async () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+    const panel = aiComparePanel({ adapter: a, source: PRESETS[2].source });
+    await a.request(PRESETS[2].source);
+    const text = panel.node.textContent;
+    const n = (text.match(/모델이 고른 것이 아닙니다/g) ?? []).length;
+    assert.equal(n, 4, '도구 넷마다 선택 근거가 있어야 한다: ' + n);
+    assert.ok(text.includes('HackerRank 인증서 검사') && text.includes('읽는 조건'));
+  } finally { restore(); }
+});
+
+test('③ 과 ④ 사이에 도구별 실행 상태가 있고, 합성 결과가 오면 전부 완료다', async () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+    const panel = aiComparePanel({ adapter: a, source: PRESETS[1].source });
+    await a.request(PRESETS[1].source);
+    const titles = [...walk(panel.node)].filter((n) => n.className === 'fp-sec-title').map((n) => n.textContent);
+    const i3 = titles.findIndex((t) => t.startsWith('③'));
+    const iRun = titles.indexOf('도구별 실행 상태');
+    const i4 = titles.findIndex((t) => t.startsWith('④'));
+    assert.ok(i3 >= 0 && iRun > i3 && i4 > iRun, '순서가 ③ → 실행 상태 → ④ 여야 한다: ' + titles.join(' | '));
+    const runs = [...walk(panel.node)].filter((n) => n.className === 'fp-run');
+    assert.equal(runs.length, 3, '② 예문은 도구 셋');
+    for (const r of runs) assert.equal(r.attributes['data-run'], 'done');
+    assert.ok(panel.node.textContent.includes('도구 선택(③)과 실행은 다른 단계입니다'));
+  } finally { restore(); }
+});
+
+test('실행 상태는 관측이 없을 때 이유를 가른다 — 계획 보류는 실패가 아니다', () => {
+  assert.equal(runStateOf({ state: STATE.SUCCESS, check: { ok: true }, obs: { state: 'MET_IN_PUBLIC_FIXTURE' }, stale: false }).key, 'done');
+  assert.equal(runStateOf({ state: STATE.STALE, check: { ok: true }, obs: {}, stale: true }).key, 'stale');
+  assert.equal(runStateOf({ state: STATE.SUCCESS, check: { ok: false, errors: ['x'] }, obs: null, stale: false }).key, 'blocked');
+  assert.equal(runStateOf({ state: STATE.LOADING, check: null, obs: null, stale: false }).key, 'running');
+  assert.equal(runStateOf({ state: STATE.ERROR, check: null, obs: null, stale: false }).key, 'failed');
+  assert.equal(runStateOf({ state: STATE.IDLE, check: null, obs: null, stale: false }).key, 'pending');
+});

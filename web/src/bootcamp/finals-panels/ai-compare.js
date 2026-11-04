@@ -416,14 +416,21 @@ export function aiComparePanel({
 
       // ── ③ 계획 ────────────────────────────────────────────────────
       ...(plan ? section('③ 선택한 도구와 계획 검사', [
-        el('ul.fp-list', {}, (plan.steps ?? []).map((st) => el('li.fp-row', {}, [
-          el('p.fp-row-title', { text: TOOL_LABEL[st.tool] ?? st.tool }),
-          el('dl.fp-pairs', {}, [
-            pair('도구 식별자', `${st.tool} · v${st.version}`),
-            pair('선행 단계', (st.dependsOn ?? []).length ? st.dependsOn.join(', ') : '없음'),
-            pair('실패 시', st.onFailure === 'STOP' ? '중단' : String(st.onFailure)),
-          ]),
-        ]))),
+        el('ul.fp-list', {}, (plan.steps ?? []).map((st) => {
+          const cond = (draft?.conditions ?? []).find((c) => c.id === st.conditionId) ?? null;
+          return el('li.fp-row', {}, [
+            el('p.fp-row-title', { text: TOOL_LABEL[st.tool] ?? st.tool }),
+            el('dl.fp-pairs', {}, [
+              pair('읽는 조건', CAPABILITY_LABEL[cond?.capability] ?? cond?.capability ?? '—'),
+              // **왜 이 도구인가.** 조건 종류마다 도구가 하나로 정해져 있다.
+              // 모델이 고른 것이 아니다 — 오규원: "AI 의 도구 선택과 실제 도구 실행을 구분"
+              pair('선택 근거', '조건 종류에 대응하는 읽기 전용 도구입니다. 모델이 고른 것이 아닙니다.'),
+              pair('도구 식별자', `${st.tool} · v${st.version}`),
+              pair('선행 단계', (st.dependsOn ?? []).length ? st.dependsOn.join(', ') : '없음'),
+              pair('실패 시', st.onFailure === 'STOP' ? '중단' : String(st.onFailure)),
+            ]),
+          ]);
+        })),
         check
           ? el('p', {
             class: check.ok ? 'fp-note fp-note--ok' : 'fp-note fp-note--warn',
@@ -432,6 +439,27 @@ export function aiComparePanel({
               : `계획 검사에서 보류했습니다 — ${(check.errors ?? []).join(', ')}`,
           })
           : null,
+      ]) : []),
+
+      // ── ③½ 도구별 실행 상태 ───────────────────────────────────────
+      //
+      // 선택(③)과 실행(④)은 다른 단계다. 그 사이에 "지금 어느 도구가 어디까지
+      // 갔나" 를 둔다. 합성 모드는 한 번에 끝나 전부 '완료' 로 보이지만, 실제
+      // 경로가 붙으면 도구마다 실행 중·실패가 따로 보여야 한다.
+      ...(plan ? section('도구별 실행 상태', [
+        el('ul.fp-runs', {}, (plan.steps ?? []).map((st) => {
+          const obs = (result?.observations ?? []).find((o) => o.stepId === st.id) ?? null;
+          const run = runStateOf({ state: s.state, check, obs, stale });
+          return el('li.fp-run', { 'data-run': run.key }, [
+            el('span.fp-run-tool', { text: TOOL_LABEL[st.tool] ?? st.tool }),
+            el('span.fp-run-state', { text: run.label }),
+            obs ? el('span.fp-run-note', { text: OBSERVATION_LABEL[obs.state] ?? obs.state }) : null,
+          ].filter(Boolean));
+        })),
+        el('p.fp-note', {
+          text: '도구 선택(③)과 실행은 다른 단계입니다. 실행은 공개 합성자료를 로컬에서 읽은 것이며, '
+            + '실제 Moodle·Reclaim 조회가 아닙니다.',
+        }),
       ]) : []),
 
       // ── ④ 근거 대조 ──────────────────────────────────────────────
@@ -463,6 +491,19 @@ export function aiComparePanel({
   adapter.subscribe?.(render);
   render();
   return { node: box, render };
+}
+
+/**
+ * 도구 하나의 실행 상태. 관측 결과가 있으면 완료, 없으면 왜 없는지로 나눈다.
+ * 계획 검사에서 막혔으면 실행 자체를 안 한 것이다 — '실패' 가 아니라 '실행 안 함'.
+ */
+export function runStateOf({ state, check, obs, stale }) {
+  if (obs) return stale ? { key: 'stale', label: '완료 · 이전 입력' } : { key: 'done', label: '완료' };
+  if (check && check.ok === false) return { key: 'blocked', label: '실행 안 함 · 계획 보류' };
+  if (state === STATE.LOADING) return { key: 'running', label: '실행 중' };
+  if (state === STATE.ERROR) return { key: 'failed', label: '실패' };
+  if (state === STATE.EXPIRED) return { key: 'expired', label: '만료' };
+  return { key: 'pending', label: '실행 전' };
 }
 
 /** 모드 칩. 합성이면 **눈에 띄게** */
