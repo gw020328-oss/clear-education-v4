@@ -277,4 +277,4 @@ for(const [p,d]of Object.entries(registrationPins.changes)){
 }
 
 assert.equal(v37Digest('.github/workflows/hackathon-e5b.yml'),'8fd33d8d817b9c0eee44af9c70f626f68a8b187e96f5710ec6bc07e9de81ecc1','preserved S5 host/test CI path filters before v38 budget');
-assert.equal(actualDigest('.github/workflows/hackathon-e5b.yml'),'95ac2a1182881421161dc5b8227146fd3a3a824d7e89269a3fc98ff3c7794386','exact PR-only CI; budget/jobs retained');
+assert.equal(actualDigest('.github/workflows/hackathon-e5b.yml'),'a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef','exact PR-only CI; two isolated file processes, full tests and 30-minute budget retained');

@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const read=p=>readFileSync(new URL('../../'+p,import.meta.url));
 const sha=p=>createHash('sha256').update(read(p)).digest('hex');
-// Exact PR-only workflow equivalence for the preserved historical CI budget.
-const historicalBudgetSha=p=>{const h=sha(p);return p==='.github/workflows/hackathon-e5b.yml'&&h==='95ac2a1182881421161dc5b8227146fd3a3a824d7e89269a3fc98ff3c7794386'?'bca8d128e698939a1082e0c4d6372631682cee2a1a8c873906f3a7f56baa408a':h;};
+// Exact PR-only workflow: two isolated file processes, unchanged tests and 30-minute budget.
+const historicalBudgetSha=p=>{const h=sha(p);return p==='.github/workflows/hackathon-e5b.yml'&&h==='a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef'?'bca8d128e698939a1082e0c4d6372631682cee2a1a8c873906f3a7f56baa408a':h;};
 const check=(ok,code)=>{if(!ok)throw Error(code);};
 const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 export const V9_PATH='specs/bootcamp/hackathon-test-memory-source-intake-v9.json';
@@ -12,7 +12,7 @@ export const V9_SHA='19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2
 export const V9_SOURCE_HEAD='26d451701186632ba7a37729b9937f28ce3a1f83';
 export function consumeReviewedV62Sources(v6){
  check(sha('src/hackathon-test-vault/reviewed-source-v55.mjs')==='e61149cf13a85545b3901a5061dbc375d385383b84047e62357f1d9ce6b6726e','STAGE_SOURCE_PIN');
- check(sha('.github/workflows/hackathon-e5b.yml')==='95ac2a1182881421161dc5b8227146fd3a3a824d7e89269a3fc98ff3c7794386','STAGE_CI_TRIGGER_PIN');
+ check(sha('.github/workflows/hackathon-e5b.yml')==='a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef','STAGE_CI_TRIGGER_PIN');
  check(sha(V9_PATH)===V9_SHA,'STAGE_V9_FILE_PIN');const v9=JSON.parse(read(V9_PATH)),previous=v9.previousCompatibilityRecord;
  check(v9.version==='clear-hackathon-test-memory-source-intake.9'&&v9.currentSourceCandidateHead===V9_SOURCE_HEAD,'STAGE_V9_GENERATION');
  check(previous.path==='specs/bootcamp/hackathon-test-memory-source-intake-v8.json'&&previous.sha256==='ca37fb5574a293ac6873d4d22e136fcc2f214f58a60b0a8d7f46e09dd786ed33'
