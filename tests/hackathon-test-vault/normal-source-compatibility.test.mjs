@@ -5,7 +5,8 @@ import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {normalE2Hash,NORMAL_E2_PATH,NORMAL_SOURCE_INTAKE,NORMAL_SOURCE_INTAKE_SHA} from '../../src/hackathon-test-vault/normal-source-compatibility.mjs';
 const root=new URL('../../',import.meta.url),actualRead=p=>readFileSync(new URL(p,root));
-const v62PriorRead=p=>['src/application/service.mjs','src/application/store.mjs'].includes(p)?execFileSync('git',['show','54ca048b77dc605b3e2d2adaae0b8f83b8fe3049:'+p],{cwd:root}):actualRead(p);
+const v64PriorRead=p=>['src/application/http.mjs','src/agent-preview/moodle-binding/coordinator.mjs'].includes(p)?execFileSync('git',['show','58953582eb1a625093486e61e207ba5944a8b32e:'+p],{cwd:root}):actualRead(p);
+const v62PriorRead=p=>['src/application/service.mjs','src/application/store.mjs'].includes(p)?execFileSync('git',['show','54ca048b77dc605b3e2d2adaae0b8f83b8fe3049:'+p],{cwd:root}):v64PriorRead(p);
 const v59Read=p=>["src/bootcamp/execution-operations.mjs", "tools/embedded-wallet/build-product.mjs", "web/src/bootcamp/team-entry.js", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','8e5a48fe35ce76eec9966cb73c81a950f62cc868:'+p],{cwd:root}):v62PriorRead(p);
 const v58Read=p=>["src/bootcamp/http.mjs", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','98a204f8082eb54cea5b7ae97b8c517becc8449b:'+p],{cwd:root}):v59Read(p);
 const v57Read=p=>["tools/bootcamp/normal-chain.mjs","tools/bootcamp/normal-review-window.mjs","web/src/bootcamp/operator-view.js", "web/src/bootcamp/team-entry.js", "web/src/bootcamp/team-render.js", "web/src/bootcamp/team-application.js", "web/src/bootcamp/student-view.js", "web/src/bootcamp/criteria.js", "web/src/bootcamp/live-dashboard.js", "web/src/bootcamp/live-evidence.js", "src/hackathon-test-vault/memory-stage-harness.mjs", "tests/hackathon-test-vault/e5/preservation.mjs", "tests/hackathon-test-vault/e5b/source-pins.mjs"].includes(p)?execFileSync('git',['show','e7f77ed2105234ca9be6f2a0027474195c342c1b:'+p],{cwd:root}):v58Read(p);
@@ -744,7 +745,7 @@ test('v58 pins existing role designs and preserves v57',async()=>{
  const d=JSON.parse(actualRead('specs/bootcamp/hackathon-test-existing-design-source-delta-v1.json'));
  for(const [p,v]of Object.entries(d.changes)){assert.equal(sha(v57Read(p)),v.before);assert.equal(sha(v59Read(p)),v.after);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),v.after);}
  for(const [p,v]of Object.entries(d.sourceAdditions))assert.equal(sha(v59Read(p)),v);
- const {consumeReviewedV64Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v64.mjs');const c=consumeReviewedV64Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));assert.equal(Object.keys(c.sources).length,224);
+ const {consumeReviewedV65Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v65.mjs');const c=consumeReviewedV65Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));assert.equal(Object.keys(c.sources).length,229);
 });
 
 test('v59 pins the authorized ledger HTTP delta and adapter while preserving v58',async()=>{
@@ -767,10 +768,10 @@ test('v62 integrates both reviewed parents with exact guards and source deltas',
   'src/hackathon-test-vault/reviewed-source-v61.mjs',
  ]);
  for(const [path,expected]of Object.entries(record.preservedGuards))assert.equal(sha(actualRead(path)),expected);
- const {consumeReviewedV64Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v64.mjs');
- const current=consumeReviewedV64Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
+ const {consumeReviewedV65Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v65.mjs');
+ const current=consumeReviewedV65Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
  for(const path of ['src/bootcamp/execution-operations.mjs','web/src/bootcamp/team-entry.js'])assert.equal(current.sources[path],sha(actualRead(path)));
  const preview=JSON.parse(actualRead('specs/bootcamp/hackathon-test-operator-condition-preview-source-delta-v1.json'));
  assert.equal(preview.changes['tools/embedded-wallet/build-product.mjs'].after,sha(actualRead('tools/embedded-wallet/build-product.mjs')));
- assert.equal(Object.keys(current.sources).length,224);
+ assert.equal(Object.keys(current.sources).length,229);
 });
