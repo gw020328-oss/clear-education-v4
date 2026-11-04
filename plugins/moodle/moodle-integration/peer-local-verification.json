@@ -47,7 +47,27 @@
     "C_signed_HTTP": "PASS",
     "C_browser_manual_completion": "PASS",
     "B_actual_coordinator_integration": "PENDING_B_OWNER",
-    "institution_or_live_activation": "DISABLED"
+    "institution_or_live_activation": "DISABLED",
+    "C_nonminting_confirmation_lookup": "PASS"
   },
-  "broader_HTTP_suite": "not completed; deferred until B single integration releases shared fixture"
+  "broader_HTTP_suite": "not completed; deferred until B single integration releases shared fixture",
+  "lookup_checks": {
+    "checks": 3,
+    "same_attempt_two_fresh_requestRefs": true,
+    "persistent_sessions_and_confirmation_count_unchanged": true,
+    "fresh_native_times": [
+      {
+        "requestRef": "5e04c8d7c9cc42415faad2216e8864ee61d6ff9e90687150b89b09ad2f94da84",
+        "observedAt": 1793775488,
+        "checkedAt": 1793775491,
+        "expiresAtExclusive": 1793775602
+      },
+      {
+        "requestRef": "82891cbf96050aee3d09f1d5c8e3e1e65b94c644ac9a2d1667ef2aa7cd39d250",
+        "observedAt": 1793775491,
+        "checkedAt": 1793775493,
+        "expiresAtExclusive": 1793775602
+      }
+    ]
+  }
 }

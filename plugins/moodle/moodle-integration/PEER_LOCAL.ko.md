@@ -31,6 +31,16 @@ docker exec -i -u www-data clear-c-peer-web \
   php /probe/moodle-integration/peer_fixture.php --stdin < exact-b-confirmation-request.json
 ```
 
+같은 attempt/scope의 후속 조회는 **기존 내부 `/lookup` HTTP**를 사용한다. 새로운 register/login을 실행하지 않는다. 각 B 요청의 새 requestRef를 포함한 원문을 `{"request": <exact B confirmation request>}`로 감싸 아래 stdin에 보낸다. 응답 `{"ok":true,"result":<full .3>}`의 result를 사용한다. 캐시하거나 requestRef/시각을 클라이언트에서 고치지 않는다. 이 서버는 컨테이너 loopback 전용이므로 호스트의 `http://127.0.0.1:18767/lookup`은 같은 endpoint가 아니다(Apache에는 노출하지 않음).
+
+```sh
+docker exec -i -u www-data clear-c-peer-web curl -fsS \
+  -H 'Content-Type: application/json' --data-binary @- \
+  http://127.0.0.1:18767/lookup < wrapped-b-confirmation-request.json
+```
+
+`peer_lookup_test.py`로 첫 발급 후 같은 attempt의 서로 다른 requestRef 두 번을 실제 HTTP로 조회했다. 새 requestRef·observedAt·checkedAt가 실제 reader에서 반환되고 confirmedAt/ref/expiry/세대/revision은 유지됐다. 전후 DB 확인서 수와 native session 영속 bytes의 집계 digest도 같았다. 기존 NO_MOODLE_COOKIES + confirmation read-only 경로 그대로이며 새 endpoint 수정은 없다.
+
 `--stdin` 없는 호출은 C 자체 반례용이며 random attempt 및 b×64 scope를 만든다. B 통합에 사용하지 않는다. 입력당 새 attempt만 허용하고 기존 attempt는 덮어쓰지 않는다. 실제 기관 등록 API가 아니라 격리 owner fixture CLI다. 이 CLI 실행은 authority를 갱신해 이전 확인서를 무효화하므로 B/C 작업을 직렬로 수행한다.
 
 | 항목 | 고정 합성 값 |
