@@ -125,3 +125,12 @@ $string['nativewalletauthenticated'] = '지갑 로그인을 확인했습니다.'
 $string['nativefinishconnection'] = 'CLEAR 연결 완료';
 $string['nativeconnectionpending'] = 'CLEAR 로그인에 성공했습니다. 이 Moodle 탭에서 연결 완료를 확인하세요.';
 $string['nativeconnectioncompleted'] = '이 Moodle 탭에서 CLEAR 연결을 완료했습니다.';
+
+$string['nativeworkflowcreate'] = '환급 신청 만들기';
+$string['nativeworkflowapplicationpending'] = '현재 신청을 확인할 수 있게 되면 신청을 만들 수 있습니다.';
+$string['nativeworkflowregistration'] = '수령인 등록 승인';
+$string['nativeworkflowregistrationpending'] = '승인하려면 현재 수령인 등록 내용을 확인해야 합니다.';
+$string['nativeworkflowreflection'] = '회고 검토 비용 승인';
+$string['nativeworkflowreflectionpending'] = '승인하려면 현재 회고 입력, 모델 및 비용 정보를 확인해야 합니다.';
+$string['nativeworkflowagree'] = '현재 결정에 동의';
+$string['nativeworkflowwithdraw'] = '현재 결정에 대한 동의 철회';

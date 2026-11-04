@@ -22,7 +22,16 @@
         <h2 id="clearbridge-application-heading">{{#str}} nativeapplicationheading, local_clearbridge {{/str}}</h2>
         {{#student}}
         <p>{{#str}} moodleenrolled, local_clearbridge {{/str}}</p>
-        <p class="mb-0">{{#str}} clearregistrationunavailable, local_clearbridge {{/str}}</p>
+        <p id="clearbridge-application-status" role="status">{{#str}} nativeworkflowapplicationpending, local_clearbridge {{/str}}</p>
+        <button type="button" class="btn btn-primary" data-workflow-action="create-application"
+                aria-describedby="clearbridge-application-status" disabled>
+            {{#str}} nativeworkflowcreate, local_clearbridge {{/str}}
+        </button>
+        <p id="clearbridge-registration-status" class="mt-3" role="status">{{#str}} nativeworkflowregistrationpending, local_clearbridge {{/str}}</p>
+        <button type="button" class="btn btn-secondary" data-workflow-action="approve-registration"
+                aria-describedby="clearbridge-registration-status" disabled>
+            {{#str}} nativeworkflowregistration, local_clearbridge {{/str}}
+        </button>
         {{/student}}
         {{^student}}
         <p class="mb-0">{{#str}} nativeoperatorapplicationunavailable, local_clearbridge {{/str}}</p>
@@ -38,6 +47,13 @@
         <p class="alert alert-info">{{#str}} fixedscopesupport, local_clearbridge {{/str}}</p>
         {{^hasrecords}}<p class="alert alert-warning">{{#str}} fixedscopereconnect, local_clearbridge {{/str}}</p>{{/hasrecords}}
         {{/fixedscope}}
+        {{#showconnection}}
+        <p id="clearbridge-reflection-status" role="status">{{#str}} nativeworkflowreflectionpending, local_clearbridge {{/str}}</p>
+        <button type="button" class="btn btn-secondary mb-3" data-workflow-action="approve-reflection"
+                aria-describedby="clearbridge-reflection-status" disabled>
+            {{#str}} nativeworkflowreflection, local_clearbridge {{/str}}
+        </button>
+        {{/showconnection}}
         {{#synthetic}}
         <p class="alert alert-info">{{#str}} syntheticprojection, local_clearbridge {{/str}}</p>
         {{/synthetic}}
@@ -87,10 +103,18 @@
             <dd class="col-sm-7">{{#payment}}{{operator}}{{/payment}}{{^payment}}{{#str}} nativeconsentunknown, local_clearbridge {{/str}}{{/payment}}</dd>
         </dl>
         {{#showconnection}}
-        <p class="mb-0">
+        <p id="clearbridge-consent-status" role="status">
             {{#student}}{{#str}} nativestudentconsentunavailable, local_clearbridge {{/str}}{{/student}}
             {{^student}}{{#str}} nativeteacherconsentunavailable, local_clearbridge {{/str}}{{/student}}
         </p>
+        <button type="button" class="btn btn-secondary" data-workflow-action="consent" data-workflow-choice="AGREE"
+                aria-describedby="clearbridge-consent-status" disabled>
+            {{#str}} nativeworkflowagree, local_clearbridge {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary" data-workflow-action="consent" data-workflow-choice="WITHDRAW"
+                aria-describedby="clearbridge-consent-status" disabled>
+            {{#str}} nativeworkflowwithdraw, local_clearbridge {{/str}}
+        </button>
         {{/showconnection}}
     </div>
 </section>

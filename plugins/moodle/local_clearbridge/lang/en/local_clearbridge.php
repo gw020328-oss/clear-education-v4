@@ -125,3 +125,12 @@ $string['nativewalletauthenticated'] = 'Wallet sign-in has been confirmed.';
 $string['nativefinishconnection'] = 'Finish connecting CLEAR';
 $string['nativeconnectionpending'] = 'CLEAR sign-in succeeded. Confirm the connection in this Moodle tab.';
 $string['nativeconnectioncompleted'] = 'The CLEAR connection was confirmed in this Moodle tab.';
+
+$string['nativeworkflowcreate'] = 'Create refund application';
+$string['nativeworkflowapplicationpending'] = 'Application creation is unavailable until the current application can be checked.';
+$string['nativeworkflowregistration'] = 'Approve recipient registration';
+$string['nativeworkflowregistrationpending'] = 'Review the current registration details before approving.';
+$string['nativeworkflowreflection'] = 'Approve reflection review cost';
+$string['nativeworkflowreflectionpending'] = 'Approval requires the current reflection input, model and cost details.';
+$string['nativeworkflowagree'] = 'Agree to the current decision';
+$string['nativeworkflowwithdraw'] = 'Withdraw consent to the current decision';
