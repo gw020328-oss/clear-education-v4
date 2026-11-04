@@ -10,6 +10,7 @@ define([], function() {
         const buttons = [...root.querySelectorAll('[data-workflow-action]')];
         const status = root.querySelector('[data-workflow-status]');
         const details = [...root.querySelectorAll('[data-workflow-details]')];
+        const applicationStatus = root.querySelector('#clearbridge-application-status');
         const acknowledgment = root.querySelector('[data-workflow-ack]');
         const messages = Object.fromEntries([...root.querySelectorAll('[data-workflow-message]')]
             .map(node => [node.dataset.workflowMessage, node.textContent]));
@@ -59,16 +60,90 @@ define([], function() {
                 default: return false;
             }
         };
+        const label = key => messages[key] ?? messages.unconfirmed;
+        const line = (key, value) => value == null ? '' : label(key) + ': ' + value;
+        const lines = (...items) => items.filter(Boolean).join('\n');
+        const amount = value => {
+            const atoms = value?.amountAtoms;
+            if (typeof atoms !== 'string' || !/^\d+$/.test(atoms) || value.symbol !== 'TEST' || value.decimals !== 6) {
+                return messages.unconfirmed;
+            }
+            const padded = atoms.padStart(7, '0');
+            const fraction = padded.slice(-6).replace(/0+$/, '');
+            return padded.slice(0, -6) + (fraction ? '.' + fraction : '') + ' TEST';
+        };
+        const criteria = (rows, availability = []) => (rows ?? []).map(row => {
+            const evidence = availability.find(item => item.criterionId === row.criterionId);
+            return lines(
+                label(row.criterionId) + ' — ' + label(row.state),
+                line('basis', label(evidence?.status ?? (row.current === true ? 'CURRENT' : 'UNKNOWN'))),
+                line('original', label(evidence?.original?.status ??
+                    (row.originalEvidence?.httpAvailable === true ? 'AVAILABLE' : 'UNAVAILABLE')))
+            );
+        }).join('\n\n');
+        const format = (key, value) => {
+            switch (key) {
+                case 'session':
+                    return label(value.sourceBound ? 'sourcebound' : 'sourcenotbound');
+                case 'operation':
+                    return label(value.current === false ? 'operationprevious' : 'operationsaved');
+                case 'application':
+                    return lines(line('decision', label(value.decision?.conditionsStatus)),
+                        line('basis', label(value.decision?.current === true ? 'CURRENT' : 'UNKNOWN')),
+                        line('decisiontarget', value.target.targetDecisionId),
+                        line('revision', value.target.targetDecisionRevision),
+                        line('fingerprint', value.target.targetDecisionHash),
+                        line('amount', amount(value.agreedPayment)),
+                        line('participantconsent', label(value.consent?.records?.some(row => row.actorRole === 'PARTICIPANT')
+                            ? 'AGREE' : 'UNKNOWN')),
+                        line('operatorconsent', label(value.consent?.records?.some(row => row.actorRole === 'COURSE_OPERATOR')
+                            ? 'AGREE' : 'UNKNOWN')),
+                        criteria(value.criteria));
+                case 'evidence':
+                    return lines(line('decision', label(value.manifest?.decision?.conditionsStatus)),
+                        criteria(value.manifest?.criteria, value.availability), label('evidencelimits'));
+                case 'registration':
+                    return lines(label(value.status), label('publicregistration'),
+                        line('decisiontarget', value.decisionId),
+                        line('registrationtarget', value.registrationTargetId),
+                        value.payload == null ? '' : label('registrationpayload') + '\n' + JSON.stringify(value.payload, null, 2));
+                case 'source':
+                    return value.message == null ? label(value.status) :
+                        lines(label('sourcereview'), line('expiry', new Date(value.expiresAt * 1000).toJSON() ?? value.expiresAt), value.message);
+                case 'reflection':
+                    if (value.version === 'clear-normal-ai-approval-receipt.1') {
+                        return label('airecorded');
+                    }
+                    return lines(label(value.permitted === true ? 'aieligible' : 'aiineligible'), label('aicostnotice'),
+                        line('input', value.sourceScope == null ? null : JSON.stringify(value.sourceScope)),
+                        line('fingerprint', value.bodySha256), line('model', value.model),
+                        line('estimatedcost', value.scenarioUsd == null ? null : value.scenarioUsd + ' USD'),
+                        line('costack', value.costAcknowledgment),
+                        line('reviewdetails', JSON.stringify(value, null, 2)));
+                case 'receipt':
+                    return lines(value.observation,
+                        label(value.state === 'INCLUDED' ? 'receiptincluded' :
+                            value.state === 'NOT_OBSERVED' ? 'receiptnotobserved' : 'receiptunavailable'),
+                        value.state === 'INCLUDED' && typeof value.finalized === 'boolean'
+                            ? label(value.finalized ? 'finalized' : 'notfinalized') : '');
+                default:
+                    return '';
+            }
+        };
         const render = () => {
             for (const button of buttons) {
                 button.disabled = !enabled(button.dataset.workflowAction);
             }
             acknowledgment.disabled = closed || !ready || walletBusy || !!pending || unknown || reflection?.permitted !== true;
+            if (applicationStatus) {
+                applicationStatus.textContent = label(unknown ? 'unknown' : applicationId ? 'applicationknown' :
+                    ready && session ? 'applicationreviewed' : 'applicationpending');
+            }
             for (const region of details) {
-                const visible = Object.fromEntries(region.dataset.workflowDetails.split(' ')
-                    .filter(key => Object.hasOwn(displayed, key)).map(key => [key, displayed[key]]));
-                region.hidden = Object.keys(visible).length === 0;
-                region.textContent = region.hidden ? '' : JSON.stringify(visible, null, 2);
+                const visible = region.dataset.workflowDetails.split(' ').filter(key => Object.hasOwn(displayed, key))
+                    .map(key => format(key, displayed[key])).filter(Boolean).join('\n\n');
+                region.hidden = !visible;
+                region.textContent = visible;
             }
         };
         const disconnect = () => {
@@ -116,7 +191,7 @@ define([], function() {
                     }
                     reflection = result.aiApproval?.version === 'clear-normal-exact-ai-approval-display.1'
                         && result.aiApproval.applicationId === applicationId ? result.aiApproval : null;
-                    displayed.session = {applicationId, phase: result.phase, sourceBound: result.applicationId !== null};
+                    displayed.session = {sourceBound};
                     if (reflection) {
                         displayed.reflection = reflection;
                     }
@@ -192,7 +267,7 @@ define([], function() {
                     exactApp(result);
                     require(result.version === 'clear-bootcamp-decision-evidence.1'
                         && result.role === (participant ? 'PARTICIPANT' : 'COURSE_OPERATOR'));
-                    displayed.evidence = {manifest: result.manifest, manifestHash: result.manifestHash, limitations: result.limitations};
+                    displayed.evidence = {manifest: result.manifest, availability: result.availability};
                     break;
                 case 'read-operation':
                     require(result?.record?.applicationId === operation?.applicationId

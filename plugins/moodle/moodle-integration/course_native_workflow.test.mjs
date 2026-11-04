@@ -28,16 +28,20 @@ const fixture = (reply, {role = 'participant', port = true} = {}) => {
         {dataset: {workflowAction, workflowChoice: 'AGREE'}}]));
     const listeners = {};
     const status = {};
+    const applicationStatus = {};
     const ack = {addEventListener() {}, removeEventListener() {}};
     const details = {dataset: {workflowDetails: 'session operation registration application source reflection evidence receipt'}};
-    const messages = ['unavailable', 'ready', 'busy', 'success', 'failure', 'unknown', 'received', 'unconfirmed']
-        .map(workflowMessage => ({dataset: {workflowMessage}, textContent: workflowMessage}));
+    const template = readFileSync(new URL('../local_clearbridge/templates/course_refund.mustache', import.meta.url), 'utf8');
+    const messages = [...template.matchAll(/data-workflow-message="([^"]+)"/g)]
+        .map(([, workflowMessage]) => ({dataset: {workflowMessage}, textContent: workflowMessage}));
     const root = {
         querySelectorAll: selector => ({
             '[data-workflow-action]': Object.values(buttons), '[data-workflow-message]': messages,
             '[data-workflow-details]': [details],
         })[selector],
-        querySelector: selector => selector === '[data-workflow-status]' ? status : ack,
+        querySelector: selector => ({
+            '[data-workflow-status]': status, '#clearbridge-application-status': applicationStatus, '[data-workflow-ack]': ack,
+        })[selector],
         addEventListener: (event, fn) => { listeners[event] = fn; },
         removeEventListener: event => { delete listeners[event]; },
     };
@@ -65,22 +69,26 @@ const fixture = (reply, {role = 'participant', port = true} = {}) => {
             };
         },
     });
-    return {mounted, sent, validated, state, buttons, status, details, ack, walletDispatch,
+    return {mounted, sent, validated, state, buttons, status, applicationStatus, details, ack, walletDispatch,
         click: action => listeners.click?.({target: {closest: () => buttons[action]}})};
 };
 
 test('explicit workflow follows returned application ID, preserves reviewed objects and verifies canonical receipt', async () => {
     const view = {version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: 'app-one', role: 'PARTICIPANT',
-        target: {targetDecisionId: 'decision-one'}, agreedPayment: {amountAtoms: '100000000'}, criteria: []};
+        target: {targetDecisionId: 'decision-one'}, agreedPayment: {amountAtoms: '100000000', decimals: 6, symbol: 'TEST'},
+        criteria: [{criterionId: 'activity-complete', state: 'MET', current: true}]};
     const packet = {version: 'clear-bootcamp-recipient-registration.1', applicationId: 'app-one', role: 'PARTICIPANT',
-        purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status: 'AWAITING_SIGNATURE', payload: {}};
+        purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status: 'AWAITING_SIGNATURE',
+        registrationTargetId: 'register-one', payload: {message: {recipient: '<test-recipient>'}}};
     const evidence = {applicationId: 'app-one', version: 'clear-bootcamp-decision-evidence.1', role: 'PARTICIPANT',
-        manifest: {label: '<img src=x onerror=alert(1)>'}};
+        manifest: {criteria: [{criterionId: 'assignment-submitted', state: 'MISSING'}]},
+        availability: [{criterionId: 'assignment-submitted', status: 'EXPIRED'}]};
     const sign = {applicationId: 'app-one', approvalId: 'approval-one', requestHash: '0x' + 'a'.repeat(64),
-        expiresAt: Math.floor(Date.now() / 1000) + 60, message: 'Evidence only',
+        expiresAt: Math.floor(Date.now() / 1000) + 60, message: 'Evidence only\n<img src=x onerror=alert(1)>',
         purpose: 'HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION'};
     const procedure = {...receipt, version: 'clear-bootcamp-procedure-operation.1', usableForPayment: false};
     let canonical = false;
+    let claimState = 'NOT_OBSERVED';
     const ui = fixture(({action}) => ({
         'read-session': session(), 'create-application': receipt, 'read-application': view,
         'bind-source-session': {applicationId: 'app-one', status: 'AUTHENTICATED_SOURCE_SESSION_BOUND', paymentAuthorization: false},
@@ -89,35 +97,47 @@ test('explicit workflow follows returned application ID, preserves reviewed obje
         'read-registration': packet, 'approve-registration': procedure, consent: procedure,
         'decision-evidence': evidence, 'read-operation': receipt,
         'payment-receipt': {applicationId: 'app-one', version: 'clear-bootcamp-normal-payment-receipt.1', role: 'PARTICIPANT',
-            claim: {state: 'INCLUDED', canonical, transferAmountAtoms: '100000000', finalized: false},
+            claim: {state: claimState, canonical, transferAmountAtoms: '100000000', finalized: false},
             balance: {receivedAtoms: '100000000', exactExpectedAmountVerified: true}},
     })[action]);
     assert.deepEqual(ui.sent, []);
     await ui.click('create-application');
     await ui.click('read-session');
+    assert.equal(ui.applicationStatus.textContent, 'applicationreviewed');
     await ui.click('create-application');
+    assert.equal(ui.applicationStatus.textContent, 'applicationknown');
+    assert.doesNotMatch(ui.details.textContent, /app-one|op-one/);
     assert.match(ui.sent.at(-1).idempotencyKey, /^moodle-[a-f0-9-]+$/);
     await ui.click('read-operation');
     assert.deepEqual(ui.sent.at(-1), {action: 'read-operation', applicationId: 'app-one', operationId: 'op-one', kind: 'application'});
     await ui.click('bind-source-session');
     await ui.click('read-source-signature');
+    assert.ok(ui.details.textContent.endsWith(sign.message));
     await ui.click('approve-source-signature');
     assert.equal(ui.sent.at(-1).reviewed, sign);
     await ui.click('read-registration');
+    assert.match(ui.details.textContent, /register-one.*<test-recipient>/s);
     await ui.click('approve-registration');
     assert.equal(ui.sent.at(-1).reviewed, packet);
     await ui.click('read-application');
+    assert.match(ui.details.textContent, /decision-one.*100 TEST.*activity-complete/s);
     await ui.click('consent');
     assert.equal(ui.sent.at(-1).reviewed, view);
     assert.equal(ui.sent.at(-1).value, 'AGREE');
     await ui.click('decision-evidence');
-    assert.match(ui.details.textContent, /<img/);
+    assert.match(ui.details.textContent, /assignment-submitted.*EXPIRED/s);
     await ui.click('payment-receipt');
-    assert.match(ui.details.textContent, /unconfirmed/);
+    assert.match(ui.details.textContent, /unconfirmed.*receiptnotobserved/s);
+    claimState = 'READBACK_UNAVAILABLE';
+    await ui.click('payment-receipt');
+    assert.match(ui.details.textContent, /unconfirmed.*receiptunavailable/s);
+    claimState = 'INCLUDED';
+    await ui.click('payment-receipt');
+    assert.match(ui.details.textContent, /unconfirmed.*receiptincluded/s);
     canonical = true;
     await ui.click('payment-receipt');
-    assert.match(ui.details.textContent, /"observation": "received"/);
-    assert.match(ui.details.textContent, /"finalized": false/);
+    assert.match(ui.details.textContent, /^received/m);
+    assert.match(ui.details.textContent, /notfinalized/);
     assert.deepEqual(ui.validated, ui.sent);
 });
 
@@ -137,6 +157,7 @@ test('cancelled pending write drops late success, clears review and locks recrea
     await ui.click('create-application');
     await ui.click('read-operation');
     assert.equal(ui.status.textContent, 'unknown');
+    assert.equal(ui.applicationStatus.textContent, 'unknown');
     assert.equal(ui.buttons['create-application'].disabled, true);
     assert.equal(ui.buttons['read-operation'].disabled, true);
     assert.equal(ui.sent.filter(x => x.action === 'create-application').length, 1);
@@ -154,6 +175,7 @@ test('rejected write stays UNKNOWN, disconnected reads are discarded, and absent
     await ui.click('create-application');
     await ui.click('read-session');
     assert.equal(ui.status.textContent, 'unknown');
+    assert.equal(ui.applicationStatus.textContent, 'unknown');
     assert.equal(ui.buttons['create-application'].disabled, true);
 
     let resolve;
@@ -193,5 +215,5 @@ test('reflection approval requires returned authority and explicit acknowledgmen
     assert.equal(ui.sent.at(-1).reviewed, approval);
     assert.equal(ui.ack.checked, false);
     assert.equal(ui.buttons['approve-reflection'].disabled, true);
-    assert.match(ui.details.textContent, /RECORDED/);
+    assert.match(ui.details.textContent, /airecorded/);
 });
