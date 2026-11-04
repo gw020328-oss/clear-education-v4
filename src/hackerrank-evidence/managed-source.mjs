@@ -10,13 +10,27 @@ import {browserCookieReader} from './browser-source.mjs';
 import {ACCOUNT_URL} from './recipes.mjs';
 import {check,freeze,isSourceId,EvidenceError} from './values.mjs';
 
+async function whileActive(signal,run){
+ if(!signal)return run();
+ check(!signal.aborted,'COLLECTOR_CANCELLED');
+ let abort;
+ try{
+  return await Promise.race([Promise.resolve().then(()=>{
+   check(!signal.aborted,'COLLECTOR_CANCELLED');return run();
+  }),new Promise((_,reject)=>{
+   abort=()=>reject(new EvidenceError('COLLECTOR_CANCELLED'));
+   signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort();
+  })]);
+ }finally{signal.removeEventListener('abort',abort);}
+}
+
 // Trusted managed-worker port, not an HTTP/CLI input. The callback builds the
 // immutable mapping from source.pins(), then uses that same source in the live
 // context. It must finish consuming the lease before returning. The outer
 // worker still owns stopRecordedBrowser + removeSession after this settles.
 export async function withManagedHackerRankSource(session,{
  trustConfig,commitmentKey,selectedCertificateId=null,waitForReady,useSource,signal,diagnostics,
- selfAttestor=null,openClient=openOfficialClient,openRoute=createRoute,launchBrowser=startChrome,
+ selfAttestor=null,openClient=openOfficialClient,openRoute=createRoute,launchBrowser=startChrome,deferReadyUntilCollection=false,
 }={}){
  if(trustConfig?.status!=='REVIEWED')return freeze({status:'BLOCKED',code:'TRUST_NOT_CONFIGURED',proofVerified:false,paymentAllowed:false});
  let config,key,connection,route,browser,source,live,onAbort;
@@ -29,6 +43,7 @@ export async function withManagedHackerRankSource(session,{
   check(process.env.CLEAR_LOCKED==='1','LOCKED_LAUNCHER_REQUIRED');
   check(session&&typeof session.path==='string'&&Number.isSafeInteger(session.expiresAt)&&session.expiresAt>Date.now(),'COLLECTOR_SESSION');
   check(typeof waitForReady==='function'&&typeof useSource==='function','COLLECTOR_HOST_PORTS');
+  check(typeof deferReadyUntilCollection==='boolean','COLLECTOR_HOST_PORTS');
   check(selectedCertificateId===null||isSourceId(selectedCertificateId),'REQUEST_SELECTION');
   // Reject invalid/pending/synthetic profiles before any network or browser.
   createHackerRankVerifier({trustConfig:config,commitmentKey});
@@ -49,10 +64,30 @@ export async function withManagedHackerRankSource(session,{
    client:connection.client,routeClient:route.client,readCookies:browserCookieReader(browser,sessionId)});
   onAbort=()=>source.close();live.addEventListener('abort',onAbort,{once:true});live.throwIfAborted();
   const navigation=await browser.send('Page.navigate',{url:ACCOUNT_URL},sessionId);check(!navigation.errorText,'COLLECTOR_NAVIGATION');
-  await waitForReady({signal:live});live.throwIfAborted();check(source.pins(),'TRUST_EXPIRED');
+  if(!deferReadyUntilCollection){
+   await waitForReady({signal:live});live.throwIfAborted();check(source.pins(),'TRUST_EXPIRED');
+  }
+  const ownerClosed=new AbortController(),readySignal=AbortSignal.any([live,ownerClosed.signal]);
+  let readiness;
+  const ready=()=>readiness??=whileActive(readySignal,async()=>{
+   check(source.pins(),'TRUST_EXPIRED');
+   await waitForReady({signal:readySignal});
+   check(!readySignal.aborted,'COLLECTOR_CANCELLED');check(source.pins(),'TRUST_EXPIRED');
+  });
+  // Explicit fixed-Moodle owner mode exposes only the SAME prepared pins before
+  // human readiness. Every collection still passes the shared readiness gate;
+  // no signature, cookie or claim is requested by this wrapper before it opens.
+  const ownerSource=deferReadyUntilCollection?freeze({status:source.status,pins:source.pins,
+   close(){source.close();ownerClosed.abort();},
+   async collectLease(request,options={}){
+    const collectionSignal=options.signal?AbortSignal.any([readySignal,options.signal]):readySignal;
+    const guard=()=>{check(source.pins(),'COLLECTOR_CLOSED');check(!collectionSignal.aborted,'COLLECTOR_CANCELLED');
+     check(typeof options.isAuthorized==='function'&&options.isAuthorized()===true,'COLLECTOR_AUTHORITY');};
+    guard();await whileActive(collectionSignal,ready);guard();return source.collectLease(request,{...options,signal:collectionSignal});
+   }}):source;
   // Only this port crosses to the integration owner: no browser, cookie reader,
   // signing key, transcript or raw claim. API request issuance stays external.
-  const result=await useSource(source,{signal:live});live.throwIfAborted();
+  const result=await useSource(ownerSource,{signal:live});live.throwIfAborted();
   return result;
  }catch(error){
   observeSource(diagnostics,'MANAGED_SOURCE','FAILED',error);

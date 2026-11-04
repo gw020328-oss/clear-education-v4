@@ -62,10 +62,11 @@ try{
   try{
    await clearAbandoned(root,stopRecordedBrowser);signal.throwIfAborted();session=await createSession(root,Date.now(),process.pid);key=randomBytes(32);
    complete=await withManagedHackerRankSource(session,{selfAttestor,trustConfig:trust,commitmentKey:key,selectedCertificateId:config.selectedCertificateId,signal,diagnostics,
+    deferReadyUntilCollection:!!createMoodleReadOptions,
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
      open:async opts=>{
-      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics});
+      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics,moodleFirst:!!createMoodleReadOptions});
       if(!createMoodleReadOptions)return context;
       try{const options=await createMoodleReadOptions({directory,report:context.report,signal});
        fail(options&&typeof options==='object','COURSE_READ_OWNER_PORT');

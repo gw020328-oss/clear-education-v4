@@ -129,7 +129,8 @@ export function createNormalMoodleReadBoundary({databasePath,authentication,getD
   close(){if(!closed){closed=true;contexts.clear();snapshots?.close();snapshots=null;}}
  });
 }
-export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics}){
+export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics,moodleFirst=false}){
+ ensure(typeof moodleFirst==='boolean','BC_NORMAL_SOURCE_ORDER');
  ensure(typeof withReader==='function'&&typeof hackerRank?.pins==='function'&&typeof hackerRank.collectLease==='function'&&typeof reviewReflection==='function','BC_LIVE_PORTS_REQUIRED');
  preparationPath=resolve(preparationPath);const base=privateDirectory(dirname(preparationPath));
  const root=fileURLToPath(new URL('../../private/bootcamp-normal-live/',import.meta.url));ensure(base.startsWith(root)&&preparationPath===join(base,'preparation.json'),'BC_LIVE_OWNER_DIRECTORY');
@@ -231,7 +232,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
     ui.participant();ensure(!closed&&!failureState,'BC_LIVE_CONTEXT');
-    sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,
+    sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,moodleFirst,
      getReflectionRecovery:id=>producers['reflection-topics'].recovery(store.getRequest(user,app,id,{bridge:true}).record),sourceWindows,startedAt,now,nowMs:()=>Date.now(),signal:controller.signal,key,stage,diagnostics,waitForReaders,requireReaders:()=>readers.require()});
     const result=await sourceSequence.collect({prepareReflection});if(prepareReflection)return result;
     ensure(result.decision.record.conditionsStatus==='MET'&&result.evidence.length===4

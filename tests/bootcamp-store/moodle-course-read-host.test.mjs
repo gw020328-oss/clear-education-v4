@@ -208,6 +208,25 @@ test('fixed live profile uses own CLEAR sessions and exact fresh C14 response wi
  }
  assert.ok(z.verifies()>2);assert.equal(z.bindings(),0);assert.deepEqual(x.bytes(),before);assert.deepEqual(x.authBytes(),auth);
 });
+test('fixed Moodle shows the partial decision with a same-decision unobserved receipt',async t=>{
+ const z=await fixedBoundaryFixture(t),{x}=z;
+ const applicationId=x.f.create();
+ await x.f.accept(applicationId,'activity-complete');
+ await x.f.accept(applicationId,'assignment-submitted');
+ const {participantId}=x.f.store.getApplication(x.f.aliceContext,applicationId);
+ Object.assign(z.state,{applicationId,participantId});
+ Object.assign(z.config.mapping,{applicationId,participantId});
+ Object.assign(x.report,{applicationId,stages:[],claim:null,reviewTarget:null,completed:false});
+ z.boundary.observeSession(x.f.aliceContext);
+ const host=z.boundary.createHost(z.config),r=await host.readCourse(z.handle());
+ assert.equal(r.status,'OK');
+ assert.deepEqual(Object.fromEntries(r.evidence.criteria.map(c=>[c.criterionId,c.recordedState])),{
+  'activity-complete':'MET','assignment-submitted':'MET','python-basic-certificate':'UNKNOWN','reflection-topics':'UNKNOWN'});
+ assert.equal(r.evidence.decision.id,r.payment.decision.id);
+ assert.equal(r.payment.decision.recordedConditionsStatus,'UNKNOWN');
+ assert.equal(r.payment.receipt.state,'NOT_OBSERVED');
+ assert.equal(r.payment.paymentAuthority,false);assert.equal(x.calls(),0);
+});
 for(const [key,value]of [['status','UNAVAILABLE'],['actorRef','wrong-teacher'],['subjectRef','wrong-student'],['courseRef','other-course'],
  ['installationRef','other-site'],['ownerRunId','other-run'],['expiresAtExclusive',START],['extra',true]])test('fixed C current '+key+' mismatch closes display',async t=>{
  const z=await fixedBoundaryFixture(t);z.boundary.observeSession(z.x.f.operatorContext);z.verifyHook(v=>({...v,[key]:value}));

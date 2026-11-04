@@ -6,12 +6,13 @@ import {createNormalSourceSequence} from '../../tools/bootcamp/normal-source-seq
 import {createNormalReviewReaders,requireNormalSourceWindow,REVIEW_WINDOW} from '../../tools/bootcamp/normal-review-window.mjs';
 import {normalSourceTarget} from '../../tools/bootcamp/normal-current-view.mjs';
 import {waitForNormalReviewConsents,waitForExplicitConsents} from '../../tools/bootcamp/explicit-consents.mjs';
-async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240,failReflectionOnce=false,loseAcceptedReflection=false}={}){
+async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240,failReflectionOnce=false,loseAcceptedReflection=false,moodleFirst=false,beforeHr=async()=>{}}={}){
  const windows=new Map(),events=[];let acquired=null,approved=false,models=0,prepared=null,f,failed=false;
  f=await procedureFixture(t,{authority:{
   async beforeVerify(r){
    if(r.criterionId==='reflection-topics'){assert.equal(approved,true);if(failReflectionOnce&&!failed){failed=true;throw Error('NORMAL_CURRENT');}models++;advance(modelDelay);}
-   else if(r.criterionId!=='python-basic-certificate')advance(sourceDelay);
+   else if(r.criterionId==='python-basic-certificate')await beforeHr();
+   else advance(sourceDelay);
   },
   transform(candidate,r){const cap=windows.get(r.criterionId);candidate.validUntilExclusive=sourceValiditySeconds===900?Math.min(cap,r.expiresAt):Math.min(cap,candidate.validUntilExclusive);
    candidate.rawLocator.expiresAt=cap;if(r.criterionId==='reflection-topics')candidate.acquiredAt=acquired;},
@@ -36,7 +37,7 @@ async function fixture(t,{modelDelay=0,sourceDelay=1,sourceValiditySeconds=240,f
   async collectBridge(c,a,b,k){const criterion=f.store.getRequest(c,a,b.requestId).record.criterionId;events.push('collect:'+criterion);const result=await f.store.collect(c,a,b,k);if(loseAcceptedReflection&&criterion==='reflection-topics'){loseAcceptedReflection=false;throw Error('BC_VIEW_STALE');}return result;},
  };
  const sequence=createNormalSourceSequence({store:facade,getContext:()=>f.aliceContext,applicationId:app,sourceWindows:windows,
-  getReflectionRecovery:()=>({status:'NOT_SENT',resumeAllowed:failed}),sourceValiditySeconds,startedAt:START,now:()=>f.time,signal:controller.signal,key:f.key,stage:name=>events.push(name),
+  getReflectionRecovery:()=>({status:'NOT_SENT',resumeAllowed:failed}),sourceValiditySeconds,moodleFirst,startedAt:START,now:()=>f.time,signal:controller.signal,key:f.key,stage:name=>events.push(name),
   waitForReaders:async()=>readers.require(),requireReaders:()=>readers.require()});
  return {f,app,windows,events,sequence,readers,touch,advance,get models(){return models;},get prepared(){return prepared;},
   approve(){approved=true;},sourceTarget:()=>normalSourceTarget(f.store.getApplication(f.aliceContext,app))};
@@ -65,6 +66,29 @@ test('new sequence holds short activity/assignment clocks until the approved exa
  assert.equal(reflection.rawLocator.expiresAt,START+240);
  assert.equal(x.windows.get('reflection-topics'),START+240);assert.equal(x.windows.get('activity-complete'),START+270);
  await assert.rejects(x.sequence.collect(),/SINGLE_COLLECTION/);assert.equal(x.models,1);
+});
+test('fixed Moodle shows two recorded conditions before HR readiness, then refreshes after reflection',async t=>{
+ const entered=Promise.withResolvers(),ready=Promise.withResolvers();
+ const x=await fixture(t,{moodleFirst:true,beforeHr:async()=>{entered.resolve();await ready.promise;}});
+ const initial=x.sequence.collect({prepareReflection:true});
+ try{
+  await Promise.race([entered.promise,initial]);
+  const snapshot=x.f.store.getDecisionEvidence(x.f.aliceContext,x.app);
+  const criteria=Object.fromEntries(snapshot.manifest.criteria.map(r=>[r.criterionId,r.state]));
+  assert.deepEqual(criteria,{'activity-complete':'MET','assignment-submitted':'MET','python-basic-certificate':'UNKNOWN','reflection-topics':'UNKNOWN'});
+  for(const id of ['python-basic-certificate','reflection-topics'])
+   assert.equal(snapshot.availability.find(r=>r.criterionId===id).status,'MISSING');
+  assert.equal(snapshot.manifest.decision.conditionsStatus,'UNKNOWN');
+  assert.equal(x.f.view(x.app).consent.bothCurrent,false);
+  assert.equal(x.models,0);
+ }finally{ready.resolve();await initial;}
+ const firstActivityExpiry=x.windows.get('activity-complete');
+ x.advance(20);x.touch();x.approve();
+ const resumed=await x.sequence.collect();
+ assert.equal(resumed.decision.record.conditionsStatus,'MET');assert.equal(x.models,1);
+ assert.deepEqual(x.events.filter(e=>e.startsWith('collect:')),['collect:activity-complete','collect:assignment-submitted','collect:python-basic-certificate',
+  'collect:reflection-topics','collect:activity-complete','collect:assignment-submitted']);
+ assert(x.windows.get('activity-complete')>firstActivityExpiry);
 });
 
 for(const delay of [96,203,240])test('approval delayed '+delay+' seconds cannot spend a model call or restart source acquisition',async t=>{

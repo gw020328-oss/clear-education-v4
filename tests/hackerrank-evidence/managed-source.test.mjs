@@ -62,6 +62,44 @@ test('one prepared owner reaches the host only after ready and closes on return'
  assert.equal(x.calls.filter(c=>c==='OPEN_CLIENT').length,1);
  assert(!x.calls.some(c=>/Cookies|ResponseBody/.test(c)));
 });
+test('deferred readiness exposes pins first and shares one wait without accessing browser data',async()=>{
+ const x=setup();x.input.deferReadyUntilCollection=true;
+ const ready=Promise.withResolvers(),entered=Promise.withResolvers();
+ let signed=0,allowed=true;
+ x.input.waitForReady=async()=>{x.calls.push('READY');entered.resolve();await ready.promise;};
+ x.input.useSource=async source=>{
+  assert(source.pins());assert(!x.calls.includes('READY'));
+  const options={isAuthorized:()=>allowed,signRequest:()=>{signed++;}};
+  const cancel=new AbortController(),a=source.collectLease({}, {...options,signal:cancel.signal}),b=source.collectLease({},options);
+  const aRejected=assert.rejects(a,/COLLECTOR_CANCELLED/),bRejected=assert.rejects(b,/COLLECTOR_AUTHORITY/);
+  await entered.promise;assert.equal(signed,0);
+  cancel.abort();await aRejected;
+  assert(source.pins());allowed=false;ready.resolve();await bRejected;
+ };
+ await withManagedHackerRankSource(x.session,x.input);
+ assert.equal(x.calls.filter(c=>c==='READY').length,1);assert.equal(signed,0);
+});
+test('deferred wait ends on close, host cancellation, or expired trust before signing',async t=>{
+ for(const mode of ['close','host','expiry'])await t.test(mode,async st=>{
+  const x=setup(),stop=new AbortController(),entered=Promise.withResolvers(),ready=Promise.withResolvers();
+  x.input.deferReadyUntilCollection=true;x.input.signal=stop.signal;
+  let signed=0,gateSignal;
+  x.input.waitForReady=async({signal})=>{gateSignal=signal;entered.resolve();await ready.promise;};
+  x.input.useSource=async source=>{
+   const pending=source.collectLease({}, {isAuthorized:()=>true,signRequest:()=>{signed++;}});
+   const rejected=assert.rejects(pending,mode==='expiry'?/TRUST_EXPIRED/:/COLLECTOR_CANCELLED/);
+   await entered.promise;
+   if(mode==='expiry'){st.mock.method(Date,'now',()=>x.config.expiresAt*1000);ready.resolve();}
+   else if(mode==='close')source.close();
+   else stop.abort();
+   await rejected;assert.equal(source.pins(),null);
+   if(mode!=='expiry')assert(gateSignal.aborted);
+  };
+  const run=withManagedHackerRankSource(x.session,x.input);
+  if(mode==='host')await assert.rejects(run,/COLLECTOR_CANCELLED/);else await run;
+  assert.equal(signed,0);assert.deepEqual(x.calls.slice(-3),['CLOSE_BROWSER','CLOSE_ROUTE','CLOSE_CLIENT']);
+ });
+});
 test('caller trust and key changes during transport cannot change prepared pins',async()=>{
  const x=setup(),originalHash=hash('TRUST',x.config),open=x.input.openClient;
  x.input.openClient=async args=>{x.config.audience='mutated-caller';x.input.commitmentKey.fill(0);return open(args);};
