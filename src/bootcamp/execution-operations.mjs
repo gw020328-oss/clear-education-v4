@@ -86,7 +86,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
   }
  }
  function service(context,action,intentId,fn,validateCommit=null){
-  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REQUEST','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_DISPATCH_REQUEST','B_RECOVER_REQUEST','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','ACQUIRE_RUNTIME','INSPECT','BIND_RUNTIME_INTENT'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
+  check(validateCommit===null||['B_PREPARE','B_AUTHORIZE_COMMIT','B_SEAL_REQUEST','B_SEAL_REFERENCE','B_ADOPT_REQUEST','B_ADOPT_COMMIT','B_DISPATCH_REQUEST','B_RECOVER_REQUEST','B_RECEIPT_COMMIT','B_READ_REQUEST','B_LOOKUP_REQUEST','B_LOOKUP_COMMIT','B_INSPECT','ACQUIRE','ACQUIRE_RUNTIME','HEARTBEAT_RUNTIME','INSPECT','BIND_RUNTIME_INTENT','COMMIT_RUNTIME_FENCE'].includes(action)&&typeof validateCommit==='function','BC_E5_COMMIT_VALIDATOR');
   configured();const result=transaction(()=>{
    const c=tick();l.clock(c.time);check(!c.reversed,'BC_CLOCK_REVERSED');
    const request={action,intentId,runtimeId:ports.runtimeId},authority=ports.authorize(context,request,c.time);
@@ -94,7 +94,7 @@ export function createExecutionOperations({db,transaction,authentication,operato
    const i=l.intent(intentId);if(i)refresh(app(i.applicationId),c.time,c.reversed);db.exec('SAVEPOINT e5_service');
    try{const value=sync(fn(c.time,authority));
     // A fence-exhaustion stop retains its original blocked commit path.
-    if(validateCommit&&!(action==='ACQUIRE_RUNTIME'&&value?.status==='BLOCKED')){
+    if(validateCommit&&!(['ACQUIRE_RUNTIME','COMMIT_RUNTIME_FENCE'].includes(action)&&value?.status==='BLOCKED')){
      // The metadata operation and any preceding native work each happen once.
      // Only read-only validation can cross a second; the savepoint stays open.
      for(let validation=0;;validation++){
@@ -224,7 +224,22 @@ export function createExecutionOperations({db,transaction,authentication,operato
   acquireRuntime(context,body){exactKeys(body,['owner','expectedFence','generation','leaseSeconds'],'BC_E5_GLOBAL_ACQUIRE');
    return service(context,'ACQUIRE_RUNTIME',null,(time,authority)=>global.acquire(time,authority,runtime(),body),
     (time,authority,h)=>global.validateAcquired(h,time,authority,runtime()));},
-  heartbeatRuntime(context,h,seconds=30){return service(context,'HEARTBEAT_RUNTIME',null,(time,authority)=>global.heartbeat(h,time,authority,seconds));},
+  heartbeatRuntime(context,h,seconds=30){
+   let originalExpiry,expectedWorker,runtimeBasis;
+   return service(context,'HEARTBEAT_RUNTIME',null,(time,authority)=>{
+    originalExpiry=global.live(h,time,authority.serviceId).expires_at;
+    const r=runtime();check(['UNOBSERVED','ACTIVE'].includes(r.status)&&r.generation===h.generation,'BC_E5_RUNTIME_SUSPENDED');
+    runtimeBasis=canonical({...r});
+    // Renew once from the original instant. Revalidation must neither renew
+    // again nor let this tentative extension revive an expired original lease.
+    const value=global.heartbeat(h,time,authority,seconds);
+    expectedWorker=canonical({...global.live(h,time,authority.serviceId)});return value;
+   },(time,authority)=>{
+    check(time<originalExpiry,'BC_E5_GLOBAL_FENCED');
+    check(canonical({...runtime()})===runtimeBasis,'BC_E5_RUNTIME_SUSPENDED');
+    check(canonical({...global.live(h,time,authority.serviceId)})===expectedWorker,'BC_E5_GLOBAL_HEARTBEAT_CAS');
+   });
+  },
   bindRuntimeIntent(context,g,h){return service(context,'BIND_RUNTIME_INTENT',h.intentId,(time,authority)=>{
    live(h,time,authority.serviceId);return global.bind(g,h,time,authority);},(time,authority)=>{live(h,time,authority.serviceId);global.slot(g,h,time,authority);});},
   releaseRuntimeIntent(context,g,h){return service(context,'RELEASE_RUNTIME_INTENT',h.intentId,(time,authority)=>{
@@ -232,7 +247,8 @@ export function createExecutionOperations({db,transaction,authentication,operato
   async observeRuntimeFence(context,g=null){
    const request=service(context,'READ_RUNTIME_FENCE',null,(time,authority)=>{runtime();if(g)global.live(g,time,authority.serviceId);check(fenceWitness.configured,'BC_E5_FENCE_WITNESS_UNCONFIGURED');return {query:global.witnessQuery(),basis:global.witnessBasis()};});
    const ticket=await fenceWitness.read(request.query);
-   return service(context,'COMMIT_RUNTIME_FENCE',null,(time,authority)=>{if(g)global.live(g,time,authority.serviceId);check(request.basis===global.witnessBasis(),'BC_E5_GLOBAL_WITNESS_CAS');return global.acceptWitness(fenceWitness.consume(ticket),time);});
+   return service(context,'COMMIT_RUNTIME_FENCE',null,(time,authority)=>{if(g)global.live(g,time,authority.serviceId);check(request.basis===global.witnessBasis(),'BC_E5_GLOBAL_WITNESS_CAS');return global.acceptWitness(fenceWitness.consume(ticket),time);},
+    (time,authority)=>{if(g)global.live(g,time,authority.serviceId);check(request.basis===global.witnessBasis(),'BC_E5_GLOBAL_WITNESS_CAS');});
   },
   connectCurrentController(context,g){
    configured();check(e4CurrentPorts.configured,'BC_E5_E4_UNCONFIGURED');

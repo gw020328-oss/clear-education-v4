@@ -1,0 +1,13 @@
+{
+  "version": "clear-runtime-fence-clock-source-delta.1",
+  "candidateHead": "7ab5530589cbe5a4f3cffdae14753b70104506a5",
+  "baseHead": "a5653d64b939da9a1ededc85744d30b91c759f8f",
+  "previousGuardSha256": "f5e4e96f1920cfd8c0164f72c2d6431eb0666888b6481d421c775e0e2e00bf08",
+  "changes": {
+    "src/bootcamp/execution-operations.mjs": {
+      "before": "2ddd9d2a661fbca2b74752632a50eef8e453b3631c86fced6d7f0d041d9d8b2c",
+      "after": "18408ef671de74bed459758da6872207f20c6d486796d931d617a42aa284ff89"
+    }
+  },
+  "sourceAdditions": {}
+}

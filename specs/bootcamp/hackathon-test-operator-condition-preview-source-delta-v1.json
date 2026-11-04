@@ -1,0 +1,21 @@
+{
+  "version": "clear-operator-condition-preview-source-delta.1",
+  "candidateHead": "6dcd064d5d67679946fa0fa97bf2663cc693f54d",
+  "baseHead": "8e5a48fe35ce76eec9966cb73c81a950f62cc868",
+  "previousGuardSha256": "f5e4e96f1920cfd8c0164f72c2d6431eb0666888b6481d421c775e0e2e00bf08",
+  "changes": {
+    "tools/embedded-wallet/build-product.mjs": {
+      "before": "a88792a38bdfb184e3aad0e0948b0b846683344186686470580cb6a1ce6108a4",
+      "after": "43096c4e626ab2c831a4e17f0c4ca0cc9f8d8a5db44275265c5c5bb9d85e72d8"
+    },
+    "web/src/bootcamp/team-entry.js": {
+      "before": "cae2a87c4bc569f7ef9d2ff693045bc5b4243eccd17d235943d66392176cc3da",
+      "after": "a3e11dc1f666a937da68856e950eb40fcf2a331e059148fe2e9a1f288ee4655f"
+    }
+  },
+  "sourceAdditions": {
+    "packages/clear-core/src/index.mjs": "bdf0b53e2e5e64a4d2c0d9ad358ec394ec3229d504fbfbd5605a63e26ad090ad",
+    "tools/embedded-wallet/preview-browser-crypto.mjs": "070ddba95edd6e45e35255752061d5fb8f066f22c9b6b740a818c99df3c79e11",
+    "web/src/bootcamp/condition-preview.js": "17b47406cab08a7ee52fd1c75fd0c15a9d2d51bf5543ebe73c4202d7adfbf49f"
+  }
+}

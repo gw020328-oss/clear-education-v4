@@ -89,6 +89,11 @@ jobs:
         run: |
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/product-workflow/*.test.mjs
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs specs/m3/demo.mjs
+      - name: Offline Moodle binding tests and standalone demo
+        run: |
+          ./tools/node --import ./tests/agent-preview/network-block.mjs --test tests/agent-preview/binding-module.test.mjs tests/agent-preview/binding-currentness.test.mjs tests/agent-preview/binding-student.test.mjs tests/agent-preview/peer-transport.test.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/agent-preview/preview-context.test.mjs tests/agent-preview/preview-local-integration.test.mjs
+          ./tools/node --import ./tests/agent-preview/network-block.mjs src/agent-preview/moodle-binding/synthetic-demo.mjs
       - name: Offline Moodle preparation vectors and package checks
         run: ./tools/node --test tests/moodle-preparation/*.test.mjs
       - name: Offline AI policy and document prechecks
