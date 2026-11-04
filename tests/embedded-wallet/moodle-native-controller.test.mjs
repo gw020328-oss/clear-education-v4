@@ -152,9 +152,10 @@ test('native handshake confines sesskey to C and lost finish response invokes on
       assert.equal(url, origin + '/local/clearbridge/login_action.php');
       assert.equal(options.body.get('sesskey'), config.sesskey); const op = options.body.get('operation'); seen.push(op);
       assert(!options.headers?.['x-csrf-token']);
+      if (['status','end'].includes(op)) assert.equal(options.body.get('intentTarget'), hex);
       if (op === 'finish') throw Error('synthetic response loss');
       return {ok:true, redirected:false, json:async () => op === 'start'
-        ? {status:'WAITING',expiresAtExclusive:2000,launchCode:hex,browserProof:hex,finishProof:hex}
+        ? {status:'WAITING',expiresAtExclusive:2000,launchCode:hex,browserProof:hex,finishProof:hex,intentTarget:hex}
         : {status:op === 'status' ? 'CONNECTED' : 'ENDED'}};
     }});
   const signal = new AbortController().signal;
@@ -184,4 +185,25 @@ test('restored participant SDK wallet stays unselected and exposes no provider o
   await controller.dispatch({action:'select-wallet',choiceId});assert.deepEqual(calls,[]);
   await controller.dispatch({action:'check-network'});assert.equal(views.at(-1).phase,'NETWORK_READY');
   assert(!calls.includes('oauth'));await controller.destroy();
+});
+
+test('native status and end retain the original intent target and never accept NOT_CURRENT', async () => {
+  const proof = 'aa'.repeat(32), target = 'bb'.repeat(32), forms = [];
+  const login = createNativeMoodleLogin({config, locks:{request:(_name,_options,run)=>run()},
+    api:async path=>path.endsWith('bootstrap')?{challenge:proof,expiresAtExclusive:2000}
+      :{status:'WAITING',role:'operator',expiresAtExclusive:2000},
+    fetch:async (_url,options)=>{
+      const form=Object.fromEntries(options.body); forms.push(form);
+      if(form.operation==='finish')throw Error('lost response');
+      return {ok:true,redirected:false,json:async()=>form.operation==='start'
+        ?{status:'WAITING',expiresAtExclusive:2000,launchCode:proof,browserProof:proof,finishProof:proof,intentTarget:target}
+        :{status:'NOT_CURRENT'}};
+    }});
+  const signal=new AbortController().signal;
+  await login.begin(signal); await assert.rejects(login.finish(signal));
+  login.invalidate(); await assert.rejects(login.end(signal));
+  assert.deepEqual(forms.filter(f=>['status','end'].includes(f.operation)).map(f=>Object.keys(f).sort()),
+    [['id','intentTarget','operation','sesskey'],['id','intentTarget','operation','sesskey']]);
+  assert(forms.filter(f=>['status','end'].includes(f.operation)).every(f=>f.intentTarget===target));
+  await assert.rejects(login.begin(signal));
 });
