@@ -143,7 +143,9 @@ function project(scope, snapshot, sources) {
 
 // The Moodle owner validates its principal, enrolment and course before resolving
 // the mapped CLEAR application and a separate CLEAR read session. Only the host
-// calls this port, with a server-authenticated request handle.
+// calls this port, with a server-authenticated request handle. Every resolution
+// must reject expired or revoked Moodle and CLEAR authority, even if its
+// identity and mapping references would otherwise be unchanged.
 export function createCourseEvidenceReader({ resolveScope, getDecisionEvidence, readSourceStates = () => [] }) {
   check([resolveScope, getDecisionEvidence, readSourceStates].every(port => typeof port === 'function'), 'COURSE_EVIDENCE_CONFIG');
 
@@ -166,7 +168,10 @@ export function createCourseEvidenceReader({ resolveScope, getDecisionEvidence, 
       check(hash(after) === beforeHash, 'COURSE_EVIDENCE_AUTHORITY_CHANGED');
       // S4 reads one snapshot and rechecks its own CLEAR authority before return.
       const snapshot = getDecisionEvidence(after.clearContext, after.applicationId);
-      return project(after, snapshot, sources);
+      const result = project(after, snapshot, sources);
+      const final = await scopeFor(caller);
+      check(hash(final) === beforeHash, 'COURSE_EVIDENCE_AUTHORITY_CHANGED');
+      return result;
     }
   });
 }

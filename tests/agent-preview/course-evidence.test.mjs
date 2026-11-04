@@ -129,3 +129,41 @@ test('stored source mode stays distinct from connection and rejects cross-source
   snapshot.manifest.criteria[3].verification.sourceStatus = 'VERIFIED_LOCAL_API';
   await assert.rejects(read.read(caller), /COURSE_EVIDENCE_PROVENANCE/);
 });
+
+test('final resolution rejects revocation, remapping and expiry during the S4 read', async t => {
+  const { f, scope, caller, reader } = await fixture(t);
+  for (const change of ['revoked', 'remapped', 'expired']) {
+    let revoked = false;
+    let now = START;
+    const expiresAt = START + 1;
+    let resolutions = 0;
+    let evidenceReads = 0;
+    const initialCourse = scope.courseRef;
+    const read = reader({
+      resolveScope(handle) {
+        assert.equal(handle, caller);
+        resolutions++;
+        if (revoked) throw Error('FIXTURE_MOODLE_AUTHORITY_REVOKED');
+        if (now >= expiresAt) throw Error('FIXTURE_MOODLE_AUTHORITY_EXPIRED');
+        return scope;
+      },
+      getDecisionEvidence(...args) {
+        evidenceReads++;
+        const result = f.store.getDecisionEvidence(...args);
+        if (change === 'revoked') revoked = true;
+        if (change === 'remapped') scope.courseRef = 'different-course';
+        if (change === 'expired') now = expiresAt;
+        return result;
+      }
+    });
+    const expected = {
+      revoked: /FIXTURE_MOODLE_AUTHORITY_REVOKED/,
+      remapped: /COURSE_EVIDENCE_AUTHORITY_CHANGED/,
+      expired: /FIXTURE_MOODLE_AUTHORITY_EXPIRED/
+    }[change];
+    await assert.rejects(read.read(caller), expected);
+    assert.equal(resolutions, 3);
+    assert.equal(evidenceReads, 1);
+    scope.courseRef = initialCourse;
+  }
+});
