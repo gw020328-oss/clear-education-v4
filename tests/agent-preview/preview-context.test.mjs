@@ -155,3 +155,23 @@ test('fractional-second context expires naturally while observation stays idle',
   assert.equal(x.f.sql('main',"SELECT state FROM requests WHERE kind='OBSERVE'")[0].state,'CANCELLED');
  } finally {x.contexts.close();await pending;}
 });
+
+test('owner registration exports the current approval preimage without exposing it over HTTP',async t=>{
+ const x=await httpFixture(t),input={version:PREVIEW_CONTEXT_VERSION,previewContextRef:x.issued.previewContextRef};
+ const s=x.contexts.registrationScope(x.f.context,input);
+ assert.deepEqual(s.context,x.issued);
+ assert.deepEqual(s.release,{deploymentEpoch:x.release.deploymentEpoch,artifactHash:x.release.artifactHash,model:x.release.model,limitsHash:x.release.limitsHash});
+ assert.equal(hash({domain:'CLEAR_SELF_PREVIEW_APPROVAL_1',contextRef:x.issued.previewContextRef,scopeHash:s.scopeHash,
+  sourceHash:x.issued.sourceHash,bodyHash:x.issued.bodyHash,model:x.issued.model,limitsHash:s.release.limitsHash,
+  artifactHash:s.release.artifactHash,deploymentEpoch:s.release.deploymentEpoch,expiresAtExclusive:x.issued.expiresAtExclusive}),x.issued.approvalBindingHash);
+ for(const path of ['/preview/ownerRegistration','/preview/registrationScope','/preview/draftScope','/preview/prepare'])
+  assert.equal((await x.call(path,input)).status,404);
+ assert.throws(()=>x.contexts.registrationScope({},input));
+ x.release.artifactHash='c'.repeat(64);assert.throws(()=>x.contexts.registrationScope(x.f.context,input),/CONTEXT_CHANGED/);
+});
+test('draft scope validates a proposal without prematurely accepting review',async t=>{
+ const x=await fixture(t);x.contexts.acceptVerifiedDraft(x.f.context,x.draft,x.proposal);
+ assert.equal(x.contexts.draftScope(x.f.context,x.input).correlation.proposalHash,x.draft.proposalHash);
+ assert.throws(()=>x.contexts.reviewedScope(x.f.context,x.input),/CONTEXT_REVIEW_OR_BUSY/);
+ assert.throws(()=>x.contexts.draftScope(x.f.context,{...x.input,proposalHash:'f'.repeat(64)}),/CONTEXT_DRAFT/);
+});

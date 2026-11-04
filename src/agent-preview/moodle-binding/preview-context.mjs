@@ -57,6 +57,27 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
     check(r.draft && input.draftId === r.draft.draftId && input.proposalHash === r.draft.proposalHash, 'CONTEXT_DRAFT');
   }
   return Object.freeze({
+    // Owner-only control-plane export. Never mounted as a browser route.
+    registrationScope(context, input) {
+      exact(input, ['version','previewContextRef']);
+      check(input.version === PREVIEW_CONTEXT_VERSION, 'CONTEXT_VERSION');
+      const { r, live } = record(context, input.previewContextRef);
+      const {deploymentEpoch,artifactHash,model,limitsHash,targetRef} = live.scope;
+      return { scopeHash:r.scopeHash, targetRef, release:{deploymentEpoch,artifactHash,model,limitsHash},
+        context:{version:PREVIEW_CONTEXT_VERSION,previewContextRef:input.previewContextRef,sourceHash:r.sourceHash,
+          bodyHash:r.bodyHash,model:r.model,approvalBindingHash:r.approvalBindingHash,
+          expiresAtExclusive:r.expiresAtExclusive,automaticEligibility:false,paymentAllowed:false},
+        correlation:{contextRef:input.previewContextRef,sourceHash:r.sourceHash,proposalHash:'0'.repeat(64),
+          expiresAtExclusive:r.expiresAtExclusive},signal:r.lifetime.signal };
+    },
+    draftScope(context, input) {
+      exact(input, ['version','previewContextRef','draftId','proposalHash']);
+      check(input.version === PREVIEW_CONTEXT_VERSION, 'CONTEXT_VERSION');
+      const { r } = record(context, input.previewContextRef);
+      matching(r, input);
+      return {correlation:{contextRef:input.previewContextRef,sourceHash:r.sourceHash,proposalHash:r.draft.proposalHash,
+        expiresAtExclusive:r.expiresAtExclusive},signal:r.lifetime.signal};
+    },
     generationScope(context, input) {
       exact(input, ['version','previewContextRef','sourceText','approvalRef']);
       check(input.version === PREVIEW_CONTEXT_VERSION && opaque(input.approvalRef), 'CONTEXT_GENERATION');
