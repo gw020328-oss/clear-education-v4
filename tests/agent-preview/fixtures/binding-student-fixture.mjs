@@ -12,11 +12,12 @@ import { schemas } from '../../../src/agent-preview/moodle-binding/schema.mjs';
 import { hash } from '../../../src/agent-preview/moodle-binding/contract.mjs';
 import { responseFor, timePolicy, sessionKey } from './binding-module-fixture.mjs';
 
-export async function studentFixture(t, { acknowledged = true } = {}) {
+export async function studentFixture(t, { acknowledged = true, origin = 'https://student.example.invalid', clock, sourceProfile } = {}) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'clear-binding-student-')));
   const alice = Wallet.createRandom(), operator = Wallet.createRandom(), bob = Wallet.createRandom();
   const state = { wall: 1000, query: null };
-  const authConfig = { directory: join(root, 'authentication'), origin: 'https://student.example.invalid', chainId: 31337,
+  if(clock) Object.defineProperty(state, 'wall', {get:clock});
+  const authConfig = { directory: join(root, 'authentication'), origin, chainId: 31337,
     instanceId: id('SYNTHETIC_STUDENT_BINDING'), participants: [alice.address], operators: [operator.address],
     bindingAuthority: { revision: 1, expectedRevision: 0 }, now: () => state.wall };
   let auth, student, runtime;
@@ -42,18 +43,18 @@ export async function studentFixture(t, { acknowledged = true } = {}) {
   if (acknowledged) acknowledge();
   const registry = { mode: 'SYNTHETIC_ONLY', applicationId, policyId: policyView.policyId, policyHash: policyView.policyHash,
     policyRevision: policyView.policyRevision, bindingRevision: 1, participantRef: 'synthetic-participant', wallet: alice.address.toLowerCase(),
-    installationRef: 'synthetic-installation', courseRef: 'synthetic-course', subjectRef: 'explicit-synthetic-subject' };
+    installationRef: sourceProfile?.installationRef ?? 'synthetic-installation', courseRef: sourceProfile?.courseRef ?? 'synthetic-course', subjectRef: sourceProfile?.subjectRef ?? 'explicit-synthetic-subject' };
   const projection = createSyntheticStudentProjection({ authentication: auth.moodleBindingManifest(), student: student.moodleBindingManifest(), registry });
-  const policy = { mode: 'SYNTHETIC_ONLY', status: 'ACTIVE', issuerEpoch: 'synthetic-issuer-1', authorityRevision: projection.authRevision,
+  const policy = { mode: 'SYNTHETIC_ONLY', status: 'ACTIVE', issuerEpoch: sourceProfile?.issuerEpoch ?? 'synthetic-issuer-1', authorityRevision: projection.authRevision,
     rosterRevision: 1, trustEpoch: 1, configHash: projection.authConfigHash, mappingHash: projection.mappingHash,
     participantRef: registry.participantRef, wallet: registry.wallet, installationRef: registry.installationRef, courseRef: registry.courseRef,
-    audience: 'synthetic-audience', expectedSubjectRef: registry.subjectRef, validUntil: 2000, timePolicyHash: hash(timePolicy), chainId: authConfig.chainId, targets: ['page-manual'] };
+    audience: sourceProfile?.audience ?? 'synthetic-audience', expectedSubjectRef: registry.subjectRef, validUntil: state.wall + 1000, timePolicyHash: hash(timePolicy), chainId: authConfig.chainId, targets: [sourceProfile?.targetRef ?? 'page-manual'] };
   const paths = { main: join(root, 'binding.sqlite'), auth: auth.moodleBindingManifest().path, workflow: student.moodleBindingManifest().path };
   const main = new DatabaseSync(paths.main);
   main.exec('PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL;' + schemas.main);
   main.prepare('INSERT INTO policy VALUES(1,?)').run(JSON.stringify(policy)); main.prepare('INSERT INTO clock VALUES(1,?)').run(state.wall); main.close(); chmodSync(paths.main, 0o600);
   const control = createSyntheticControlPlane(policy);
-  const verifier = createSyntheticVerifier(request => state.query ? state.query(request) : responseFor(request, policy, state.wall));
+  const verifier = createSyntheticVerifier((request, options) => state.query ? state.query(request, options) : responseFor(request, policy, state.wall));
   const config = { paths, projection, control, verifier, timePolicy, sessionKey,
     clock: { wall: () => state.wall, monotonic: () => performance.now() } };
   runtime = createBindingCoordinator(config);
