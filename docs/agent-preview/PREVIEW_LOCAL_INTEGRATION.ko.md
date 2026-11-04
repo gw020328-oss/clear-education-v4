@@ -1,5 +1,7 @@
 # B 로컬 미리보기 연결
 
+이 문서는 7dd6e38 단계의 기록이다. 후속 실제 설치 C 연결은 [PREVIEW_INSTALLED_MOODLE.ko.md](PREVIEW_INSTALLED_MOODLE.ko.md)를 따른다.
+
 Base `3d6c3ff7e8252575155d553247cacab2b699026f`. 이 문서를 포함한 커밋이 B 연결 후보다. D 외부 입력은 `bf5f41c62be8ff23bd167905e645e4915ab4e01c`이며 체크아웃 HEAD와 변경 없는 상태를 검사한다.
 
 현재 입증 범위는 브라우저 인증 HTTPS → B 현재 학생 신청/ACK/binding → D 생성·검토 HTTPS → C 합성 observations.3 HTTPS → D 최소 관측 HTTPS → B 응답이다. D 고정 후보 검사는 실제 D approval store/service와 단회 OFFLINE 모델 픽스처를 사용한다. C 부분은 아직 B 합성 응답기다. 설치 Moodle 관측, 외부 모델 호출, 화면 표시의 완료 증거로 사용하지 않는다.

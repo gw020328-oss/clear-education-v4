@@ -13,7 +13,7 @@ function local(mode, transport) {
 // Correlation exists only during the current authenticated read, across its async
 // source request. The original coordinator owns full .3/currentness validation.
 export function createLocalObservationBridge({ mode, transport, confirmationVerifier }) {
-  local(mode, transport);
+  check(mode === 'LOCAL_SYNTHETIC_ONLY' && ['LOCAL_SYNTHETIC_HTTPS','LOCAL_SYNTHETIC_HTTP'].includes(transport?.execution), 'LOCAL_PREVIEW_CONFIG');
   const reads = new AsyncLocalStorage();
   const verifier = createSyntheticVerifier(async (request, { signal } = {}) => {
     if(request.version !== versions.observationsRequest) {
