@@ -768,6 +768,8 @@ test('v62 integrates both reviewed parents with exact guards and source deltas',
  for(const [path,expected]of Object.entries(record.preservedGuards))assert.equal(sha(actualRead(path)),expected);
  const {consumeReviewedV62Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v62.mjs');
  const current=consumeReviewedV62Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
- for(const path of ['src/bootcamp/execution-operations.mjs','web/src/bootcamp/team-entry.js','tools/embedded-wallet/build-product.mjs'])assert.equal(current.sources[path],sha(actualRead(path)));
+ for(const path of ['src/bootcamp/execution-operations.mjs','web/src/bootcamp/team-entry.js'])assert.equal(current.sources[path],sha(actualRead(path)));
+ const preview=JSON.parse(actualRead('specs/bootcamp/hackathon-test-operator-condition-preview-source-delta-v1.json'));
+ assert.equal(preview.changes['tools/embedded-wallet/build-product.mjs'].after,sha(actualRead('tools/embedded-wallet/build-product.mjs')));
  assert.equal(Object.keys(current.sources).length,211);
 });
