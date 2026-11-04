@@ -7,6 +7,7 @@ import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {procedureFixture,START} from './procedure-fixture.mjs';
 import {normalSourceTarget} from '../../tools/bootcamp/normal-current-view.mjs';
 import {waitForNormalRecipientRegistration,createNormalRecipientWaitCheckpoint} from '../../tools/bootcamp/normal-recipient-wait.mjs';
+import {createNormalReviewReaders,waitForNormalPaymentReview} from '../../tools/bootcamp/normal-review-window.mjs';
 import {createNormalResumeControl} from '../../tools/bootcamp/normal-resume-control.mjs';
 async function setup(t){
  const f=await procedureFixture(t),old=f.configuration.procedurePorts.registration;
@@ -74,4 +75,51 @@ for(const kind of ['logout','source','expiry','code','envelope','broadcast'])tes
 });
 test('a replaced decision or registration target cannot resume an old checkpoint',async t=>{
  const x=await setup(t);pause(x);await x.f.refreshEvidence(x.app,START+1);assert.equal(x.checkpoint.inspect().resumeAllowed,false);
+});
+
+async function reviewSetup(t){
+ const x=await setup(t);await x.sign();
+ const readers=createNormalReviewReaders({now:()=>x.f.time});
+ const touch=()=>{readers.observe('PARTICIPANT');readers.observe('OPERATOR');};
+ touch();x.f.setTime(x.f.time+6);
+ const args={store:x.f.store,context:x.f.aliceContext,applicationId:x.app,sourceTarget:x.target,
+  registration:x.intake.record,assertCurrent:()=>x.ui.participant(),requireReaders:()=>readers.require(),pollMs:1,timeoutMs:1000};
+ return {x,readers,touch,args};
+}
+test('post-signature reader delay waits for both fresh reads and preserves the signed packet without writes',async t=>{
+ const {x,readers,touch,args}=await reviewSetup(t),before=x.packet(),counts=x.f.counts();let refreshes=0;
+ await waitForNormalPaymentReview({...args,connection:{async refresh(){
+  refreshes++;if(refreshes===1)readers.observe('PARTICIPANT');if(refreshes===3)touch();
+ }}});
+ assert.equal(refreshes,3);assert.deepEqual(x.packet(),before);assert.deepEqual(x.f.counts(),counts);
+ assert.equal(readers.ready(),true);x.f.setTime(x.f.time+6);assert.equal(readers.ready(),false);
+});
+for(const kind of ['logout','source','expiry','target'])test('post-signature wait rejects '+kind+' even when both readers return',async t=>{
+ const {x,touch,args}=await reviewSetup(t);let reads=0;
+ await assert.rejects(waitForNormalPaymentReview({...args,connection:{async refresh(){
+  if(++reads===2){if(kind==='target')await x.f.refreshEvidence(x.app,START+7);else x.mutate(kind);touch();}
+ }}}));
+ assert.equal(reads,2);assert.equal(x.report.stages.length,0);
+});
+test('post-signature wait revalidates authority after asynchronous refresh',async t=>{
+ const {touch,args}=await reviewSetup(t);let current=true;
+ await assert.rejects(waitForNormalPaymentReview({...args,assertCurrent(){if(!current)throw new RuleError('AUTH_REQUIRED');},
+  connection:{async refresh(){current=false;touch();}}}),/AUTH_REQUIRED/);
+});
+test('post-signature wait is bounded and cancellation never returns permission',async t=>{
+ const {args}=await reviewSetup(t);
+ await assert.rejects(waitForNormalPaymentReview({...args,timeoutMs:10,connection:{async refresh(){}}}),/REVIEW_SCREENS_REQUIRED/);
+ const controller=new AbortController();
+ await assert.rejects(waitForNormalPaymentReview({...args,signal:controller.signal,connection:{async refresh(){controller.abort();}}}),/NORMAL_HOST_CANCELLED/);
+});
+test('post-signature wait propagates unrelated reader errors immediately',async t=>{
+ const {args}=await reviewSetup(t);let reads=0;const failure=new RuleError('AUTH_REQUIRED');
+ await assert.rejects(waitForNormalPaymentReview({...args,connection:{async refresh(){reads++;}},requireReaders(){throw failure;}}),e=>e===failure);
+ assert.equal(reads,1);
+});
+test('readers becoming ready after the bounded RPC wait cannot authorize continuation',async t=>{
+ const {touch,args}=await reviewSetup(t);
+ await assert.rejects(waitForNormalPaymentReview({...args,timeoutMs:10,connection:{async refresh(){
+  await new Promise(resolve=>setTimeout(resolve,15));touch();
+ }}}),/REVIEW_SCREENS_REQUIRED/);
 });
