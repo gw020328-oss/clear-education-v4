@@ -233,12 +233,12 @@ export async function attachNormalMoodleReadServer({context,options,signal}){
   server=options.createCourseReadServer({origin:options.origin,ownerRunId:run,secret:options.secret,tls:options.tls,readCourse,
    ...(options.clock===undefined?{}:{clock:options.clock}),...(options.monotonic===undefined?{}:{monotonic:options.monotonic})});
   if(options.login!==undefined){
-   const {createCourseLoginHandler,...login}=options.login;
+   const {createCourseLoginHandler,native=false,...login}=options.login;
    check(typeof createCourseLoginHandler==='function'&&typeof context.configureMoodleLogin==='function'
     &&options.secret!==login.proofKey&&options.secret!==login.reverseKey,'MOODLE_LOGIN_CONFIG');
-   const core=context.configureMoodleLogin(login),[readHandler,...other]=server.listeners('request');
+   const core=context.configureMoodleLogin(login,{native}),[readHandler,...other]=server.listeners('request');
    check(typeof readHandler==='function'&&!other.length,'MOODLE_LOGIN_CONFIG');
-   const owner=Object.freeze(Object.fromEntries(['issue','status','end','finish'].map(operation=>[
+   const owner=Object.freeze(Object.fromEntries(['issue','status','end','finish','authorizeCommand'].map(operation=>[
     operation,(request,lease)=>{
      check(lease?.signal instanceof AbortSignal&&typeof lease.assertCurrent==='function','MOODLE_LOGIN_TRANSPORT_LEASE');
      return core[operation](request,lease);
@@ -246,7 +246,7 @@ export async function attachNormalMoodleReadServer({context,options,signal}){
    ])));
    loginHandler=createCourseLoginHandler({origin:options.origin,ownerRunId:run,secret:options.secret,owner,
     clock:options.clock,monotonic:options.monotonic});
-   const paths=new Set(['start','status','end','finish'].map(operation=>'/v1/moodle/connect/'+operation));
+   const paths=new Set(['start','status','end','finish','authorize-command'].map(operation=>'/v1/moodle/connect/'+operation));
    server.removeListener('request',readHandler);
    server.on('request',(req,res)=>paths.has(req.url)?loginHandler.handle(req,res):readHandler(req,res));
   }

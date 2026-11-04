@@ -15,6 +15,7 @@ import {ExecutionReader} from '../../src/hackathon-test-vault/e5/reader.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {createApplicationService} from '../../src/application/service.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
+import {createMoodleCommandScope} from '../../src/bootcamp/moodle-command-scope.mjs';
 import {openDevelopmentConnection} from '../../src/bootcamp/execution-development.mjs';
 import {createLiveMoodleConsumer} from '../../src/bootcamp/moodle-live-consumer.mjs';
 import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs';
@@ -158,6 +159,10 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   const reader=new ExecutionReader(m);ensure((await reader.call('applicationIds',[],await reader.block()))[0].length===0,'BC_LIVE_REQUIRES_UNUSED_TEST_REALM');
   provider=new JsonRpcProvider(m.endpoint,undefined,{cacheTimeout:-1,batchMaxCount:1});provider.pollingInterval=50;
   auth=createApplicationService({directory:join(directory,'authentication'),origin:prepared.origin,chainId:Number(m.chainId),instanceId:m.instanceId,participants:[participant.address],operators:[operator.address],now});
+  const commandScope=createMoodleCommandScope({enabled:()=>moodleLogin?.native===true,
+   reserve:input=>moodleLogin.reserveCommand(input)});
+  const uiAuthentication=Object.freeze({...auth,authorizeWorkflow(context,write){
+   const actor=auth.authorizeWorkflow(context,write);commandScope.assertContext(context);return actor;}});
   const serviceContext=Object.freeze({});
   const resolveLease=r=>resolveNormalSourceLease(r,{authentication:auth,context:user,closed,participantWallet:prepared.participantWallet,applicationId:app,participantId,runtimeMappingHash,sourceWindows,startedAt,time:now()});
   const resolvePin=r=>{if(r.applicationId!==app||r.participantId!==participantId||r.runtimeMappingHash!==runtimeMappingHash)return null;const c=r.criterionId;
@@ -167,8 +172,8 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   producers['python-basic-certificate']=createLiveReclaimConsumer({selfAttestor:mapping.selfAttestor??null,pins:hackerRank.pins,collectLease:(request,options)=>hackerRank.collectLease(request,{...options,signRequest:message=>ui.requestSignature(request,message,{signal:options.signal})}),resolveLease,now});
   const services={version:'clear-bootcamp-test-execution-port.1',runtimeId:m.environmentId,runtimePinHash:prepared.runtimeHash,authorizeService(c){ensure(c===serviceContext&&!closed&&!failureState&&now()<startedAt+1800,'BC_LIVE_SERVICE');return {serviceId:'normal-worker',runtimeId:m.environmentId,expiresAt:startedAt+1800};},reader:{async snapshot(){throw Error('BC_NORMAL_LEGACY_READER_DISABLED');}},envelope:{async lookup(){throw Error('BC_NORMAL_LEGACY_ENVELOPE_DISABLED');}}};
   connection=openDevelopmentConnection({environmentId:m.environmentId,sourceMode:'REGISTERED_TEST_SOURCE'});
-  store=createBootcampStore({directory:join(directory,'store'),authentication:auth,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,onCollectionFailure:failure=>{report.collectionFailure=failure;write();},resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
-  ui=createNormalUiSession({authentication:auth,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,getApplication:(c,a)=>store.getApplication(c,a),now,diagnostics});
+  store=createBootcampStore({directory:join(directory,'store'),authentication:uiAuthentication,commandScope,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,onCollectionFailure:failure=>{report.collectionFailure=failure;write();},resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
+  ui=createNormalUiSession({authentication:uiAuthentication,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,getApplication:(c,a)=>store.getApplication(c,a),now,diagnostics});
   const bindParticipant=(context,applicationId)=>{
    ensure(!closed&&!app,'BC_LIVE_SINGLE_APPLICATION');ui.bindParticipant(context,applicationId,pins);user=ui.participant();app=applicationId;participantId=store.getApplication(user,app).participantId;
    Object.assign(report,{applicationId:app,participantId,recipient:prepared.participantWallet,sourceStatus:'NOT_COLLECTED',allocationAtoms:'0'});stage('AUTHENTICATED_EXTERNAL_UI_APPLICATION');
@@ -193,7 +198,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    await waitUntil(()=>readers.ready(),{signal:controller.signal,timeoutMs:Math.max(1,(startedAt+1800-now())*1000)});};
   const reflectionApproval=reflectionHost?.createApprovalControl?.({
    authorize:(c,w)=>ui.authorize(c,w),getPreparation:()=>sourceSequence?.preparation,getApplicationId:()=>app,
-   requireReaders:()=>readers.require(),nowMs:()=>Date.now()})??null;
+   requireReaders:()=>readers.require(),nowMs:()=>Date.now(),commandScope})??null;
   const paymentCode=reflectionHost?.codeState?.();
   const paymentAuthority=()=>{readNormalView(()=>ui.participant());ensure(!closed&&now()<startedAt+1800&&paymentCode?.clean===true
    &&JSON.stringify(reflectionHost.codeState())===JSON.stringify(paymentCode),'BC_LIVE_CONTEXT');};
@@ -221,7 +226,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:failureState?null:reflectionApproval?.brief(context)??null});};
   const recipientView=(c,a,checkpoint)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,checkpoint,authorize:(c,w)=>ui.authorize(c,w)});};
-  const normalUi=Object.freeze({walletRuntime:Object.freeze({instanceId:m.instanceId}),assertWritable(path){requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
+  const normalUi=Object.freeze({commandScope,walletRuntime:Object.freeze({instanceId:m.instanceId}),assertWritable(path){requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
    beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
     requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},
@@ -230,10 +235,10 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   stage('AWAITING_EXTERNAL_UI_AUTHENTICATION');
   return Object.freeze({metadataPath:join(directory,'context.json'),
    createMoodleCourseReadHost:options=>moodleRead.createHost(options),
-   configureMoodleLogin(options){
+   configureMoodleLogin(options,{native=false}={}){
     ensure(!closed&&!mounted&&!moodleLogin,'MOODLE_LOGIN_CONFIG');
     moodleLogin=createNormalMoodleLogin({options,ownerRunId:runId,runExpiresAtExclusive:startedAt+1800,
-     authentication:auth,wallets:{PARTICIPANT:participant.address,COURSE_OPERATOR:operator.address},now,signal:controller.signal});
+     authentication:auth,wallets:{PARTICIPANT:participant.address,COURSE_OPERATOR:operator.address},now,signal:controller.signal,native});
     return moodleLogin.owner;
    },
    createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},

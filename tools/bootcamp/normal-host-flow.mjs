@@ -22,9 +22,9 @@ export function reflectionHostOptions(directory,managedRun=null){
  const currentApprovalHash=()=>{try{return hash(readApproval());}catch{return null;}};
  return {reflectionHost:{codeState,day:localDay,...(managedRun?{bindManagedRun:input=>managedRun.bind(input)}:{}),
   recovery:()=>managedRun?.recovery()??{status:'UNOBSERVED',resumeAllowed:false},authorizeResume:()=>managedRun.authorizeResume(),
-  createApprovalControl({authorize,getPreparation,getApplicationId,requireReaders,nowMs}){
+  createApprovalControl({authorize,getPreparation,getApplicationId,requireReaders,nowMs,commandScope}){
    managedRun?.assertCurrent();const config=JSON.parse(readPrivate(join(directory,'host.json')));
-   return createNormalReflectionApproval({directory,config,getPreparation,getApplicationId,requireReaders,nowMs,
+   return createNormalReflectionApproval({directory,config,getPreparation,getApplicationId,requireReaders,nowMs,commandScope,
     currentCodeState:codeState,currentDay:localDay,authorize(c,w){managedRun?.assertCurrent();return authorize(c,w);}});
   }},readApproval,currentApprovalHash};
 }

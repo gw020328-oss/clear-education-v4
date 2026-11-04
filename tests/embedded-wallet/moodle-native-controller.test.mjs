@@ -146,7 +146,7 @@ test('native handshake confines sesskey to C and lost finish response invokes on
     api: async (path, options) => {
       assert(!JSON.stringify(options).includes(config.sesskey)); seen.push(path);
       return path.endsWith('bootstrap') ? {challenge: hex, expiresAtExclusive: 2000}
-        : {status: 'WAITING', role: 'operator', expiresAtExclusive:2000};
+        : {status: 'WAITING', role: 'operator', expiresAtExclusive:2000, commandBinding:'cc'.repeat(32)};
     },
     fetch: async (url, options) => {
       assert.equal(url, origin + '/local/clearbridge/login_action.php');
@@ -191,7 +191,7 @@ test('native status and end retain the original intent target and never accept N
   const proof = 'aa'.repeat(32), target = 'bb'.repeat(32), forms = [];
   const login = createNativeMoodleLogin({config, locks:{request:(_name,_options,run)=>run()},
     api:async path=>path.endsWith('bootstrap')?{challenge:proof,expiresAtExclusive:2000}
-      :{status:'WAITING',role:'operator',expiresAtExclusive:2000},
+      :{status:'WAITING',role:'operator',expiresAtExclusive:2000,commandBinding:'cc'.repeat(32)},
     fetch:async (_url,options)=>{
       const form=Object.fromEntries(options.body); forms.push(form);
       if(form.operation==='finish')throw Error('lost response');

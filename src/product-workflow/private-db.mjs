@@ -8,7 +8,16 @@ export function openPrivateDb(directory,name,environment,schema,tables){
   const path=join(root,name);try{closeSync(openSync(path,constants.O_CREAT|constants.O_EXCL|constants.O_WRONLY|constants.O_NOFOLLOW,0o600));}catch(e){if(e.code!=='EEXIST')throw e;}
   const f=lstatSync(path);check(f.isFile()&&!f.isSymbolicLink()&&f.nlink===1&&f.uid===process.getuid()&&(f.mode&0o777)===0o600,'WORKFLOW_DB_FILE');
   const db=new DatabaseSync(path,{timeout:5000,allowExtension:false});
-  const transaction=fn=>{db.exec('BEGIN IMMEDIATE');try{const r=fn();db.exec('COMMIT');return r;}catch(e){db.exec('ROLLBACK');throw e;}};
+  const sync=value=>{check(!value||typeof value.then!=='function','WORKFLOW_DB_ASYNC_HOOK');};
+  const transaction=(fn,{beforeCommit,afterCommit}={})=>{
+    check((beforeCommit===undefined||typeof beforeCommit==='function')
+      &&(afterCommit===undefined||typeof afterCommit==='function'),'WORKFLOW_DB_HOOK');
+    db.exec('BEGIN IMMEDIATE');let result;
+    try{result=fn();if(beforeCommit)sync(beforeCommit(result));db.exec('COMMIT');}
+    catch(error){db.exec('ROLLBACK');throw error;}
+    // This callback cannot turn a completed durable COMMIT into a rollback.
+    if(afterCommit)sync(afterCommit(result));return result;
+  };
   try{db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA trusted_schema=OFF;');transaction(()=>{
     const exists=db.prepare("SELECT name FROM sqlite_schema WHERE name='metadata' AND type='table'").get();
     check(exists||db.prepare("SELECT COUNT(*) AS n FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'").get().n===0,'WORKFLOW_DB_NOT_EMPTY');

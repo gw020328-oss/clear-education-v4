@@ -13,7 +13,7 @@ import {localDay} from '../../tools/bootcamp/normal-host-config.mjs';
 import {awaitExactReflectionApproval} from '../../tools/bootcamp/normal-host-flow.mjs';
 const hash=v=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
 export const put=(path,value)=>writeFileSync(path,JSON.stringify(value),{mode:0o600});
-export async function normalApprovalFixture(t,{approver='operator'}={}){
+export async function normalApprovalFixture(t,{approver='operator',commandScope=null}={}){
  const f=await storeFixture(t),app=f.create(),base=join(f.directory,'owner'),directory=join(base,'var/bootcamp-normal-host','normal-offline-window');mkdirSync(directory,{recursive:true,mode:0o700});
  f.configuration.operatorBindings=[{wallet:f.operator.address,courseOperatorRef:'course-operator-demo'}];f.restart();
  mkdirSync(join(base,'artifacts'),{mode:0o700});
@@ -45,7 +45,7 @@ export async function normalApprovalFixture(t,{approver='operator'}={}){
  let pending=prepared,fetches=0,keys=0,unknown=false,approvalCurrent=true,wireWait=async()=>{};
  const control=createNormalReflectionApproval({directory,config,authorize:(c,w)=>{capability.assertCurrent();return f.service.authorizeWorkflow(c,w);},
   getPreparation:()=>pending,getApplicationId:()=>app,currentCodeState:()=>code,currentDay:()=>day,
-  requireReaders:()=>readers.require(),nowMs:()=>f.time*1000});
+  requireReaders:()=>readers.require(),nowMs:()=>f.time*1000,commandScope});
  const actor=approver==='operator'?f.operatorContext:f.aliceContext;
  const body=()=>{const a=control.brief(actor);return {version:'clear-normal-ai-approval-action.1',applicationId:app,
   bodySha256:a.bodySha256,planHash:a.planHash,contextHash:a.contextHash,runBindingHash:a.runBindingHash,

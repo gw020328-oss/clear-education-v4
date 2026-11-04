@@ -1,5 +1,6 @@
 import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
 import {canonical, exactKeys, requireRule as check} from '../../src/policy/values.mjs';
+import {MOODLE_COMMAND_VERSION, moodleCommandDigest} from '../../src/embedded-wallet/moodle-command.mjs';
 
 export const MOODLE_LOGIN_INTENT = 'clear-moodle-login-intent.1';
 const roles = ['PARTICIPANT', 'COURSE_OPERATOR'];
@@ -50,7 +51,8 @@ export function createMoodleLoginIntents({
   function clearAttempt(a, phase) {
     launches.delete(a.launchHash);
     browsers.delete(a.browserHash);
-    a.finishProofHash = a.handbackHash = a.handback = a.context = null;
+    a.finishProofHash = a.handbackHash = a.handback = a.context = a.commandBindingHash = null;
+    for (const command of a.commands?.values() ?? []) command.phase = 'UNKNOWN';
     a.phase = phase;
   }
   function request(input, operation, t) {
@@ -185,7 +187,7 @@ export function createMoodleLoginIntents({
         expiresAtExclusive, monotonicEnd: t.mono + 120000});
       return {challenge, bootstrapCookie, expiresAtExclusive};
     },
-    redeem({code, browserProof, challenge, bootstrapCookie}) {
+    redeem({code, browserProof, challenge, bootstrapCookie}, {native = false} = {}) {
       check(hex(code) && hex(challenge), 'MOODLE_LOGIN_LAUNCH');
       const a = launches.get(digest(code).toString('hex')), t = time(), challengeHash = digest(challenge).toString('hex');
       const pending = bootstraps.get(challengeHash);
@@ -196,10 +198,13 @@ export function createMoodleLoginIntents({
       bootstraps.delete(challengeHash);
       launches.delete(a.launchHash);
       const browserBinding = token();
+      const commandBinding = native ? token() : null;
+      if (native) { a.commandBindingHash = digest(commandBinding); a.commands = new Map(); }
       a.browserHash = digest(browserBinding).toString('hex');
       a.phase = 'WAITING';
       browsers.set(a.browserHash, a);
-      return {location: routes[a.request.role], browserBinding, expiresAtExclusive: a.expiresAtExclusive};
+      return {location: routes[a.request.role], browserBinding, expiresAtExclusive: a.expiresAtExclusive,
+        ...(native ? {commandBinding} : {})};
     },
     browserPending(binding) {
       if (!hex(binding)) return false;
@@ -263,6 +268,60 @@ export function createMoodleLoginIntents({
     },
     status(input, options) { return inspect(input, 'status', options); },
     end(input, options) { return inspect(input, 'end', options); },
+    async authorizeCommand(input, {signal, assertCurrent} = {}) {
+      const t = time();
+      exactKeys(input, [...requestKeys,'intentRef','commandHash'], 'MOODLE_COMMAND_REQUEST');
+      check(input.version === MOODLE_COMMAND_VERSION && hex(input.commandHash)
+        && typeof assertCurrent === 'function' && signal instanceof AbortSignal, 'MOODLE_COMMAND_REQUEST');
+      // Reuse the same strict identity/expiry shape without widening login DTOs.
+      const {commandHash, ...loginInput} = input;
+      request({...loginInput,version:MOODLE_LOGIN_INTENT}, 'status', t);
+      const q = Object.freeze(structuredClone(input)), a = attempts.get(q.intentRef);
+      check(a?.phase === 'CONNECTED' && a.request.role === q.role && a.commandBindingHash
+        && a.commands.size < 64 && !a.commands.has(q.requestRef)
+        && ![...a.commands.values()].some(c => c.hash === commandHash), 'MOODLE_COMMAND_UNAVAILABLE');
+      // Reserve this C authorization reference before awaiting the independent verifier.
+      const command = {phase:'VERIFYING',hash:commandHash}; a.commands.set(q.requestRef,command);
+      try {
+        const grant = await authority('authorize-command', q, t, signal);
+        check(grant.identity === a.identity && a.phase === 'CONNECTED'
+          && grant.expiresAtExclusive >= q.expiresAtExclusive && a.expiresAtExclusive >= q.expiresAtExclusive, 'MOODLE_COMMAND_IDENTITY');
+        clearExpiry(q.role, a.context);
+        requireLive(a,signal); requireCurrentOperation(q,t,grant,signal); assertCurrent();
+        Object.assign(command,{phase:'AUTHORIZED',q,t,grant,signal,assertCurrent});
+        return {version:MOODLE_COMMAND_VERSION,requestRef:q.requestRef,status:'AUTHORIZED',
+          expiresAtExclusive:q.expiresAtExclusive};
+      } catch (error) { command.phase = 'UNKNOWN'; throw error; }
+    },
+    reserveCommand({requestRef,commandBinding,context,command:input,signal}) {
+      check(hex(requestRef) && hex(commandBinding) && signal instanceof AbortSignal, 'MOODLE_COMMAND_REQUEST');
+      const commandHash = moodleCommandDigest(input);
+      const a = [...attempts.values()].find(a => a.commands?.has(requestRef));
+      const command = a?.commands.get(requestRef);
+      check(a?.phase === 'CONNECTED' && command?.phase === 'AUTHORIZED'
+        && command.hash === commandHash && matches(commandBinding,a.commandBindingHash)
+        && canonical(context) === canonical(a.context), 'MOODLE_COMMAND_BINDING');
+      const fence = () => {
+        signal.throwIfAborted();
+        check(['RESERVED','EFFECT'].includes(command.phase) && a.phase === 'CONNECTED'
+          && matches(commandBinding,a.commandBindingHash) && canonical(context) === canonical(a.context)
+          && moodleCommandDigest(input) === command.hash, 'MOODLE_COMMAND_BINDING');
+        try { clearExpiry(a.request.role,context); }
+        catch(error) { clearAttempt(a,'ENDED'); throw error; }
+        requireLive(a,signal); requireCurrentOperation(command.q,command.t,command.grant,command.signal);
+        command.assertCurrent(); signal.throwIfAborted();
+      };
+      command.phase = 'RESERVED';
+      try { fence(); } catch(error) { command.phase = 'UNKNOWN'; throw error; }
+      return Object.freeze({
+        assert: fence,
+        assertContext(candidate) { check(canonical(candidate) === canonical(context),'MOODLE_COMMAND_CONTEXT'); fence(); },
+        durable() { check(command.phase === 'RESERVED' || command.phase === 'EFFECT','MOODLE_COMMAND_BINDING'); command.phase = 'EFFECT'; },
+        committed() { check(['RESERVED','EFFECT'].includes(command.phase),'MOODLE_COMMAND_BINDING'); command.phase = 'CONSUMED'; },
+        fail() { if(command.phase !== 'CONSUMED') command.phase = 'UNKNOWN'; },
+        finish() { check(command.phase === 'CONSUMED','MOODLE_COMMAND_NOT_COMMITTED'); },
+      });
+    },
     close() {
       closed = true;
       for (const a of attempts.values()) clearAttempt(a, 'ENDED');

@@ -11,7 +11,7 @@ const safePath = path => typeof path === 'string' && path.startsWith('/') && !pa
   && !/[\\%?#\x00-\x20\x7f]/.test(path) && !path.split('/').some(p => p === '.' || p === '..');
 const headersFor = owner => new Set(owner === 'A'
   ? ['accept', 'content-type', 'content-length', 'origin', 'sec-fetch-site', 'sec-fetch-mode', 'sec-fetch-dest',
-    'x-wallet', 'x-chain-id', 'x-csrf-token', 'idempotency-key']
+    'x-wallet', 'x-chain-id', 'x-csrf-token', 'idempotency-key', 'x-clear-command-ref', 'x-clear-command-binding']
   : ['accept', 'accept-language', 'content-type', 'content-length', 'origin', 'sec-fetch-site', 'sec-fetch-mode', 'sec-fetch-dest']);
 
 export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 'MoodleSession'}) {

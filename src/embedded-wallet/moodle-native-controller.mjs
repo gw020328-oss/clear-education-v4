@@ -5,6 +5,7 @@ import {createClearSession} from './clear-session.mjs';
 import {createSameOriginApi} from '../application/api-client.mjs';
 import {bounded} from './provider-boundary.mjs';
 import {createNativeMoodleLogin} from './moodle-native-login.mjs';
+import {moodleCommandDigest} from './moodle-command.mjs';
 import {MOODLE_WALLET_VERSION, validateCourseWalletView, validateCourseWalletCommand} from './moodle-native-contract.mjs';
 
 const check = (ok, code) => { if (!ok) throw Error(code); };
@@ -49,9 +50,9 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   function current(stamp, signal) { check(!closed && stamp === epoch && !signal.aborted, 'CANCELLED'); }
   async function endMoodle(signal) {
     if (endingMoodle) return endingMoodle;
-    // C currently resolves end against its session's current intent. Retrying an
-    // uncertain end, or accepting a later status, cannot retire a delayed request
-    // safely before a new start. Keep this latch independent of CLEAR revocation.
+    // A target mismatch (NOT_CURRENT) or a later status cannot confirm that this
+    // original end completed. No automatic retry/reconnect is allowed after an
+    // uncertain result. Keep this latch independent of CLEAR revocation.
     check(!moodleEndUnknown, 'MOODLE_END_UNKNOWN');
     endingMoodle = (async () => {
       try { await moodle.end(signal); }
@@ -199,7 +200,21 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     } finally { if (busy === controller) busy = null; emit(); }
   }
   emit();
-  return Object.freeze({dispatch, update, async destroy() {
+  return Object.freeze({dispatch, update, async submitCommand(input) {
+    const command = structuredClone(input); moodleCommandDigest(command);
+    check(!closed && !busy && !cancellation && !revokeUnknown && !moodleEndUnknown
+      && phase === 'CONNECTED' && authenticated && session && wallet, 'MOODLE_COMMAND_NOT_READY');
+    const captured = session, controller = new AbortController(), stamp = epoch;
+    busy = controller; emit();
+    try {
+      const result = await bounded(()=>moodle.command(captured,command,controller.signal),{signal:controller.signal,timeoutMs:13000});
+      current(stamp,controller.signal); check(session === captured,'AUTH_REQUIRED'); return result;
+    } catch(error) {
+      // A failed response never permits this command to be automatically sent again.
+      if (stamp === epoch && !closed) await cancel();
+      throw error;
+    } finally { if(busy === controller) busy = null; emit(); }
+  }, async destroy() {
     if (closed) return;
     closed = true; epoch++; busy?.abort(); busy = null; stopDiscovery();
     moodle.invalidate?.();

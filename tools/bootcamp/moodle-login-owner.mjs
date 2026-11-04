@@ -25,7 +25,8 @@ export function createNormalMoodleLogin({options, ownerRunId, runExpiresAtExclus
     });
     const browser = createMoodleLoginBrowser({origin: authentication.origin, moodleOrigin: options.moodleOrigin,
       ownerRunId, intents, now, signal, native});
-    const owner = Object.freeze({issue: intents.issue, status: intents.status, end: intents.end, finish: intents.finish});
-    return Object.freeze({browser, owner, close});
+    const owner = Object.freeze({issue: intents.issue, status: intents.status, end: intents.end, finish: intents.finish,
+      authorizeCommand:intents.authorizeCommand});
+    return Object.freeze({browser, owner, reserveCommand:intents.reserveCommand, native, close});
   } catch (error) { close(); throw error; }
 }

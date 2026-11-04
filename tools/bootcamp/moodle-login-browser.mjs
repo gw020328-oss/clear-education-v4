@@ -80,14 +80,14 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
         }
         exactKeys(value, ['code', 'challenge', 'browserProof'], 'MOODLE_LOGIN_LAUNCH');
         check(!intents.browserPending(readCookie(req.headers.cookie, bindingName)), 'MOODLE_LOGIN_BROWSER_BUSY');
-        const binding = intents.redeem({...value, bootstrapCookie: readCookie(req.headers.cookie, bootstrapName)});
+        const binding = intents.redeem({...value, bootstrapCookie: readCookie(req.headers.cookie, bootstrapName)}, {native});
         if (native) {
           check(['/onboarding', '/operator'].includes(binding.location), 'MOODLE_LOGIN_ROLE');
           res.writeHead(200, {'Content-Type': 'application/json', 'Set-Cookie': [
             cookie(bootstrapName, '', 0), cookie(bindingName, binding.browserBinding, binding.expiresAtExclusive - now()),
           ]});
           res.end(JSON.stringify({status: 'WAITING', role: binding.location === '/operator' ? 'operator' : 'participant',
-            expiresAtExclusive: binding.expiresAtExclusive}));
+            expiresAtExclusive: binding.expiresAtExclusive,commandBinding:binding.commandBinding}));
           return;
         }
         res.writeHead(303, {Location: binding.location, 'Set-Cookie': [

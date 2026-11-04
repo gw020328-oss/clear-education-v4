@@ -36,7 +36,9 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));}catch{throw new RuleError('BC_HTTP_JSON');}
       }
       if(req.method==='POST')normalUi?.assertWritable?.(req.url);
-      const path=req.url,key=req.headers['idempotency-key'];let result;
+      const path=req.url,key=req.headers['idempotency-key'],commandScope=normalUi?.commandScope;
+      const business=work=>commandScope?commandScope.business(work):work();
+      const execute=async()=>{let result;
       if(v4&&path==='/bootcamp/v4/session'){
         check(req.method==='GET'&&typeof normalUi?.getSession==='function','BC_NOT_FOUND');result=normalUi.getSession(context);
       }
@@ -76,7 +78,7 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
           check(methods[resource],'BC_NOT_FOUND');if(resource==='recipient-registration')normalUi?.beforeRecipientRegistration?.(context,a);if(resource==='review-consents'&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');normalUi?.assertWritable?.(req.url);
           const consentOptions=resource==='review-consents'&&normalUi?.beforeReviewConsent
             ?{beforeNewConsent:view=>normalUi.beforeReviewConsent(context,a,body,view)}:undefined;
-          result=store[methods[resource]](context,a,body,key,consentOptions);
+          result=business(()=>store[methods[resource]](context,a,body,key,consentOptions));
         }else check(false,'BC_NOT_FOUND');
       }
       else if(v2){
@@ -109,7 +111,7 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         }
       }
       else if(path==='/bootcamp/v1/policy'&&req.method==='GET')result=store.policy(context);
-      else if(path==='/bootcamp/v1/applications'&&req.method==='POST')result=store.createApplication(context,body,key);
+      else if(path==='/bootcamp/v1/applications'&&req.method==='POST')result=business(()=>store.createApplication(context,body,key));
       else{
         const m=/^\/bootcamp\/v1\/applications\/([a-z][a-z0-9.-]{0,63})(?:\/(requests|collect|invalidations|cancel|operations|decisions|evidence)(?:\/([a-z][a-z0-9.-]{0,63}))?)?$/.exec(path);
         check(m,'BC_NOT_FOUND');const [,applicationId,resource,target]=m;
@@ -131,6 +133,10 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
           }else check(false,'BC_NOT_FOUND');
         }else check(false,'BC_NOT_FOUND');
       }
+      return result;};
+      const result=commandScope?await commandScope.run({requestRef:req.headers['x-clear-command-ref'],
+        commandBinding:req.headers['x-clear-command-binding'],context,signal:controller.signal,
+        command:{method:req.method,path,body,idempotencyKey:key??null}},execute):await execute();
       res.writeHead(200);res.end(JSON.stringify(result));
     }catch(error){
       const safe=error instanceof RuleError&&/^[A-Z0-9_]+$/.test(error.message)?error.message:'BC_INTERNAL';

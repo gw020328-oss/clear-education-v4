@@ -37,11 +37,11 @@ test('fixed route inventory separates callback, private authority and encoded pa
 test('gateway requests never send CLEAR cookies/CSRF to PHP or Moodle sessions to A', () => {
   const p = policy(), headers = {cookie: 'MoodleSession=synthetic; __Host-clear-session=synthetic; privy-token=synthetic',
     origin, host: 'attacker.test', 'x-wallet': 'synthetic', 'x-chain-id': '1', 'x-csrf-token': 'synthetic',
-    'x-forwarded-host': 'attacker.test', 'x-clear-document-nonce': 'attacker', authorization: 'synthetic'};
+    'x-clear-command-binding':'synthetic','x-clear-command-ref':'synthetic', 'x-forwarded-host': 'attacker.test', 'x-clear-document-nonce': 'attacker', authorization: 'synthetic'};
   const c = p.requestHeaders('C', headers, 'a'.repeat(32)), a = p.requestHeaders('A', headers);
   assert.equal(c.cookie, 'MoodleSession=synthetic');
   assert.equal(a.cookie, '__Host-clear-session=synthetic');
-  for (const key of ['x-wallet', 'x-chain-id', 'x-csrf-token', 'authorization', 'x-forwarded-host']) assert.equal(c[key], undefined);
+  for (const key of ['x-wallet', 'x-chain-id', 'x-csrf-token', 'x-clear-command-binding', 'x-clear-command-ref', 'authorization', 'x-forwarded-host']) assert.equal(c[key], undefined);
   assert.equal(c.host, '127.0.0.1:9477'); assert.equal(c['x-clear-document-nonce'], 'a'.repeat(32));
   assert.equal(a['x-clear-document-nonce'], undefined);
   assert.throws(() => p.requestHeaders('A', {cookie: '__Host-clear-session=a; __Host-clear-session=b'}));
@@ -106,7 +106,9 @@ for (const role of ['PARTICIPANT', 'COURSE_OPERATOR']) test('native JSON handoff
   assert.equal((await invoke(browser, '/moodle/connect/redeem', {...input, browserProof: hex(20)}, cookie)).status, 403);
   const redeemed = await invoke(browser, '/moodle/connect/redeem', input, cookie);
   assert.equal(redeemed.status, 200); assert.equal(redeemed.headers.location, undefined);
-  assert.deepEqual(redeemed.body, {status: 'WAITING', role: role === 'PARTICIPANT' ? 'participant' : 'operator', expiresAtExclusive: 1300});
+  assert.match(redeemed.body.commandBinding,/^[a-f0-9]{64}$/);
+  assert(!JSON.stringify(redeemed.headers).includes(redeemed.body.commandBinding));
+  assert.deepEqual(redeemed.body, {status: 'WAITING', role: role === 'PARTICIPANT' ? 'participant' : 'operator', expiresAtExclusive: 1300,commandBinding:redeemed.body.commandBinding});
   assert.equal((await invoke(browser, '/moodle/connect/redeem', input, cookie)).status, 403);
   assert.equal(browser.matches('/moodle/connect'), false); assert.equal(browser.matches('/moodle/connect/google-start'), false);
   assert.equal((await invoke(browser, '/moodle/connect/bootstrap', {role})).status, 403);

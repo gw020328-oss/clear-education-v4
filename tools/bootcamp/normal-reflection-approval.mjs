@@ -37,7 +37,7 @@ export function readNormalAiAuthority({directory,config,codeHead}){
 }
 
 export function createNormalReflectionApproval({directory,config,authorize,getPreparation,getApplicationId,
-  currentCodeState,currentDay,requireReaders,nowMs=()=>Date.now()}){
+  currentCodeState,currentDay,requireReaders,nowMs=()=>Date.now(),commandScope=null}){
   const paths={request:join(directory,'approval-request.json'),template:join(directory,'approval-template.json'),
     approval:join(directory,'approval.json'),evidence:join(directory,'human-ai-approval-evidence.json'),
     spent:join(directory,'ai-reflection/spent.paid-wire.v3.lock')};
@@ -102,7 +102,11 @@ export function createNormalReflectionApproval({directory,config,authorize,getPr
       const approval={...template,authorization:{kind:'DIRECT_HUMAN_FRESH_NORMAL_ONE',evidenceSha256:hash(evidence)}};
       validateNormalReflectionClearance({packet:p,approval,codeState:code,day:currentDay()});
       // Synchronous exclusive writes; a partial failure is retained and cannot be retried into a new grant.
-      try{atomicPrivate(paths.evidence,evidence,{exclusive:true});atomicPrivate(paths.approval,approval,{exclusive:true});}
+      try{
+        commandScope?.beforeFile();atomicPrivate(paths.evidence,evidence,{exclusive:true});commandScope?.afterFile();
+        commandScope?.beforeFile();atomicPrivate(paths.approval,approval,{exclusive:true});commandScope?.afterFile();
+        commandScope?.filesCommitted();
+      }
       catch{check(false,'BC_NORMAL_AI_APPROVAL_RECORD_FAILED');}
       return {version:'clear-normal-ai-approval-receipt.1',applicationId,runBindingHash:m.bindingHash,
         status:'RECORDED',maxGenerationCalls:1,paymentConsentIncluded:false};

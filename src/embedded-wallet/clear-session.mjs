@@ -101,11 +101,17 @@ export function createClearSession({wallet, api, config, now = () => Math.floor(
     return {...before};
   }
   return Object.freeze({authenticate, assertSession, invalidate, state: publicState,
-    async request(path, {method = 'GET', body, idempotencyKey, signal} = {}) {
+    async request(path, {method = 'GET', body, idempotencyKey, signal, moodleCommand} = {}) {
       const s = await assertSession(signal);
+      if (moodleCommand !== undefined) {
+        check(c.surface === 'MOODLE_NATIVE' && method === 'POST'
+          && moodleCommand && Object.keys(moodleCommand).sort().join(',') === 'commandBinding,requestRef'
+          && /^[a-f0-9]{64}$/.test(moodleCommand.commandBinding) && /^[a-f0-9]{64}$/.test(moodleCommand.requestRef), 'SESSION_MOODLE_COMMAND');
+      }
       const scope = signal ? AbortSignal.any([lifetime.signal, signal]) : lifetime.signal;
       const result = await api(path, {method, body, signal: scope,
-        headers: {...headers(s), ...(idempotencyKey ? {'idempotency-key': idempotencyKey} : {})}});
+        headers: {...headers(s), ...(idempotencyKey ? {'idempotency-key': idempotencyKey} : {}),
+          ...(moodleCommand ? {'x-clear-command-ref':moodleCommand.requestRef,'x-clear-command-binding':moodleCommand.commandBinding} : {})}});
       try { await guard(signal); }
       catch (error) { if (method !== 'GET') Object.assign(error, {outcome: 'UNKNOWN', nextAction: 'CHECK_RESULT'}); throw error; }
       return result;

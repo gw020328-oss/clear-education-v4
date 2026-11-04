@@ -1,12 +1,13 @@
 // C receives only its sesskey and original-tab proof, never a CLEAR cookie,
 // CSRF value, wallet signature or provider token. Authority remains server-side.
+import {moodleCommandDigest} from './moodle-command.mjs';
 const check = ok => { if (!ok) throw Error('MOODLE_LOGIN_UNAVAILABLE'); };
 const hex = v => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
 const exact = (v, keys) => v && Object.keys(v).length === keys.length && keys.every(k => Object.hasOwn(v, k));
 export function createNativeMoodleLogin({config, api, fetch: fetchImpl = globalThis.fetch, locks = globalThis.navigator?.locks}) {
   check(config.surface === 'MOODLE_NATIVE' && Number.isSafeInteger(config.courseId) && config.courseId > 0
     && typeof config.sesskey === 'string' && /^[a-zA-Z0-9]{10,64}$/.test(config.sesskey) && locks?.request);
-  let finishProof = null, intentTarget = null, pending = false, attempted = false;
+  let finishProof = null, intentTarget = null, commandBinding = null, pending = false, attempted = false;
   async function course(operation, fields, signal) {
     const response = await fetchImpl(config.origin + '/local/clearbridge/login_action.php', {
       method: 'POST', credentials: 'same-origin', redirect: 'error', cache: 'no-store', signal,
@@ -16,9 +17,9 @@ export function createNativeMoodleLogin({config, api, fetch: fetchImpl = globalT
     const result = await response.json(); signal?.throwIfAborted(); return result;
   }
   return Object.freeze({
-    invalidate() { finishProof = null; },
+    invalidate() { finishProof = null; commandBinding = null; },
     async begin(signal) {
-      check(!pending && !attempted); pending = true; finishProof = null; intentTarget = null;
+      check(!pending && !attempted); pending = true; finishProof = null; intentTarget = null; commandBinding = null;
       try {
         await locks.request('clear-moodle-login-redeem', {signal}, async () => {
           signal.throwIfAborted();
@@ -32,9 +33,11 @@ export function createNativeMoodleLogin({config, api, fetch: fetchImpl = globalT
           intentTarget = issued.intentTarget;
           const binding = await api('/moodle/connect/redeem', {method: 'POST', signal,
             body: {code: issued.launchCode, challenge: boot.challenge, browserProof: issued.browserProof}});
-          check(exact(binding, ['status', 'role', 'expiresAtExclusive']) && binding.status === 'WAITING' && binding.role === config.role);
+          check(exact(binding, ['status', 'role', 'expiresAtExclusive', 'commandBinding']) && binding.status === 'WAITING'
+            && binding.role === config.role && hex(binding.commandBinding));
+          commandBinding = binding.commandBinding;
         });
-      } catch (error) { finishProof = null; throw error; }
+      } catch (error) { finishProof = null; commandBinding = null; throw error; }
       finally { pending = false; }
     },
     async complete(session, signal) {
@@ -55,12 +58,22 @@ export function createNativeMoodleLogin({config, api, fetch: fetchImpl = globalT
       finishProof = null;
     },
     async end(signal) {
-      finishProof = null;
+      finishProof = null; commandBinding = null;
       if (!attempted) return;
       check(hex(intentTarget));
       const result = await course('end', {intentTarget}, signal);
       check(exact(result, ['status']) && ['ENDED', 'UNAVAILABLE', 'EXPIRED'].includes(result.status));
       attempted = false; intentTarget = null;
+    },
+    async command(session, input, signal) {
+      const binding = commandBinding, commandHash = moodleCommandDigest(input);
+      check(hex(binding)); await session.assertSession(signal);
+      const grant = await course('authorize-command', {commandHash}, signal);
+      check(exact(grant,['status','requestRef','expiresAtExclusive']) && grant.status === 'AUTHORIZED'
+        && hex(grant.requestRef) && Number.isSafeInteger(grant.expiresAtExclusive)
+        && Date.now() < grant.expiresAtExclusive * 1000 && commandBinding === binding);
+      return session.request(input.path,{method:input.method,body:input.body,idempotencyKey:input.idempotencyKey,
+        signal,moodleCommand:{requestRef:grant.requestRef,commandBinding:binding}});
     },
   });
 }

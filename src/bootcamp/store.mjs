@@ -65,7 +65,7 @@ const requestGuardHash=(g,version)=>version==='clear-bootcamp-bound-request.2'?p
 // authentication and in-process producer/source authority; HTTP never supplies it.
 export function createBootcampStore({directory,authentication,instanceId,demoStartedAt,courseOperatorRef='course-operator-demo',
   mode='DISABLED',runtimeMappingHash=DEFAULT_MAPPING_HASH,producers={},resolveSource=()=>null,
-  now=()=>Math.floor(Date.now()/1000),fault=()=>{},onCollectionFailure=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null,executionConnection=null,executionFenceWitness=null,executionBridge=null}){
+  now=()=>Math.floor(Date.now()/1000),fault=()=>{},onCollectionFailure=()=>{},operatorBindings=[],resolveOperatorBindings=null,measurement={},procedurePorts=null,executionServices=null,executionConnection=null,executionFenceWitness=null,executionBridge=null,commandScope=null}){
   id(instanceId);id(courseOperatorRef);epoch(demoStartedAt);hash(runtimeMappingHash);
   check(['DISABLED','SYNTHETIC_FIXTURE','ISOLATED_LIVE_TEST'].includes(mode)&&typeof resolveSource==='function'&&typeof now==='function'&&typeof fault==='function','BC_CONFIGURATION');
   check(typeof authentication?.authorizeWorkflow==='function','BC_AUTHENTICATION');
@@ -94,7 +94,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
   const transaction=fn=>baseTransaction(()=>{if(e4BridgePorts.configured)db.prepare('UPDATE e5b_meta SET writer=1 WHERE id=1').run();
     db.prepare('UPDATE e5_worker_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=1 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=1 WHERE id=1').run();
     db.prepare('UPDATE e3_meta SET writer=1 WHERE id=1').run();
-    try{return sync(fn());}finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_worker_meta SET writer=0 WHERE id=1').run();if(e4BridgePorts.configured)db.prepare('UPDATE e5b_meta SET writer=0 WHERE id=1').run();}});
+    try{return sync(fn());}finally{db.prepare('UPDATE e3_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE r2_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_meta SET writer=0 WHERE id=1').run();db.prepare('UPDATE e5_worker_meta SET writer=0 WHERE id=1').run();if(e4BridgePorts.configured)db.prepare('UPDATE e5b_meta SET writer=0 WHERE id=1').run();}},commandScope?.transactionHooks());
   const ledger=r2Ledger(db,measurement);
   const normalizeOperators=bindings=>{check(Array.isArray(bindings),'BC_OPERATOR_BINDING');return bindings.map(b=>{
     exactKeys(b,['wallet','courseOperatorRef'],'BC_OPERATOR_BINDING');id(b.courseOperatorRef);
