@@ -56,9 +56,10 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
     requireRule(live.status === 'ACTIVE' && live.policyHash === boot.policyHash, 'STALE_WORKER');
     for (const [name, path] of Object.entries(paths)) requireRule(canonical(checkFile(path)) === canonical(files[name]), 'DB_REPLACED');
   };
-  function transaction(fn, finalCheck = () => {}) {
+  function transaction(fn, finalCheck) {
     requireRule(!closed, 'CLOSED'); deployment();
-    db.exec('BEGIN IMMEDIATE');
+    // Take the commit locks before sampling a time-sensitive final fence.
+    db.exec(finalCheck ? 'BEGIN EXCLUSIVE' : 'BEGIN IMMEDIATE');
     try {
       sqlPolicy.inspect(db); deployment();
       const p = validatePolicy(JSON.parse(get('SELECT record FROM main.policy WHERE id=1').record));
@@ -70,10 +71,11 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
       requireRule(began.wall >= floor && began.wall < p.validUntil, 'CLOCK_OR_POLICY_EXPIRED');
       const value = fn(p, began);
       requireRule(!value?.then, 'ASYNC_TRANSACTION');
+      deployment();
       const final = sample(clock);
       requireRule(final.wall >= began.wall && final.mono >= began.mono && final.wall < p.validUntil, 'FINAL_CLOCK');
       if (value?.expiresAtExclusive !== undefined) requireRule(final.wall < value.expiresAtExclusive, 'FINAL_EXPIRED');
-      finalCheck(p, final); deployment();
+      finalCheck?.(p, final);
       run('UPDATE main.clock SET floor=? WHERE id=1', final.wall);
       db.exec('COMMIT'); return value;
     } catch (e) { if (db.isTransaction) db.exec('ROLLBACK'); throw e; }

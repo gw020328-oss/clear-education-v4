@@ -7,7 +7,7 @@ import { createBindingCoordinator, createSyntheticVerifier, installationVerifier
 import { createSqlPolicy } from '../../src/agent-preview/moodle-binding/sql-policy.mjs';
 import { schemas } from '../../src/agent-preview/moodle-binding/schema.mjs';
 import { digest, hash } from '../../src/agent-preview/moodle-binding/contract.mjs';
-import { fixture, context, responseFor } from './fixtures/binding-module-fixture.mjs';
+import { fixture, context, responseFor, timePolicy } from './fixtures/binding-module-fixture.mjs';
 
 test('real module starts, previews, consumes, reads and survives reopen without product writes', async t => {
   const f = fixture(t), before = [f.fingerprint('auth'), f.fingerprint('workflow')];
@@ -219,7 +219,7 @@ test('two real module processes pass local checks before exactly one consumes', 
   assert.equal(f.sql('main', "SELECT event FROM audit WHERE event='CONSUMED'").length, 1);
 });
 
-test('COMMIT busy failure rolls back binding, CAS and audit together', { timeout: 10000 }, async t => {
+test('final transaction lock failure leaves binding, CAS and audit untouched', { timeout: 10000 }, async t => {
   const f = fixture(t), a = f.start(), p = await f.preview(a);
   const reader = new DatabaseSync(f.paths.main);
   f.state.query = request => {
@@ -229,6 +229,33 @@ test('COMMIT busy failure rolls back binding, CAS and audit together', { timeout
   try {
     await assert.rejects(f.complete(a, p), /locked/);
   } finally { reader.exec('ROLLBACK'); reader.close(); }
+  assert.equal(f.sql('main', 'SELECT status FROM attempts')[0].status, 'PENDING');
+  assert.equal(f.sql('main', 'SELECT * FROM bindings').length, 0);
+  assert.equal(f.sql('main', "SELECT event FROM audit WHERE event='CONSUMED'").length, 0);
+});
+
+
+test('reader releases after final deadline but before SQLite busy timeout', { timeout: 10000 }, async t => {
+  const f = fixture(t, { timePolicy: { ...timePolicy, finalFenceMs: 50 } });
+  f.config.clock.monotonic = () => performance.now();
+  f.reopen();
+  const a = f.start(), p = await f.preview(a);
+  let reader;
+  f.state.query = async request => {
+    reader = fork(new URL('./fixtures/binding-module-reader.mjs', import.meta.url), [f.paths.main]);
+    const [message] = await once(reader, 'message');
+    assert.equal(message, 'LOCKED');
+    return responseFor(request, f.policy, f.state.wall);
+  };
+  try {
+    await assert.rejects(f.complete(a, p), /RESPONSE_TIMEOUT/);
+  } finally {
+    if (reader && reader.exitCode === null && reader.signalCode === null) {
+      const exited = once(reader, 'exit');
+      reader.kill();
+      await exited;
+    }
+  }
   assert.equal(f.sql('main', 'SELECT status FROM attempts')[0].status, 'PENDING');
   assert.equal(f.sql('main', 'SELECT * FROM bindings').length, 0);
   assert.equal(f.sql('main', "SELECT event FROM audit WHERE event='CONSUMED'").length, 0);
