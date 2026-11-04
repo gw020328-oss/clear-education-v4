@@ -1,5 +1,7 @@
 # Moodle binding revision 3 합성 모듈 인수
 
+후속: [C1 학생 DB projection](MOODLE_STUDENT_PROJECTION.ko.md)은 제품 DB용 별도 합성 profile이다. 아래 독립 profile의 exact gate와 Node 내장 모듈만 사용하는 demo는 유지한다. 제품 profile은 별도 import·명시 auth authority 활성화가 필요하며 HTTP/운영 verifier는 연결하지 않는다.
+
 2026-11-04. 구현 입력 base `f357c8aca0999d02216f240a4541d018c6ad2d48`, C 수정 조건 `f44c0b2`의 `B_REVISION3_CROSS_REVIEW.ko.md`. 이번 범위는 `src/agent-preview/moodle-binding/` 독립 모듈과 임시 DB 시험이다. Public synthetic CI에서 아래 시험과 데모를 전용 단계로 실행한다.
 
 ## 실행과 API

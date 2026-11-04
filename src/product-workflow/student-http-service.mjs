@@ -1,15 +1,18 @@
 // C1: invited participant-only synthetic applications and exact-display acknowledgments.
 // No publication, real consent, upload, document observer, Evidence or funding action.
+import { join,resolve } from 'node:path';
 import { randomBytes,randomUUID } from 'node:crypto';
 import { canonical,exactKeys,freeze,requireRule as check } from '../policy/values.mjs';
 import { compileMvpPolicy } from '../policy/mvp/compiler.mjs';
 import { digest,validateContract } from '../policy/mvp/contract.mjs';
 import { identifier,hash32,revision,GATES } from './contract.mjs';
 import { openPrivateDb } from './private-db.mjs';
+const bindingManifests = new WeakSet();
+export const isStudentBindingManifest = value => bindingManifests.has(value);
 export const STUDENT_HTTP_VERSION='clear-mvp-student-http.1';
 const gates={...GATES,version:STUDENT_HTTP_VERSION,dataMode:'SYNTHETIC',authenticationScope:'INVITED_WALLET_SESSION',identityVerified:false,
  policyPublished:false,fundingStatus:'UNKNOWN',eligibilityStatus:'NOT_EVALUATED',sourceStatus:'UNVERIFIED',documentSubmissionReady:false};
-const schema=`
+export const studentSchema=`
 CREATE TABLE IF NOT EXISTS policies(hash TEXT PRIMARY KEY,policy_id TEXT NOT NULL,revision INTEGER NOT NULL,record TEXT NOT NULL,UNIQUE(policy_id,revision)) STRICT;
 CREATE TABLE IF NOT EXISTS policy_heads(id TEXT PRIMARY KEY,hash TEXT NOT NULL REFERENCES policies(hash),revision INTEGER NOT NULL,active INTEGER NOT NULL CHECK(active IN(0,1))) STRICT;
 CREATE TABLE IF NOT EXISTS applications(id TEXT PRIMARY KEY,wallet TEXT NOT NULL,policy_id TEXT NOT NULL,policy_hash TEXT NOT NULL REFERENCES policies(hash),revision INTEGER NOT NULL,
@@ -27,10 +30,11 @@ export function createStudentWorkflowService({directory,authentication,instanceI
  const prepared=definitions.map(p=>{exactKeys(p,['policyId','revision','draft','sources','capabilities'],'MVP_STUDENT_CONFIG');identifier(p.policyId);revision(p.revision);
   return {definition:p,compiled:compileMvpPolicy(p.draft,{sources:p.sources,capabilities:p.capabilities})};});
  check(new Set(prepared.map(p=>p.compiled.policyHash)).size===prepared.length,'MVP_STUDENT_CONFIG');
- const store=openPrivateDb(directory,'mvp-student.sqlite',{instanceId,origin:authentication.origin,mode:'SYNTHETIC_STUDENT_C1'},schema,['policies','policy_heads','applications','acknowledgments','commands']);
+ const store=openPrivateDb(directory,'mvp-student.sqlite',{instanceId,origin:authentication.origin,mode:'SYNTHETIC_STUDENT_C1'},studentSchema,['policies','policy_heads','applications','acknowledgments','commands']);
  const {db,transaction}=store;let closed=false;
  const clock=()=>{const t=now();check(Number.isSafeInteger(t)&&t>=0&&t<=4102444800,'MVP_CLOCK');return t;};
  try{transaction(()=>{
+  const previousHeads=db.prepare('SELECT id,active FROM policy_heads').all();
   db.prepare('UPDATE policy_heads SET active=0').run();
   for(const {definition:p,compiled:c}of prepared){
    const prior=db.prepare('SELECT * FROM policy_heads WHERE id=?').get(p.policyId);
@@ -40,6 +44,15 @@ export function createStudentWorkflowService({directory,authentication,instanceI
    else {check(!db.prepare('SELECT hash FROM policies WHERE hash=?').get(c.policyHash),'MVP_POLICY_CONFLICT');
     db.prepare('INSERT INTO policies VALUES(?,?,?,?)').run(c.policyHash,p.policyId,p.revision,canonical(p));}
    db.prepare('INSERT INTO policy_heads VALUES(?,?,?,1) ON CONFLICT(id) DO UPDATE SET hash=excluded.hash,revision=excluded.revision,active=1').run(p.policyId,c.policyHash,p.revision);
+  }
+  // Fence disable→reenable even when the policy hash returns unchanged. A normal
+  // restart with the same active heads does not invalidate an approved binding.
+  for(const old of previousHeads){
+   const current=db.prepare('SELECT active FROM policy_heads WHERE id=?').get(old.id);
+   if(current.active!==old.active){
+    check(!db.prepare('SELECT id FROM applications WHERE policy_id=? AND binding_revision>=?').get(old.id,Number.MAX_SAFE_INTEGER),'MVP_BINDING_REVISION');
+    db.prepare('UPDATE applications SET binding_revision=binding_revision+1 WHERE policy_id=?').run(old.id);
+   }
   }
  });}catch(error){store.close();throw error;}
  const actor=(context,write=false)=>{check(!closed,'MVP_CLOSED');const s=authentication.authorizeWorkflow(context,write);check(s.role==='participant','FORBIDDEN');return s;};
@@ -84,7 +97,16 @@ export function createStudentWorkflowService({directory,authentication,instanceI
    return commandView(db.prepare('SELECT * FROM commands WHERE id=?').get(id));
   });
  }
- return {origin:authentication.origin,close(){closed=true;store.close();},
+ return {origin:authentication.origin,
+  // Internal manifest, no application rows or full policy/acknowledgment records exposed.
+  moodleBindingManifest(){
+   check(!closed,'MVP_CLOSED');
+   const auth=authentication.moodleBindingManifest();
+   const result=freeze({path:join(resolve(directory),'mvp-student.sqlite'),auth,
+    metadata:canonical({schemaVersion:1,name:'mvp-student.sqlite',environment:{instanceId,origin:authentication.origin,mode:'SYNTHETIC_STUDENT_C1'}})});
+   bindingManifests.add(result);return result;
+  },
+  close(){closed=true;store.close();},
   policies(context){actor(context);return freeze({policies:db.prepare('SELECT hash FROM policy_heads WHERE active=1 ORDER BY id').all().map(r=>policyView(policy(r.hash))),...gates});},
   policy(context,hash){actor(context);return policyView(policy(hash));},
   list(context){const s=actor(context);return db.prepare('SELECT * FROM applications WHERE wallet=? ORDER BY created_at,id LIMIT 100').all(s.wallet).map(view);},

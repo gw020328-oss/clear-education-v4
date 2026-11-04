@@ -5,6 +5,7 @@ import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 import { canonical, exact, hash, digest, hex, opaque, integer, requireRule, validateDto, versions, confirmationDigest, stableConfirmation } from './contract.mjs';
 import { validateTimePolicy, sample, checkCurrentness } from './currentness.mjs';
 import { createSqlPolicy } from './sql-policy.mjs';
+import { studentProfile } from './projection-profiles.mjs';
 import { isSyntheticControl, isSyntheticVerifier } from './synthetic.mjs';
 
 const randomRef = () => randomBytes(32).toString('hex');
@@ -27,9 +28,12 @@ function checkFile(path) {
   return { dev: f.dev, ino: f.ino };
 }
 
-export function createBindingCoordinator({ paths, control, verifier, timePolicy, clock, sessionKey }) {
+export function createBindingCoordinator({ paths, control, verifier, timePolicy, clock, sessionKey, projection = null }) {
   requireRule(isSyntheticControl(control) && isSyntheticVerifier(verifier), 'INSTALLATION_DISABLED');
+  const product = projection === null ? null : studentProfile(projection);
+  requireRule(projection === null || product, 'PRODUCT_PROFILE');
   exact(paths, ['main', 'auth', 'workflow']);
+  if (product) requireRule(paths.auth === product.paths.auth && paths.workflow === product.paths.workflow, 'PRODUCT_PATH');
   requireRule(new Set(Object.values(paths)).size === 3, 'DB_PATH');
   requireRule(Buffer.isBuffer(sessionKey) && sessionKey.length === 32, 'SESSION_KEY');
   const key = Buffer.from(sessionKey), ptime = validateTimePolicy(timePolicy), files = {};
@@ -37,7 +41,7 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
   const boot = control.current();
   requireRule(boot.status === 'ACTIVE' && hex(boot.policyHash), 'DEPLOYMENT_DISABLED');
   const db = new DatabaseSync(paths.main, { timeout: 1000, allowExtension: false });
-  const sqlPolicy = createSqlPolicy();
+  const sqlPolicy = createSqlPolicy(product);
   try {
     db.exec('PRAGMA foreign_keys=ON; PRAGMA trusted_schema=OFF; PRAGMA synchronous=FULL;');
     db.prepare('ATTACH DATABASE ? AS auth').run(paths.auth);
@@ -64,9 +68,12 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
       sqlPolicy.inspect(db); deployment();
       const p = validatePolicy(JSON.parse(get('SELECT record FROM main.policy WHERE id=1').record));
       requireRule(hash(p) === boot.policyHash && p.timePolicyHash === hash(ptime), 'POLICY_CHANGED');
-      const auth = get('SELECT config_hash,mode FROM auth.metadata WHERE id=1');
-      requireRule(auth?.mode === 'SYNTHETIC_ONLY' && auth.config_hash === p.configHash
+      if (product) product.environment(get, p);
+      else {
+        const auth = get('SELECT config_hash,mode FROM auth.metadata WHERE id=1');
+        requireRule(auth?.mode === 'SYNTHETIC_ONLY' && auth.config_hash === p.configHash
         && get('SELECT mode FROM workflow.metadata WHERE id=1')?.mode === 'SYNTHETIC_ONLY', 'CONFIG_CHANGED');
+      }
       const began = sample(clock), floor = get('SELECT floor FROM main.clock WHERE id=1').floor;
       requireRule(began.wall >= floor && began.wall < p.validUntil, 'CLOCK_OR_POLICY_EXPIRED');
       const value = fn(p, began);
@@ -82,13 +89,13 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
   }
   function principal(context, applicationId, p, now) {
     exact(context, ['token', 'wallet', 'chainId', 'csrf']);
-    requireRule(hex(context.token) && hex(context.csrf) && context.wallet === p.wallet && context.chainId === p.chainId, 'AUTH_REQUIRED');
+    requireRule(hex(context.token) && hex(context.csrf) && (product ? product.wallet(context.wallet) : context.wallet) === p.wallet && context.chainId === p.chainId, 'AUTH_REQUIRED');
     requireRule(timingSafeEqual(Buffer.from(context.csrf, 'hex'), Buffer.from(digest('csrf:' + context.token), 'hex')), 'CSRF');
     const s = get('SELECT digest,wallet,issued_at,expires_at,revoked_at FROM auth.sessions WHERE digest=?', digest(context.token));
-    requireRule(s && s.revoked_at === null && s.wallet === p.wallet && integer(s.issued_at) && s.issued_at > 0
+    requireRule(s && s.revoked_at === null && (product ? product.wallet(s.wallet) : s.wallet) === p.wallet && integer(s.issued_at) && s.issued_at > 0
       && integer(s.expires_at) && s.issued_at <= now && now < s.expires_at, 'AUTH_REQUIRED');
-    const a = get('SELECT id,participant_id,wallet,course_ref,mapping_hash,revision,status FROM workflow.applications WHERE id=?', applicationId);
-    requireRule(a && a.wallet === s.wallet && a.participant_id === p.participantRef && a.status === 'ACTIVE'
+    const a = product ? product.application(get, applicationId, p, s, now) : get('SELECT id,participant_id,wallet,course_ref,mapping_hash,revision,status FROM workflow.applications WHERE id=?', applicationId);
+    if (!product) requireRule(a && a.wallet === s.wallet && a.participant_id === p.participantRef && a.status === 'ACTIVE'
       && a.course_ref === p.courseRef && a.mapping_hash === p.mappingHash && integer(a.revision) && a.revision > 0, 'APPLICATION_SCOPE');
     const sessionRef = createHmac('sha256', key).update(canonical({ domain: 'READ_PREVIEW_SESSION', issuerEpoch: p.issuerEpoch, digest: s.digest })).digest('hex');
     return { a, s, sessionRef };
