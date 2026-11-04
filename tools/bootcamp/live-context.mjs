@@ -21,6 +21,7 @@ import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs
 import {createLiveReclaimConsumer} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {requireRule as requireUiRule,exactKeys,canonical,freeze} from '../../src/policy/values.mjs';
 import {openMoodlePaymentSnapshots} from '../../src/bootcamp/moodle-payment-snapshot.mjs';
+import {FIXED_MOODLE_MAPPING_VERSION,FIXED_MOODLE_SCOPE_VERSION} from '../../src/bootcamp/moodle-payment-projection.mjs';
 import {createMoodleCourseReadHost} from './moodle-course-read-host.mjs';
 import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {createNormalReceiptReader} from '../../src/bootcamp/normal-receipt.mjs';
@@ -64,14 +65,20 @@ export function createNormalMoodleReadBoundary({databasePath,authentication,getD
    actor(context,role,state);exactKeys(context,['token','wallet','chainId','csrf'],'BC_MOODLE_READ_CONTEXT');
    if(canonical(context)!==canonical(contexts.get(role)??null))contexts.set(role,freeze(structuredClone(context)));
   },
-  createHost({ownerRunId,mapping,installationGeneration,actorRefs,verifyMoodleAuthority,readBindingCurrentness,createCourseEvidenceReader,readSourceStates}){
-   ensure(!mounted&&[verifyMoodleAuthority,readBindingCurrentness,createCourseEvidenceReader].every(f=>typeof f==='function'),'BC_MOODLE_READ_PORTS');
+  createHost({ownerRunId,mapping,installationGeneration,actorRefs,verifyMoodleAuthority,readBindingCurrentness,readFixedMapping,createCourseEvidenceReader,readSourceStates}){
+   const fixed=mapping?.version===FIXED_MOODLE_MAPPING_VERSION;
+   ensure(!mounted&&[verifyMoodleAuthority,fixed?readFixedMapping:readBindingCurrentness,createCourseEvidenceReader].every(f=>typeof f==='function'),'BC_MOODLE_READ_PORTS');
+   // Separate contract, not an epoch/binding fallback. Missing legacy authority
+   // cannot silently opt into the fixed single-course demonstration profile.
+   ensure(!fixed||(installationGeneration===undefined&&readBindingCurrentness===undefined),'BC_MOODLE_READ_FIXED_PORTS');
    const pinned=freeze(structuredClone(mapping)),actors=freeze(structuredClone(actorRefs));
    exactKeys(actors,['PARTICIPANT','COURSE_OPERATOR'],'BC_MOODLE_READ_ACTORS');
    const ref=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v);
-   ensure(ref(installationGeneration)&&Object.values(actors).every(ref)&&actors.PARTICIPANT===pinned.subjectRef
+   ensure((fixed||ref(installationGeneration))&&Object.values(actors).every(ref)&&actors.PARTICIPANT===pinned.subjectRef
     &&actors.COURSE_OPERATOR!==pinned.subjectRef,'BC_MOODLE_READ_ACTORS');
    const currentOwner=()=>{const state=owner();ensure(ownerRunId===state.runId&&state.applicationId&&state.participantId,'BC_MOODLE_READ_RUN');
+    if(fixed){const current=readFixedMapping();exactKeys(current,['mapping','actorRefs'],'BC_MOODLE_READ_FIXED_MAPPING');
+     ensure(canonical(current)===canonical({mapping:pinned,actorRefs:actors}),'BC_MOODLE_READ_FIXED_MAPPING');}
     for(const k of ['applicationId','participantId','courseOperatorRef','policyHash','runtimeMappingHash','participantWallet','operatorWallet','recipient','token'])ensure(pinned[k]===state[k],'BC_MOODLE_READ_MAPPING');
     return state;
    };
@@ -81,30 +88,37 @@ export function createNormalMoodleReadBoundary({databasePath,authentication,getD
     // Authenticated server-only verifier: no browser session resume, SID,
     // cookies or CLEAR credentials in this reverse-channel request.
     const verified=structuredClone(await verifyMoodleAuthority(request,{signal}));signal?.throwIfAborted();
-    exactKeys(verified,['version','requestRef','ownerRunId','moodleAuthorityRef','role','status','installationRef',
-     'installationGeneration','authorityEpoch','courseRef','subjectRef','actorRef','expiresAtExclusive'],'BC_MOODLE_READ_AUTHORITY');
-    ensure(verified.version==='clear-moodle-authority-check.1'&&verified.status==='OK'&&verified.requestRef===request.requestRef
+    const authorityKeys=['version','requestRef','ownerRunId','moodleAuthorityRef','role','status','installationRef',
+     'installationGeneration','authorityEpoch','courseRef','subjectRef','actorRef','expiresAtExclusive'];
+    exactKeys(verified,fixed?[...authorityKeys.filter(k=>!['installationGeneration','authorityEpoch'].includes(k)),
+     'applicationRef','displayOnly','authorityConsumptionAllowed']:authorityKeys,'BC_MOODLE_READ_AUTHORITY');
+    ensure(verified.version===(fixed?FIXED_MOODLE_SCOPE_VERSION:'clear-moodle-authority-check.1')&&verified.status==='OK'&&verified.requestRef===request.requestRef
      &&verified.ownerRunId===ownerRunId&&verified.moodleAuthorityRef===request.moodleAuthorityRef&&verified.role===request.role
-     &&verified.installationRef===pinned.installationRef&&verified.installationGeneration===installationGeneration
+     &&verified.installationRef===pinned.installationRef&&(fixed||verified.installationGeneration===installationGeneration)
      &&verified.courseRef===pinned.courseRef&&verified.subjectRef===pinned.subjectRef&&verified.actorRef===actors[request.role]
-     &&Number.isSafeInteger(verified.authorityEpoch)&&verified.authorityEpoch>0
+     &&(!fixed||(verified.applicationRef===pinned.applicationId&&verified.displayOnly===true&&verified.authorityConsumptionAllowed===false))
+     &&(fixed||(Number.isSafeInteger(verified.authorityEpoch)&&verified.authorityEpoch>0))
      &&Number.isSafeInteger(verified.expiresAtExclusive)&&now()<verified.expiresAtExclusive&&verified.expiresAtExclusive<=request.expiresAtExclusive,'BC_MOODLE_READ_AUTHORITY');
-    const authority={requestRef:verified.requestRef,authorityRef:verified.moodleAuthorityRef,authorityEpoch:verified.authorityEpoch,
+    const authority={requestRef:verified.requestRef,authorityRef:verified.moodleAuthorityRef,...(fixed?{version:FIXED_MOODLE_SCOPE_VERSION}:{authorityEpoch:verified.authorityEpoch}),
      expiresAtExclusive:verified.expiresAtExclusive,mapping:pinned,role:verified.role};
     const state=currentOwner(),context=contexts.get(authority.role);ensure(context,'BC_MOODLE_READ_LOGIN_REQUIRED');actor(context,authority.role,state);
+    let bindingExpiry=authority.expiresAtExclusive;
+    if(!fixed){
     // This required port must use legitimate B runtime/trustedTime and current
     // authority for this actor; a student's session is never substituted here.
     const binding=structuredClone(await readBindingCurrentness(context,{applicationId:pinned.bApplicationId,bindingRef:pinned.bindingRef,bindingRevision:pinned.bindingRevision},
      {role:authority.role,actorRef:verified.actorRef,authorityRef:authority.authorityRef,authorityEpoch:authority.authorityEpoch,signal}));
-    signal?.throwIfAborted();const last=currentOwner();ensure(contexts.get(authority.role)===context,'BC_MOODLE_READ_SESSION_CHANGED');
-    const session=actor(context,authority.role,last);
     exactKeys(binding,['version','applicationId','bindingRef','bindingRevision','scope','currentness','checkedAt','expiresAtExclusive'],'BC_MOODLE_READ_BINDING');
     exactKeys(binding.scope,['installationRef','courseRef','subjectRef'],'BC_MOODLE_READ_BINDING');
     ensure(binding.version==='clear-moodle-binding-currentness.1'&&binding.currentness==='LOCAL_BINDING_CURRENT'
      &&binding.applicationId===pinned.bApplicationId&&binding.bindingRef===pinned.bindingRef&&binding.bindingRevision===pinned.bindingRevision
      &&['installationRef','courseRef','subjectRef'].every(k=>binding.scope[k]===pinned[k])
      &&Number.isSafeInteger(binding.checkedAt)&&binding.checkedAt===now()&&Number.isSafeInteger(binding.expiresAtExclusive)&&now()<binding.expiresAtExclusive,'BC_MOODLE_READ_BINDING');
-    const expiresAtExclusive=Math.min(authority.expiresAtExclusive,binding.expiresAtExclusive,last.expiresAtExclusive,session.expiresAt);
+    bindingExpiry=binding.expiresAtExclusive;
+    }
+    signal?.throwIfAborted();const last=currentOwner();ensure(contexts.get(authority.role)===context,'BC_MOODLE_READ_SESSION_CHANGED');
+    const session=actor(context,authority.role,last);
+    const expiresAtExclusive=Math.min(authority.expiresAtExclusive,bindingExpiry,last.expiresAtExclusive,session.expiresAt);
     ensure(now()<expiresAtExclusive,'BC_MOODLE_READ_EXPIRED');return {...authority,expiresAtExclusive,clearContext:context};
    };
    snapshots=openMoodlePaymentSnapshots({databasePath,authentication,resolveOperatorBindings,now});

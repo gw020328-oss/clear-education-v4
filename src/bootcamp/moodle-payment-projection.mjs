@@ -4,6 +4,9 @@ import {isMoodlePaymentSnapshots} from './moodle-payment-snapshot.mjs';
 import {canonical,exactKeys,freeze,requireRule as check} from '../policy/values.mjs';
 
 export const MOODLE_PAYMENT_VERSION='clear-moodle-payment-status.1';
+export const FIXED_MOODLE_MAPPING_VERSION='clear-normal-moodle-fixed-mapping.1';
+export const FIXED_MOODLE_SCOPE_VERSION='clear-moodle-fixed-scope-check.1';
+export const FIXED_MOODLE_PAYMENT_VERSION='clear-moodle-fixed-payment-status.1';
 const digest=v=>createHash('sha256').update(canonical(v)).digest('hex');
 const ref=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v);
 const slug=v=>typeof v==='string'&&/^[a-z][a-z0-9.-]{0,63}$/.test(v);
@@ -15,11 +18,12 @@ const mappingKeys=['mappingRevision','installationRef','courseRef','subjectRef',
  'bindingExpiresAtExclusive','applicationId','participantId','courseOperatorRef','policyHash','runtimeMappingHash',
  'participantWallet','operatorWallet','recipient','token','expiresAtExclusive'];
 function pinMapping(value){
- exactKeys(value,mappingKeys,'MOODLE_PAYMENT_MAPPING');const m=structuredClone(value);
- check(['mappingRevision','bindingRevision','bindingExpiresAtExclusive','expiresAtExclusive'].every(k=>positive(m[k]))
-  &&['installationRef','courseRef','subjectRef','bindingRef'].every(k=>ref(m[k]))
+ const fixed=value?.version===FIXED_MOODLE_MAPPING_VERSION;
+ exactKeys(value,fixed?[...mappingKeys.filter(k=>!['bApplicationId','bindingRef','bindingRevision','bindingExpiresAtExclusive'].includes(k)),'version','mappingRef']:mappingKeys,'MOODLE_PAYMENT_MAPPING');const m=structuredClone(value);
+ check((fixed?['mappingRevision','expiresAtExclusive']:['mappingRevision','bindingRevision','bindingExpiresAtExclusive','expiresAtExclusive']).every(k=>positive(m[k]))
+  &&['installationRef','courseRef','subjectRef',fixed?'mappingRef':'bindingRef'].every(k=>ref(m[k]))
   &&['applicationId','participantId','courseOperatorRef'].every(k=>slug(m[k]))
-  &&['bApplicationId','policyHash','runtimeMappingHash'].every(k=>hash(m[k]))
+  &&(fixed?['policyHash','runtimeMappingHash']:['bApplicationId','policyHash','runtimeMappingHash']).every(k=>hash(m[k]))
   &&['participantWallet','operatorWallet','recipient','token'].every(k=>address(m[k]))
   &&m.participantWallet===m.recipient&&m.operatorWallet!==m.recipient&&m.token!==m.recipient,'MOODLE_PAYMENT_MAPPING');
  return freeze(m);
@@ -63,7 +67,7 @@ function receipt(r,m,role,p){
 // A reviewed production resolver is still required before host activation.
 export function createMoodlePaymentReader({mapping,resolveScope,authentication,snapshots,receiptSource,
  now=()=>Math.floor(Date.now()/1000),monotonic=()=>performance.now()}){
- const m=pinMapping(mapping);
+ const m=pinMapping(mapping),fixed=m.version===FIXED_MOODLE_MAPPING_VERSION;
  check([resolveScope,authentication?.authorizeWorkflow,now,monotonic].every(f=>typeof f==='function')
   &&isMoodlePaymentSnapshots(snapshots,authentication),'MOODLE_PAYMENT_CONFIG');
  exactKeys(receiptSource,['runtimeHash','readReport','readCanonicalClaim','selfAttestor'],'MOODLE_PAYMENT_CONFIG');
@@ -74,15 +78,15 @@ export function createMoodlePaymentReader({mapping,resolveScope,authentication,s
  const time=()=>{const wall=now(),mono=monotonic();check(positive(wall)&&wall>=wallFloor&&Number.isFinite(mono)&&mono>=0,'MOODLE_PAYMENT_CLOCK');wallFloor=wall;return {wall,mono};};
  async function scope(caller){
   const s=structuredClone(await resolveScope(caller));
-  exactKeys(s,['requestRef','authorityRef','authorityEpoch','expiresAtExclusive','mapping','role','clearContext'],'MOODLE_PAYMENT_SCOPE');
+  exactKeys(s,['requestRef','authorityRef',fixed?'version':'authorityEpoch','expiresAtExclusive','mapping','role','clearContext'],'MOODLE_PAYMENT_SCOPE');
   exactKeys(s.clearContext,['token','wallet','chainId','csrf'],'MOODLE_PAYMENT_SCOPE');
-  check(ref(s.requestRef)&&ref(s.authorityRef)&&positive(s.authorityEpoch)&&positive(s.expiresAtExclusive)&&same(s.mapping,m)&&['PARTICIPANT','COURSE_OPERATOR'].includes(s.role),'MOODLE_PAYMENT_SCOPE');
+  check(ref(s.requestRef)&&ref(s.authorityRef)&&(fixed?s.version===FIXED_MOODLE_SCOPE_VERSION:positive(s.authorityEpoch))&&positive(s.expiresAtExclusive)&&same(s.mapping,m)&&['PARTICIPANT','COURSE_OPERATOR'].includes(s.role),'MOODLE_PAYMENT_SCOPE');
   const actor=authentication.authorizeWorkflow(s.clearContext,false),participant=s.role==='PARTICIPANT';
   check(actor.role===(participant?'participant':'operator')&&actor.wallet.toLowerCase()===(participant?m.participantWallet:m.operatorWallet),'MOODLE_PAYMENT_CLEAR_ROLE');
   return s;
  }
  return Object.freeze({async read(caller){
-  const started=time();let end=Math.min(m.expiresAtExclusive,m.bindingExpiresAtExclusive,started.wall+5);
+  const started=time();let end=Math.min(m.expiresAtExclusive,fixed?m.expiresAtExclusive:m.bindingExpiresAtExclusive,started.wall+5);
   const current=()=>{const t=time();check(t.wall<end&&t.mono>=started.mono&&t.mono-started.mono<5000,'MOODLE_PAYMENT_EXPIRED');return t;};
   current();const before=await scope(caller);end=Math.min(end,before.expiresAtExclusive);current();const initialHash=digest(before);
   const first=snapshot(readSnapshot(before.clearContext,m.applicationId),m,before.role);
@@ -93,8 +97,8 @@ export function createMoodlePaymentReader({mapping,resolveScope,authentication,s
   const last=snapshot(readSnapshot(after.clearContext,m.applicationId),m,after.role);current();
   check(same(target(first),target(last)),'MOODLE_PAYMENT_CHANGED');
   const payment=receipt(r,m,after.role,last);
-  return freeze({version:MOODLE_PAYMENT_VERSION,requestRef:after.requestRef,mappingRevision:m.mappingRevision,
-   bindingRef:m.bindingRef,bindingRevision:m.bindingRevision,role:after.role,observedAt:current().wall,expiresAtExclusive:end,
+  return freeze({version:fixed?FIXED_MOODLE_PAYMENT_VERSION:MOODLE_PAYMENT_VERSION,requestRef:after.requestRef,mappingRevision:m.mappingRevision,
+   ...(fixed?{mappingRef:m.mappingRef}:{bindingRef:m.bindingRef,bindingRevision:m.bindingRevision}),role:after.role,observedAt:current().wall,expiresAtExclusive:end,
    displayOnly:true,paymentAuthority:false,decision:{id:last.decisionId,revision:last.decisionRevision,hash:last.decisionHash,
     recordedConditionsStatus:last.recordedConditionsStatus,sourceCurrentness:'NOT_RECHECKED'},
    consent:{...last.recordedConsent,publicationMatchesCurrentDecision:last.publication?.current??false,

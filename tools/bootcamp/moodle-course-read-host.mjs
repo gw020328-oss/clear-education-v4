@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {canonical,exactKeys,freeze,requireRule as check} from '../../src/policy/values.mjs';
-import {createMoodlePaymentReader} from '../../src/bootcamp/moodle-payment-projection.mjs';
+import {createMoodlePaymentReader,FIXED_MOODLE_MAPPING_VERSION,FIXED_MOODLE_SCOPE_VERSION,FIXED_MOODLE_PAYMENT_VERSION} from '../../src/bootcamp/moodle-payment-projection.mjs';
 import {join} from 'node:path';
 import {readPrivate} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
 
@@ -32,7 +32,7 @@ export function createMoodleCourseReadHost({ownerRunId,mapping,resolveAuthority,
  createCourseEvidenceReader,getDecisionEvidence,readSourceStates,now=()=>Math.floor(Date.now()/1000),monotonic=()=>performance.now()}){
  check(ref(ownerRunId)&&[resolveAuthority,authentication?.authorizeWorkflow,authentication?.whoami,
   createCourseEvidenceReader,getDecisionEvidence,now,monotonic].every(f=>typeof f==='function'),'COURSE_READ_CONFIG');
- const pinned=freeze(structuredClone(mapping)),time=clock(now,monotonic),used=new WeakSet(),handles=new WeakMap(),requests=new Set();
+ const pinned=freeze(structuredClone(mapping)),fixed=pinned.version===FIXED_MOODLE_MAPPING_VERSION,time=clock(now,monotonic),used=new WeakSet(),handles=new WeakMap(),requests=new Set();
  const authorizeTransport=(handle,request)=>{
   const entry=handles.get(handle),current=time();
   entry?.signal?.throwIfAborted();
@@ -48,12 +48,12 @@ export function createMoodleCourseReadHost({ownerRunId,mapping,resolveAuthority,
   const unavailable=()=>freeze({version:COURSE_READ_RESPONSE,requestRef:request.requestRef,ownerRunId:request.ownerRunId,
    role:request.role,status:'UNAVAILABLE',expiresAtExclusive:null,evidence:null,payment:null});
   try{
-   const started=time();let end=Math.min(request.expiresAtExclusive,started.wall+5,pinned.expiresAtExclusive,pinned.bindingExpiresAtExclusive),identity;
+   const started=time();let end=Math.min(request.expiresAtExclusive,started.wall+5,pinned.expiresAtExclusive,fixed?pinned.expiresAtExclusive:pinned.bindingExpiresAtExclusive),identity;
    const current=()=>{authorizeTransport(verifiedTransportHandle,request);const t=time();check(t.wall<end&&t.mono>=started.mono&&t.mono-started.mono<5000,'COURSE_READ_EXPIRED');return t;};
    async function scope(){
     current();const s=structuredClone(await resolveAuthority(verifiedTransportHandle,request,{signal:handles.get(verifiedTransportHandle)?.signal}));current();
-    exactKeys(s,scopeKeys,'COURSE_READ_SCOPE');exactKeys(s.clearContext,['token','wallet','chainId','csrf'],'COURSE_READ_SCOPE');
-    check(s.requestRef===request.requestRef&&s.authorityRef===request.moodleAuthorityRef&&integer(s.authorityEpoch)
+    exactKeys(s,fixed?scopeKeys.map(k=>k==='authorityEpoch'?'version':k):scopeKeys,'COURSE_READ_SCOPE');exactKeys(s.clearContext,['token','wallet','chainId','csrf'],'COURSE_READ_SCOPE');
+    check(s.requestRef===request.requestRef&&s.authorityRef===request.moodleAuthorityRef&&(fixed?s.version===FIXED_MOODLE_SCOPE_VERSION:integer(s.authorityEpoch))
      &&integer(s.expiresAtExclusive)&&s.role===request.role&&same(s.mapping,pinned),'COURSE_READ_SCOPE');
     const expectedRole=request.role==='PARTICIPANT'?'participant':'operator';
     const expectedWallet=request.role==='PARTICIPANT'?pinned.participantWallet:pinned.operatorWallet;
@@ -93,7 +93,8 @@ export function createMoodleCourseReadHost({ownerRunId,mapping,resolveAuthority,
    const finalEvidence=readEvidence(final.clearContext,pinned.applicationId);
    check(same(stableSnapshot(initial),stableSnapshot(last))&&same(stableSnapshot(captured),stableSnapshot(finalEvidence)),'COURSE_READ_CHANGED');
    check(payment.requestRef===request.requestRef&&payment.role===request.role&&payment.mappingRevision===pinned.mappingRevision
-    &&payment.bindingRef===pinned.bindingRef&&payment.bindingRevision===pinned.bindingRevision,'COURSE_READ_PAYMENT_SCOPE');
+    &&(fixed?payment.version===FIXED_MOODLE_PAYMENT_VERSION&&payment.mappingRef===pinned.mappingRef
+     :payment.bindingRef===pinned.bindingRef&&payment.bindingRevision===pinned.bindingRevision),'COURSE_READ_PAYMENT_SCOPE');
    // B's display DTO has no complete validity horizon. Do not let it outlive its
    // observed second; all its source/clock boundaries are integer epoch seconds.
    end=Math.min(end,payment.expiresAtExclusive,evidence.observedAt+1);current();

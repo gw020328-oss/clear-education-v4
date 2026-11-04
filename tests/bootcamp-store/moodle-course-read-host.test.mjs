@@ -186,6 +186,72 @@ test('live boundary requires explicit verifier/currentness, distinct actor mappi
  assert.throws(()=>z.boundary.observeSession(z.x.f.bobContext),/BC_MOODLE_READ_ACTOR/);
 });
 
+async function fixedBoundaryFixture(t){
+ const z=await boundaryFixture(t),{bApplicationId,bindingRef,bindingRevision,bindingExpiresAtExclusive,...base}=z.config.mapping;
+ const mapping={...base,version:'clear-normal-moodle-fixed-mapping.1',mappingRef:'normal-fixed-course'};
+ const {installationGeneration,readBindingCurrentness,...config}=z.config;
+ const verify=config.verifyMoodleAuthority;
+ Object.assign(config,{mapping,readFixedMapping:()=>({mapping,actorRefs:config.actorRefs}),verifyMoodleAuthority:async request=>{
+  const {installationGeneration,authorityEpoch,...v}=await verify(request);return {...v,version:'clear-moodle-fixed-scope-check.1',
+   applicationRef:mapping.applicationId,displayOnly:true,authorityConsumptionAllowed:false};
+ }});
+ return {...z,config};
+}
+test('fixed live profile uses own CLEAR sessions and exact fresh C14 response with no B binding supplier',async t=>{
+ const z=await fixedBoundaryFixture(t),{x}=z,before=x.bytes(),auth=x.authBytes();
+ z.boundary.observeSession(x.f.aliceContext);z.boundary.observeSession(x.f.operatorContext);const host=z.boundary.createHost(z.config);
+ for(const role of ['PARTICIPANT','COURSE_OPERATOR']){
+  const r=await host.readCourse(z.handle(role));assert.equal(r.status,'OK');assert.equal(r.payment.version,'clear-moodle-fixed-payment-status.1');
+  assert.equal(r.payment.mappingRef,z.config.mapping.mappingRef);assert.equal(r.payment.receipt.amountAtoms,'100000000');assert.equal(r.payment.role,role);
+  assert.equal(r.evidence.decision.id,r.payment.decision.id);assert.equal(r.expiresAtExclusive,START+1);
+  assert.equal(r.payment.paymentAuthority,false);assert.equal(r.payment.consent.usableForPayment,false);
+ }
+ assert.ok(z.verifies()>2);assert.equal(z.bindings(),0);assert.deepEqual(x.bytes(),before);assert.deepEqual(x.authBytes(),auth);
+});
+for(const [key,value]of [['status','UNAVAILABLE'],['actorRef','wrong-teacher'],['subjectRef','wrong-student'],['courseRef','other-course'],
+ ['installationRef','other-site'],['ownerRunId','other-run'],['expiresAtExclusive',START],['extra',true]])test('fixed C current '+key+' mismatch closes display',async t=>{
+ const z=await fixedBoundaryFixture(t);z.boundary.observeSession(z.x.f.operatorContext);z.verifyHook(v=>({...v,[key]:value}));
+ const host=z.boundary.createHost(z.config);unavailable(await host.readCourse(z.handle('COURSE_OPERATOR')));assert.equal(z.bindings(),0);assert.equal(z.x.calls(),0);
+});
+test('fixed profile never falls back to epoch/binding namespace or accepts mixed DTO',async t=>{
+ const z=await fixedBoundaryFixture(t);
+ assert.throws(()=>z.boundary.createHost({...z.config,installationGeneration:'invented'}),/FIXED_PORTS/);
+ assert.throws(()=>z.boundary.createHost({...z.config,readBindingCurrentness:()=>({})}),/FIXED_PORTS/);
+ assert.throws(()=>z.boundary.createHost({...z.config,readFixedMapping:undefined}),/PORTS/);
+ const original=z.config.verifyMoodleAuthority;z.config.verifyMoodleAuthority=async r=>({...await original(r),authorityEpoch:1});
+ z.boundary.observeSession(z.x.f.aliceContext);const host=z.boundary.createHost(z.config);unavailable(await host.readCourse(z.handle()));
+});
+for(const change of ['old11','applicationRef','displayOnly','authorityConsumptionAllowed','unknown-version'])test('fixed C14 rejects '+change,async t=>{
+ const z=await fixedBoundaryFixture(t),original=z.config.verifyMoodleAuthority;
+ z.config.verifyMoodleAuthority=async request=>{
+  const r=await original(request);
+  if(change==='old11'){delete r.applicationRef;delete r.displayOnly;delete r.authorityConsumptionAllowed;}
+  if(change==='applicationRef')r.applicationRef='other-application';
+  if(change==='displayOnly')r.displayOnly=false;
+  if(change==='authorityConsumptionAllowed')r.authorityConsumptionAllowed=true;
+  if(change==='unknown-version')r.version='clear-moodle-fixed-scope-check.2';return r;
+ };
+ z.boundary.observeSession(z.x.f.aliceContext);const host=z.boundary.createHost(z.config);unavailable(await host.readCourse(z.handle()));assert.equal(z.x.calls(),0);
+});
+test('fixed mapping changes during canonical await close display and require reconstruction',async t=>{
+ const z=await fixedBoundaryFixture(t);z.boundary.observeSession(z.x.f.aliceContext);const host=z.boundary.createHost(z.config);
+ z.x.onRead(async()=>{z.config.mapping.mappingRevision++;return z.x.receipt;});unavailable(await host.readCourse(z.handle()));
+});
+test('fixed teacher still needs its separate observed CLEAR login',async t=>{
+ const z=await fixedBoundaryFixture(t);z.boundary.observeSession(z.x.f.aliceContext);const host=z.boundary.createHost(z.config);
+ unavailable(await host.readCourse(z.handle('COURSE_OPERATOR')));assert.equal(z.x.calls(),0);
+ z.boundary.observeSession(z.x.f.operatorContext);assert.equal((await host.readCourse(z.handle('COURSE_OPERATOR'))).status,'OK');
+});
+for(const action of ['logout','owner-change','abort','expired'])test('fixed current '+action+' during canonical await closes display',async t=>{
+ const z=await fixedBoundaryFixture(t),controller=new AbortController();z.boundary.observeSession(z.x.f.aliceContext);const host=z.boundary.createHost(z.config);
+ z.x.onRead(async()=>{
+  if(action==='logout')z.x.f.service.logout(z.x.f.aliceContext);
+  if(action==='owner-change')z.state.applicationId='different-application';
+  if(action==='abort')controller.abort();
+  if(action==='expired')z.x.setMono(5000);return z.x.receipt;
+ });unavailable(await host.readCourse(z.handle(),{signal:controller.signal}));
+});
+
 test('worker owner module is absent by default and only exact private hash-checked bytes load',async t=>{
  const z=await fixture(t),directory=join(z.x.f.directory,'private-owner');mkdirSync(directory,{mode:0o700});
  assert.equal(await loadNormalMoodleReadOwner({directory}),null);

@@ -49,3 +49,38 @@ test('ordinary mutating store getters cannot replace branded snapshot port',asyn
  assert.throws(()=>createMoodlePaymentReader({...x.options,snapshots:{read(){called++;return x.f.store.getProcedure(x.f.aliceContext,x.a);}}}),/MOODLE_PAYMENT_CONFIG/);
  assert.equal(called,0);
 });
+
+function fixedOptions(x){
+ const {bApplicationId,bindingRef,bindingRevision,bindingExpiresAtExclusive,...base}=x.mapping;
+ const mapping={...base,version:'clear-normal-moodle-fixed-mapping.1',mappingRef:'fixed-owner-course'};
+ return {...x.options,mapping,resolveScope:async handle=>{const {authorityEpoch,...scope}=await x.options.resolveScope(handle);
+  return {...scope,mapping,version:'clear-moodle-fixed-scope-check.1'};}};
+}
+test('fixed normal mapping returns exact v1 display DTO without B IDs, binding or epoch',async t=>{
+ const x=await paymentFixture(t),options=fixedOptions(x),reader=createMoodlePaymentReader(options),bytes=x.bytes();
+ for(const role of ['PARTICIPANT','COURSE_OPERATOR']){
+  if(role==='COURSE_OPERATOR')x.operator();const r=await reader.read(x.handle);
+  assert.deepEqual(Object.keys(r).sort(),['version','requestRef','mappingRevision','mappingRef','role','observedAt','expiresAtExclusive','displayOnly','paymentAuthority','decision','consent','receipt'].sort());
+  assert.equal(r.version,'clear-moodle-fixed-payment-status.1');assert.equal(r.mappingRef,options.mapping.mappingRef);assert.equal(r.role,role);
+  assert.equal(r.receipt.amountAtoms,'100000000');assert.equal(r.paymentAuthority,false);assert.equal(r.consent.usableForPayment,false);
+  assert.equal(r.decision.sourceCurrentness,'NOT_RECHECKED');assert.equal(r.expiresAtExclusive,START+5);
+ }
+ assert.deepEqual(x.bytes(),bytes);
+});
+for(const key of ['bApplicationId','bindingRef','bindingRevision','bindingExpiresAtExclusive'])test('fixed mapping rejects mixed legacy '+key,async t=>{
+ const x=await paymentFixture(t),options=fixedOptions(x);assert.throws(()=>createMoodlePaymentReader({...options,mapping:{...options.mapping,[key]:x.mapping[key]}}),/MAPPING/);
+});
+test('fixed scope rejects fake epoch/unknown version and changed owner configuration',async t=>{
+ const x=await paymentFixture(t),options=fixedOptions(x);
+ for(const change of [{authorityEpoch:1},{version:'unrecognized'}]){
+  const reader=createMoodlePaymentReader({...options,resolveScope:async h=>({...await options.resolveScope(h),...change})});
+  await assert.rejects(reader.read(x.handle),/SCOPE/);
+ }
+ const reader=createMoodlePaymentReader(options);x.onRead(async()=>{options.mapping.mappingRef='different-config';return x.receipt;});
+ await assert.rejects(reader.read(x.handle),/SCOPE/);
+});
+test('fixed scope retains exact canonical recipient, token and amount checks',async t=>{
+ const x=await paymentFixture(t),reader=createMoodlePaymentReader(fixedOptions(x));
+ x.onRead(async()=>({...x.receipt,amountAtoms:'99999999'}));const r=await reader.read(x.handle);
+ assert.equal(r.receipt.state,'READBACK_UNAVAILABLE');assert.equal(r.receipt.amountAtoms,null);
+});
