@@ -97,7 +97,7 @@ export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 
       : ['lax', 'strict'].includes(String(attrs.get('samesite')).toLowerCase()));
     return raw;
   }
-  function responseHeaders(owner, input) {
+  function responseHeaders(owner, input, status = 200) {
     const output = {}, names = new Set();
     for (const [key, value] of Object.entries(input)) {
       const name = key.toLowerCase();
@@ -112,7 +112,12 @@ export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 
         check(route.owner === owner); output[name] = target.pathname + target.search;
       } else if (['content-type', 'content-length', 'content-encoding', 'content-security-policy', 'vary'].includes(name)) output[name] = value;
     }
-    return {...output, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer', 'x-content-type-options': 'nosniff'};
+    // Moodle's same-origin login form needs its document origin on POST.
+    // Keep external navigations, APIs, OAuth returns and errors referrer-free.
+    const mediaType = typeof output['content-type'] === 'string'
+      ? output['content-type'].split(';', 1)[0].trim().toLowerCase() : '';
+    const moodleHtml = owner === 'C' && status >= 200 && status < 300 && mediaType === 'text/html';
+    return {...output, 'cache-control': 'no-store', 'referrer-policy': moodleHtml ? 'same-origin' : 'no-referrer', 'x-content-type-options': 'nosniff'};
   }
   return Object.freeze({classify, requestHeaders, responseHeaders});
 }
@@ -132,7 +137,7 @@ export function createMoodleFrontDoor({policy, handleA, handleC, rpcUrl}) {
       res.writeHead = function(status, reason, supplied) {
         const headers = typeof reason === 'string' ? supplied : reason;
         check(headers === undefined || headers && !Array.isArray(headers));
-        const filtered = policy.responseHeaders(route.owner, {...res.getHeaders(), ...headers});
+        const filtered = policy.responseHeaders(route.owner, {...res.getHeaders(), ...headers}, status);
         for (const key of res.getHeaderNames()) res.removeHeader(key);
         for (const [key, value] of Object.entries(filtered)) originalSet(key, value);
         if (nonce) originalSet('Content-Security-Policy', embeddedCsp(nonce, rpcUrl));

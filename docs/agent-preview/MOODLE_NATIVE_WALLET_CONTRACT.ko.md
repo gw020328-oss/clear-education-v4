@@ -101,6 +101,14 @@ X-Forwarded-*를 권한 판단에 사용하지 않는다.
   CLEAR CSRF/wallet/chain/Authorization을 제거한다. A에는 MoodleSession을 보내지 않는다.
 - Set-Cookie도 소유자를 검사한다. A의 __Host 쿠키는 Secure/HttpOnly/Strict/Path=/,
   C 쿠키는 Secure/HttpOnly/Lax 또는 Strict/Path=/, 두 소유자 모두 Domain 금지다.
+- C의 성공(2xx) `text/html` 문서만 `Referrer-Policy: same-origin`을 사용한다.
+  이는 Moodle 로그인 form POST의 Origin을 유지하며 외부 이동에는 Referer를 보내지 않는다.
+  A OAuth/API, C 비HTML 및 오류/redirect 응답은 `no-referrer`를 유지한다.
+  POST의 Origin/Fetch-Site 정확 비교는 그대로이며 `Origin: null`은 허용하지 않는다.
+- Moodle 4.5 설치에서는 `config.php`의 `$CFG->nolastloggedin = true`로
+  사용자명 기억 쿠키 발급을 억제한다. 이를 DB 설정으로 저장하지 않는다.
+  실제 로그인 세션 검사 redirect에 필요한 `testsession` query는
+  `/login/index.php` inventory에만 포함한다. 인증 쿠키 allowlist를 확장하지 않는다.
 - same-origin은 양쪽 프론트를 같은 신뢰 영역에 둔다. 위 필터는 두 JS 실행
   환경이 서로 격리된다는 주장이 아니다. C 최신 권한과 CLEAR 서명 검증이 필요하다.
 - 정확한 C native 문서 `/local/clearbridge/index.php`, `/local/clearbridge/configure.php`

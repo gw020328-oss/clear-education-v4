@@ -45,12 +45,14 @@ test('TLS gateway emits fresh matching native nonces and confines callback/crede
   });
   const first=await send('/local/clearbridge/index.php?id=2'),second=await send('/local/clearbridge/index.php?id=2');
   assert.equal(first.status,200);assert.equal(second.status,200);
+  assert.equal(first.headers['referrer-policy'],'same-origin');
   const nonce= /content="([^"]+)"/.exec(first.body)[1];
   assert.match(nonce,/^[A-Za-z0-9+/]{32}$/);assert.notEqual(first.body,second.body);
   assert(first.headers['content-security-policy'].includes("'nonce-"+nonce+"'"));
   assert.equal(calls[0].headers.cookie,'MoodleSession=synthetic-moodle');
   assert(!calls[0].rawHeaders.includes('synthetic-csrf'));assert(!calls[0].rawHeaders.includes('caller-controlled'));
   const auth=await send('/auth/nonce','POST');assert.equal(auth.status,200);
+  assert.equal(auth.headers['referrer-policy'],'no-referrer');
   assert.equal(calls.at(-1).headers.cookie,'__Host-clear-session=synthetic-clear');
   const q='?privy_oauth_code=synthetic-code&privy_oauth_state=synthetic-state&privy_oauth_provider=google';
   const returned=await send('/local/clearbridge/wallet-return'+q);
@@ -63,5 +65,27 @@ test('TLS gateway emits fresh matching native nonces and confines callback/crede
   badCookie=true;
   const denied=await send('/local/clearbridge/index.php?id=2');
   assert.equal(denied.status,403);assert.equal(denied.headers['set-cookie'],undefined);
+  assert.equal(denied.headers['referrer-policy'],'no-referrer');
   assert.equal(denied.body,'{"error":"MOODLE_FRONT_DOOR_UNAVAILABLE"}');
+});
+
+test('only successful C HTML documents retain same-origin referrers; request origin remains exact', () => {
+  const origin='https://127.0.0.1:19574';
+  const policy=createMoodleFrontDoorPolicy({origin,routes:[
+    {owner:'C',path:'/login/index.php',methods:['GET','POST'],query:[]},
+  ]});
+  for(const type of ['text/html','Text/HTML; charset=UTF-8',' text/html ;charset=utf-8']) {
+    assert.equal(policy.responseHeaders('C',{'Content-Type':type})['referrer-policy'],'same-origin');
+    assert.equal(policy.responseHeaders('A',{'Content-Type':type})['referrer-policy'],'no-referrer');
+    for(const status of [302,400,403,500])
+      assert.equal(policy.responseHeaders('C',{'Content-Type':type},status)['referrer-policy'],'no-referrer');
+  }
+  for(const type of ['application/json','text/javascript','text/html-invalid',undefined])
+    assert.equal(policy.responseHeaders('C',{'Content-Type':type})['referrer-policy'],'no-referrer');
+  const req={url:'/login/index.php',method:'POST',socket:{encrypted:true},
+    headers:{host:'127.0.0.1:19574',origin,'sec-fetch-site':'same-origin'}};
+  assert.equal(policy.classify(req).owner,'C');
+  for(const foreign of ['null','https://other.invalid',undefined])
+    assert.throws(()=>policy.classify({...req,headers:{...req.headers,origin:foreign}}));
+  assert.throws(()=>policy.classify({...req,headers:{...req.headers,'sec-fetch-site':'cross-site'}}));
 });
