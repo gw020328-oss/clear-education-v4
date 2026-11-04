@@ -1,0 +1,21 @@
+services:
+  preview:
+    build:
+      context: ${CLEAR_PREVIEW_BUILD_CONTEXT:?run package.mjs first}
+      dockerfile: deploy/agent-preview/Dockerfile
+    network_mode: host
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    environment:
+      CLEAR_PREVIEW_CONFIG: /run/secrets/profile.json
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?existing key required}
+    volumes:
+      - ${CLEAR_PREVIEW_CONFIG_DIR:?private configuration directory}:/run/secrets:ro
+      - ${CLEAR_PREVIEW_STATE_DIR:?isolated persistent directory}:/var/lib/clear-preview
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    mem_limit: 256m
+    cpus: 1
+    pids_limit: 64
