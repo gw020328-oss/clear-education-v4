@@ -39,3 +39,12 @@ test('a receipt is a 100 TEST receipt only for this application, role, recipient
 });
 
 test('unbound sessions cannot request a receipt for an invented application',()=>{const restore=dom();try{const state={bootstrap:{role:'OPERATOR',applicationId:null},view:null},n=teamApplicationSection({state,availability:{consent:{enabled:false,reason:'신청 대기'}},button:(text,fn,disabled)=>{const b=document.createElement('button');b.textContent=text;if(disabled)b.setAttribute('disabled','');return b;},readReceipt:()=>assert.fail('no read before binding')});const b=buttons(n).find(x=>x.textContent==='지급 영수증 읽기');assert.ok(b&&Object.hasOwn(b.attributes,'disabled'));assert.ok(!n.textContent.includes('application-synthetic'));}finally{restore();}});
+test('completed source flow requests receipt review without offering another consent or waiting for payment',async()=>{const restore=dom();try{
+ const f=await fixture();f.b.phase='REGISTERED_SOURCE_CHAIN_COMPLETE';await f.driver.refresh();const n=draw(f);
+ assert.match(n.textContent,/영수증을 읽어 실제 수령/);assert.ok(!buttons(n).some(b=>b.textContent==='표시한 판정과 100 TEST 지급에 동의'));
+ assert.doesNotMatch(n.textContent,/다른 역할 또는 지급 결과를 기다립니다/);assert.doesNotMatch(n.textContent,/양측이 같은 최신 판정/);assert.equal(f.calls.length,0);
+}finally{restore();}});
+test('completion never replaces an unknown consent with a new consent intent',async()=>{const restore=dom();try{
+ const f=await fixture();f.setFail(true);await assert.rejects(f.driver.consent('AGREE'));f.b.phase='REGISTERED_SOURCE_CHAIN_COMPLETE';await f.driver.refresh();const n=draw(f);
+ assert.ok(buttons(n).some(b=>b.textContent==='앞선 지급 동의 결과 확인'));assert.ok(!buttons(n).some(b=>b.textContent==='표시한 판정과 100 TEST 지급에 동의'));assert.equal(f.calls.length,1);
+}finally{restore();}});

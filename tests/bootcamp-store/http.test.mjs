@@ -5,8 +5,8 @@ import {request as httpRequest} from 'node:http';
 import {once} from 'node:events';
 import {createBootcampHandler} from '../../src/bootcamp/http.mjs';
 import {storeFixture} from './fixture.mjs';
-async function httpFixture(t,allowLoopbackHttpForTests=true,operator=false){
-  const f=await storeFixture(t);if(operator){f.configuration.operatorBindings=[{wallet:f.operator.address,courseOperatorRef:'course-operator-demo'}];f.restart();}
+async function httpFixture(t,allowLoopbackHttpForTests=true,operator=false,operatorCourse){
+  const f=await storeFixture(t);if(operator){f.configuration.operatorBindings=[{wallet:f.operator.address,courseOperatorRef:'course-operator-demo'}];if(operatorCourse)f.configuration.resolveOperatorBindings=()=>[{wallet:f.operator.address,courseOperatorRef:operatorCourse()}];f.restart();}
   const handler=createBootcampHandler(f.store,{allowLoopbackHttpForTests}),server=createServer(handler);
   server.listen(0,'127.0.0.1');await once(server,'listening');
   t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));});
@@ -71,4 +71,32 @@ test('HTTP reauthenticates after awaited acceptance before sending its private r
  const response=await f.request(`/bootcamp/v1/applications/${a}/collect`,{method:'POST',body:{requestId:r.record.target.requestId,expectedRevision:r.record.applicationRevision},headers:{'idempotency-key':'await-logout'}});
  assert.equal(response.status,401);assert.deepEqual(response.body,{error:'AUTH_REQUIRED'});assert.equal(f.counts().evidence,1);
  const context=await f.login(f.alice);assert.equal(f.store.getApplication(context,a).evidence.length,1);
+});
+
+test('ledger observations reuse application authorization and preserve the metric events response',async t=>{
+  let course='course-operator-demo';
+  const f=await httpFixture(t,true,true,()=>course),a=f.create();
+  const request=f.store.issueRequest(f.aliceContext,a,{criterionId:'activity-complete',expectedRevision:1},f.key());
+  await f.store.collect(f.aliceContext,a,{requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision},f.key());
+  const path='/bootcamp/v2/applications/'+a;
+  const legacy=f.store.getMetricEvents(f.aliceContext,a);
+  const run=legacy.events[0].scenarioRunId;
+  const url=path+'/ledger-observations/'+run;
+  const owner=await f.request(url),operator=await f.request(url,{context:f.operatorContext});
+  assert.equal(owner.status,200);
+  assert.equal(operator.status,200);
+  assert.deepEqual(operator.body,owner.body);
+  assert.equal(owner.body.coverage,'RECORDED_EVENTS_ONLY');
+  assert.equal(owner.body.humanWorkReductionPercent,null);
+  assert.equal(owner.body.recorded.eventCount,legacy.events.length);
+  assert.equal(Object.hasOwn(owner.body,'events'),false);
+  const empty=await f.request(path+'/ledger-observations/run-missing');
+  assert.equal(empty.status,200);
+  assert.equal(empty.body.recorded.automatedCompletionEvents,null);
+  assert.deepEqual((await f.request(path+'/metric-events')).body,legacy);
+  assert.equal((await f.request(url,{context:f.bobContext})).status,403);
+  course='other-course';
+  assert.equal((await f.request(url,{context:f.operatorContext})).status,403);
+  f.service.logout(f.aliceContext);
+  assert.deepEqual((await f.request(url)).body,{error:'AUTH_REQUIRED'});
 });

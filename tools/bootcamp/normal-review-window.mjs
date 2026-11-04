@@ -1,4 +1,5 @@
-import {requireRule as check} from '../../src/policy/values.mjs';
+import {setTimeout as delay} from 'node:timers/promises';
+import {RuleError,requireRule as check} from '../../src/policy/values.mjs';
 import {REVIEW_WINDOW} from './test-client/review-window.js';
 import {readNormalView,normalSourceTarget,assertNormalSourceTarget} from './normal-current-view.mjs';
 export {REVIEW_WINDOW};
@@ -27,6 +28,41 @@ export function requireNormalSourceWindow({store,context,applicationId,sourceTar
     &&Number.isSafeInteger(view.evidence.validUntilExclusive),'BC_NORMAL_NOT_MET');
   const caps=[view.evidence.validUntilExclusive,view.procedure.reviewCapAt].filter(Number.isSafeInteger);
   return requireNormalReviewWindow(Math.min(...caps),view.asOf);
+}
+
+// Wait at the current pre-send gate. Only authenticated reads and canonical RPC
+// refreshes repeat; the caller continues its existing payment sequence once.
+export async function waitForNormalPaymentReview({store,connection,context,applicationId,sourceTarget,
+  registration,assertCurrent,requireReaders,signal,timeoutMs=30000,pollMs=REVIEW_WINDOW.pollMs}){
+  const end=performance.now()+timeoutMs;
+  const checkWait=()=>{
+    check(!signal?.aborted,'NORMAL_HOST_CANCELLED');
+    check(performance.now()<end,'BC_NORMAL_REVIEW_SCREENS_REQUIRED');
+  };
+  const current=()=>{
+    assertCurrent?.();
+    assertNormalSourceTarget(normalSourceTarget(readNormalView(()=>store.getApplication(context,applicationId))),sourceTarget);
+    if(registration){
+      const view=readNormalView(()=>store.getRecipientRegistration(context,applicationId));
+      check(view.registrationTargetId===registration.id&&view.applicationRevision===sourceTarget.applicationRevision
+        &&JSON.stringify(view.payload)===JSON.stringify(registration.recipientRegistration),'BC_RECIPIENT_REGISTRATION_TARGET');
+      check(view.status==='SIGNED'&&view.signatureAccepted,'BC_NORMAL_RECIPIENT_SIGNATURE_REQUIRED');
+      check(view.observedAt<Number(registration.recipientRegistration.message.deadline),'BC_RECIPIENT_REGISTRATION_EXPIRED');
+    }
+  };
+  for(;;){
+    checkWait();current();
+    await connection.refresh(applicationId);
+    checkWait();current();
+    requireNormalSourceWindow({store,context,applicationId,sourceTarget});
+    checkWait();
+    try{requireReaders?.();return;}
+    catch(error){
+      if(Object.getPrototypeOf(error)!==RuleError.prototype||error.message!=='BC_NORMAL_REVIEW_SCREENS_REQUIRED')throw error;
+    }
+    try{await delay(Math.min(pollMs,Math.max(1,end-performance.now())),undefined,{signal});}
+    catch(error){check(!signal?.aborted,'NORMAL_HOST_CANCELLED');throw error;}
+  }
 }
 
 export function requireNormalConsentAction({view,body,phase,sourceTarget,reviewTarget}){
