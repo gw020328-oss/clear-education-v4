@@ -325,7 +325,7 @@ test('화면이 못 읽은 조항을 못 읽음으로 두고 지어내지 않는
     assert.ok(text.includes('모델 아님'), '규칙 기반이라고 적지 않았다');
     assert.ok(text.includes('과제 제출'), '읽은 조항을 안 보여줬다');
     assert.ok(text.includes('1개 조건을 찾았습니다 — 맞나요?'), '찾은 개수를 묻지 않는다');
-    assert.ok(text.includes('확인하지 않는 것 1개'), '출석률 조항을 숨겼다');
+    assert.ok(text.includes('자동 검증 미지원 — 정책 확정 전 처리 필요 · 1개'), '출석률 조항을 숨겼다');
     assert.ok(text.includes('출석률은'), '못 읽은 이유를 안 적었다');
     assert.ok(text.includes('읽은 것만 구조화'), '일부만 읽었는데 버튼이 그 사실을 안 적는다');
     assert.ok(!text.includes('강의 활동 완료'), '출석률을 활동 완료로 지어냈다');
@@ -457,7 +457,7 @@ test('화면이 못 읽은 조항에 직접 지정 상자를 붙이고 제안 �
     assert.equal(selects.length, 1, '못 읽은 조항 하나에만 상자가 붙어야 한다');
     // 출석률 조항은 경고 줄로만 보이고 지정 상자가 없다 — 조건으로 바꿀 길이 없어야 한다
     const p2 = aiComparePanel({ adapter: a, source: '출석률 90% 이상' });
-    assert.ok(p2.node.textContent.includes('확인하지 않는 것 1개'), '출석률 경고가 없다');
+    assert.ok(p2.node.textContent.includes('자동 검증 미지원 — 정책 확정 전 처리 필요 · 1개'), '출석률 경고가 없다');
     const opts = [...walk(p2.node)].filter((n) => n.tagName === 'OPTION').map((n) => n.textContent);
     assert.equal(opts.length, 0, '출석률 조항에 선택지가 열려 있다: ' + opts.join(', '));
   } finally { restore(); }
@@ -518,7 +518,7 @@ test('화면은 찾은 조건만 펴고 나머지는 접는다', () => {
     const panel = aiComparePanel({ adapter: a, source: REAL_NOTICE });
     const text = panel.node.textContent;
     assert.ok(text.includes('3개 조건을 찾았습니다 — 맞나요?'), '찾은 개수를 묻지 않는다 — ' + text.slice(0, 300));
-    assert.ok(text.includes('확인하지 않는 것 4개'), '못 하는 조건 경고가 없다');
+    assert.ok(text.includes('자동 검증 미지원 — 정책 확정 전 처리 필요 · 4개'), '못 하는 조건 경고가 없다');
     const details = [...walk(panel.node)].find((n) => n.tagName === 'DETAILS');
     assert.ok(details, '읽지 않은 문장이 접혀 있지 않다');
     assert.ok(details.textContent.includes('만족도'), '만족도 줄이 접힌 쪽에 없다');
@@ -570,4 +570,31 @@ test('실행 상태는 관측이 없을 때 이유를 가른다 — 계획 보�
   assert.equal(runStateOf({ state: STATE.LOADING, check: null, obs: null, stale: false }).key, 'running');
   assert.equal(runStateOf({ state: STATE.ERROR, check: null, obs: null, stale: false }).key, 'failed');
   assert.equal(runStateOf({ state: STATE.IDLE, check: null, obs: null, stale: false }).key, 'pending');
+});
+
+// ── 자동 검증 미지원이 남으면 전체 정책을 실행 가능으로 보지 않는다 (본부 11/4) ──
+
+test('미지원 조건이 남은 채 구조화하면 결과가 성공이어도 전체 정책 실행 가능으로 보이지 않는다', async () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+    const panel = aiComparePanel({ adapter: a, source: '숙제 제출; 출석률 90% 이상' });
+    assert.ok(panel.node.textContent.includes('자동 검증 미지원 — 정책 확정 전 처리 필요 · 1개'));
+    const btn = [...walk(panel.node)].find((n) => n.tagName === 'BUTTON' && n.textContent.includes('읽은 것만 구조화'));
+    for (const fn of btn.handlers.click ?? []) fn({});
+    await settle();
+    assert.equal(a.current.state, STATE.SUCCESS, '지원 조건 하나는 정상 구조화돼야 한다');
+    const text = panel.node.textContent;
+    assert.ok(text.includes('실행 가능으로 보지 않습니다'), '미지원이 남았는데 차단 문구가 없다');
+    assert.ok(text.includes('지원 조건만 쪼갰습니다'), '성공 배너가 전체 성공처럼 읽힌다');
+    assert.ok(!text.includes('지원 문법 안에서 모두 쪼갰습니다'));
+
+    // 미지원이 없으면 차단 문구도 없다
+    const clean = aiComparePanel({ adapter: createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null }), source: PRESETS[0].source });
+    const b2 = [...walk(clean.node)].find((n) => n.tagName === 'BUTTON' && n.textContent.includes('이대로 구조화'));
+    for (const fn of b2.handlers.click ?? []) fn({});
+    await settle();
+    assert.ok(!clean.node.textContent.includes('실행 가능으로 보지 않습니다'));
+    assert.ok(clean.node.textContent.includes('지원 문법 안에서 모두 쪼갰습니다'));
+  } finally { restore(); }
 });

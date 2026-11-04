@@ -125,7 +125,7 @@ test('저장된 설정이 있으면 초안이 그걸로 채워지고 저장 버�
     assert.ok(text.includes('저장된 설정과 같습니다'));
     assert.ok(text.includes('저장된 설정 map-3'));
     assert.ok(text.includes('고른 2개를 모두 완료해야 합니다'), '여러 활동의 뜻(모두 완료)을 안 적었다');
-    assert.ok(text.includes('백엔드에 요청했습니다'), '모듈이 하나만 받는다는 사실을 숨겼다');
+    assert.ok(text.includes('실제 연결은 먼저 활동 하나로'), '실제 연결은 활동 하나부터라는 본부 결정을 숨겼다');
   } finally { restore(); }
 });
 

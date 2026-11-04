@@ -220,6 +220,11 @@ export function aiComparePanel({
     const result = s.payload?.result ?? null;
     // stale 이면 값은 그리되 **지금 입력의 결과가 아니라고** 못 박는다.
     const stale = s.state === STATE.STALE;
+    // 넘긴 제안에 자동 검증 미지원 조항이 있었나. 있으면 결과가 성공이어도
+    // **전체 환급 정책을 실행 가능으로 보지 않는다** — 본부 결정(11/4).
+    const sentUnsupported = (lastSent?.clauses ?? [])
+      .filter((c) => c.notOurs && c.source !== 'operator').length;
+    const policyBlocked = s.payload !== null && sentUnsupported > 0;
 
     // 제안을 셋으로 가른다 — 찾은 것 / 조건처럼 썼지만 우리가 못 하는 것 /
     // 그 밖의 읽지 않은 문장. 운영자가 '조건 아님' 으로 표시한 것은 셋째에
@@ -314,7 +319,9 @@ export function aiComparePanel({
           notOurs.length > 0
             ? el('div.fp-proposal-warn', {}, [
               el('p.fp-proposal-ask', {
-                text: `조건처럼 보이지만 CLEAR 가 확인하지 않는 것 ${notOurs.length}개`,
+                // 본부 결정(11/4): '확인 안 하는 것' 이 아니라 **자동 검증 미지원**.
+                // 조건이 아닌 게 아니라, 정책 확정 전에 사람이 처리해야 하는 것이다.
+                text: `자동 검증 미지원 — 정책 확정 전 처리 필요 · ${notOurs.length}개`,
               }),
               el('ul.fp-proposal-list', {}, notOurs.map((c) => el('li.fp-proposal-row', { 'data-read': 'no' }, [
                 el('span.fp-proposal-src', { text: `"${c.original}"` }),
@@ -363,7 +370,23 @@ export function aiComparePanel({
         })]),
       ]),
 
-      el('p', { class: banner.tone ? `fp-note fp-note--${banner.tone}` : 'fp-note', text: banner.text }),
+      el('p', {
+        class: banner.tone ? `fp-note fp-note--${banner.tone}` : 'fp-note',
+        // 미지원이 남은 채 성공했으면 "모두 쪼갰다" 가 아니다. 지원 조건만이다.
+        text: policyBlocked && s.state === STATE.SUCCESS ? '지원 조건만 쪼갰습니다.' : banner.text,
+      }),
+
+      // ── 전체 정책 실행 가능 표시 차단 ────────────────────────────
+      //
+      // 미지원 조항은 구조화에 넘기지 않으므로 아래 ①~④ 는 지원 조건에 대한
+      // 것이다. 그걸 "환급 정책 전체가 돌아간다" 로 읽히게 두면 안 된다.
+      policyBlocked
+        ? el('p.fp-note.fp-note--warn', {
+          'data-role': 'policy-blocked',
+          text: `자동 검증 미지원 조건 ${sentUnsupported}개가 남아 있어 전체 환급 정책을 실행 가능으로 보지 않습니다. `
+            + '아래 결과는 지원 조건에 대한 것이며, 미지원 조건은 정책 확정 전 처리가 필요합니다.',
+        })
+        : null,
 
       s.actualUnavailable
         ? el('p.fp-note.fp-note--warn', { text: ERROR_TEXT.ACTUAL_NOT_CONNECTED })
