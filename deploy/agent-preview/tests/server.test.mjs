@@ -10,7 +10,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {validateConfig,bindingHash} from '../config.mjs';
 import {openStore} from '../store.mjs';
 import {createService} from '../service.mjs';
-import {createServer} from '../server.mjs';
+import {createServer} from '../http-server.mjs';
 import {signature} from '../auth.mjs';
 import {sourceClauses} from '../../../src/agent-preview/index.mjs';
 import {prepareGeminiStructureRequest} from '../../../src/agent-preview/gemini-preparation.mjs';
@@ -41,7 +41,7 @@ async function fixture(t,{adapter=null,transport=null,path=':memory:',clock=Date
       req.on('error',reject);req.end(raw);
     });
   }
-  return {request,approve,calls,store,service,secret};
+  return {request,approve,calls,store,service,secret,server};
 }
 test('prepare returns exact binding and zero model calls; no cookies or CORS',async t=>{
   const f=await fixture(t),r=await f.request('/v1/preview/prepare',body);
@@ -218,4 +218,23 @@ test('observation uses seconds and exact statuses; UNKNOWN/INACCESSIBLE are neve
   const f=await fixture(t,{adapter:{execution:'OFFLINE_TEST',async observe(){return {targetRef:'demo-page',status:'COMPLETE',observedAt:Date.now()};}}});
   const r=await f.request('/v1/preview/generate',{...body,approvalRef:f.approve()});
   assert.equal((await f.request('/v1/preview/execute',{...body,draftId:r.body.draftId,proposalHash:r.body.draft.proposalHash})).body.code,'OBSERVATION_INVALID');
+});
+
+test('client disconnect aborts pending HTTP generation and prevents the next provider call',async t=>{
+  let release,entered,signal;const started=new Promise(resolve=>{entered=resolve;}),calls=[];
+  const f=await fixture(t,{transport:{execution:'OFFLINE',request(model,method,body,s){
+    calls.push(method);signal=s;entered();return new Promise(resolve=>{release=resolve;});
+  }}});
+  const path='/v1/preview/generate',raw=JSON.stringify({...body,approvalRef:f.approve()}),
+    timestamp=String(Math.floor(Date.now()/1000)),nonce=randomBytes(16).toString('hex');
+  const req=http.request({host:'127.0.0.1',port:f.server.address().port,path,method:'POST',headers:{
+    host:'preview.example.invalid','content-type':'application/json','x-clear-timestamp':timestamp,'x-clear-nonce':nonce,
+    'x-clear-signature':signature(f.secret,timestamp,nonce,path,raw)}});
+  req.on('error',()=>{});req.end(raw);await started;
+  let timer;const cancelled=new Promise((resolve,reject)=>{
+    signal.addEventListener('abort',resolve,{once:true});timer=setTimeout(()=>reject(Error('disconnect did not abort')),500);
+  });
+  req.destroy();try {await cancelled;}finally {clearTimeout(timer);}
+  release({totalTokens:500});await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(calls,['countTokens']);
 });

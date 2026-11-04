@@ -3,6 +3,7 @@ import {mkdirSync,lstatSync,copyFileSync,readFileSync,writeFileSync} from 'node:
 import {resolve,dirname,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
+import {verifyPaths} from './artifact.mjs';
 
 // Only tracked source paths enter the build context; never archive the workspace.
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..'),out=resolve(process.argv[2]??'var/preview-build');
@@ -11,6 +12,7 @@ const files=execFileSync('git',['ls-files','-z'],{cwd:root,encoding:'utf8'}).spl
   .filter(p=>!p.includes('/tests/')&&!p.endsWith('.test.mjs'));
 if(!files.includes('deploy/agent-preview/server.mjs')) throw Error('COMMIT_DEPLOYMENT_FILES_BEFORE_PACKAGING');
 if(files.some(p=>/\.(?:pem|key|sqlite|log)$|(^|\/)\.env/.test(p))) throw Error('PACKAGE_PATH_REJECTED');
+verifyPaths(files);
 mkdirSync(out,{recursive:false,mode:0o700});
 const manifest=[];
 for(const path of files) {

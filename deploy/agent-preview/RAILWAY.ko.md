@@ -54,7 +54,7 @@ deprecated로 표시되어 있어 그 파일을 추가하지 않는다. Dashboar
 
 Railway runner는 HMAC 값을 파일에 쓰지 않는다. 승인/nonce DB만 볼륨 state 하위에 저장한다.
 HTTPS는 Railway edge에서 종료하고 내부 서비스가 HTTP를 받는다. 모든 경로의 exact Host와 HMAC 검사는 그대로 유지한다.
-루트 권한은 볼륨의 state 폴더 생성/소유권 준비에만 사용하며 HTTP 수신 전 UID1000으로 전환한다.
+앱 모듈 평가 전에 전체 source 검증을 마친다. 루트 권한은 고정 state 폴더 준비에만 사용하며 UID/GID1000·보조 그룹 제거 뒤 config/service/HTTP를 로드한다. 종료 신호는 진행 중 요청을 먼저 취소한다.
 
 ## 사용자에게 필요한 단계
 

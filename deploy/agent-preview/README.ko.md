@@ -148,3 +148,12 @@ status는 COMPLETE/INCOMPLETE/UNKNOWN/INACCESSIBLE, observedAt은 Unix seconds�
 오프라인30초 검사는 actual 신선도 계약을 대신하지 않는다. B가 소유한 인증 envelope의
 context/request/source/proposal/audience/epoch/bodyHash/expiry 검증을 인수하기 전 actual503을 유지한다.
 최초 actual 접근은 학생 본인의 B auth/ACK 신청/현재 binding 경로이며 운영자 configure/HMAC은 위임 권한이 아니다.
+
+## PR154 독립 검토 보정
+
+- 패키지 전체 파일 목록(463개)의 정렬 경로 지문을 trusted verifier에 고정했다. manifest가 파일 일부를 생략하거나 실행 경로에 추가 파일/심볼릭 링크가 있으면 시작을 거부한다. 패키지 파일을 추가·삭제할 때 경로 집합 지문도 별도 검토하여 갱신한다.
+- `server.mjs`, `railway.mjs`, `approval.mjs`는 Node 내장 모듈과 순수 `artifact.mjs`만 먼저 평가한다. source 검증 뒤에 config/service/HTTP를 동적 import한다. Railway는 검증 및 고정 state 디렉터리 준비 후 UID/GID1000·보조 그룹 제거를 완료하고 앱을 평가한다. 설정 생성 함수는 `railway-config.mjs`로 분리했다.
+- 검증기와 bootstrap 자체는 immutable 이미지의 신뢰 기반이다. source manifest는 외부 npm dependency bytes나 Node/base image를 인증하지 않는다. 변경 가능한 bootstrap/동시 파일 교체를 방어하는 sandbox라는 주장은 하지 않는다.
+- 각 generate/execute는 45초 상한, 승인/초안 만료, HTTP 연결 종료, service close에 연결된 AbortSignal을 갖는다. dispatch 직전과 await 직후 closed/expiry를 확인한다. SIGTERM은 HTTP drain을 기다리기 전에 작업을 취소한다. 취소된 승인도 계속 소진 상태다.
+- 초안 TTL은 진행 중 observe도 취소한다. 응답하지 않는 adapter도 서비스 대기를 즉시 끝내고 늦은 응답은 버린다. 이는 서비스가 가진 참조 정리이며 비협조적 외부 adapter의 자체 메모리나 물리적 zeroization을 보장하지 않는다.
+- 실제 관측 adapter는 계속 미수락(503)이다. 외부 배포·실제 Moodle·유료 모델 호출은 이 보정 검사에 포함되지 않는다.
