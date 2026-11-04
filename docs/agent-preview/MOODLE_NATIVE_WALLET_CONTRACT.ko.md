@@ -125,10 +125,15 @@ query를 history에서 제거하고 owner 고정 courseId의 Moodle index로 복
 임의 returnURL을 받지 않는다. OAuth code/token/signature를 PHP에 전달하지 않는다.
 
 현재 재사용 후보 origin은 `https://127.0.0.1:9477`이고 Privy App ID는 기존
-`cmvt0wl3v043w0hjp00elt4rf`다. 기존 사용자 설정은 `/onboarding` redirect다.
+`cmvt0wl3v043w0hjp00elt4rf`다. 2026-11-04 실제 Privy 콘솔을 읽기 전용으로 확인했다.
+Basics → Domains and clients의 Allowed origins에는 HTTPS 127.0.0.1의
+9457/9467/9477 세 주소가 있고 HttpOnly cookies 설정은 꺼져 있다.
+Basics → Advanced의 Allowed OAuth redirect URLs에는 같은 세 origin의
+`/onboarding` 경로만 있다. UI는 full URL path가 매칭된다고 명시한다.
 새 exact redirect 후보는 `https://127.0.0.1:9477/local/clearbridge/wallet-return`이다.
-새 경로의 콘솔 허용 여부는 아직 읽기 확인하지 않았고 등록/수정하지 않았다.
-단순히 기존 origin이 허용됐다는 이유로 새 redirect도 허용됐다고 판단하지 않는다.
+해당 경로는 등록돼 있지 않아 실제 native Google 연결 전 추가가 필요하다.
+이 조사에서 어떤 입력값이나 설정도 변경하지 않았다. 기존 origin 허용만으로
+새 redirect까지 허용됐다고 판단하지 않는다.
 
 ## 사업 action 권한 계약 검토 요청
 
