@@ -72,7 +72,7 @@ print('PASS anonymous requests to both routes require Moodle login')
 student = login('student')
 status, path, headers, body = fetch(student, student_url + '&role=teacher&registered=1&paid=1')
 assert status == 200 and path == '/local/clearbridge/index.php'
-for label in (policy, student_only, 'Introductory lecture completion mark', 'Practice assignment submission',
+for label in (policy, student_only, 'Automatic completion of the introductory lecture', 'Practice assignment submission',
               'problem solving and lessons learned', 'HackerRank Python (Basic) certification',
               'CLEAR recipient registration cannot be checked yet', 'A receipt will appear here'):
     assert label in body, label

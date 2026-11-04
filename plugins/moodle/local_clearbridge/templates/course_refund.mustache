@@ -16,12 +16,27 @@
         <dl class="row mb-0">
             {{#conditions}}
             <dt class="col-sm-5">{{name}}</dt>
-            <dd class="col-sm-7">{{source}}</dd>
+            <dd class="col-sm-7">
+                {{source}}
+                {{#record}}
+                <p class="mb-1">{{status}}</p>
+                <p class="mb-1">{{connection}}</p>
+                {{#provenance}}<p class="mb-1">{{.}}</p>{{/provenance}}
+                {{#topics}}
+                <p class="mb-1">{{topic}}: {{outcome}}</p>
+                {{/topics}}
+                {{/record}}
+            </dd>
             {{/conditions}}
         </dl>
+        {{#hasrecords}}
+        <p class="mb-0">{{#str}} currentnessunknown, local_clearbridge {{/str}}</p>
+        {{/hasrecords}}
+        {{^hasrecords}}
         {{#student}}
         <p class="mb-0">{{#str}} conditionstatusunavailable, local_clearbridge {{/str}}</p>
         {{/student}}
+        {{/hasrecords}}
     </div>
 </section>
 {{#student}}

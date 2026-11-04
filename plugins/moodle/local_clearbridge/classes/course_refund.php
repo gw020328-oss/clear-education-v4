@@ -13,14 +13,23 @@ final class course_refund {
         return $courseid !== SITEID && (string)($CFG->local_clearbridge_demo_courseid ?? '') === (string)$courseid;
     }
 
-    public static function template_data(bool $student): array {
+    // The optional DTO is for a future owner-verified server composition, never a request parameter.
+    public static function template_data(bool $student, ?array $dto = null): array {
+        $criteria = [
+            'activity-complete' => 'lecture',
+            'assignment-submitted' => 'assignment',
+            'reflection-topics' => 'reflection',
+            'python-basic-certificate' => 'certificate',
+        ];
+        $rows = course_evidence_display::rows($dto, $student, $criteria);
         $conditions = [];
-        foreach (['lecture', 'assignment', 'reflection', 'certificate'] as $condition) {
+        foreach ($criteria as $id => $condition) {
             $conditions[] = [
                 'name' => get_string('condition' . $condition, 'local_clearbridge'),
                 'source' => get_string('source' . $condition, 'local_clearbridge'),
+                'record' => $rows[$id] ?? null,
             ];
         }
-        return ['student' => $student, 'conditions' => $conditions];
+        return ['student' => $student, 'hasrecords' => $rows !== null, 'conditions' => $conditions];
     }
 }
