@@ -12,6 +12,7 @@ final class course_projection {
         public readonly array $evidence,
         public readonly array $payment,
         public readonly bool $synthetic = false,
+        public readonly ?int $expiresAtExclusive = null,
     ) {
     }
 }
