@@ -204,8 +204,11 @@ final class course_fixed_scope {
             $r = $registry->lookup($q);
             course_authority_currentness::require_rule($r !== null && self::verify_record($r));
             course_authority_currentness::require_rule($registry->lookup($q) === $r && self::verify_record($r));
-            course_authority_currentness::require_rule($registry->lookup($q) === $r && time() >= $now
-                && time() < $q['expiresAtExclusive'] && hrtime(true) >= $start && hrtime(true) - $start < 5_000_000_000);
+            course_authority_currentness::require_rule($registry->lookup($q) === $r);
+            $finalmono = hrtime(true);
+            course_authority_currentness::require_rule(time() >= $now && time() < $q['expiresAtExclusive']
+                && $finalmono >= $start && $finalmono - $start < 5_000_000_000
+                && $finalmono >= $r['startedMonotonic'] && $finalmono - $r['startedMonotonic'] < 5_000_000_000);
             $result = self::unavailable($q); $s = $r['fixedScope']; $result['status'] = 'OK';
             foreach (['installationRef', 'courseRef', 'subjectRef', 'applicationRef'] as $key) { $result[$key] = $s[$key]; }
             $result['actorRef'] = $q['role'] === 'PARTICIPANT' ? $s['participantActorRef'] : $s['operatorActorRef'];

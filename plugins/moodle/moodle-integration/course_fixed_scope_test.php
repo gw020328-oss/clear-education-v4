@@ -1,4 +1,13 @@
 <?php
+namespace local_clearbridge {
+    // Test-only delay after a real registry flush, including the final lookup.
+    function fsync($stream): bool {
+        $ok = \fsync($stream);
+        if (isset($GLOBALS['fixed_registry_fence_hook'])) { ($GLOBALS['fixed_registry_fence_hook'])(); }
+        return $ok;
+    }
+}
+namespace {
 // New fixed path only; DB/helper/transport dependencies are modeled, not real Moodle users.
 define('CLEAR_AUTHORITY_BRIDGE_LIBRARY_ONLY', true);
 require __DIR__ . '/course_authority_bridge_test.php';
@@ -15,6 +24,7 @@ function fixed_reset(): void {
         'applicationRef'=>'normal-application','expiresAtExclusive'=>2000000100];
 }
 function fixed_test($label,$body): void {
+    if (($GLOBALS['argv'][1] ?? '') === '--final-fence-only' && !str_starts_with($label, 'final fence ')) { return; }
     fixed_reset(); [$registry,$path]=new_registry();
     try { $body($registry,$path); echo "PASS $label\n"; } finally { cleanup_registry($path); }
 }
@@ -146,3 +156,40 @@ fixed_test('fixed endpoint accepts logical TLS host and rejects connection-port 
         rmdir($root.'/local/clearbridge');rmdir($root.'/local');rmdir($root);
     }
 });
+
+foreach ([['config',15100000000,'UNAVAILABLE'], ['registry',15100000000,'UNAVAILABLE'],
+        ['registry',15000000000,'UNAVAILABLE'], ['registry',14999999999,'OK'],
+        ['registry',9900000000,'UNAVAILABLE']] as [$delaypoint,$finalmono,$expected]) {
+    fixed_test('final fence '.$delaypoint.' at '.$finalmono.' returns '.$expected,
+        function($registry) use($delaypoint,$finalmono,$expected) {
+            [$lease,$q]=fixed_publish($registry);
+            $GLOBALS['f']['mono']=14900000000; // Original lease starts at 10s; callback at 14.9s.
+            $reads=0;
+            if ($delaypoint==='config') {
+                $GLOBALS['DB']=new class($GLOBALS['DB'],$finalmono) {
+                    private int $reads=0;
+                    public function __construct(private object $inner,private int $finalmono) {}
+                    public function get_record($table,$where,$fields) {
+                        $value=$this->inner->get_record($table,$where,$fields);
+                        if ($table==='config_plugins' && ++$this->reads===4) { $GLOBALS['f']['mono']=$this->finalmono; }
+                        return $value;
+                    }
+                    public function __call($method,$args) { return $this->inner->$method(...$args); }
+                };
+            } else {
+                $GLOBALS['fixed_registry_fence_hook']=static function() use(&$reads,$finalmono) {
+                    if (++$reads===3) { $GLOBALS['f']['mono']=$finalmono; }
+                };
+            }
+            try {
+                $reply=Fixed::respond($q,$registry);
+                expect($reply['status']===$expected,'callback must fence original lease after last reads');
+                expect($GLOBALS['f']['mono']===$finalmono && $GLOBALS['f']['wall']<$q['expiresAtExclusive'],'delay actually injected before wall expiry');
+                if ($expected==='UNAVAILABLE') {
+                    expect($reply['applicationRef']===null && $reply['expiresAtExclusive']===null && $registry->lookup($q)===null,
+                        'expired callback closes scope and retires registry entry');
+                }
+            } finally { unset($GLOBALS['fixed_registry_fence_hook']); $lease->revoke(); }
+        });
+}
+}
