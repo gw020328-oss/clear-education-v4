@@ -6,6 +6,7 @@ import {readLoginJson, protectLoginResponse} from './moodle-login-wire.mjs';
 const popup = '/moodle/connect';
 const script = popup + '/popup.js';
 const redeem = popup + '/redeem';
+const googleStart = popup + '/google-start';
 const scriptBytes = readFileSync(new URL('./moodle-login-popup.js', import.meta.url));
 const hex = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 
@@ -27,7 +28,7 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
     return value;
   }
   return Object.freeze({
-    matches: path => [popup, script, redeem].includes(path),
+    matches: path => [popup, script, redeem, googleStart].includes(path),
     async handle(req, res) {
       protectLoginResponse(res);
       res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
@@ -50,9 +51,17 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
           res.end(scriptBytes);
           return;
         }
-        check(req.url === redeem && req.method === 'POST' && req.headers.origin === origin, 'MOODLE_LOGIN_BROWSER');
+        check([redeem, googleStart].includes(req.url) && req.method === 'POST'
+          && req.headers.origin === origin, 'MOODLE_LOGIN_BROWSER');
         const {value} = await readLoginJson(req);
         signal?.throwIfAborted();
+        if (req.url === googleStart) {
+          exactKeys(value, [], 'MOODLE_LOGIN_GOOGLE_START');
+          const start = intents.takeGoogleStart(readCookie(req.headers.cookie, bindingName));
+          res.writeHead(200, {'Content-Type': 'application/json'});
+          res.end(JSON.stringify({start}));
+          return;
+        }
         exactKeys(value, ['code', 'challenge', 'browserProof'], 'MOODLE_LOGIN_LAUNCH');
         check(!intents.browserPending(readCookie(req.headers.cookie, bindingName)), 'MOODLE_LOGIN_BROWSER_BUSY');
         const binding = intents.redeem({...value, bootstrapCookie: readCookie(req.headers.cookie, bootstrapName)});

@@ -206,6 +206,14 @@ export function createMoodleLoginIntents({
       const a = browsers.get(digest(binding).toString('hex'));
       return a?.phase === 'WAITING' && live(a, time());
     },
+    takeGoogleStart(binding) {
+      if (!hex(binding)) return false;
+      const a = browsers.get(digest(binding).toString('hex'));
+      if (a?.phase !== 'WAITING' || a.request.role !== 'PARTICIPANT'
+          || a.googleStartTaken || !live(a, time())) return false;
+      a.googleStartTaken = true;
+      return true;
+    },
     async complete(browserBinding, context, {signal} = {}) {
       check(hex(browserBinding), 'MOODLE_LOGIN_BROWSER');
       const a = browsers.get(digest(browserBinding).toString('hex'));

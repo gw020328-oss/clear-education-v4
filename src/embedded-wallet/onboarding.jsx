@@ -9,6 +9,7 @@ import {walletChoices, selectedIdentity, connectSelectedWallet} from './privy-ad
 import {bounded} from './provider-boundary.mjs';
 import {createClearSession} from './clear-session.mjs';
 import {createSameOriginApi} from '../application/api-client.mjs';
+import {claimMoodleGoogleStart, takeMoodleGoogleNavigation} from './moodle-google-start.mjs';
 
 function Setup({config}) {
   if(config.phase==='ACTIVE_LOCAL_TEST')return <section><h2>참가자 신청 준비</h2><p>Google로 기존 지갑을 연결하고 이번 제품 체인에서 로그인 서명을 진행하세요. 운영자는 별도 Chrome 프로필의 /operator 화면을 사용합니다.</p></section>;
@@ -27,6 +28,8 @@ function Onboarding({config}) {
   const [networkReady, setNetworkReady] = useState(false), [authState, setAuthState] = useState(null);
   const snapshot = useRef(null), active = useRef(null), operation = useRef(null), step = useRef('');
   const authSession = useRef(null);
+  const autoGoogle = useRef(config.autoMoodleGoogle), autoOAuth = useRef(false);
+  const [autoPending, setAutoPending] = useState(config.autoMoodleGoogle);
   const [diagnostic, setDiagnostic] = useState(() => {
     try { return readOAuthDiagnostic(window.sessionStorage); } catch { return null; }
   });
@@ -35,7 +38,9 @@ function Onboarding({config}) {
     const d = oauthDiagnostic(error, stage);
     setDiagnostic(d);
     try { saveOAuthDiagnostic(window.sessionStorage, d); } catch {}
-    setStatus(`작업을 완료하지 못했습니다. 진단: ${diagnosticLabel(d)}. 다시 로그인하지 말고 이 진단 코드를 알려주세요.`);
+    setStatus(stage === 'OAUTH_START' && autoOAuth.current
+      ? 'Google 로그인을 자동으로 시작하지 못했습니다. 아래 버튼으로 로그인하세요.'
+      : `작업을 완료하지 못했습니다. 진단: ${diagnosticLabel(d)}. 다시 로그인하지 말고 이 진단 코드를 알려주세요.`);
   }
   // SDK handles the redirect return asynchronously, outside run()'s promise.
   useEffect(() => {
@@ -79,6 +84,19 @@ function Onboarding({config}) {
     catch (error) { cancel(); report(error, step.current); }
     finally { setBusy(false); operation.current = null; }
   };
+  useEffect(() => {
+    if (!autoGoogle.current || !privy.ready || oauthLoading) return;
+    autoGoogle.current = false;
+    if (privy.authenticated) { setAutoPending(false); return; }
+    autoOAuth.current = true;
+    void run(async signal => {
+      step.current = 'OAUTH_START';
+      const api = createSameOriginApi({origin: config.origin, timeoutMs: 5000});
+      if (!await claimMoodleGoogleStart(api, signal)) return;
+      signal.throwIfAborted();
+      if (!snapshot.current.authenticated) await initOAuth({provider: 'google'});
+    }).finally(() => setAutoPending(false));
+  }, [privy.ready, privy.authenticated, oauthLoading]);
   const choose = async (c, signal) => { await clearAuth(); signal.throwIfAborted();
     setSelection({sdkUserId: c.sdkUserId, walletId: c.walletId, address: c.address}); setStatus('선택한 주소를 확인하고 네트워크 확인을 진행하세요.'); };
   async function probe(signal) {
@@ -135,7 +153,7 @@ function Onboarding({config}) {
   }
   return <section><h2>참가자 Google 로그인과 주소 확인</h2>
     <p>이 화면은 참가자의 Google 내장 지갑용입니다. 운영자는 별도 Chrome 프로필의 /operator 화면에서 MetaMask를 연결하세요. 운영자 내장 지갑 로그인은 진행하지 않습니다.</p>
-    {!privy.authenticated && <button disabled={!privy.ready || busy || oauthLoading || !!authSession.current} onClick={() => run(() => { step.current = 'OAUTH_START'; return initOAuth({provider: 'google'}); })}>Google로 로그인</button>}
+    {!privy.authenticated && <button disabled={!privy.ready || busy || autoPending || oauthLoading || !!authSession.current} onClick={() => run(() => { autoOAuth.current = false; step.current = 'OAUTH_START'; return initOAuth({provider: 'google'}); })}>Google로 로그인</button>}
     {privy.authenticated && <>
       <p>재로그인 후 아래 주소가 이전과 같은지 직접 비교하세요. 다른 주소이면 기존 신청을 이어 진행하지 마세요.</p>
       {choices.length === 0 && privy.user?.linkedAccounts?.some(a => a.type === 'wallet' && ['privy','privy-v2'].includes(a.walletClientType)) &&
@@ -166,10 +184,16 @@ function Onboarding({config}) {
 }
 
 const root = createRoot(document.getElementById('root'));
+let moodleGoogleNavigation = false;
+try {
+  moodleGoogleNavigation = takeMoodleGoogleNavigation({location, storage: window.sessionStorage,
+    navigationType: performance.getEntriesByType('navigation')[0]?.type});
+} catch {}
 try {
   const response = await fetch('/__embedded/config', {credentials: 'same-origin', cache: 'no-store'});
   if (!response.ok) throw Error('CONFIG');
-  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true, moodleLogin: input.moodleLogin === true};
+  const input = await response.json(); const config = {...validateConfig(input),teamFrontend: input.teamFrontend === true,
+    moodleLogin: input.moodleLogin === true, autoMoodleGoogle: input.moodleLogin === true && moodleGoogleNavigation};
   if (config.origin !== location.origin || location.pathname !== '/onboarding' || !['ONBOARDING_ONLY','AUTH_LOCAL_TEST','ACTIVE_LOCAL_TEST'].includes(config.phase)) throw Error('ORIGIN');
   const setup = <Setup config={config}/>;
   root.render(<main><h1>CLEAR 내장 지갑 연결 준비</h1>{setup}{config.appId &&

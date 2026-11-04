@@ -156,6 +156,12 @@ test('private authority, public popup and existing CLEAR SIWE round trip for bot
     assert.equal(redeemed.headers.location, path);
     assert.doesNotMatch(redeemed.headers.location, /[?#]/);
     const binding = cookies(redeemed)[1];
+    const claim = headers => get('/moodle/connect/google-start', {body: {}, headers});
+    assert.deepEqual(JSON.parse((await claim(same)).text), {start: false});
+    assert.equal((await claim({...same, origin: moodleOrigin, cookie: binding})).status, 403);
+    const claims = await Promise.all([claim({...same, cookie: binding}), claim({...same, cookie: binding})]);
+    assert.deepEqual(claims.map(reply => JSON.parse(reply.text).start).sort(),
+      role === 'PARTICIPANT' ? [false, true] : [false, false]);
     const shell = await get(path + (role === 'PARTICIPANT' ? '?privy_oauth_code=synthetic' : ''), {headers: doc});
     assert.equal(shell.status, 200);
     assert.equal(shell.headers['set-cookie'], undefined);

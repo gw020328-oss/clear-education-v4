@@ -22,6 +22,10 @@ async function launch(event) {
       });
       if (!response.ok || !response.redirected
           || !['/onboarding', '/operator'].some(path => response.url === location.origin + path)) throw Error();
+      if (response.url === location.origin + '/onboarding') {
+        // A tab-local UI hint only. The binding and once-only grant remain on the server.
+        try { sessionStorage.setItem('clear-moodle-google-navigation', String(Date.now())); } catch {}
+      }
       location.replace(response.url);
     });
   } catch {
