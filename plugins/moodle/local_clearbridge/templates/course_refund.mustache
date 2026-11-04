@@ -5,6 +5,19 @@
     Example context (json):
     {"student": true, "conditions": [{"name": "Lecture completion", "source": "Moodle activity"}]}
 }}
+{{#showconnection}}
+<section aria-labelledby="clearbridge-connection-heading" class="card mb-3">
+    <div class="card-body">
+        {{#student}}
+        <h2 id="clearbridge-connection-heading">{{#str}} googleconnectionheading, local_clearbridge {{/str}}</h2>
+        {{/student}}
+        {{^student}}
+        <h2 id="clearbridge-connection-heading">{{#str}} walletconnectionheading, local_clearbridge {{/str}}</h2>
+        {{/student}}
+        <p class="mb-0">{{#str}} connectionstatusunavailable, local_clearbridge {{/str}}</p>
+    </div>
+</section>
+{{/showconnection}}
 <section aria-labelledby="clearbridge-policy-heading" class="card mb-3">
     <div class="card-body">
         <h2 id="clearbridge-policy-heading">{{#str}} policyheading, local_clearbridge {{/str}}</h2>

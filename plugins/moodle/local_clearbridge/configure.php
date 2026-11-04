@@ -49,6 +49,8 @@ $isdemocourse = \local_clearbridge\course_refund::is_demo_course($course->id);
 $view = $isdemocourse ? \local_clearbridge\course_projection_page::data($course, false) : null;
 echo $OUTPUT->header();
 if ($view !== null) {
+    // The mapping capability alone does not enroll a course operator.
+    $view['showconnection'] = is_enrolled($context, null, '', true);
     echo $OUTPUT->render_from_template('local_clearbridge/course_refund', $view);
     echo html_writer::link($url, get_string('refreshstatus', 'local_clearbridge'));
 }
