@@ -37,6 +37,9 @@ namespace {
                     return isset($GLOBALS['CFG']->$name) ? (object)['value' => !empty($GLOBALS['f']['configdrift'])
                         ? 'changed' : (string)$GLOBALS['CFG']->$name] : false;
                 }
+                if ($table === 'config_plugins') {
+                    return isset($GLOBALS['f']['fixedscope']) ? (object)['value' => json_encode($GLOBALS['f']['fixedscope'])] : false;
+                }
                 throw new RuntimeException('Unexpected table');
             }
             public function record_exists($table, $where) {

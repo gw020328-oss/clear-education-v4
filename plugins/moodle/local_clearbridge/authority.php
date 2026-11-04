@@ -29,17 +29,19 @@ try {
     [$request, $nonce, $timestamp] = \local_clearbridge\course_authority_currentness::authenticate(
         $_SERVER, $raw, $config, $CFG->local_clearbridge_course_read['key'] ?? '');
     $ports = $factory();
+    $fixed = ($CFG->local_clearbridge_enable_fixed_scope ?? false) === true;
     \local_clearbridge\course_authority_currentness::require_rule(
-        \local_clearbridge\course_read_client::exact_keys($ports, ['registry', 'currentness'])
+        \local_clearbridge\course_read_client::exact_keys($ports, $fixed ? ['registry'] : ['registry', 'currentness'])
         && $ports['registry'] instanceof \local_clearbridge\course_authority_registry
-        && $ports['currentness'] instanceof \local_clearbridge\course_authority_currentness);
+        && ($fixed || $ports['currentness'] instanceof \local_clearbridge\course_authority_currentness));
     $ports['registry']->claim_nonce($nonce, $timestamp);
-    $result = $ports['currentness']->respond($request, $ports['registry']);
+    $result = $fixed ? \local_clearbridge\course_fixed_scope::respond($request, $ports['registry'])
+        : $ports['currentness']->respond($request, $ports['registry']);
     if ($result['status'] === 'OK' && (time() >= $result['expiresAtExclusive']
             || hrtime(true) - $started >= 5_000_000_000)) {
         $result['status'] = 'UNAVAILABLE';
-        foreach (['installationRef', 'installationGeneration', 'authorityEpoch', 'courseRef', 'subjectRef',
-                'actorRef', 'expiresAtExclusive'] as $field) {
+        foreach ($fixed ? ['installationRef', 'courseRef', 'subjectRef', 'actorRef', 'applicationRef', 'expiresAtExclusive']
+                : ['installationRef', 'installationGeneration', 'authorityEpoch', 'courseRef', 'subjectRef', 'actorRef', 'expiresAtExclusive'] as $field) {
             $result[$field] = null;
         }
     }

@@ -13,6 +13,7 @@ final class course_moodle_access {
         private readonly int $course,
         private readonly int $user,
         private readonly string $capability,
+        private readonly bool $fixedscope = false,
     ) {
     }
 
@@ -22,12 +23,16 @@ final class course_moodle_access {
         $sid = session_id();
         if (!isloggedin() || isguestuser() || \core\session\manager::is_loggedinas()
                 || (int)$USER->id !== $this->user || $sid === '' || session_status() !== PHP_SESSION_ACTIVE
-                || ltrim((string)($CFG->session_handler_class ?? ''), '\\') !== \core\session\database::class
+                || (!$this->fixedscope && ltrim((string)($CFG->session_handler_class ?? ''), '\\') !== \core\session\database::class)
+                || ($this->fixedscope && (!in_array(ltrim(\core\session\manager::get_handler_class(), '\\'),
+                    [\core\session\database::class, \core\session\file::class], true)
+                    || !\core\session\manager::session_exists($sid)))
                 || !empty($USER->access['rsw'])) {
             return null;
         }
-        // This profile uses the database session backend. Fetch only generation
-        // and lifetime metadata. Neither the SID nor these fields leave Moodle.
+        // Core file and database handlers share tracking rows. The fixed profile
+        // additionally checked physical handler existence above, in the original
+        // authenticated request only. No SID or session payload leaves Moodle.
         $session = $DB->get_record('sessions', ['sid' => $sid, 'userid' => $this->user], 'id,timecreated,timemodified');
         if (!$session || !$DB->record_exists('user', ['id' => $this->user, 'auth' => 'manual',
                 'confirmed' => 1, 'deleted' => 0, 'suspended' => 0])) {

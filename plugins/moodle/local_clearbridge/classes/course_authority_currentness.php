@@ -36,6 +36,10 @@ final class course_authority_currentness {
     }
 
     public static function record_shape(array $r): void {
+        if (array_key_exists('fixedScope', $r)) {
+            course_fixed_scope::record_shape($r);
+            return;
+        }
         self::require_rule(course_read_client::exact_keys($r, ['request', 'binding', 'generation', 'courseId',
             'actorUserId', 'subjectUserId', 'sessionRowId', 'sessionCreatedAt', 'startedMonotonic']));
         self::require_rule(is_array($r['request']) && is_array($r['binding']) && is_array($r['generation']));
@@ -80,7 +84,7 @@ final class course_authority_currentness {
             && $actual['authorityEpoch'] === $expected['authorityEpoch'];
     }
 
-    private function config_current(): bool {
+    private static function config_current(): bool {
         global $CFG, $DB;
         // Core helpers consult CFG loaded at bootstrap. Do not accept a newer
         // DB epoch with stale default-role/admin/idle settings in that snapshot.
@@ -110,22 +114,19 @@ final class course_authority_currentness {
         return $record;
     }
 
-    /** No session start, USER replacement, sessdata read or SID/token lookup. */
-    public function verify(array $record): bool {
+    /** Shared fresh DB checks, without an authorization-history claim. Caller validates its record variant. */
+    public static function verify_database(array $record, bool $fixedscope = false): bool {
         global $CFG, $DB;
         try {
-            self::record_shape($record);
             $q = $record['request'];
             $now = time();
-            self::require_rule((float)($CFG->version ?? 0) === 2024100715.0
-                && !$DB->is_transaction_started()
-                && $this->config_current()
-                && ltrim((string)($CFG->session_handler_class ?? ''), '\\') === \core\session\database::class
+            self::require_rule((float)($CFG->version ?? 0) === 2024100715.0 && !$DB->is_transaction_started()
+                && self::config_current()
+                && ($fixedscope ? ($record['sessionBackend'] === ltrim(\core\session\manager::get_handler_class(), '\\')
+                    && in_array($record['sessionBackend'], [\core\session\database::class, \core\session\file::class], true))
+                    : ltrim((string)($CFG->session_handler_class ?? ''), '\\') === \core\session\database::class)
                 && $now < $q['expiresAtExclusive'] && hrtime(true) >= $record['startedMonotonic']
-                && hrtime(true) - $record['startedMonotonic'] < 5_000_000_000
-                && $this->same_generation($record));
-            $m = $this->mapped($record['binding'], $record['courseId'], $record['actorUserId'], $q['role']);
-            self::require_rule($m['subjectUserId'] === $record['subjectUserId']);
+                && hrtime(true) - $record['startedMonotonic'] < 5_000_000_000);
             $session = $DB->get_record('sessions', ['id' => $record['sessionRowId'], 'userid' => $record['actorUserId']],
                 'id,timecreated,timemodified');
             self::require_rule($session && (int)$session->timecreated === $record['sessionCreatedAt']
@@ -158,12 +159,24 @@ final class course_authority_currentness {
             self::require_rule($context && empty($access['rsw'])
                 && has_capability_in_accessdata($capability, $context, $access)
                 && get_role_definitions(array_keys($roleids)) == get_role_definitions_uncached(array_keys($roleids)));
-            // Re-fetch mapping and epoch after all database reads. Same-final-state
-            // revoke/restore requires the approved epoch source to have advanced.
-            self::require_rule($this->mapped($record['binding'], $record['courseId'], $record['actorUserId'], $q['role']) === $m
-                && $this->config_current() && $this->same_generation($record) && !$DB->is_transaction_started()
-                && time() >= $now && time() < $q['expiresAtExclusive']
-                && hrtime(true) >= $record['startedMonotonic'] && hrtime(true) - $record['startedMonotonic'] < 5_000_000_000);
+            self::require_rule(self::config_current() && !$DB->is_transaction_started()
+                && time() >= $now && time() < $q['expiresAtExclusive'] && hrtime(true) >= $record['startedMonotonic']
+                && hrtime(true) - $record['startedMonotonic'] < 5_000_000_000);
+            return true;
+        } catch (\Throwable $error) {
+            return false;
+        }
+    }
+
+    /** Original epoch-bearing contract still requires the real generation source. */
+    public function verify(array $record): bool {
+        try {
+            self::record_shape($record);
+            self::require_rule(!isset($record['fixedScope']) && $this->same_generation($record));
+            $m = $this->mapped($record['binding'], $record['courseId'], $record['actorUserId'], $record['request']['role']);
+            self::require_rule($m['subjectUserId'] === $record['subjectUserId'] && self::verify_database($record));
+            self::require_rule($this->mapped($record['binding'], $record['courseId'], $record['actorUserId'], $record['request']['role']) === $m
+                && $this->same_generation($record) && time() < $record['request']['expiresAtExclusive']);
             return true;
         } catch (\Throwable $error) {
             return false;

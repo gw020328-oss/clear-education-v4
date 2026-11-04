@@ -9,6 +9,10 @@
     <div class="card-body">
         <h2 id="clearbridge-policy-heading">{{#str}} policyheading, local_clearbridge {{/str}}</h2>
         <p>{{#str}} policyamount, local_clearbridge {{/str}}</p>
+        {{#fixedscope}}
+        <p class="alert alert-info">{{#str}} fixedscopesupport, local_clearbridge {{/str}}</p>
+        {{^hasrecords}}<p class="alert alert-warning">{{#str}} fixedscopereconnect, local_clearbridge {{/str}}</p>{{/hasrecords}}
+        {{/fixedscope}}
         {{#synthetic}}
         <p class="alert alert-info">{{#str}} syntheticprojection, local_clearbridge {{/str}}</p>
         {{/synthetic}}

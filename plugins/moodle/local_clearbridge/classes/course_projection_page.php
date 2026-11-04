@@ -11,6 +11,8 @@ final class course_projection_page {
         global $CFG, $USER;
 
         $fallback = course_refund::template_data($student);
+        $fixed = ($CFG->local_clearbridge_enable_fixed_scope ?? false) === true;
+        $fallback['fixedscope'] = $fixed;
         $settings = $CFG->local_clearbridge_course_read ?? null;
         $provider = $CFG->local_clearbridge_projection_provider ?? null;
         if (!course_refund::is_demo_course($course->id)
@@ -20,7 +22,7 @@ final class course_projection_page {
         $userid = (int)$USER->id;
         $role = $student ? 'PARTICIPANT' : 'COURSE_OPERATOR';
         $capability = $student ? 'local/clearbridge:view' : 'local/clearbridge:configure';
-        $access = new course_moodle_access((int)$course->id, $userid, $capability);
+        $access = new course_moodle_access((int)$course->id, $userid, $capability, $fixed);
         $lease = null;
         try {
             if ($access->expires_at() === null) {
@@ -29,7 +31,7 @@ final class course_projection_page {
             if ($settings !== null) {
                 $resolve = $CFG->local_clearbridge_course_authority ?? null;
                 if (!course_read_client::exact_keys($settings, ['enabled', 'origin', 'ca', 'ownerRunId', 'key', 'synthetic'])
-                        || $settings['enabled'] !== true || !is_bool($settings['synthetic']) || !$resolve instanceof \Closure) {
+                        || $settings['enabled'] !== true || !is_bool($settings['synthetic']) || (!$fixed && !$resolve instanceof \Closure)) {
                     return $fallback;
                 }
                 foreach (['origin', 'ca', 'ownerRunId', 'key'] as $field) {
@@ -39,21 +41,33 @@ final class course_projection_page {
                 }
                 // The installation owner supplies a reference bound to this current
                 // Moodle principal and session. Numeric IDs stay inside Moodle.
-                $grant = $resolve((int)$course->id, $userid, $role);
-                if ($grant instanceof course_authority_lease) {
+                $grant = $fixed ? course_fixed_scope::issue((int)$course->id, $userid, $role)
+                    : $resolve((int)$course->id, $userid, $role);
+                if ($grant instanceof course_authority_lease || $grant instanceof course_fixed_scope) {
                     $lease = $grant;
                     $bridge = $CFG->local_clearbridge_course_authority_bridge ?? null;
+                    if ($fixed && !$bridge instanceof \Closure) {
+                        return $fallback;
+                    }
                     if ($bridge !== null) {
                         if (!$bridge instanceof \Closure) {
                             return $fallback;
                         }
                         $ports = $bridge();
-                        if (!course_read_client::exact_keys($ports, ['registry', 'currentness'])
-                                || !$ports['registry'] instanceof course_authority_registry
-                                || !$ports['currentness'] instanceof course_authority_currentness) {
-                            return $fallback;
+                        if ($lease instanceof course_fixed_scope) {
+                            if (!course_read_client::exact_keys($ports, ['registry'])
+                                    || !$ports['registry'] instanceof course_authority_registry) {
+                                return $fallback;
+                            }
+                            $lease->attach_registry($ports['registry']);
+                        } else {
+                            if (!course_read_client::exact_keys($ports, ['registry', 'currentness'])
+                                    || !$ports['registry'] instanceof course_authority_registry
+                                    || !$ports['currentness'] instanceof course_authority_currentness) {
+                                return $fallback;
+                            }
+                            $lease->attach_bridge($ports['registry'], $ports['currentness']);
                         }
-                        $lease->attach_bridge($ports['registry'], $ports['currentness']);
                     }
                     $grant = $lease->grant_for((int)$course->id, $userid, $role, $settings['ownerRunId']);
                 }
@@ -82,6 +96,9 @@ final class course_projection_page {
                 return $fallback;
             }
             $view = course_refund::template_data($student, $result->evidence);
+            if (($result->payment['version'] ?? null) !== ($fixed ? 'clear-moodle-fixed-payment-status.1' : 'clear-moodle-payment-status.1')) {
+                return $fallback;
+            }
             $payment = course_payment_display::data($result->payment, $result->evidence, $role, time());
             if (!$view['hasrecords'] || $payment === null || time() >= $moodleexpiry
                     || ($result->expiresAtExclusive !== null && time() >= $result->expiresAtExclusive)) {
@@ -89,6 +106,7 @@ final class course_projection_page {
             }
             $view['payment'] = $payment;
             $view['synthetic'] = $result->synthetic;
+            $view['fixedscope'] = $fixed;
             return $view;
         } catch (\Throwable $error) {
             // No upstream exception, DTO or credential should reach the course page.

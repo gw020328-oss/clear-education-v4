@@ -2,7 +2,12 @@
 // CLI-only modeled Moodle/transport dependencies. No bootstrap, DB, cookie or socket.
 namespace core\session {
     class database {}
-    class manager { public static function is_loggedinas(): bool { return $GLOBALS['f']['impersonation']; } }
+    class file {}
+    class manager {
+        public static function is_loggedinas(): bool { return $GLOBALS['f']['impersonation']; }
+        public static function get_handler_class(): string { return $GLOBALS['CFG']->session_handler_class ?? file::class; }
+        public static function session_exists($sid): bool { return $GLOBALS['f']['sessionexists'] ?? true; }
+    }
 }
 namespace {
     define('MOODLE_INTERNAL', true);
@@ -30,13 +35,15 @@ namespace local_clearbridge {
     function curl_init($url) { return new \stdClass(); }
     function curl_setopt_array($handle, $options) { $handle->options = $options; return true; }
     function curl_exec($handle) {
+        $request = json_decode($handle->options[CURLOPT_POSTFIELDS], true);
+        $GLOBALS['f']['lastRequest'] = $request;
         ($GLOBALS['f']['owner'])();
         if ($GLOBALS['f']['transportfail']) { return false; }
-        $request = json_decode($handle->options[CURLOPT_POSTFIELDS], true);
         $reply = ['version' => 'clear-moodle-course-read-response.1', 'requestRef' => $request['requestRef'],
             'ownerRunId' => $request['ownerRunId'], 'role' => $request['role'], 'status' => 'OK',
             'expiresAtExclusive' => $request['expiresAtExclusive'], 'evidence' => ['fixture' => true],
-            'payment' => ['requestRef' => $request['requestRef'], 'expiresAtExclusive' => $request['expiresAtExclusive']]];
+            'payment' => ['version' => $GLOBALS['f']['paymentversion'] ?? 'clear-moodle-payment-status.1',
+                'requestRef' => $request['requestRef'], 'expiresAtExclusive' => $request['expiresAtExclusive']]];
         $raw = json_encode($reply);
         ($handle->options[CURLOPT_WRITEFUNCTION])($handle, $raw);
         return true;

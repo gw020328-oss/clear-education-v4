@@ -25,7 +25,8 @@ final class course_read_client {
         }
     }
 
-    public function read(string $authority, string $role, int $authorityexpiry, ?course_authority_lease $lease = null): ?course_projection {
+    public function read(string $authority, string $role, int $authorityexpiry,
+            course_authority_lease|course_fixed_scope|null $lease = null): ?course_projection {
         $start = hrtime(true);
         $now = time();
         $expiry = min($authorityexpiry, $now + 5);

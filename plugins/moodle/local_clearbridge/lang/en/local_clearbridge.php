@@ -68,3 +68,5 @@ $string['receiptincluded'] = '100 TEST transfer included in a block. Final confi
 $string['receiptnotobserved'] = 'No transfer has been observed.';
 $string['receiptreadunknown'] = 'The receipt could not be confirmed.';
 $string['refreshstatus'] = 'Refresh recorded status';
+$string['fixedscopesupport'] = 'Supported scope: one configured Python course, one student and one teacher on Moodle 4.5.15 with manual authentication and core file/database sessions. Current results are for display; CLEAR checks payment authorization separately.';
+$string['fixedscopereconnect'] = 'Results are unavailable because the current session, access or application connection could not be confirmed. Check your Moodle login and reconnect CLEAR.';
