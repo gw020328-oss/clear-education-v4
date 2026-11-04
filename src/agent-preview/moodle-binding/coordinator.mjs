@@ -1,6 +1,7 @@
-import { DatabaseSync } from 'node:sqlite';
+import { DatabaseSync, constants as SQLITE } from 'node:sqlite';
 import { lstatSync, realpathSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
 import { canonical, exact, hash, digest, hex, opaque, integer, requireRule, validateDto, versions, confirmationDigest, stableConfirmation } from './contract.mjs';
 import { validateTimePolicy, sample, checkCurrentness } from './currentness.mjs';
@@ -28,10 +29,18 @@ function checkFile(path) {
   return { dev: f.dev, ino: f.ino };
 }
 
-export function createBindingCoordinator({ paths, control, verifier, timePolicy, clock, sessionKey, projection = null }) {
-  requireRule(isSyntheticControl(control) && isSyntheticVerifier(verifier), 'INSTALLATION_DISABLED');
+export const createBindingCoordinator = options => createCoordinator(options, false);
+// Server-owner port only. No HTTP entry point and no mutation methods on this object.
+export const createBindingCurrentnessReader = options => createCoordinator(options, true);
+
+function createCoordinator({ paths, control, verifier, timePolicy, clock, sessionKey, projection = null, trustedTime }, readOnly) {
+  requireRule(isSyntheticControl(control) && (readOnly || isSyntheticVerifier(verifier)), 'INSTALLATION_DISABLED');
   const product = projection === null ? null : studentProfile(projection);
   requireRule(projection === null || product, 'PRODUCT_PROFILE');
+  if (readOnly) {
+    requireRule(product, 'STUDENT_PROFILE_REQUIRED');
+    requireRule(typeof trustedTime === 'function', 'TRUSTED_TIME_REQUIRED');
+  }
   exact(paths, ['main', 'auth', 'workflow']);
   if (product) requireRule(paths.auth === product.paths.auth && paths.workflow === product.paths.workflow, 'PRODUCT_PATH');
   requireRule(new Set(Object.values(paths)).size === 3, 'DB_PATH');
@@ -40,17 +49,20 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
   for (const [name, path] of Object.entries(paths)) files[name] = checkFile(path);
   const boot = control.current();
   requireRule(boot.status === 'ACTIVE' && hex(boot.policyHash), 'DEPLOYMENT_DISABLED');
-  const db = new DatabaseSync(paths.main, { timeout: 1000, allowExtension: false });
+  const db = new DatabaseSync(paths.main, { timeout: 1000, allowExtension: false, readOnly });
   const sqlPolicy = createSqlPolicy(product);
   try {
     db.exec('PRAGMA foreign_keys=ON; PRAGMA trusted_schema=OFF; PRAGMA synchronous=FULL;');
-    db.prepare('ATTACH DATABASE ? AS auth').run(paths.auth);
-    db.prepare('ATTACH DATABASE ? AS workflow').run(paths.workflow);
+    if (readOnly) db.exec('PRAGMA query_only=ON');
+    const attachment = path => readOnly ? pathToFileURL(path).href + '?mode=ro' : path;
+    db.prepare('ATTACH DATABASE ? AS auth').run(attachment(paths.auth));
+    db.prepare('ATTACH DATABASE ? AS workflow').run(attachment(paths.workflow));
     for (const schema of ['main', 'auth', 'workflow']) {
       requireRule(db.prepare(`PRAGMA ${schema}.journal_mode`).get().journal_mode === 'delete', 'DB_JOURNAL');
       db.exec(`PRAGMA ${schema}.synchronous=FULL`);
     }
-    db.setAuthorizer(sqlPolicy.authorize);
+    db.setAuthorizer((action, ...args) => readOnly && ![SQLITE.SQLITE_SELECT, SQLITE.SQLITE_READ, SQLITE.SQLITE_TRANSACTION, SQLITE.SQLITE_PRAGMA].includes(action)
+      ? SQLITE.SQLITE_DENY : sqlPolicy.authorize(action, ...args));
   } catch (e) { key.fill(0); db.close(); throw e; }
   const get = (sql, ...args) => db.prepare(sql).get(...args);
   const run = (sql, ...args) => db.prepare(sql).run(...args);
@@ -60,20 +72,24 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
     requireRule(live.status === 'ACTIVE' && live.policyHash === boot.policyHash, 'STALE_WORKER');
     for (const [name, path] of Object.entries(paths)) requireRule(canonical(checkFile(path)) === canonical(files[name]), 'DB_REPLACED');
   };
+  function environment() {
+    sqlPolicy.inspect(db); deployment();
+    const p = validatePolicy(JSON.parse(get('SELECT record FROM main.policy WHERE id=1').record));
+    requireRule(hash(p) === boot.policyHash && p.timePolicyHash === hash(ptime), 'POLICY_CHANGED');
+    if (product) product.environment(get, p);
+    else {
+      const auth = get('SELECT config_hash,mode FROM auth.metadata WHERE id=1');
+      requireRule(auth?.mode === 'SYNTHETIC_ONLY' && auth.config_hash === p.configHash
+        && get('SELECT mode FROM workflow.metadata WHERE id=1')?.mode === 'SYNTHETIC_ONLY', 'CONFIG_CHANGED');
+    }
+    return p;
+  }
   function transaction(fn, finalCheck) {
     requireRule(!closed, 'CLOSED'); deployment();
     // Take the commit locks before sampling a time-sensitive final fence.
     db.exec(finalCheck ? 'BEGIN EXCLUSIVE' : 'BEGIN IMMEDIATE');
     try {
-      sqlPolicy.inspect(db); deployment();
-      const p = validatePolicy(JSON.parse(get('SELECT record FROM main.policy WHERE id=1').record));
-      requireRule(hash(p) === boot.policyHash && p.timePolicyHash === hash(ptime), 'POLICY_CHANGED');
-      if (product) product.environment(get, p);
-      else {
-        const auth = get('SELECT config_hash,mode FROM auth.metadata WHERE id=1');
-        requireRule(auth?.mode === 'SYNTHETIC_ONLY' && auth.config_hash === p.configHash
-        && get('SELECT mode FROM workflow.metadata WHERE id=1')?.mode === 'SYNTHETIC_ONLY', 'CONFIG_CHANGED');
-      }
+      const p = environment();
       const began = sample(clock), floor = get('SELECT floor FROM main.clock WHERE id=1').floor;
       requireRule(began.wall >= floor && began.wall < p.validUntil, 'CLOCK_OR_POLICY_EXPIRED');
       const value = fn(p, began);
@@ -115,6 +131,74 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
     requireRule(b && b.application_id === applicationId && b.session_ref === identity.sessionRef, 'BINDING_SCOPE');
     requireRule(b.status === 'ACTIVE' && now < b.expires_at && b.policy_hash === hash(p) && b.app_revision === identity.a.revision, 'BINDING_INACTIVE');
     return { row: b, ...identity };
+  }
+  let readWatermark, readClockFailed = false;
+  function readTime(p, floor) {
+    requireRule(!readClockFailed, 'READ_CLOCK_UNAVAILABLE');
+    try {
+      const local = sample(clock), trusted = trustedTime();
+      exact(trusted, ['issuerEpoch', 'wall']);
+      requireRule(trusted.issuerEpoch === p.issuerEpoch && integer(trusted.wall) && trusted.wall > 0, 'TRUSTED_TIME_SCOPE');
+      requireRule(integer(floor) && floor > 0 && local.wall >= floor && trusted.wall >= floor, 'CLOCK_FLOOR');
+      requireRule(Math.abs(local.wall - trusted.wall) <= ptime.maxClockSkewSeconds, 'TRUSTED_TIME_MISMATCH');
+      if (readWatermark) {
+        requireRule(local.wall >= readWatermark.local && local.mono >= readWatermark.mono
+          && trusted.wall >= readWatermark.trusted, 'CLOCK_REVERSED');
+        const elapsed = (local.mono - readWatermark.mono) / 1000;
+        for (const delta of [local.wall - readWatermark.local, trusted.wall - readWatermark.trusted]) {
+          requireRule(delta <= Math.ceil(elapsed) + ptime.maxClockSkewSeconds
+            && delta >= Math.floor(elapsed) - ptime.maxClockSkewSeconds, 'CLOCK_JUMP');
+        }
+      }
+      readWatermark = { local: local.wall, mono: local.mono, trusted: trusted.wall };
+      return { wall: Math.max(local.wall, trusted.wall), mono: local.mono };
+    } catch (error) { readClockFailed = true; throw error; }
+  }
+  function readTransaction(fn) {
+    requireRule(!closed, 'CLOSED'); deployment();
+    // Shared locks on all three databases hold the local authority snapshot until
+    // COMMIT. They neither reserve a writer slot nor update the persisted floor.
+    db.exec('BEGIN');
+    try {
+      const p = environment(), floor = get('SELECT floor FROM main.clock WHERE id=1')?.floor;
+      const began = readTime(p, floor);
+      requireRule(began.wall < p.validUntil, 'CLOCK_OR_POLICY_EXPIRED');
+      const value = fn(p, began);
+      requireRule(!value?.then, 'ASYNC_TRANSACTION');
+      const final = readTime(p, floor);
+      requireRule(final.mono - began.mono < ptime.finalFenceMs, 'RESPONSE_TIMEOUT');
+      requireRule(final.wall < p.validUntil, 'FINAL_CLOCK');
+      if (value) requireRule(final.wall < value.expiresAtExclusive, 'FINAL_EXPIRED');
+      deployment();
+      db.exec('COMMIT'); return value;
+    } catch (error) { if (db.isTransaction) db.exec('ROLLBACK'); throw error; }
+  }
+  const close = () => { if (!closed) { requireRule(!db.isTransaction, 'TRANSACTION_OPEN'); closed = true; key.fill(0); db.close(); } };
+  if (readOnly) {
+    try { readTransaction(() => null); } catch (error) { close(); throw error; }
+    return Object.freeze({
+      mode: 'SYNTHETIC_ONLY',
+      readStudent(context, input) {
+        input = structuredClone(input); context = structuredClone(context);
+        exact(input, ['applicationId', 'bindingRef', 'bindingRevision']);
+        requireRule(opaque(input.applicationId) && opaque(input.bindingRef)
+          && integer(input.bindingRevision) && input.bindingRevision > 0, 'BINDING_SCOPE');
+        return readTransaction((p, now) => {
+          const { row, s } = binding(context, input.applicationId, input.bindingRef, p, now.wall);
+          const attempt = get('SELECT generation,status,binding_id FROM main.attempts WHERE id=?', row.attempt_id);
+          requireRule(attempt?.status === 'CONSUMED' && attempt.binding_id === row.id && attempt.generation === input.bindingRevision
+            && get('SELECT generation FROM main.generations WHERE application_id=?', input.applicationId)?.generation === input.bindingRevision, 'BINDING_REVISION');
+          requireRule(row.installation_ref === p.installationRef && row.course_ref === p.courseRef
+            && row.subject_ref === p.expectedSubjectRef, 'BINDING_SCOPE');
+          return Object.freeze({ version: 'clear-moodle-binding-currentness.1', applicationId: input.applicationId,
+            bindingRef: row.id, bindingRevision: input.bindingRevision,
+            scope: Object.freeze({ installationRef: p.installationRef, courseRef: p.courseRef, subjectRef: p.expectedSubjectRef }),
+            currentness: 'LOCAL_BINDING_CURRENT', checkedAt: now.wall,
+            expiresAtExclusive: Math.min(row.expires_at, s.expires_at, p.validUntil) });
+        });
+      },
+      close,
+    });
   }
   const audit = (event, ref, now) => run('INSERT INTO main.audit VALUES(?,?,?,?)', randomRef(), event, ref, now);
   // The async boundary is here only. A timed-out promise can never re-enter commit.
@@ -241,6 +325,6 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
           expiresAtExclusive: Math.min(row.expires_at, s.expires_at) });
       });
     },
-    close() { if (!closed) { requireRule(!db.isTransaction, 'TRANSACTION_OPEN'); closed = true; key.fill(0); db.close(); } },
+    close,
   });
 }
