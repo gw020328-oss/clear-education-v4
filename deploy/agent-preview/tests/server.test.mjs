@@ -5,6 +5,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import http from 'node:http';
 import {randomBytes} from 'node:crypto';
+import {Worker} from 'node:worker_threads';
+import {DatabaseSync} from 'node:sqlite';
 import {validateConfig,bindingHash} from '../config.mjs';
 import {openStore} from '../store.mjs';
 import {createService} from '../service.mjs';
@@ -21,10 +23,10 @@ function modelReply(text=sourceText) {
   return {candidates:[{finishReason:'STOP',content:{role:'model',parts:[{text:JSON.stringify({clauses:sourceClauses(text).map(c=>({
     quote:c.text,start:c.start,end:c.end,status:'SUPPORTED',capability:'MOODLE_ACTIVITY_COMPLETION.1',question:null}))})}]}}]};
 }
-async function fixture(t,{adapter=null,transport=null,path=':memory:'}={}) {
+async function fixture(t,{adapter=null,transport=null,path=':memory:',clock=Date.now}={}) {
   const store=openStore(path),calls=[],secret=randomBytes(32).toString('hex');
   const modelTransport=transport??{execution:'OFFLINE',async request(model,method){calls.push(method);return method==='countTokens'?{totalTokens:500}:modelReply();}};
-  const service=createService({config,store,modelTransport,observationAdapter:adapter});
+  const service=createService({config,store,modelTransport,observationAdapter:adapter,clock});
   const server=createServer({config,store,secret,service});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   t.after(async()=>{await new Promise(resolve=>server.close(resolve));service.close();store.close();});
@@ -79,10 +81,10 @@ test('durable grant and nonce reject reuse after reopening; different instance c
   try {
     let store=openStore(path);const p=prepareGeminiStructureRequest(sourceText),binding=bindingHash(config),now=Date.now();
     store.register({ref:'persistent-approval',bodyHash:p.bodyHash,bindingHash:binding,expires:now+60000},now);
-    assert.throws(()=>store.consume('persistent-approval',p.bodyHash,'0'.repeat(64),now),/APPROVAL_REQUIRED/);
-    store.consume('persistent-approval',p.bodyHash,binding,now);store.nonce('a'.repeat(32),now);store.close();
+    assert.throws(()=>store.consume('persistent-approval',p.bodyHash,'0'.repeat(64),()=>now),/APPROVAL_REQUIRED/);
+    store.consume('persistent-approval',p.bodyHash,binding,()=>now);store.nonce('a'.repeat(32),now);store.close();
     store=openStore(path);
-    assert.throws(()=>store.consume('persistent-approval',p.bodyHash,binding,now),/APPROVAL_REQUIRED/);
+    assert.throws(()=>store.consume('persistent-approval',p.bodyHash,binding,()=>now),/APPROVAL_REQUIRED/);
     assert.throws(()=>store.nonce('a'.repeat(32),now),/REQUEST_REPLAY/);store.close();
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
@@ -133,4 +135,49 @@ test('remote profile never accepts HTTP public origin, arbitrary private source 
   assert.throws(()=>validateConfig({...config,publicOrigin:'http://example.invalid'}),/CONFIG_PUBLIC/);
   assert.throws(()=>validateConfig({...config,dataMode:'PRODUCTION'}),/CONFIG_MODE/);
   assert.throws(()=>validateConfig({...config,moodleOrigin:'http://169.254.169.254'}),/INVALID_FIELDS/);
+});
+test('approval expiring during another connection write lock cannot be consumed',async()=>{
+  const dir=mkdtempSync(join(tmpdir(),'clear-preview-lock-')),path=join(dir,'state.sqlite');
+  let worker,lock;
+  try {
+    openStore(path).close();
+    worker=new Worker(`const {parentPort,workerData}=require('node:worker_threads');
+      (async()=>{const {openStore}=await import(workerData.module);const store=openStore(workerData.path);
+      parentPort.postMessage('ready');parentPort.once('message',()=>{
+        parentPort.postMessage({started:true});let code='CONSUMED';
+        try{store.consume('expires-under-lock','a'.repeat(64),'b'.repeat(64),Date.now);}catch(e){code=e.message;}
+        parentPort.postMessage({code,after:Date.now()});store.close();});})();`,
+      {eval:true,workerData:{module:new URL('../store.mjs',import.meta.url).href,path}});
+    await new Promise((resolve,reject)=>{worker.once('message',resolve);worker.once('error',reject);});
+    lock=new DatabaseSync(path);const expires=Date.now()+250;
+    lock.prepare('INSERT INTO approvals(ref,body_hash,binding_hash,expires) VALUES(?,?,?,?)')
+      .run('expires-under-lock','a'.repeat(64),'b'.repeat(64),expires);
+    lock.exec('BEGIN IMMEDIATE');
+    const outcome=new Promise((resolve,reject)=>{worker.on('message',value=>{
+      if(value.started)setTimeout(()=>lock.exec('COMMIT'),550);else resolve(value);
+    });worker.once('error',reject);});
+    worker.postMessage('consume');const result=await outcome;
+    assert.ok(result.after>expires);assert.equal(result.code,'APPROVAL_REQUIRED_OR_SPENT');
+    assert.equal(lock.prepare('SELECT consumed FROM approvals').get().consumed,0);
+  } finally {await worker?.terminate();lock?.close();rmSync(dir,{recursive:true,force:true});}
+});
+test('expiry immediately after durable consumption stays spent',()=>{
+  const store=openStore(':memory:'),now=Date.now(),expires=now+100;
+  try {
+    store.register({ref:'commit-expiry-test',bodyHash:'a'.repeat(64),bindingHash:'b'.repeat(64),expires},now);
+    let calls=0;
+    assert.throws(()=>store.consume('commit-expiry-test','a'.repeat(64),'b'.repeat(64),()=>++calls===1?now:expires),/APPROVAL_EXPIRED/);
+    assert.throws(()=>store.consume('commit-expiry-test','a'.repeat(64),'b'.repeat(64),()=>now),/APPROVAL_REQUIRED_OR_SPENT/);
+  } finally {store.close();}
+});
+test('approval expires during countTokens: generation never starts and grant stays spent',async t=>{
+  let now=Date.now();const calls=[];
+  const f=await fixture(t,{clock:()=>now,transport:{execution:'OFFLINE',async request(model,method){
+    calls.push(method);now+=120000;return {totalTokens:500};
+  }}});
+  const request={...body,approvalRef:f.approve()};
+  assert.equal((await f.request('/v1/preview/generate',request)).body.code,'APPROVAL_EXPIRED');
+  now-=120000;
+  assert.equal((await f.request('/v1/preview/generate',request)).body.code,'APPROVAL_REQUIRED_OR_SPENT');
+  assert.deepEqual(calls,['countTokens']);
 });

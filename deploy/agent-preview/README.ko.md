@@ -45,6 +45,10 @@ URL 변경 시 새 승인이 필요하다. X-Forwarded-*를 신뢰하거나 iden
 호출 직전 SQLite UPDATE가 승인 1건을 원자 소비한다. 그 뒤 countTokens 최대1회,
 generateContent 최대1회, 입력4096/출력2048 tokens, 자동 재시도0회, 총45초다.
 실패/timeout/응답 유실도 소비 상태를 유지한다. 승인 유효시간은 최대1시간이다.
+SQLite write/commit lock 획득 뒤 fresh clock으로 승인 만료를 검사하고, durable commit 뒤에도 재확인한다.
+countTokens와 generateContent **각 호출 시작 시점** 모두 같은 승인 만료 이전이어야 한다.
+countTokens가 늦게 끝나 만료되면 generateContent를 보내지 않고 소비 상태를 유지한다.
+만료 전에 시작한 모델 응답의 수신 완료까지 승인 시간을 연장하거나 새 호출 권한으로 해석하지 않는다.
 검증된 AST만 메모리에 15분 보관하며 provider 원문 응답은 파일/로그에 보관하지 않는다.
 서버 재시작 시 draft가 없어지며 이미 소비한 승인은 복구되지 않는다. 이는 재호출 권한이 아니다.
 

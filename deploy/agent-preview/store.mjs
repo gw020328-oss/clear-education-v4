@@ -18,10 +18,22 @@ export function openStore(path) {
         && expires > now && expires <= now + 3600000, 'APPROVAL_INVALID');
       db.prepare('INSERT INTO approvals(ref,body_hash,binding_hash,expires) VALUES(?,?,?,?)').run(ref,bodyHash,bindingHash,expires);
     },
-    consume(ref, bodyHash, binding, now) {
-      const result = db.prepare('UPDATE approvals SET consumed=1 WHERE ref=? AND body_hash=? AND binding_hash=? AND expires>? AND consumed=0')
-        .run(ref,bodyHash,binding,now);
-      check(result.changes === 1, 'APPROVAL_REQUIRED_OR_SPENT');
+    consume(ref, bodyHash, binding, clock=Date.now) {
+      // Acquire both write/commit locks before observing the authorization clock.
+      // No pre-lock timestamp may authorize a request after a busy wait.
+      db.exec('BEGIN EXCLUSIVE');
+      let grant;
+      try {
+        const now=clock();
+        check(Number.isSafeInteger(now),'APPROVAL_CLOCK');
+        grant=db.prepare('UPDATE approvals SET consumed=1 WHERE ref=? AND body_hash=? AND binding_hash=? AND expires>? AND consumed=0 RETURNING expires')
+          .get(ref,bodyHash,binding,now);
+        check(grant,'APPROVAL_REQUIRED_OR_SPENT');
+        db.exec('COMMIT');
+      } catch(e) {if(db.isTransaction)db.exec('ROLLBACK');throw e;}
+      // Slow durable commit cannot extend the approval. If this fails, keep spent.
+      check(grant.expires>clock(),'APPROVAL_EXPIRED');
+      return Object.freeze({expires:grant.expires});
     },
     nonce(nonce, now) {
       db.prepare('DELETE FROM nonces WHERE expires < ?').run(now);

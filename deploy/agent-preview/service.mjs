@@ -33,10 +33,13 @@ export function createService({config,store,observationAdapter=null,modelTranspo
         const result=await requestGeminiPreview(body.sourceText,{approvalRef:body.approvalRef,signal,
           claimAndDispatch:async ({approvalRef,model,bodyHash,body:request})=>{
             // Durable single use before countTokens and before any key read. Failure stays spent.
-            store.consume(approvalRef,bodyHash,binding,clock());
+            const grant=store.consume(approvalRef,bodyHash,binding,clock);
+            check(grant.expires>clock(),'APPROVAL_EXPIRED');
             const count=await modelTransport.request(model,'countTokens',{generateContentRequest:{model:'models/'+model,...request}},signal);
             check(Number.isSafeInteger(count.totalTokens) && count.totalTokens>0 && count.totalTokens<=limits.maxInputTokens,'INPUT_TOKEN_LIMIT');
             signal.throwIfAborted();
+            // Both outbound calls must begin within the same single-use approval.
+            check(grant.expires>clock(),'APPROVAL_EXPIRED');
             return modelTransport.request(model,'generateContent',request,signal);
           }});
         signal.throwIfAborted();
