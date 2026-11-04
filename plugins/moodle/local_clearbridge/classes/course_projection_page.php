@@ -21,6 +21,7 @@ final class course_projection_page {
         $role = $student ? 'PARTICIPANT' : 'COURSE_OPERATOR';
         $capability = $student ? 'local/clearbridge:view' : 'local/clearbridge:configure';
         $access = new course_moodle_access((int)$course->id, $userid, $capability);
+        $lease = null;
         try {
             if ($access->expires_at() === null) {
                 return $fallback;
@@ -39,6 +40,10 @@ final class course_projection_page {
                 // The installation owner supplies a reference bound to this current
                 // Moodle principal and session. Numeric IDs stay inside Moodle.
                 $grant = $resolve((int)$course->id, $userid, $role);
+                if ($grant instanceof course_authority_lease) {
+                    $lease = $grant;
+                    $grant = $lease->grant_for((int)$course->id, $userid, $role, $settings['ownerRunId']);
+                }
                 if (!course_read_client::exact_keys($grant, ['moodleAuthorityRef', 'expiresAtExclusive'])
                         || !is_string($grant['moodleAuthorityRef']) || !is_int($grant['expiresAtExclusive'])) {
                     return $fallback;
@@ -60,7 +65,7 @@ final class course_projection_page {
                 return $fallback;
             }
             $moodleexpiry = $access->expires_at();
-            if ($moodleexpiry === null) {
+            if ($moodleexpiry === null || ($lease !== null && !$lease->is_current())) {
                 return $fallback;
             }
             $view = course_refund::template_data($student, $result->evidence);
@@ -75,6 +80,8 @@ final class course_projection_page {
         } catch (\Throwable $error) {
             // No upstream exception, DTO or credential should reach the course page.
             return $fallback;
+        } finally {
+            $lease?->revoke();
         }
     }
 }
