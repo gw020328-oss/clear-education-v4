@@ -42,6 +42,19 @@ final class course_projection_page {
                 $grant = $resolve((int)$course->id, $userid, $role);
                 if ($grant instanceof course_authority_lease) {
                     $lease = $grant;
+                    $bridge = $CFG->local_clearbridge_course_authority_bridge ?? null;
+                    if ($bridge !== null) {
+                        if (!$bridge instanceof \Closure) {
+                            return $fallback;
+                        }
+                        $ports = $bridge();
+                        if (!course_read_client::exact_keys($ports, ['registry', 'currentness'])
+                                || !$ports['registry'] instanceof course_authority_registry
+                                || !$ports['currentness'] instanceof course_authority_currentness) {
+                            return $fallback;
+                        }
+                        $lease->attach_bridge($ports['registry'], $ports['currentness']);
+                    }
                     $grant = $lease->grant_for((int)$course->id, $userid, $role, $settings['ownerRunId']);
                 }
                 if (!course_read_client::exact_keys($grant, ['moodleAuthorityRef', 'expiresAtExclusive'])
@@ -54,7 +67,7 @@ final class course_projection_page {
                 }
                 $client = new course_read_client($settings['origin'], $settings['ca'], $settings['ownerRunId'],
                     $settings['key'], $settings['synthetic']);
-                $result = $client->read($grant['moodleAuthorityRef'], $role, min($moodleexpiry, $grant['expiresAtExclusive']));
+                $result = $client->read($grant['moodleAuthorityRef'], $role, min($moodleexpiry, $grant['expiresAtExclusive']), $lease);
             } else {
                 $result = $provider((int)$course->id, $userid, $role);
                 if (!$result instanceof course_projection || !$result->synthetic) {
@@ -65,7 +78,7 @@ final class course_projection_page {
                 return $fallback;
             }
             $moodleexpiry = $access->expires_at();
-            if ($moodleexpiry === null || ($lease !== null && !$lease->is_current())) {
+            if ($moodleexpiry === null || ($lease !== null && !$lease->bridge_current())) {
                 return $fallback;
             }
             $view = course_refund::template_data($student, $result->evidence);
@@ -81,7 +94,9 @@ final class course_projection_page {
             // No upstream exception, DTO or credential should reach the course page.
             return $fallback;
         } finally {
-            $lease?->revoke();
+            if ($lease !== null && !$lease->revoke()) {
+                return $fallback;
+            }
         }
     }
 }

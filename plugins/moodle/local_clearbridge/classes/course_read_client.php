@@ -25,7 +25,7 @@ final class course_read_client {
         }
     }
 
-    public function read(string $authority, string $role, int $authorityexpiry): ?course_projection {
+    public function read(string $authority, string $role, int $authorityexpiry, ?course_authority_lease $lease = null): ?course_projection {
         $start = hrtime(true);
         $now = time();
         $expiry = min($authorityexpiry, $now + 5);
@@ -34,14 +34,18 @@ final class course_read_client {
         }
         $ref = bin2hex(random_bytes(32));
         $nonce = bin2hex(random_bytes(16));
-        $body = json_encode([
+        $request = [
             'version' => 'clear-moodle-course-read-request.1',
             'requestRef' => $ref,
             'ownerRunId' => $this->run,
             'moodleAuthorityRef' => $authority,
             'role' => $role,
             'expiresAtExclusive' => $expiry,
-        ], JSON_THROW_ON_ERROR);
+        ];
+        if ($lease !== null && !$lease->publish_request($request)) {
+            return null;
+        }
+        $body = json_encode($request, JSON_THROW_ON_ERROR);
         $material = implode("\n", [$now, $nonce, 'POST', self::PATH, hash('sha256', $body)]);
         // Match auth.mjs: the hex text itself is the UTF-8 key.
         $signature = hash_hmac('sha256', $material, $this->key);

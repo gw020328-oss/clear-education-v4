@@ -14,6 +14,9 @@ final class course_authority_lease {
     private ?array $request = null;
     private int $wallfloor;
     private int $monofloor;
+    private ?course_authority_registry $registry = null;
+    private ?course_authority_currentness $currentness = null;
+    private ?array $published = null;
 
     private function __construct(
         private readonly course_moodle_access $access,
@@ -103,9 +106,13 @@ final class course_authority_lease {
             return null;
         }
         // Key order is irrelevant; each value and the complete key set are pinned.
-        if ($this->request !== null && $this->request != $request) {
-            $this->revoke();
-            return null;
+        if ($this->request !== null) {
+            foreach ($request as $field => $value) {
+                if ($this->request[$field] !== $value) {
+                    $this->revoke();
+                    return null;
+                }
+            }
         }
         $this->request = $request;
         if (!$this->is_current()) {
@@ -164,8 +171,55 @@ final class course_authority_lease {
         }
     }
 
-    public function revoke(): void {
+    public function attach_bridge(course_authority_registry $registry, course_authority_currentness $currentness): void {
+        if ($this->registry !== null || $this->request !== null || !$this->is_current()) {
+            throw new \RuntimeException('Authority unavailable');
+        }
+        $this->registry = $registry;
+        $this->currentness = $currentness;
+    }
+
+    /** Bind and publish the exact request before the outbound owner call. */
+    public function publish_request(array $request): bool {
+        try {
+            if ($this->check($request) === null) {
+                return false;
+            }
+            if ($this->registry === null) {
+                return true; // Local-only lease; external owner must reject an unknown ref.
+            }
+            if ($this->published !== null) {
+                return false;
+            }
+            $record = $this->currentness->capture($request, $this->binding, $this->generation, $this->course, $this->user, $this->started);
+            $this->registry->publish($record);
+            $this->published = $record;
+            if (!$this->is_current() || !$this->currentness->verify($record)) {
+                $this->revoke();
+                return false;
+            }
+            return true;
+        } catch (\Throwable $error) {
+            $this->revoke();
+            return false;
+        }
+    }
+
+    public function bridge_current(): bool {
+        return $this->is_current() && ($this->registry === null || ($this->published !== null
+            && $this->registry->lookup($this->published['request']) === $this->published
+            && $this->currentness->verify($this->published)));
+    }
+
+    public function revoke(): bool {
         $this->revoked = true;
+        try {
+            // Also attempt cleanup if publication failed after the file write.
+            $this->registry?->revoke($this->ref, $this->expiry);
+            return true;
+        } catch (\Throwable $error) {
+            return false;
+        }
     }
 
     public function __serialize(): array {

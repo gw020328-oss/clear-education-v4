@@ -77,7 +77,10 @@ namespace {
             'moodleAuthorityRef' => $lease->grant()['moodleAuthorityRef'], 'role' => 'PARTICIPANT', 'expiresAtExclusive' => 2000000005];
     }
     function expect($ok, $label): void { if (!$ok) { throw new \RuntimeException($label); } }
-    function test($label, $body): void { reset_fixture(); $body(); echo "PASS $label\n"; }
+    function test($label, $body): void {
+        if (defined('CLEAR_AUTHORITY_TEST_LIBRARY_ONLY')) { return; }
+        reset_fixture(); $body(); echo "PASS $label\n";
+    }
     test('exact grant and repeated authenticated-request checks call fresh access', function () {
         $lease = issue(); $grant = $lease->grant(); $q = query($lease); $before = $GLOBALS['f']['fresh'];
         $a = $lease->check($q); $b = $lease->check(array_reverse($q, true));
@@ -128,6 +131,12 @@ namespace {
             $q[$field] = $field === 'requestRef' ? str_repeat('b',64) : 2000000004;
             expect($lease->check($q) === null && !$lease->is_current(), 'rebind');
         }
+    });
+    test('numeric-looking hex references are distinct and revoke on rebinding', function () {
+        $lease = issue(); $q = query($lease); $q['requestRef'] = '0e' . str_repeat('1', 62);
+        expect($lease->check($q) !== null && $lease->check(array_reverse($q, true)) !== null, 'same reordered request');
+        $q['requestRef'] = '0e' . str_repeat('2', 62);
+        expect($lease->check($q) === null && !$lease->is_current() && $lease->grant() === null, 'strict reference and revoke');
     });
     test('session generation replacement and deletion are observed', function () {
         foreach ([32, 0] as $id) { reset_fixture(); $lease = issue(); $GLOBALS['f']['session'] = $id;
