@@ -1,6 +1,6 @@
 # Moodle binding revision 3 합성 모듈 인수
 
-2026-11-04. 구현 입력 base `f357c8aca0999d02216f240a4541d018c6ad2d48`, C 수정 조건 `f44c0b2`의 `B_REVISION3_CROSS_REVIEW.ko.md`. 이번 범위는 `src/agent-preview/moodle-binding/` 독립 모듈과 임시 DB 시험이다. 기존 auth/workflow/common/web 및 제품 host/CI 설정을 변경하지 않는다.
+2026-11-04. 구현 입력 base `f357c8aca0999d02216f240a4541d018c6ad2d48`, C 수정 조건 `f44c0b2`의 `B_REVISION3_CROSS_REVIEW.ko.md`. 이번 범위는 `src/agent-preview/moodle-binding/` 독립 모듈과 임시 DB 시험이다. Public synthetic CI에서 아래 시험과 데모를 전용 단계로 실행한다.
 
 ## 실행과 API
 
@@ -40,4 +40,4 @@ validator는 `observedAt <= checkedAt`, 둘 다 이번 요청의 시작/수신 �
 
 제품 package export나 기존 route를 추가하지 않았다. 제품 자동 eligibility/payment는 항상 false이며 실제 학생 기록·로그인·서명·체인·유료 호출은 수행하지 않는다. C의 F1–F4와 본부 공통 파일 인수가 완료되기 전 실제 연결을 활성화할 수 없다.
 
-신규 49건은 현재 로컬에서 직접 실행한 결과다. 기존 Public synthetic CI에는 이 시험 명령이 없으며 CI 공통 파일은 본부 소유로 변경하지 않았다. 본부가 두 신규 test 파일과 필요 시 demo 명령을 CI에 추가해야 한다. PR 전체 기존 검사 결과를 신규 모듈의 자동 CI 결과로 표시하지 않는다.
+Public synthetic CI의 `Offline Moodle binding tests and standalone demo` 단계는 위 두 명령을 네트워크 차단 상태에서 실행한다. 로컬 49건과 PR의 CI 결과는 각각 해당 커밋에서 확인한다.
