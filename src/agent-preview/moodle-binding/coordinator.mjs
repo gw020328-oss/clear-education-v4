@@ -133,11 +133,18 @@ function createCoordinator({ paths, control, verifier, timePolicy, clock, sessio
     return { row: b, ...identity };
   }
   let readWatermark, readClockFailed = false;
-  function readTime(p, floor) {
+  function readTime(p, floor, anchor = null) {
     requireRule(!readClockFailed, 'READ_CLOCK_UNAVAILABLE');
     try {
-      const local = sample(clock), trusted = trustedTime();
-      exact(trusted, ['issuerEpoch', 'wall']);
+      // Copy provider output before the last local sample, including any getter
+      // work. After COMMIT, reuse that copy and call only the pure local clock.
+      const startedMono = anchor ? anchor.startedMono : clock.monotonic();
+      const provided = anchor ? anchor.trusted : trustedTime();
+      exact(provided, ['issuerEpoch', 'wall']);
+      const trusted = anchor ? provided : structuredClone(provided);
+      const local = sample(clock);
+      requireRule(Number.isFinite(startedMono) && startedMono >= 0 && local.mono >= startedMono, 'CLOCK_REVERSED');
+      requireRule(local.mono - startedMono < ptime.finalFenceMs, 'RESPONSE_TIMEOUT');
       requireRule(trusted.issuerEpoch === p.issuerEpoch && integer(trusted.wall) && trusted.wall > 0, 'TRUSTED_TIME_SCOPE');
       requireRule(integer(floor) && floor > 0 && local.wall >= floor && trusted.wall >= floor, 'CLOCK_FLOOR');
       requireRule(Math.abs(local.wall - trusted.wall) <= ptime.maxClockSkewSeconds, 'TRUSTED_TIME_MISMATCH');
@@ -151,7 +158,11 @@ function createCoordinator({ paths, control, verifier, timePolicy, clock, sessio
         }
       }
       readWatermark = { local: local.wall, mono: local.mono, trusted: trusted.wall };
-      return { wall: Math.max(local.wall, trusted.wall), mono: local.mono };
+      // The provider timestamp is quantized to seconds and may have been sampled
+      // at the beginning of its call. Round elapsed time up, never extend expiry.
+      const trustedUpper = trusted.wall + Math.ceil((local.mono - startedMono) / 1000);
+      requireRule(integer(trustedUpper), 'CLOCK');
+      return { wall: Math.max(local.wall, trusted.wall), expiryWall: Math.max(local.wall, trustedUpper), mono: local.mono, trusted, startedMono };
     } catch (error) { readClockFailed = true; throw error; }
   }
   function readTransaction(fn) {
@@ -162,15 +173,22 @@ function createCoordinator({ paths, control, verifier, timePolicy, clock, sessio
     try {
       const p = environment(), floor = get('SELECT floor FROM main.clock WHERE id=1')?.floor;
       const began = readTime(p, floor);
-      requireRule(began.wall < p.validUntil, 'CLOCK_OR_POLICY_EXPIRED');
+      requireRule(began.expiryWall < p.validUntil, 'CLOCK_OR_POLICY_EXPIRED');
       const value = fn(p, began);
       requireRule(!value?.then, 'ASYNC_TRANSACTION');
-      const final = readTime(p, floor);
-      requireRule(final.mono - began.mono < ptime.finalFenceMs, 'RESPONSE_TIMEOUT');
-      requireRule(final.wall < p.validUntil, 'FINAL_CLOCK');
-      if (value) requireRule(final.wall < value.expiresAtExclusive, 'FINAL_EXPIRED');
+      const anchor = readTime(p, floor);
       deployment();
-      db.exec('COMMIT'); return value;
+      db.exec('COMMIT');
+      // The authority read linearizes at COMMIT. Provider, file checks and COMMIT
+      // latency are all charged before this final sample. No owner callback or
+      // I/O follows it on the successful return path.
+      try {
+        const final = readTime(p, floor, anchor);
+        requireRule(final.mono - began.startedMono < ptime.finalFenceMs, 'RESPONSE_TIMEOUT');
+        requireRule(final.expiryWall < p.validUntil, 'FINAL_CLOCK');
+        if (value) requireRule(final.expiryWall < value.expiresAtExclusive, 'FINAL_EXPIRED');
+      } catch (error) { readClockFailed = true; throw error; }
+      return value;
     } catch (error) { if (db.isTransaction) db.exec('ROLLBACK'); throw error; }
   }
   const close = () => { if (!closed) { requireRule(!db.isTransaction, 'TRANSACTION_OPEN'); closed = true; key.fill(0); db.close(); } };

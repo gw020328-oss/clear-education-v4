@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync, statSync, readdirSync } from 'node:fs';
+import fs from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { createBindingCurrentnessReader } from '../../src/agent-preview/moodle-binding/coordinator.mjs';
@@ -17,10 +19,10 @@ const fingerprint = f => Object.fromEntries(Object.entries(f.paths).map(([name, 
 async function setup(t) {
   const f = await studentFixture(t), a = f.start(), preview = await f.preview(a), b = await f.complete(a, preview);
   const input = { applicationId: f.registry.applicationId, bindingRef: b.bindingRef, bindingRevision: b.bindingRevision };
-  const time = { wall: 1000, mono: 1000, trusted: 1000, epoch: f.policy.issuerEpoch, hook: null };
+  const time = { wall: 1000, mono: 1000, trusted: 1000, epoch: f.policy.issuerEpoch, hook: null, providerHook: null };
   const { verifier, ...config } = f.config;
   const options = { ...config, clock: { wall: () => { time.hook?.(); return time.wall; }, monotonic: () => time.mono },
-    trustedTime: () => ({ issuerEpoch: time.epoch, wall: time.trusted }) };
+    trustedTime: () => { time.providerHook?.(); return { issuerEpoch: time.epoch, wall: time.trusted }; } };
   const readers = [];
   t.after(() => { for (const reader of readers) reader.close(); });
   const open = (overrides = {}) => { const reader = createBindingCurrentnessReader({ ...options, ...overrides }); readers.push(reader); return reader; };
@@ -68,7 +70,7 @@ test('another active session for the same student cannot borrow a binding', asyn
   assert.deepEqual(fingerprint(f), before);
 });
 
-test('all authority databases remain shared-locked through the final sample, then accept owner revocation', async t => {
+test('all authority databases remain shared-locked through the pre-commit sample, then accept owner revocation', async t => {
   const { f, input, open, time } = await setup(t), reader = open(), before = fingerprint(f);
   let samples = 0;
   time.hook = () => {
@@ -80,7 +82,7 @@ test('all authority databases remain shared-locked through the final sample, the
     }
   };
   assert.ok(reader.readStudent(f.context, input));
-  assert.equal(samples, 2);
+  assert.equal(samples, 3);
   assert.deepEqual(fingerprint(f), before);
   time.hook = null;
   f.auth.logout(f.context);
@@ -120,7 +122,7 @@ test('expiry is the minimum of binding, independent CLEAR session and policy; fi
   const reader = open(), before = fingerprint(f);
   assert.equal(reader.readStudent(f.context, input).expiresAtExclusive, 1001);
   let samples = 0;
-  time.hook = () => { if (++samples === 2) { time.wall = 1001; time.trusted = 1001; time.mono += 999; } };
+  time.providerHook = () => { if (++samples === 2) { time.wall = 1001; time.trusted = 1001; time.mono += 999; } };
   assert.throws(() => reader.readStudent(f.context, input), /FINAL_EXPIRED/);
   assert.deepEqual(fingerprint(f), before);
 });
@@ -184,13 +186,79 @@ test('recovery drain/new epoch, DB-only policy drift and final deployment revoca
 test('slow final fence and schema drift refuse a result without reader writes', async t => {
   const { f, input, open, time } = await setup(t), reader = open(), before = fingerprint(f);
   let samples = 0;
-  time.hook = () => { if (++samples === 2) { time.mono += 1000; time.wall = time.trusted = 1001; } };
+  time.providerHook = () => { if (++samples === 2) { time.mono += 1000; time.wall = time.trusted = 1001; } };
   assert.throws(() => reader.readStudent(f.context, input), /RESPONSE_TIMEOUT/);
   assert.deepEqual(fingerprint(f), before);
-  time.hook = null; time.wall = time.trusted = 1001;
+  time.providerHook = null; time.wall = time.trusted = 1001;
   const fresh = open();
   f.sql('main', 'CREATE TABLE unexpected(id INTEGER)');
   const drifted = fingerprint(f);
   assert.throws(() => fresh.readStudent(f.context, input), /SCHEMA_INVENTORY/);
   assert.deepEqual(fingerprint(f), drifted);
+});
+
+for (const boundary of ['provider', 'file-check', 'commit']) {
+  for (const delay of [250, 2000]) {
+    test(`${boundary} latency ${delay}ms is charged before return; failure latches without writes`, async t => {
+      const { f, input, open, time } = await setup(t);
+      f.sql('auth', 'UPDATE sessions SET expires_at=1001 RETURNING digest');
+      let providers = 0, armed = false, delayed = false, reading = false;
+      const pause = () => {
+        delayed = true; time.mono += delay;
+        if (delay === 2000) { time.wall += 2; time.trusted += 2; }
+      };
+      const reader = open({ trustedTime: () => {
+        const result = { issuerEpoch: time.epoch, wall: time.trusted };
+        if (reading && ++providers === 2) {
+          armed = true;
+          if (boundary === 'provider') pause();
+        }
+        return result;
+      } });
+      reading = true;
+      const before = fingerprint(f), originalPath = fs.realpathSync, originalExec = DatabaseSync.prototype.exec;
+      if (boundary === 'file-check') {
+        fs.realpathSync = (...args) => {
+          const result = originalPath(...args);
+          if (armed && !delayed) pause();
+          return result;
+        };
+        syncBuiltinESMExports();
+      }
+      if (boundary === 'commit') DatabaseSync.prototype.exec = function(sql) {
+        const result = originalExec.call(this, sql);
+        if (sql === 'COMMIT' && armed && !delayed) pause();
+        return result;
+      };
+      try {
+        assert.throws(() => reader.readStudent(f.context, input), delay === 250 ? /FINAL_EXPIRED/ : /RESPONSE_TIMEOUT/);
+        assert.equal(delayed, true);
+        assert.throws(() => reader.readStudent(f.context, input), /READ_CLOCK_UNAVAILABLE/);
+        assert.deepEqual(fingerprint(f), before);
+      } finally {
+        fs.realpathSync = originalPath; syncBuiltinESMExports(); DatabaseSync.prototype.exec = originalExec;
+      }
+    });
+  }
+}
+
+test('successful return samples the pure local clock after provider, deployment file I/O and COMMIT', async t => {
+  const { f, input, open, time } = await setup(t), events = [];
+  const reader = open({
+    trustedTime: () => { events.push('provider'); return { issuerEpoch: time.epoch, wall: time.trusted }; },
+    clock: { wall: () => { events.push('wall'); return time.wall; }, monotonic: () => { events.push('mono'); return time.mono; } },
+  });
+  events.length = 0;
+  const originalPath = fs.realpathSync, originalExec = DatabaseSync.prototype.exec;
+  fs.realpathSync = (...args) => { events.push('file'); return originalPath(...args); };
+  syncBuiltinESMExports();
+  DatabaseSync.prototype.exec = function(sql) { events.push(sql); return originalExec.call(this, sql); };
+  try {
+    assert.ok(reader.readStudent(f.context, input));
+    const commit = events.indexOf('COMMIT');
+    assert.ok(commit > events.lastIndexOf('file') && commit > events.lastIndexOf('provider'));
+    assert.deepEqual(events.slice(commit + 1), ['wall', 'mono']);
+  } finally {
+    fs.realpathSync = originalPath; syncBuiltinESMExports(); DatabaseSync.prototype.exec = originalExec;
+  }
 });
