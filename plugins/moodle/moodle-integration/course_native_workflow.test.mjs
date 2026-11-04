@@ -217,3 +217,23 @@ test('reflection approval requires returned authority and explicit acknowledgmen
     assert.equal(ui.buttons['approve-reflection'].disabled, true);
     assert.match(ui.details.textContent, /airecorded/);
 });
+
+test('application evidence status follows evidenceCurrent for missing, expired and current evidence', async () => {
+    const cases = [
+        {evidenceCurrent: false, state: 'UNKNOWN', reasonCode: 'SOURCE_UNAVAILABLE'},
+        {evidenceCurrent: false, state: 'UNKNOWN', reasonCode: 'EXPIRED'},
+        {evidenceCurrent: true, state: 'MET', reasonCode: null},
+    ];
+    for (const {evidenceCurrent, state, reasonCode} of cases) {
+        const view = {version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: 'app-one', role: 'PARTICIPANT',
+            decision: {current: true, evidenceCurrent, conditionsStatus: state},
+            target: {targetDecisionId: 'decision-one'}, agreedPayment: {amountAtoms: '100000000', decimals: 6, symbol: 'TEST'},
+            criteria: [{criterionId: 'activity-complete', state, current: evidenceCurrent, reasonCode}]};
+        const ui = fixture(({action}) => action === 'read-session' ? session('app-one') : view);
+        await ui.click('read-session');
+        await ui.click('read-application');
+        const basisLines = ui.details.textContent.split('\n').filter(line => line.startsWith('basis: '));
+        const expected = evidenceCurrent ? 'basis: CURRENT' : 'basis: UNKNOWN';
+        assert.deepEqual(basisLines, [expected, expected], reasonCode ?? 'current evidence');
+    }
+});

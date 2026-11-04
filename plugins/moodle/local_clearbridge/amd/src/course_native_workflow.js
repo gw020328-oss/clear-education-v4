@@ -89,7 +89,7 @@ define([], function() {
                     return label(value.current === false ? 'operationprevious' : 'operationsaved');
                 case 'application':
                     return lines(line('decision', label(value.decision?.conditionsStatus)),
-                        line('basis', label(value.decision?.current === true ? 'CURRENT' : 'UNKNOWN')),
+                        line('basis', label(value.decision?.evidenceCurrent === true ? 'CURRENT' : 'UNKNOWN')),
                         line('decisiontarget', value.target.targetDecisionId),
                         line('revision', value.target.targetDecisionRevision),
                         line('fingerprint', value.target.targetDecisionHash),
