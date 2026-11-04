@@ -1,5 +1,7 @@
 # 합성 Page profile 및 DB 권한 구현
 
+후속 실제 코어 테이블 adapter·collector·동일 트랜잭션 발급 실험은 [moodle-integration](../moodle-integration/README.ko.md)에 추가했다. 아래 내용과 이 디렉터리의 verification/dependencies는 당시 shadow 단계 기록이며, 실제 코어 통합 결과와 합산하지 않는다.
+
 이 디렉터리는 disposable PostgreSQL clear_profile 전용이다. 운영 Moodle migration이나 연결 endpoint는 제공하지 않는다. 실제 Moodle 설치의 권한 의존성을 축약한 shadow schema이므로 현행 Moodle에 SQL을 적용하면 안 된다.
 
 ## 구현과 실행

@@ -1,0 +1,45 @@
+PASS atomic installer applied to isolated actual Moodle core schema
+No syntax errors detected in /probe/moodle-integration/adapter.php
+No syntax errors detected in /probe/moodle-integration/collector.php
+No syntax errors detected in /probe/moodle-integration/function_fence_tests.php
+No syntax errors detected in /probe/moodle-integration/guarded_database.php
+No syntax errors detected in /probe/moodle-integration/install.php
+No syntax errors detected in /probe/moodle-integration/issuance_failure_tests.php
+No syntax errors detected in /probe/moodle-integration/native_codec_fixture.php
+No syntax errors detected in /probe/moodle-integration/setup.php
+No syntax errors detected in /probe/moodle-integration/tests.php
+PASS actual core tables issue and empty manual completion observation
+PASS Moodle session advisory lock held throughout issue
+PASS same session concurrent write fenced
+PASS authority mutation fenced during issuance
+PASS blocked writers leave usable confirmation
+PASS new repeatable snapshot keeps original completion across concurrent update
+PASS next request acquires new snapshot and sees completion one
+PASS actual core grade-state completion rejected
+PASS suspend restore cannot revive actual confirmation
+PASS force password change blocks issuance
+PASS actual role switch blocks new issuance
+PASS same session persisted role switch invalidates earlier confirmation
+PASS core database session destruction blocks observation
+SYNTHETIC_ACTUAL_MOODLE_INTEGRATION_ONLY
+PASS concurrent persisted session update blocks stale issuance
+PASS stale-memory failure issues zero confirmations
+PASS failed issuance releases core advisory lock
+PASS actual trigger timeout blocks confirmation issuance
+PASS flush failure rolls confirmation transaction back
+PASS new explicit attempt after failed flush is observable
+PASS assumed identity rejected before insert and lock released
+PASS pre-transaction rejection releases core session lock
+PASS post-flush native memory change blocks issuance
+PASS post-flush memory change issues zero confirmations
+PASS post-flush actual role switch blocks issuance
+PASS post-flush role switch issues zero confirmations
+PASS actual observation issuer mismatch rejected
+PASS actual observation rejects browser identity input
+PASS function definition drift blocks observation
+PASS trigger disabled state blocks observation
+PASS actual reader sensitive column privilege denied
+PASS actual reader sensitive column privilege denied
+PASS actual reader sensitive column privilege denied
+PASS database insert rejects SESSION_LOCK_REQUIRED
+PASS database insert rejects STALE_FENCE
