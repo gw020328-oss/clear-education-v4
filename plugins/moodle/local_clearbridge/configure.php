@@ -47,10 +47,14 @@ $saved = json_decode((string)get_config('local_clearbridge', $key), true);
 $form->set_data(is_array($saved) ? $saved : []);
 $isdemocourse = \local_clearbridge\course_refund::is_demo_course($course->id);
 $view = $isdemocourse ? \local_clearbridge\course_projection_page::data($course, false) : null;
-echo $OUTPUT->header();
 if ($view !== null) {
     // The mapping capability alone does not enroll a course operator.
     $view['showconnection'] = is_enrolled($context, null, '', true);
+    $view['connectionenabled'] = $view['showconnection'] && \local_clearbridge\course_login_authority::enable_page(
+        $PAGE, (int)$course->id, (int)$USER->id, 'COURSE_OPERATOR');
+}
+echo $OUTPUT->header();
+if ($view !== null) {
     echo $OUTPUT->render_from_template('local_clearbridge/course_refund', $view);
     echo html_writer::link($url, get_string('refreshstatus', 'local_clearbridge'));
 }

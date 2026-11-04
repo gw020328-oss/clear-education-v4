@@ -185,6 +185,16 @@ final class course_authority_currentness {
 
     /** Exact service configuration; no proxy-header trust and no cookie authority. */
     public static function authenticate(array $server, string $raw, array $config, string $outboundkey): array {
+        [$q, $nonce, $stamp] = self::authenticate_transport($server, $raw, $config, $outboundkey, self::PATH);
+        self::request_shape($q);
+        $now = time();
+        self::require_rule($q['ownerRunId'] === $config['ownerRunId'] && $q['expiresAtExclusive'] > $now
+            && $q['expiresAtExclusive'] <= $now + 5);
+        return [$q, $nonce, $stamp];
+    }
+
+    public static function authenticate_transport(array $server, string $raw, array $config, string $outboundkey,
+            string $path): array {
         self::require_rule(course_read_client::exact_keys($config, ['enabled', 'origin', 'ownerRunId', 'key'])
             && $config['enabled'] === true && is_string($config['origin'])
             && preg_match('~\Ahttps://[a-z0-9.-]+(?::[1-9][0-9]{0,4})?\z~', $config['origin']) === 1
@@ -192,7 +202,7 @@ final class course_authority_currentness {
             && preg_match('/\A[a-f0-9]{64}\z/', $config['key']) === 1
             && preg_match('/\A[a-f0-9]{64}\z/', $outboundkey) === 1 && !hash_equals($outboundkey, $config['key']));
         $host = substr($config['origin'], 8);
-        self::require_rule(($server['REQUEST_METHOD'] ?? '') === 'POST' && ($server['REQUEST_URI'] ?? '') === self::PATH
+        self::require_rule(($server['REQUEST_METHOD'] ?? '') === 'POST' && ($server['REQUEST_URI'] ?? '') === $path
             && ($server['HTTP_HOST'] ?? '') === $host && in_array($server['HTTPS'] ?? '', ['on', '1'], true)
             && ($server['CONTENT_TYPE'] ?? '') === 'application/json' && strlen($raw) <= 4096 && $raw !== ''
             && empty($server['HTTP_COOKIE']) && empty($server['HTTP_AUTHORIZATION'])
@@ -205,13 +215,10 @@ final class course_authority_currentness {
             && is_string($mac) && preg_match('/\A[a-f0-9]{64}\z/', $mac) === 1);
         $now = time();
         self::require_rule((int)$stamp <= $now && (int)$stamp > $now - 5);
-        $material = implode("\n", [self::DOMAIN, $stamp, $nonce, 'POST', self::PATH, hash('sha256', $raw)]);
+        $material = implode("\n", [self::DOMAIN, $stamp, $nonce, 'POST', $path, hash('sha256', $raw)]);
         self::require_rule(hash_equals(hash_hmac('sha256', $material, $config['key']), $mac));
         $q = json_decode($raw, true, 12, JSON_THROW_ON_ERROR);
         self::require_rule(is_array($q) && json_encode($q, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) === $raw);
-        self::request_shape($q);
-        self::require_rule($q['ownerRunId'] === $config['ownerRunId'] && $q['expiresAtExclusive'] > $now
-            && $q['expiresAtExclusive'] <= $now + 5);
         return [$q, $nonce, (int)$stamp];
     }
 

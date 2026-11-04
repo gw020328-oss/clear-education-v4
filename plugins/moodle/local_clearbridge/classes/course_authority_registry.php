@@ -5,11 +5,20 @@ defined('MOODLE_INTERNAL') || die();
 
 /** One pre-provisioned private run file, shared by PHP workers. No session secrets. */
 final class course_authority_registry {
-    public function __construct(private readonly string $path, private readonly string $run) {
+    public function __construct(private readonly string $path, private readonly string $run,
+            private readonly bool $login = false) {
         if (!preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\z/', $run)) {
             throw new \RuntimeException('Authority unavailable');
         }
         $this->permissions();
+    }
+
+    private function record_shape(array $record): void {
+        if ($this->login) {
+            course_login_authority::record_shape($record);
+        } else {
+            course_authority_currentness::record_shape($record);
+        }
     }
 
     private function permissions(): array {
@@ -51,7 +60,8 @@ final class course_authority_registry {
             $state = json_decode($raw, true, 20, JSON_THROW_ON_ERROR);
             $now = time();
             if (!course_read_client::exact_keys($state, ['version', 'ownerRunId', 'wallFloor', 'leases', 'nonces'])
-                    || $state['version'] !== 'clear-moodle-authority-registry.1' || $state['ownerRunId'] !== $this->run
+                    || $state['version'] !== ($this->login ? 'clear-moodle-login-registry.1' : 'clear-moodle-authority-registry.1')
+                    || $state['ownerRunId'] !== $this->run
                     || !is_int($state['wallFloor']) || $state['wallFloor'] < 0 || $state['wallFloor'] > $now
                     || !is_array($state['leases']) || !is_array($state['nonces'])
                     || count($state['leases']) > 128 || count($state['nonces']) > 1024) {
@@ -61,7 +71,7 @@ final class course_authority_registry {
                 if (!is_array($record) || !is_int($record['request']['expiresAtExclusive'] ?? null)) {
                     throw new \RuntimeException('Authority unavailable');
                 }
-                course_authority_currentness::record_shape($record);
+                $this->record_shape($record);
                 if ($key !== $record['request']['moodleAuthorityRef'] || $record['request']['ownerRunId'] !== $this->run) {
                     throw new \RuntimeException('Authority unavailable');
                 }
@@ -91,7 +101,7 @@ final class course_authority_registry {
     }
 
     public function publish(array $record): void {
-        course_authority_currentness::record_shape($record);
+        $this->record_shape($record);
         $this->transaction(function (&$state, $now) use ($record): void {
             $q = $record['request'];
             $key = $q['moodleAuthorityRef'];
@@ -116,12 +126,16 @@ final class course_authority_registry {
 
     public function lookup(array $request): ?array {
         return $this->transaction(function (&$state, $now) use ($request): ?array {
-            course_authority_currentness::request_shape($request);
+            if ($this->login) {
+                course_login_authority::request_shape('start', $request);
+            } else {
+                course_authority_currentness::request_shape($request);
+            }
             $record = $state['leases'][$request['moodleAuthorityRef']] ?? null;
             if ($record === null || $request['ownerRunId'] !== $this->run || $request['expiresAtExclusive'] <= $now) {
                 return null;
             }
-            course_authority_currentness::record_shape($record);
+            $this->record_shape($record);
             foreach ($request as $field => $value) {
                 if ($record['request'][$field] !== $value) {
                     return null;

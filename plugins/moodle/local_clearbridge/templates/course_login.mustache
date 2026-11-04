@@ -1,0 +1,26 @@
+{{!
+    @template local_clearbridge/course_login
+
+    Moodle connection controls. The page keeps connection proof in the original tab.
+    Example context (json): {"student": true}
+}}
+<div data-clear-login>
+    <p data-clear-status role="status" aria-live="polite">{{#str}} loginidle, local_clearbridge {{/str}}</p>
+    <div hidden>
+        <span data-clear-message="idle">{{#str}} loginidle, local_clearbridge {{/str}}</span>
+        <span data-clear-message="opening">{{#str}} loginopening, local_clearbridge {{/str}}</span>
+        <span data-clear-message="waiting">{{#str}} loginwaiting, local_clearbridge {{/str}}</span>
+        <span data-clear-message="return">{{#str}} loginreturn, local_clearbridge {{/str}}</span>
+        <span data-clear-message="connected">{{#str}} loginconnected, local_clearbridge {{/str}}</span>
+        <span data-clear-message="expired">{{#str}} loginexpired, local_clearbridge {{/str}}</span>
+        <span data-clear-message="restart">{{#str}} loginrestart, local_clearbridge {{/str}}</span>
+        <span data-clear-message="blocked">{{#str}} loginblocked, local_clearbridge {{/str}}</span>
+        <span data-clear-message="unavailable">{{#str}} loginunavailable, local_clearbridge {{/str}}</span>
+    </div>
+    <button type="button" class="btn btn-primary" data-clear-start hidden>
+        {{#student}}{{#str}} logingoogle, local_clearbridge {{/str}}{{/student}}
+        {{^student}}{{#str}} loginwallet, local_clearbridge {{/str}}{{/student}}
+    </button>
+    <button type="button" class="btn btn-primary" data-clear-finish hidden>{{#str}} loginfinish, local_clearbridge {{/str}}</button>
+    <button type="button" class="btn btn-secondary" data-clear-end hidden>{{#str}} loginend, local_clearbridge {{/str}}</button>
+</div>

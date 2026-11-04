@@ -16,9 +16,13 @@ $PAGE->set_title(get_string('pluginname', 'local_clearbridge'));
 $PAGE->set_heading(format_string($course->fullname));
 $view = \local_clearbridge\course_refund::is_demo_course($course->id)
     ? \local_clearbridge\course_projection_page::data($course, true) : null;
-echo $OUTPUT->header();
 if ($view !== null) {
     $view['showconnection'] = true;
+    $view['connectionenabled'] = \local_clearbridge\course_login_authority::enable_page(
+        $PAGE, (int)$course->id, (int)$USER->id, 'PARTICIPANT');
+}
+echo $OUTPUT->header();
+if ($view !== null) {
     echo $OUTPUT->render_from_template('local_clearbridge/course_refund', $view);
     echo html_writer::link($PAGE->url, get_string('refreshstatus', 'local_clearbridge'));
 } else {

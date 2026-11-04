@@ -14,7 +14,12 @@
         {{^student}}
         <h2 id="clearbridge-connection-heading">{{#str}} walletconnectionheading, local_clearbridge {{/str}}</h2>
         {{/student}}
+        {{#connectionenabled}}
+        {{> local_clearbridge/course_login }}
+        {{/connectionenabled}}
+        {{^connectionenabled}}
         <p class="mb-0">{{#str}} connectionstatusunavailable, local_clearbridge {{/str}}</p>
+        {{/connectionenabled}}
     </div>
 </section>
 {{/showconnection}}
