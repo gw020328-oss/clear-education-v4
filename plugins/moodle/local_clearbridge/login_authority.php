@@ -30,7 +30,7 @@ try {
     current::require_rule(\local_clearbridge\course_read_client::exact_keys($envelope, ['operation', 'request'])
         && is_string($envelope['operation']) && is_array($envelope['request']));
     $q = $envelope['request'];
-    login::request_shape($envelope['operation'], $q);
+    login::reverse_request_shape($envelope['operation'], $q);
     $now = time();
     current::require_rule($q['ownerRunId'] === $config['ownerRunId'] && $q['expiresAtExclusive'] > $now
         && $q['expiresAtExclusive'] <= $now + 5);

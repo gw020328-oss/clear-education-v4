@@ -149,6 +149,11 @@ final class course_login_authority {
         return hash('sha256', json_encode(['operation' => $operation, 'request' => $q], JSON_THROW_ON_ERROR));
     }
 
+    /** execute-command is reverse-only and reuses the original authorize DTO and digest. */
+    public static function reverse_request_shape(string $operation, array $q): void {
+        self::request_shape($operation === 'execute-command' ? 'authorize-command' : $operation, $q);
+    }
+
     public static function record_shape(array $r): void {
         course_authority_currentness::require_rule(course_read_client::exact_keys($r, [
             'request', 'operation', 'digest', 'scope', 'courseId', 'actorUserId', 'subjectUserId',
@@ -223,21 +228,31 @@ final class course_login_authority {
     }
 
     public static function respond(string $operation, array $q, array $config, course_authority_registry $registry): array {
-        $digest = self::digest($operation, $q);
+        $execute = $operation === 'execute-command';
+        $publishedoperation = $execute ? 'authorize-command' : $operation;
+        $digest = self::digest($publishedoperation, $q);
         $base = array_intersect_key($q, array_flip(self::BASE));
-        $record = $registry->lookup($base);
-        course_authority_currentness::require_rule($record !== null && $record['operation'] === $operation
+        // take_command commits removal before any currentness check can throw.
+        $record = $execute ? $registry->take_command($q) : $registry->lookup($base);
+        course_authority_currentness::require_rule($record !== null && $record['operation'] === $publishedoperation
             && hash_equals($record['digest'], $digest));
         $horizon = self::horizon($record);
-        course_authority_currentness::require_rule($registry->lookup($base) === $record);
+        if (!$execute) {
+            course_authority_currentness::require_rule($registry->lookup($base) === $record);
+        }
         $horizon = min($horizon, self::horizon($record));
-        course_authority_currentness::require_rule($registry->lookup($base) === $record);
+        if (!$execute) {
+            course_authority_currentness::require_rule($registry->lookup($base) === $record);
+        }
         $scope = $record['scope'];
         $actor = $q['role'] === 'PARTICIPANT' ? $scope['participantActorRef'] : $scope['operatorActorRef'];
         $sessionref = hash_hmac('sha256', implode("\n", ['CLEAR-MOODLE-LOGIN-SESSION-REF-1', $q['ownerRunId'],
             $scope['installationRef'], $scope['courseRef'], $scope['subjectRef'], $actor, $q['role'],
             $record['sessionRowId'], $record['sessionCreatedAt'], $record['sessionBackend'],
             self::scope_digest($scope)]), $config['sessionKey']);
+        if ($execute) {
+            $horizon = min($horizon, self::horizon($record), $q['expiresAtExclusive']);
+        }
         self::fence($record);
         return ['ownerRunId' => $q['ownerRunId'], 'role' => $q['role'], 'installationRef' => $scope['installationRef'],
             'courseRef' => $scope['courseRef'], 'subjectRef' => $scope['subjectRef'], 'actorRef' => $actor,

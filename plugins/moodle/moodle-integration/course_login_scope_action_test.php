@@ -203,6 +203,11 @@ try {
         }
     }
     echo "PASS command without SESSION intent or with malformed/extra caller binding/body cannot authorize\n";
+    [$reply,$state,$status]=$send($case,'execute-command',['commandHash'=>str_repeat('6',64)]);
+    if ($status!==403 || $reply!==['status'=>'UNAVAILABLE'] || $state['calls']!==[] || $state['attempt']!==$old) {
+        throw new RuntimeException('reverse-only execute accepted by browser dispatcher');
+    }
+    echo "PASS reverse-only execute-command is rejected by actual browser dispatcher without owner calls\n";
 } finally {
     proc_terminate($server);
     proc_close($server);

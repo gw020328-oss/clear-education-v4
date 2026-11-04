@@ -148,4 +148,27 @@ final class course_authority_registry {
     public function revoke(string $ref, int $expiry): void {
         $this->transaction(static function (&$state) use ($ref): void { unset($state['leases'][$ref]); }, $expiry);
     }
+
+    /** Atomically consume only the matching original authorize-command publication. */
+    public function take_command(array $request): ?array {
+        course_authority_currentness::require_rule($this->login);
+        $digest = course_login_authority::digest('authorize-command', $request);
+        return $this->transaction(function (&$state, $now) use ($request, $digest): ?array {
+            $ref = $request['moodleAuthorityRef'];
+            $record = $state['leases'][$ref] ?? null;
+            if ($record === null || $request['ownerRunId'] !== $this->run
+                    || $request['expiresAtExclusive'] <= $now || $record['operation'] !== 'authorize-command'
+                    || !hash_equals($record['digest'], $digest)) {
+                return null;
+            }
+            // Compare every exact common header under the SAME lock as removal.
+            foreach ($record['request'] as $field => $value) {
+                if ($request[$field] !== $value) {
+                    return null;
+                }
+            }
+            unset($state['leases'][$ref]);
+            return $record;
+        }, $request['expiresAtExclusive']);
+    }
 }

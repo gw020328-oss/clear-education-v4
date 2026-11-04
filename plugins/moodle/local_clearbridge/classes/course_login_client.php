@@ -27,19 +27,25 @@ final class course_login_client {
         course_login_authority::request_shape($operation, $q);
         $record = course_login_authority::capture($operation, $q, $this->scope, $this->user, $start, $now);
         $registry = new course_authority_registry($this->config['registry'], $this->config['ownerRunId'], true);
+        $retain = false;
         try {
             $registry->publish($record);
             $reply = $this->exchange('/v1/moodle/connect/' . $operation, $q, $start);
             course_login_authority::check_origin($record);
+            $mono = hrtime(true);
+            $wall = time();
+            course_authority_currentness::require_rule($wall >= $now && $wall < $q['expiresAtExclusive']
+                && $mono >= $start && $mono - $start < 5_000_000_000);
+            self::response_shape($operation, $q, $reply, $wall, $this->scope['expiresAtExclusive']);
+            // Preserve only a fully validated command publication, with its ORIGINAL deadline.
+            // execute-command consumes this same record; no fresh lease is issued at execution.
+            $retain = $operation === 'authorize-command';
+            return $reply;
         } finally {
-            $registry->revoke($q['moodleAuthorityRef'], $q['expiresAtExclusive']);
+            if (!$retain) {
+                $registry->revoke($q['moodleAuthorityRef'], $q['expiresAtExclusive']);
+            }
         }
-        $mono = hrtime(true);
-        $wall = time();
-        course_authority_currentness::require_rule($wall >= $now && $wall < $q['expiresAtExclusive']
-            && $mono >= $start && $mono - $start < 5_000_000_000);
-        self::response_shape($operation, $q, $reply, $wall, $this->scope['expiresAtExclusive']);
-        return $reply;
     }
 
     public static function response_shape(string $operation, array $q, array $reply, int $now, int $runend): void {

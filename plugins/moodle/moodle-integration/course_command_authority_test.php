@@ -19,6 +19,8 @@ function command_case(string $label, Closure $body, string $role = 'PARTICIPANT'
     finally { unset($GLOBALS['login_flush_hook']); cleanup_registry($path); }
 }
 
+if (defined('CLEAR_COMMAND_AUTHORITY_LIBRARY_ONLY')) { return; }
+
 foreach (['PARTICIPANT','COURSE_OPERATOR'] as $role) {
     command_case("$role command exact8 digest uses the existing registry and exact8 reverse grant", function($q,$r,$registry,$config,$path) {
         Login::request_shape('authorize-command',$q);
@@ -61,7 +63,7 @@ function($q,$r,$registry,$config) {
 
 foreach (['ok','wrong-ref','extended-expiry','short-expiry','extra','transport-error','expiry','monotonic',
         'enrolment','role','scope','session'] as $scenario) {
-    command_case("real C command client $scenario preserves final currentness and always revokes its registry lease",
+    command_case("real C command client $scenario retains only validated success and revokes every failure",
     function($fixture,$r,$registry,$config,$path) use($scenario) {
         $GLOBALS['f']['owner'] = static function() use($scenario,$registry,$config): void {
             $q=$GLOBALS['f']['lastRequest'];
@@ -96,6 +98,11 @@ foreach (['ok','wrong-ref','extended-expiry','short-expiry','extra','transport-e
             expect($reply['status']==='AUTHORIZED' && $reply['expiresAtExclusive']===2000000005,'authorized exact deadline');
         } else { rejected($call); }
         $state=json_decode(file_get_contents($path),true,8,JSON_THROW_ON_ERROR);
-        expect($state['leases']===[],'lease revoked even on failure');
+        if ($scenario==='ok') {
+            expect(count($state['leases'])===1 && array_values($state['leases'])[0]['request']['expiresAtExclusive']===2000000005,
+                'success retains original deadline for execution');
+        } else {
+            expect($state['leases']===[],'failure revoked before any success retention');
+        }
     });
 }

@@ -1,5 +1,8 @@
 # C authorize-command 최소 후보
 
+> 이 문서는 0.1.14 당시의 동작과 증거를 보존한다. 성공 시 lease 수명과 실행 직전 소비는
+> 0.1.15 [COMMAND_EXECUTION_CANDIDATE.ko.md](COMMAND_EXECUTION_CANDIDATE.ko.md)에서 변경했다.
+
 2026-11-05. 기준은 intentTarget을 고정한 C `6d8be7f834c3e0b693dc4723d19955ca713dcfda`다.
 0.1.12 CSP/실브라우저 증거와 0.1.13 target ZIP은 보존한다. 요청 모델은 Astra / High,
 현재 실제 실행 모델은 GPT-6.1 Sol이며 턴 설정을 바꿨다고 주장하지 않는다.
