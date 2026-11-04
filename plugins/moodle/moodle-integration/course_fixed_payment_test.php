@@ -16,7 +16,9 @@ function payment(): array {
 }
 function evidence():array { return ['decision'=>['id'=>'decision-1','revision'=>1,'recordedConditionsStatus'=>'NEEDS_SUPPLEMENT']]; }
 function ok($v,$label) { if(!$v) {throw new \RuntimeException($label);} echo "PASS $label\n"; }
-$p=payment(); ok(Display::data($p,evidence(),'PARTICIPANT',100)!==null,'new exact12 payment accepted');
+$p=payment();
+$view=Display::data($p,evidence(),'PARTICIPANT',100);
+ok(($view['decisionstatus']??null)==='nativedecisionsupplement','exact12 payment renders the validated recorded decision');
 $old=$p; $old['version']='clear-moodle-payment-status.1'; unset($old['mappingRef']); $old['bindingRef']='binding-1'; $old['bindingRevision']=1;
 ok(Display::data($old,evidence(),'PARTICIPANT',100)!==null,'old exact13 payment remains separately accepted');
 foreach (['bindingRef'=>'old','bindingRevision'=>1,'payment'=>[],'unknown'=>true] as $k=>$v) {

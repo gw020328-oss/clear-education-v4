@@ -14,12 +14,19 @@
         {{^student}}
         <h2 id="clearbridge-connection-heading">{{#str}} walletconnectionheading, local_clearbridge {{/str}}</h2>
         {{/student}}
-        {{#connectionenabled}}
-        {{> local_clearbridge/course_login }}
-        {{/connectionenabled}}
-        {{^connectionenabled}}
-        <p class="mb-0">{{#str}} connectionstatusunavailable, local_clearbridge {{/str}}</p>
-        {{/connectionenabled}}
+        {{> local_clearbridge/course_native_connection }}
+    </div>
+</section>
+<section aria-labelledby="clearbridge-application-heading" class="card mb-3">
+    <div class="card-body">
+        <h2 id="clearbridge-application-heading">{{#str}} nativeapplicationheading, local_clearbridge {{/str}}</h2>
+        {{#student}}
+        <p>{{#str}} moodleenrolled, local_clearbridge {{/str}}</p>
+        <p class="mb-0">{{#str}} clearregistrationunavailable, local_clearbridge {{/str}}</p>
+        {{/student}}
+        {{^student}}
+        <p class="mb-0">{{#str}} nativeoperatorapplicationunavailable, local_clearbridge {{/str}}</p>
+        {{/student}}
     </div>
 </section>
 {{/showconnection}}
@@ -34,10 +41,6 @@
         {{#synthetic}}
         <p class="alert alert-info">{{#str}} syntheticprojection, local_clearbridge {{/str}}</p>
         {{/synthetic}}
-        {{#student}}
-        <p>{{#str}} moodleenrolled, local_clearbridge {{/str}}</p>
-        <p>{{#str}} clearregistrationunavailable, local_clearbridge {{/str}}</p>
-        {{/student}}
         <dl class="row mb-0">
             {{#conditions}}
             <dt class="col-sm-5">{{name}}</dt>
@@ -51,6 +54,7 @@
                 <p class="mb-1">{{topic}}: {{outcome}}</p>
                 {{/topics}}
                 {{/record}}
+                {{^record}}<p class="mb-1">{{#str}} nativeevidenceunavailable, local_clearbridge {{/str}}</p>{{/record}}
             </dd>
             {{/conditions}}
         </dl>
@@ -62,28 +66,42 @@
         {{/hasrecords}}
     </div>
 </section>
-{{#student}}
 <section aria-labelledby="clearbridge-decision-heading" class="card mb-3">
     <div class="card-body">
-        <h2 id="clearbridge-decision-heading">{{#str}} decisionheading, local_clearbridge {{/str}}</h2>
-        <p>{{#str}} decisionunavailable, local_clearbridge {{/str}}</p>
+        <h2 id="clearbridge-decision-heading">{{#str}} nativedecisionheading, local_clearbridge {{/str}}</h2>
+        {{#payment}}
+        <p class="mb-0">{{decisionstatus}}</p>
+        {{/payment}}
+        {{^payment}}
+        <p class="mb-0">{{#str}} nativedecisionunavailable, local_clearbridge {{/str}}</p>
+        {{/payment}}
+    </div>
+</section>
+<section aria-labelledby="clearbridge-consent-heading" class="card mb-3">
+    <div class="card-body">
+        <h2 id="clearbridge-consent-heading">{{#str}} nativeconsentheading, local_clearbridge {{/str}}</h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-5">{{#str}} consentstudent, local_clearbridge {{/str}}</dt>
+            <dd class="col-sm-7">{{#payment}}{{participant}}{{/payment}}{{^payment}}{{#str}} nativeconsentunknown, local_clearbridge {{/str}}{{/payment}}</dd>
+            <dt class="col-sm-5">{{#str}} consentteacher, local_clearbridge {{/str}}</dt>
+            <dd class="col-sm-7">{{#payment}}{{operator}}{{/payment}}{{^payment}}{{#str}} nativeconsentunknown, local_clearbridge {{/str}}{{/payment}}</dd>
+        </dl>
+        {{#showconnection}}
+        <p class="mb-0">
+            {{#student}}{{#str}} nativestudentconsentunavailable, local_clearbridge {{/str}}{{/student}}
+            {{^student}}{{#str}} nativeteacherconsentunavailable, local_clearbridge {{/str}}{{/student}}
+        </p>
+        {{/showconnection}}
+    </div>
+</section>
+<section aria-labelledby="clearbridge-receipt-heading" class="card mb-3">
+    <div class="card-body">
+        <h2 id="clearbridge-receipt-heading">{{#str}} nativereceiptheading, local_clearbridge {{/str}}</h2>
+        {{#payment}}
+        <p class="mb-0">{{receiptstatus}}</p>
+        {{/payment}}
         {{^payment}}
         <p class="mb-0">{{#str}} receiptunavailable, local_clearbridge {{/str}}</p>
         {{/payment}}
     </div>
 </section>
-{{/student}}
-{{#payment}}
-<section aria-labelledby="clearbridge-recorded-payment-heading" class="card mb-3">
-    <div class="card-body">
-        <h2 id="clearbridge-recorded-payment-heading">{{#str}} recordedpaymentheading, local_clearbridge {{/str}}</h2>
-        <dl class="row mb-0">
-            <dt class="col-sm-5">{{#str}} consentstudent, local_clearbridge {{/str}}</dt>
-            <dd class="col-sm-7">{{participant}}</dd>
-            <dt class="col-sm-5">{{#str}} consentteacher, local_clearbridge {{/str}}</dt>
-            <dd class="col-sm-7">{{operator}}</dd>
-        </dl>
-        <p class="mb-0">{{receiptstatus}}</p>
-    </div>
-</section>
-{{/payment}}

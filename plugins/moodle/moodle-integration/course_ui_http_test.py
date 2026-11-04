@@ -67,6 +67,19 @@ google_connection = 'Connect your Google account'
 wallet_connection = 'Connect your course operator wallet'
 connection_unavailable = 'Connection is unavailable from this course page right now.'
 connection_heading = 'id="clearbridge-connection-heading"'
+native_sections = (
+    'clearbridge-connection-heading', 'clearbridge-application-heading', 'clearbridge-policy-heading',
+    'clearbridge-decision-heading', 'clearbridge-consent-heading', 'clearbridge-receipt-heading',
+)
+
+
+def assert_native_workflow(body, wallet, other_wallet, consent):
+    positions = [body.index(f'id="{section}"') for section in native_sections]
+    assert positions == sorted(positions)
+    for label in (wallet, 'Choose a wallet', 'Check the network', 'Sign in with your wallet', consent):
+        assert label in body, label
+    assert other_wallet not in body
+    assert 'data-clear-start' not in body and '/moodle/connect' not in body
 
 for url in (student_url, teacher_url):
     status, path, _, body = fetch(client(), url)
@@ -83,6 +96,8 @@ for label in (policy, student_only, 'Automatic completion of the introductory le
     assert label in body, label
 assert teacher_only not in body
 assert google_connection in body and wallet_connection not in body and connection_unavailable in body
+assert_native_workflow(body, 'Privy wallet using your Google account', 'operator wallet in MetaMask',
+                       'Student consent cannot be submitted right now.')
 assert 'no-store' in headers.get('Cache-Control', ''), headers.get('Cache-Control', '')
 assert '<iframe' not in body.lower()
 print('PASS enrolled student sees four conditions, unavailable authority state and no iframe or caching')
@@ -99,6 +114,8 @@ status, path, _, body = fetch(teacher, teacher_url)
 assert status == 200 and path == '/local/clearbridge/configure.php'
 assert policy in body and teacher_only in body and student_only not in body
 assert wallet_connection in body and google_connection not in body and connection_unavailable in body
+assert_native_workflow(body, 'operator wallet in MetaMask', 'Privy wallet using your Google account',
+                       'Operator consent cannot be submitted right now.')
 assert 'AI structuring and tool execution preview are not connected yet.' in body
 assert {'sesskey', 'id'}.issubset(Inputs(body).values)
 assert teacher_only not in fetch(teacher, other_teacher_url)[3]

@@ -97,7 +97,14 @@ final class course_payment_display {
             'NOT_OBSERVED' => 'receiptnotobserved',
             'READBACK_UNAVAILABLE' => 'receiptreadunknown',
         };
-        return $roles + ['receiptstatus' => get_string($status, 'local_clearbridge')];
+        $decisionlabel = match ($decision['recordedConditionsStatus']) {
+            'MET' => 'nativedecisionmet',
+            'NOT_MET' => 'nativedecisionnotmet',
+            'NEEDS_SUPPLEMENT' => 'nativedecisionsupplement',
+            'UNKNOWN' => 'nativedecisionunknown',
+        };
+        return $roles + ['receiptstatus' => get_string($status, 'local_clearbridge'),
+            'decisionstatus' => get_string($decisionlabel, 'local_clearbridge')];
     }
 
     private static function ref(mixed $value): bool {

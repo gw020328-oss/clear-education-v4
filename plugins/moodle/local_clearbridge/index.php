@@ -18,8 +18,6 @@ $view = \local_clearbridge\course_refund::is_demo_course($course->id)
     ? \local_clearbridge\course_projection_page::data($course, true) : null;
 if ($view !== null) {
     $view['showconnection'] = true;
-    $view['connectionenabled'] = \local_clearbridge\course_login_authority::enable_page(
-        $PAGE, (int)$course->id, (int)$USER->id, 'PARTICIPANT');
 }
 echo $OUTPUT->header();
 if ($view !== null) {

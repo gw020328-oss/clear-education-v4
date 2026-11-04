@@ -1,0 +1,24 @@
+{{!
+    @template local_clearbridge/course_native_connection
+
+    Connection stages before the native wallet provider is configured.
+    Example context (json): {"student": true}
+}}
+<p>{{#str}} connectionstatusunavailable, local_clearbridge {{/str}}</p>
+<ol class="mb-0">
+    <li class="mb-3">
+        <h3 class="h5">{{#str}} nativewalletheading, local_clearbridge {{/str}}</h3>
+        <p class="mb-0">
+            {{#student}}{{#str}} nativestudentwallet, local_clearbridge {{/str}}{{/student}}
+            {{^student}}{{#str}} nativeteacherwallet, local_clearbridge {{/str}}{{/student}}
+        </p>
+    </li>
+    <li class="mb-3">
+        <h3 class="h5">{{#str}} nativenetworkheading, local_clearbridge {{/str}}</h3>
+        <p class="mb-0">{{#str}} nativenetworkunknown, local_clearbridge {{/str}}</p>
+    </li>
+    <li>
+        <h3 class="h5">{{#str}} nativeloginheading, local_clearbridge {{/str}}</h3>
+        <p class="mb-0">{{#str}} nativeloginunavailable, local_clearbridge {{/str}}</p>
+    </li>
+</ol>

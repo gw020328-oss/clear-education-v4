@@ -50,8 +50,6 @@ $view = $isdemocourse ? \local_clearbridge\course_projection_page::data($course,
 if ($view !== null) {
     // The mapping capability alone does not enroll a course operator.
     $view['showconnection'] = is_enrolled($context, null, '', true);
-    $view['connectionenabled'] = $view['showconnection'] && \local_clearbridge\course_login_authority::enable_page(
-        $PAGE, (int)$course->id, (int)$USER->id, 'COURSE_OPERATOR');
 }
 echo $OUTPUT->header();
 if ($view !== null) {
