@@ -207,10 +207,13 @@ export function aiComparePanel({
     ]);
   };
 
-  // 첫 제안. source 가 비어 있으면 빈 제안 그대로다.
-  if (text.trim() !== '') propose(text);
-
   const render = () => {
+    // 글자를 칠 때마다 다시 그리는데, 그러면 원문 칸이 새 요소로 바뀌어
+    // 커서가 날아간다. 치던 중이면 자리와 커서를 기억했다가 되돌려 준다.
+    const prevInput = typeof box.querySelector === 'function' ? box.querySelector('.fp-input') : null;
+    const keepCaret = prevInput && typeof document !== 'undefined' && document.activeElement === prevInput
+      ? { start: prevInput.selectionStart, end: prevInput.selectionEnd, top: prevInput.scrollTop }
+      : null;
     clear(box);
     const s = adapter.current;
     const banner = BANNER[s.state] ?? BANNER[STATE.ERROR];
@@ -509,9 +512,22 @@ export function aiComparePanel({
         }),
       ]) : []),
     ].filter(Boolean));
+
+    if (keepCaret) {
+      const nextInput = box.querySelector('.fp-input');
+      if (nextInput) {
+        nextInput.focus();
+        try { nextInput.setSelectionRange(keepCaret.start, keepCaret.end); } catch { /* 일부 브라우저 */ }
+        nextInput.scrollTop = keepCaret.top;
+      }
+    }
   };
 
   adapter.subscribe?.(render);
+  // 첫 제안은 **render 가 정의된 뒤에** 부른다. 제안자가 비동기(Gemini)면
+  // propose 가 곧바로 render() 를 부르는데, 위에 두면 아직 없는 함수를
+  // 불러 첫 화면이 깨진다 — 오규원 PR #160 리뷰 1번.
+  if (text.trim() !== '') propose(text);
   render();
   return { node: box, render };
 }

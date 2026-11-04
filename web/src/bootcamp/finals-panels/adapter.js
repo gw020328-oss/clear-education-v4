@@ -95,6 +95,10 @@ export function createAdapter({
     /** 입력이 바뀌었다. 이전 결과는 더 이상 이 입력의 것이 아니다 */
     markStale(nextInput) {
       input = nextInput;
+      // **진행 중인 요청도 여기서 무효가 된다.** 번호를 올려 두면 뒤늦게
+      // 도착한 이전 입력의 응답이 새 입력의 결과처럼 표시되지 않는다 —
+      // 오규원 PR #160 리뷰 2번.
+      issued += 1;
       // 아직 아무것도 못 받았으면 stale 이 아니라 그냥 idle 이다.
       if (payload === null && error === null) { settle(STATE.IDLE); return; }
       settle(STATE.STALE);

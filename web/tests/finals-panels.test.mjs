@@ -598,3 +598,36 @@ test('미지원 조건이 남은 채 구조화하면 결과가 성공이어도 �
     assert.ok(clean.node.textContent.includes('지원 문법 안에서 모두 쪼갰습니다'));
   } finally { restore(); }
 });
+
+// ── 오규원 PR #160 리뷰 1·2번 ─────────────────────────────────────────────
+
+test('초기 안내문이 있고 제안자가 비동기여도 첫 화면이 깨지지 않는다 (리뷰 1)', async () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+    const slow = { id: 'gemini', label: 'Gemini 제안 · 시험용', propose: async (t) => proposeReading(t) };
+    let panel;
+    assert.doesNotThrow(() => { panel = aiComparePanel({ adapter: a, source: PRESETS[0].source, proposer: slow }); });
+    assert.ok(panel.node.textContent.includes('제안을 만드는 중'), '비동기 제안 대기 표시가 없다');
+    await settle();
+    assert.ok(panel.node.textContent.includes('2개 조건을 찾았습니다'), '비동기 제안 결과가 안 들어왔다');
+  } finally { restore(); }
+});
+
+test('입력을 고치면 진행 중이던 요청의 늦은 응답은 버려진다 (리뷰 2)', async () => {
+  let release;
+  const slow = new Promise((r) => { release = r; });
+  const a = createAdapter({ mode: DATA_MODE.ACTUAL, run: async () => slow });
+  const p = a.request('첫 입력');
+  assert.equal(a.current.state, STATE.LOADING);
+  a.markStale('고친 입력');
+  assert.equal(a.current.state, STATE.IDLE, '아직 결과가 없으니 idle 이어야 한다');
+  release(COMBOS[PRESETS[0].source].payload);
+  await p;
+  assert.equal(a.current.payload, null, '늦은 응답이 새 입력의 결과처럼 들어왔다');
+  assert.equal(a.current.state, STATE.IDLE);
+  // 새 요청은 정상으로 돈다
+  const b = createAdapter({ mode: DATA_MODE.ACTUAL, run: async (i) => COMBOS[i]?.payload ?? null });
+  await b.request(PRESETS[0].source);
+  assert.equal(b.current.state, STATE.SUCCESS);
+});
