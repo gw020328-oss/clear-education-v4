@@ -86,6 +86,15 @@ export function createMoodleLoginIntents({
       && time().wall < actor.expiresAt, 'MOODLE_LOGIN_CLEAR_ACTOR');
     return actor.expiresAt;
   }
+  function requireCurrentOperation(q, started, grant, signal) {
+    const checked = time();
+    signal?.throwIfAborted();
+    check(checked.wall < q.expiresAtExclusive && checked.mono - started.mono < 5000,
+      'MOODLE_LOGIN_LEASE_EXPIRED');
+    check(checked.wall < Math.min(grant.expiresAtExclusive, runExpiresAtExclusive)
+      && checked.mono < runMonotonicEnd, 'MOODLE_LOGIN_EXPIRED');
+    return checked;
+  }
   const answer = (q, status, expiresAtExclusive = null, handback = null) => ({
     version: MOODLE_LOGIN_INTENT, requestRef: q.requestRef, status, expiresAtExclusive, handback,
   });
@@ -100,14 +109,19 @@ export function createMoodleLoginIntents({
       // A fresh, same-session cancellation wins even if finish advanced the
       // phase while authority was pending. Terminal phases never re-enter.
       if (operation === 'end') {
+        requireCurrentOperation(q, t, grant, signal);
         clearAttempt(a, 'ENDED');
         return answer(q, 'UNAVAILABLE');
       }
       if (a.phase !== before) return answer(q, 'UNAVAILABLE');
-      if (!live(a, time())) return answer(q, 'EXPIRED');
+      if (!live(a, requireCurrentOperation(q, t, grant, signal))) return answer(q, 'EXPIRED');
       let expiry = Math.min(grant.expiresAtExclusive, a.expiresAtExclusive);
       if (before === 'CONNECTED' || before === 'AUTHENTICATED_PENDING_MOODLE') {
         expiry = Math.min(expiry, clearExpiry(q.role, a.context));
+        // Authentication may advance either clock or cancel the operation.
+        // Recheck before exposing a handback, without extending the attempt.
+        const checked = requireCurrentOperation(q, t, grant, signal);
+        check(a.phase === before && live(a, checked) && checked.wall < expiry, 'MOODLE_LOGIN_EXPIRED');
         const pending = before === 'AUTHENTICATED_PENDING_MOODLE';
         return answer(q, pending ? 'RETURN_REQUIRED' : 'CONNECTED', expiry, pending ? a.handback : null);
       }
@@ -206,6 +220,11 @@ export function createMoodleLoginIntents({
         requireLive(a, signal);
         check(a.phase === 'FINISHING' && grant.identity === a.identity
           && clearExpiry(q.role, a.context) === expiry, 'MOODLE_LOGIN_AUTHORITY_CHANGED');
+        // Validate the original pending deadline before replacing it with the
+        // connected horizon. No authentication callback follows this fence.
+        const checked = requireCurrentOperation(q, t, grant, signal);
+        check(a.phase === 'FINISHING' && live(a, checked) && checked.wall < expiry,
+          'MOODLE_LOGIN_EXPIRED');
         a.expiresAtExclusive = Math.min(runExpiresAtExclusive, a.moodleHorizon, grant.expiresAtExclusive, expiry);
         a.monotonicEnd = Math.min(runMonotonicEnd, a.moodleMonotonicEnd, t.mono + (a.expiresAtExclusive - t.wall) * 1000);
         a.finishProofHash = a.handbackHash = a.handback = null;

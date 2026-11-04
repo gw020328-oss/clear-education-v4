@@ -13,7 +13,7 @@ const browserProof = input => proof('BROWSER', input);
 const finishProof = input => proof('FINISH', input);
 const context = role => ({wallet: wallets[role], token: 'fixture', chainId: 1, csrf: 'fixture'});
 function fixture() {
-  let wall = 1000, mono = 0, seq = 0, sessionRef = hex(70), revoked = false, loggedOut = false, verifyHook;
+  let wall = 1000, mono = 0, seq = 0, sessionRef = hex(70), revoked = false, loggedOut = false, verifyHook, authHook;
   const operations = [], registry = new Map();
   const owner = createMoodleLoginIntents({ownerRunId: 'run-demo', runExpiresAtExclusive: 1800, scope, wallets,
     now: () => wall, monotonic: () => mono,
@@ -29,6 +29,7 @@ function fixture() {
         subjectRef, actorRef: actorRefs[request.role], sessionRef, expiresAtExclusive: 1600};
     },
     authenticateClear(c) {
+      authHook?.();
       if (loggedOut) throw Error('CLEAR_SESSION_REVOKED');
       return {role: c.wallet === wallets.PARTICIPANT ? 'participant' : 'operator', wallet: c.wallet, expiresAt: 1700};
     },
@@ -56,7 +57,7 @@ function fixture() {
   }
   return {owner, operations, input, launch, advance(n){wall += n; mono += n * 1000;},
     drift(n){mono += n;}, replace(){sessionRef = hex(71);}, originalSession(){sessionRef = hex(70);}, revoke(){revoked = true;},
-    logout(){loggedOut = true;}, hold(fn){verifyHook = fn;}};
+    logout(){loggedOut = true;}, hold(fn){verifyHook = fn;}, onAuthenticate(fn){authHook = fn;}};
 }
 
 for (const [role, route] of [['PARTICIPANT', '/onboarding'], ['COURSE_OPERATOR', '/operator']]) {
@@ -243,3 +244,30 @@ test('a different Moodle session cannot end the original connection', async () =
   x.originalSession();
   assert.equal((await x.owner.status(a.next())).status, 'CONNECTED');
 });
+
+for (const operation of ['finish', 'status']) {
+  for (const expiry of ['request wall', 'request monotonic', 'pending', 'abort', 'close']) {
+    test(operation + ' rejects expiry or cancellation during its final CLEAR authentication: ' + expiry, async () => {
+      const x = fixture(), a = await x.launch();
+      await a.complete();
+      const {handback} = await x.owner.status(a.next());
+      if (expiry === 'pending') x.advance(59);
+      const controller = new AbortController();
+      let calls = 0;
+      x.onAuthenticate(() => {
+        if (++calls !== (operation === 'finish' ? 2 : 1)) return;
+        if (expiry === 'request wall') x.advance(5);
+        if (expiry === 'request monotonic') x.drift(5000);
+        if (expiry === 'pending') x.advance(1);
+        if (expiry === 'abort') controller.abort();
+        if (expiry === 'close') x.owner.close();
+      });
+      const request = operation === 'finish' ? a.next({handback, finishProof: a.finishProof}) : a.next();
+      const result = await x.owner[operation](request, {signal: controller.signal});
+      assert.equal(result.status, 'UNAVAILABLE');
+      assert.equal(result.handback, null);
+      x.onAuthenticate(undefined);
+      if (expiry !== 'close') assert.notEqual((await x.owner.status(a.next())).status, 'CONNECTED');
+    });
+  }
+}
