@@ -1,0 +1,35 @@
+{{!
+    @template local_clearbridge/course_refund
+
+    Course refund policy and integration availability. All strings are plain text.
+    Example context (json):
+    {"student": true, "conditions": [{"name": "Lecture completion", "source": "Moodle activity"}]}
+}}
+<section aria-labelledby="clearbridge-policy-heading" class="card mb-3">
+    <div class="card-body">
+        <h2 id="clearbridge-policy-heading">{{#str}} policyheading, local_clearbridge {{/str}}</h2>
+        <p>{{#str}} policyamount, local_clearbridge {{/str}}</p>
+        {{#student}}
+        <p>{{#str}} moodleenrolled, local_clearbridge {{/str}}</p>
+        <p>{{#str}} clearregistrationunavailable, local_clearbridge {{/str}}</p>
+        {{/student}}
+        <dl class="row mb-0">
+            {{#conditions}}
+            <dt class="col-sm-5">{{name}}</dt>
+            <dd class="col-sm-7">{{source}}</dd>
+            {{/conditions}}
+        </dl>
+        {{#student}}
+        <p class="mb-0">{{#str}} conditionstatusunavailable, local_clearbridge {{/str}}</p>
+        {{/student}}
+    </div>
+</section>
+{{#student}}
+<section aria-labelledby="clearbridge-decision-heading" class="card mb-3">
+    <div class="card-body">
+        <h2 id="clearbridge-decision-heading">{{#str}} decisionheading, local_clearbridge {{/str}}</h2>
+        <p>{{#str}} decisionunavailable, local_clearbridge {{/str}}</p>
+        <p class="mb-0">{{#str}} receiptunavailable, local_clearbridge {{/str}}</p>
+    </div>
+</section>
+{{/student}}
