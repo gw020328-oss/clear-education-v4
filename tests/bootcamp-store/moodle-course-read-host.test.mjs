@@ -365,3 +365,20 @@ test('worker attachment does not finish deferred mapping after cancellation or a
  const other=mountFixture();other.bind();other.options.resolveReadOptions=async()=>({ownerRunId:'other-run'});
  const wrapped=await attachNormalMoodleReadServer({context:other.context,options:other.options});await assert.rejects(other.callback(Object.freeze({})),/COURSE_READ_OWNER_RUN/);wrapped.close();
 });
+
+test('explicit native owner forwards only its pinned frontdoor to the existing frontend factory',async()=>{
+ const z=mountFixture(),native={courseId:2,routes:[],handleC(){}};let forwarded,configured;
+ const context={...z.context,createFrontend(args){forwarded=args;return {syntheticMounted:true};},configureMoodleLogin(args,mode){configured=mode;return {};}};
+ const create=z.options.createCourseReadServer;
+ z.options.createCourseReadServer=args=>{const s=create(args);s.on('request',()=>{});return s;};
+ z.options.login={native:true,proofKey:'b'.repeat(64),reverseKey:'c'.repeat(64),createCourseLoginHandler:()=>({handle(){},close(){}})};
+ z.options.nativeFrontDoor=native;
+ const wrapped=await attachNormalMoodleReadServer({context,options:z.options});
+ assert.deepEqual(configured,{native:true});assert.deepEqual(wrapped.createFrontend({tls:'synthetic',webRoot:'synthetic'}),{syntheticMounted:true});
+ assert.equal(forwarded.moodleNative,native);assert.equal(forwarded.webRoot,'synthetic');
+ assert.throws(()=>wrapped.createFrontend({moodleNative:{}}),/MOODLE_NATIVE_FRONTEND_CONFIG/);
+ wrapped.close();assert.throws(()=>wrapped.createFrontend({}),/COURSE_READ_CLOSED/);
+ const bad=mountFixture();bad.options.nativeFrontDoor=native;
+ await assert.rejects(attachNormalMoodleReadServer({context,options:bad.options}),/MOODLE_NATIVE_FRONTEND_CONFIG/);
+ assert.equal(bad.counts().listens,0);
+});

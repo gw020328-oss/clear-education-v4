@@ -121,3 +121,35 @@ test('native bootstrap cannot be enabled on separate origins', () => {
   assert.throws(() => createMoodleLoginBrowser({origin, moodleOrigin: 'http://127.0.0.1:18768', ownerRunId: 'fixture',
     intents: {}, now: () => 1000, native: true}), /MOODLE_LOGIN_NATIVE_ORIGIN/);
 });
+
+test('only the fixed A application templates accept whole bounded ID segments', async () => {
+ const {moodleNativeApplicationRoutes:fixed}=await import('../../tools/bootcamp/moodle-front-door.mjs');
+ const p=createMoodleFrontDoorPolicy({origin,routes:fixed});
+ for(const route of fixed){
+  for(const id of ['a','a'+'9'.repeat(63),'app-one.two']){
+   const path=route.path.replace(':applicationId',id).replace(':operationId',id);
+   for(const method of route.methods)assert.equal(p.classify(request(path,method)).path,route.path);
+  }
+  for(const id of ['','a'.repeat(65),'1bad','Upper','%61','a%2fb','a%2Fb','a%2eb','..','.','a\\b','a/b']){
+   const path=route.path.replace(':applicationId',id).replace(':operationId','op-1');
+   assert.throws(()=>p.classify(request(path,route.methods[0])),path);
+  }
+  const path=route.path.replace(':applicationId','app-a').replace(':operationId','op-a');
+  for(const suffix of ['/','/extra','?unexpected=1','?checkpoint=x&checkpoint=y'])assert.throws(()=>p.classify(request(path+suffix,route.methods[0])));
+ }
+ const path='/bootcamp/v3/applications/app-a/recipient-registration';
+ assert.equal(p.classify(request(path+'?checkpoint=block%3A1')).owner,'A');
+ assert.throws(()=>p.classify(request('/bootcamp/v3/applications/app-a/procedure?checkpoint=x')));
+});
+
+test('parameter inventory rejects arbitrary templates, owners, methods and ambiguous shadows at startup', async () => {
+ const {moodleNativeApplicationRoutes:fixed}=await import('../../tools/bootcamp/moodle-front-door.mjs');
+ const route=fixed[0],make=routes=>createMoodleFrontDoorPolicy({origin,routes});
+ for(const patch of [{owner:'C'},{methods:['POST']},{query:['token']},{path:route.path.replace(':applicationId',':other')},
+  {path:'/auth/:applicationId'},{path:'/assets/:applicationId'},{path:'/local/clearbridge/:applicationId'},
+  {slashArguments:true},{walletDocument:true},{idParameters:false}])assert.throws(()=>make([{...route,...patch}]));
+ assert.throws(()=>make([{owner:'A',path:'/auth/:applicationId',methods:['GET'],query:[]} ]));
+ const exact={owner:'A',path:'/bootcamp/v1/applications/app-a/operations/op-a',methods:['DELETE'],query:[]};
+ assert.throws(()=>make([route,exact]));assert.throws(()=>make([exact,route]));
+ assert.throws(()=>make([route,{owner:'A',path:'/bootcamp/v1/applications',methods:['GET'],query:[],slashArguments:true}]));
+});

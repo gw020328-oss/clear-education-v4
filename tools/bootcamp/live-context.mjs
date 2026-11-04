@@ -245,7 +245,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
      authentication:auth,wallets:{PARTICIPANT:participant.address,COURSE_OPERATOR:operator.address},now,signal:controller.signal,native});
     return moodleLogin.owner;
    },
-   createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
+   createFrontend({tls,webRoot,moodleNative=null}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,moodleNative,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
     ui.participant();ensure(!closed&&!failureState,'BC_LIVE_CONTEXT');
     sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,moodleFirst,

@@ -216,6 +216,8 @@ export async function attachNormalMoodleReadServer({context,options,signal}){
  try{
   signal?.throwIfAborted();
   check([context?.report,context?.close,context?.createMoodleCourseReadHost,options.createCourseReadServer,options.resolveReadOptions,options.listen].every(f=>typeof f==='function'),'COURSE_READ_OWNER_PORT');
+  if(options.nativeFrontDoor!==undefined)check(options.login?.native===true&&typeof context.createFrontend==='function'
+   &&options.nativeFrontDoor!==null,'MOODLE_NATIVE_FRONTEND_CONFIG');
   const origin=new URL(options.origin),run=context.report().runId;
   check(ref(run)&&origin.protocol==='https:'&&origin.origin===options.origin&&!origin.username&&!origin.password
    &&options.tls?.key&&options.tls?.cert&&typeof options.secret==='string'&&/^[a-f0-9]{64}$/.test(options.secret),'COURSE_READ_SERVER_CONFIG');
@@ -252,6 +254,10 @@ export async function attachNormalMoodleReadServer({context,options,signal}){
   }
   server.once('error',close);signal?.addEventListener('abort',close,{once:true});
   await options.listen(server,options.origin);signal?.throwIfAborted();check(!closed,'COURSE_READ_CLOSED');
-  return Object.freeze({...context,close});
+  return Object.freeze({...context,...(options.nativeFrontDoor===undefined?{}:{
+   createFrontend(args){check(!closed,'COURSE_READ_CLOSED');
+    check(args&&args.moodleNative===undefined,'MOODLE_NATIVE_FRONTEND_CONFIG');
+    return context.createFrontend({...args,moodleNative:options.nativeFrontDoor});},
+  }),close});
  }catch(error){close();throw error;}
 }

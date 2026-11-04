@@ -1,3 +1,7 @@
+import {createHash} from 'node:crypto';
+import {validateConfig} from '../../src/embedded-wallet/config.mjs';
+import {createMoodleFrontDoor,createMoodleFrontDoorPolicy,moodleNativeApplicationRoutes} from './moodle-front-door.mjs';
+import {createMoodleOAuthReturn} from './moodle-oauth-return.mjs';
 import {createProductRpc} from '../embedded-wallet/product-rpc.mjs';
 import {productWalletMount} from '../embedded-wallet/product-mount.mjs';
 import {existsSync,readFileSync} from 'node:fs';
@@ -8,7 +12,7 @@ import {P0_POLICY,p0PolicyHash} from '../../specs/bootcamp/p0-contract.mjs';
 import {NORMAL_HOST_VERSION} from '../../src/bootcamp/normal-client.mjs';
 
 // Mount the existing two handlers on one existing HTTPS server; no RPC, collector or signer is installed.
-export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot,normalUi=null,network=null,moodleLogin=null}){
+export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot,normalUi=null,network=null,moodleLogin=null,moodleNative=null}){
  if(normalUi&&sourceMode!=='REGISTERED_TEST_SOURCE')throw Error('BC_FRONTEND_CONFIG');
  if(moodleLogin&&!normalUi)throw Error('MOODLE_LOGIN_WALLET_MOUNT');
  if(authentication.origin!==store.origin||authentication.chainId!==chainId||!tls||!['SYNTHETIC_TEST_SOURCE','REGISTERED_TEST_SOURCE'].includes(sourceMode))throw Error('BC_FRONTEND_CONFIG');
@@ -22,12 +26,11 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
  if(assets.has('/clear-wallet-app.html')){
   if(!walletNetwork||!normalUi?.walletRuntime)throw Error('EMBEDDED_PRODUCT_RUNTIME');
   productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi.walletRuntime});
-  rpc=createProductRpc({origin:store.origin,upstream:walletNetwork.rpcUrls[0],port:Number(new URL(store.origin).port)+2});
-  walletNetwork=Object.freeze({...walletNetwork,rpcUrls:[rpc.url]});
-  server.once('close',()=>{void rpc.close();});
+  walletNetwork=Object.freeze({...walletNetwork,rpcUrls:['http://127.0.0.1:'+(Number(new URL(store.origin).port)+2)]});
  }
  const wallets=productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi?.walletRuntime,moodleLogin:!!moodleLogin});
  if(moodleLogin&&!wallets)throw Error('MOODLE_LOGIN_WALLET_MOUNT');
+ const native=prepareNative({options:moodleNative,assets,wallets,moodleLogin,origin:store.origin});
  const config=Object.freeze({version:NORMAL_HOST_VERSION,origin:store.origin,chainId,sourceMode,network:walletNetwork,phase:normalUi?'ACTIVE_LOCAL_TEST':'DISPLAY_ONLY',policyHash:p0PolicyHash(P0_POLICY),
   procedureHttpVersion:'clear-bootcamp-review-procedure.1',operationsHttpVersion:'clear-bootcamp-operations-projection.2',
   reviewConsentHttpImplemented:true,originalEvidenceHttpImplemented:false,executionReceiptHttpImplemented:typeof normalUi?.getPaymentReceipt==='function',
@@ -37,6 +40,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
   if(moodleLogin?.matches(req.url))return moodleLogin.handle(req,res);
   if(/^\/bootcamp(?:\/|\?|$)/.test(req.url)){
    const allowed=req.method==='GET'&&(/^\/bootcamp\/v[23]\/applications\/[a-z][a-z0-9.-]{0,63}\/(operations|procedure)$/.test(req.url)
+    ||/^\/bootcamp\/v1\/applications\/[a-z][a-z0-9.-]{0,63}\/operations\/[a-z][a-z0-9.-]{0,63}$/.test(req.url)
     ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/procedure-operations\/[a-z][a-z0-9.-]{0,63}$/.test(req.url)
     ||/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/(recipient-registration|review-chain)$/.test(req.url)
     // Only the encoded single checkpoint query reaches the existing strict parser.
@@ -63,10 +67,66 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
   if(['GET','HEAD'].includes(req.method)&&asset){res.writeHead(200,{'Content-Type':asset.type});res.end(req.method==='HEAD'?undefined:asset.body);return;}
   res.writeHead(404,{'Content-Type':'application/json'});res.end('{"error":"BC_NOT_FOUND"}');
  };
+ const dispatch=native?createMoodleFrontDoor({policy:native.policy,rpcUrl:native.config.rpcUrl,handleC:moodleNative.handleC,
+  handleA:async(req,res)=>{
+   if(native.oauthReturn(req,res))return;
+   if(req.url.startsWith('/clear-assets/')){
+    const asset=native.assets.get(req.url);
+    if(!asset){res.writeHead(404,{'Content-Type':'application/json'});res.end('{"error":"BC_NOT_FOUND"}');return;}
+    res.writeHead(200,{'Content-Type':asset.type});res.end(asset.body);return;
+   }
+   return handle(req,res);
+  }}):handle;
+ // Configuration, inventory and immutable bytes are validated before starting any RPC listener.
+ if(wallets){rpc=createProductRpc({origin:store.origin,upstream:network.rpcUrl,port:Number(expected.port)+2});
+  server.once('close',()=>{void rpc.close();});}
  server.on('request',(req,res)=>{
-  const task=Promise.resolve(handle(req,res));pending.add(task);
+  const task=Promise.resolve(dispatch(req,res));pending.add(task);
   task.catch(()=>{if(!res.headersSent){res.writeHead(500,{'Content-Type':'application/json'});res.end('{"error":"BC_INTERNAL"}');}else res.destroy();})
    .finally(()=>pending.delete(task));
  });
- return {server,config,ready:rpc?.ready,async drain(){await Promise.allSettled([...pending]);await rpc?.close();}};
+ return {server,config,...(native?{nativeWalletConfig:native.config}:{}),ready:rpc?.ready,async drain(){await Promise.allSettled([...pending]);await rpc?.close();}};
+}
+
+// The hash-pinned owner supplies only C's reviewed inventory/handler and fixed
+// course. A routes, public assets and OAuth return cannot be supplied by C or a request.
+function prepareNative({options,assets,wallets,moodleLogin,origin}){
+ const marker=assets.get('/clear-moodle-native.html');
+ const fail=ok=>{if(!ok)throw Error('MOODLE_NATIVE_FRONTEND_CONFIG');};
+ if(options===null){fail(!marker&&!assets.has('/clear-moodle-native-assets.html')&&moodleLogin?.native!==true);return null;}
+ fail(options&&Object.keys(options).sort().join(',')==='courseId,handleC,routes'
+  &&Number.isSafeInteger(options.courseId)&&options.courseId>0&&typeof options.handleC==='function'
+  &&Array.isArray(options.routes)&&options.routes.every(r=>r?.owner==='C')
+  &&moodleLogin?.native===true&&wallets&&!wallets.config.teamFrontend
+  &&marker?.body.toString()==='<meta name="clear-moodle-native" content="1">\n');
+ for(const path of ['/local/clearbridge/index.php','/local/clearbridge/configure.php'])
+  fail(options.routes.some(r=>r.path===path&&r.walletDocument===true&&r.methods.join(',')==='GET'));
+ fail(options.routes.some(r=>r.path==='/local/clearbridge/login_action.php'&&r.methods.join(',')==='POST'&&!r.slashArguments));
+ let inventory;try{inventory=JSON.parse(assets.get('/clear-moodle-native-assets.html')?.body.toString());}catch{fail(false);}
+ fail(inventory&&Object.keys(inventory).sort().join(',')==='assets,version'&&inventory.version===1
+  &&Array.isArray(inventory.assets)&&inventory.assets.length>=2&&inventory.assets.length<=512);
+ const publicAssets=new Map();
+ for(const entry of inventory.assets){
+  fail(entry&&Object.keys(entry).sort().join(',')==='path,sha256'
+   &&/^\/assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(entry.path)&&/^[a-f0-9]{64}$/.test(entry.sha256));
+  const asset=assets.get(entry.path),path=entry.path.replace('/assets/','/clear-assets/');
+  fail(asset&&!publicAssets.has(path)&&createHash('sha256').update(asset.body).digest('hex')===entry.sha256);
+  publicAssets.set(path,asset);
+ }
+ fail(publicAssets.has('/clear-assets/moodle-native.js')&&publicAssets.has('/clear-assets/moodle-oauth-return.js')
+  &&!publicAssets.has('/clear-assets/onboarding.js')&&!publicAssets.has('/clear-assets/operator.js'));
+ const config=validateConfig({...wallets.config,surface:'MOODLE_NATIVE',redirectUri:origin+'/local/clearbridge/wallet-return'});
+ const fixed=[
+  ...['nonce','verify','logout','moodle-complete'].map(name=>({owner:'A',path:'/auth/'+name,methods:['POST'],query:[]})),
+  {owner:'A',path:'/auth/session',methods:['GET'],query:[]},
+  ...['bootstrap','redeem'].map(name=>({owner:'A',path:'/moodle/connect/'+name,methods:['POST'],query:[]})),
+  {owner:'A',path:'/__dev/config',methods:['GET'],query:[]},
+  {owner:'A',path:'/bootcamp/v1/applications',methods:['POST'],query:[]},
+  {owner:'A',path:'/bootcamp/v4/session',methods:['GET'],query:[]},
+  {owner:'A',path:'/local/clearbridge/wallet-return',methods:['GET'],query:['privy_oauth_code','privy_oauth_state','privy_oauth_provider']},
+  {owner:'A',path:'/clear-assets',methods:['GET'],query:[],slashArguments:true},
+  ...moodleNativeApplicationRoutes,
+ ];
+ return {config,assets:publicAssets,policy:createMoodleFrontDoorPolicy({origin,routes:[...options.routes,...fixed]}),
+  oauthReturn:createMoodleOAuthReturn({config,courseId:options.courseId})};
 }

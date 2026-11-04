@@ -31,6 +31,7 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
     return value;
   }
   return Object.freeze({
+    native,
     matches: path => paths.includes(path),
     async handle(req, res) {
       protectLoginResponse(res);

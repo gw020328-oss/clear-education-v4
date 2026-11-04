@@ -334,3 +334,35 @@ body·plan·context·run·code·model·cost acknowledgment 결합을 다시 확�
 
 C는 기존 Moodle 영역에서 표시/입력만 연결한다. 별도 `/onboarding`/`operator` 이동,
 iframe 업무 화면, raw submitCommand orchestration, C의 자체 서명/body 생성은 필요 없다.
+
+### 표준 frontend의 명시적 native 조립
+
+`tools/embedded-wallet/build-product.mjs --moodle-native`는 새 불변 출력 디렉터리에
+native ESM과 고정 OAuth return ESM을 함께 빌드한다. 두 entry의 실제 esbuild 의존
+그래프만 `clear-moodle-native-assets.html` 내부 목록에 경로/SHA-256으로 기록한다.
+기존 owner의 `frontendAssetSha256` 전체 snapshot 검사는 계속 적용한다. `--team`과
+동시에 사용할 수 없고, 기본 빌드/기본 frontend 동작은 그대로다.
+
+hash-pinned Moodle owner의 `options.nativeFrontDoor`에는 정확히 `courseId`, `routes`,
+`handleC`를 제공한다. `routes`는 검토된 C inventory만, `handleC`는 기존에 고정한
+C transport만 받는다. `options.login.native`도 true여야 한다. attachment가 기존
+`context.createFrontend`에 `moodleNative`로 전달하며, 표준 HTTPS 서버의 단일
+request listener가 A/C를 분배한다. 이 설정만으로 사용자 실행을 활성화하지 않는다.
+
+frontend는 native marker, 필수 entry, 각 파일 해시, C native 문서 inventory와
+native login 모드가 맞지 않으면 RPC listener를 시작하기 전에 거부한다. 반환한
+`mounted.nativeWalletConfig`는 이번 실행의 공개 설정이며 C의 native wallet 설정과
+동일하게 설치해야 한다. C 문서 nonce는 요청마다 새로 발급한다. A/C 쿠키 분리와
+기존 인증·권한 검사는 계속 적용된다.
+
+A API inventory는 코드에 고정되어 있다. 기존 신청/operation ID 전체 세그먼트만
+`[a-z][a-z0-9.-]{0,63}`로 받으며 임의 regex/template은 받지 않는다. C/auth/OAuth/
+assets에 ID parameter를 사용할 수 없다. asset prefix 아래에서도 불변 목록의
+정확한 파일만 제공한다. `/onboarding`, `/operator`, `__embedded/config`, 이전
+Moodle popup과 내부 authority 경로는 이 공개 frontdoor에서 열리지 않는다.
+
+검증 범위: 표준 HTTPS frontend의 C 문서/nonce, 메모리 snapshot asset, 고정 OAuth
+return, 기존 v1 operation 조회와 다른 소유자 거부, 시작 설정 거부, parameter 경계,
+기존 non-native frontend 및 attachment 회귀. 실제 Google 로그인·증명·AI 호출·지급
+성공을 이 합성 검증으로 주장하지 않는다. C 설치 ZIP/실제 버튼 결합 결과는 별도로
+고정한 조립 근거에 기록한다.

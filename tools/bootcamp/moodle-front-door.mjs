@@ -9,6 +9,28 @@ const clearCookie = /^__Host-clear-(?:[a-z0-9-]+)$/;
 const token = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 const safePath = path => typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')
   && !/[\\%?#\x00-\x20\x7f]/.test(path) && !path.split('/').some(p => p === '.' || p === '..');
+// Parameter substitution is restricted to this closed list of existing A APIs.
+// The owner cannot supply a regex, another parameter name or a new template.
+const app = '/bootcamp/v', id = '[a-z][a-z0-9.-]{0,63}';
+export const moodleNativeApplicationRoutes = Object.freeze([
+  [1, 'operations/:operationId', ['GET']],
+  [2, 'operations', ['GET']],
+  [3, 'procedure', ['GET']],
+  [3, 'procedure-operations/:operationId', ['GET']],
+  [3, 'decision-evidence', ['GET']],
+  [3, 'recipient-registration', ['GET', 'POST'], ['checkpoint']],
+  [3, 'review-consents', ['POST']],
+  [4, 'source-session', ['POST']],
+  [4, 'source-signature', ['GET', 'POST']],
+  [4, 'reflection-approval', ['POST']],
+  [4, 'payment-receipt', ['GET']],
+].map(([version, tail, methods, query = []]) => Object.freeze({owner: 'A',
+  path: app + version + '/applications/:applicationId/' + tail,
+  methods: Object.freeze(methods), query: Object.freeze(query), idParameters: true})));
+const parameterMatch = (route, path) => route.idParameters && new RegExp('^' + route.path
+  .split('/').map(segment => [':applicationId', ':operationId'].includes(segment) ? id : segment).join('/') + '$').test(path);
+const matchesPath = (route, path) => route.path === path || parameterMatch(route, path)
+  || route.slashArguments && path.startsWith(route.path + '/');
 const headersFor = owner => new Set(owner === 'A'
   ? ['accept', 'content-type', 'content-length', 'origin', 'sec-fetch-site', 'sec-fetch-mode', 'sec-fetch-dest',
     'x-wallet', 'x-chain-id', 'x-csrf-token', 'idempotency-key', 'x-clear-command-ref', 'x-clear-command-binding']
@@ -20,11 +42,18 @@ export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 
   check(token.test(moodleCookieName) && !moodleCookieName.startsWith('__Host-clear-'));
   check(Array.isArray(routes) && routes.length > 0 && routes.length <= 256);
   const inventory = routes.map(route => {
-    check(route && Object.keys(route).every(k => ['owner', 'path', 'methods', 'query', 'slashArguments', 'walletDocument'].includes(k)));
+    check(route && Object.keys(route).every(k => ['owner', 'path', 'methods', 'query', 'slashArguments', 'walletDocument', 'idParameters'].includes(k)));
     check(['A', 'C'].includes(route.owner) && safePath(route.path));
     check(Array.isArray(route.methods) && route.methods.length > 0
       && route.methods.every(v => ['GET', 'POST', 'DELETE'].includes(v)));
     check(Array.isArray(route.query) && route.query.every(k => /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(k)));
+    check(route.idParameters === undefined || route.idParameters === true);
+    if (route.idParameters) {
+      const fixed = moodleNativeApplicationRoutes.find(r => r.path === route.path);
+      check(fixed && route.owner === 'A' && !route.slashArguments && !route.walletDocument
+        && JSON.stringify(route.methods) === JSON.stringify(fixed.methods)
+        && JSON.stringify(route.query) === JSON.stringify(fixed.query));
+    } else check(!route.path.includes(':'));
     check(route.slashArguments === undefined || typeof route.slashArguments === 'boolean');
     check(route.walletDocument === undefined || typeof route.walletDocument === 'boolean');
     check(!route.walletDocument || route.owner === 'C' && !route.slashArguments
@@ -41,6 +70,12 @@ export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 
     return Object.freeze({...route, methods: [...route.methods], query: [...route.query]});
   });
   check(new Set(inventory.map(r => r.path)).size === inventory.length);
+  // A concrete route may not shadow a parameter route, even on another method.
+  for (const a of inventory.filter(r => r.idParameters)) for (const b of inventory) {
+    if (a === b) continue;
+    check(!parameterMatch(a, b.path));
+    if (b.slashArguments) check(!a.path.startsWith(b.path + '/'));
+  }
 
   function classify(req) {
     check(req.socket?.encrypted === true && req.headers.host === url.host);
@@ -49,7 +84,7 @@ export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 
     check(typeof req.url === 'string' && req.url.length <= 8192 && !/[\x00-\x20\x7f\\#]/.test(req.url));
     const q = req.url.indexOf('?'), path = q < 0 ? req.url : req.url.slice(0, q);
     check(safePath(path));
-    const candidates = inventory.filter(r => r.path === path || r.slashArguments && path.startsWith(r.path + '/'));
+    const candidates = inventory.filter(r => matchesPath(r, path));
     check(candidates.length === 1);
     const route = candidates[0];
     check(route.methods.includes(req.method));
