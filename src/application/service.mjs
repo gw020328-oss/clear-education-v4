@@ -6,6 +6,8 @@ import { openStore } from './store.mjs';
 import { createFundingService } from './funding.mjs';
 import { createProofSessionService } from './proof-sessions.mjs';
 
+const bindingManifests = new WeakSet();
+export const isApplicationBindingManifest = value => bindingManifests.has(value);
 const secret = () => randomBytes(32).toString('hex');
 const digest = value => createHash('sha256').update(value).digest('hex');
 const hexSecret = value => requireRule(typeof value === 'string' && /^[0-9a-f]{64}$/.test(value), 'AUTH_REQUIRED');
@@ -21,7 +23,7 @@ export const applicationTermsTypes = freeze({ ApplicationTermsV4: [
   { name: 'nonce', type: 'bytes32' }, { name: 'signedAt', type: 'uint256' }, { name: 'expiresAt', type: 'uint256' },
 ] });
 
-export function createApplicationService({ directory, origin, chainId, instanceId, participants, operators, vaultReader, proofSourceSigner = null, now = () => Math.floor(Date.now() / 1000) }) {
+export function createApplicationService({ directory, origin, chainId, instanceId, participants, operators, vaultReader, proofSourceSigner = null, bindingAuthority = null, now = () => Math.floor(Date.now() / 1000) }) {
   const url = new URL(origin);
   requireRule(url.protocol === 'https:' && url.origin === origin && !url.username && !url.password, 'ORIGIN_CONFIG');
   requireRule(Number.isSafeInteger(chainId) && chainId > 0, 'CHAIN_CONFIG');
@@ -29,10 +31,21 @@ export function createApplicationService({ directory, origin, chainId, instanceI
   const participantSet = new Set(participants.map(address)), operatorSet = new Set(operators.map(address));
   requireRule(operatorSet.size > 0 && ![...operatorSet].some(a => participantSet.has(a)), 'ROLE_CONFIG');
   if (proofSourceSigner !== null) proofSourceSigner = address(proofSourceSigner);
-  const store = openStore(directory, { origin, chainId, instanceId, dataMode: 'SYNTHETIC', consentScope: 'APPLICATION_ONLY', proofSourceSigner });
+  if (bindingAuthority !== null) {
+    requireRule(bindingAuthority && typeof bindingAuthority === 'object' && !Array.isArray(bindingAuthority)
+      && Object.keys(bindingAuthority).every(k => ['revision', 'expectedRevision'].includes(k))
+      && Number.isSafeInteger(bindingAuthority.revision) && bindingAuthority.revision > 0
+      && (bindingAuthority.expectedRevision === undefined || Number.isSafeInteger(bindingAuthority.expectedRevision) && bindingAuthority.expectedRevision >= 0), 'AUTHORITY_CONFIG');
+  }
+  const roleConfig = freeze({ origin, chainId, instanceId, proofSourceSigner,
+    participants: [...participantSet].map(a => a.toLowerCase()).sort(), operators: [...operatorSet].map(a => a.toLowerCase()).sort() });
+  const authority = bindingAuthority === null ? null : { ...bindingAuthority, configHash: digest(canonical(roleConfig)) };
+  const store = openStore(directory, { origin, chainId, instanceId, dataMode: 'SYNTHETIC', consentScope: 'APPLICATION_ONLY', proofSourceSigner }, authority);
+  const bindingManifest = authority ? freeze({ ...store.bindingManifest, roleConfig }) : null;
+  if (bindingManifest) bindingManifests.add(bindingManifest);
   const { db, transaction } = store;
   const clock = () => { const t = now(); requireRule(Number.isSafeInteger(t) && t > 0 && t < 253402290000, 'CLOCK'); return t; };
-  const role = wallet => operatorSet.has(wallet) ? 'operator' : participantSet.has(wallet) ? 'participant' : null;
+  const role = wallet => { store.assertAuthority(); return operatorSet.has(wallet) ? 'operator' : participantSet.has(wallet) ? 'participant' : null; };
   const domain = freeze({ name: 'ClearApplicationTerms', version: '4', chainId, salt: instanceId });
   const message = (wallet, nonce, issuedAt, expiresAt) => `${url.host} wants you to sign in with your Ethereum account:\n${wallet}\n\nSign in to CLEAR. This is not acceptance of refund terms.\n\nURI: ${origin}/auth\nVersion: 1\nChain ID: ${chainId}\nNonce: ${nonce}\nIssued At: ${new Date(issuedAt * 1000).toISOString()}\nExpiration Time: ${new Date(expiresAt * 1000).toISOString()}\nRequest ID: ${instanceId.slice(2)}`;
   function session(context, write = false) {
@@ -90,6 +103,8 @@ export function createApplicationService({ directory, origin, chainId, instanceI
     ...funding.methods,
     ...createProofSessionService({ db, transaction, session, owned, clock, digest, secret, signatureShape, vaultReader, policy, proofSourceSigner }),
     origin, chainId, close: store.close,
+    // Internal only. No HTTP dispatch; authority activation is explicit at construction.
+    moodleBindingManifest() { store.assertAuthority(); requireRule(bindingManifest, 'AUTHORITY_REQUIRED'); return bindingManifest; },
     // Internal development workflow bridge. Never accept wallet/role from JSON.
     authorizeWorkflow(context, write = false) {
       const s = session(context, write); return { wallet: s.wallet, role: s.role };
