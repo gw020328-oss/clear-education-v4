@@ -10,7 +10,7 @@ function projectionConflict(error){
 }
 
 // Constructor-owned public identities. No wallet key, auto-login or server signing fallback.
-export function createNormalUiSession({authentication,participantWallet,operatorWallet,getApplication,now=()=>Math.floor(Date.now()/1000),diagnostics}){
+export function createNormalUiSession({authentication,participantWallet,operatorWallet,getApplication,now=()=>Math.floor(Date.now()/1000),diagnostics,commandScope=null,beforeBind=null}){
  check([participantWallet,operatorWallet].every(x=>typeof x==='string'&&/^0x[0-9a-f]{40}$/.test(x)&&x!=='0x'+'00'.repeat(20))&&participantWallet!==operatorWallet
   &&typeof getApplication==='function','BC_UI_IDENTITY_CONFIG');
  let bound=null,pending=null,used=false,closed=false;
@@ -53,7 +53,11 @@ export function createNormalUiSession({authentication,participantWallet,operator
    const s=actor(context,true);check(s.role==='participant','FORBIDDEN');const v=getApplication(context,applicationId);
    check(!bound&&v.status==='ACTIVE'&&v.applicationId===applicationId,'BC_UI_ALREADY_BOUND');
    check(pins&&pins.dataMode==='RECLAIM_SIGNED_RECORD','BC_UI_SIGNATURE_SOURCE');
-   bound={context:freeze({...context}),applicationId,participantId:v.participantId,policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,pins:freeze(structuredClone(pins))};
+   const candidate={context:freeze({...context}),applicationId,participantId:v.participantId,policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,pins:freeze(structuredClone(pins))};
+   actor(context,true);commandScope?.assert();
+   const result=beforeBind?.(freeze(candidate));
+   if(result&&typeof result.then==='function'){Promise.resolve(result).catch(()=>{});check(false,'BC_UI_ASYNC_BIND');}
+   commandScope?.assert();bound=candidate;
   },
   participant,
   async requestSignature(expected,message,{signal}={}){
@@ -84,7 +88,8 @@ export function createNormalUiSession({authentication,participantWallet,operator
    check(typeof body.signature==='string'&&/^0x[0-9a-fA-F]{130}$/.test(body.signature),'BC_UI_SIGNATURE');
    let signer;try{signer=verifyMessage(pending.message,body.signature).toLowerCase();}catch{}check(signer===participantWallet,'BC_UI_SIGNATURE');
    own(context,true);if(now()>=pending.expiresAt){cancel('BC_UI_SIGNATURE_EXPIRED');check(false,'BC_UI_SIGNATURE_EXPIRED');}
-   const p=pending;pending=null;clearTimeout(p.timer);clearInterval(p.authorityTimer);p.signal?.removeEventListener('abort',p.abort);p.message=null;observeSource(diagnostics,'SIGNATURE_ACCEPTANCE','COMPLETED');observeSource(diagnostics,'SIGNATURE_WAIT','COMPLETED');p.resolve(body.signature);
+   commandScope?.assert();
+   const p=pending;pending=null;clearTimeout(p.timer);clearInterval(p.authorityTimer);p.signal?.removeEventListener('abort',p.abort);p.message=null;p.resolve(body.signature);commandScope?.memoryCommitted();observeSource(diagnostics,'SIGNATURE_ACCEPTANCE','COMPLETED');observeSource(diagnostics,'SIGNATURE_WAIT','COMPLETED');
    return freeze({approvalId:p.id,requestHash:p.requestHash,status:'PARTICIPANT_SIGNATURE_ACCEPTED',paymentAuthorization:false});
    }catch(error){observeSource(diagnostics,'SIGNATURE_ACCEPTANCE','FAILED',error);throw error;}
   },

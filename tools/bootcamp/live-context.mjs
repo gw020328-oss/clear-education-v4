@@ -173,11 +173,15 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   const services={version:'clear-bootcamp-test-execution-port.1',runtimeId:m.environmentId,runtimePinHash:prepared.runtimeHash,authorizeService(c){ensure(c===serviceContext&&!closed&&!failureState&&now()<startedAt+1800,'BC_LIVE_SERVICE');return {serviceId:'normal-worker',runtimeId:m.environmentId,expiresAt:startedAt+1800};},reader:{async snapshot(){throw Error('BC_NORMAL_LEGACY_READER_DISABLED');}},envelope:{async lookup(){throw Error('BC_NORMAL_LEGACY_ENVELOPE_DISABLED');}}};
   connection=openDevelopmentConnection({environmentId:m.environmentId,sourceMode:'REGISTERED_TEST_SOURCE'});
   store=createBootcampStore({directory:join(directory,'store'),authentication:uiAuthentication,commandScope,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,onCollectionFailure:failure=>{report.collectionFailure=failure;write();},resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
-  ui=createNormalUiSession({authentication:uiAuthentication,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,getApplication:(c,a)=>store.getApplication(c,a),now,diagnostics});
+  ui=createNormalUiSession({authentication:uiAuthentication,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,getApplication:(c,a)=>store.getApplication(c,a),now,diagnostics,commandScope,
+   beforeBind(candidate){
+    atomicPrivate(join(directory,'context.json'),{runId,environmentId:m.environmentId,applicationId:candidate.applicationId,participantId:candidate.participantId,participantWallet:prepared.participantWallet,policyHash:m.policyHash,runtimeMappingHash,startedAt,sourceStatus:'NOT_COLLECTED',allocationAtoms:'0'},{exclusive:true,beforePublish:()=>commandScope.beforeFile()});
+    commandScope.afterFile();
+   }});
   const bindParticipant=(context,applicationId)=>{
    ensure(!closed&&!app,'BC_LIVE_SINGLE_APPLICATION');ui.bindParticipant(context,applicationId,pins);user=ui.participant();app=applicationId;participantId=store.getApplication(user,app).participantId;
-   Object.assign(report,{applicationId:app,participantId,recipient:prepared.participantWallet,sourceStatus:'NOT_COLLECTED',allocationAtoms:'0'});stage('AUTHENTICATED_EXTERNAL_UI_APPLICATION');
-   atomicPrivate(join(directory,'context.json'),{runId,environmentId:m.environmentId,applicationId:app,participantId,participantWallet:prepared.participantWallet,policyHash:m.policyHash,runtimeMappingHash,startedAt,sourceStatus:'NOT_COLLECTED',allocationAtoms:'0'},{exclusive:true});
+   commandScope.assert();Object.assign(report,{applicationId:app,participantId,recipient:prepared.participantWallet,sourceStatus:'NOT_COLLECTED',allocationAtoms:'0'});stage('AUTHENTICATED_EXTERNAL_UI_APPLICATION');
+   commandScope.filesCommitted();
    return {applicationId:app,status:'AUTHENTICATED_SOURCE_SESSION_BOUND',paymentAuthorization:false};
   };
   const paymentReceipt=createNormalReceiptReader({selfAttestor:mapping.selfAttestor??null,authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,

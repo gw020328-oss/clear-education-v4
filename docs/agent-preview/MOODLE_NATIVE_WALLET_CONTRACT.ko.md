@@ -12,7 +12,7 @@
 - 고정 ESM URL은 `/clear-assets/moodle-native.js`다. 빌드에서 생긴 의존 chunk도
   검토된 asset inventory에서만 제공한다. `mountCourseWallet({element,config,onState})`
   는 C DOM을 교체하지 않고 provider modal host만 추가한다.
-- 반환값은 `dispatch(command)`, 비동기 `destroy()`뿐이다. provider, 서명 함수,
+- 반환값은 `dispatch(command)`, `submitCommand(command)`, 비동기 `destroy()`다. provider, 서명 함수,
   CLEAR CSRF/token, 일반 URL request 함수를 C UI에 내주지 않는다.
 - mount, SDK 복귀, refresh는 지갑 선택/체인 변경/서명/finish를 자동 실행하지 않는다.
 
@@ -155,8 +155,9 @@ Moodle end UNKNOWN latch는 CLEAR revocation UNKNOWN과 별도다. 원 intentTar
 idempotency 검사를 유지한다. mount의 `submitCommand({method,path,body,idempotencyKey})`
 포트는 CONNECTED 원 controller에서만 사용할 수 있으며 provider/signer/세션 비밀을
 반환하지 않는다. 검증된 경로만 allowlist에 넣는다. 현재 후보는 POST application 생성,
-recipient-registration, review-consents, reflection-approval 네 종류다.
-source-session/source-signature/resume 및 전체 사용자 여정은 아직 연결 완료가 아니다.
+recipient-registration, review-consents, reflection-approval 및 아래 별도 검토 후보의
+source-session/source-signature다. resume은 허용하지 않는다. 전체 사용자 여정과
+Moodle 업무 버튼의 연결은 아직 완료가 아니다.
 
 - C browser form exact `{id,sesskey,operation:'authorize-command',commandHash}`.
 - C→A private POST `/v1/moodle/connect/authorize-command` exact
@@ -209,3 +210,61 @@ invalidation-only COMMIT는 성공 소비가 아닌 UNKNOWN으로 닫는다.
 C 6d8be7f834c3e0b693dc4723d19955ca713dcfda의 0.1.13 ZIP,
 D 4a6f9251e7864f604523d65611836cd898ba2a67. 이는 조립 입력이며 아직 실제 Moodle
 전체 연결이나 실제 인증/서명/지급 성공을 증명하는 목록이 아니다.
+
+## 원천 세션·서명 명령 확장 후보
+
+`source-session`의 첫 durable effect는 기존 exclusive `context.json`이다. 신청/지갑/
+원천 pins를 검증한 뒤 temp fsync/close 다음 실제 게시 직전에 같은 command fence를
+확인한다. 파일 게시 후에만 broker의 bound context를 설치하며, 이후 실패하면 기존
+파일과 UNKNOWN을 보존한다. 재발급으로 파일을 덮어쓰거나 연결 성공을 추정하지 않는다.
+
+`source-signature`는 기존 evidence 요청/approvalId/서명 소유자/기한/원 CLEAR 세션을
+검사한 후, pending waiter의 resolve 바로 전에 command fence를 확인한다. resolve와
+명령 소비 사이에 await·외부 callback을 두지 않는다. 진단 기록은 그 뒤에 수행한다.
+서버가 서명하지 않으며 지급 동의/결제 권한으로 재사용하지 않는다. 이 두 기존 API만
+idempotencyKey `null`을 허용한다. 다른 네 쓰기 명령은 기존 key가 필수다.
+
+## C 업무 버튼의 body·읽기·서명 계약
+
+아래 표의 body는 정확한 키 목록이다. C에 새 권한 판단이나 signer를 추가하지 않는다.
+`a`는 현재 신청 ID이고, 모든 값은 기존 A 응답과 명시 사용자 선택에서 나온다.
+직렬화 정본은 `src/bootcamp/normal-client.mjs`다.
+
+| POST 경로 | body | 역할·결합 |
+| --- | --- | --- |
+| `/bootcamp/v1/applications` | `{}` | 참가자 |
+| `/bootcamp/v4/applications/a/source-session` | `{}` | 원 참가자 세션, 기존 source pins |
+| `/bootcamp/v4/applications/a/source-signature` | `{approvalId,signature}` | 원 참가자, pending evidence 메시지 |
+| `/bootcamp/v3/applications/a/recipient-registration` | `{expectedRevision,expectedLedgerSequence,targetDecisionId,targetDecisionRevision,targetDecisionHash,registrationTargetId,signature}` | 참가자, 검토한 registration packet과 기존 typed signature |
+| `/bootcamp/v3/applications/a/review-consents` | `{expectedRevision,expectedLedgerSequence,targetDecisionId,targetDecisionRevision,targetDecisionHash,value}` | 양측 각각, `value=AGREE` 또는 `WITHDRAW`, 기존 CAS |
+| `/bootcamp/v4/applications/a/reflection-approval` | `{version,applicationId,bodySha256,planHash,contextHash,runBindingHash,codeHead,model,action,costAcknowledgment}` | 지정 비용 승인 지갑, exact input·실행·코드·모델 |
+
+회고 body의 version은 `clear-normal-ai-approval-action.1`, action은
+`APPROVE_THIS_INPUT_ONCE`다. 나머지는 `/bootcamp/v4/session`의 최신 `aiApproval`
+표시를 사용한다. 운영자라는 이유만으로 AI 전송·비용 승인이 생기지 않는다.
+
+기존 읽기 계약은 `/bootcamp/v4/session`, v3 `procedure`, v2 `operations`, v3
+`decision-evidence`, v4 `source-signature`, v3 `recipient-registration` 및 v4
+`payment-receipt`다. registration의 검토 후 재조회는 기존 checkpoint query를 유지한다.
+원천 서명은 `createApprovalSigner.source`, 수령 등록은
+`createProductSession.readRegistration/submitRegistration`의 현재 context 및
+서명 전후 재검사를 재사용해야 한다. raw signer/provider/CSRF/일반 request를 C에
+전달하지 않는다. 현재 mount의 공개 포트는 위 submitCommand까지이며, C가 사용할
+제한된 읽기·검토 후 서명 포트는 후속 연결 단위다. provider 승인창을 제외한 업무
+화면은 기존 Moodle DOM에서 렌더링한다.
+
+## 격리 실제 설치 결합 결과 (2026-11-05)
+
+A `3faceaa2bf922e3fad329177942571f3a2931398`, C `fabf01e3327d61413118a8bfa9713ea9ab0ad113`
+ZIP 0.1.15, D `4a6f9251e7864f604523d65611836cd898ba2a67`를 격리 Moodle 4.5에
+조립했다. 실제 사용자 실행과 별개이며, 새 Chrome 합성 프로필만 사용하고 정리했다.
+
+- 실제 A ESM·합성 EIP6963 provider로 운영자 선택→네트워크 확인→SIWE→Moodle
+  finish CONNECTED를 원 Moodle URL에서 확인했다. 실제 MetaMask 승인은 아니다.
+- 학생은 합성 Privy SDK adapter와 실제 A controller/login/session/HTTP/store,
+  실제 C PHP 세션/권한/atomic take 및 SQLite를 사용했다. Google 인증 검증은 아니다.
+- 정상 신청은 commands 1건. authorize 후 세션 종료·원 session row 교체·역할 해제·
+  원 5초 기한 만료는 각각 0건. 동시 동일 POST는 200/409와 1건, 응답 유실 후
+  같은 grant 재전송은 409로 차단되고 기존 1건을 보존했다.
+- 이 검사는 C 신청 버튼 대신 공개 submitCommand 포트를 호출했다. Moodle 전체
+  업무 버튼/실제 증빙/유료 AI/지급 완료를 의미하지 않는다.

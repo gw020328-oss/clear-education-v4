@@ -12,13 +12,16 @@ import {createNormalBootcampClient} from '../../src/bootcamp/normal-client.mjs';
 import {createNormalReceiptReader} from '../../src/bootcamp/normal-receipt.mjs';
 import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {requestMessage} from '../../src/hackerrank-evidence/request.mjs';
+import {commandFixture} from './moodle-command-fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
-async function fixture(t,{withReceipt=false,refreshProcedure=null}={}){
+async function fixture(t,{withReceipt=false,refreshProcedure=null,native=false}={}){
  const f=await procedureFixture(t),a=f.create(),v=f.store.getApplication(f.aliceContext,a),H=x=>p0Hash('OFFLINE-UI-HTTP',x);
  const pins={audience:'offline-ui-http',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
- const ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time});
+ const commands=native?await commandFixture({authentication:f.service,contexts:{PARTICIPANT:f.aliceContext,COURSE_OPERATOR:f.operatorContext}}):null;
+ if(commands)t.after(()=>commands.owner.close());
+ const ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time,commandScope:commands?.scope});
  let boundApp=null;
- const normalUi={getSession(c){const actor=ui.authorize(c);if(boundApp)f.store.getOperationsProjection(c,boundApp);const app=boundApp;return {version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app,policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},bindParticipant(c,id){ui.bindParticipant(c,id,pins);boundApp=id;return {applicationId:id,paymentAuthorization:false};},
+ const normalUi={commandScope:commands?.scope,getSession(c){const actor=ui.authorize(c);if(boundApp)f.store.getOperationsProjection(c,boundApp);const app=boundApp;return {version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app,policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},bindParticipant(c,id){ui.bindParticipant(c,id,pins);boundApp=id;commands?.scope.filesCommitted();return {applicationId:id,paymentAuthorization:false};},
   pendingSignature(c,id){assert.equal(id,a);return ui.pendingSignature(c);},submitSignature(c,id,b){assert.equal(id,a);return ui.submitSignature(c,b);}};
  if(withReceipt)normalUi.getPaymentReceipt=createNormalReceiptReader({authorize:(c,id)=>f.store.getOperationsProjection(c,id),readReport:()=>({applicationId:a,recipient:f.alice.address.toLowerCase(),runtimeMappingHash:v.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false,stages:[],completed:false}),readCanonicalClaim:async()=>assert.fail('no tx should be read'),runtimeHash:H('runtime'),runtimeMappingHash:v.runtimeMappingHash,policyHash:v.policyHash,recipient:f.alice.address.toLowerCase(),token:'0x'+'12'.repeat(20)});
  if(refreshProcedure)normalUi.refreshProcedure=(...args)=>refreshProcedure({f,a},...args);
@@ -35,7 +38,7 @@ async function fixture(t,{withReceipt=false,refreshProcedure=null}={}){
  }
  const expected={version:'clear-hackerrank-request.1',...pins,applicationId:a,participantId:v.participantId,participantWallet:f.alice.address.toLowerCase(),criterionId:'python-basic-certificate',policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,nonce:H('nonce'),issuedAt:START,expiresAt:START+240};delete expected.dataMode;
  const client=context=>createNormalBootcampClient({request:async(path,options)=>{const r=await raw(path.split('/').at(-1),{...options,context});if(r.status!==200)throw Error(r.body.error);return r.body;}});
- return {f,ui,a,raw,expected,client,mounted};
+ return {f,ui,a,raw,expected,client,mounted,commands};
 }
 test('HTTPS browser session binds the app, receives only its exact approval and returns its own signature',async t=>{
  const x=await fixture(t);assert.equal((await x.raw('source-session',{method:'POST',body:{}})).status,200);
@@ -129,4 +132,23 @@ test('session bootstrap uses authenticated role without caller-selected app or w
  assert.equal((await x.raw('/bootcamp/v4/session',{method:'POST',body:{}})).status,404);
  assert.equal((await x.raw('/bootcamp/v4/session',{headers:{cookie:''}})).status,401);
  assert.equal((await x.raw('/bootcamp/v4/session',{headers:{origin:'https://other.invalid'}})).status,403);
+});
+
+ test('native HTTP source commands require fresh exact grants and keep one-use signature semantics',async t=>{
+ const x=await fixture(t,{native:true});
+ const write=async(resource,body)=>{
+  const command={method:'POST',path:'/bootcamp/v4/applications/'+x.a+'/'+resource,body,idempotencyKey:null};
+  const grant=await x.commands.grant(command);
+  const send=()=>x.raw(resource,{method:'POST',body,headers:{'x-clear-command-ref':grant.requestRef,'x-clear-command-binding':grant.commandBinding}});
+  return {send};
+ };
+ assert.equal((await x.raw('source-session',{method:'POST',body:{}})).status,409);
+ const binding=await write('source-session',{});assert.equal((await binding.send()).status,200);
+ assert.equal((await binding.send()).status,409);
+ const pending=x.ui.requestSignature(x.expected,requestMessage(x.expected));pending.catch(()=>{});
+ const view=await x.raw('source-signature');assert.equal(view.status,200);
+ const signature=await x.f.alice.signMessage(view.body.message);
+ const signed=await write('source-signature',{approvalId:view.body.approvalId,signature});
+ assert.equal((await signed.send()).status,200);assert.equal(await pending,signature);
+ assert.equal((await signed.send()).status,409);
 });

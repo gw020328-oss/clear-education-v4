@@ -41,5 +41,6 @@ export function createMoodleCommandScope({enabled, reserve}) {
     beforeFile() { requests.getStore()?.reservation.assert(); },
     afterFile() { requests.getStore()?.reservation.durable(); },
     filesCommitted() { const r = requests.getStore()?.reservation; if(r) { r.assert(); r.committed(); } },
+    memoryCommitted() { requests.getStore()?.reservation.committed(); },
   });
 }
