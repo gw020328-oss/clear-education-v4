@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import http from 'node:http';
+import https from 'node:https';
 import {execFileSync} from 'node:child_process';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {randomBytes} from 'node:crypto';
@@ -29,10 +29,22 @@ const [protocol,{createPreviewContexts,PREVIEW_CONTEXT_VERSION},{studentFixture}
   load('src/agent-preview/moodle-binding/contract.mjs')
 ]);
 const sourceText='Moodle에서 첫 학습 활동을 마쳐야 한다';
-const paths=['/v1/preview/generate','/v1/preview/observation-result'];
+const paths=['/v1/preview/generate','/v1/preview/execute','/v1/preview/observation-result'];
 const bytes=value=>Buffer.from(JSON.stringify(value));
 
-test('exact B student context, signed draft and reviewed observation over isolated D HTTP',async t=>{
+function testTls(root) {
+  const openssl=(...args)=>execFileSync('openssl',args,{cwd:root,stdio:'pipe'});
+  openssl('req','-x509','-newkey','rsa:2048','-nodes','-days','1','-subj','/CN=CLEAR fixture CA',
+    '-keyout','ca.key','-out','ca.pem');
+  openssl('req','-newkey','rsa:2048','-nodes','-subj','/CN=127.0.0.1','-keyout','server.key','-out','server.csr');
+  writeFileSync(join(root,'server.ext'),'subjectAltName=IP:127.0.0.1\nextendedKeyUsage=serverAuth\n');
+  openssl('x509','-req','-in','server.csr','-CA','ca.pem','-CAkey','ca.key','-CAcreateserial',
+    '-days','1','-extfile','server.ext','-out','server.pem');
+  return Object.fromEntries([['ca','ca.pem'],['cert','server.pem'],['key','server.key']]
+    .map(([field,file])=>[field,readFileSync(join(root,file))]));
+}
+
+test('exact B student context, signed draft and reviewed observation over isolated D TLS',async t=>{
   const f=await studentFixture(t);
   const attempt=f.start(),preview=await f.preview(attempt);
   await f.complete(attempt,preview);
@@ -64,8 +76,6 @@ test('exact B student context, signed draft and reviewed observation over isolat
     return method==='countTokens'?{totalTokens:100}:{candidates:[{finishReason:'STOP',
       content:{role:'model',parts:[{text:JSON.stringify({clauses:rows})}]}}]};
   }};
-  const pins=paths.map(path=>({keyRef:'synthetic-key',sender:'B',receiver:'D',audience:'synthetic-preview',
-    deploymentEpoch:config.deploymentEpoch,path,origin:'https://127.0.0.1',maxClockSkewSeconds:0}));
   const key=randomBytes(32);
   const replay=label=>{
     const dir=join(f.root,label);
@@ -74,29 +84,52 @@ test('exact B student context, signed draft and reviewed observation over isolat
     t.after(()=>db.close());
     return db;
   };
-  const fixture=createOfflinePeer({protocol,pins,key,replay:replay('d-peer'),context:issued,targetRef:'page-manual',
-    timePolicy:f.config.timePolicy,config,store,modelTransport,clock});
+  const tls=testTls(f.root);
+  let encodeFailure=null, dClockOffset=0;
+  const dProtocol={...protocol,encodePeerResponse(args) {
+    if(args.pin.path===paths[1] && encodeFailure==='throw') throw Error('SYNTHETIC_ENCODE_FAILURE');
+    const wire=protocol.encodePeerResponse(args);
+    if(args.pin.path===paths[1] && encodeFailure==='late') dClockOffset=5;
+    return wire;
+  }};
+  const fixture=createOfflinePeer({tls,protocol:dProtocol,key,replay:replay('d-peer'),context:issued,targetRef:'page-manual',
+    timePolicy:f.config.timePolicy,config,store,modelTransport,clock:()=>clock()+dClockOffset});
   const port=await fixture.listen();
   t.after(()=>fixture.close());
+  const origin=`https://127.0.0.1:${port}`;
+  const pins=paths.map(path=>({keyRef:'synthetic-key',sender:'B',receiver:'D',audience:'synthetic-preview',
+    deploymentEpoch:config.deploymentEpoch,path,origin,maxClockSkewSeconds:0}));
+  assert.throws(()=>fixture.configurePins(pins.map(pin=>({...pin,origin:'https://127.0.0.1'}))),/FIXTURE_PIN/);
+  fixture.configurePins(pins);
   const requests=[];
-  const fetchImpl=(url,{method,body,headers,signal})=>new Promise((resolve,reject)=>{
-    const {origin,pathname}=new URL(url);
-    assert.equal(origin,'https://127.0.0.1');
-    assert.ok(paths.includes(pathname));
-    requests.push({pathname,body:Buffer.from(body)});
-    const req=http.request({host:'127.0.0.1',port,path:pathname,method,
-      headers:{...headers,host:'127.0.0.1'},signal},res=>{
-      const chunks=[];
-      res.on('data',chunk=>chunks.push(chunk));
-      res.on('error',reject);
-      res.on('end',()=>resolve(new Response(Buffer.concat(chunks),{status:res.statusCode,
-        headers:{'content-type':res.headers['content-type']}})));
+  function send(url,{method='POST',body,headers,signal},ca) {
+    const parsed=new URL(url);
+    assert.equal(parsed.origin,origin);
+    assert.ok(paths.includes(parsed.pathname));
+    return new Promise((resolve,reject)=>{
+      const req=https.request(parsed,{method,headers,signal,ca,rejectUnauthorized:true,agent:false},res=>{
+        const chunks=[];
+        res.on('data',chunk=>chunks.push(chunk));
+        res.on('error',reject);
+        res.on('end',()=>{
+          const response=new Response(Buffer.concat(chunks),{status:res.statusCode,
+            headers:{'content-type':res.headers['content-type']}});
+          Object.defineProperty(response,'url',{value:url});
+          resolve(response);
+        });
+      });
+      req.on('error',reject);
+      req.end(body);
     });
-    req.on('error',reject);
-    req.end(body);
-  });
+  }
+  const fetchImpl=(url,options)=>{
+    requests.push({url,body:Buffer.from(options.body)});
+    return send(url,options,tls.ca);
+  };
+  await assert.rejects(send(origin+paths[0],{body:bytes({}),headers:{'content-type':'application/json'}}),
+    error=>['SELF_SIGNED_CERT_IN_CHAIN','UNABLE_TO_VERIFY_LEAF_SIGNATURE'].includes(error.code));
   const bReplay=replay('b-peer');
-  const [generate,deliver]=pins.map(pin=>{
+  const [generate,execute,deliver]=pins.map(pin=>{
     const transport=protocol.createPeerTransport({pin,key,replay:bReplay,clock,activation:'OFFLINE_TEST',fetchImpl});
     t.after(()=>transport.close());
     return transport;
@@ -120,8 +153,25 @@ test('exact B student context, signed draft and reviewed observation over isolat
   const afterDraft={...correlation,proposalHash:input.proposalHash};
   await assert.rejects(contexts.observe(f.context,request),/CONTEXT_REVIEW_OR_BUSY/);
   await assert.rejects(deliver.query(bytes(triple),afterDraft),/PEER_HTTP/);
+  assert.throws(()=>contexts.review({},request));
   contexts.review(f.context,request);
-  fixture.confirmReview(review);
+  const reviewBody={draftId:review.draftId,proposalHash:review.proposalHash};
+  const unsigned=await fetchImpl(origin+paths[1],{body:bytes(reviewBody),headers:{'content-type':'application/json'}});
+  assert.equal(unsigned.status,422);
+  await assert.rejects(execute.query(bytes(reviewBody),correlation),/PEER_PROPOSAL_REQUIRED/);
+  await assert.rejects(execute.query(bytes({...reviewBody,draftId:'different-draft'}),afterDraft),/PEER_HTTP/);
+  await assert.rejects(execute.query(bytes(reviewBody),{...afterDraft,proposalHash:'f'.repeat(64)}),/PEER_HTTP/);
+  for(const failure of ['throw','late']) {
+    encodeFailure=failure;
+    await assert.rejects(execute.query(bytes(reviewBody),afterDraft),/PEER_HTTP/);
+    encodeFailure=null;
+    dClockOffset=0;
+    await assert.rejects(deliver.query(bytes(triple),afterDraft),/PEER_HTTP/);
+  }
+  const reviewed=JSON.parse(await execute.query(bytes(reviewBody),afterDraft));
+  assert.deepEqual(reviewed,{version:'clear-offline-review-receipt.1',...reviewBody,reviewed:true,paymentAllowed:false});
+  const repeatReview=requests.at(-1);
+  assert.equal((await fetchImpl(repeatReview.url,{body:repeatReview.body,headers:{'content-type':'application/json'}})).status,422);
   for(const [payload,correlation] of [
     [triple,{...afterDraft,proposalHash:'f'.repeat(64)}],
     [triple,{...afterDraft,contextRef:'wrong-context'}],
@@ -137,7 +187,7 @@ test('exact B student context, signed draft and reviewed observation over isolat
   assert.deepEqual(receipt,{version:'clear-offline-observation-receipt.1',observation:triple,
     provenance:'OFFLINE_TEST',automaticEligibility:false,paymentAllowed:false});
   const last=requests.at(-1);
-  const replayed=await fetchImpl('https://127.0.0.1'+last.pathname,{method:'POST',body:last.body,
+  const replayed=await fetchImpl(last.url,{method:'POST',body:last.body,
     headers:{'content-type':'application/json'}});
   assert.equal(replayed.status,422);
   assert.throws(()=>contexts.deliverObservation(f.context,review,observed,deliver),/CONTEXT_DELIVERY_EXPIRED/);

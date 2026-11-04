@@ -1,34 +1,29 @@
-import http from 'node:http';
+import https from 'node:https';
 import {createService} from '../service.mjs';
 import {check,exact} from '../config.mjs';
 import {strictJson} from '../../../src/hackerrank-evidence/values.mjs';
 
-const generate='/v1/preview/generate', result='/v1/preview/observation-result';
+const generate='/v1/preview/generate', review='/v1/preview/execute', result='/v1/preview/observation-result';
 const zero='0'.repeat(64);
 const parse=body=>strictJson(new TextDecoder('utf-8',{fatal:true}).decode(body),16384);
 
 // Single-context fixture. The B protocol, context and key enter through trusted
 // test composition. This file is excluded from the runtime artifact.
-export function createOfflinePeer({protocol,pins,key,replay,context,targetRef,timePolicy,config,store,modelTransport,clock}) {
+export function createOfflinePeer({tls,protocol,key,replay,context,targetRef,timePolicy,config,store,modelTransport,clock}) {
   context=Object.freeze(structuredClone(context));
   const service=createService({config,store,modelTransport,clock:()=>clock()*1000,offlinePeerContext:context});
-  const routes=new Map(pins.map(pin=>[pin.path,protocol.validatePeerPin(pin)]));
-  check(routes.size===2 && routes.has(generate) && routes.has(result),'FIXTURE_ROUTES');
-  for(const pin of routes.values()) {
-    check(pin.origin==='https://127.0.0.1' && pin.deploymentEpoch===config.deploymentEpoch
-      && pin.maxClockSkewSeconds===timePolicy.maxClockSkewSeconds,'FIXTURE_PIN');
-  }
+  let routes=null;
   let draft=null,reviewed=false,delivered=false,closed=false,active=false;
-  const server=http.createServer(async(req,res)=>{
+  const server=https.createServer(tls,async(req,res)=>{
     const controller=new AbortController();
     res.once('close',()=>controller.abort());
     let entered=false;
     try {
-      const pin=routes.get(req.url);
+      const pin=routes?.get(req.url);
       check(!closed && !active && pin && req.method==='POST','FIXTURE_ROUTE');
       active=true;
       entered=true;
-      check(req.socket.remoteAddress==='127.0.0.1' && req.headers.host==='127.0.0.1'
+      check(req.socket.remoteAddress==='127.0.0.1' && req.headers.host===new URL(pin.origin).host
         && req.headers['content-type']==='application/json' && !req.headers['content-encoding']
         && !req.headers.cookie && !req.headers.origin && !req.headers['sec-fetch-site'],'FIXTURE_HTTP');
       let size=0;
@@ -53,6 +48,12 @@ export function createOfflinePeer({protocol,pins,key,replay,context,targetRef,ti
         const generated=await service.generate({institutionId:config.institutionId,courseId:config.courseId,
           operatorId:config.operatorId,...value},{signal:controller.signal,offlinePeerDeadline:deadline});
         output=generated.peerDraft;
+      } else if(req.url===review) {
+        exact(value,['draftId','proposalHash']);
+        check(draft && !reviewed && meta.proposalHash!==zero && meta.proposalHash===draft.proposalHash
+          && value.proposalHash===draft.proposalHash && value.draftId===draft.draftId,'FIXTURE_REVIEW');
+        output={version:'clear-offline-review-receipt.1',draftId:draft.draftId,
+          proposalHash:draft.proposalHash,reviewed:true,paymentAllowed:false};
       } else {
         check(draft && reviewed && !delivered && meta.proposalHash===draft.proposalHash,'FIXTURE_REVIEW');
         exact(value,['targetRef','status','observedAt']);
@@ -68,7 +69,11 @@ export function createOfflinePeer({protocol,pins,key,replay,context,targetRef,ti
       check(!closed && clock()<meta.expiresAtExclusive-pin.maxClockSkewSeconds,'FIXTURE_EXPIRED');
       const response=protocol.encodePeerResponse({request,body:Buffer.from(JSON.stringify(output)),key,pin,
         now:clock(),expiresAtExclusive:Math.min(context.expiresAtExclusive,observationExpiry)});
+      // No state transition on expired requests or response-encoding failure.
+      controller.signal.throwIfAborted();
+      check(!closed && clock()<meta.expiresAtExclusive-pin.maxClockSkewSeconds,'FIXTURE_EXPIRED');
       if(req.url===generate) draft=output.input;
+      else if(req.url===review) reviewed=true;
       else delivered=true;
       res.writeHead(200,{'content-type':'application/json','cache-control':'no-store','connection':'close'}).end(response);
     } catch {
@@ -84,12 +89,18 @@ export function createOfflinePeer({protocol,pins,key,replay,context,targetRef,ti
       await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
       return server.address().port;
     },
-    // Harness calls this only after B has accepted the AST and reviewed it under
-    // the current authenticated student. No review route is exposed here.
-    confirmReview({previewContextRef,draftId,proposalHash}) {
-      check(!closed && clock()<context.expiresAtExclusive && draft && previewContextRef===context.previewContextRef
-        && draftId===draft.draftId && proposalHash===draft.proposalHash,'FIXTURE_REVIEW');
-      reviewed=true;
+    configurePins(pins) {
+      const address=server.address();
+      check(!closed && !routes && address?.address==='127.0.0.1','FIXTURE_PIN');
+      const fixed=new Map(pins.map(pin=>[pin.path,protocol.validatePeerPin(pin)]));
+      check(pins.length===3 && fixed.size===3 && [generate,review,result].every(path=>fixed.has(path)),'FIXTURE_ROUTES');
+      const identity=fixed.get(generate);
+      for(const pin of fixed.values()) {
+        check(pin.origin===`https://127.0.0.1:${address.port}` && pin.deploymentEpoch===config.deploymentEpoch
+          && pin.maxClockSkewSeconds===timePolicy.maxClockSkewSeconds
+          && ['sender','receiver','audience','keyRef'].every(field=>pin[field]===identity[field]),'FIXTURE_PIN');
+      }
+      routes=fixed;
     },
     close() {
       closed=true;
