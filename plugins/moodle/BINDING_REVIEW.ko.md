@@ -31,3 +31,5 @@ lib/dml/pgsql_native_moodle_database.php(1667)의 기본 delegated transaction�
 tests/isolated_probe.php는 CLI, CLEAR_ISOLATED_PROBE=1, 합성 site shortname=clear가 필요하며 새 임시 DB에서만 실행한다. 합성 교사/학생·강좌를 생성하고 등록 정지/복구/재등록, 허용/타 모듈/중복/미설정 mapping, 독립 PostgreSQL 연결의 snapshot 차이를 확인한다. 이전 ZIP 설치·lint·8개 권한 결과를 재사용한다. HTTP 폼 sesskey 거부·실제 세션 계정 전환·cookie 없는 confirmation lookup은 구현 이후 시험 관문이다.
 
 실험에서 Moodle delegated transaction은 이미 SAVEPOINT를 만들기 때문에 그 뒤 SET TRANSACTION ISOLATION LEVEL 변경이 DB 오류로 거부됐다. 별도 native PostgreSQL 연결의 snapshot만 검증했다. 기존 Moodle 권한 helper를 그 연결로 옮겨 일관되게 평가하는 구현은 미검증이며 B 관문으로 남는다.
+
+후속 결정은 [권한 epoch 및 최소 지원 결정안](AUTHORITY_DECISION.ko.md)을 따른다. 합성 PostgreSQL 경쟁 7개를 추가했으며, Moodle 전체 권한 평가 및 운영 연결 승인 관문은 유지한다.
