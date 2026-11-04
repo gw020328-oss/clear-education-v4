@@ -7,6 +7,7 @@ const sha=p=>createHash('sha256').update(read(p)).digest('hex');
 const historicalBudgetSha=p=>{const h=sha(p);return p==='.github/workflows/hackathon-e5b.yml'&&h==='a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef'?'bca8d128e698939a1082e0c4d6372631682cee2a1a8c873906f3a7f56baa408a':h;};
 const check=(ok,code)=>{if(!ok)throw Error(code);};
 const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const tableSha=table=>createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.keys(table).sort().map(p=>[p,table[p]])))).digest('hex');
 export const V9_PATH='specs/bootcamp/hackathon-test-memory-source-intake-v9.json';
 export const V9_SHA='19261eca5c089bf8ae68626bfdfff87b935bb7c4b0a9c783bb52709c9a2870fc';
 export const V9_SOURCE_HEAD='26d451701186632ba7a37729b9937f28ce3a1f83';
@@ -504,11 +505,16 @@ export function consumeReviewedV62Sources(v6){
  for(const [p,h]of Object.entries(fenceClock.sourceAdditions)){check(!Object.hasOwn(sources,p)&&!Object.hasOwn(wallet,p),'STAGE_RUNTIME_FENCE_CLOCK_SCOPE');sources[p]=h;}
 
  const integrationPath='specs/bootcamp/hackathon-test-preview-fence-integration-v1.json';
- check(sha(integrationPath)==='94d5f4f5d15ea3baf6f1c00928d597087e7b31a7544e4c6d0f5037ee0c5c8ee9','STAGE_INTEGRATION_PIN');
+ check(sha(integrationPath)==='f4a88b455048668fd4109f7a1ccb2ade2d22c50f27fc0c579560e10737990d47','STAGE_INTEGRATION_PIN');
  const integration=JSON.parse(read(integrationPath));
- check(eq(integration,{"version":"clear-preview-fence-integration.1","previewHead":"36b9d9bbccec3455899e16cdb53022628ae445cf","fenceHead":"1cce9f192de2b34076686ba456085f1a015b0013","preservedGuards":{"src/hackathon-test-vault/reviewed-source-v60.mjs":"2180a13829dd0902dbb57a8d053004f3abda50d1c904f8d67a3d98bda512e5f9","src/hackathon-test-vault/reviewed-source-v61.mjs":"25a5de00062b5ba8450b50cafecbcbe9b19cf1e4b5b784b7266df32198513e6d"},"sourceCount":211}),'STAGE_INTEGRATION_SCOPE');
+ check(eq(integration,{"version":"clear-preview-fence-integration.1","previewHead":"36b9d9bbccec3455899e16cdb53022628ae445cf","fenceHead":"1cce9f192de2b34076686ba456085f1a015b0013","preservedGuards":{"src/hackathon-test-vault/reviewed-source-v60.mjs":"2180a13829dd0902dbb57a8d053004f3abda50d1c904f8d67a3d98bda512e5f9","src/hackathon-test-vault/reviewed-source-v61.mjs":"25a5de00062b5ba8450b50cafecbcbe9b19cf1e4b5b784b7266df32198513e6d"},"sourceCount":211,"candidateHead":"c171b3d9e4370a0b3dece805fe92ca9d0e63c5a8","candidateScope":{"kind":"EXACT_SOURCE_TABLES_AND_LISTED_ARTIFACTS","sourceManifestSha256":"c456174018e88544c129264d1d5f25810caef13eb61bcd57332b9348d44439c0","productWalletSourceCount":24,"productWalletManifestSha256":"cc33bd45389c56edd893c5f5308cc831e15b2eb2db4e01e793cbefea94adad7c","wholeRepository":false,"additionalArtifacts":{"src/hackathon-test-vault/reviewed-source-v60.mjs":"2180a13829dd0902dbb57a8d053004f3abda50d1c904f8d67a3d98bda512e5f9","src/hackathon-test-vault/reviewed-source-v61.mjs":"25a5de00062b5ba8450b50cafecbcbe9b19cf1e4b5b784b7266df32198513e6d","specs/bootcamp/hackathon-test-operator-condition-preview-source-delta-v1.json":"5efe3a8280e4b7c988ec4ea8bc61da1be3db9b35018211edfd1696d923a8521f","specs/bootcamp/hackathon-test-runtime-fence-clock-source-delta-v1.json":"1e6eb52a7a1fac38239d5cdeb3547e5f518e231293b81872ca0903880ab98e22",".github/workflows/hackathon-e5b.yml":"a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef"}}}),'STAGE_INTEGRATION_SCOPE');
  for(const [p,h]of Object.entries(integration.preservedGuards))check(sha(p)===h,'STAGE_INTEGRATION_PIN');
- check(Object.keys(sources).length===integration.sourceCount,'STAGE_INTEGRATION_SCOPE');
+ // This predecessor commit names only these exact tables and listed artifacts,
+ // not the evolving intake guard/consumer or the whole repository tree.
+ const scope=integration.candidateScope;
+ check(Object.keys(sources).length===integration.sourceCount&&Object.keys(wallet).length===scope.productWalletSourceCount
+  &&tableSha(sources)===scope.sourceManifestSha256&&tableSha(wallet)===scope.productWalletManifestSha256,'STAGE_INTEGRATION_PROVENANCE');
+ for(const [p,h]of Object.entries(scope.additionalArtifacts))check(sha(p)===h,'STAGE_INTEGRATION_PROVENANCE');
  for(const [table,code]of [[sources,'STAGE_SOURCE_PIN'],[wallet,'STAGE_PRODUCT_WALLET_PIN']])for(const [p,h]of Object.entries(table))check(sha(p)===h,code);
- return {sources,currentSourceCandidateHead:preview.candidateHead};
+ return {sources,productWalletSources:wallet,currentSourceCandidateHead:integration.candidateHead,currentSourceCandidateScope:scope};
 }
