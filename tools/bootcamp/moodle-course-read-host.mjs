@@ -1,6 +1,8 @@
 import {createHash} from 'node:crypto';
 import {canonical,exactKeys,freeze,requireRule as check} from '../../src/policy/values.mjs';
 import {createMoodlePaymentReader} from '../../src/bootcamp/moodle-payment-projection.mjs';
+import {join} from 'node:path';
+import {readPrivate} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
 
 export const COURSE_READ_PATH='/v1/moodle/course/read';
 export const COURSE_READ_REQUEST='clear-moodle-course-read-request.1';
@@ -132,4 +134,51 @@ export function createMoodleCourseReadServer({host,tls,origin,secret,createCours
  // eight-field wire response. A supplies the independently checked four-field
  // callback, a fresh run/key and TLS. No same-host proxy/default key here.
  return createCourseReadServer({origin,ownerRunId:host.ownerRunId,secret,readCourse:host.readCourse,tls,clock,monotonic});
+}
+
+// Explicit optional owner code in this one-run private host directory. Import
+// exactly the hash-checked bytes, not a path that could change after validation.
+// The module must use absolute imports for separately pinned dependencies.
+export async function loadNormalMoodleReadOwner({directory,sha256}){
+ if(sha256===undefined)return null;
+ check(typeof sha256==='string'&&/^[a-f0-9]{64}$/.test(sha256),'COURSE_READ_OWNER_PIN');
+ const source=readPrivate(join(directory,'moodle-read-owner.mjs'));
+ check(Buffer.byteLength(source)<=65536&&createHash('sha256').update(source).digest('hex')===sha256,'COURSE_READ_OWNER_PIN');
+ const module=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+ check(typeof module.createMoodleReadOptions==='function','COURSE_READ_OWNER_PORT');
+ return module.createMoodleReadOptions;
+}
+
+// Startup attaches only an explicitly supplied owner configuration. Application
+// mapping becomes available after the existing UI binds the participant. A new
+// authenticated request may then construct the one fixed reader; no polling,
+// automatic retries, fabricated mapping, new auth flow or payment call is added.
+export async function attachNormalMoodleReadServer({context,options,signal}){
+ if(options===null||options===undefined)return context;
+ let server,closed=false,creating=null,readHost=null;
+ const close=()=>{if(closed)return;closed=true;signal?.removeEventListener('abort',close);
+  try{server?.close();server?.closeAllConnections?.();}finally{context.close();}};
+ try{
+  signal?.throwIfAborted();
+  check([context?.report,context?.close,context?.createMoodleCourseReadHost,options.createCourseReadServer,options.resolveReadOptions,options.listen].every(f=>typeof f==='function'),'COURSE_READ_OWNER_PORT');
+  const origin=new URL(options.origin),run=context.report().runId;
+  check(ref(run)&&origin.protocol==='https:'&&origin.origin===options.origin&&!origin.username&&!origin.password
+   &&options.tls?.key&&options.tls?.cert&&typeof options.secret==='string'&&/^[a-f0-9]{64}$/.test(options.secret),'COURSE_READ_SERVER_CONFIG');
+  const readCourse=async(handle,{signal:requestSignal}={})=>{
+   const combined=AbortSignal.any([signal,requestSignal].filter(Boolean));
+   combined.throwIfAborted();check(!closed,'COURSE_READ_CLOSED');
+   if(!readHost){
+    creating??=(async()=>{const config=await options.resolveReadOptions({report:context.report(),signal:combined});
+     combined.throwIfAborted();check(!closed&&config?.ownerRunId===run,'COURSE_READ_OWNER_RUN');
+     return context.createMoodleCourseReadHost(config);})();
+    try{readHost=await creating;}catch(error){creating=null;throw error;}
+   }
+   combined.throwIfAborted();check(!closed,'COURSE_READ_CLOSED');return readHost.readCourse(handle,{signal:combined});
+  };
+  server=options.createCourseReadServer({origin:options.origin,ownerRunId:run,secret:options.secret,tls:options.tls,readCourse,
+   ...(options.clock===undefined?{}:{clock:options.clock}),...(options.monotonic===undefined?{}:{monotonic:options.monotonic})});
+  server.once('error',close);signal?.addEventListener('abort',close,{once:true});
+  await options.listen(server,options.origin);signal?.throwIfAborted();check(!closed,'COURSE_READ_CLOSED');
+  return Object.freeze({...context,close});
+ }catch(error){close();throw error;}
 }

@@ -124,3 +124,12 @@ A 내부 `read(handle,request)`는 정확히 `{version:'clear-moodle-course-read
 `readBindingCurrentness(해당역할CLEARcontext,{applicationId:Bhex,bindingRef,bindingRevision},{role,actorRef,authorityRef,authorityEpoch,signal})`는 정당한 B runtime/trustedTime와 그 사람의 현재 열람 권한을 사용하는 필수 포트다. B의 `clear-moodle-binding-currentness.1` exact DTO를 받으며 설치/강좌/subject/신청/ref/revision과 현재 checkedAt·만료를 확인한다. 학생 세션을 교사에게 빌려 주거나 현재 B의 합성 입력을 실제 currentness로 대체하는 fallback은 없다. 실제 운영자용 currentness 공급이 없는 동안 교사 조회는 차단된다.
 
 추가 조립 집중 검사23개 통과: 신규21개(두 역할 독립 세션·C actor/subject/설치세대·B 현재 binding/만료·누락 runtime·로그아웃·종료 및 no-write), 기존 startup 차단2개. 이전 adapter37개와 B/A/D HTTPS3개는 재사용했다. 아직 실제 C verifier/B runtime 주입 또는 사용자 로그인·증명·AI·지급은 수행하지 않았다.
+
+
+## 명시적 worker 연결 옵션
+
+`normal-host-worker.mjs`의 기존 `ports.open`은 private host config의 `moodleReadOwnerSha256`가 **없으면 기존 context를 그대로 반환**한다. 명시한 경우에만 해당 run 디렉터리의 owner 전용 `moodle-read-owner.mjs`를 읽고 SHA-256을 대조한 정확한 bytes를 import한다. 모듈은 `createMoodleReadOptions({directory,report,signal})`를 제공하며, 별도로 핀한 의존성은 절대 import 경로를 사용한다. 공용 config/auth 파일이나 기본 옵션·발행기·키는 추가하지 않았다. 실제 공급원이 준비되지 않은 현재 이 설정/모듈을 생성해 활성화하지 않는다.
+
+옵션은 `origin,secret,tls,createCourseReadServer,resolveReadOptions,listen`과 선택적 `clock,monotonic`이다. D의 검토된 factory와 per-run HMAC/TLS를 그대로 사용한다. `listen(server,origin)`은 소유자가 승인한 private 바인딩만 수행한다. `resolveReadOptions({report,signal})`는 실제 신청이 bound된 후 위 `context.createMoodleCourseReadHost` 옵션을 서버 정본으로 만든다. 최초 authenticated 요청에서 한 번 조립하며, mapping이 아직 없거나 필수 authority 공급이 없으면 그 요청을 실패시킨다. 자동 polling/retry를 만들지 않는다. 다른 새 요청이 들어와 구성에 성공한 뒤에도 모든 상태 조회는 기존 fresh verifier/currentness 검사를 반복한다.
+
+정상 context 종료·abort·listener/server 오류에서 해당 읽기 서버와 context를 함께 닫는다. deferred mapping이 취소 후 완료되더라도 host를 만들지 않는다. 신규 worker 접점 집중4개 통과(기본 미연결/정확한 private source pin·변조 거부, mapping 준비 전 차단·단일 조립, 종료/오류/abort, 잘못된 run). 실제 worker 활성화·로그인·AI·지급 검사는 아니며 앞선23/37+3은 재사용했다.

@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,writeFileSync,symlinkSync} from 'node:fs';
+import {EventEmitter} from 'node:events';
 import {join} from 'node:path';
 import {createServer} from 'node:https';
-import {randomBytes} from 'node:crypto';
+import {randomBytes,createHash} from 'node:crypto';
 import {paymentFixture} from './moodle-payment-fixture.mjs';
 import {START} from './procedure-fixture.mjs';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
-import {createMoodleCourseReadHost,createMoodleCourseReadServer,COURSE_READ_REQUEST,COURSE_READ_PATH} from '../../tools/bootcamp/moodle-course-read-host.mjs';
+import {createMoodleCourseReadHost,createMoodleCourseReadServer,loadNormalMoodleReadOwner,attachNormalMoodleReadServer,COURSE_READ_REQUEST,COURSE_READ_PATH} from '../../tools/bootcamp/moodle-course-read-host.mjs';
 import {createNormalMoodleReadBoundary} from '../../tools/bootcamp/live-context.mjs';
 
 // Owner-port double for adapter tests, not a Moodle authority implementation.
@@ -183,4 +184,50 @@ test('live boundary requires explicit verifier/currentness, distinct actor mappi
  assert.throws(()=>z.boundary.createHost({...z.config,ownerRunId:'other-run'}),/BC_MOODLE_READ_RUN/);
  assert.throws(()=>z.boundary.createHost({...z.config,mapping:{...z.x.mapping,recipient:z.x.mapping.operatorWallet}}),/BC_MOODLE_READ_MAPPING/);
  assert.throws(()=>z.boundary.observeSession(z.x.f.bobContext),/BC_MOODLE_READ_ACTOR/);
+});
+
+test('worker owner module is absent by default and only exact private hash-checked bytes load',async t=>{
+ const z=await fixture(t),directory=join(z.x.f.directory,'private-owner');mkdirSync(directory,{mode:0o700});
+ assert.equal(await loadNormalMoodleReadOwner({directory}),null);
+ const source='export const createMoodleReadOptions = () => ({syntheticLoaderTest: true});',sha256=createHash('sha256').update(source).digest('hex');
+ writeFileSync(join(directory,'moodle-read-owner.mjs'),source,{mode:0o600});
+ await assert.rejects(loadNormalMoodleReadOwner({directory,sha256:'0'.repeat(64)}),/COURSE_READ_OWNER_PIN/);
+ const create=await loadNormalMoodleReadOwner({directory,sha256});assert.deepEqual(create(),{syntheticLoaderTest:true});
+ writeFileSync(join(directory,'moodle-read-owner.mjs'),source+'\n',{mode:0o600});
+ await assert.rejects(loadNormalMoodleReadOwner({directory,sha256}),/COURSE_READ_OWNER_PIN/);
+ const alias=join(z.x.f.directory,'alias-owner');symlinkSync(directory,alias);
+ await assert.rejects(loadNormalMoodleReadOwner({directory:alias,sha256}));
+});
+function mountFixture(){
+ let closed=0,stopped=0,listens=0,mapped=0,reads=0,bind=false,callback,resolveHook=null;
+ const server=new EventEmitter();server.close=()=>{stopped++;};server.closeAllConnections=()=>{};
+ const context=Object.freeze({report:()=>({runId:'synthetic-mount-run',applicationId:bind?'app-bound':null}),close:()=>{closed++;},pay(){assert.fail('no payment');},
+  createMoodleCourseReadHost:config=>{assert.equal(config.ownerRunId,'synthetic-mount-run');assert.equal(bind,true);mapped++;return {readCourse:async()=>{reads++;return {status:'UNAVAILABLE',expiresAtExclusive:null,evidence:null,payment:null};}};}});
+ const options={origin:'https://127.0.0.1:9443',secret:randomBytes(32).toString('hex'),tls:{key:'synthetic-test-only',cert:'synthetic-test-only'},
+  createCourseReadServer:args=>{callback=args.readCourse;return server;},listen:async(s,origin)=>{assert.equal(s,server);assert.equal(origin,options.origin);listens++;},
+  resolveReadOptions:async({report,signal})=>{if(resolveHook)await resolveHook();signal.throwIfAborted();if(!report.applicationId)throw Error('MAPPING_NOT_BOUND');return {ownerRunId:report.runId};}};
+ return {context,options,server,bind:()=>{bind=true;},callback:(...a)=>callback(...a),hook:fn=>{resolveHook=fn;},counts:()=>({closed,stopped,listens,mapped,reads})};
+}
+test('worker attachment leaves default context untouched; explicit mount waits for bound mapping without automatic retry',async()=>{
+ const z=mountFixture();assert.equal(await attachNormalMoodleReadServer({context:z.context}),z.context);assert.equal(z.counts().listens,0);
+ const wrapped=await attachNormalMoodleReadServer({context:z.context,options:z.options});assert.equal(wrapped.pay,z.context.pay);assert.equal(z.counts().listens,1);
+ await assert.rejects(z.callback(Object.freeze({})),/MAPPING_NOT_BOUND/);assert.equal(z.counts().mapped,0);
+ z.bind();await z.callback(Object.freeze({}));await z.callback(Object.freeze({}));assert.equal(z.counts().mapped,1);assert.equal(z.counts().reads,2);
+ wrapped.close();wrapped.close();assert.equal(z.counts().closed,1);assert.equal(z.counts().stopped,1);
+ await assert.rejects(z.callback(Object.freeze({})),/COURSE_READ_CLOSED/);
+});
+test('worker attachment abort, listener failure and server error close only this context/read server',async()=>{
+ for(const kind of ['abort','listen','server']){
+  const z=mountFixture(),controller=new AbortController();
+  if(kind==='listen'){z.options.listen=async()=>{throw Error('LISTEN_UNAVAILABLE');};await assert.rejects(attachNormalMoodleReadServer({context:z.context,options:z.options,signal:controller.signal}),/LISTEN_UNAVAILABLE/);}
+  else{await attachNormalMoodleReadServer({context:z.context,options:z.options,signal:controller.signal});if(kind==='abort')controller.abort();else z.server.emit('error',Error('synthetic'));}
+  assert.equal(z.counts().closed,1);assert.equal(z.counts().stopped,1);assert.equal(z.counts().mapped,0);
+ }
+});
+test('worker attachment does not finish deferred mapping after cancellation or accept another run',async()=>{
+ const z=mountFixture(),controller=new AbortController();z.bind();let release;
+ z.hook(()=>new Promise(r=>{release=r;}));await attachNormalMoodleReadServer({context:z.context,options:z.options,signal:controller.signal});
+ const pending=z.callback(Object.freeze({}));controller.abort();release();await assert.rejects(pending);assert.equal(z.counts().mapped,0);
+ const other=mountFixture();other.bind();other.options.resolveReadOptions=async()=>({ownerRunId:'other-run'});
+ const wrapped=await attachNormalMoodleReadServer({context:other.context,options:other.options});await assert.rejects(other.callback(Object.freeze({})),/COURSE_READ_OWNER_RUN/);wrapped.close();
 });

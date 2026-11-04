@@ -9,6 +9,7 @@ import {pathToFileURL} from 'node:url';
 import {loadHostConfig,hostReadiness,sha,fail,readPriceReview} from './normal-host-config.mjs';
 import {atomicPrivate} from '../../src/hackathon-test-vault/e5/private-storage.mjs';
 import {safeCode,composeNormalFlow,reflectionHostOptions,awaitExactReflectionApproval} from './normal-host-flow.mjs';
+import {loadNormalMoodleReadOwner,attachNormalMoodleReadServer} from './moodle-course-read-host.mjs';
 process.umask(0o077);
 const controller=new AbortController(),{signal}=controller;let unexpected=false,diagnostics,selfAttestor,retainedFailure;
 for(const s of ['uncaughtException','unhandledRejection'])process.once(s,()=>{unexpected=true;process.exitCode=1;controller.abort();});
@@ -28,6 +29,7 @@ try{
  fail(process.env.CLEAR_LOCKED==='1'&&!process.env.CLEAR_TEST_ROOT&&process.versions.node==='24.21.0'&&process.platform==='darwin'&&process.arch==='arm64','NORMAL_HOST_LOCKED_PLATFORM');
  const [mode,name,...extra]=process.argv.slice(2);fail(['registry','run'].includes(mode)&&extra.length===0,'NORMAL_HOST_WORKER_ARGUMENT');
  const {directory,config}=loadHostConfig(name);
+ const createMoodleReadOptions=mode==='run'?await loadNormalMoodleReadOwner({directory,sha256:config.moodleReadOwnerSha256}):null;
  const {loadManagedHackerRankTrust}=await import('../../src/hackerrank-evidence/worker-trust.mjs');
  const loadTrust=async()=>{if(config.attestorMode!=='SELF_ATTESTOR_TEST')return loadManagedHackerRankTrust({audience:config.audience,privacyKeyId:config.privacyKeyId,signal});
   selfAttestor=await (await import('../local-attestor-review/host.mjs')).startSelfAttestorTest({signal});
@@ -62,7 +64,14 @@ try{
    complete=await withManagedHackerRankSource(session,{selfAttestor,trustConfig:trust,commitmentKey:key,selectedCertificateId:config.selectedCertificateId,signal,diagnostics,
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
-     open:opts=>openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics}),tls:loadTls(directory,config.tlsFingerprint),listen:listenNormalServer,
+     open:async opts=>{
+      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics});
+      if(!createMoodleReadOptions)return context;
+      try{const options=await createMoodleReadOptions({directory,report:context.report,signal});
+       fail(options&&typeof options==='object','COURSE_READ_OWNER_PORT');
+       return await attachNormalMoodleReadServer({context,options,signal});}
+      catch(error){context.close();throw error;}
+     },tls:loadTls(directory,config.tlsFingerprint),listen:listenNormalServer,
      notify,async awaitResume({context,signal}){
       const stop=new AbortController(),combined=AbortSignal.any([signal,stop.signal]);
       try{return await Promise.race([context.waitForResume({signal:combined}),waitForCommand('FINISH',{signal:combined}).then(()=>{throw Error('NORMAL_HOST_EXPLICIT_FINISH');})]);}
