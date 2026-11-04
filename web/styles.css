@@ -2723,3 +2723,25 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
   .fp-link { grid-template-columns: 1fr auto; }
   .fp-link-what { grid-column: 1 / -1; }
 }
+
+/* ── 운영자 강좌 연결 화면 ─────────────────────────────────────────── */
+.fp-slots { display: grid; gap: 12px; }
+.fp-slot {
+  display: grid; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card, #fff);
+}
+.fp-slot[data-changed="yes"] { border-color: #d97706; }
+.fp-slot-label { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-weight: 700; }
+.fp-slot-hint { font-weight: 400; font-size: 0.86rem; color: var(--muted); }
+.fp-slot-select {
+  width: 100%; max-width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--bg, #fff); color: inherit;
+}
+.fp-slot-select:disabled { opacity: 0.6; }
+.fp-slot-note { font-size: 0.84rem; color: var(--muted); }
+.fp-slot-note--changed { color: #92400e; }
+.fp-checks { display: grid; gap: 6px; }
+.fp-check { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.fp-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent, #1d4ed8); }
+.fp-check:has(input:checked) { border-color: var(--accent, #1d4ed8); background: color-mix(in srgb, var(--accent, #1d4ed8) 8%, transparent); }
+.fp-flow { margin: 18px 0 6px; color: var(--muted); font-size: 0.92rem; }

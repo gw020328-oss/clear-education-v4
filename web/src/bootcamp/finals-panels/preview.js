@@ -11,6 +11,8 @@ import { el, clear } from '../../ui/dom.js';
 import { createAdapter, DATA_MODE } from './adapter.js';
 import { aiComparePanel } from './ai-compare.js';
 import { opsMetricsPanel } from './ops-metrics.js';
+import { courseLinkPanel } from './course-link.js';
+import { linkFixture, saveFixture } from './course-link-fixtures.js';
 import { PRESETS, COMBOS, METRICS_SUMMARY, REAL_NOTICE } from './fixtures.js';
 
 // ④ 는 **실제 공개 안내문**이다. 우리 조건 넷 중 셋만 있고 HackerRank 는
@@ -54,6 +56,21 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
   });
   const opsPanel = opsMetricsPanel({ adapter: ops });
 
+  // ── A 운영자 강좌 연결 — B 다음에 온다 ─────────────────────────────
+  //
+  // 시연 순서: 운영자 로그인 → B 조건 구조화 → A 조건마다 읽을 Moodle 항목
+  // 지정 → 저장. 그래서 A 의 칸은 **B 가 찾은 조건**을 따라간다. ① 예문이면
+  // 활동·과제 두 칸, ③ 이면 세 칸(HackerRank 는 Moodle 칸이 없다).
+  // 여기서는 '아직 미설정' 강좌에서 시작한다 — 운영자가 고르는 장면이다.
+  const linkLoad = createAdapter({ mode, fixture: linkFixture, run: null });
+  const linkSave = createAdapter({ mode, fixture: saveFixture, run: null });
+  const linkPanel = courseLinkPanel({ load: linkLoad, save: linkSave, scenario: 'unset', conditions: [] });
+  const followConditions = (snap) => {
+    if (snap.state !== 'success' || !snap.payload?.draft?.conditions) return;
+    linkPanel.setConditions(snap.payload.draft.conditions.map((c) => c.capability));
+  };
+  ai.subscribe(followConditions);
+
   root.append(
     el('header.fp-top', {}, [
       el('h1', { text: 'CLEAR 본선 패널 미리보기' }),
@@ -66,6 +83,8 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
       }),
     ]),
     aiPanel.node,
+    el('p.fp-flow', { text: '↓ 조건이 정해지면, 조건마다 Moodle 의 어느 항목을 읽을지 운영자가 지정합니다.' }),
+    linkPanel.node,
     opsPanel.node,
   );
 
@@ -74,9 +93,10 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
   if (mode === DATA_MODE.SYNTHETIC) {
     void ai.request(first);
     void ops.request();
+    void linkLoad.request('unset');
   }
 
-  return { ai, ops };
+  return { ai, ops, link: linkPanel };
 }
 
 if (typeof window !== 'undefined' && document.querySelector('#finals-root')) {
