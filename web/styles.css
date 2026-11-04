@@ -2401,6 +2401,18 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
   transition: color 0.12s ease, border-color 0.12s ease;
 }
 .cc-toggle:hover { color: var(--fg); border-color: var(--fg); }
+/* 시연 표식. 제품 배지로 읽히지 않게 앞에 작게 붙인다 */
+.cc-toggle-tag {
+  display: inline-block;
+  margin-right: 5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--line);
+  color: var(--muted);
+  font-size: 0.86em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 .cc-toggle[data-on="yes"] { color: var(--accent); border-color: var(--accent); }
 
 /* ── 펼친 신청 한 건 ───────────────────────────────────────────────────*/
@@ -2506,6 +2518,15 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
  * 유료 호출이라 체크 한 번 + 클릭 한 번이라야 보낸다. 체크를 눈에 띄게 둔다.
  */
 .ai-hashes { margin-top: 20px; }
+/* 접어 둔다. 펴야 전체 해시가 보인다 — ai-approval.js 머리말 참고 */
+.ai-hashes > summary {
+  cursor: pointer;
+  padding: 9px 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.ai-hashes > summary:hover { color: var(--fg); }
 .ai-hashes .field dd code { font-size: 0.78rem; }
 .ai-ack {
   display: flex;

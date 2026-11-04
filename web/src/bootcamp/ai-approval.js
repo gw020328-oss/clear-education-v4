@@ -212,9 +212,15 @@ export function aiApprovalSection({
 
       // 무엇에 서명 아닌 '승인' 을 하는지. 해시를 숨기지 않는다 —
       // 나중에 "그때 그 입력이 맞냐" 를 따질 수 있어야 한다.
+      // 접어 둔다. 펴면 전체 해시까지 다 보인다.
+      //
+      // 전에는 다섯 줄이 각각 **축약형과 64자 전체 해시 두 줄씩** 펼쳐져
+      // 있어서 화면 한 쪽을 해시가 덮었다. 운영자가 매번 읽을 값이 아니다.
+      // 그렇다고 지우면 "그때 그 입력이 맞냐" 를 나중에 못 따진다 —
+      // 그래서 숨기지 않고 접는다.
       a
-        ? el('div.ai-hashes', {}, [
-          monoLabel('이번 입력'),
+        ? el('details.ai-hashes', {}, [
+          el('summary', { text: '이번 입력의 해시 — 무엇을 승인하는지' }),
           ...pairBlock([
             item('본문', short(a.bodySha256), a.bodySha256),
             item('계획', short(a.planHash), a.planHash),
