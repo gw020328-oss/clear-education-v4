@@ -12,8 +12,21 @@ const actorKeys=['institutionId','courseId','operatorId','sourceText'];
 const gates={scope:'PRECONFIGURATION_ONLY', automaticEligibility:false, paymentAllowed:false,
   actualReclaimCall:false, actualPayout:false, dataMode:'DEMO_ACCOUNTS_ONLY'};
 export function createService({config,store,observationAdapter=null,modelTransport=developerTransport(),clock=Date.now,
-  setTimer=setTimeout,clearTimer=clearTimeout,setOperationTimer=setTimeout,clearOperationTimer=clearTimeout}) {
-  const binding=bindingHash(config), drafts=new Map(),timers=new Map();
+  setTimer=setTimeout,clearTimer=clearTimeout,setOperationTimer=setTimeout,clearOperationTimer=clearTimeout,offlinePeerContext=null}) {
+  // In-process fixture input from B's context issuer. Never taken from an HTTP body.
+  const peer=offlinePeerContext && Object.freeze(structuredClone(offlinePeerContext));
+  if(peer) {
+    exact(peer,['version','previewContextRef','sourceHash','bodyHash','model','approvalBindingHash',
+      'expiresAtExclusive','automaticEligibility','paymentAllowed']);
+    check(modelTransport.execution==='OFFLINE' && peer.version==='clear-self-preview-context.1'
+      && peer.model===previewModel && peer.automaticEligibility===false && peer.paymentAllowed===false
+      && [peer.previewContextRef,peer.sourceHash,peer.bodyHash,peer.approvalBindingHash].every(
+        value=>typeof value==='string' && /^[a-f0-9]{64}$/.test(value) && value!=='0'.repeat(64))
+      && Number.isSafeInteger(peer.expiresAtExclusive) && peer.expiresAtExclusive*1000>clock()
+      && peer.expiresAtExclusive<=Math.floor(clock()/1000)+120,'OFFLINE_PEER_CONTEXT');
+  }
+  const peerExpiry=peer ? peer.expiresAtExclusive*1000 : Infinity;
+  const binding=peer?.approvalBindingHash??bindingHash(config), drafts=new Map(),timers=new Map();
   let active=null,closed=false;
   function begin(requestSignal,draftId=null) {
     check(!closed,'SERVICE_CLOSED');check(!active,'BUSY');
@@ -39,6 +52,8 @@ export function createService({config,store,observationAdapter=null,modelTranspo
     for(const k of ['institutionId','courseId','operatorId']) check(body[k]===config[k],'ACTOR_SCOPE');
     const prepared=prepareGeminiStructureRequest(body.sourceText);
     check(prepared.model===previewModel && prepared.body.generationConfig.maxOutputTokens===limits.maxOutputTokens,'MODEL_PROFILE_CHANGED');
+    if(peer) check(peerExpiry>clock() && prepared.sourceHash===peer.sourceHash
+      && prepared.bodyHash===peer.bodyHash,'OFFLINE_PEER_CONTEXT');
     return prepared;
   }
   function remove(id) {
@@ -50,7 +65,11 @@ export function createService({config,store,observationAdapter=null,modelTranspo
   return {
     prepare(body) {const p=actor(body);return {...gates,version:'clear-external-preview-preparation.1',
       sourceText:body.sourceText,bodyHash:p.bodyHash,sourceHash:p.sourceHash,model:p.model,bindingHash:binding,limits,actualModelCall:false};},
-    async generate(body,{signal:requestSignal}={}) {
+    async generate(body,{signal:requestSignal,offlinePeerDeadline}={}) {
+      if(offlinePeerDeadline!==undefined) {
+        check(peer && Number.isSafeInteger(offlinePeerDeadline),'OFFLINE_PEER_CONTEXT');
+      }
+      const generationExpiry=Math.min(peerExpiry,offlinePeerDeadline??Infinity);
       const p=actor(body,['approvalRef']);
       check(typeof body.approvalRef==='string' && /^[a-zA-Z0-9_-]{8,80}$/.test(body.approvalRef),'APPROVAL_INVALID');
       check(!active,'BUSY');prune();check(drafts.size<16,'DRAFT_LIMIT');
@@ -60,8 +79,12 @@ export function createService({config,store,observationAdapter=null,modelTranspo
           claimAndDispatch:async ({approvalRef,model,bodyHash,body:request})=>{
             // Durable single use before countTokens and before any key read. Failure stays spent.
             op.guard();
-            const grant=store.consume(approvalRef,bodyHash,binding,clock);
-            op.expires(grant.expires,'APPROVAL_EXPIRED');
+            const grant=store.consume(approvalRef,bodyHash,binding,()=>{
+              const now=clock();
+              check(generationExpiry>now,'APPROVAL_EXPIRED');
+              return now;
+            });
+            op.expires(Math.min(grant.expires,generationExpiry),'APPROVAL_EXPIRED');
             const count=await op.dispatch(signal=>modelTransport.request(model,'countTokens',{generateContentRequest:{model:'models/'+model,...request}},signal));
             check(Number.isSafeInteger(count.totalTokens) && count.totalTokens>0 && count.totalTokens<=limits.maxInputTokens,'INPUT_TOKEN_LIMIT');
             // Every dispatch and result stays inside the same single-use approval.
@@ -75,11 +98,15 @@ export function createService({config,store,observationAdapter=null,modelTranspo
           return {quote:c.text,start:c.start,end:c.end,status:question?.reason??'SUPPORTED',
             capability:question?null:condition.capability,question:question?.question??null};
         });
-        const draftId=randomUUID(), expiresAt=clock()+900000;
+        if(peer) check(draft.status==='OPERATOR_REVIEW_REQUIRED','DRAFT_NOT_READY');
+        const draftId=randomUUID(), expiresAt=Math.min(clock()+900000,peerExpiry);
         drafts.set(draftId,{sourceText:body.sourceText,rows,proposalHash:draft.proposalHash,expires:expiresAt});
         // The timer closes over an opaque id only. Drop original text/AST references even while idle.
-        const timer=setTimer(()=>remove(draftId),900000);timer.unref?.();timers.set(draftId,timer);
+        const timer=setTimer(()=>remove(draftId),peer ? Math.max(0,expiresAt-clock()) : 900000);timer.unref?.();timers.set(draftId,timer);
         return {...gates,version:'clear-external-preview-draft.1',draftId,expiresAt,draft,
+          ...(peer?{peerDraft:{input:{previewContextRef:peer.previewContextRef,draftId,proposalHash:draft.proposalHash,
+            sourceHash:p.sourceHash,bodyHash:p.bodyHash,approvalBindingHash:peer.approvalBindingHash},
+            proposal:{sourceText:body.sourceText,rows:structuredClone(rows)}}}:{}),
           model:p.model,bodyHash:p.bodyHash,actualModelCall:modelTransport.execution==='ACTUAL',
           modelProvenance:modelTransport.execution==='ACTUAL'?'ACTUAL_GEMINI_HTTP':'OFFLINE_TEST_TRANSPORT'};
       } finally {op.end();}
