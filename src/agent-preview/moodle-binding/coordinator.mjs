@@ -174,8 +174,14 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
     preview(context, applicationId, input) {
       input = validateDto('preview', input);
       return lookup(context, applicationId, input.attemptRef, 'PREVIEW', ({ now, state, r }) => {
+        if (state.row.confirmation !== null) {
+          const previous = JSON.parse(state.row.confirmation);
+          requireRule(r.confirmationRef === previous.confirmationRef && r.confirmedAt === previous.confirmedAt
+            && r.expiresAtExclusive <= previous.expiresAtExclusive, 'CONFIRMATION_LIFETIME_CHANGED');
+        }
         const fingerprint = confirmationDigest(r);
-        run('UPDATE main.attempts SET preview_digest=?,confirmation=? WHERE id=?', fingerprint, canonical(stableConfirmation(r)), state.row.id);
+        run('UPDATE main.attempts SET preview_digest=?,confirmation=? WHERE id=?', fingerprint,
+          canonical({ ...stableConfirmation(r), confirmedAt: r.confirmedAt, expiresAtExclusive: r.expiresAtExclusive }), state.row.id);
         return validateDto('previewResult', { version: versions.preview, attemptRef: input.attemptRef, installationRef: r.installationRef, courseRef: r.courseRef, accountHint: r.accountHint, confirmationDigest: fingerprint, expiresAtExclusive: Math.min(state.row.expires_at, r.expiresAtExclusive - ptime.maxClockSkewSeconds) });
       });
     },
@@ -183,6 +189,8 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
       input = validateDto('complete', input);
       return lookup(context, applicationId, input.attemptRef, 'COMPLETE', ({ p, now, state, r }) => {
         requireRule(state.row.preview_digest === input.confirmationDigest && confirmationDigest(r) === input.confirmationDigest, 'PREVIEW_CHANGED');
+        const preview = JSON.parse(state.row.confirmation);
+        requireRule(r.confirmedAt === preview.confirmedAt && r.expiresAtExclusive <= preview.expiresAtExclusive, 'CONFIRMATION_LIFETIME_CHANGED');
         const id = randomRef(), expires = Math.min(now.wall + ptime.bindingSeconds, state.s.expires_at, p.validUntil, r.expiresAtExclusive - ptime.maxClockSkewSeconds);
         const changed = run("UPDATE main.attempts SET status='CONSUMED',binding_id=? WHERE id=? AND status='PENDING' AND generation=? AND session_ref=? AND scope_hash=? AND policy_hash=? AND app_revision=? AND preview_digest=? AND expires_at>?", id, state.row.id, state.row.generation, state.sessionRef, state.row.scope_hash, hash(p), state.a.revision, input.confirmationDigest, now.wall);
         requireRule(changed.changes === 1, 'CAS_LOST');

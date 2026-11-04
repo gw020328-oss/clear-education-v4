@@ -144,6 +144,14 @@ test('changed confirmation requires a new preview; foreign target cannot be retu
   await assert.rejects(f.runtime.readPreview(context, 'app-a', b.bindingRef), /TARGET_SCOPE/);
 });
 
+test('same confirmation cannot refresh confirmedAt or extend lifetime at completion or preview', async t => {
+  const f = fixture(t), a = f.start(), p = await f.preview(a);
+  f.state.mutate = r => ({ ...r, confirmedAt: 991, expiresAtExclusive: 1291 });
+  await assert.rejects(f.complete(a, p), /CONFIRMATION_LIFETIME_CHANGED/);
+  await assert.rejects(f.preview(a), /CONFIRMATION_LIFETIME_CHANGED/);
+  assert.equal(f.sql('main', 'SELECT status FROM attempts')[0].status, 'PENDING');
+});
+
 test('schema drift audit trigger is refused before any runtime mutation', async t => {
   const f = fixture(t);
   f.execute('main', "CREATE TRIGGER audit_policy AFTER INSERT ON audit BEGIN UPDATE policy SET record='{}'; END;");

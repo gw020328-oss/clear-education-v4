@@ -28,14 +28,16 @@ entry point는 `src/agent-preview/moodle-binding/index.mjs`. `createBindingCoord
 
 ## 이번 요청의 snapshot 의미
 
-confirmation과 observations `.3` 서버 응답 모두 `observedAt`을 필수로 한다. C는 이번 요청을 수락한 **뒤 새 SQL snapshot을 획득한 시점**을 observedAt으로, 같은 snapshot의 검사 종료를 checkedAt으로 반환해야 한다. 예전 snapshot에 새 checkedAt/requestRef를 붙여서는 안 된다. confirmedAt은 최초 사용자 확인 시각을 유지하며 stable confirmationDigest에는 observedAt/checkedAt/requestRef를 넣지 않는다.
+confirmation과 observations `.3` 서버 응답 모두 `observedAt`을 필수로 한다. C는 이번 요청을 수락한 **뒤 새 SQL snapshot을 획득한 시점**을 observedAt으로, 같은 snapshot의 검사 종료를 checkedAt으로 반환해야 한다. 예전 snapshot에 새 checkedAt/requestRef를 붙여서는 안 된다. confirmedAt과 최초 확인 expiry는 preview에 고정하며 이후 lookup에서 시각 갱신·수명 연장을 거부한다. confirmedAt은 최초 사용자 확인 시각을 유지하며 stable confirmationDigest에는 observedAt/checkedAt/requestRef를 넣지 않는다.
 
 validator는 `observedAt <= checkedAt`, 둘 다 이번 요청의 시작/수신 구간 ±승인 skew, 최종 시각에서 보수적 관측 나이 및 expiry, monotonic 왕복/최종 fence를 검사한다. source expiry에서 skew를 빼며 정확한 만료 시각은 거부한다. 각 observation의 시각도 envelope snapshot 시각과 같아야 한다. enrolmentRevision/trust/roster/binding revision은 양의 안전 정수이며 Moodle 세션 generation은 opaque 문자열이다. source의 실제 snapshot 획득 정직성은 이 숫자 검사만으로 입증되지 않으며 C의 세션/SQL 인수에 의존한다.
 
 ## 검증 범위와 남는 통합
 
-2026-11-04 고정 Node 24.21.0 / SQLite 3.53.4에서 신규 시험 **48/48 통과** 및 네트워크 차단 독립 demo 실행을 확인했다. 신규 module 시험은 실제 모듈 start→preview→complete→read/status→reopen, 별도 두 프로세스의 사전 검사 장벽과 한 번 소비, subject unique 패자의 rollback, COMMIT busy의 원자 rollback, source/세션/신청/설정 변경, 복구 중 구 worker, requestRef replay/timeout 늦은 응답, final monotonic fence, audit trigger→policy 공격 및 view/raw secret 읽기 거부를 실행한다. auth/workflow DB byte hash가 정상 흐름 전후 같음을 확인한다. 별도 currentness 시험은 경계 시각과 오래된 observedAt 반례를 다룬다. C의 과거 7건 및 초기 SQLite 9건과 신규 시험 수를 합산하지 않는다.
+2026-11-04 고정 Node 24.21.0 / SQLite 3.53.4에서 신규 시험 **49/49 통과** 및 네트워크 차단 독립 demo 실행을 확인했다. 신규 module 시험은 실제 모듈 start→preview→complete→read/status→reopen, 별도 두 프로세스의 사전 검사 장벽과 한 번 소비, subject unique 패자의 rollback, COMMIT busy의 원자 rollback, source/세션/신청/설정 변경, 복구 중 구 worker, requestRef replay/timeout 늦은 응답, final monotonic fence, audit trigger→policy 공격 및 view/raw secret 읽기 거부를 실행한다. auth/workflow DB byte hash가 정상 흐름 전후 같음을 확인한다. 별도 currentness 시험은 경계 시각과 오래된 observedAt 반례를 다룬다. C의 과거 7건 및 초기 SQLite 9건과 신규 시험 수를 합산하지 않는다.
 
 운영 미구현: 실제 Moodle verifier/session persistence/SQL projection, signed roster/trust 관리자 CLI, 외부 epoch/worker supervisor, 보존·청소·복구 migration, rate limiting, HTTP same-origin/cookie/peer/CSRF 전달, 실제 기존 auth 서비스와 pure predicate 공유 및 제품 schema/projection 통합. 현재 host가 없으므로 이 라이브러리 context를 HTTP body에서 그대로 받아서는 안 된다. 실제 root/DB 관리자가 서비스 중 파일·정책·epoch를 임의로 동시 교체하는 환경은 지원하지 않는다. operational retention cleanup이 없으므로 합성 environment는 사용 후 dispose한다.
 
 제품 package export나 기존 route를 추가하지 않았다. 제품 자동 eligibility/payment는 항상 false이며 실제 학생 기록·로그인·서명·체인·유료 호출은 수행하지 않는다. C의 F1–F4와 본부 공통 파일 인수가 완료되기 전 실제 연결을 활성화할 수 없다.
+
+신규 49건은 현재 로컬에서 직접 실행한 결과다. 기존 Public synthetic CI에는 이 시험 명령이 없으며 CI 공통 파일은 본부 소유로 변경하지 않았다. 본부가 두 신규 test 파일과 필요 시 demo 명령을 CI에 추가해야 한다. PR 전체 기존 검사 결과를 신규 모듈의 자동 CI 결과로 표시하지 않는다.
