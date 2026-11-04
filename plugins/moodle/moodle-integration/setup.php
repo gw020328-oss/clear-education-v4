@@ -9,7 +9,7 @@ if(getenv('CLEAR_ACTUAL_MOODLE_PROBE')!=='1' || $SITE->shortname!=='clear'){exit
 $CFG->debug=DEBUG_DEVELOPER; $CFG->debugdisplay=1;
 $suffix=bin2hex(random_bytes(3));
 set_config('enablecompletion',1);set_config('enableavailability',0);set_config('auth','manual');set_config('enrol_plugins_enabled','manual');
-$uid=user_create_user((object)['username'=>'actual-page-student-'.$suffix,'firstname'=>'Synthetic','lastname'=>'Student','email'=>'synthetic@example.invalid','auth'=>'manual','confirmed'=>1],false,false);
+$uid=user_create_user((object)['username'=>'actual-page-student-'.$suffix,'firstname'=>'Synthetic','lastname'=>'Student','email'=>'synthetic@example.invalid','auth'=>'manual','confirmed'=>1,'mnethostid'=>$CFG->mnet_localhost_id],false,false);
 $course=create_course((object)['fullname'=>'Synthetic Core Page','shortname'=>'actual-page-'.$suffix,'category'=>1,'enablecompletion'=>1,'format'=>'topics']);
 $enrol=enrol_get_plugin('manual');
 $instance=array_values(array_filter(enrol_get_instances($course->id,true),fn($i)=>$i->enrol==='manual'))[0];
