@@ -16,6 +16,7 @@ export function createNativeMoodleLogin({config, api, fetch: fetchImpl = globalT
     const result = await response.json(); signal?.throwIfAborted(); return result;
   }
   return Object.freeze({
+    invalidate() { finishProof = null; },
     async begin(signal) {
       check(!pending); pending = true; finishProof = null;
       try {

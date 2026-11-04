@@ -17,11 +17,13 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   let epoch = 0, sequence = 0, closed = false, revoking = false, revokeUnknown = false;
   let phase = 'IDLE', error = null, busy = null, selected = null, network = false, authenticated = false;
   let wallet = null, session = null, closing = null, candidates = [], providers = [];
+  let cancellation = null;
   let authExpiry = 0, expiryTimer;
   let snapshot = {ready: false, authenticated: false, user: null, wallets: [], walletsReady: false, externalWalletsDisabled: true};
   const selector = kind => kind + '-' + epoch + '-' + (++sequence);
   function allowed() {
     if (closed) return [];
+    if (cancellation) return [];
     if (revoking || revokeUnknown) return ['sign-out'];
     if (busy) return ['cancel'];
     if (phase === 'CONNECTION_PENDING') return ['finish-connection', 'sign-out'];
@@ -37,7 +39,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   }
   function emit() {
     const view = validateCourseWalletView({version: MOODLE_WALLET_VERSION, role, phase,
-      busy: !!busy || revoking, providers: providers.map(p => ({providerId: p.selector})),
+      busy: !!busy || revoking || !!cancellation, providers: providers.map(p => ({providerId: p.selector})),
       choices: candidates.map(p => ({choiceId: p.selector, address: p.address})), selectedChoiceId: selected?.selector ?? null,
       networkReady: network, authenticated, allowedActions: allowed(), error});
     try { onState(view); } catch { /* Rendering cannot change authority. */ }
@@ -59,15 +61,20 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     })();
     return closing;
   }
-  async function cancel(code = 'CANCELLED') {
+  function cancel(code = 'CANCELLED') {
+    if (cancellation) return cancellation;
     epoch++; busy?.abort(); busy = null; phase = code === 'EXPIRED' ? 'EXPIRED' : 'CANCELLED';
+    moodle.invalidate?.();
     selected = null; candidates = []; network = authenticated = false;
     error = {code, outcome: 'UNKNOWN'};
     // Retire selector generations even when discovery metadata stays unchanged.
     providers = providers.map(p => ({...p, selector: selector('provider')}));
-    try { await release(); await moodle.end(AbortSignal.timeout(13000)); }
-    catch { error = {code: revokeUnknown ? 'REVOCATION_UNKNOWN' : 'UNAVAILABLE', outcome: 'UNKNOWN'}; }
-    emit();
+    cancellation = (async () => {
+      try { await release(); await moodle.end(AbortSignal.timeout(13000)); }
+      catch { error = {code: revokeUnknown ? 'REVOCATION_UNKNOWN' : 'UNAVAILABLE', outcome: 'UNKNOWN'}; }
+      finally { cancellation = null; emit(); }
+    })();
+    emit(); return cancellation;
   }
   function update(value) {
     if (closed || role !== 'participant') return;
@@ -170,8 +177,9 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   return Object.freeze({dispatch, update, async destroy() {
     if (closed) return;
     closed = true; epoch++; busy?.abort(); busy = null; stopDiscovery();
+    moodle.invalidate?.();
     selected = null; candidates = []; providers = []; phase = 'CLOSED'; network = authenticated = false;
-    try { await release(); await moodle.end(AbortSignal.timeout(13000)); } catch {}
+    try { await cancellation; await release(); await moodle.end(AbortSignal.timeout(13000)); } catch {}
     emit();
   }});
 }
