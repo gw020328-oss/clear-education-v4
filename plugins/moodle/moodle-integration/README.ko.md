@@ -53,3 +53,7 @@ php /probe/moodle-integration/mutation_tests.php
 이전 ed384b4 결과는 `verification.json`, `verification.txt`, `cross-language-output.json`에 보관한다. 기존 34개 실제 코어 회귀 + 신규 native/반례 10개 + mutation 경로 110개 + 교차 언어 42개 = **196개 PASS**, PHP 15개 파일 lint 통과다. 이번 schema를 새 격리 코어 설치에 적용했다. B 계약 파일은 읽기 전용 Git object로 사용하며 실제 PHP JSON에 B validateDto와 checkCurrentness를 실행했다. 이전 shadow 51개나 B 자체 검사 수는 합산하지 않는다.
 
 권한 trigger가 광범위하므로 관련 없는 config 변경도 확인서를 무효화할 수 있다. 운영 부하, 보관/삭제 정책, 장애 복구 및 실서비스 브라우저 검증은 남아 있다. 격리 native HTTP manager 검증은 별도 문서/증거를 따른다. 기존 서비스·기관 데이터·B/common/A 코드는 변경하지 않았다.
+
+## 기관 신뢰 registry 합성 인수
+
+root 승인 → 활성 키의 roster/attempt 서명 → 인증된 B pending과 exact 결합을 검사하는 owner 측 후보는 [REGISTRY_HANDOFF.ko.md](REGISTRY_HANDOFF.ko.md)에 있다. 기존 사용자 confirmation 발급과 `.3` DTO는 유지한다. 기관 키·transport·매핑·복구 인수와 운영 활성화는 별도이며, 신규 실행 결과는 `registry-verification.txt`로 분리한다.
