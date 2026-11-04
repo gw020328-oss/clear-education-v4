@@ -13,9 +13,13 @@ SET ROLE clear_moodle_guard;
 CREATE TABLE clear_probe.authority(id integer primary key CHECK(id=1), revision bigint NOT NULL CHECK(revision BETWEEN 1 AND 9007199254740991));
 INSERT INTO clear_probe.authority VALUES(1,1);
 CREATE TABLE clear_probe.generations(sessionid bigint primary key, generation bigint NOT NULL CHECK(generation BETWEEN 1 AND 9007199254740991));
+CREATE TABLE clear_probe.attempts(attemptref text primary key, issuer text NOT NULL, scopehash text NOT NULL,
+ userid bigint NOT NULL, courseid bigint NOT NULL, moduleid bigint NOT NULL, installationref text NOT NULL,
+ courseref text NOT NULL, subjectref text NOT NULL, audience text NOT NULL, rosterrevision bigint NOT NULL,
+ trustepoch bigint NOT NULL, expiry bigint NOT NULL, status text NOT NULL CHECK(status IN ('ACTIVE','REVOKED')));
 CREATE TABLE clear_probe.confirmations(ref text primary key, sessionid bigint NOT NULL, userid bigint NOT NULL,
  authority bigint NOT NULL, generation bigint NOT NULL, profilehash text NOT NULL, issuer text NOT NULL,
- scopehash text NOT NULL, installation text NOT NULL, confirmedat bigint NOT NULL, expiry bigint NOT NULL);
+ scopehash text NOT NULL, installation text NOT NULL, confirmedat bigint NOT NULL, expiry bigint NOT NULL, attemptref text UNIQUE NOT NULL REFERENCES clear_probe.attempts(attemptref));
 CREATE FUNCTION clear_probe.bump_authority() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 SET search_path=pg_catalog,clear_probe,pg_temp AS $$ BEGIN
  UPDATE clear_probe.authority SET revision=revision+1 WHERE id=1 AND revision<9007199254740991;
@@ -33,9 +37,9 @@ SET search_path=pg_catalog,clear_probe,pg_temp AS $$ DECLARE rev bigint; BEGIN
  SELECT revision INTO STRICT rev FROM clear_probe.authority WHERE id=1 FOR SHARE; RETURN rev;
 END $$;
 CREATE FUNCTION clear_probe.insert_confirmation(ref text, sessionid bigint, userid bigint, authority bigint,
- generation bigint, profilehash text, issuer text, scopehash text, installation text, confirmedat bigint, expiry bigint)
+ generation bigint, profilehash text, issuer text, scopehash text, installation text, confirmedat bigint, expiry bigint, attemptref text)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,clear_probe,pg_temp AS $$
-DECLARE currentauthority bigint; currentgeneration bigint; currentuser bigint;
+DECLARE currentauthority bigint; currentgeneration bigint; currentuser bigint; arow clear_probe.attempts%ROWTYPE;
 BEGIN
  IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_locks l WHERE l.pid=pg_backend_pid() AND l.locktype='advisory'
   AND l.classid=((sessionid >> 32)::oid) AND l.objid=((sessionid & 4294967295)::oid)
@@ -44,10 +48,18 @@ BEGIN
  SELECT s.userid INTO STRICT currentuser FROM public.PREFIXsessions s WHERE s.id=sessionid FOR UPDATE;
  SELECT g.generation INTO STRICT currentgeneration FROM clear_probe.generations g WHERE g.sessionid=insert_confirmation.sessionid;
  IF currentauthority<>authority OR currentgeneration<>generation OR currentuser<>userid THEN RAISE EXCEPTION 'STALE_FENCE'; END IF;
+ SELECT * INTO STRICT arow FROM clear_probe.attempts a WHERE a.attemptref=insert_confirmation.attemptref;
+ IF arow.issuer<>issuer OR arow.scopehash<>scopehash OR arow.userid<>userid OR arow.status<>'ACTIVE'
+  OR arow.expiry<expiry THEN RAISE EXCEPTION 'ATTEMPT_BINDING'; END IF;
+ IF EXISTS(SELECT 1 FROM clear_probe.confirmations c WHERE c.attemptref=insert_confirmation.attemptref) THEN
+  RAISE EXCEPTION 'CONFIRMATION_EXISTS'; END IF;
  IF expiry<=confirmedat OR expiry>confirmedat+120 OR extract(epoch FROM clock_timestamp())>=expiry
   OR confirmedat>extract(epoch FROM clock_timestamp()) THEN RAISE EXCEPTION 'CONFIRMATION_TIME'; END IF;
- INSERT INTO clear_probe.confirmations VALUES(ref,sessionid,userid,authority,generation,profilehash,issuer,scopehash,installation,confirmedat,expiry);
+ INSERT INTO clear_probe.confirmations VALUES(ref,sessionid,userid,authority,generation,profilehash,issuer,scopehash,installation,confirmedat,expiry,attemptref);
 END $$;
+CREATE TRIGGER clear_attempt_authority AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON clear_probe.attempts
+ FOR EACH STATEMENT EXECUTE FUNCTION clear_probe.bump_authority();
+ALTER TABLE clear_probe.attempts ENABLE ALWAYS TRIGGER clear_attempt_authority;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA clear_probe FROM PUBLIC;
 RESET ROLE;
 CREATE ROLE clear_moodle_runtime LOGIN PASSWORD 'synthetic-runtime' NOSUPERUSER NOCREATEROLE NOCREATEDB NOREPLICATION;
@@ -59,8 +71,8 @@ REVOKE SET ON PARAMETER session_replication_role FROM PUBLIC,clear_moodle_runtim
 GRANT USAGE ON SCHEMA public,clear_probe TO clear_moodle_runtime,clear_moodle_reader;
 GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO clear_moodle_runtime;
 GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO clear_moodle_runtime;
-GRANT SELECT ON clear_probe.authority,clear_probe.generations,clear_probe.confirmations TO clear_moodle_runtime,clear_moodle_reader;
-GRANT EXECUTE ON FUNCTION clear_probe.lock_authority(), clear_probe.insert_confirmation(text,bigint,bigint,bigint,bigint,text,text,text,text,bigint,bigint) TO clear_moodle_runtime;
+GRANT SELECT ON clear_probe.authority,clear_probe.generations,clear_probe.confirmations,clear_probe.attempts TO clear_moodle_runtime,clear_moodle_reader;
+GRANT EXECUTE ON FUNCTION clear_probe.lock_authority(), clear_probe.insert_confirmation(text,bigint,bigint,bigint,bigint,text,text,text,text,bigint,bigint,text) TO clear_moodle_runtime;
 SQL;
     if (!pg_query($connection, str_replace('PREFIX', $prefix, $sql))) {throw new RuntimeException('INSTALL_FAILED');}
     $tables=['user','user_preferences','user_info_field','user_info_data','enrol','user_enrolments',

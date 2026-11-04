@@ -1,13 +1,18 @@
-PASS atomic installer applied to isolated actual Moodle core schema
 No syntax errors detected in /probe/moodle-integration/adapter.php
+No syntax errors detected in /probe/moodle-integration/attempt_fixture.php
+No syntax errors detected in /probe/moodle-integration/boundary_tests.php
 No syntax errors detected in /probe/moodle-integration/collector.php
 No syntax errors detected in /probe/moodle-integration/function_fence_tests.php
 No syntax errors detected in /probe/moodle-integration/guarded_database.php
 No syntax errors detected in /probe/moodle-integration/install.php
 No syntax errors detected in /probe/moodle-integration/issuance_failure_tests.php
+No syntax errors detected in /probe/moodle-integration/mutation_tests.php
 No syntax errors detected in /probe/moodle-integration/native_codec_fixture.php
+No syntax errors detected in /probe/moodle-integration/native_handler_fixture.php
 No syntax errors detected in /probe/moodle-integration/setup.php
 No syntax errors detected in /probe/moodle-integration/tests.php
+No syntax errors detected in /probe/moodle-integration/wire.php
+No syntax errors detected in /probe/moodle-integration/wire_probe.php
 PASS actual core tables issue and empty manual completion observation
 PASS Moodle session advisory lock held throughout issue
 PASS same session concurrent write fenced
@@ -43,3 +48,166 @@ PASS actual reader sensitive column privilege denied
 PASS actual reader sensitive column privilege denied
 PASS database insert rejects SESSION_LOCK_REQUIRED
 PASS database insert rejects STALE_FENCE
+PASS outer delegated transaction cannot return an uncommitted confirmation
+PASS outer transaction rejection issues zero confirmations
+PASS detached native USER object blocks issuance
+PASS post-flush native USER detachment blocks issuance
+PASS native abort closes actual core-derived handler
+PASS closed native session does not persist later PHP memory changes
+PASS abort does not freeze PHP globals and is not a terminal HTTP action
+PASS actual core rejects string-zero required profile field
+PASS Page projection rejects the same string-zero profile counterexample
+PASS lookup rejects a clock before original confirmedAt
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS authority lock fences user INSERT statement path
+PASS authority lock fences user UPDATE statement path
+PASS authority lock fences user DELETE statement path
+PASS runtime cannot truncate user
+PASS authority lock fences user_preferences INSERT statement path
+PASS authority lock fences user_preferences UPDATE statement path
+PASS authority lock fences user_preferences DELETE statement path
+PASS runtime cannot truncate user_preferences
+PASS authority lock fences user_info_field INSERT statement path
+PASS authority lock fences user_info_field UPDATE statement path
+PASS authority lock fences user_info_field DELETE statement path
+PASS runtime cannot truncate user_info_field
+PASS authority lock fences user_info_data INSERT statement path
+PASS authority lock fences user_info_data UPDATE statement path
+PASS authority lock fences user_info_data DELETE statement path
+PASS runtime cannot truncate user_info_data
+PASS authority lock fences enrol INSERT statement path
+PASS authority lock fences enrol UPDATE statement path
+PASS authority lock fences enrol DELETE statement path
+PASS runtime cannot truncate enrol
+PASS authority lock fences user_enrolments INSERT statement path
+PASS authority lock fences user_enrolments UPDATE statement path
+PASS authority lock fences user_enrolments DELETE statement path
+PASS runtime cannot truncate user_enrolments
+PASS authority lock fences role INSERT statement path
+PASS authority lock fences role UPDATE statement path
+PASS authority lock fences role DELETE statement path
+PASS runtime cannot truncate role
+PASS authority lock fences role_assignments INSERT statement path
+PASS authority lock fences role_assignments UPDATE statement path
+PASS authority lock fences role_assignments DELETE statement path
+PASS runtime cannot truncate role_assignments
+PASS authority lock fences role_capabilities INSERT statement path
+PASS authority lock fences role_capabilities UPDATE statement path
+PASS authority lock fences role_capabilities DELETE statement path
+PASS runtime cannot truncate role_capabilities
+PASS authority lock fences capabilities INSERT statement path
+PASS authority lock fences capabilities UPDATE statement path
+PASS authority lock fences capabilities DELETE statement path
+PASS runtime cannot truncate capabilities
+PASS authority lock fences context INSERT statement path
+PASS authority lock fences context UPDATE statement path
+PASS authority lock fences context DELETE statement path
+PASS runtime cannot truncate context
+PASS authority lock fences config INSERT statement path
+PASS authority lock fences config UPDATE statement path
+PASS authority lock fences config DELETE statement path
+PASS runtime cannot truncate config
+PASS authority lock fences config_plugins INSERT statement path
+PASS authority lock fences config_plugins UPDATE statement path
+PASS authority lock fences config_plugins DELETE statement path
+PASS runtime cannot truncate config_plugins
+PASS authority lock fences course INSERT statement path
+PASS authority lock fences course UPDATE statement path
+PASS authority lock fences course DELETE statement path
+PASS runtime cannot truncate course
+PASS authority lock fences course_categories INSERT statement path
+PASS authority lock fences course_categories UPDATE statement path
+PASS authority lock fences course_categories DELETE statement path
+PASS runtime cannot truncate course_categories
+PASS authority lock fences course_sections INSERT statement path
+PASS authority lock fences course_sections UPDATE statement path
+PASS authority lock fences course_sections DELETE statement path
+PASS runtime cannot truncate course_sections
+PASS authority lock fences course_modules INSERT statement path
+PASS authority lock fences course_modules UPDATE statement path
+PASS authority lock fences course_modules DELETE statement path
+PASS runtime cannot truncate course_modules
+PASS authority lock fences modules INSERT statement path
+PASS authority lock fences modules UPDATE statement path
+PASS authority lock fences modules DELETE statement path
+PASS runtime cannot truncate modules
+PASS authority lock fences page INSERT statement path
+PASS authority lock fences page UPDATE statement path
+PASS authority lock fences page DELETE statement path
+PASS runtime cannot truncate page
+PASS authority lock fences trusted attempt INSERT
+PASS authority lock fences trusted attempt UPDATE
+PASS authority lock fences trusted attempt DELETE
+PASS session row lock fences current UPDATE
+PASS session row lock fences current DELETE
+PASS runtime cannot truncate sessions
+PASS unrelated session mutations remain independent
+PASS blocked source mutations and unrelated sessions leave issued confirmation usable
+PASS maintenance truncate advances authority for public.mdl_user before rollback
+PASS maintenance truncate advances authority for public.mdl_user_preferences before rollback
+PASS maintenance truncate advances authority for public.mdl_user_info_field before rollback
+PASS maintenance truncate advances authority for public.mdl_user_info_data before rollback
+PASS maintenance truncate advances authority for public.mdl_enrol before rollback
+PASS maintenance truncate advances authority for public.mdl_user_enrolments before rollback
+PASS maintenance truncate advances authority for public.mdl_role before rollback
+PASS maintenance truncate advances authority for public.mdl_role_assignments before rollback
+PASS maintenance truncate advances authority for public.mdl_role_capabilities before rollback
+PASS maintenance truncate advances authority for public.mdl_capabilities before rollback
+PASS maintenance truncate advances authority for public.mdl_context before rollback
+PASS maintenance truncate advances authority for public.mdl_config before rollback
+PASS maintenance truncate advances authority for public.mdl_config_plugins before rollback
+PASS maintenance truncate advances authority for public.mdl_course before rollback
+PASS maintenance truncate advances authority for public.mdl_course_categories before rollback
+PASS maintenance truncate advances authority for public.mdl_course_sections before rollback
+PASS maintenance truncate advances authority for public.mdl_course_modules before rollback
+PASS maintenance truncate advances authority for public.mdl_modules before rollback
+PASS maintenance truncate advances authority for public.mdl_page before rollback
+PASS maintenance truncate advances authority for clear_probe.attempts before rollback
+PASS maintenance truncate advances authority for public.mdl_sessions before rollback
+PASS one-character refs: lookup never creates a confirmation
+PASS one-character refs: native handler persists and closes before returning
+PASS one-character refs: actual PHP confirmation passes B validateDto and currentness
+PASS one-character refs: fresh request preserves original confirmation lifetime and digest
+PASS one-character refs: actual PHP observations pass B validateDto and currentness
+PASS one-character refs: former state key is rejected by unchanged B validator
+PASS one-character refs: repeated explicit mint cannot renew the same attempt
+PASS one-character refs: issuer substitution rejected without issuance
+PASS one-character refs: scope substitution rejected without issuance
+PASS one-character refs: extra browser user rejected without issuance
+PASS one-character refs: 129-character ref rejected without issuance
+PASS one-character refs: invalid ref prefix rejected without issuance
+PASS one-character refs: uppercase scope hash rejected without issuance
+PASS 128-character refs: lookup never creates a confirmation
+PASS 128-character refs: native handler persists and closes before returning
+PASS 128-character refs: actual PHP confirmation passes B validateDto and currentness
+PASS 128-character refs: fresh request preserves original confirmation lifetime and digest
+PASS 128-character refs: actual PHP observations pass B validateDto and currentness
+PASS 128-character refs: former state key is rejected by unchanged B validator
+PASS 128-character refs: repeated explicit mint cannot renew the same attempt
+PASS 128-character refs: issuer substitution rejected without issuance
+PASS 128-character refs: scope substitution rejected without issuance
+PASS 128-character refs: extra browser user rejected without issuance
+PASS 128-character refs: 129-character ref rejected without issuance
+PASS 128-character refs: invalid ref prefix rejected without issuance
+PASS 128-character refs: uppercase scope hash rejected without issuance
+PASS ordinary opaque refs: lookup never creates a confirmation
+PASS ordinary opaque refs: native handler persists and closes before returning
+PASS ordinary opaque refs: actual PHP confirmation passes B validateDto and currentness
+PASS ordinary opaque refs: fresh request preserves original confirmation lifetime and digest
+PASS ordinary opaque refs: actual PHP observations pass B validateDto and currentness
+PASS ordinary opaque refs: former state key is rejected by unchanged B validator
+PASS ordinary opaque refs: repeated explicit mint cannot renew the same attempt
+PASS ordinary opaque refs: issuer substitution rejected without issuance
+PASS ordinary opaque refs: scope substitution rejected without issuance
+PASS ordinary opaque refs: extra browser user rejected without issuance
+PASS ordinary opaque refs: 129-character ref rejected without issuance
+PASS ordinary opaque refs: invalid ref prefix rejected without issuance
+PASS ordinary opaque refs: uppercase scope hash rejected without issuance
+PASS actual Page mutation is observed in a new snapshot without confirmation renewal
+PASS native reopen and persisted core role switch invalidate confirmation
+PASS server registry revocation blocks confirmation lookup
+CROSS_LANGUAGE_CHECKS=42

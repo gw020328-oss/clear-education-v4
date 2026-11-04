@@ -3,6 +3,7 @@ require __DIR__.'/native_codec_fixture.php';
 define('CLI_SCRIPT',true);
 require '/var/www/html/config.php';
 require __DIR__.'/adapter.php';
+require __DIR__.'/attempt_fixture.php';
 use function clear_moodle_probe\collect_profile;
 use function clear_moodle_probe\mint;
 use function clear_moodle_probe\observe;
@@ -27,14 +28,13 @@ $DB->delete_records('course_modules_completion',['userid'=>$target['user'],'cour
 $reader=pg_from_config('reader');
 $profile=collect_profile($reader,$target);pg_close($reader);
 $sid='synthetic-actual-page-session';
-$attempt=['issuerEpoch'=>str_repeat('a',64),'bindingScopeHash'=>str_repeat('b',64)];
+$attempt=null;
 $makehandler=function()use($sid){start_probe_codec($sid);$h=new \clear_moodle_probe\guarded_database();$h->set_requires_write_lock(true);$h->read($sid);return $h;};
-$issue=fn($barrier=null)=>mint($makehandler(),$sid,$attempt,$profile,$barrier);
-$request=function($confirmation)use($attempt){return ['version'=>'clear-moodle-observations.3','requestRef'=>bin2hex(random_bytes(32)),
- 'confirmationRef'=>$confirmation['confirmationRef'],...$attempt];};
+$issue=function($barrier=null)use($makehandler,$sid,$profile,$target,&$attempt){$attempt=register_probe_attempt($target);return mint($makehandler(),$sid,$attempt,$profile,$barrier);};
+$request=function($confirmation)use(&$attempt){return probe_observations_request($attempt,$confirmation);};
 $confirmation=$issue();
 $r=$request($confirmation);$dto=observe($r,$profile);
-ok($dto['requestRef']===$r['requestRef'] && $dto['observations'][0]['state']==='INCOMPLETE','actual core tables issue and empty manual completion observation');
+ok($dto['requestRef']===$r['requestRef'] && $dto['observations'][0]['status']==='INCOMPLETE','actual core tables issue and empty manual completion observation');
 $peer=pg_from_config('runtime');sql($peer,"SET lock_timeout='150ms'");
 $confirmation=$issue(function()use($peer,$target,$CFG){
  $held=pg_fetch_result(sql($peer,'SELECT pg_try_advisory_lock('.$target['session'].')'),0,0);
@@ -42,12 +42,12 @@ $confirmation=$issue(function()use($peer,$target,$CFG){
  blocked($peer,'UPDATE '.$CFG->prefix.'sessions SET timemodified=timemodified+1 WHERE id='.$target['session'],'same session concurrent write fenced');
  blocked($peer,'UPDATE '.$CFG->prefix.'user_enrolments SET status=1 WHERE userid='.$target['user'],'authority mutation fenced during issuance');
 });
-ok(observe($request($confirmation),$profile)['observations'][0]['state']==='INCOMPLETE','blocked writers leave usable confirmation');
+ok(observe($request($confirmation),$profile)['observations'][0]['status']==='INCOMPLETE','blocked writers leave usable confirmation');
 // Manual core table update is fixture manipulation, not a real learner action.
 $id=$DB->insert_record('course_modules_completion',(object)['coursemoduleid'=>$target['module'],'userid'=>$target['user'],'completionstate'=>0,'viewed'=>null,'overrideby'=>null,'timemodified'=>time()]);
 $dto=observe($request($confirmation),$profile,function()use($peer,$CFG,$id){sql($peer,'UPDATE '.$CFG->prefix.'course_modules_completion SET completionstate=1 WHERE id='.$id);});
-ok($dto['observations'][0]['state']==='INCOMPLETE','new repeatable snapshot keeps original completion across concurrent update');
-ok(observe($request($confirmation),$profile)['observations'][0]['state']==='COMPLETE','next request acquires new snapshot and sees completion one');
+ok($dto['observations'][0]['status']==='INCOMPLETE','new repeatable snapshot keeps original completion across concurrent update');
+ok(observe($request($confirmation),$profile)['observations'][0]['status']==='COMPLETE','next request acquires new snapshot and sees completion one');
 $DB->set_field('course_modules_completion','completionstate',2,['id'=>$id]);
 reject(fn()=>observe($request($confirmation),$profile),'COMPLETION_STATE','actual core grade-state completion rejected');
 $DB->set_field('course_modules_completion','completionstate',1,['id'=>$id]);

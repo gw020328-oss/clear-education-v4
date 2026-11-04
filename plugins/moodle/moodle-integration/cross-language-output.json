@@ -1,0 +1,394 @@
+{
+  "bCommit": "9db5ac78ecb1f174cd8bd23965fd4c8160849310",
+  "contractSha256": "9f20b90abc0f5dd951f55af0a6ebdb4592ac673448de6c664c9156d21d0ca961",
+  "checks": [
+    "one-character refs: lookup never creates a confirmation",
+    "one-character refs: native handler persists and closes before returning",
+    "one-character refs: actual PHP confirmation passes B validateDto and currentness",
+    "one-character refs: fresh request preserves original confirmation lifetime and digest",
+    "one-character refs: actual PHP observations pass B validateDto and currentness",
+    "one-character refs: former state key is rejected by unchanged B validator",
+    "one-character refs: repeated explicit mint cannot renew the same attempt",
+    "one-character refs: issuer substitution rejected without issuance",
+    "one-character refs: scope substitution rejected without issuance",
+    "one-character refs: extra browser user rejected without issuance",
+    "one-character refs: 129-character ref rejected without issuance",
+    "one-character refs: invalid ref prefix rejected without issuance",
+    "one-character refs: uppercase scope hash rejected without issuance",
+    "128-character refs: lookup never creates a confirmation",
+    "128-character refs: native handler persists and closes before returning",
+    "128-character refs: actual PHP confirmation passes B validateDto and currentness",
+    "128-character refs: fresh request preserves original confirmation lifetime and digest",
+    "128-character refs: actual PHP observations pass B validateDto and currentness",
+    "128-character refs: former state key is rejected by unchanged B validator",
+    "128-character refs: repeated explicit mint cannot renew the same attempt",
+    "128-character refs: issuer substitution rejected without issuance",
+    "128-character refs: scope substitution rejected without issuance",
+    "128-character refs: extra browser user rejected without issuance",
+    "128-character refs: 129-character ref rejected without issuance",
+    "128-character refs: invalid ref prefix rejected without issuance",
+    "128-character refs: uppercase scope hash rejected without issuance",
+    "ordinary opaque refs: lookup never creates a confirmation",
+    "ordinary opaque refs: native handler persists and closes before returning",
+    "ordinary opaque refs: actual PHP confirmation passes B validateDto and currentness",
+    "ordinary opaque refs: fresh request preserves original confirmation lifetime and digest",
+    "ordinary opaque refs: actual PHP observations pass B validateDto and currentness",
+    "ordinary opaque refs: former state key is rejected by unchanged B validator",
+    "ordinary opaque refs: repeated explicit mint cannot renew the same attempt",
+    "ordinary opaque refs: issuer substitution rejected without issuance",
+    "ordinary opaque refs: scope substitution rejected without issuance",
+    "ordinary opaque refs: extra browser user rejected without issuance",
+    "ordinary opaque refs: 129-character ref rejected without issuance",
+    "ordinary opaque refs: invalid ref prefix rejected without issuance",
+    "ordinary opaque refs: uppercase scope hash rejected without issuance",
+    "actual Page mutation is observed in a new snapshot without confirmation renewal",
+    "native reopen and persisted core role switch invalidate confirmation",
+    "server registry revocation blocks confirmation lookup"
+  ],
+  "actualPhpResponses": [
+    {
+      "kind": "confirmation",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8424.992625
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8472.86825
+      },
+      "dto": {
+        "version": "clear-moodle-confirmation.3",
+        "attemptRef": "a",
+        "accountHint": "Synthetic student",
+        "confirmedAt": 1793767516,
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "e",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "q",
+        "confirmationRef": "a40df1ab48cab22aa62ee0c1d4d6f2e4db0541809d950c96024818438e0ff227",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 41,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636
+      }
+    },
+    {
+      "kind": "confirmation",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8473.241541
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8500.976708
+      },
+      "dto": {
+        "version": "clear-moodle-confirmation.3",
+        "attemptRef": "a",
+        "accountHint": "Synthetic student",
+        "confirmedAt": 1793767516,
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "e",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_complete",
+        "confirmationRef": "a40df1ab48cab22aa62ee0c1d4d6f2e4db0541809d950c96024818438e0ff227",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 41,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636
+      }
+    },
+    {
+      "kind": "observations",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8501.428458
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8529.703333
+      },
+      "dto": {
+        "version": "clear-moodle-observations.3",
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "e",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_observe",
+        "confirmationRef": "a40df1ab48cab22aa62ee0c1d4d6f2e4db0541809d950c96024818438e0ff227",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 41,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636,
+        "scope": "READ_PREVIEW",
+        "sourceStatus": "OBSERVED_AT",
+        "observations": [
+          {
+            "targetRef": "core-page-manual-mark",
+            "status": "INCOMPLETE",
+            "observedAt": 1793767516
+          }
+        ]
+      }
+    },
+    {
+      "kind": "confirmation",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8649.693875
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8678.057833
+      },
+      "dto": {
+        "version": "clear-moodle-confirmation.3",
+        "attemptRef": "Abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "accountHint": "Synthetic student",
+        "confirmedAt": 1793767516,
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "Eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "Rccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "confirmationRef": "0a403f9cfd073ff3653ceda9c3fb39ddf370f8d99ce014fa0404faf124f8917c",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 43,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636
+      }
+    },
+    {
+      "kind": "confirmation",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8678.224625
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8720.052083
+      },
+      "dto": {
+        "version": "clear-moodle-confirmation.3",
+        "attemptRef": "Abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "accountHint": "Synthetic student",
+        "confirmedAt": 1793767516,
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "Eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_complete",
+        "confirmationRef": "0a403f9cfd073ff3653ceda9c3fb39ddf370f8d99ce014fa0404faf124f8917c",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 43,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636
+      }
+    },
+    {
+      "kind": "observations",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8720.270208
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8748.606541
+      },
+      "dto": {
+        "version": "clear-moodle-observations.3",
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "Eaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_observe",
+        "confirmationRef": "0a403f9cfd073ff3653ceda9c3fb39ddf370f8d99ce014fa0404faf124f8917c",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 43,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636,
+        "scope": "READ_PREVIEW",
+        "sourceStatus": "OBSERVED_AT",
+        "observations": [
+          {
+            "targetRef": "core-page-manual-mark",
+            "status": "INCOMPLETE",
+            "observedAt": 1793767516
+          }
+        ]
+      }
+    },
+    {
+      "kind": "confirmation",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8856.284
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8903.284625
+      },
+      "dto": {
+        "version": "clear-moodle-confirmation.3",
+        "attemptRef": "attempt-wire-final",
+        "accountHint": "Synthetic student",
+        "confirmedAt": 1793767516,
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "issuer-probe-v1",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_preview",
+        "confirmationRef": "e6f733d05553d83dd0abdd4e1cc0e82edc5408a5247e996be87b4ac3025d77f5",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 45,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636
+      }
+    },
+    {
+      "kind": "confirmation",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8903.429708
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8931.5265
+      },
+      "dto": {
+        "version": "clear-moodle-confirmation.3",
+        "attemptRef": "attempt-wire-final",
+        "accountHint": "Synthetic student",
+        "confirmedAt": 1793767516,
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "issuer-probe-v1",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_complete",
+        "confirmationRef": "e6f733d05553d83dd0abdd4e1cc0e82edc5408a5247e996be87b4ac3025d77f5",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 45,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636
+      }
+    },
+    {
+      "kind": "observations",
+      "started": {
+        "wall": 1793767516,
+        "mono": 8931.753708
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 8959.443625
+      },
+      "dto": {
+        "version": "clear-moodle-observations.3",
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "issuer-probe-v1",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_observe",
+        "confirmationRef": "e6f733d05553d83dd0abdd4e1cc0e82edc5408a5247e996be87b4ac3025d77f5",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 45,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636,
+        "scope": "READ_PREVIEW",
+        "sourceStatus": "OBSERVED_AT",
+        "observations": [
+          {
+            "targetRef": "core-page-manual-mark",
+            "status": "INCOMPLETE",
+            "observedAt": 1793767516
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observations",
+      "started": {
+        "wall": 1793767516,
+        "mono": 9022.077625
+      },
+      "received": {
+        "wall": 1793767516,
+        "mono": 9051.544208
+      },
+      "dto": {
+        "version": "clear-moodle-observations.3",
+        "installationRef": "synthetic-moodle",
+        "courseRef": "synthetic-course",
+        "subjectRef": "synthetic-subject",
+        "audience": "synthetic-clear",
+        "issuerEpoch": "issuer-probe-v1",
+        "trustEpoch": 1,
+        "rosterRevision": 1,
+        "bindingScopeHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requestRef": "request_after_completion",
+        "confirmationRef": "e6f733d05553d83dd0abdd4e1cc0e82edc5408a5247e996be87b4ac3025d77f5",
+        "moodleSessionGeneration": "8cc6515962fd0cef9088f8a85cc235602250d4676e3201b035ac8224f6c7626a",
+        "enrolmentRevision": 45,
+        "observedAt": 1793767516,
+        "checkedAt": 1793767516,
+        "expiresAtExclusive": 1793767636,
+        "scope": "READ_PREVIEW",
+        "sourceStatus": "OBSERVED_AT",
+        "observations": [
+          {
+            "targetRef": "core-page-manual-mark",
+            "status": "COMPLETE",
+            "observedAt": 1793767516
+          }
+        ]
+      }
+    }
+  ]
+}

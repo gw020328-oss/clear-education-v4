@@ -15,7 +15,7 @@ JOIN public.PREFIXpage p ON p.id=m.instance AND p.course=c.id
 JOIN public.PREFIXcourse_sections sec ON sec.id=m.section AND sec.course=c.id
 WHERE s.id=$1 AND u.id=$2 AND c.id=$3 AND m.id=$4 AND a.id=1
 AND u.auth='manual' AND u.confirmed=1 AND u.deleted=0 AND u.suspended=0
-AND u.firstname<>'' AND u.lastname<>'' AND u.email<>''
+AND u.firstname NOT IN ('','0') AND u.lastname NOT IN ('','0') AND u.email NOT IN ('','0')
 AND NOT EXISTS(SELECT 1 FROM public.PREFIXuser_preferences pr WHERE pr.userid=u.id AND pr.name='auth_forcepasswordchange' AND pr.value NOT IN ('','0'))
 AND NOT EXISTS(SELECT 1 FROM public.PREFIXuser_info_field)
 AND NOT EXISTS(SELECT 1 FROM public.PREFIXuser_info_data)

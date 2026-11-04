@@ -3,6 +3,7 @@ namespace clear_moodle_probe;
 require_once __DIR__.'/collector.php';
 require_once __DIR__.'/../synthetic-profile/strict_database_candidate.php';
 require_once __DIR__.'/guarded_database.php';
+require_once __DIR__.'/wire.php';
 use function clear_synthetic\require_rule;
 use function clear_synthetic\safe_int;
 use function clear_synthetic\canonical;
@@ -31,24 +32,23 @@ function pg_from_config(string $role) {
 }
 function mint(guarded_database $handler,string $sid,array $request,array $profile,?callable $barrier=null): array {
     try {
+        global $USER,$SESSION,$DB;
+        require_rule(!$DB->is_transaction_started(),'OUTER_TRANSACTION');
+        require_rule(($_SESSION['USER']??null)===$USER && ($_SESSION['SESSION']??null)===$SESSION,'NATIVE_IDENTITY_LINK');
+        wire_request($request,'confirmation');
         require_rule(session_status()===PHP_SESSION_ACTIVE && session_id()===$sid,'NATIVE_SESSION_REQUIRED');
         $encoded=session_encode();
         require_rule(is_string($encoded),'SESSION_ENCODING');
         return mint_locked($handler,$sid,$encoded,$request,$profile,$barrier);
     } finally {
-        // Freeze this request's memory state: never write the PHP session again after issuing.
+        // End native persistence. This does not freeze PHP globals; the HTTP host must end its action.
         if(session_status()===PHP_SESSION_ACTIVE){session_abort();}
         $handler->close();
     }
 }
 function mint_locked(guarded_database $handler,string $sid,string $sessionbytes,array $request,array $profile,?callable $barrier=null): array {
-    global $DB,$CFG,$USER;
+    global $DB,$CFG,$USER,$SESSION;
     require_rule(getenv('CLEAR_ACTUAL_MOODLE_PROBE')==='1','SYNTHETIC_ONLY');
-    $keys=array_keys($request);sort($keys);
-    require_rule($keys===['bindingScopeHash','issuerEpoch'],'REQUEST');
-    foreach(['issuerEpoch','bindingScopeHash'] as $field) {
-        require_rule(isset($request[$field]) && preg_match('/^[a-f0-9]{64}$/D',$request[$field])===1,'REQUEST');
-    }
     require_rule((int)$USER->id===(int)$profile['target']['user'],'IDENTITY');
     \clear_synthetic\reject_assumed_identity($USER,$_SESSION);
     $check=pg_from_config('reader');
@@ -57,6 +57,8 @@ function mint_locked(guarded_database $handler,string $sid,string $sessionbytes,
     $transaction=$DB->start_delegated_transaction();
     try {
         $authority=(int)$DB->get_field_sql('SELECT clear_probe.lock_authority()');
+        $a=(array)$DB->get_record_sql('SELECT * FROM clear_probe.attempts WHERE attemptref=?',[$request['attemptRef']],MUST_EXIST);
+        check_attempt($a,$request,$profile,time());
         $s=$DB->get_record_sql('SELECT id,userid,timecreated,timemodified FROM {sessions} WHERE sid=? FOR UPDATE',[$sid],MUST_EXIST);
         require_rule((int)$s->userid===(int)$USER->id,'IDENTITY');
         require_rule($handler->flush_for_confirmation($sid,$sessionbytes,$USER,$_SESSION)===(int)$s->id,'SESSION_RECEIPT');
@@ -72,15 +74,16 @@ function mint_locked(guarded_database $handler,string $sid,string $sessionbytes,
         pg_close($check);
         if($barrier!==null) {$barrier();} // Available only in this SYNTHETIC_ONLY harness.
         \clear_synthetic\reject_assumed_identity($USER,$_SESSION);
+        require_rule(($_SESSION['USER']??null)===$USER && ($_SESSION['SESSION']??null)===$SESSION,'NATIVE_IDENTITY_LINK');
         require_rule((int)$USER->id===(int)$s->userid && session_encode()===$sessionbytes,'SESSION_MEMORY_CHANGED');
         $now=time();
-        $expiry=min($now+120,(int)$s->timemodified+(int)$profile['cfg']['sessiontimeout']);
+        $expiry=min($now+120,(int)$a['expiry'],(int)$s->timemodified+(int)$profile['cfg']['sessiontimeout']);
         if($source['timeend']>0){$expiry=min($expiry,$source['timeend']);}
         require_rule($now<$expiry,'SESSION_EXPIRED');
         $ref=bin2hex(random_bytes(32));
         $hash=hash('sha256',canonical($profile));
-        $DB->get_field_sql('SELECT clear_probe.insert_confirmation(?,?,?,?,?,?,?,?,?,?,?)',[
-            $ref,$s->id,$USER->id,safe_int($authority),$generation,$hash,$request['issuerEpoch'],$request['bindingScopeHash'],$profile['installationEpoch'],$now,$expiry]);
+        $DB->get_field_sql('SELECT clear_probe.insert_confirmation(?,?,?,?,?,?,?,?,?,?,?,?)',[
+            $ref,$s->id,$USER->id,safe_int($authority),$generation,$hash,$request['issuerEpoch'],$request['bindingScopeHash'],$profile['installationEpoch'],$now,$expiry,$request['attemptRef']]);
         $transaction->allow_commit();
         // Releasing without session_write_close avoids a post-commit memory write from this adapter.
         $handler->close();
@@ -90,36 +93,46 @@ function mint_locked(guarded_database $handler,string $sid,string $sessionbytes,
     }
 }
 function observe(array $request,array $profile,?callable $snapshotbarrier=null): array {
+    return lookup($request,$profile,'observations',$snapshotbarrier);
+}
+function confirmation(array $request,array $profile,?callable $snapshotbarrier=null): array {
+    return lookup($request,$profile,'confirmation',$snapshotbarrier);
+}
+function lookup(array $request,array $profile,string $kind,?callable $snapshotbarrier=null): array {
     require_rule(getenv('CLEAR_ACTUAL_MOODLE_PROBE')==='1','SYNTHETIC_ONLY');
-    $keys=array_keys($request);sort($keys);
-    require_rule($keys===['bindingScopeHash','confirmationRef','issuerEpoch','requestRef','version'] && $request['version']==='clear-moodle-observations.3','REQUEST');
-    foreach(['bindingScopeHash','confirmationRef','issuerEpoch','requestRef'] as $field) {
-        require_rule(is_string($request[$field]) && preg_match('/^[a-f0-9]{64}$/D',$request[$field])===1,'REQUEST');
-    }
+    wire_request($request,$kind);
     $pg=pg_from_config('reader');
     $start=time();$mono=hrtime(true);
     try {
         require_rule(pg_query($pg,'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')!==false,'SNAPSHOT');
         // First SQL read acquires a new snapshot after the request was checked.
-        $result=pg_query_params($pg,'SELECT * FROM clear_probe.confirmations WHERE ref=$1',[$request['confirmationRef']]);
+        $column=$kind==='confirmation'?'attemptref':'ref';
+        $value=$kind==='confirmation'?$request['attemptRef']:$request['confirmationRef'];
+        $result=pg_query_params($pg,'SELECT * FROM clear_probe.confirmations WHERE '.$column.'=$1',[$value]);
         $observed=time();
         require_rule($result!==false && pg_num_rows($result)===1,'CONFIRMATION');
         $c=pg_fetch_assoc($result);
         if($snapshotbarrier!==null){$snapshotbarrier();}
         require_rule(hash_equals($c['issuer'],$request['issuerEpoch']) && hash_equals($c['scopehash'],$request['bindingScopeHash']) &&
             hash_equals($c['profilehash'],hash('sha256',canonical($profile))) && hash_equals($c['installation'],$profile['installationEpoch']), 'CONFIRMATION_BINDING');
+        $ar=pg_query_params($pg,'SELECT * FROM clear_probe.attempts WHERE attemptref=$1',[$c['attemptref']]);
+        require_rule($ar!==false && pg_num_rows($ar)===1,'ATTEMPT');
+        $a=pg_fetch_assoc($ar);check_attempt($a,$request,$profile,time());
         validate_profile($pg,$profile);
         $r=row($pg,$profile,(int)$c['sessionid'],time());
         require_rule((int)$c['userid']===$r['userid'] && (int)$c['generation']===$r['generation'] && (int)$c['authority']===$r['revision'],'STALE_CONFIRMATION');
-        $checked=time();$expiry=min((int)$c['expiry'],$r['timemodified']+(int)$profile['cfg']['sessiontimeout']);
+        $checked=time();$expiry=min((int)$c['expiry'],(int)$a['expiry'],$r['timemodified']+(int)$profile['cfg']['sessiontimeout']);
         if($r['timeend']>0){$expiry=min($expiry,$r['timeend']);}
-        require_rule($start<=$observed && $observed<=$checked && $checked-$start<=5 && hrtime(true)-$mono<=5000000000 && $checked<$expiry,'EXPIRED');
+        require_rule((int)$c['confirmedat']<=$start && $start<=$observed && $observed<=$checked && $checked-$start<=5 && hrtime(true)-$mono<=5000000000 && $checked<$expiry,'EXPIRED');
         require_rule(pg_query($pg,'COMMIT')!==false,'SNAPSHOT');
-        return ['version'=>'clear-moodle-observations.3','requestRef'=>$request['requestRef'],
-            'installationRef'=>'synthetic-moodle','courseRef'=>'synthetic-course','subjectRef'=>'synthetic-subject','audience'=>'synthetic-clear',
-            'issuerEpoch'=>$request['issuerEpoch'],'trustEpoch'=>1,'rosterRevision'=>1,'bindingScopeHash'=>$request['bindingScopeHash'],
-            'confirmationRef'=>$request['confirmationRef'],'moodleSessionGeneration'=>hash('sha256',canonical([$profile['installationEpoch'],$r['sessionid'],$r['generation']])),
-            'enrolmentRevision'=>$r['revision'],'scope'=>'READ_PREVIEW','sourceStatus'=>'OBSERVED_AT','observedAt'=>$observed,'checkedAt'=>$checked,
-            'expiresAtExclusive'=>$expiry,'observations'=>[['targetRef'=>'core-page-manual-mark','state'=>$r['completionstate']==='1'?'COMPLETE':'INCOMPLETE','observedAt'=>$observed]]];
+        $common=[...response_scope($a),'requestRef'=>$request['requestRef'],'confirmationRef'=>$c['ref'],
+            'moodleSessionGeneration'=>hash('sha256',canonical([$profile['installationEpoch'],$r['sessionid'],$r['generation']])),
+            'enrolmentRevision'=>$r['revision'],'observedAt'=>$observed,'checkedAt'=>$checked,'expiresAtExclusive'=>$expiry];
+        if($kind==='confirmation') {
+            return ['version'=>'clear-moodle-confirmation.3','attemptRef'=>$c['attemptref'],
+                'accountHint'=>'Synthetic student','confirmedAt'=>(int)$c['confirmedat'],...$common];
+        }
+        return ['version'=>'clear-moodle-observations.3',...$common,'scope'=>'READ_PREVIEW','sourceStatus'=>'OBSERVED_AT',
+            'observations'=>[['targetRef'=>'core-page-manual-mark','status'=>$r['completionstate']==='1'?'COMPLETE':'INCOMPLETE','observedAt'=>$observed]]];
     } finally {pg_close($pg);}
 }

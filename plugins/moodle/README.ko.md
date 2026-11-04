@@ -13,4 +13,4 @@ zip -r /tmp/local_clearbridge-0.1.0.zip local_clearbridge
 
 활성 등록 상태와 강좌 범위의 `local/clearbridge:view` 권한이 있는 학생은 CLEAR 페이지에서 연결 대기와 비활성 버튼을 본다. URL의 `id`는 강좌 ID다. 학생 식별은 Moodle 세션과 강좌 등록에 의존한다. 외부 인증 계약이 확정되면 별도 연결 작업에서 기존 매핑을 다시 검증해야 한다.
 
-실제 Moodle 코어 session·등록·권한·Page 테이블을 사용하는 합성 CLI adapter와 34개 통합 검사 결과는 [moodle-integration](moodle-integration/README.ko.md)에 있다. 별도 격리 설치용 실험이며 이 설치 플러그인이나 실제 기관 endpoint에서 활성화하지 않는다.
+실제 Moodle 코어 session·등록·권한·Page 테이블을 사용하는 합성 CLI adapter와 B 계약 교차 검증을 포함한 196개 검사 결과는 [moodle-integration](moodle-integration/README.ko.md)에 있다. 별도 격리 설치용 실험이며 이 설치 플러그인이나 실제 기관 endpoint에서 활성화하지 않는다.

@@ -3,6 +3,7 @@ require __DIR__.'/native_codec_fixture.php';
 define('CLI_SCRIPT',true);
 require '/var/www/html/config.php';
 require __DIR__.'/adapter.php';
+require __DIR__.'/attempt_fixture.php';
 use function clear_moodle_probe\collect_profile;
 use function clear_moodle_probe\mint;
 use function clear_moodle_probe\observe;
@@ -16,7 +17,7 @@ $sid='synthetic-issue-failure';
 $old=$DB->get_record('sessions',['sid'=>$sid]);if($old){$DB->delete_records('sessions',['id'=>$old->id]);}
 $target['session']=$DB->insert_record('sessions',(object)['state'=>0,'sid'=>$sid,'userid'=>$target['user'],'sessdata'=>base64_encode('old'),'timecreated'=>time(),'timemodified'=>time(),'firstip'=>'','lastip'=>'']);
 $pg=pg_from_config('reader');$profile=collect_profile($pg,$target);pg_close($pg);
-$attempt=['issuerEpoch'=>str_repeat('c',64),'bindingScopeHash'=>str_repeat('d',64)];
+$attempt=register_probe_attempt($target);
 $handler=function()use($sid){start_probe_codec($sid);$h=new \clear_moodle_probe\guarded_database();$h->set_requires_write_lock(true);$h->read($sid);return $h;};
 $count=fn()=>(int)$DB->get_field_sql('SELECT count(*) FROM clear_probe.confirmations');
 $before=$count();$h=$handler();
@@ -35,7 +36,7 @@ rejected(fn()=>mint($h,$sid,$attempt,$profile),'SESSION_PERSISTENCE','actual tri
 pg_query($owner,'ROLLBACK');$DB->execute('SET lock_timeout=DEFAULT');
 ok($count()===$before,'flush failure rolls confirmation transaction back');
 $h=$handler();$confirmation=mint($h,$sid,$attempt,$profile);
-$request=['version'=>'clear-moodle-observations.3','requestRef'=>bin2hex(random_bytes(32)),...$attempt,'confirmationRef'=>$confirmation['confirmationRef']];
+$request=probe_observations_request($attempt,$confirmation);
 ok(observe($request,$profile)['version']==='clear-moodle-observations.3','new explicit attempt after failed flush is observable');
 $h=$handler();$USER->realuser=99;
 rejected(fn()=>mint($h,$sid,$attempt,$profile),'ASSUMED_IDENTITY','assumed identity rejected before insert and lock released');
