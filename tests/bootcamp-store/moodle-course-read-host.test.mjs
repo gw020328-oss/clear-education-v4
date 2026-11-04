@@ -274,9 +274,9 @@ for(const action of ['logout','owner-change','abort','expired'])test('fixed curr
 test('fixed reverse HTTPS client pins logical Host, TLS CA, request, fresh nonce and rejects redirects/mixed data',async t=>{
  const z=await fixture(t),directory=join(z.x.f.directory,'fixed-client-tls');mkdirSync(directory,{mode:0o700});
  const fingerprint=createCertificates(directory),tls=loadTls(directory,fingerprint),secret=randomBytes(32).toString('hex'),nonces=new Set();
- let mode='OK',hits=0;
+ let mode='OK',hits=0,expectedHost='127.0.0.1:18768';
  const server=createServer(tls,(req,res)=>{let raw='';req.on('data',b=>raw+=b);req.on('end',()=>{
-  hits++;assert.equal(req.method,'POST');assert.equal(req.url,'/local/clearbridge/authority.php');assert.equal(req.headers.host,'127.0.0.1:18768');
+  hits++;assert.equal(req.method,'POST');assert.equal(req.url,'/local/clearbridge/authority.php');assert.equal(req.headers.host,expectedHost);
   assert.equal(req.headers.cookie,undefined);assert.equal(req.headers.authorization,undefined);
   const nonce=req.headers['x-clear-nonce'];assert.ok(!nonces.has(nonce));nonces.add(nonce);
   const signature=createHmac('sha256',secret).update(['CLEAR-MOODLE-AUTHORITY-A-TO-C-1',String(START),nonce,'POST',req.url,createHash('sha256').update(raw).digest('hex')].join('\n')).digest('hex');
@@ -305,6 +305,14 @@ test('fixed reverse HTTPS client pins logical Host, TLS CA, request, fresh nonce
  await assert.rejects(client.verify({...request,connectionPort:1}));assert.equal(hits,before);
  const abort=new AbortController();abort.abort();await assert.rejects(client.verify(request,{signal:abort.signal}));assert.equal(hits,before);
  client.close();await assert.rejects(client.verify(request),/CLOSED/);
+ mode='OK';expectedHost='127.0.0.1:9477';
+ const native=createFixedMoodleAuthorityVerifier({...options,moodleOrigin:'https://127.0.0.1:9477'});t.after(()=>native.close());
+ assert.equal((await native.verify(request)).status,'OK');
+ const nativeHits=hits;await assert.rejects(native.verify({...request,moodleOrigin:'https://127.0.0.1:9999'}));assert.equal(hits,nativeHits);
+ for(const moodleOrigin of ['http://127.0.0.1:9477','https://localhost:9477','https://example.invalid:9477',
+  'https://127.0.0.1:9477/','https://127.0.0.1:9477/path','https://127.0.0.1:9477?x=1',
+  'https://user@127.0.0.1:9477','https://127.0.0.1:443'])assert.throws(()=>createFixedMoodleAuthorityVerifier({...options,moodleOrigin}));
+ assert.equal(hits,nativeHits);
 });
 
 test('worker owner module is absent by default and only exact private hash-checked bytes load',async t=>{

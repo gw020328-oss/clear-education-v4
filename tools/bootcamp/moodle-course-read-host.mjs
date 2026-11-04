@@ -20,11 +20,14 @@ const roles=['PARTICIPANT','COURSE_OPERATOR'];
 // remain untouched. TLS terminates in Moodle, with a fixed logical HTTPS Host
 // matching Moodle's canonical port; only the private TCP route uses port 19468.
 // No caller/request can choose the target, Host, CA, redirect or credentials.
-export function createFixedMoodleAuthorityVerifier({ownerRunId,secret,ca,connectionPort=19468,
+export function createFixedMoodleAuthorityVerifier({ownerRunId,secret,ca,connectionPort=19468,moodleOrigin='https://127.0.0.1:18768',
  now=()=>Math.floor(Date.now()/1000),monotonic=()=>performance.now()}){
  check(ref(ownerRunId)&&typeof secret==='string'&&/^[a-f0-9]{64}$/.test(secret)&&ca
   &&Number.isInteger(connectionPort)&&connectionPort>=1024&&connectionPort<=65535,'COURSE_FIXED_AUTHORITY_CONFIG');
- const time=clock(now,monotonic),key=Buffer.from(secret,'utf8'),authorityHost='127.0.0.1:18768';
+ const logical=new URL(moodleOrigin);
+ check(logical.origin===moodleOrigin&&logical.protocol==='https:'&&logical.hostname==='127.0.0.1'
+  &&Number(logical.port)>=1024&&Number(logical.port)<=65535,'COURSE_FIXED_AUTHORITY_CONFIG');
+ const time=clock(now,monotonic),key=Buffer.from(secret,'utf8'),authorityHost=logical.host;
  const certificateAuthority=Buffer.from(ca);let closed=false;const requests=new Set();
  const verify=async(input,{signal}={})=>{
   check(!closed,'COURSE_FIXED_AUTHORITY_CLOSED');signal?.throwIfAborted();const body=requestShape(input,ownerRunId),start=time();
