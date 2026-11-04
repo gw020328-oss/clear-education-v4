@@ -1,24 +1,72 @@
 {{!
     @template local_clearbridge/course_native_connection
 
-    Connection stages before the native wallet provider is configured.
+    Moodle owns the controls. The wallet adapter supplies validated display state.
     Example context (json): {"student": true}
 }}
-<p>{{#str}} connectionstatusunavailable, local_clearbridge {{/str}}</p>
-<ol class="mb-0">
-    <li class="mb-3">
-        <h3 class="h5">{{#str}} nativewalletheading, local_clearbridge {{/str}}</h3>
-        <p class="mb-0">
-            {{#student}}{{#str}} nativestudentwallet, local_clearbridge {{/str}}{{/student}}
-            {{^student}}{{#str}} nativeteacherwallet, local_clearbridge {{/str}}{{/student}}
-        </p>
-    </li>
-    <li class="mb-3">
-        <h3 class="h5">{{#str}} nativenetworkheading, local_clearbridge {{/str}}</h3>
-        <p class="mb-0">{{#str}} nativenetworkunknown, local_clearbridge {{/str}}</p>
-    </li>
-    <li>
-        <h3 class="h5">{{#str}} nativeloginheading, local_clearbridge {{/str}}</h3>
-        <p class="mb-0">{{#str}} nativeloginunavailable, local_clearbridge {{/str}}</p>
-    </li>
-</ol>
+<div data-clear-wallet-ui>
+    <p data-wallet-summary role="status">{{#str}} connectionstatusunavailable, local_clearbridge {{/str}}</p>
+    <ol class="mb-0">
+        <li class="mb-3">
+            <h3 class="h5">{{#str}} nativewalletheading, local_clearbridge {{/str}}</h3>
+            <p data-wallet-stage="wallet">
+                {{#student}}{{#str}} nativestudentwallet, local_clearbridge {{/str}}{{/student}}
+                {{^student}}{{#str}} nativeteacherwallet, local_clearbridge {{/str}}{{/student}}
+            </p>
+            {{#student}}
+            <button type="button" class="btn btn-primary" data-wallet-action="connect-google" hidden>
+                {{#str}} logingoogle, local_clearbridge {{/str}}
+            </button>
+            {{/student}}
+            {{^student}}
+            <div data-wallet-options="provider" hidden>
+                <label for="clearbridge-wallet-provider">{{#str}} nativeproviderchoice, local_clearbridge {{/str}}</label>
+                <select id="clearbridge-wallet-provider" class="form-select" data-wallet-select="provider"></select>
+                <button type="button" class="btn btn-primary mt-2" data-wallet-action="connect-metamask" hidden>
+                    {{#str}} nativeconnectmetamask, local_clearbridge {{/str}}
+                </button>
+            </div>
+            {{/student}}
+            <div data-wallet-options="wallet" hidden>
+                <label for="clearbridge-wallet-choice">{{#str}} nativewalletchoice, local_clearbridge {{/str}}</label>
+                <select id="clearbridge-wallet-choice" class="form-select" data-wallet-select="wallet"></select>
+                <button type="button" class="btn btn-primary mt-2" data-wallet-action="select-wallet" hidden>
+                    {{#str}} nativeapplywalletchoice, local_clearbridge {{/str}}
+                </button>
+            </div>
+        </li>
+        <li class="mb-3">
+            <h3 class="h5">{{#str}} nativenetworkheading, local_clearbridge {{/str}}</h3>
+            <p data-wallet-stage="network">{{#str}} nativenetworkunknown, local_clearbridge {{/str}}</p>
+            <button type="button" class="btn btn-secondary" data-wallet-action="check-network" hidden>
+                {{#str}} nativechecknetwork, local_clearbridge {{/str}}
+            </button>
+        </li>
+        <li>
+            <h3 class="h5">{{#str}} nativeloginheading, local_clearbridge {{/str}}</h3>
+            <p data-wallet-stage="login">{{#str}} nativeloginunavailable, local_clearbridge {{/str}}</p>
+            <button type="button" class="btn btn-primary" data-wallet-action="sign-in" hidden>
+                {{#str}} nativesignin, local_clearbridge {{/str}}
+            </button>
+        </li>
+    </ol>
+    <div class="mt-3">
+        <button type="button" class="btn btn-secondary" data-wallet-action="cancel" hidden>
+            {{#str}} cancel {{/str}}
+        </button>
+        <button type="button" class="btn btn-secondary" data-wallet-action="sign-out" hidden>
+            {{#str}} nativewalletsignout, local_clearbridge {{/str}}
+        </button>
+    </div>
+    <div hidden>
+        <span data-wallet-message="choose">{{#str}} nativechooseoption, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="metamask">{{#str}} nativeproviderchoice, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="idle">{{#str}} nativewalletidle, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="busy">{{#str}} nativewalletbusy, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="error">{{#str}} nativewalleterror, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="walletselected">{{#str}} nativewalletselected, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="networkready">{{#str}} nativenetworkready, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="loginready">{{#str}} nativesigninready, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="authenticated">{{#str}} nativewalletauthenticated, local_clearbridge {{/str}}</span>
+    </div>
+</div>
