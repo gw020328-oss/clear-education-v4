@@ -5,7 +5,7 @@ import {createMoodleLoginAuthority, createMoodleLoginProofs} from './moodle-logi
 
 // The run owner supplies fixed topology, credentials and scope through its
 // already hash-pinned module. None can be selected by an HTTP caller.
-export function createNormalMoodleLogin({options, ownerRunId, runExpiresAtExclusive, authentication, wallets, now, signal}) {
+export function createNormalMoodleLogin({options, ownerRunId, runExpiresAtExclusive, authentication, wallets, now, signal, native = false}) {
   exactKeys(options, ['moodleOrigin', 'scope', 'proofKey', 'reverseKey', 'reverseCa', 'connectionPort'], 'MOODLE_LOGIN_CONFIG');
   check(options.proofKey !== options.reverseKey, 'MOODLE_LOGIN_CONFIG');
   const proofs = createMoodleLoginProofs(options.proofKey);
@@ -24,7 +24,7 @@ export function createNormalMoodleLogin({options, ownerRunId, runExpiresAtExclus
       },
     });
     const browser = createMoodleLoginBrowser({origin: authentication.origin, moodleOrigin: options.moodleOrigin,
-      ownerRunId, intents, now, signal});
+      ownerRunId, intents, now, signal, native});
     const owner = Object.freeze({issue: intents.issue, status: intents.status, end: intents.end, finish: intents.finish});
     return Object.freeze({browser, owner, close});
   } catch (error) { close(); throw error; }

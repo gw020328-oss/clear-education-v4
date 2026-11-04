@@ -4,7 +4,8 @@ export function validateConfig(input) {
   check(u.protocol === 'https:' && u.hostname === '127.0.0.1' && u.origin === c.origin
     && Number(u.port) >= 1024 && Number(u.port) <= 65535, 'EMBEDDED_ORIGIN');
   check(c.appId === null || typeof c.appId === 'string' && /^[a-z0-9]{10,80}$/.test(c.appId), 'EMBEDDED_APP_ID');
-  check(c.redirectUri === c.origin + '/onboarding', 'EMBEDDED_REDIRECT');
+  check(c.surface === undefined || c.surface === 'MOODLE_NATIVE', 'EMBEDDED_SURFACE');
+  check(c.redirectUri === c.origin + (c.surface === 'MOODLE_NATIVE' ? '/local/clearbridge/wallet-return' : '/onboarding'), 'EMBEDDED_REDIRECT');
   check(['ONBOARDING_ONLY', 'AUTH_LOCAL_TEST', 'ACTIVE_LOCAL_TEST'].includes(c.phase), 'EMBEDDED_PHASE');
   check(Number.isSafeInteger(c.chainId) && c.chainId > 0, 'EMBEDDED_CHAIN');
   const rpc = new URL(c.rpcUrl);
@@ -12,13 +13,15 @@ export function validateConfig(input) {
     && rpc.pathname === '/' && !rpc.search && !rpc.hash && !rpc.username && !rpc.password, 'EMBEDDED_RPC');
   check(typeof c.instanceId === 'string' && /^0x[0-9a-f]{64}$/.test(c.instanceId), 'EMBEDDED_INSTANCE');
   return Object.freeze({appId: c.appId, origin: c.origin, redirectUri: c.redirectUri, phase: c.phase,
-    chainId: c.chainId, rpcUrl: rpc.origin, instanceId: c.instanceId});
+    chainId: c.chainId, rpcUrl: rpc.origin, instanceId: c.instanceId,
+    ...(c.surface === 'MOODLE_NATIVE' ? {surface: c.surface} : {})});
 }
 export function privyConfig(config, scriptNonce) {
   const c = validateConfig(config);
   const chain = {id: c.chainId, name: 'CLEAR Local TEST', nativeCurrency: {name: 'Local test Ether', symbol: 'ETH', decimals: 18},
     rpcUrls: {default: {http: [c.rpcUrl]}}, testnet: true};
   return {loginMethods: ['google'], defaultChain: chain, supportedChains: [chain], scriptNonce,
+    ...(c.surface === 'MOODLE_NATIVE' ? {customOAuthRedirectUrl: c.redirectUri} : {}),
     appearance: {walletChainType: 'ethereum-only'}, externalWallets: {disableAllExternalWallets: true},
     embeddedWallets: {ethereum: {createOnLogin: 'off'}, solana: {createOnLogin: 'off'},
       disableAutomaticMigration: true, showWalletUIs: true}};

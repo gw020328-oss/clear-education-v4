@@ -7,16 +7,19 @@ const popup = '/moodle/connect';
 const script = popup + '/popup.js';
 const redeem = popup + '/redeem';
 const googleStart = popup + '/google-start';
+const nativeBootstrap = popup + '/bootstrap';
 const scriptBytes = readFileSync(new URL('./moodle-login-popup.js', import.meta.url));
 const hex = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 
-export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, intents, now, signal}) {
+export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, intents, now, signal, native = false}) {
   const clear = new URL(origin), moodle = new URL(moodleOrigin);
   check(clear.origin === origin && clear.protocol === 'https:' && clear.hostname === '127.0.0.1'
     && moodle.origin === moodleOrigin && ['https:', 'http:'].includes(moodle.protocol)
     && /^[a-z0-9.-]+$/.test(moodle.hostname) && (moodle.protocol === 'https:' || moodle.hostname === '127.0.0.1'),
     'MOODLE_LOGIN_BROWSER_CONFIG');
+  check(typeof native === 'boolean' && (!native || origin === moodleOrigin), 'MOODLE_LOGIN_NATIVE_ORIGIN');
   const cookiePrefix = '__Host-clear-ml-' + createHash('sha256').update(ownerRunId).digest('hex').slice(0, 24);
+  const paths = native ? [nativeBootstrap, redeem] : [popup, script, redeem, googleStart];
   const bootstrapName = cookiePrefix + '-boot', bindingName = cookiePrefix + '-binding';
   const cookie = (name, value, age) => name + '=' + value + '; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=' + age;
   function readCookie(header = '', name) {
@@ -28,7 +31,7 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
     return value;
   }
   return Object.freeze({
-    matches: path => [popup, script, redeem, googleStart].includes(path),
+    matches: path => paths.includes(path),
     async handle(req, res) {
       protectLoginResponse(res);
       res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
@@ -36,6 +39,7 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
         signal?.throwIfAborted();
         check(req.socket.encrypted && req.headers.host === clear.host
           && !req.headers.authorization, 'MOODLE_LOGIN_BROWSER');
+        check(paths.includes(req.url), 'MOODLE_LOGIN_BROWSER');
         if (req.url === popup && req.method === 'GET') {
           check(req.headers['sec-fetch-mode'] === 'navigate' && req.headers['sec-fetch-dest'] === 'document',
             'MOODLE_LOGIN_BROWSER');
@@ -46,6 +50,18 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
           return;
         }
         check(req.headers['sec-fetch-site'] === 'same-origin', 'MOODLE_LOGIN_BROWSER');
+        if (native && req.url === nativeBootstrap) {
+          check(req.method === 'POST' && req.headers.origin === origin, 'MOODLE_LOGIN_BROWSER');
+          const {value} = await readLoginJson(req);
+          exactKeys(value, [], 'MOODLE_LOGIN_BOOTSTRAP');
+          signal?.throwIfAborted();
+          check(!intents.browserPending(readCookie(req.headers.cookie, bindingName)), 'MOODLE_LOGIN_BROWSER_BUSY');
+          const boot = intents.bootstrap();
+          res.writeHead(200, {'Content-Type': 'application/json',
+            'Set-Cookie': cookie(bootstrapName, boot.bootstrapCookie, boot.expiresAtExclusive - now())});
+          res.end(JSON.stringify({challenge: boot.challenge, expiresAtExclusive: boot.expiresAtExclusive}));
+          return;
+        }
         if (req.url === script && req.method === 'GET') {
           res.writeHead(200, {'Content-Type': 'text/javascript; charset=utf-8'});
           res.end(scriptBytes);
@@ -65,6 +81,15 @@ export function createMoodleLoginBrowser({origin, moodleOrigin, ownerRunId, inte
         exactKeys(value, ['code', 'challenge', 'browserProof'], 'MOODLE_LOGIN_LAUNCH');
         check(!intents.browserPending(readCookie(req.headers.cookie, bindingName)), 'MOODLE_LOGIN_BROWSER_BUSY');
         const binding = intents.redeem({...value, bootstrapCookie: readCookie(req.headers.cookie, bootstrapName)});
+        if (native) {
+          check(['/onboarding', '/operator'].includes(binding.location), 'MOODLE_LOGIN_ROLE');
+          res.writeHead(200, {'Content-Type': 'application/json', 'Set-Cookie': [
+            cookie(bootstrapName, '', 0), cookie(bindingName, binding.browserBinding, binding.expiresAtExclusive - now()),
+          ]});
+          res.end(JSON.stringify({status: 'WAITING', role: binding.location === '/operator' ? 'operator' : 'participant',
+            expiresAtExclusive: binding.expiresAtExclusive}));
+          return;
+        }
         res.writeHead(303, {Location: binding.location, 'Set-Cookie': [
           cookie(bootstrapName, '', 0), cookie(bindingName, binding.browserBinding, binding.expiresAtExclusive - now()),
         ]});

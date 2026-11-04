@@ -9,7 +9,8 @@ const {build} = require('esbuild');
 const outdir = root + 'var/embedded-wallet-build';
 mkdirSync(outdir, {recursive: true});
 await build({absWorkingDir: root, entryPoints: {onboarding: 'src/embedded-wallet/onboarding.jsx', operator: 'src/embedded-wallet/operator.jsx',
-  adapter: 'src/embedded-wallet/exports.mjs'}, outdir, bundle: true, splitting: true, format: 'esm', platform: 'browser',
+  adapter: 'src/embedded-wallet/exports.mjs', 'moodle-native': 'src/embedded-wallet/moodle-native.jsx',
+  'moodle-oauth-return': 'src/embedded-wallet/moodle-oauth-return.jsx'}, outdir, bundle: true, splitting: true, format: 'esm', platform: 'browser',
   target: ['chrome120'], minify: true, sourcemap: false, legalComments: 'external',
   define: {'process.env.NODE_ENV': '"production"'}, logLevel: 'warning'});
 copyFileSync(root + 'src/embedded-wallet/style.css', outdir + '/style.css');
