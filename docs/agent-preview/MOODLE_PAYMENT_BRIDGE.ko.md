@@ -80,3 +80,34 @@ Node24.21.0과 외부 네트워크 차단에서 신규 projection18·snapshot14 
 | Moodle 지급 영수증 표시 | 신규 `src/bootcamp/moodle-payment-snapshot.mjs`, `moodle-payment-projection.mjs` | 위 private owner mapping/resolver 및 별도 normal-receipt 인스턴스. C에는 displayOnly DTO만 전달한다. 실제 HTTP transport와 응답 인증/현재 Moodle 세션 결합은 아직 미구현이다. |
 
 C는 `plugins/moodle/**`의 로그인·강좌 권한, 화면·서버 transport를 소유한다. B의 학생 binding currentness는 별도 입력이며 운영자가 학생 세션을 대신 사용할 수 없다. A의 현재 변경 소유권은 신규 snapshot/projection 및 그 테스트·이 문서에 한정된다. 공용 `src/bootcamp/http.mjs`, `tools/bootcamp/live-context.mjs`, host/driver 및 기존 web 파일 조립은 본부의 소유 경로 배정 후 진행한다. 서버 중단 직접 청구·절전/재시작/복구 확대는 이번 정상 연결 수정에 포함하지 않는다.
+
+
+## 정상 경로용 서버 조립 후보
+
+`tools/bootcamp/moodle-course-read-host.mjs`와 대응 `tests/bootcamp-store/moodle-course-read-host.test.mjs`를 추가했다. 앞 절의 미구현 상태 중 private owner adapter와 HTTPS server factory가 이 후보에서 구현됐다. 실제 C 권한 발행·검증, B 현재 binding/trustedTime, 정상 host의 독립 CLEAR 세션·mapping 주입은 여전히 필수 연결 입력이다. 신규 모듈을 import하거나 factory를 만드는 것만으로 listener·지급·AI를 활성화하지 않는다.
+
+호출 계약은 다음과 같다. `now`는 epoch 초, `monotonic`은 밀리초다.
+
+```js
+const host = createMoodleCourseReadHost({
+  ownerRunId, mapping, resolveAuthority, authentication, snapshots, receiptSource,
+  createCourseEvidenceReader, getDecisionEvidence, readSourceStates, now, monotonic
+});
+const server = createMoodleCourseReadServer({
+  host, tls, origin, secret, createCourseReadServer, clock, monotonic
+});
+```
+
+`createCourseEvidenceReader`는 B 승인 `145720325711cba3243d8b41cd698f5dcce5dba4`의 factory, `getDecisionEvidence(context,slug)`는 기존 S4 읽기 전용 reader다. `createCourseReadServer`는 D `18626211e70add439d6afc5e73d5ba47d71744a6`의 `deploy/agent-preview/course-read-http.mjs` factory를 공급한다. 마지막 factory는 D의 생성자에 A callback을 결합하며 자동 listen하지 않는다. D의 `clock`은 epoch 밀리초로 A의 초 단위 시계와 같은 시간 프로필을 사용해야 한다. 각 새 실행은 별도 ownerRunId와 새 C→A 전용 raw UTF-8 hex64 HMAC key, 명시적인 TLS key/cert를 공급한다. C 클라이언트는 고정 CA/hostname을 확인하고 redirect를 금지한다. 키를 hex decode하거나 기존 원천/preview 키를 재사용하지 않는다.
+
+고정 private POST `/v1/moodle/course/read`의 요청은 정확히 `{version:'clear-moodle-course-read-request.1', requestRef, ownerRunId, moodleAuthorityRef, role, expiresAtExclusive}`다. requestRef는 PHP에서 생성하는 random32bytes의 hex64, role은 PARTICIPANT/COURSE_OPERATOR다. D는 채널 HMAC·nonce/request 재사용·Host/경로/크기/최대5초·취소를 확인한 뒤 frozen 요청을 A의 **private** `host.readCourse(handle,{signal})`에 넘긴다. 이 callback을 별도의 인증 없는 HTTP 경로로 노출하면 안 된다. frozen 객체 자체는 사용자 권한의 증거가 아니다.
+
+A는 requestRef/run/role/ref를 결합한 내부 handle을 만든다. `resolveAuthority(handle,request,{signal})`는 매번 C가 발급한 ref의 현재 세션·설치·강좌·인증세대·주체·열람범위·만료와 B binding/mapping을 검증하고, 위 A exact scope를 반환해야 한다. 반환 authorityRef는 요청 moodleAuthorityRef와 같으며 CLEAR context는 현재 역할의 독립 세션이어야 한다. 지급 수령인·토큰·정책·runtime·두 신청 ID mapping은 서버 정본에서만 가져온다. 기본 resolver나 권한이 없을 때 합성 객체로 대신하는 경로는 없다.
+
+A 내부 `read(handle,request)`는 정확히 `{version:'clear-moodle-course-read-response.1',requestRef,ownerRunId,role,status,expiresAtExclusive,evidence,payment}`를 만든다. private callback은 version/ref/run/role과 payment.requestRef를 대조한 뒤 D에 `{status,expiresAtExclusive,evidence,payment}` 네 필드만 반환한다. D가 검증한 요청 값으로 최종 8필드 wire를 구성한다. UNAVAILABLE은 expiry/evidence/payment 모두 null이며 부분 DTO나 이전 성공을 반환하지 않는다. malformed/미인증 요청은 D의 고정 오류 응답을 따른다.
+
+동일 owner mapping·현재 권한/epoch·CLEAR actor를 모든 await 전후 재검사한다. 증빙의 실제 S4 decision hash/id/revision과 payment의 현재 판정을 대조하고, 마지막 권한 재조회 뒤 S4와 read-only payment snapshot을 동기로 다시 조회해 변경 여부를 확인한다. OK 기한은 요청5초·mapping·binding·현재 Moodle/CLEAR 권한·payment 기한·증빙 관측 시각+1초의 최솟값이며 payment의 기한도 함께 줄인다. 관측 시각+1초는 B DTO에 완전한 유효시간 경계가 없어 적용한 보수적인 표시 기한이다. 이를 넘으면 자동 재시도하지 않고 UNAVAILABLE로 처리한다. D 취소 signal 이후에는 다음 owner/evidence 조회를 시작하지 않는다.
+
+인증 창 힌트는 기존 `{version:'clear-moodle-auth-window-result.1',requestRef,status:'REFRESH_REQUIRED'}`를 유지한다. C는 정확한 origin/source-window/requestRef를 확인하고 새로운 authenticated read를 요청한다. 힌트는 로그인·동의·지급 성공 근거가 아니며 callback이나 CLEAR token을 browser 메시지에 담지 않는다.
+
+국소 adapter 검사 37개가 통과했다. 승인 B factory exact archive와 A adapter, D exact 커밋을 함께 사용한 loopback HTTPS 합성 검사 3개도 통과했다(참가자·운영자 OK 및 권한 없음 UNAVAILABLE, raw HMAC/CA 확인·재사용 거부·DB bytes 보존). 초기 합성 연결 시 B 작업본의 의존성이 없어 import가 실패했으며, 타 담당자 작업본을 수정하지 않고 승인 커밋의 별도 archive와 기존 의존성으로 해결했다. 별도 과정 전체/PR139/기존61개 검사를 재실행하지 않았다. 실제 C ref 발급, 사용자 로그인, 원천 증명·AI·100 TEST 지급, 실운영 시간 프로필 및 독립 권한 리뷰를 완료했다는 뜻은 아니다.

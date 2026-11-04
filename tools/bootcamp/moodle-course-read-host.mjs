@@ -1,0 +1,135 @@
+import {createHash} from 'node:crypto';
+import {canonical,exactKeys,freeze,requireRule as check} from '../../src/policy/values.mjs';
+import {createMoodlePaymentReader} from '../../src/bootcamp/moodle-payment-projection.mjs';
+
+export const COURSE_READ_PATH='/v1/moodle/course/read';
+export const COURSE_READ_REQUEST='clear-moodle-course-read-request.1';
+export const COURSE_READ_RESPONSE='clear-moodle-course-read-response.1';
+const hosts=new WeakSet();
+const ref=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v);
+const integer=v=>Number.isSafeInteger(v)&&v>0;
+const same=(a,b)=>canonical(a)===canonical(b);
+const digest=v=>createHash('sha256').update(canonical(v)).digest('hex');
+const roles=['PARTICIPANT','COURSE_OPERATOR'];
+function requestShape(value,ownerRunId){
+ exactKeys(value,['version','requestRef','ownerRunId','moodleAuthorityRef','role','expiresAtExclusive'],'COURSE_READ_REQUEST');
+ check(value.version===COURSE_READ_REQUEST&&/^[a-f0-9]{64}$/.test(value.requestRef)&&value.ownerRunId===ownerRunId
+  &&ref(value.moodleAuthorityRef)&&roles.includes(value.role)&&integer(value.expiresAtExclusive),'COURSE_READ_REQUEST');
+ return freeze(structuredClone(value));
+}
+function clock(now,monotonic){
+ let floor=0;
+ return ()=>{const wall=now(),mono=monotonic();check(integer(wall)&&wall>=floor&&Number.isFinite(mono)&&mono>=0,'COURSE_READ_CLOCK');floor=wall;return {wall,mono};};
+}
+
+const stableSnapshot=value=>{const {observedAt,...stable}=value;return stable;};
+const scopeKeys=['requestRef','authorityRef','authorityEpoch','expiresAtExclusive','mapping','role','clearContext'];
+// No listener starts here. All dependencies are owner-only ports; absent current
+// Moodle/B authority or a separate CLEAR actor must throw, never synthesize one.
+export function createMoodleCourseReadHost({ownerRunId,mapping,resolveAuthority,authentication,snapshots,receiptSource,
+ createCourseEvidenceReader,getDecisionEvidence,readSourceStates,now=()=>Math.floor(Date.now()/1000),monotonic=()=>performance.now()}){
+ check(ref(ownerRunId)&&[resolveAuthority,authentication?.authorizeWorkflow,authentication?.whoami,
+  createCourseEvidenceReader,getDecisionEvidence,now,monotonic].every(f=>typeof f==='function'),'COURSE_READ_CONFIG');
+ const pinned=freeze(structuredClone(mapping)),time=clock(now,monotonic),used=new WeakSet(),handles=new WeakMap(),requests=new Set();
+ const authorizeTransport=(handle,request)=>{
+  const entry=handles.get(handle),current=time();
+  entry?.signal?.throwIfAborted();
+  check(entry&&entry.requestHash===digest(request),'COURSE_READ_AUTH');
+  check(current.wall<request.expiresAtExclusive&&current.mono>=entry.started.mono&&current.mono-entry.started.mono<5000,'COURSE_READ_EXPIRED');
+ };
+ // Validate the pinned mapping/receipt/snapshot composition even before read.
+ createMoodlePaymentReader({mapping:pinned,resolveScope:resolveAuthority,authentication,snapshots,receiptSource,now,monotonic});
+ const host=Object.freeze({ownerRunId,async read(verifiedTransportHandle,body){
+  const request=requestShape(body,ownerRunId);
+  authorizeTransport(verifiedTransportHandle,request);
+  check(!used.has(verifiedTransportHandle),'COURSE_READ_REPLAY');used.add(verifiedTransportHandle);
+  const unavailable=()=>freeze({version:COURSE_READ_RESPONSE,requestRef:request.requestRef,ownerRunId:request.ownerRunId,
+   role:request.role,status:'UNAVAILABLE',expiresAtExclusive:null,evidence:null,payment:null});
+  try{
+   const started=time();let end=Math.min(request.expiresAtExclusive,started.wall+5,pinned.expiresAtExclusive,pinned.bindingExpiresAtExclusive),identity;
+   const current=()=>{authorizeTransport(verifiedTransportHandle,request);const t=time();check(t.wall<end&&t.mono>=started.mono&&t.mono-started.mono<5000,'COURSE_READ_EXPIRED');return t;};
+   async function scope(){
+    current();const s=structuredClone(await resolveAuthority(verifiedTransportHandle,request,{signal:handles.get(verifiedTransportHandle)?.signal}));current();
+    exactKeys(s,scopeKeys,'COURSE_READ_SCOPE');exactKeys(s.clearContext,['token','wallet','chainId','csrf'],'COURSE_READ_SCOPE');
+    check(s.requestRef===request.requestRef&&s.authorityRef===request.moodleAuthorityRef&&integer(s.authorityEpoch)
+     &&integer(s.expiresAtExclusive)&&s.role===request.role&&same(s.mapping,pinned),'COURSE_READ_SCOPE');
+    const expectedRole=request.role==='PARTICIPANT'?'participant':'operator';
+    const expectedWallet=request.role==='PARTICIPANT'?pinned.participantWallet:pinned.operatorWallet;
+    const actor=authentication.authorizeWorkflow(s.clearContext,false),session=authentication.whoami(s.clearContext);
+    check(actor.role===expectedRole&&actor.wallet.toLowerCase()===expectedWallet&&session.role===expectedRole
+     &&session.wallet.toLowerCase()===expectedWallet&&integer(session.expiresAt),'COURSE_READ_CLEAR_ACTOR');
+    end=Math.min(end,s.expiresAtExclusive,session.expiresAt);current();
+    const fingerprint=digest(s);if(identity===undefined)identity=fingerprint;else check(identity===fingerprint,'COURSE_READ_AUTHORITY_CHANGED');
+    return s;
+   }
+   const first=await scope(),initial=snapshots.read(first.clearContext,pinned.applicationId);current();
+   const paymentReader=createMoodlePaymentReader({mapping:pinned,resolveScope:scope,authentication,snapshots,receiptSource,now,monotonic});
+   const payment=structuredClone(await paymentReader.read(verifiedTransportHandle));current();
+   let captured,reads=0;
+   const readEvidence=(context,applicationId)=>{
+    check(applicationId===pinned.applicationId&&same(context,first.clearContext),'COURSE_READ_EVIDENCE_SCOPE');
+    const value=getDecisionEvidence(context,applicationId);
+    check(value?.version==='clear-bootcamp-decision-evidence.1'&&value.applicationId===pinned.applicationId&&value.role===request.role
+     &&value.manifest?.applicationId===pinned.applicationId&&value.manifest?.decision?.policyHash===pinned.policyHash
+     &&value.currentDecision?.matchesRequestedDecision===true&&value.currentDecision.decisionId===value.manifest.decision.decisionId
+     &&integer(value.observedAt),'COURSE_READ_EVIDENCE_SCOPE');
+    current();return structuredClone(value);
+   };
+   const evidenceReader=createCourseEvidenceReader({resolveScope:async()=>{const s=await scope();return {
+    courseRef:pinned.courseRef,participantRef:pinned.subjectRef,applicationId:pinned.applicationId,
+    role:s.role,authorityRef:s.authorityRef,clearContext:s.clearContext};},
+    getDecisionEvidence:(context,id)=>{check(++reads===1,'COURSE_READ_EVIDENCE_READS');captured=readEvidence(context,id);return captured;},
+    ...(readSourceStates===undefined?{}:{readSourceStates})});
+   const evidence=structuredClone(await evidenceReader.read(verifiedTransportHandle));current();
+   exactKeys(evidence,['version','role','observedAt','decision','applicationActive','criteria','usableForPayment'],'COURSE_READ_EVIDENCE');
+   check(reads===1&&evidence.version==='clear-moodle-course-evidence.1'&&evidence.role===request.role&&evidence.usableForPayment===false
+    &&evidence.observedAt===captured.observedAt&&evidence.decision.id===payment.decision.id
+    &&evidence.decision.revision===payment.decision.revision&&evidence.decision.recordedConditionsStatus===payment.decision.recordedConditionsStatus
+    &&captured.manifest.decision.decisionId===payment.decision.id&&captured.manifest.decision.decisionRevision===payment.decision.revision
+    &&captured.manifest.decision.decisionHash===payment.decision.hash,'COURSE_READ_DECISION');
+   const final=await scope(),last=snapshots.read(final.clearContext,pinned.applicationId);
+   const finalEvidence=readEvidence(final.clearContext,pinned.applicationId);
+   check(same(stableSnapshot(initial),stableSnapshot(last))&&same(stableSnapshot(captured),stableSnapshot(finalEvidence)),'COURSE_READ_CHANGED');
+   check(payment.requestRef===request.requestRef&&payment.role===request.role&&payment.mappingRevision===pinned.mappingRevision
+    &&payment.bindingRef===pinned.bindingRef&&payment.bindingRevision===pinned.bindingRevision,'COURSE_READ_PAYMENT_SCOPE');
+   // B's display DTO has no complete validity horizon. Do not let it outlive its
+   // observed second; all its source/clock boundaries are integer epoch seconds.
+   end=Math.min(end,payment.expiresAtExclusive,evidence.observedAt+1);current();
+   payment.expiresAtExclusive=end;
+   return freeze({version:COURSE_READ_RESPONSE,requestRef:request.requestRef,ownerRunId:request.ownerRunId,role:request.role,
+    status:'OK',expiresAtExclusive:end,evidence,payment});
+  }catch{return unavailable();}
+ },
+ // Private callback for D's authenticated handler ONLY. The six frozen fields
+ // are service-verified by D, not user authority. Refs still go through the
+ // independent, fresh Moodle/B/CLEAR owner resolver inside read().
+ async readCourse(transportHandle,{signal}={}){
+  check(signal===undefined||signal instanceof AbortSignal,'COURSE_READ_SIGNAL');signal?.throwIfAborted();
+  check(Object.isFrozen(transportHandle),'COURSE_READ_TRANSPORT_HANDLE');
+  const request=requestShape(transportHandle,ownerRunId),started=time();
+  check(started.wall<request.expiresAtExclusive&&request.expiresAtExclusive<=started.wall+5
+   &&!requests.has(request.requestRef)&&requests.size<10000,'COURSE_READ_REPLAY');
+  requests.add(request.requestRef);handles.set(transportHandle,{requestHash:digest(request),started,signal});
+  const result=await host.read(transportHandle,request);
+  exactKeys(result,['version','requestRef','ownerRunId','role','status','expiresAtExclusive','evidence','payment'],'COURSE_READ_RESPONSE');
+  check(result.version===COURSE_READ_RESPONSE&&result.requestRef===request.requestRef&&result.ownerRunId===request.ownerRunId
+   &&result.role===request.role&&(result.payment===null||result.payment.requestRef===request.requestRef),'COURSE_READ_RESPONSE');
+  return freeze({status:result.status,expiresAtExclusive:result.expiresAtExclusive,evidence:result.evidence,payment:result.payment});
+ }
+ });
+ hosts.add(host);return host;
+}
+
+// Explicit owner-created HTTPS server; factory does not bind/listen. C/D must
+// pin the CA and hostname and disable redirects on their client. No CORS, cookie,
+// proxy authority, raw proof route, retry, payment command or default TLS bypass.
+export function createMoodleCourseReadServer({host,tls,origin,secret,createCourseReadServer,clock=Date.now,monotonic=()=>performance.now()}){
+ const url=new URL(origin);
+ check(hosts.has(host)&&tls&&tls.key&&tls.cert&&typeof createCourseReadServer==='function'
+  &&url.protocol==='https:'&&url.origin===origin&&!url.username&&!url.password
+  &&typeof secret==='string'&&/^[a-f0-9]{64}$/.test(secret),'COURSE_READ_SERVER_CONFIG');
+ // D owns raw HMAC, nonce/request replay, size/route/Host, cancellation and the
+ // eight-field wire response. A supplies the independently checked four-field
+ // callback, a fresh run/key and TLS. No same-host proxy/default key here.
+ return createCourseReadServer({origin,ownerRunId:host.ownerRunId,secret,readCourse:host.readCourse,tls,clock,monotonic});
+}
