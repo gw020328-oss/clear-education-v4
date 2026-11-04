@@ -108,7 +108,7 @@ function prepareNative({options,assets,wallets,moodleLogin,origin}){
  const publicAssets=new Map();
  for(const entry of inventory.assets){
   fail(entry&&Object.keys(entry).sort().join(',')==='path,sha256'
-   &&/^\/assets\/[A-Za-z0-9_-]+\.(?:js|css)$/.test(entry.path)&&/^[a-f0-9]{64}$/.test(entry.sha256));
+   &&/^\/assets\/[A-Za-z0-9_][A-Za-z0-9_.-]*\.(?:js|css)$/.test(entry.path)&&/^[a-f0-9]{64}$/.test(entry.sha256));
   const asset=assets.get(entry.path),path=entry.path.replace('/assets/','/clear-assets/');
   fail(asset&&!publicAssets.has(path)&&createHash('sha256').update(asset.body).digest('hex')===entry.sha256);
   publicAssets.set(path,asset);

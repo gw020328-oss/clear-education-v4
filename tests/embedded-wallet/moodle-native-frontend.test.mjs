@@ -25,9 +25,9 @@ async function fixture(t){
  const webRoot=join(directory,'web');mkdirSync(webRoot);mkdirSync(join(webRoot,'assets'));
  const files={'index.html':'<!doctype html>legacy landing','clear-wallet-app.html':'<meta name="clear-wallet-app" content="syntheticfixture123">\n',
   'clear-moodle-native.html':'<meta name="clear-moodle-native" content="1">\n','assets/onboarding.js':'// legacy','assets/operator.js':'// legacy',
-  'assets/moodle-native.js':'export const synthetic = true;','assets/moodle-oauth-return.js':'export const syntheticReturn = true;'};
+  'assets/_index.browser-fixture.js':'export const syntheticDependency = true;','assets/moodle-native.js':'export const synthetic = true;','assets/moodle-oauth-return.js':'export const syntheticReturn = true;'};
  for(const [path,body] of Object.entries(files))writeFileSync(join(webRoot,path),body);
- const inventory={version:1,assets:['moodle-native','moodle-oauth-return'].map(name=>({path:'/assets/'+name+'.js',sha256:createHash('sha256').update(files['assets/'+name+'.js']).digest('hex')}))};
+ const inventory={version:1,assets:['moodle-native','moodle-oauth-return','_index.browser-fixture'].map(name=>({path:'/assets/'+name+'.js',sha256:createHash('sha256').update(files['assets/'+name+'.js']).digest('hex')}))};
  writeFileSync(join(webRoot,'clear-moodle-native-assets.html'),JSON.stringify(inventory));
  const calls=[],moodleNative={courseId:2,routes:[
   ...['index','configure'].map(name=>({owner:'C',path:'/local/clearbridge/'+name+'.php',methods:['GET'],query:['id'],walletDocument:true})),
@@ -53,6 +53,7 @@ test('standard frontend combines Moodle document, immutable assets, fixed return
  assert.equal(a.status,200);assert.notEqual(a.body,b.body);assert.equal(x.calls[0].cookie,'MoodleSession=synthetic');assert.equal(x.calls[0]['x-csrf-token'],undefined);
  assert(a.headers['content-security-policy'].includes(/content="([^"]+)"/.exec(a.body)[1]));
  const asset=await x.raw('/clear-assets/moodle-native.js');assert.equal(asset.status,200);assert.equal(asset.body,'export const synthetic = true;');
+ assert.equal((await x.raw('/clear-assets/_index.browser-fixture.js')).status,200);
  writeFileSync(join(x.webRoot,'assets/moodle-native.js'),'CHANGED');assert.equal((await x.raw('/clear-assets/moodle-native.js')).body,asset.body);
  const returned=await x.raw('/local/clearbridge/wallet-return?privy_oauth_code=synthetic-code&privy_oauth_state=synthetic-state&privy_oauth_provider=google');
  assert.equal(returned.status,200);assert(!returned.body.includes('synthetic-code'));assert.equal(returned.headers['referrer-policy'],'no-referrer');
