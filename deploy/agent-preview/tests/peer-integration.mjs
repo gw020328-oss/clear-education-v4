@@ -11,6 +11,8 @@ import {bindingHash,validateConfig} from '../config.mjs';
 import {openStore} from '../store.mjs';
 import {limits} from '../limits.mjs';
 import {createService} from '../service.mjs';
+import {firstRunSource,firstRunPreflight,wireSha256} from './first-run-preflight.mjs';
+import {reviewModelProposal,buildPlan,validatePlan} from '../../../src/agent-preview/index.mjs';
 
 const peerHead='3d6c3ff7e8252575155d553247cacab2b699026f';
 assert.ok(process.env.CLEAR_B_PEER_WORKTREE,'set CLEAR_B_PEER_WORKTREE to the B checkout');
@@ -28,7 +30,7 @@ const [protocol,{createPreviewContexts,PREVIEW_CONTEXT_VERSION},{studentFixture}
   load('src/agent-preview/index.mjs'),
   load('src/agent-preview/moodle-binding/contract.mjs')
 ]);
-const sourceText='Moodle에서 첫 학습 활동을 마쳐야 한다';
+const sourceText=firstRunSource;
 const paths=['/v1/preview/generate','/v1/preview/execute','/v1/preview/observation-result'];
 const bytes=value=>Buffer.from(JSON.stringify(value));
 
@@ -70,8 +72,14 @@ test('exact B student context, signed draft and reviewed observation over isolat
   approve('b-peer-approval',issued.approvalBindingHash);
   const rows=sourceClauses(sourceText).map(c=>({quote:c.text,start:c.start,end:c.end,status:'SUPPORTED',
     capability:'MOODLE_ACTIVITY_COMPLETION.1',question:null}));
+  const packet=firstRunPreflight();
+  assert.equal(packet.bodyHash,'ac7ed3efc93f48f855f2ae66e8a63997be54d04feea790261593892c9f17643c');
+  assert.equal(issued.bodyHash,packet.bodyHash);
+  assert.equal(issued.sourceHash,packet.sourceHash);
   const modelCalls=[];
-  const modelTransport={execution:'OFFLINE',async request(model,method) {
+  const modelTransport={execution:'OFFLINE',async request(model,method,body) {
+    assert.equal(model,packet.model);
+    assert.equal(wireSha256(body),packet.wireHashes[method]);
     modelCalls.push(method);
     return method==='countTokens'?{totalTokens:100}:{candidates:[{finishReason:'STOP',
       content:{role:'model',parts:[{text:JSON.stringify({clauses:rows})}]}}]};
@@ -142,6 +150,10 @@ test('exact B student context, signed draft and reviewed observation over isolat
   const {input,proposal}=JSON.parse(await generate.query(bytes({sourceText,approvalRef:'b-peer-approval'}),correlation));
   assert.deepEqual(modelCalls,['countTokens','generateContent']);
   assert.deepEqual(proposal,{sourceText,rows});
+  const reviewedDraft=reviewModelProposal(proposal.sourceText,proposal.rows,input.proposalHash);
+  const plan=buildPlan(reviewedDraft);
+  assert.equal(validatePlan(plan,reviewedDraft).ok,true);
+  assert.deepEqual(plan.steps.map(step=>[step.tool,step.input.target]),[['moodle.activity.public','python-intro']]);
   assert.equal(input.approvalBindingHash,issued.approvalBindingHash);
   assert.throws(()=>store.consume('b-peer-approval',issued.bodyHash,issued.approvalBindingHash,()=>clock()*1000),
     /APPROVAL_REQUIRED_OR_SPENT/);
