@@ -96,21 +96,22 @@ export function createMoodleLoginIntents({
     const before = a.phase;
     try {
       const grant = await authority(operation, q, t, signal);
-      if (grant.identity !== a.identity || a.phase !== before) return answer(q, 'UNAVAILABLE');
-      if (!live(a, time())) {
-        clearAttempt(a, 'EXPIRED');
-        return answer(q, 'EXPIRED');
-      }
+      if (grant.identity !== a.identity) return answer(q, 'UNAVAILABLE');
+      // A fresh, same-session cancellation wins even if finish advanced the
+      // phase while authority was pending. Terminal phases never re-enter.
       if (operation === 'end') {
         clearAttempt(a, 'ENDED');
         return answer(q, 'UNAVAILABLE');
       }
-      const expiry = Math.min(grant.expiresAtExclusive, a.expiresAtExclusive);
-      if (before === 'CONNECTED' || before === 'RETURN_REQUIRED') {
-        clearExpiry(q.role, a.context);
-        return answer(q, before, expiry, before === 'RETURN_REQUIRED' ? a.handback : null);
+      if (a.phase !== before) return answer(q, 'UNAVAILABLE');
+      if (!live(a, time())) return answer(q, 'EXPIRED');
+      let expiry = Math.min(grant.expiresAtExclusive, a.expiresAtExclusive);
+      if (before === 'CONNECTED' || before === 'AUTHENTICATED_PENDING_MOODLE') {
+        expiry = Math.min(expiry, clearExpiry(q.role, a.context));
+        const pending = before === 'AUTHENTICATED_PENDING_MOODLE';
+        return answer(q, pending ? 'RETURN_REQUIRED' : 'CONNECTED', expiry, pending ? a.handback : null);
       }
-      if (['ISSUED', 'WAITING', 'COMPLETING'].includes(before)) return answer(q, 'WAITING', expiry);
+      if (['ISSUED', 'WAITING'].includes(before)) return answer(q, 'WAITING', expiry);
       return answer(q, 'UNAVAILABLE');
     } catch {
       return answer(q, 'UNAVAILABLE');
@@ -181,36 +182,22 @@ export function createMoodleLoginIntents({
       requireLive(a, signal);
       exactKeys(context, ['token', 'wallet', 'chainId', 'csrf'], 'MOODLE_LOGIN_CONTEXT');
       const clearContext = Object.freeze(structuredClone(context)), role = a.request.role;
-      const expiry = clearExpiry(role, clearContext), t = time();
-      // This server-originated operation uses a fresh lease. The expired start
-      // request remains an intent reference and is never a verification input.
-      const q = Object.freeze({...a.request, requestRef: token(), intentRef: a.request.requestRef,
-        expiresAtExclusive: t.wall + 5});
-      a.phase = 'COMPLETING';
-      try {
-        const grant = await authority('complete', q, t, signal);
-        requireLive(a, signal);
-        check(a.phase === 'COMPLETING' && grant.identity === a.identity
-          && clearExpiry(role, clearContext) === expiry, 'MOODLE_LOGIN_AUTHORITY_CHANGED');
-        const checked = time();
-        a.moodleHorizon = Math.min(a.moodleHorizon, grant.expiresAtExclusive);
-        a.expiresAtExclusive = Math.min(a.expiresAtExclusive, checked.wall + 60, grant.expiresAtExclusive, expiry);
-        a.monotonicEnd = Math.min(a.monotonicEnd, checked.mono + 60000);
-        a.context = clearContext;
-        a.handback = token();
-        a.handbackHash = digest(a.handback);
-        a.phase = 'RETURN_REQUIRED';
-        return {status: 'RETURN_REQUIRED'};
-      } catch (error) {
-        if (a.phase === 'COMPLETING') clearAttempt(a, 'FAILED');
-        throw error;
-      } finally {
-        browsers.delete(a.browserHash);
-      }
+      const expiry = clearExpiry(role, clearContext), checked = time();
+      requireLive(a, signal);
+      // Only C registers authority operations. Local CLEAR authentication
+      // creates one pending handback; it does not establish Moodle authority.
+      a.expiresAtExclusive = Math.min(a.expiresAtExclusive, checked.wall + 60, expiry);
+      a.monotonicEnd = Math.min(a.monotonicEnd, checked.mono + 60000);
+      a.context = clearContext;
+      a.handback = token();
+      a.handbackHash = digest(a.handback);
+      a.phase = 'AUTHENTICATED_PENDING_MOODLE';
+      browsers.delete(a.browserHash);
+      return {status: 'AUTHENTICATED_PENDING_MOODLE'};
     },
     async finish(input, {signal} = {}) {
       const t = time(), q = request(input, 'finish', t), a = attempts.get(q.intentRef);
-      if (a?.phase !== 'RETURN_REQUIRED' || a.request.role !== q.role || !live(a, t)
+      if (a?.phase !== 'AUTHENTICATED_PENDING_MOODLE' || a.request.role !== q.role || !live(a, t)
         || !matches(q.handback, a.handbackHash) || !matches(q.finishProof, a.finishProofHash)) return answer(q, 'UNAVAILABLE');
       a.phase = 'FINISHING';
       try {

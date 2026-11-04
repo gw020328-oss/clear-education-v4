@@ -14,12 +14,13 @@ const finishProof = input => proof('FINISH', input);
 const context = role => ({wallet: wallets[role], token: 'fixture', chainId: 1, csrf: 'fixture'});
 function fixture() {
   let wall = 1000, mono = 0, seq = 0, sessionRef = hex(70), revoked = false, loggedOut = false, verifyHook;
-  const operations = [];
+  const operations = [], registry = new Map();
   const owner = createMoodleLoginIntents({ownerRunId: 'run-demo', runExpiresAtExclusive: 1800, scope, wallets,
     now: () => wall, monotonic: () => mono,
     deriveBrowserProof: browserProof, deriveFinishProof: finishProof,
     async verifyMoodle({operation, request}) {
       operations.push({operation, request});
+      assert.deepEqual(registry.get(request.requestRef), {operation, request}, 'only exact C-registered operations are authorized');
       await verifyHook?.(operation, request);
       if (revoked) throw Error('MOODLE_SESSION_REVOKED');
       assert(wall < request.expiresAtExclusive);
@@ -32,11 +33,16 @@ function fixture() {
       return {role: c.wallet === wallets.PARTICIPANT ? 'participant' : 'operator', wallet: c.wallet, expiresAt: 1700};
     },
   });
-  const input = (role, extras) => ({version: MOODLE_LOGIN_INTENT, requestRef: hex(++seq), ownerRunId: 'run-demo',
-    moodleAuthorityRef: hex(90), role, expiresAtExclusive: wall + 5, ...extras});
+  const input = (role, extras, operation = extras?.handback ? 'finish' : extras?.intentRef ? 'status' : 'start') => {
+    const request = {version: MOODLE_LOGIN_INTENT, requestRef: hex(++seq), ownerRunId: 'run-demo',
+      moodleAuthorityRef: hex(90), role, expiresAtExclusive: wall + 5, ...extras};
+    registry.set(request.requestRef, {operation, request: structuredClone(request)});
+    return request;
+  };
   async function launch(role = 'PARTICIPANT') {
     const start = input(role), issued = await owner.issue(start);
     const popup = owner.bootstrap(), other = owner.bootstrap();
+    assert.notEqual(popup.bootstrapCookie, popup.challenge);
     const binding = {ownerRunId: start.ownerRunId, intentRef: start.requestRef, launchCode: issued.launchCode};
     const redeem = {code: issued.launchCode, browserProof: browserProof({...binding, challenge: popup.challenge}), ...popup};
     assert.throws(() => owner.redeem({...redeem, bootstrapCookie: undefined}), /MOODLE_LOGIN_LAUNCH/);
@@ -45,11 +51,11 @@ function fixture() {
     assert.throws(() => owner.redeem({...redeem, browserProof: finishProof(binding)}), /MOODLE_LOGIN_LAUNCH/);
     const redeemed = owner.redeem(redeem);
     assert.throws(() => owner.redeem(redeem), /MOODLE_LOGIN_LAUNCH/);
-    const next = extra => input(role, {intentRef: start.requestRef, ...extra});
+    const next = (extra, operation) => input(role, {intentRef: start.requestRef, ...extra}, operation);
     return {start, redeemed, next, finishProof: finishProof(binding), complete: () => owner.complete(redeemed.browserBinding, context(role))};
   }
   return {owner, operations, input, launch, advance(n){wall += n; mono += n * 1000;},
-    drift(n){mono += n;}, replace(){sessionRef = hex(71);}, revoke(){revoked = true;},
+    drift(n){mono += n;}, replace(){sessionRef = hex(71);}, originalSession(){sessionRef = hex(70);}, revoke(){revoked = true;},
     logout(){loggedOut = true;}, hold(fn){verifyHook = fn;}};
 }
 
@@ -61,12 +67,11 @@ for (const [role, route] of [['PARTICIPANT', '/onboarding'], ['COURSE_OPERATOR',
     await assert.rejects(x.owner.complete(hex(222), context(role)), /MOODLE_LOGIN_BROWSER/);
     const wrongRole = role === 'PARTICIPANT' ? 'COURSE_OPERATOR' : 'PARTICIPANT';
     await assert.rejects(x.owner.complete(a.redeemed.browserBinding, context(wrongRole)), /MOODLE_LOGIN_CLEAR_ACTOR/);
-    x.advance(10); // The start lease is dead. Completion must verify a fresh operation.
-    assert.deepEqual(await a.complete(), {status: 'RETURN_REQUIRED'});
-    const complete = x.operations.find(op => op.operation === 'complete').request;
-    assert.notEqual(complete.requestRef, a.start.requestRef);
-    assert.equal(complete.intentRef, a.start.requestRef);
-    assert.equal(complete.expiresAtExclusive, 1015);
+    x.advance(10); // The start lease is dead. Completion makes no C authority request.
+    const beforeComplete = x.operations.length;
+    assert.deepEqual(await a.complete(), {status: 'AUTHENTICATED_PENDING_MOODLE'});
+    assert.equal(x.operations.length, beforeComplete);
+    await assert.rejects(a.complete(), /MOODLE_LOGIN_BROWSER/);
 
     const statusInput = a.next(), status = await x.owner.status(statusInput);
     assert.deepEqual(x.operations.at(-1), {operation: 'status', request: statusInput});
@@ -99,10 +104,10 @@ for (const failure of ['replace', 'revoke', 'logout', 'expiry']) {
 test('end is terminal and carries the entire fresh request to the verifier', async () => {
   const x = fixture(), a = await x.launch();
   await a.complete();
-  const {handback} = await x.owner.status(a.next()), end = a.next();
+  const {handback} = await x.owner.status(a.next()), end = a.next({}, 'end');
   assert.equal((await x.owner.end(end)).status, 'UNAVAILABLE');
   assert.deepEqual(x.operations.at(-1), {operation: 'end', request: end});
-  assert.equal((await x.owner.end(a.next())).status, 'UNAVAILABLE');
+  assert.equal((await x.owner.end(a.next({}, 'end'))).status, 'UNAVAILABLE');
   assert.equal((await x.owner.finish(a.next({handback, finishProof: a.finishProof}))).status, 'UNAVAILABLE');
 });
 test('an expired monotonic verification lease cannot create or complete a binding', async () => {
@@ -132,8 +137,109 @@ test('ending the same intent while a finish is in flight prevents connection', a
   x.hold(operation => { if (operation === 'finish') { entered.resolve(); return release.promise; } });
   const pending = x.owner.finish(a.next({handback, finishProof: a.finishProof}));
   await entered.promise;
-  assert.equal((await x.owner.end(a.next())).status, 'UNAVAILABLE');
+  assert.equal((await x.owner.end(a.next({}, 'end'))).status, 'UNAVAILABLE');
   release.resolve();
   assert.equal((await pending).status, 'UNAVAILABLE');
   assert.equal((await x.owner.status(a.next())).status, 'UNAVAILABLE');
+});
+
+test('end awaiting authority cancels a finish that connected in the meantime', async () => {
+  const x = fixture(), a = await x.launch();
+  await a.complete();
+  const {handback} = await x.owner.status(a.next());
+  const entered = Promise.withResolvers(), release = Promise.withResolvers();
+  x.hold(operation => { if (operation === 'end') { entered.resolve(); return release.promise; } });
+  const pending = x.owner.end(a.next({}, 'end'));
+  await entered.promise;
+  assert.equal((await x.owner.finish(a.next({handback, finishProof: a.finishProof}))).status, 'CONNECTED');
+  release.resolve();
+  assert.equal((await pending).status, 'UNAVAILABLE');
+  assert.equal((await x.owner.status(a.next())).status, 'UNAVAILABLE');
+});
+
+test('end starting during FINISHING still cancels after finish commits', async () => {
+  const x = fixture(), a = await x.launch();
+  await a.complete();
+  const {handback} = await x.owner.status(a.next());
+  const finishEntered = Promise.withResolvers(), finishRelease = Promise.withResolvers();
+  const endEntered = Promise.withResolvers(), endRelease = Promise.withResolvers();
+  x.hold(operation => {
+    if (operation === 'finish') { finishEntered.resolve(); return finishRelease.promise; }
+    if (operation === 'end') { endEntered.resolve(); return endRelease.promise; }
+  });
+  const finishing = x.owner.finish(a.next({handback, finishProof: a.finishProof}));
+  await finishEntered.promise;
+  const ending = x.owner.end(a.next({}, 'end'));
+  await endEntered.promise;
+  finishRelease.resolve();
+  assert.equal((await finishing).status, 'CONNECTED');
+  endRelease.resolve();
+  await ending; // Simulate a lost end response and retry with a fresh C request.
+  assert.equal((await x.owner.end(a.next({}, 'end'))).status, 'UNAVAILABLE');
+  assert.equal((await x.owner.status(a.next())).status, 'UNAVAILABLE');
+  assert.equal((await x.owner.finish(a.next({handback, finishProof: a.finishProof}))).status, 'UNAVAILABLE');
+});
+
+test('two simultaneous finishes consume the pending handback once', async () => {
+  const x = fixture(), a = await x.launch();
+  await a.complete();
+  const {handback} = await x.owner.status(a.next());
+  const entered = Promise.withResolvers(), release = Promise.withResolvers();
+  x.hold(operation => { if (operation === 'finish') { entered.resolve(); return release.promise; } });
+  const finishing = x.owner.finish(a.next({handback, finishProof: a.finishProof}));
+  await entered.promise;
+  assert.equal((await x.owner.finish(a.next({handback, finishProof: a.finishProof}))).status, 'UNAVAILABLE');
+  release.resolve();
+  assert.equal((await finishing).status, 'CONNECTED');
+  assert.equal(x.operations.filter(op => op.operation === 'finish').length, 1);
+});
+
+test('status repeatedly projects the same handback and never extends the pending deadline', async () => {
+  const x = fixture(), a = await x.launch();
+  await a.complete();
+  const first = await x.owner.status(a.next());
+  assert.equal(first.expiresAtExclusive, 1060);
+  for (const seconds of [10, 20, 29]) {
+    x.advance(seconds);
+    const next = await x.owner.status(a.next());
+    assert.equal(next.status, 'RETURN_REQUIRED');
+    assert.equal(next.handback, first.handback);
+    assert.equal(next.expiresAtExclusive, first.expiresAtExclusive);
+  }
+  x.advance(1);
+  assert.equal((await x.owner.status(a.next())).status, 'EXPIRED');
+  assert.equal((await x.owner.status(a.next())).status, 'EXPIRED');
+  assert.equal((await x.owner.finish(a.next({handback: first.handback, finishProof: a.finishProof}))).status, 'UNAVAILABLE');
+});
+
+test('end awaiting authority cancels locally completed authentication, with no revival', async () => {
+  const x = fixture(), a = await x.launch();
+  const entered = Promise.withResolvers(), release = Promise.withResolvers();
+  x.hold(operation => { if (operation === 'end') { entered.resolve(); return release.promise; } });
+  const ending = x.owner.end(a.next({}, 'end'));
+  await entered.promise;
+  await a.complete();
+  release.resolve();
+  await ending;
+  assert.equal((await x.owner.status(a.next())).status, 'UNAVAILABLE');
+  await assert.rejects(a.complete(), /MOODLE_LOGIN_BROWSER/);
+  assert.equal(x.operations.filter(op => op.operation === 'complete').length, 0);
+});
+
+test('a different Moodle session cannot end the original connection', async () => {
+  const x = fixture(), a = await x.launch();
+  await a.complete();
+  const {handback} = await x.owner.status(a.next());
+  assert.equal((await x.owner.finish(a.next({handback, finishProof: a.finishProof}))).status, 'CONNECTED');
+  const entered = Promise.withResolvers(), release = Promise.withResolvers();
+  x.hold(operation => { if (operation === 'end') { entered.resolve(); return release.promise; } });
+  const ending = x.owner.end(a.next({}, 'end'));
+  await entered.promise;
+  x.replace();
+  release.resolve();
+  assert.equal((await ending).status, 'UNAVAILABLE');
+  // A mismatched identity cannot access the old connection either.
+  assert.equal((await x.owner.status(a.next())).status, 'UNAVAILABLE');
+  x.originalSession();
+  assert.equal((await x.owner.status(a.next())).status, 'CONNECTED');
 });
