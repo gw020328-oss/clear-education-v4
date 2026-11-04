@@ -1,0 +1,84 @@
+{
+  "version": "clear-preview-peer-fixtures.1",
+  "mode": "SYNTHETIC_ONLY",
+  "vectors": [
+    {
+      "syntheticKeyByte": 17,
+      "meta": {
+        "version": "clear-preview-peer.1",
+        "kind": "REQUEST",
+        "keyRef": "synthetic-key",
+        "sender": "B",
+        "receiver": "C",
+        "audience": "synthetic-C-observations",
+        "deploymentEpoch": "epoch-1",
+        "method": "POST",
+        "path": "/observations",
+        "requestRef": "1111111111111111111111111111111111111111111111111111111111111111",
+        "contextRef": "self-context",
+        "sourceHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "proposalHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "bodyHash": "b4ba33338130092d516a2ec71860596d4407a6a14289be17e8ac238305ba7fae",
+        "issuedAt": 1793767516,
+        "expiresAtExclusive": 1793767521,
+        "requestHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "status": 0
+      },
+      "bodyBase64": "eyJiaW5kaW5nU2NvcGVIYXNoIjoiYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYSIsImNvbmZpcm1hdGlvblJlZiI6ImNvbmZpcm1hdGlvbiIsImlzc3VlckVwb2NoIjoiaXNzdWVyIiwicmVxdWVzdFJlZiI6ImlubmVyLXJlcXVlc3QiLCJ2ZXJzaW9uIjoiY2xlYXItbW9vZGxlLW9ic2VydmF0aW9ucy4zIn0=",
+      "signedBytesSha256": "e0544e81cf5eacbe7e39b329badc7c96a71f46dbad4f5a97f0b4691308b5de8d",
+      "wire": "{\"body\":\"eyJiaW5kaW5nU2NvcGVIYXNoIjoiYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYSIsImNvbmZpcm1hdGlvblJlZiI6ImNvbmZpcm1hdGlvbiIsImlzc3VlckVwb2NoIjoiaXNzdWVyIiwicmVxdWVzdFJlZiI6ImlubmVyLXJlcXVlc3QiLCJ2ZXJzaW9uIjoiY2xlYXItbW9vZGxlLW9ic2VydmF0aW9ucy4zIn0=\",\"mac\":\"107209265a28a045fe976339cbe06e9afc19bce0a1ede9d3b012aa1899ad9b96\",\"meta\":{\"audience\":\"synthetic-C-observations\",\"bodyHash\":\"b4ba33338130092d516a2ec71860596d4407a6a14289be17e8ac238305ba7fae\",\"contextRef\":\"self-context\",\"deploymentEpoch\":\"epoch-1\",\"expiresAtExclusive\":1793767521,\"issuedAt\":1793767516,\"keyRef\":\"synthetic-key\",\"kind\":\"REQUEST\",\"method\":\"POST\",\"path\":\"/observations\",\"proposalHash\":\"3333333333333333333333333333333333333333333333333333333333333333\",\"receiver\":\"C\",\"requestHash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"requestRef\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"sender\":\"B\",\"sourceHash\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"status\":0,\"version\":\"clear-preview-peer.1\"}}"
+    },
+    {
+      "syntheticKeyByte": 17,
+      "meta": {
+        "version": "clear-preview-peer.1",
+        "kind": "RESPONSE",
+        "keyRef": "synthetic-key",
+        "sender": "C",
+        "receiver": "B",
+        "audience": "synthetic-C-observations",
+        "deploymentEpoch": "epoch-1",
+        "method": "POST",
+        "path": "/observations",
+        "requestRef": "1111111111111111111111111111111111111111111111111111111111111111",
+        "contextRef": "self-context",
+        "sourceHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "proposalHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "bodyHash": "b2a6252947806bd67a519d932cc151c23aef97d24cbc7c131abb1ea4c25e6ada",
+        "issuedAt": 1793767516,
+        "expiresAtExclusive": 1793767521,
+        "requestHash": "e0544e81cf5eacbe7e39b329badc7c96a71f46dbad4f5a97f0b4691308b5de8d",
+        "status": 200
+      },
+      "bodyBase64": "eyJhdWRpZW5jZSI6InN5bnRoZXRpYy1jbGVhciIsImJpbmRpbmdTY29wZUhhc2giOiJhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwiY2hlY2tlZEF0IjoxNzkzNzY3NTE2LCJjb25maXJtYXRpb25SZWYiOiJjb25maXJtYXRpb24iLCJjb3Vyc2VSZWYiOiJzeW50aGV0aWMtY291cnNlIiwiZW5yb2xtZW50UmV2aXNpb24iOjEsImV4cGlyZXNBdEV4Y2x1c2l2ZSI6MTc5Mzc2NzU3NiwiaW5zdGFsbGF0aW9uUmVmIjoic3ludGhldGljLWluc3RhbGxhdGlvbiIsImlzc3VlckVwb2NoIjoiaXNzdWVyIiwibW9vZGxlU2Vzc2lvbkdlbmVyYXRpb24iOiJnZW5lcmF0aW9uIiwib2JzZXJ2YXRpb25zIjpbeyJvYnNlcnZlZEF0IjoxNzkzNzY3NTE2LCJzdGF0dXMiOiJDT01QTEVURSIsInRhcmdldFJlZiI6InBhZ2UtbWFudWFsIn1dLCJvYnNlcnZlZEF0IjoxNzkzNzY3NTE2LCJyZXF1ZXN0UmVmIjoiaW5uZXItcmVxdWVzdCIsInJvc3RlclJldmlzaW9uIjoxLCJzY29wZSI6IlJFQURfUFJFVklFVyIsInNvdXJjZVN0YXR1cyI6Ik9CU0VSVkVEX0FUIiwic3ViamVjdFJlZiI6InN5bnRoZXRpYy1zdWJqZWN0IiwidHJ1c3RFcG9jaCI6MSwidmVyc2lvbiI6ImNsZWFyLW1vb2RsZS1vYnNlcnZhdGlvbnMuMyJ9",
+      "signedBytesSha256": "a3fd52befef49810ac7421992249bcd8f384f8435d4538a41bd68765f032caea",
+      "wire": "{\"body\":\"eyJhdWRpZW5jZSI6InN5bnRoZXRpYy1jbGVhciIsImJpbmRpbmdTY29wZUhhc2giOiJhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwiY2hlY2tlZEF0IjoxNzkzNzY3NTE2LCJjb25maXJtYXRpb25SZWYiOiJjb25maXJtYXRpb24iLCJjb3Vyc2VSZWYiOiJzeW50aGV0aWMtY291cnNlIiwiZW5yb2xtZW50UmV2aXNpb24iOjEsImV4cGlyZXNBdEV4Y2x1c2l2ZSI6MTc5Mzc2NzU3NiwiaW5zdGFsbGF0aW9uUmVmIjoic3ludGhldGljLWluc3RhbGxhdGlvbiIsImlzc3VlckVwb2NoIjoiaXNzdWVyIiwibW9vZGxlU2Vzc2lvbkdlbmVyYXRpb24iOiJnZW5lcmF0aW9uIiwib2JzZXJ2YXRpb25zIjpbeyJvYnNlcnZlZEF0IjoxNzkzNzY3NTE2LCJzdGF0dXMiOiJDT01QTEVURSIsInRhcmdldFJlZiI6InBhZ2UtbWFudWFsIn1dLCJvYnNlcnZlZEF0IjoxNzkzNzY3NTE2LCJyZXF1ZXN0UmVmIjoiaW5uZXItcmVxdWVzdCIsInJvc3RlclJldmlzaW9uIjoxLCJzY29wZSI6IlJFQURfUFJFVklFVyIsInNvdXJjZVN0YXR1cyI6Ik9CU0VSVkVEX0FUIiwic3ViamVjdFJlZiI6InN5bnRoZXRpYy1zdWJqZWN0IiwidHJ1c3RFcG9jaCI6MSwidmVyc2lvbiI6ImNsZWFyLW1vb2RsZS1vYnNlcnZhdGlvbnMuMyJ9\",\"mac\":\"31e949ada285e270fc6ae7bfa0c6b61463928ccc806a8021e85f99e1dcee67cb\",\"meta\":{\"audience\":\"synthetic-C-observations\",\"bodyHash\":\"b2a6252947806bd67a519d932cc151c23aef97d24cbc7c131abb1ea4c25e6ada\",\"contextRef\":\"self-context\",\"deploymentEpoch\":\"epoch-1\",\"expiresAtExclusive\":1793767521,\"issuedAt\":1793767516,\"keyRef\":\"synthetic-key\",\"kind\":\"RESPONSE\",\"method\":\"POST\",\"path\":\"/observations\",\"proposalHash\":\"3333333333333333333333333333333333333333333333333333333333333333\",\"receiver\":\"B\",\"requestHash\":\"e0544e81cf5eacbe7e39b329badc7c96a71f46dbad4f5a97f0b4691308b5de8d\",\"requestRef\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"sender\":\"C\",\"sourceHash\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"status\":200,\"version\":\"clear-preview-peer.1\"}}"
+    },
+    {
+      "syntheticKeyByte": 17,
+      "meta": {
+        "version": "clear-preview-peer.1",
+        "kind": "REQUEST",
+        "keyRef": "synthetic-key-D",
+        "sender": "B",
+        "receiver": "D",
+        "audience": "synthetic-D-results",
+        "deploymentEpoch": "epoch-1",
+        "method": "POST",
+        "path": "/v1/preview/observation-result",
+        "requestRef": "4444444444444444444444444444444444444444444444444444444444444444",
+        "contextRef": "self-context",
+        "sourceHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "proposalHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "bodyHash": "1b8dd27871c7a1a08f4fe6f95a0c682335d034443187a490961cb3653984066b",
+        "issuedAt": 1793767516,
+        "expiresAtExclusive": 1793767521,
+        "requestHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "status": 0
+      },
+      "bodyBase64": "eyJvYnNlcnZlZEF0IjoxNzkzNzY3NTE2LCJzdGF0dXMiOiJDT01QTEVURSIsInRhcmdldFJlZiI6InBhZ2UtbWFudWFsIn0=",
+      "signedBytesSha256": "8f4aa9b597aa7ec4aab32b5d3f22f4fcade555835e4b42a0612f5c5f1a9daec1",
+      "wire": "{\"body\":\"eyJvYnNlcnZlZEF0IjoxNzkzNzY3NTE2LCJzdGF0dXMiOiJDT01QTEVURSIsInRhcmdldFJlZiI6InBhZ2UtbWFudWFsIn0=\",\"mac\":\"ccc2227c3bf5c0ce26084985e4e76e4287ff4c09c643c9838f33408d2f9ff0cd\",\"meta\":{\"audience\":\"synthetic-D-results\",\"bodyHash\":\"1b8dd27871c7a1a08f4fe6f95a0c682335d034443187a490961cb3653984066b\",\"contextRef\":\"self-context\",\"deploymentEpoch\":\"epoch-1\",\"expiresAtExclusive\":1793767521,\"issuedAt\":1793767516,\"keyRef\":\"synthetic-key-D\",\"kind\":\"REQUEST\",\"method\":\"POST\",\"path\":\"/v1/preview/observation-result\",\"proposalHash\":\"3333333333333333333333333333333333333333333333333333333333333333\",\"receiver\":\"D\",\"requestHash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"requestRef\":\"4444444444444444444444444444444444444444444444444444444444444444\",\"sender\":\"B\",\"sourceHash\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"status\":0,\"version\":\"clear-preview-peer.1\"}}"
+    }
+  ]
+}

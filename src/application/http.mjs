@@ -250,3 +250,25 @@ function dispatchEvaluation(service,context,method,path,body,key){
  if(kind==='evaluation-operations'&&method==='GET'&&target)return action?service.recover(context,app,target,action):service.operation(context,app,target);
  throw new RuleError('ROUTE');
 }
+
+// Separate preview composition only. Do not expose the full product route table.
+export function createPreviewAuthenticationHandler(service, { cookieNamespace = 'preview', allowLoopbackHttpForTests = false } = {}) {
+  requireRule(typeof cookieNamespace === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(cookieNamespace), 'COOKIE_NAMESPACE_CONFIG');
+  const handler = createApplicationHandler(service, { cookieNamespace, allowLoopbackHttpForTests });
+  const routes = new Set(['POST /auth/nonce','POST /auth/verify','GET /auth/session','POST /auth/logout']);
+  return (req, res) => {
+    if(routes.has(`${req.method} ${req.url}`)) return handler(req,res);
+    res.writeHead(404, {'content-type':'application/json','cache-control':'no-store'});
+    res.end('{"code":"ROUTE"}');
+  };
+}
+export function readPreviewAuthenticationContext(service, req, { cookieNamespace = 'preview', allowLoopbackHttpForTests = false } = {}) {
+  requireRule(typeof cookieNamespace === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(cookieNamespace), 'COOKIE_NAMESPACE_CONFIG');
+  const loopback = ['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+  requireRule(req.socket.encrypted || allowLoopbackHttpForTests && loopback, 'TRANSPORT');
+  requireRule(req.method === 'POST' && req.headers.host === new URL(service.origin).host && req.headers.origin === service.origin
+    && (!req.headers['sec-fetch-site'] || req.headers['sec-fetch-site'] === 'same-origin'), 'ORIGIN');
+  const name = `__Host-clear-${cookieNamespace}-session`, values = cookies(req.headers.cookie,[name]), chain = req.headers['x-chain-id'];
+  return { token:values[name], wallet:req.headers['x-wallet'],
+    chainId:typeof chain === 'string' && /^[1-9][0-9]{0,15}$/.test(chain) ? Number(chain) : null, csrf:req.headers['x-csrf-token'] ?? null };
+}
