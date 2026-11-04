@@ -10,7 +10,7 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator'} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   const provider = new EventEmitter(), calls = [], stages = [], views = [];
   let currentAddress = address;
@@ -35,6 +35,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
       async authenticate() { stages.push('authenticate'); return {role: serverRole}; },
       async assertSession(signal) { stages.push('assert-session'); await wallet.guard(signal);
         return {wallet: address, role: serverRole, expiresAt: Math.floor(Date.now()/1000)+60}; },
+      async request(path){stages.push(path);await workflowGate;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
       async dispose() { stages.push('revoke'); if (rejectedRevoke) throw Error('synthetic'); },
     }),
     loginFactory: () => Object.fromEntries(['begin','complete','finish','end'].map(method => [method, async () => {
@@ -206,4 +207,15 @@ test('native status and end retain the original intent target and never accept N
     [['id','intentTarget','operation','sesskey'],['id','intentTarget','operation','sesskey']]);
   assert(forms.filter(f=>['status','end'].includes(f.operation)).every(f=>f.intentTarget===target));
   await assert.rejects(login.begin(signal));
+});
+
+test('workflow reads require the original completed connection and cancellation discards a late result',async()=>{
+ let release;const workflowGate=new Promise(r=>{release=r;}),f=fixture({workflowGate});
+ await assert.rejects(f.controller.runWorkflow({action:'read-session'}),/NOT_READY/);
+ await f.ready();await f.controller.dispatch({action:'sign-in'});await f.controller.dispatch({action:'finish-connection'});
+ const reading=f.controller.runWorkflow({action:'read-session'});reading.catch(()=>{});
+ for(let i=0;i<10&&!f.stages.includes('/bootcamp/v4/session');i++)await new Promise(r=>setImmediate(r));
+ assert(f.stages.includes('/bootcamp/v4/session'));await f.controller.dispatch({action:'cancel'});release();
+ await assert.rejects(reading,e=>e.code==='MOODLE_WORKFLOW_UNAVAILABLE'&&e.outcome==='NOT_SENT');
+ assert.equal(f.view().authenticated,false);await f.controller.destroy();
 });

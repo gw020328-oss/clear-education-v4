@@ -6,6 +6,7 @@ import {createSameOriginApi} from '../application/api-client.mjs';
 import {bounded} from './provider-boundary.mjs';
 import {createNativeMoodleLogin} from './moodle-native-login.mjs';
 import {moodleCommandDigest} from './moodle-command.mjs';
+import {createNativeWorkflow,validateNativeWorkflowCommand,nativeWorkflowIsRead} from './moodle-native-workflow.mjs';
 import {MOODLE_WALLET_VERSION, validateCourseWalletView, validateCourseWalletCommand} from './moodle-native-contract.mjs';
 
 const check = (ok, code) => { if (!ok) throw Error(code); };
@@ -17,7 +18,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   const moodle = loginFactory({config, api, fetch: fetchImpl, locks: target.navigator.locks});
   let epoch = 0, sequence = 0, closed = false, revoking = false, revokeUnknown = false;
   let phase = 'IDLE', error = null, busy = null, selected = null, network = false, authenticated = false;
-  let wallet = null, session = null, closing = null, candidates = [], providers = [];
+  let wallet = null, session = null, workflow = null, closing = null, candidates = [], providers = [];
   let cancellation = null, moodleEndUnknown = false, endingMoodle = null;
   let authExpiry = 0, expiryTimer;
   let snapshot = {ready: false, authenticated: false, user: null, wallets: [], walletsReady: false, externalWalletsDisabled: true};
@@ -71,7 +72,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     if (closing) return closing;
     const priorSession = session, priorWallet = wallet;
     clearTimeout(expiryTimer); authExpiry = 0;
-    wallet = null; network = authenticated = false;
+    wallet = null; workflow = null; network = authenticated = false;
     priorWallet?.dispose();
     if (!priorSession) return;
     revoking = true; emit();
@@ -200,7 +201,29 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     } finally { if (busy === controller) busy = null; emit(); }
   }
   emit();
-  return Object.freeze({dispatch, update, async submitCommand(input) {
+  return Object.freeze({dispatch, update, async runWorkflow(input) {
+    const command=validateNativeWorkflowCommand(structuredClone(input));
+    check(!closed&&!busy&&!cancellation&&!revokeUnknown&&!moodleEndUnknown
+      &&phase==='CONNECTED'&&authenticated&&session&&wallet,'MOODLE_WORKFLOW_NOT_READY');
+    const captured=session,capturedWallet=wallet,stamp=epoch,controller=new AbortController();
+    const guard=async signal=>{
+      current(stamp,signal);check(session===captured&&wallet===capturedWallet&&authenticated&&phase==='CONNECTED','AUTH_REQUIRED');
+      await captured.assertSession(signal);await capturedWallet.guard(signal);current(stamp,signal);
+      check(session===captured&&wallet===capturedWallet&&authenticated,'AUTH_REQUIRED');
+    };
+    workflow??=createNativeWorkflow({session:captured,wallet:capturedWallet,config:c,guard,
+      command:async(input,signal)=>{await guard(signal);return moodle.command(captured,input,signal);}});
+    busy=controller;emit();
+    try{return await bounded(()=>workflow.run(command,{signal:controller.signal}),{signal:controller.signal,timeoutMs:120000});}
+    catch(cause){
+      workflow=null;
+      if(stamp===epoch&&!closed&&(!nativeWorkflowIsRead(command)||cause?.status===401||cause?.status===403
+        ||['AUTH_REQUIRED','ROLE_CHANGED','PRODUCT_ROLE_CHANGED','FORBIDDEN','SESSION_CHANGED','SESSION_CONTEXT',
+          'CANCELLED','WALLET_CONTEXT_CANCELLED'].includes(cause?.message)))await cancel();
+      throw Object.assign(Error('MOODLE_WORKFLOW_UNAVAILABLE'),{code:'MOODLE_WORKFLOW_UNAVAILABLE',
+        outcome:nativeWorkflowIsRead(command)?'NOT_SENT':'UNKNOWN'});
+    }finally{if(busy===controller)busy=null;emit();}
+  }, async submitCommand(input) {
     const command = structuredClone(input); moodleCommandDigest(command);
     check(!closed && !busy && !cancellation && !revokeUnknown && !moodleEndUnknown
       && phase === 'CONNECTED' && authenticated && session && wallet, 'MOODLE_COMMAND_NOT_READY');

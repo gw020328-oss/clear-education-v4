@@ -5,6 +5,7 @@ import {privyConfig, validateConfig} from './config.mjs';
 import {createCourseWalletController} from './moodle-native-controller.mjs';
 import {validateCourseWalletMountConfig} from './moodle-native-contract.mjs';
 export {validateCourseWalletView, validateCourseWalletCommand} from './moodle-native-contract.mjs';
+export {validateNativeWorkflowCommand} from './moodle-native-workflow.mjs';
 
 function Runtime({config, target, onState, attach}) {
   const privy = usePrivy(), {wallets, ready: walletsReady} = useWallets(), {initOAuth} = useLoginWithOAuth();
@@ -53,6 +54,10 @@ export function mountCourseWallet({element, config, onState}) {
     async submitCommand(command) {
       if (closed || !controller) throw Error('MOODLE_WALLET_NOT_READY');
       return controller.submitCommand(command);
+    },
+    async runWorkflow(command) {
+      if (closed || !controller) throw Error('MOODLE_WALLET_NOT_READY');
+      return controller.runWorkflow(command);
     },
     async destroy() {
       if (closed) return; closed = true;

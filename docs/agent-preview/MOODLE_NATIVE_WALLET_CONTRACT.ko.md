@@ -12,7 +12,7 @@
 - 고정 ESM URL은 `/clear-assets/moodle-native.js`다. 빌드에서 생긴 의존 chunk도
   검토된 asset inventory에서만 제공한다. `mountCourseWallet({element,config,onState})`
   는 C DOM을 교체하지 않고 provider modal host만 추가한다.
-- 반환값은 `dispatch(command)`, `submitCommand(command)`, 비동기 `destroy()`다. provider, 서명 함수,
+- 반환값은 `dispatch(command)`, `submitCommand(command)`, `runWorkflow(input)`, 비동기 `destroy()`다. provider, 서명 함수,
   CLEAR CSRF/token, 일반 URL request 함수를 C UI에 내주지 않는다.
 - mount, SDK 복귀, refresh는 지갑 선택/체인 변경/서명/finish를 자동 실행하지 않는다.
 
@@ -249,8 +249,8 @@ idempotencyKey `null`을 허용한다. 다른 네 쓰기 명령은 기존 key가
 원천 서명은 `createApprovalSigner.source`, 수령 등록은
 `createProductSession.readRegistration/submitRegistration`의 현재 context 및
 서명 전후 재검사를 재사용해야 한다. raw signer/provider/CSRF/일반 request를 C에
-전달하지 않는다. 현재 mount의 공개 포트는 위 submitCommand까지이며, C가 사용할
-제한된 읽기·검토 후 서명 포트는 후속 연결 단위다. provider 승인창을 제외한 업무
+전달하지 않는다. C가 사용할 제한된 읽기·검토 후 서명은 아래 runWorkflow 후보로 제공한다.
+기존 submitCommand는 하위 포트이며 C 업무 화면에서 직접 조합하지 않는다. provider 승인창을 제외한 업무
 화면은 기존 Moodle DOM에서 렌더링한다.
 
 ## 격리 실제 설치 결합 결과 (2026-11-05)
@@ -268,3 +268,69 @@ ZIP 0.1.15, D `4a6f9251e7864f604523d65611836cd898ba2a67`를 격리 Moodle 4.5에
   같은 grant 재전송은 409로 차단되고 기존 1건을 보존했다.
 - 이 검사는 C 신청 버튼 대신 공개 submitCommand 포트를 호출했다. Moodle 전체
   업무 버튼/실제 증빙/유료 AI/지급 완료를 의미하지 않는다.
+
+## C 연결용 runWorkflow 포트 후보
+
+mount 반환값에 `runWorkflow(input)`이 추가된다. 입력 검사 함수
+`validateNativeWorkflowCommand`도 같은 ESM에서 export한다. 모든 action은 명시 호출이며
+mount/로그인 복귀에서 신청·서명·동의·AI 승인을 자동 실행하지 않는다. `CONNECTED`,
+`authenticated=true`, `busy=false`일 때만 호출할 수 있다. 같은 controller의 원
+session/wallet/epoch를 전후 재검사하며 작업 중에는 wallet의 기존 cancel을 사용할 수 있다.
+각 `input`은 아래 `action`과 나열한 추가 필드만 허용한다. `reviewed`는 직전 해당
+읽기가 반환한 객체를 변경 없이 다시 넘긴다. A 내부에도 별도 복제본을 보관한다.
+
+| action | 추가 입력 | 성공 결과: 기존 DTO/필드 |
+| --- | --- | --- |
+| `read-session` | 없음 | `clear-bootcamp-normal-session.1`: role `PARTICIPANT/OPERATOR`, applicationId 또는 null, policyHash/runtimeMappingHash, phase, failure, procedureReady, reviewScreensReady, expectedPayment, aiApproval. 원 normal-client의 기존 session 응답이며 source signingContext는 A 내부 검증용이다. |
+| `create-application` | idempotencyKey | 기존 v1 `{record,current,gates}`. record.applicationId/operationId를 보존하여 후속 조회에 사용한다. |
+| `read-application` | applicationId | `clear-bootcamp-normal-view.1`. role `PARTICIPANT/COURSE_OPERATOR`, target, decision, criteria, agreedPayment, funding, procedure, consent, objection, payment, sourceMode. displayOnly=true이며 권한 증거가 아니다. |
+| `bind-source-session` | applicationId | 기존 `{applicationId,status:'AUTHENTICATED_SOURCE_SESSION_BOUND',paymentAuthorization:false}` |
+| `read-source-signature` | applicationId | `{approvalId,requestHash,message,expiresAt,purpose,applicationId}`. purpose는 `HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION`. 메시지 표시는 textContent로 한다. |
+| `approve-source-signature` | reviewed | 기존 `{approvalId,requestHash,status:'PARTICIPANT_SIGNATURE_ACCEPTED',paymentAuthorization:false}`. 서명값은 반환하지 않는다. |
+| `read-registration` | 없음 | `clear-bootcamp-recipient-registration.1`: 현재 server application, role/status/purpose/calldataPublic, payload, registrationTargetId, CAS 필드, chain 관측·checkpoint. 기존 normal-client 및 product-session 정본을 사용한다. |
+| `approve-registration` | reviewed | 기존 `clear-bootcamp-procedure-operation.1`, record.applicationId/operationId/target, current, usableForPayment=false. 저장 확인이며 지급 완료가 아니다. |
+| `approve-reflection` | reviewed, idempotencyKey | reviewed는 read-session.aiApproval 전체. 기존 `clear-normal-ai-approval-receipt.1`의 applicationId/runBindingHash/승인 결과. 비용·전송 표시를 읽고 명시 버튼으로만 호출한다. |
+| `consent` | reviewed, value, idempotencyKey | reviewed는 read-application 전체, value는 AGREE 또는 WITHDRAW. 기존 `clear-bootcamp-procedure-operation.1` 결과. 각 역할이 별도로 누른다. |
+| `payment-receipt` | applicationId | `clear-bootcamp-normal-payment-receipt.1`. claim.state는 NOT_OBSERVED/READBACK_UNAVAILABLE/INCLUDED. 정상 포함 시 canonical=true, transferAmountAtoms/balance.receivedAtoms=`100000000`, exactExpectedAmountVerified=true. finalized는 기존 DTO 사실 그대로 표시한다. |
+| `decision-evidence` | applicationId | 기존 `clear-bootcamp-decision-evidence.1`, manifest/manifestHash/limitations. 원천 재수집을 수행하지 않는다. |
+| `read-operation` | applicationId, operationId, kind | kind `application`: 기존 v1 operations 조회. kind `procedure`: 기존 v3 procedure-operations 조회. 반환 record의 두 ID가 입력과 일치해야 한다. |
+
+GET과 POST 경로는 A 내부 allowlist에만 있다. C에 일반 request, cookie/CSRF,
+provider, signer 또는 서명 결과를 전달하지 않는다. 원천·등록은 기존 독립 signer와
+source/registration context, 서명 전후 현재 응답 검사를 재사용한다. 특히 원천의
+approvalId/기한 등 검토 packet 전체가 바뀌면 같은 메시지여도 새 검토가 필요하다.
+지갑 승인이 끝난 다음에만 C의 5초 command grant를 발급하므로 지갑 대기시간으로
+원 grant를 연장하지 않는다. grant 실패 후 서명값을 저장·재전송하지 않는다.
+
+동의는 보관한 원 view와 제출값의 동일성을 검사하고 최신 view의 target/금액을 다시
+비교한 뒤 기존 CAS body를 만든다. AI 승인은 보관한 aiApproval 및 최신 permitted/
+body·plan·context·run·code·model·cost acknowledgment 결합을 다시 확인한다. 이 포트
+자체가 AI provider를 호출하거나 지갑 거래를 대신 전송하지 않는다.
+
+### 오류·UNKNOWN 및 조회 책임
+
+- 입력 shape/ID/action 오류 또는 미연결 상태는 I/O 전에 거부한다. C는 버튼을 잠그고
+  입력/연결을 다시 읽는다. 원 예외 원문은 화면에 표시하지 않는다.
+- 시작한 작업 실패는 고정 `code=MOODLE_WORKFLOW_UNAVAILABLE`를 던진다. 읽기의
+  outcome은 NOT_SENT(업무 쓰기 미전송), 쓰기의 outcome은 보수적으로 UNKNOWN이다.
+  쓰기 실패를 확정 미접수로 표현하지 않는다. 확정 실패와 단순 timeout을 추정해
+  재전송하는 복구 절차를 추가하지 않는다.
+- 쓰기 실패는 controller 연결을 취소·폐기하고 검토 cache를 지운다. 계정/네트워크/
+  세션/역할 변경 또는 cancel 후 늦은 결과는 버린다. 읽기 실패도 검토 cache를 지우며,
+  인증 경계 실패는 연결까지 폐기한다. C는 CONNECTED가 사라지면 모든 쓰기 버튼과
+  이전 connected/검토 표시를 즉시 해제한다.
+- idempotencyKey는 사용자의 한 명시 작업에 대해 한 번 생성한다. 결과 유실 후 새 key,
+  새 grant 또는 재서명으로 같은 작업을 자동 재실행하지 않는다. A/C 메모리나 DOM의
+  오래된 성공 표시를 durable 영수증으로 취급하지 않는다.
+- 성공 응답에서 이미 applicationId/operationId를 얻었다면 read-operation으로 기존
+  durable 결과를 다시 읽을 수 있다. operationId를 받지 못한 생성 UNKNOWN은 현재
+  API에 key→operation 조회가 없으므로 미해결로 멈춘다. applicationId=null은 원천에
+  연결된 신청이 없다는 뜻이며, 생성된 신청이 전혀 없다는 증거가 아니다.
+- 양측 동의와 등록 결과는 read-application/read-registration, AI 기록 상태는
+  read-session.aiApproval로 다시 관측할 수 있다. NOT_OBSERVED/조회 실패/partial은
+  미지급·미전송을 확정하지 않는다. 지급 완료는 payment-receipt의 실제 관측 사실로만
+  표시하며, 자동 재지급 버튼은 없다. 원천 서명 결과 유실은 새 서명 없이 상태를
+  확인하고 불명확하면 중단한다.
+
+C는 기존 Moodle 영역에서 표시/입력만 연결한다. 별도 `/onboarding`/`operator` 이동,
+iframe 업무 화면, raw submitCommand orchestration, C의 자체 서명/body 생성은 필요 없다.

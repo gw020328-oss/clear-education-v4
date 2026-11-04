@@ -20,6 +20,7 @@ export function createProductSession({session, wallet, config}) {
   const normal = createNormalBootcampClient({request: (...args) => session.request(...args)});
   const signer = createApprovalSigner({wallet, session, normal});
   let registration = null, registrationPending = false, registrationUnknown = false;
+  let sourcePending = false, sourceUnknown = false;
   async function context(signal) {
     const actor = await session.assertSession(signal), b = await normal.session({signal});
     check(b.role === actor.role.toUpperCase(), 'PRODUCT_ROLE_CHANGED');
@@ -49,6 +50,20 @@ export function createProductSession({session, wallet, config}) {
     end: () => session.dispose(),
   });
   return Object.freeze({bridge,
+    async submitSource(reviewed,{signal} = {}) {
+      check(!sourcePending&&!sourceUnknown,'SOURCE_RESULT_UNKNOWN');sourcePending=true;let sent=false;
+      try {
+        const b=await context(signal);check(reviewed.applicationId===b.applicationId,'SOURCE_BINDING');
+        const signature=await signer.source(reviewed,b.signingContext.source,{signal});
+        const latest=await context(signal);
+        check(same(latest.signingContext.source,b.signingContext.source),'SOURCE_BINDING');
+        signal?.throwIfAborted();sent=true;
+        return await normal.submitSourceSignature(b.applicationId,reviewed,signature,{signal});
+      } catch(error) {
+        if(sent&&(error.outcome==='UNKNOWN'||!Number.isInteger(error.status)))sourceUnknown=true;
+        throw error;
+      } finally {sourcePending=false;}
+    },
     async readRegistration({signal} = {}) {
       check(!registrationPending && !registrationUnknown, 'REGISTRATION_RESULT_UNKNOWN');
       const b = await context(signal); check(b.role === 'PARTICIPANT', 'FORBIDDEN');
