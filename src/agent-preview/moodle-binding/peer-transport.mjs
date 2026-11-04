@@ -204,3 +204,33 @@ export function createPeerTransport({ pin, key, replay, clock = () => Math.floor
     close() { closed = true; for(const controller of pending) controller.abort(Error('PEER_CLOSED')); k.fill(0); }
   });
 }
+
+// Explicit local synthetic composition with native certificate verification.
+// Only a private CA and a fixed IPv4 loopback HTTPS origin are accepted.
+export async function createLocalSyntheticPeerTransport(options) {
+  const { mode, ca, ...configuration } = options;
+  check(mode === 'LOCAL_SYNTHETIC_ONLY', 'LOCAL_PEER_MODE');
+  const pin = validatePeerPin(configuration.pin);
+  check(new URL(pin.origin).hostname === '127.0.0.1' && Buffer.isBuffer(ca) && ca.length > 0, 'LOCAL_PEER_TLS');
+  check(!Object.hasOwn(configuration, 'fetchImpl') && !Object.hasOwn(configuration, 'activation'), 'LOCAL_PEER_CONFIG');
+  const { request } = await import('node:https');
+  const { Readable } = await import('node:stream');
+  const fetchImpl = (url, init) => new Promise((resolve, reject) => {
+    check(url === pin.origin + pin.path, 'LOCAL_PEER_URL');
+    const req = request(url, {
+      method: 'POST', ca, rejectUnauthorized: true, minVersion: 'TLSv1.2',
+      headers: init.headers, signal: init.signal, agent: false
+    }, response => {
+      try {
+        check(response.statusCode === 200, 'PEER_HTTP');
+        resolve(new Response(Readable.toWeb(response), {
+          status: response.statusCode, headers: response.headers
+        }));
+      } catch(error) { response.destroy(); reject(error); }
+    });
+    req.on('error', reject);
+    req.end(init.body);
+  });
+  const transport = createPeerTransport({ ...configuration, pin, activation: 'OFFLINE_TEST', fetchImpl });
+  return Object.freeze({ execution: 'LOCAL_SYNTHETIC_HTTPS', query: transport.query, close: transport.close });
+}

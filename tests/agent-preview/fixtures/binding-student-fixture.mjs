@@ -12,11 +12,11 @@ import { schemas } from '../../../src/agent-preview/moodle-binding/schema.mjs';
 import { hash } from '../../../src/agent-preview/moodle-binding/contract.mjs';
 import { responseFor, timePolicy, sessionKey } from './binding-module-fixture.mjs';
 
-export async function studentFixture(t, { acknowledged = true } = {}) {
+export async function studentFixture(t, { acknowledged = true, origin = 'https://student.example.invalid' } = {}) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'clear-binding-student-')));
   const alice = Wallet.createRandom(), operator = Wallet.createRandom(), bob = Wallet.createRandom();
   const state = { wall: 1000, query: null };
-  const authConfig = { directory: join(root, 'authentication'), origin: 'https://student.example.invalid', chainId: 31337,
+  const authConfig = { directory: join(root, 'authentication'), origin, chainId: 31337,
     instanceId: id('SYNTHETIC_STUDENT_BINDING'), participants: [alice.address], operators: [operator.address],
     bindingAuthority: { revision: 1, expectedRevision: 0 }, now: () => state.wall };
   let auth, student, runtime;

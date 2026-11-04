@@ -57,6 +57,27 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
     check(r.draft && input.draftId === r.draft.draftId && input.proposalHash === r.draft.proposalHash, 'CONTEXT_DRAFT');
   }
   return Object.freeze({
+    generationScope(context, input) {
+      exact(input, ['version','previewContextRef','sourceText','approvalRef']);
+      check(input.version === PREVIEW_CONTEXT_VERSION && opaque(input.approvalRef), 'CONTEXT_GENERATION');
+      const { r } = record(context, input.previewContextRef);
+      check(!r.draft, 'CONTEXT_DRAFT_EXISTS');
+      const prepared = prepareModel(input.sourceText);
+      check(prepared.sourceHash === r.sourceHash && prepared.bodyHash === r.bodyHash
+        && prepared.model === r.model && prepared.actualModelCall === false, 'CONTEXT_PROPOSAL');
+      record(context, input.previewContextRef);
+      return { correlation: { contextRef:input.previewContextRef, sourceHash:r.sourceHash,
+        proposalHash:'0'.repeat(64), expiresAtExclusive:r.expiresAtExclusive }, signal:r.lifetime.signal };
+    },
+    reviewedScope(context, input) {
+      exact(input, ['version','previewContextRef','draftId','proposalHash']);
+      check(input.version === PREVIEW_CONTEXT_VERSION, 'CONTEXT_VERSION');
+      const { r } = record(context, input.previewContextRef);
+      matching(r, input);
+      check(r.reviewed, 'CONTEXT_REVIEW_OR_BUSY');
+      return { correlation: { contextRef:input.previewContextRef, sourceHash:r.sourceHash,
+        proposalHash:r.draft.proposalHash, expiresAtExclusive:r.expiresAtExclusive }, signal:r.lifetime.signal };
+    },
     issue(context, input) {
       exact(input, ['version','sourceText']); check(input.version === PREVIEW_CONTEXT_VERSION, 'CONTEXT_VERSION');
       const before = current(context), prepared = prepareModel(input.sourceText), live = current(context);
@@ -104,14 +125,16 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
       const {r} = record(context, input.previewContextRef); matching(r,input); r.reviewed = true;
       return { version:PREVIEW_CONTEXT_VERSION, previewContextRef:input.previewContextRef, reviewed:true, paymentAllowed:false };
     },
-    async observe(context, input) {
+    async observe(context, input, { signal } = {}) {
       exact(input, ['version','previewContextRef','draftId','proposalHash']); check(input.version === PREVIEW_CONTEXT_VERSION, 'CONTEXT_VERSION');
       const {r} = record(context, input.previewContextRef); matching(r,input);
       check(r.reviewed && !r.active, 'CONTEXT_REVIEW_OR_BUSY'); r.active = true;
       const controller = new AbortController();
-      const cancel = () => controller.abort(r.lifetime.signal.reason);
-      r.lifetime.signal.addEventListener('abort', cancel, { once:true });
+      const operationSignal = signal ? AbortSignal.any([r.lifetime.signal, signal]) : r.lifetime.signal;
+      const cancel = () => controller.abort(operationSignal.reason);
+      operationSignal.addEventListener('abort', cancel, { once:true });
       try {
+        operationSignal.throwIfAborted();
         const cancelled = new Promise((_, reject) => {
           controller.signal.addEventListener('abort', () => reject(controller.signal.reason), { once:true });
         });
@@ -138,12 +161,12 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
           expiry:Math.min(result.expiresAtExclusive,r.expiresAtExclusive,item.observedAt + policy.maxObservationAgeSeconds - policy.maxClockSkewSeconds) });
         return triple;
       } finally {
-        r.lifetime.signal.removeEventListener('abort', cancel);
+        operationSignal.removeEventListener('abort', cancel);
         controller.abort();
         r.active = false;
       }
     },
-    deliverObservation(context, input, observation, transport) {
+    deliverObservation(context, input, observation, transport, { signal } = {}) {
       exact(input,['previewContextRef','draftId','proposalHash']); const {r} = record(context,input.previewContextRef); matching(r,input);
       check(r.reviewed, 'CONTEXT_REVIEW_OR_BUSY');
       const receipt = observations.get(observation), final = time();
@@ -155,7 +178,7 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
       // re-sign an arbitrary or cached triple with a new transport timestamp.
       return transport.query(Buffer.from(canonical(observation)), {
         contextRef:input.previewContextRef, sourceHash:r.sourceHash, proposalHash:r.draft.proposalHash,
-        expiresAtExclusive:receipt.expiry }, { signal:r.lifetime.signal });
+        expiresAtExclusive:receipt.expiry }, { signal:signal ? AbortSignal.any([r.lifetime.signal, signal]) : r.lifetime.signal });
     },
     close() { closed = true; for(const ref of records.keys()) forget(ref, 'CONTEXT_CLOSED'); }
   });
