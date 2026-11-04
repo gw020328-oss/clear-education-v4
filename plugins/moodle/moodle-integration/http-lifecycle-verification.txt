@@ -1,0 +1,359 @@
+C Moodle HTTP lifecycle validation
+Input C: 37385cd0fc8ae835c08a95fbd4060d21b8e3d920
+Pinned B: 210a739e1d8a2b8e7af2ef894b9309c1352b5a14
+Synthetic isolated Moodle 4.5.15 / PHP 8.3.35 / PostgreSQL 16.14
+
+No syntax errors detected in /probe/moodle-integration/adapter.php
+No syntax errors detected in /probe/moodle-integration/attempt_fixture.php
+No syntax errors detected in /probe/moodle-integration/boundary_tests.php
+No syntax errors detected in /probe/moodle-integration/collector.php
+No syntax errors detected in /probe/moodle-integration/function_fence_tests.php
+No syntax errors detected in /probe/moodle-integration/guarded_database.php
+No syntax errors detected in /probe/moodle-integration/http_bootstrap.php
+No syntax errors detected in /probe/moodle-integration/http_database.php
+No syntax errors detected in /probe/moodle-integration/http_faults.php
+No syntax errors detected in /probe/moodle-integration/http_fixture.php
+No syntax errors detected in /probe/moodle-integration/http_lifecycle_tests.php
+No syntax errors detected in /probe/moodle-integration/http_router.php
+No syntax errors detected in /probe/moodle-integration/install.php
+No syntax errors detected in /probe/moodle-integration/issuance_failure_tests.php
+No syntax errors detected in /probe/moodle-integration/mutation_tests.php
+No syntax errors detected in /probe/moodle-integration/native_codec_fixture.php
+No syntax errors detected in /probe/moodle-integration/native_handler_fixture.php
+No syntax errors detected in /probe/moodle-integration/setup.php
+No syntax errors detected in /probe/moodle-integration/snapshot_delay_fixture.php
+No syntax errors detected in /probe/moodle-integration/tests.php
+No syntax errors detected in /probe/moodle-integration/wire.php
+No syntax errors detected in /probe/moodle-integration/wire_probe.php
+
+PASS CLI prepare remains isolated
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS lookup before explicit confirmation fails closed / fixed error without session or cookie
+PASS CLI inspect remains isolated
+PASS lookup cannot mint
+PASS GET cannot confirm / fixed error without session or cookie
+PASS missing sesskey / fixed error without session or cookie
+PASS wrong sesskey / fixed error without session or cookie
+PASS missing explicit consent / fixed error without session or cookie
+PASS cross-session sesskey / fixed error without session or cookie
+PASS CLI inspect remains isolated
+PASS CSRF failures issue nothing
+PASS nested transaction / fixed error without session or cookie
+PASS nested rollback preserves exact persistent session bytes
+PASS CLI inspect remains isolated
+PASS nested cannot commit a confirmation
+PASS nested cannot resurrect authority via lookup / fixed error without session or cookie
+PASS nested preserves original login after rollback
+PASS rollback transaction / fixed error without session or cookie
+PASS rollback rollback preserves exact persistent session bytes
+PASS CLI inspect remains isolated
+PASS rollback cannot commit a confirmation
+PASS rollback cannot resurrect authority via lookup / fixed error without session or cookie
+PASS rollback preserves original login after rollback
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS normal explicit confirmation succeeds
+PASS CLI inspect remains isolated
+PASS normal persists final generation
+PASS normal native restart and shutdown persistence sealed
+PASS normal read-only lookup succeeds without session creation
+PASS CLI inspect remains isolated
+PASS normal response / lookup leaves persisted bytes and generation unchanged
+PASS first reuse manager metadata receipt advances before mint
+PASS CLI delay remains isolated
+PASS SQL return delay remains part of snapshot age within five-second limit
+PASS normal repeated explicit confirmation cannot replay / fixed error without session or cookie
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS redirect explicit confirmation succeeds
+PASS redirect target has no session/confirmation data
+PASS CLI inspect remains isolated
+PASS redirect persists final generation
+PASS redirect native restart and shutdown persistence sealed
+PASS redirect read-only lookup succeeds without session creation
+PASS CLI inspect remains isolated
+PASS redirect response / lookup leaves persisted bytes and generation unchanged
+PASS redirect repeated explicit confirmation cannot replay / fixed error without session or cookie
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS shutdown explicit confirmation succeeds
+PASS CLI inspect remains isolated
+PASS shutdown persists final generation
+PASS shutdown native restart and shutdown persistence sealed
+PASS shutdown read-only lookup succeeds without session creation
+PASS CLI inspect remains isolated
+PASS shutdown response / lookup leaves persisted bytes and generation unchanged
+PASS shutdown repeated explicit confirmation cannot replay / fixed error without session or cookie
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS logout baseline confirmation valid
+PASS logout core manager action succeeds
+PASS logout invalidates prior confirmation / fixed error without session or cookie
+PASS CLI inspect remains isolated
+PASS logout removes old row and changes cookie
+PASS logout old cookie cannot revive authenticated session
+PASS logout old cookie request cannot revive confirmation / fixed error without session or cookie
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS regenerate baseline confirmation valid
+PASS regenerate core manager action succeeds
+PASS regenerate invalidates prior confirmation / fixed error without session or cookie
+PASS CLI inspect remains isolated
+PASS regenerate removes old row and changes cookie
+PASS regenerate old cookie cannot revive authenticated session
+PASS regenerate old cookie request cannot revive confirmation / fixed error without session or cookie
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS mutation baseline confirmation valid
+PASS mutation core manager action succeeds
+PASS mutation invalidates prior confirmation / fixed error without session or cookie
+PASS CLI inspect remains isolated
+PASS persisted role-switch advances generation
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS idle manager metadata update allows confirmation
+PASS idle uses actual manager update_session receipt
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS ip manager metadata update allows confirmation
+PASS ip uses actual manager update_session receipt
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS external-data between read and manager metadata update / fixed error without session or cookie
+PASS CLI inspect remains isolated
+PASS external-data cannot be laundered by metadata receipt
+PASS native anonymous cookie / HttpOnly SameSite
+PASS manager login regenerates anonymous cookie
+PASS old anonymous cookie cannot acquire logged-in identity
+PASS external-identity between read and manager metadata update / fixed error without session or cookie
+PASS CLI inspect remains isolated
+PASS external-identity cannot be laundered by metadata receipt
+PASS 113 HTTP lifecycle checks
+
+PASS actual PostgreSQL return delay: age 2s rejects within RTT 5s
+PASS old post-query timestamp counterexample would accept
+Measured lookup frame: 3210.28ms; checkedAt-observedAt: 3s
+
+PASS actual core tables issue and empty manual completion observation
+PASS Moodle session advisory lock held throughout issue
+PASS same session concurrent write fenced
+PASS authority mutation fenced during issuance
+PASS blocked writers leave usable confirmation
+PASS new repeatable snapshot keeps original completion across concurrent update
+PASS next request acquires new snapshot and sees completion one
+PASS actual core grade-state completion rejected
+PASS suspend restore cannot revive actual confirmation
+PASS force password change blocks issuance
+PASS actual role switch blocks new issuance
+PASS same session persisted role switch invalidates earlier confirmation
+PASS core database session destruction blocks observation
+SYNTHETIC_ACTUAL_MOODLE_INTEGRATION_ONLY
+PASS concurrent persisted session update blocks stale issuance
+PASS stale-memory failure issues zero confirmations
+PASS failed issuance releases core advisory lock
+PASS actual trigger timeout blocks confirmation issuance
+PASS flush failure rolls confirmation transaction back
+PASS new explicit attempt after failed flush is observable
+PASS assumed identity rejected before insert and lock released
+PASS pre-transaction rejection releases core session lock
+PASS post-flush native memory change blocks issuance
+PASS post-flush memory change issues zero confirmations
+PASS post-flush actual role switch blocks issuance
+PASS post-flush role switch issues zero confirmations
+PASS actual observation issuer mismatch rejected
+PASS actual observation rejects browser identity input
+PASS function definition drift blocks observation
+PASS trigger disabled state blocks observation
+PASS actual reader sensitive column privilege denied
+PASS actual reader sensitive column privilege denied
+PASS actual reader sensitive column privilege denied
+PASS database insert rejects SESSION_LOCK_REQUIRED
+PASS database insert rejects STALE_FENCE
+PASS outer delegated transaction cannot return an uncommitted confirmation
+PASS outer transaction rejection issues zero confirmations
+PASS detached native USER object blocks issuance
+PASS post-flush native USER detachment blocks issuance
+PASS native abort closes actual core-derived handler
+PASS closed native session does not persist later PHP memory changes
+PASS abort does not freeze PHP globals and is not a terminal HTTP action
+PASS actual core rejects string-zero required profile field
+PASS Page projection rejects the same string-zero profile counterexample
+PASS lookup rejects a clock before original confirmedAt
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS runtime cannot rewrite trusted attempt or confirmation registry
+PASS authority lock fences user INSERT statement path
+PASS authority lock fences user UPDATE statement path
+PASS authority lock fences user DELETE statement path
+PASS runtime cannot truncate user
+PASS authority lock fences user_preferences INSERT statement path
+PASS authority lock fences user_preferences UPDATE statement path
+PASS authority lock fences user_preferences DELETE statement path
+PASS runtime cannot truncate user_preferences
+PASS authority lock fences user_info_field INSERT statement path
+PASS authority lock fences user_info_field UPDATE statement path
+PASS authority lock fences user_info_field DELETE statement path
+PASS runtime cannot truncate user_info_field
+PASS authority lock fences user_info_data INSERT statement path
+PASS authority lock fences user_info_data UPDATE statement path
+PASS authority lock fences user_info_data DELETE statement path
+PASS runtime cannot truncate user_info_data
+PASS authority lock fences enrol INSERT statement path
+PASS authority lock fences enrol UPDATE statement path
+PASS authority lock fences enrol DELETE statement path
+PASS runtime cannot truncate enrol
+PASS authority lock fences user_enrolments INSERT statement path
+PASS authority lock fences user_enrolments UPDATE statement path
+PASS authority lock fences user_enrolments DELETE statement path
+PASS runtime cannot truncate user_enrolments
+PASS authority lock fences role INSERT statement path
+PASS authority lock fences role UPDATE statement path
+PASS authority lock fences role DELETE statement path
+PASS runtime cannot truncate role
+PASS authority lock fences role_assignments INSERT statement path
+PASS authority lock fences role_assignments UPDATE statement path
+PASS authority lock fences role_assignments DELETE statement path
+PASS runtime cannot truncate role_assignments
+PASS authority lock fences role_capabilities INSERT statement path
+PASS authority lock fences role_capabilities UPDATE statement path
+PASS authority lock fences role_capabilities DELETE statement path
+PASS runtime cannot truncate role_capabilities
+PASS authority lock fences capabilities INSERT statement path
+PASS authority lock fences capabilities UPDATE statement path
+PASS authority lock fences capabilities DELETE statement path
+PASS runtime cannot truncate capabilities
+PASS authority lock fences context INSERT statement path
+PASS authority lock fences context UPDATE statement path
+PASS authority lock fences context DELETE statement path
+PASS runtime cannot truncate context
+PASS authority lock fences config INSERT statement path
+PASS authority lock fences config UPDATE statement path
+PASS authority lock fences config DELETE statement path
+PASS runtime cannot truncate config
+PASS authority lock fences config_plugins INSERT statement path
+PASS authority lock fences config_plugins UPDATE statement path
+PASS authority lock fences config_plugins DELETE statement path
+PASS runtime cannot truncate config_plugins
+PASS authority lock fences course INSERT statement path
+PASS authority lock fences course UPDATE statement path
+PASS authority lock fences course DELETE statement path
+PASS runtime cannot truncate course
+PASS authority lock fences course_categories INSERT statement path
+PASS authority lock fences course_categories UPDATE statement path
+PASS authority lock fences course_categories DELETE statement path
+PASS runtime cannot truncate course_categories
+PASS authority lock fences course_sections INSERT statement path
+PASS authority lock fences course_sections UPDATE statement path
+PASS authority lock fences course_sections DELETE statement path
+PASS runtime cannot truncate course_sections
+PASS authority lock fences course_modules INSERT statement path
+PASS authority lock fences course_modules UPDATE statement path
+PASS authority lock fences course_modules DELETE statement path
+PASS runtime cannot truncate course_modules
+PASS authority lock fences modules INSERT statement path
+PASS authority lock fences modules UPDATE statement path
+PASS authority lock fences modules DELETE statement path
+PASS runtime cannot truncate modules
+PASS authority lock fences page INSERT statement path
+PASS authority lock fences page UPDATE statement path
+PASS authority lock fences page DELETE statement path
+PASS runtime cannot truncate page
+PASS authority lock fences trusted attempt INSERT
+PASS authority lock fences trusted attempt UPDATE
+PASS authority lock fences trusted attempt DELETE
+PASS session row lock fences current UPDATE
+PASS session row lock fences current DELETE
+PASS runtime cannot truncate sessions
+PASS unrelated session mutations remain independent
+PASS blocked source mutations and unrelated sessions leave issued confirmation usable
+PASS maintenance truncate advances authority for public.mdl_user before rollback
+PASS maintenance truncate advances authority for public.mdl_user_preferences before rollback
+PASS maintenance truncate advances authority for public.mdl_user_info_field before rollback
+PASS maintenance truncate advances authority for public.mdl_user_info_data before rollback
+PASS maintenance truncate advances authority for public.mdl_enrol before rollback
+PASS maintenance truncate advances authority for public.mdl_user_enrolments before rollback
+PASS maintenance truncate advances authority for public.mdl_role before rollback
+PASS maintenance truncate advances authority for public.mdl_role_assignments before rollback
+PASS maintenance truncate advances authority for public.mdl_role_capabilities before rollback
+PASS maintenance truncate advances authority for public.mdl_capabilities before rollback
+PASS maintenance truncate advances authority for public.mdl_context before rollback
+PASS maintenance truncate advances authority for public.mdl_config before rollback
+PASS maintenance truncate advances authority for public.mdl_config_plugins before rollback
+PASS maintenance truncate advances authority for public.mdl_course before rollback
+PASS maintenance truncate advances authority for public.mdl_course_categories before rollback
+PASS maintenance truncate advances authority for public.mdl_course_sections before rollback
+PASS maintenance truncate advances authority for public.mdl_course_modules before rollback
+PASS maintenance truncate advances authority for public.mdl_modules before rollback
+PASS maintenance truncate advances authority for public.mdl_page before rollback
+PASS maintenance truncate advances authority for clear_probe.attempts before rollback
+PASS maintenance truncate advances authority for public.mdl_sessions before rollback
+
+PASS one-character refs: lookup never creates a confirmation
+PASS one-character refs: native handler persists and closes before returning
+PASS one-character refs: actual PHP confirmation passes B validateDto and currentness
+PASS one-character refs: fresh request preserves original confirmation lifetime and digest
+PASS one-character refs: actual PHP observations pass B validateDto and currentness
+PASS one-character refs: former state key is rejected by unchanged B validator
+PASS one-character refs: repeated explicit mint cannot renew the same attempt
+PASS one-character refs: issuer substitution rejected without issuance
+PASS one-character refs: scope substitution rejected without issuance
+PASS one-character refs: extra browser user rejected without issuance
+PASS one-character refs: 129-character ref rejected without issuance
+PASS one-character refs: invalid ref prefix rejected without issuance
+PASS one-character refs: uppercase scope hash rejected without issuance
+PASS 128-character refs: lookup never creates a confirmation
+PASS 128-character refs: native handler persists and closes before returning
+PASS 128-character refs: actual PHP confirmation passes B validateDto and currentness
+PASS 128-character refs: fresh request preserves original confirmation lifetime and digest
+PASS 128-character refs: actual PHP observations pass B validateDto and currentness
+PASS 128-character refs: former state key is rejected by unchanged B validator
+PASS 128-character refs: repeated explicit mint cannot renew the same attempt
+PASS 128-character refs: issuer substitution rejected without issuance
+PASS 128-character refs: scope substitution rejected without issuance
+PASS 128-character refs: extra browser user rejected without issuance
+PASS 128-character refs: 129-character ref rejected without issuance
+PASS 128-character refs: invalid ref prefix rejected without issuance
+PASS 128-character refs: uppercase scope hash rejected without issuance
+PASS ordinary opaque refs: lookup never creates a confirmation
+PASS ordinary opaque refs: native handler persists and closes before returning
+PASS ordinary opaque refs: actual PHP confirmation passes B validateDto and currentness
+PASS ordinary opaque refs: fresh request preserves original confirmation lifetime and digest
+PASS ordinary opaque refs: actual PHP observations pass B validateDto and currentness
+PASS ordinary opaque refs: former state key is rejected by unchanged B validator
+PASS ordinary opaque refs: repeated explicit mint cannot renew the same attempt
+PASS ordinary opaque refs: issuer substitution rejected without issuance
+PASS ordinary opaque refs: scope substitution rejected without issuance
+PASS ordinary opaque refs: extra browser user rejected without issuance
+PASS ordinary opaque refs: 129-character ref rejected without issuance
+PASS ordinary opaque refs: invalid ref prefix rejected without issuance
+PASS ordinary opaque refs: uppercase scope hash rejected without issuance
+PASS actual Page mutation is observed in a new snapshot without confirmation renewal
+PASS native reopen and persisted core role switch invalidate confirmation
+PASS server registry revocation blocks confirmation lookup
+CROSS_LANGUAGE_CHECKS=42
+
+PASS existing application and matching student, course and mapping are required
+PASS cross-application attempt and lookup before explicit Moodle confirmation rejected
+PASS PHP refuses mismatched local student or course mapping at mint
+PASS B rejects an actual PHP response for the wrong subject without consumption
+PASS PHP revocation between preview and complete prevents B consumption
+PASS concurrent and later complete calls consume the B attempt only once
+PASS B start, preview, complete and readPreview use fresh actual Moodle observations
+PASS PHP revocation blocks subsequent reads of an existing B binding
+PASS synthetic B auth and workflow database bytes are unchanged across all scenarios
+B_HEAD=210a739e1d8a2b8e7af2ef894b9309c1352b5a14
+
+Summary: HTTP 113 checks; snapshot-age 2 behavior checks against pinned B; PHP regression 154 + cross-language 42 = 196; coordinator 9; PHP lint 22 files.

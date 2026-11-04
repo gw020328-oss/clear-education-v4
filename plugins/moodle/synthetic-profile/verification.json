@@ -1,0 +1,84 @@
+{
+  "mode": "SYNTHETIC_ONLY",
+  "postgresVersion": "16.14",
+  "moodleVersion": "4.5.15 (2024100715.00)",
+  "phpVersion": "8.3.35",
+  "base": "f44c0b2ebbe88616e8f4e115f8e53f91fa733fd8",
+  "checks": {
+    "profileAndPgPrivileges": [
+      "nonowner definer epoch changes on suspend restore",
+      "runtime rollback also rolls epoch back",
+      "session update changes only per-session generation",
+      "epoch direct update denied",
+      "trigger disable denied",
+      "owner role switch denied",
+      "replication bypass denied",
+      "temporary shadow denied",
+      "public shadow denied",
+      "runtime truncate denied",
+      "direct definer invocation denied",
+      "reader session bytes denied",
+      "reader writes denied",
+      "new request snapshot missing row is incomplete",
+      "manual completion one accepted",
+      "grade completion rejected",
+      "duplicate completion rejected",
+      "issuer mismatch rejected",
+      "extra identity field rejected",
+      "exclusive expiry rejected",
+      "clock reversal rejected",
+      "stale session generation rejected",
+      "unsafe revision rejected",
+      "exact synthetic profile accepted",
+      "profile drift rejected hooks",
+      "profile drift rejected customProfileFields",
+      "profile drift rejected sitePolicies",
+      "profile drift rejected timeoutHooks",
+      "profile drift rejected additionalPlugins",
+      "profile drift rejected roleOverrides",
+      "profile drift rejected roleSwitch",
+      "profile drift rejected loginAs",
+      "profile drift rejected availability",
+      "profile drift rejected groups",
+      "profile drift rejected replication",
+      "profile drift rejected codeInventoryHash",
+      "profile drift rejected cfgHash",
+      "profile drift rejected aclHash",
+      "profile drift rejected queryHash",
+      "profile drift rejected dependencyHash"
+    ],
+    "moodleSession": [
+      "actual Moodle role_switch state rejected",
+      "actual Moodle loginas state rejected",
+      "core end-of-request write invalidates earlier generation",
+      "candidate exact flush prevents unchanged shutdown self-invalidation",
+      "core write returns true after actual database exception",
+      "candidate persistence failure rejects confirmation receipt",
+      "candidate write failure remains sticky"
+    ],
+    "safeIntegerOverflow": [
+      "authority overflow rolls source mutation back",
+      "session overflow rolls source mutation back",
+      "overflow failures preserve original account and session"
+    ],
+    "privilegePreflight": [
+      "role and trigger privilege preflight"
+    ]
+  },
+  "files": {
+    "install.sql": "c6e5922c7346104ba3f952b5182092957b184364db5461b59aafb1484fc8380b",
+    "page.sql": "c6520fbec36b822fb104bda4a25b2e1aab60863997e9dfe4e76675c5770e5160",
+    "profile.php": "106e1b8373d99b6efaf4498a2396bce40986d694f7fb2b2084a02ee4c26df35a",
+    "reader.php": "a72bd0914b7a26a457f42b1ac718d176065102854669367e61d5fae9c180d22a",
+    "strict_database_candidate.php": "a04796fc9b7f8eed88fc1c546f61862c9fbd61e99b664e33f79d3997258a9707",
+    "privilege_preflight.php": "4ee95898677a5210abef4971195cf7f001cdb3950f5cf40000a864ad430248ff",
+    "dependencies.json": "5292290a37efa613776bb14fe6ebc30a978cfca6e45d5a03bd96442841e381f7"
+  },
+  "actualInstitutionRecordsRead": false,
+  "productionConfirmationEnabled": false,
+  "sourceInventory": {
+    "mode": "SYNTHETIC_ONLY",
+    "files": 23902,
+    "inventorySha256": "0ceab24121ce066d9d7e4754424be6451333075099ca50507a8e59d07aab345d"
+  }
+}

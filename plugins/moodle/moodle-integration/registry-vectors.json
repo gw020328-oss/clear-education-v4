@@ -1,0 +1,23 @@
+{
+    "mode": "PUBLIC_SYNTHETIC_EXPIRED_VECTORS",
+    "vectors": [
+        {
+            "kind": "trust",
+            "publicKey": "2d55ade88c692be6280f7b3d28d0fe3de6498f4d826db8b3901e3e936da13d16",
+            "wire": "{\"keyRef\":\"root-v1\",\"payload\":\"{\\\"audience\\\":\\\"synthetic-clear\\\",\\\"controlRevision\\\":1,\\\"expiresAtExclusive\\\":1700000060,\\\"installationRef\\\":\\\"synthetic-moodle\\\",\\\"issuerEpoch\\\":\\\"issuer-registry-v1\\\",\\\"keyExpiresAtExclusive\\\":1700003600,\\\"keyNotBefore\\\":1700000000,\\\"keyRef\\\":\\\"key-a\\\",\\\"notBefore\\\":1700000000,\\\"publicKey\\\":\\\"1ed6e9580637aae7fddf83ce1c8607678213a33186d70c25f5a1883bb78b3593\\\",\\\"status\\\":\\\"ACTIVE\\\",\\\"trustEpoch\\\":1,\\\"type\\\":\\\"trust\\\"}\",\"signature\":\"9147b144aaa852c15a29aa6d46b825175f915fdeca784d3033d55eb1a8df59cfb90ac58e364202952c3294ad5d45f995b54716bd584e345e24799a1c745f0701\",\"version\":\"clear-registry-envelope.1\"}",
+            "signedBytesSha256": "6a4b3da28a2f60203b052fc0bfd986697e85b4781420b6be85cc5351e61f00cf"
+        },
+        {
+            "kind": "roster",
+            "publicKey": "1ed6e9580637aae7fddf83ce1c8607678213a33186d70c25f5a1883bb78b3593",
+            "wire": "{\"keyRef\":\"key-a\",\"payload\":\"{\\\"audience\\\":\\\"synthetic-clear\\\",\\\"courseRef\\\":\\\"synthetic-course\\\",\\\"expiresAtExclusive\\\":1700000060,\\\"installationRef\\\":\\\"synthetic-moodle\\\",\\\"issuerEpoch\\\":\\\"issuer-registry-v1\\\",\\\"notBefore\\\":1700000000,\\\"rosterRevision\\\":1,\\\"status\\\":\\\"ACTIVE\\\",\\\"subjectRef\\\":\\\"synthetic-subject\\\",\\\"trustEpoch\\\":1,\\\"type\\\":\\\"roster\\\"}\",\"signature\":\"af6fc43502b23d7123be9e2ccd1881003faa301c135b339700abec177a62dbac08b28050fe39a21d356c5a70d5711602a620ab8585a4680733d1f6b48b66bb04\",\"version\":\"clear-registry-envelope.1\"}",
+            "signedBytesSha256": "c1efdb5d62009887f0223ba54d03eff7fbf8b0981f779ad09f155fc60d5a2661"
+        },
+        {
+            "kind": "attempt",
+            "publicKey": "1ed6e9580637aae7fddf83ce1c8607678213a33186d70c25f5a1883bb78b3593",
+            "wire": "{\"keyRef\":\"key-a\",\"payload\":\"{\\\"attemptRef\\\":\\\"synthetic-attempt-vector\\\",\\\"audience\\\":\\\"synthetic-clear\\\",\\\"bindingScopeHash\\\":\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\",\\\"courseRef\\\":\\\"synthetic-course\\\",\\\"expiresAtExclusive\\\":1700000060,\\\"installationRef\\\":\\\"synthetic-moodle\\\",\\\"issuerEpoch\\\":\\\"issuer-registry-v1\\\",\\\"notBefore\\\":1700000000,\\\"rosterRevision\\\":1,\\\"subjectRef\\\":\\\"synthetic-subject\\\",\\\"trustEpoch\\\":1,\\\"type\\\":\\\"attempt\\\"}\",\"signature\":\"3384544459459624e5b3cc8b060e981cc9b2889817cebecd2624e68ab04da592fe5a8ea92ea45b6f1dc344731f3f76c514b6e6df827ed242e3047579e3471600\",\"version\":\"clear-registry-envelope.1\"}",
+            "signedBytesSha256": "bd9919831dae31e49f1d7a4aaa3bc91fa6043ce643b15c2e9b9c5ef92f19fef6"
+        }
+    ]
+}

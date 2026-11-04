@@ -1,0 +1,10 @@
+PASS existing application and matching student, course and mapping are required
+PASS cross-application attempt and lookup before explicit Moodle confirmation rejected
+PASS PHP refuses mismatched local student or course mapping at mint
+PASS B rejects an actual PHP response for the wrong subject without consumption
+PASS PHP revocation between preview and complete prevents B consumption
+PASS concurrent and later complete calls consume the B attempt only once
+PASS B start, preview, complete and readPreview use fresh actual Moodle observations
+PASS PHP revocation blocks subsequent reads of an existing B binding
+PASS synthetic B auth and workflow database bytes are unchanged across all scenarios
+B_HEAD=210a739e1d8a2b8e7af2ef894b9309c1352b5a14

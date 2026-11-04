@@ -1,0 +1,34 @@
+{
+  "version": "clear-moodle-synthetic-page-profile.1",
+  "mode": "SYNTHETIC_ONLY",
+  "moodleVersion": 2024100715,
+  "projection": "core-page-manual-01",
+  "mutableAuthorityDependencies": {
+    "sessions": ["internal id", "userid", "state", "timecreated", "timemodified", "all persisted session changes"],
+    "user": ["auth", "deleted", "suspended", "confirmed", "policyagreed", "profile completeness"],
+    "user_preferences": ["auth_forcepasswordchange", "all access-relevant preferences"],
+    "user_info_field": ["must be empty in first supported profile"],
+    "user_info_data": ["must be empty in first supported profile"],
+    "enrol": ["manual only", "status", "courseid"],
+    "user_enrolments": ["userid", "enrolid", "status", "timestart", "timeend"],
+    "role_assignments": ["full applicable ancestor/default/student role set"],
+    "role_capabilities": ["full exact approved capability set"],
+    "context": ["path", "depth", "instanceid", "contextlevel", "locked"],
+    "role": ["exact approved role definitions"],
+    "capabilities": ["exact approved definitions"],
+    "config": ["exact supported site and role configuration"],
+    "config_plugins": ["exact supported plugin and policy configuration"],
+    "course_categories": ["all ancestor visibility"],
+    "course": ["visibility", "completion enabled", "format", "group restrictions"],
+    "course_sections": ["visibility", "availability", "course"],
+    "course_modules": ["course", "module", "instance", "section", "visibility", "deletioninprogress", "availability", "completion", "groupmode", "groupingid"],
+    "modules": ["exact core page module"],
+    "page": ["instance and course identity only, no body access"]
+  },
+  "mutableObservationDependencies": {
+    "course_modules_completion": ["userid", "coursemoduleid", "completionstate only 0/1", "at most one row"]
+  },
+  "immutableEvidence": ["complete source file inventory and hashes excluding secrets/config.php", "trusted runtime CFG allowlist hash", "enabled plugin/auth/enrol/format inventory", "hook inventory", "profile schema", "exact SQL query hash", "installation epoch"],
+  "rejectFeatures": ["SSO", "remember-me profile", "login-as", "role-switch", "custom profile fields", "site policies", "timeout hooks", "custom availability", "group restrictions", "stealth", "non-page modules", "graded completion", "replication", "partitions"],
+  "status": "SHADOW_SCHEMA_IMPLEMENTED_MOODLE_DEPENDENCY_ADAPTER_PENDING"
+}

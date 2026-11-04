@@ -1,0 +1,73 @@
+{
+  "mode": "SYNTHETIC_ONLY",
+  "base": "17f402104335869019b058fc87e3dc0b5f376449",
+  "B_contract": "a002cf77e3b184596355379c4678f6973aa37464",
+  "B_accepted_timer_head": "3d6c3ff7e8252575155d553247cacab2b699026f",
+  "actual_model": "gpt-6-astra",
+  "actual_effort": "high",
+  "protocol_checks": 29,
+  "actual_http_checks": 13,
+  "dispatch_checks": 10,
+  "php_lint_files": 7,
+  "browser": {
+    "url": "http://127.0.0.1:18767/mod/page/view.php?id=2",
+    "native_login": true,
+    "native_manual_completion": true,
+    "screenshot": "python-complete.jpg"
+  },
+  "observation": {
+    "version": "clear-moodle-observations.3",
+    "installationRef": "synthetic-moodle",
+    "courseRef": "synthetic-course",
+    "subjectRef": "synthetic-subject",
+    "audience": "synthetic-clear",
+    "issuerEpoch": "synthetic-B-exact-issuer",
+    "trustEpoch": 1,
+    "rosterRevision": 1,
+    "bindingScopeHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "requestRef": "a341f12ff63cf35013a625a606bdc33fe70439c8a42855900c1340b3820731fe",
+    "confirmationRef": "75687e8ef6767de1fc51919200605e90dcaf926fa66d6ac6bbd298bafc7f139a",
+    "moodleSessionGeneration": "dd470f64af0d9977ae298853505a39ef14d6995d3c1cdd9ab6d7a31acfd332ac",
+    "enrolmentRevision": 42,
+    "observedAt": 1793775266,
+    "checkedAt": 1793775268,
+    "expiresAtExclusive": 1793775375,
+    "scope": "READ_PREVIEW",
+    "sourceStatus": "OBSERVED_AT",
+    "observations": [
+      {
+        "targetRef": "core-page-manual-mark",
+        "status": "COMPLETE",
+        "observedAt": 1793775266
+      }
+    ]
+  },
+  "zip_sha256": "6810649ea0de04f8b0ef287f96378b576dd0069bc014049206f246a9896973a5",
+  "gates": {
+    "C_signed_HTTP": "PASS",
+    "C_browser_manual_completion": "PASS",
+    "B_actual_coordinator_integration": "PENDING_B_OWNER",
+    "institution_or_live_activation": "DISABLED",
+    "C_nonminting_confirmation_lookup": "PASS"
+  },
+  "broader_HTTP_suite": "not completed; deferred until B single integration releases shared fixture",
+  "lookup_checks": {
+    "checks": 3,
+    "same_attempt_two_fresh_requestRefs": true,
+    "persistent_sessions_and_confirmation_count_unchanged": true,
+    "fresh_native_times": [
+      {
+        "requestRef": "5e04c8d7c9cc42415faad2216e8864ee61d6ff9e90687150b89b09ad2f94da84",
+        "observedAt": 1793775488,
+        "checkedAt": 1793775491,
+        "expiresAtExclusive": 1793775602
+      },
+      {
+        "requestRef": "82891cbf96050aee3d09f1d5c8e3e1e65b94c644ac9a2d1667ef2aa7cd39d250",
+        "observedAt": 1793775491,
+        "checkedAt": 1793775493,
+        "expiresAtExclusive": 1793775602
+      }
+    ]
+  }
+}
