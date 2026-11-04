@@ -744,7 +744,7 @@ test('v58 pins existing role designs and preserves v57',async()=>{
  const d=JSON.parse(actualRead('specs/bootcamp/hackathon-test-existing-design-source-delta-v1.json'));
  for(const [p,v]of Object.entries(d.changes)){assert.equal(sha(v57Read(p)),v.before);assert.equal(sha(v59Read(p)),v.after);assert.equal(sha(execFileSync('git',['show',d.candidateHead+':'+p],{cwd:root})),v.after);}
  for(const [p,v]of Object.entries(d.sourceAdditions))assert.equal(sha(v59Read(p)),v);
- const {consumeReviewedV63Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v63.mjs');const c=consumeReviewedV63Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));assert.equal(Object.keys(c.sources).length,224);
+ const {consumeReviewedV64Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v64.mjs');const c=consumeReviewedV64Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));assert.equal(Object.keys(c.sources).length,224);
 });
 
 test('v59 pins the authorized ledger HTTP delta and adapter while preserving v58',async()=>{
@@ -767,8 +767,8 @@ test('v62 integrates both reviewed parents with exact guards and source deltas',
   'src/hackathon-test-vault/reviewed-source-v61.mjs',
  ]);
  for(const [path,expected]of Object.entries(record.preservedGuards))assert.equal(sha(actualRead(path)),expected);
- const {consumeReviewedV63Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v63.mjs');
- const current=consumeReviewedV63Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
+ const {consumeReviewedV64Sources}=await import('../../src/hackathon-test-vault/reviewed-source-v64.mjs');
+ const current=consumeReviewedV64Sources(JSON.parse(actualRead('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
  for(const path of ['src/bootcamp/execution-operations.mjs','web/src/bootcamp/team-entry.js'])assert.equal(current.sources[path],sha(actualRead(path)));
  const preview=JSON.parse(actualRead('specs/bootcamp/hackathon-test-operator-condition-preview-source-delta-v1.json'));
  assert.equal(preview.changes['tools/embedded-wallet/build-product.mjs'].after,sha(actualRead('tools/embedded-wallet/build-product.mjs')));
