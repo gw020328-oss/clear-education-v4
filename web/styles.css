@@ -2692,3 +2692,34 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
 .fp-proposal-rest > summary { cursor: pointer; font-size: 0.86rem; color: var(--muted); padding: 4px 0; }
 .fp-proposal-rest > summary:hover { color: var(--fg); }
 .fp-proposal-rest .fp-proposal-list { margin-top: 8px; }
+
+/* ── 참가자 진입 화면 ───────────────────────────────────────────────── */
+.fp-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.fp-link {
+  display: grid; grid-template-columns: 4.5em 1fr auto; gap: 4px 12px; align-items: center;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card, #fff);
+}
+.fp-link-name { font-weight: 700; }
+.fp-link-what { color: var(--muted); font-size: 0.9rem; }
+.fp-link-badge { font-size: 0.82rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+.fp-link[data-tone="ok"] .fp-link-badge { background: #dcfce7; color: #166534; }
+.fp-link[data-tone="wait"] .fp-link-badge { background: #fef3c7; color: #92400e; }
+.fp-link[data-tone="warn"] .fp-link-badge { background: #fee2e2; color: #991b1b; }
+.fp-link-note { grid-column: 2 / -1; font-size: 0.86rem; color: var(--muted); }
+.fp-guide { border-left: 4px solid var(--line); padding-left: 14px; }
+.fp-guide[data-tone="ok"] { border-left-color: #16a34a; }
+.fp-guide[data-tone="wait"] { border-left-color: #d97706; }
+.fp-guide[data-tone="warn"] { border-left-color: #dc2626; }
+.fp-guide p { margin: 4px 0 10px; }
+.fp-btn--primary { background: var(--accent, #1d4ed8); color: #fff; border-color: transparent; text-decoration: none; }
+.fp-btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+.fp-steps { margin: 0; padding-left: 1.4em; display: grid; gap: 6px; }
+.fp-step { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; }
+.fp-step-state { font-size: 0.82rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: #f1f5f9; color: #475569; }
+.fp-step[data-state="done"] .fp-step-state { background: #dcfce7; color: #166534; }
+.fp-step[data-state="todo"] .fp-step-state { background: #fef3c7; color: #92400e; }
+.fp-step-note { grid-column: 1 / -1; font-size: 0.84rem; color: var(--muted); }
+@media (max-width: 560px) {
+  .fp-link { grid-template-columns: 1fr auto; }
+  .fp-link-what { grid-column: 1 / -1; }
+}
