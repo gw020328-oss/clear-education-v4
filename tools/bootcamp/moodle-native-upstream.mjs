@@ -68,6 +68,7 @@ export const nativeMoodleRoutes=Object.freeze([
  ...['/theme/styles.php','/theme/image.php','/theme/font.php','/lib/javascript.php','/lib/requirejs.php',
   '/lib/polyfills/polyfill.js','/lib/javascript-static.js','/lib/requirejs/require.min.js','/pluginfile.php']
   .map(path=>({path,methods:['GET'],query:['rev','jsfile','theme','type','image','component','lang','file'],slashArguments:true})),
- ...['/lib/ajax/service.php','/lib/ajax/service-nologin.php','/lib/ajax/getnavbranch.php']
-  .map(path=>({path,methods:['GET','POST'],query:['sesskey','info']})),
+ {path:'/lib/ajax/service.php',methods:['POST'],query:['sesskey','info','nosessionupdate']},
+ {path:'/lib/ajax/service-nologin.php',methods:['GET','POST'],query:['info','cachekey','args','nosessionupdate']},
+ {path:'/lib/ajax/getnavbranch.php',methods:['GET','POST'],query:['id','type','instance']},
 ].map(r=>Object.freeze({...r,owner:'C',methods:Object.freeze(r.methods),query:Object.freeze(r.query)})));

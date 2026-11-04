@@ -74,3 +74,18 @@ test('native inventory allows no asset POST, private authority, OAuth or legacy 
  }
  assert.throws(()=>p.classify(req('/login/index.php?privy_oauth_code=synthetic')));
 });
+test('installed Moodle cached strings, session-aware AJAX and navigation pass their own query inventory',async t=>{
+ const x=await fixture(t),args=encodeURIComponent(JSON.stringify([{index:0,methodname:'core_get_string',
+  args:{stringid:'confirm',component:'moodle',lang:'ko'}}]));
+ const paths=[
+  '/lib/ajax/service-nologin.php?info=core_get_string&cachekey=1&args='+args+'&nosessionupdate=true',
+  '/lib/ajax/getnavbranch.php?id=courses&type=0&instance=2',
+ ];
+ for(const path of paths)assert.equal((await x.send(path)).status,200);
+ assert.equal((await x.send('/lib/ajax/service.php?sesskey=synthetic&info=core_get_string&nosessionupdate=true','[]')).status,200);
+ assert.equal(x.seen.length,3);assert.equal(x.seen[0].path,paths[0]);
+ for(const path of [paths[0]+'&args=duplicate',paths[1]+'&type=1',paths[0]+'&unexpected=1',
+  '/lib/ajax/service.php?args='+args,'/lib/ajax/getnavbranch.php?sesskey=synthetic',
+  '/lib/ajax/service-nologin.php?sesskey=synthetic'])assert.equal((await x.send(path)).status,403);
+ assert.equal(x.seen.length,3);
+});
