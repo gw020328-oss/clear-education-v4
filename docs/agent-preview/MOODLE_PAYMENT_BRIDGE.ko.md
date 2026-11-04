@@ -111,3 +111,16 @@ A 내부 `read(handle,request)`는 정확히 `{version:'clear-moodle-course-read
 인증 창 힌트는 기존 `{version:'clear-moodle-auth-window-result.1',requestRef,status:'REFRESH_REQUIRED'}`를 유지한다. C는 정확한 origin/source-window/requestRef를 확인하고 새로운 authenticated read를 요청한다. 힌트는 로그인·동의·지급 성공 근거가 아니며 callback이나 CLEAR token을 browser 메시지에 담지 않는다.
 
 국소 adapter 검사 37개가 통과했다. 승인 B factory exact archive와 A adapter, D exact 커밋을 함께 사용한 loopback HTTPS 합성 검사 3개도 통과했다(참가자·운영자 OK 및 권한 없음 UNAVAILABLE, raw HMAC/CA 확인·재사용 거부·DB bytes 보존). 초기 합성 연결 시 B 작업본의 의존성이 없어 import가 실패했으며, 타 담당자 작업본을 수정하지 않고 승인 커밋의 별도 archive와 기존 의존성으로 해결했다. 별도 과정 전체/PR139/기존61개 검사를 재실행하지 않았다. 실제 C ref 발급, 사용자 로그인, 원천 증명·AI·100 TEST 지급, 실운영 시간 프로필 및 독립 권한 리뷰를 완료했다는 뜻은 아니다.
+
+
+## 정상 live-context의 private 조립
+
+`tools/bootcamp/live-context.mjs`의 `createNormalMoodleReadBoundary`가 기존 auth/store/S4·canonical receipt source를 신규 host에 공급한다. 기존 `getSession`의 실제 인증된 UI 요청에서만 역할별 context를 메모리에 보관하고, Moodle 서버 조회에서는 UI heartbeat나 store refresh를 호출하지 않는다. 종료하면 두 context와 read-only DB 연결을 폐기한다. 기본 실행·기존 동의/지급 경로는 그대로이며 별도 private `context.createMoodleCourseReadHost(options)`를 호출해야 연결된다.
+
+옵션은 `ownerRunId, mapping, installationGeneration, actorRefs, verifyMoodleAuthority, readBindingCurrentness, createCourseEvidenceReader, readSourceStates?`다. ownerRunId는 실제 normal runId와 같고 mapping의 신청·학생·운영자·지갑·수령인·토큰·정책·runtime은 기존 실행 정본과 같아야 한다. actorRefs는 정확히 `{PARTICIPANT:학생ref, COURSE_OPERATOR:교사ref}`이며 학생ref는 subjectRef, 교사ref는 별도 사람이다. 교사 자체 actorRef와 지급 대상 subjectRef를 동일시하지 않는다.
+
+`verifyMoodleAuthority(request6,{signal})`는 매 호출 C의 현재 서버 권한 검증 결과를 가져오는 필수 private 포트다. 결과 exact keys는 `version,requestRef,ownerRunId,moodleAuthorityRef,role,status,installationRef,installationGeneration,authorityEpoch,courseRef,subjectRef,actorRef,expiresAtExclusive`이며 version=`clear-moodle-authority-check.1`, status=`OK`만 수락한다. 요청 ref/run/role, 고정 설치 세대·강좌·학생 및 역할별 actorRef와 기한을 대조한다. 원본 cookie/SID, CLEAR token은 이 포트에 보내지 않는다. callback 구현은 브라우저 Moodle 세션을 재개해 최초 요청의 세션 락을 다시 얻는 방식이어서는 안 된다. 실제 역방향 HTTP/키/DB 변경은 이 모듈에서 구현하지 않았다.
+
+`readBindingCurrentness(해당역할CLEARcontext,{applicationId:Bhex,bindingRef,bindingRevision},{role,actorRef,authorityRef,authorityEpoch,signal})`는 정당한 B runtime/trustedTime와 그 사람의 현재 열람 권한을 사용하는 필수 포트다. B의 `clear-moodle-binding-currentness.1` exact DTO를 받으며 설치/강좌/subject/신청/ref/revision과 현재 checkedAt·만료를 확인한다. 학생 세션을 교사에게 빌려 주거나 현재 B의 합성 입력을 실제 currentness로 대체하는 fallback은 없다. 실제 운영자용 currentness 공급이 없는 동안 교사 조회는 차단된다.
+
+추가 조립 집중 검사23개 통과: 신규21개(두 역할 독립 세션·C actor/subject/설치세대·B 현재 binding/만료·누락 runtime·로그아웃·종료 및 no-write), 기존 startup 차단2개. 이전 adapter37개와 B/A/D HTTPS3개는 재사용했다. 아직 실제 C verifier/B runtime 주입 또는 사용자 로그인·증명·AI·지급은 수행하지 않았다.

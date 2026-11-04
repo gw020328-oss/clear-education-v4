@@ -19,7 +19,9 @@ import {openDevelopmentConnection} from '../../src/bootcamp/execution-developmen
 import {createLiveMoodleConsumer} from '../../src/bootcamp/moodle-live-consumer.mjs';
 import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs';
 import {createLiveReclaimConsumer} from '../../src/bootcamp/reclaim-live-consumer.mjs';
-import {requireRule as requireUiRule} from '../../src/policy/values.mjs';
+import {requireRule as requireUiRule,exactKeys,canonical,freeze} from '../../src/policy/values.mjs';
+import {openMoodlePaymentSnapshots} from '../../src/bootcamp/moodle-payment-snapshot.mjs';
+import {createMoodleCourseReadHost} from './moodle-course-read-host.mjs';
 import {readRecipientRegistration} from '../../src/bootcamp/recipient-registration-ui.mjs';
 import {createNormalReceiptReader} from '../../src/bootcamp/normal-receipt.mjs';
 import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
@@ -43,6 +45,76 @@ export function resolveNormalSourceLease(r,{authentication,context,closed,partic
   return {available:sourceWindows.has(r.criterionId)&&time<sourceWindows.get(r.criterionId),authExpiresAt:Math.min(startedAt+3600,sourceWindows.get(r.criterionId)??0),rawExpiresAt:sourceWindows.get(r.criterionId)??0,queryExpiresAt:sourceWindows.get(r.criterionId)??0};
  }catch{return null;}
 }
+// Private constructor boundary, also tested without starting a chain/source.
+// It stores only contexts already authenticated in this run's own UI. A Moodle
+// server cannot supply/replace a CLEAR context or borrow the other role's login.
+export function createNormalMoodleReadBoundary({databasePath,authentication,getDecisionEvidence,resolveOperatorBindings,
+ receiptSource,getOwnerState,now,monotonic=()=>performance.now()}){
+ ensure([authentication?.authorizeWorkflow,authentication?.whoami,getDecisionEvidence,resolveOperatorBindings,getOwnerState,now].every(f=>typeof f==='function'),'BC_MOODLE_READ_CONFIG');
+ const contexts=new Map();let closed=false,snapshots=null,mounted=false;
+ const owner=()=>{ensure(!closed,'BC_MOODLE_READ_CLOSED');const state=getOwnerState();ensure(state&&now()<state.expiresAtExclusive,'BC_MOODLE_READ_EXPIRED');return state;};
+ const actor=(context,role,state)=>{
+  const a=authentication.authorizeWorkflow(context,false),s=authentication.whoami(context),expected=role==='PARTICIPANT'?'participant':'operator';
+  ensure(['PARTICIPANT','COURSE_OPERATOR'].includes(role)&&a.role===expected&&s.role===expected&&a.wallet.toLowerCase()===s.wallet.toLowerCase()
+   &&a.wallet.toLowerCase()===(role==='PARTICIPANT'?state.participantWallet:state.operatorWallet),'BC_MOODLE_READ_ACTOR');return s;
+ };
+ return Object.freeze({
+  observeSession(context){
+   const state=owner(),a=authentication.authorizeWorkflow(context,false),role=a.role==='participant'?'PARTICIPANT':'COURSE_OPERATOR';
+   actor(context,role,state);exactKeys(context,['token','wallet','chainId','csrf'],'BC_MOODLE_READ_CONTEXT');
+   if(canonical(context)!==canonical(contexts.get(role)??null))contexts.set(role,freeze(structuredClone(context)));
+  },
+  createHost({ownerRunId,mapping,installationGeneration,actorRefs,verifyMoodleAuthority,readBindingCurrentness,createCourseEvidenceReader,readSourceStates}){
+   ensure(!mounted&&[verifyMoodleAuthority,readBindingCurrentness,createCourseEvidenceReader].every(f=>typeof f==='function'),'BC_MOODLE_READ_PORTS');
+   const pinned=freeze(structuredClone(mapping)),actors=freeze(structuredClone(actorRefs));
+   exactKeys(actors,['PARTICIPANT','COURSE_OPERATOR'],'BC_MOODLE_READ_ACTORS');
+   const ref=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v);
+   ensure(ref(installationGeneration)&&Object.values(actors).every(ref)&&actors.PARTICIPANT===pinned.subjectRef
+    &&actors.COURSE_OPERATOR!==pinned.subjectRef,'BC_MOODLE_READ_ACTORS');
+   const currentOwner=()=>{const state=owner();ensure(ownerRunId===state.runId&&state.applicationId&&state.participantId,'BC_MOODLE_READ_RUN');
+    for(const k of ['applicationId','participantId','courseOperatorRef','policyHash','runtimeMappingHash','participantWallet','operatorWallet','recipient','token'])ensure(pinned[k]===state[k],'BC_MOODLE_READ_MAPPING');
+    return state;
+   };
+   currentOwner();
+   const resolveAuthority=async(handle,request,{signal}={})=>{
+    signal?.throwIfAborted();currentOwner();
+    // Authenticated server-only verifier: no browser session resume, SID,
+    // cookies or CLEAR credentials in this reverse-channel request.
+    const verified=structuredClone(await verifyMoodleAuthority(request,{signal}));signal?.throwIfAborted();
+    exactKeys(verified,['version','requestRef','ownerRunId','moodleAuthorityRef','role','status','installationRef',
+     'installationGeneration','authorityEpoch','courseRef','subjectRef','actorRef','expiresAtExclusive'],'BC_MOODLE_READ_AUTHORITY');
+    ensure(verified.version==='clear-moodle-authority-check.1'&&verified.status==='OK'&&verified.requestRef===request.requestRef
+     &&verified.ownerRunId===ownerRunId&&verified.moodleAuthorityRef===request.moodleAuthorityRef&&verified.role===request.role
+     &&verified.installationRef===pinned.installationRef&&verified.installationGeneration===installationGeneration
+     &&verified.courseRef===pinned.courseRef&&verified.subjectRef===pinned.subjectRef&&verified.actorRef===actors[request.role]
+     &&Number.isSafeInteger(verified.authorityEpoch)&&verified.authorityEpoch>0
+     &&Number.isSafeInteger(verified.expiresAtExclusive)&&now()<verified.expiresAtExclusive&&verified.expiresAtExclusive<=request.expiresAtExclusive,'BC_MOODLE_READ_AUTHORITY');
+    const authority={requestRef:verified.requestRef,authorityRef:verified.moodleAuthorityRef,authorityEpoch:verified.authorityEpoch,
+     expiresAtExclusive:verified.expiresAtExclusive,mapping:pinned,role:verified.role};
+    const state=currentOwner(),context=contexts.get(authority.role);ensure(context,'BC_MOODLE_READ_LOGIN_REQUIRED');actor(context,authority.role,state);
+    // This required port must use legitimate B runtime/trustedTime and current
+    // authority for this actor; a student's session is never substituted here.
+    const binding=structuredClone(await readBindingCurrentness(context,{applicationId:pinned.bApplicationId,bindingRef:pinned.bindingRef,bindingRevision:pinned.bindingRevision},
+     {role:authority.role,actorRef:verified.actorRef,authorityRef:authority.authorityRef,authorityEpoch:authority.authorityEpoch,signal}));
+    signal?.throwIfAborted();const last=currentOwner();ensure(contexts.get(authority.role)===context,'BC_MOODLE_READ_SESSION_CHANGED');
+    const session=actor(context,authority.role,last);
+    exactKeys(binding,['version','applicationId','bindingRef','bindingRevision','scope','currentness','checkedAt','expiresAtExclusive'],'BC_MOODLE_READ_BINDING');
+    exactKeys(binding.scope,['installationRef','courseRef','subjectRef'],'BC_MOODLE_READ_BINDING');
+    ensure(binding.version==='clear-moodle-binding-currentness.1'&&binding.currentness==='LOCAL_BINDING_CURRENT'
+     &&binding.applicationId===pinned.bApplicationId&&binding.bindingRef===pinned.bindingRef&&binding.bindingRevision===pinned.bindingRevision
+     &&['installationRef','courseRef','subjectRef'].every(k=>binding.scope[k]===pinned[k])
+     &&Number.isSafeInteger(binding.checkedAt)&&binding.checkedAt===now()&&Number.isSafeInteger(binding.expiresAtExclusive)&&now()<binding.expiresAtExclusive,'BC_MOODLE_READ_BINDING');
+    const expiresAtExclusive=Math.min(authority.expiresAtExclusive,binding.expiresAtExclusive,last.expiresAtExclusive,session.expiresAt);
+    ensure(now()<expiresAtExclusive,'BC_MOODLE_READ_EXPIRED');return {...authority,expiresAtExclusive,clearContext:context};
+   };
+   snapshots=openMoodlePaymentSnapshots({databasePath,authentication,resolveOperatorBindings,now});
+   try{const host=createMoodleCourseReadHost({ownerRunId,mapping:pinned,resolveAuthority,authentication,snapshots,receiptSource,
+    createCourseEvidenceReader,getDecisionEvidence,readSourceStates,now,monotonic});mounted=true;return host;}
+   catch(error){snapshots.close();snapshots=null;throw error;}
+  },
+  close(){if(!closed){closed=true;contexts.clear();snapshots?.close();snapshots=null;}}
+ });
+}
 export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics}){
  ensure(typeof withReader==='function'&&typeof hackerRank?.pins==='function'&&typeof hackerRank.collectLease==='function'&&typeof reviewReflection==='function','BC_LIVE_PORTS_REQUIRED');
  preparationPath=resolve(preparationPath);const base=privateDirectory(dirname(preparationPath));
@@ -59,12 +131,12 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
  const m=loadRuntime(prepared.environmentId);ensure(sha(m)===prepared.runtimeHash&&m.version===(prepared.runtimeVersion??'clear-e5-test-runtime.1')&&m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
- let auth,store,connection,provider,ui,resumeControl,mounted,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
+ let auth,store,connection,provider,ui,resumeControl,mounted,moodleRead,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
  const stage=name=>{report.stage=name;write();};
- const close=()=>{if(closed)return;closed=true;resumeControl?.cancel();controller.abort();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
+ const close=()=>{if(closed)return;closed=true;resumeControl?.cancel();controller.abort();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
  try{
   await startEnvironment(prepared.environmentId);started=true;
   const reader=new ExecutionReader(m);ensure((await reader.call('applicationIds',[],await reader.block()))[0].length===0,'BC_LIVE_REQUIRES_UNUSED_TEST_REALM');
@@ -89,6 +161,13 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   };
   const paymentReceipt=createNormalReceiptReader({selfAttestor:mapping.selfAttestor??null,authorize:(c,a)=>store.getOperationsProjection(c,a),readReport:()=>report,
    readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q),runtimeHash:connection.runtime.runtimeHash,runtimeMappingHash,policyHash:m.policyHash,recipient:prepared.participantWallet,token:m.tokenAddress});
+  moodleRead=createNormalMoodleReadBoundary({databasePath:join(directory,'store','bootcamp.sqlite'),authentication:auth,
+   getDecisionEvidence:(context,id)=>store.getDecisionEvidence(context,id),resolveOperatorBindings:()=>[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],
+   receiptSource:{selfAttestor:mapping.selfAttestor??null,runtimeHash:connection.runtime.runtimeHash,readReport:()=>structuredClone(report),
+    readCanonicalClaim:q=>connection.configuration.reader.claimReceipt(q)},now,
+   getOwnerState:()=>{ensure(!closed&&!failureState,'BC_LIVE_CONTEXT');return {runId,applicationId:app,participantId,courseOperatorRef:'course-operator-demo',
+    policyHash:m.policyHash,runtimeMappingHash,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,
+    recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),expiresAtExclusive:startedAt+1800};}});
   const refreshProcedure=async(c,a)=>{
    store.getOperationsProjection(c,a);if(failureState)return;requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
    await connection.refresh(a);store.getOperationsProjection(c,a);
@@ -116,6 +195,9 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
     if(current.status==='NOT_SENT')reflectionHost.authorizeResume();sourceSequence.requestResume();
    }});
   const getSession=context=>{const actor=ui.authorize(context,false);if(app&&!failureState)readNormalView(()=>store.getOperationsProjection(context,app));
+   // Observe only the real authenticated UI request, never a Moodle poll. Keep
+   // this optional read binding out of the existing failure/resume UI path.
+   if(!failureState&&now()<startedAt+1800)moodleRead.observeSession(context);
    readers.observe(actor.role.toUpperCase());return Object.freeze({
    version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,failure:failureState?resumeControl.view():null,
    signingContext:actor.role==='participant'?productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}):null,
@@ -131,6 +213,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    pendingSignature(c,a){ensure(a===app,'BC_LIVE_CONTEXT');return ui.pendingSignature(c);},submitSignature(c,a,b){ensure(a===app,'BC_LIVE_CONTEXT');return ui.submitSignature(c,b);}});
   stage('AWAITING_EXTERNAL_UI_AUTHENTICATION');
   return Object.freeze({metadataPath:join(directory,'context.json'),
+   createMoodleCourseReadHost:options=>moodleRead.createHost(options),
    createFrontend({tls,webRoot}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
     ui.participant();ensure(!closed&&!failureState,'BC_LIVE_CONTEXT');

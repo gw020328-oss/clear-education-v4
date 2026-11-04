@@ -8,6 +8,7 @@ import {paymentFixture} from './moodle-payment-fixture.mjs';
 import {START} from './procedure-fixture.mjs';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
 import {createMoodleCourseReadHost,createMoodleCourseReadServer,COURSE_READ_REQUEST,COURSE_READ_PATH} from '../../tools/bootcamp/moodle-course-read-host.mjs';
+import {createNormalMoodleReadBoundary} from '../../tools/bootcamp/live-context.mjs';
 
 // Owner-port double for adapter tests, not a Moodle authority implementation.
 // The reviewed B factory is separately exercised in the integration handoff.
@@ -116,4 +117,70 @@ test('D cancellation is honored before entry and after canonical await',async t=
  await assert.rejects(z.host.readCourse(z.handle(),{signal:controller.signal}));assert.equal(z.x.calls(),0);
  const live=new AbortController();z.x.onRead(async()=>{live.abort();return z.x.receipt;});
  unavailable(await z.host.readCourse(z.handle(),{signal:live.signal}));assert.equal(z.evidenceReads(),0);
+});
+
+async function boundaryFixture(t){
+ const z=await fixture(t),{x}=z;let verifyHook=v=>v,bindingHook=v=>v,verifies=0,bindings=0;
+ const state={...x.mapping,runId:z.args.ownerRunId,expiresAtExclusive:START+1800};
+ const boundary=createNormalMoodleReadBoundary({databasePath:x.path,authentication:x.f.service,
+  getDecisionEvidence:(c,id)=>x.f.store.getDecisionEvidence(c,id),resolveOperatorBindings:()=>x.f.configuration.operatorBindings,
+  receiptSource:x.options.receiptSource,getOwnerState:()=>state,now:x.options.now,monotonic:x.options.monotonic});t.after(()=>boundary.close());
+ const actorRefs={PARTICIPANT:x.mapping.subjectRef,COURSE_OPERATOR:'synthetic-teacher'},config={
+  ownerRunId:state.runId,mapping:x.mapping,installationGeneration:'synthetic-installation-generation',actorRefs,
+  createCourseEvidenceReader:z.args.createCourseEvidenceReader,
+  verifyMoodleAuthority:async(request)=>{verifies++;assert.deepEqual(Object.keys(request).sort(),['version','requestRef','ownerRunId','moodleAuthorityRef','role','expiresAtExclusive'].sort());
+   return verifyHook({version:'clear-moodle-authority-check.1',requestRef:request.requestRef,ownerRunId:request.ownerRunId,
+    moodleAuthorityRef:request.moodleAuthorityRef,role:request.role,status:'OK',installationRef:x.mapping.installationRef,
+    installationGeneration:'synthetic-installation-generation',authorityEpoch:1,courseRef:x.mapping.courseRef,subjectRef:x.mapping.subjectRef,
+    actorRef:actorRefs[request.role],expiresAtExclusive:request.expiresAtExclusive});},
+  readBindingCurrentness:async(context,target,authority)=>{bindings++;
+   assert.equal(context.token,(authority.role==='PARTICIPANT'?x.f.aliceContext:x.f.operatorContext).token);
+   assert.equal(authority.actorRef,actorRefs[authority.role]);assert.equal(target.applicationId,x.mapping.bApplicationId);
+   return bindingHook({version:'clear-moodle-binding-currentness.1',...target,
+    scope:{installationRef:x.mapping.installationRef,courseRef:x.mapping.courseRef,subjectRef:x.mapping.subjectRef},
+    currentness:'LOCAL_BINDING_CURRENT',checkedAt:x.options.now(),expiresAtExclusive:START+100});}
+ };
+ return {...z,boundary,config,state,verifies:()=>verifies,bindings:()=>bindings,
+  verifyHook:fn=>{verifyHook=fn;},bindingHook:fn=>{bindingHook=fn;}};
+}
+test('live boundary combines fresh C actor/subject with only each observed CLEAR session and B binding, without writes',async t=>{
+ const z=await boundaryFixture(t),{x}=z,bytes=x.bytes(),auth=x.authBytes(),counts=x.f.counts();
+ z.boundary.observeSession(x.f.aliceContext);z.boundary.observeSession(x.f.operatorContext);
+ const host=z.boundary.createHost(z.config);
+ for(const role of ['PARTICIPANT','COURSE_OPERATOR']){const r=await host.readCourse(z.handle(role));assert.equal(r.status,'OK');assert.equal(r.payment.role,role);}
+ assert.ok(z.verifies()>2);assert.equal(z.verifies(),z.bindings());
+ assert.deepEqual(x.bytes(),bytes);assert.deepEqual(x.authBytes(),auth);assert.deepEqual(x.f.counts(),counts);
+});
+test('live boundary never uses participant login for a teacher with no observed operator session',async t=>{
+ const z=await boundaryFixture(t);z.boundary.observeSession(z.x.f.aliceContext);const host=z.boundary.createHost(z.config);
+ unavailable(await host.readCourse(z.handle('COURSE_OPERATOR')));assert.equal(z.bindings(),0);assert.equal(z.x.calls(),0);
+ z.boundary.observeSession(z.x.f.operatorContext);assert.equal((await host.readCourse(z.handle('COURSE_OPERATOR'))).status,'OK');
+});
+for(const [field,value]of [['status','UNAVAILABLE'],['actorRef','wrong-person'],['subjectRef','wrong-student'],['courseRef','other-course'],
+ ['installationGeneration','another-installation'],['installationRef','another-site'],['ownerRunId','other-run'],['authorityEpoch',0],['expiresAtExclusive',START],['extra',true]])
+ test('live boundary rejects C verifier '+field+' mismatch before B/receipt',async t=>{
+  const z=await boundaryFixture(t);z.boundary.observeSession(z.x.f.operatorContext);z.verifyHook(v=>({...v,[field]:value}));
+  const host=z.boundary.createHost(z.config);unavailable(await host.readCourse(z.handle('COURSE_OPERATOR')));assert.equal(z.bindings(),0);assert.equal(z.x.calls(),0);
+ });
+for(const kind of ['missing-runtime','binding-revision','binding-subject','stale-currentness','expired-currentness','owner-change','logout','close'])
+ test('live boundary '+kind+' blocks the pair without an authority fallback',async t=>{
+  const z=await boundaryFixture(t);z.boundary.observeSession(z.x.f.aliceContext);const host=z.boundary.createHost(z.config);
+  z.bindingHook(v=>{
+   if(kind==='missing-runtime')throw Error('LEGITIMATE_RUNTIME_UNAVAILABLE');
+   if(kind==='binding-revision')v.bindingRevision++;
+   if(kind==='binding-subject')v.scope.subjectRef='wrong-student';
+   if(kind==='stale-currentness')v.checkedAt--;
+   if(kind==='expired-currentness')v.expiresAtExclusive=START;
+   if(kind==='owner-change')z.state.applicationId='other-application';
+   if(kind==='logout')z.x.f.service.logout(z.x.f.aliceContext);
+   if(kind==='close')z.boundary.close();return v;
+  });unavailable(await host.readCourse(z.handle()));assert.equal(z.x.calls(),0);
+ });
+test('live boundary requires explicit verifier/currentness, distinct actor mapping and fixed live run mapping',async t=>{
+ const z=await boundaryFixture(t);
+ for(const field of ['verifyMoodleAuthority','readBindingCurrentness'])assert.throws(()=>z.boundary.createHost({...z.config,[field]:undefined}),/BC_MOODLE_READ_PORTS/);
+ assert.throws(()=>z.boundary.createHost({...z.config,actorRefs:{PARTICIPANT:z.x.mapping.subjectRef,COURSE_OPERATOR:z.x.mapping.subjectRef}}),/BC_MOODLE_READ_ACTORS/);
+ assert.throws(()=>z.boundary.createHost({...z.config,ownerRunId:'other-run'}),/BC_MOODLE_READ_RUN/);
+ assert.throws(()=>z.boundary.createHost({...z.config,mapping:{...z.x.mapping,recipient:z.x.mapping.operatorWallet}}),/BC_MOODLE_READ_MAPPING/);
+ assert.throws(()=>z.boundary.observeSession(z.x.f.bobContext),/BC_MOODLE_READ_ACTOR/);
 });
