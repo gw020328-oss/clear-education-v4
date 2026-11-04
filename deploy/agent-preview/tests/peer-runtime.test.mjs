@@ -10,7 +10,7 @@ import {encodePeer,decodePeer,createPeerReplayStore,ZERO_HASH} from '../vendor/b
 import {createPeerEngine} from '../peer-engine.mjs';
 import {createPeerServer} from '../peer-http.mjs';
 import {peerReceipts} from '../peer-receipts.mjs';
-import {validateRegistration} from '../peer-release.mjs';
+import {validateRegistration,validateRelease} from '../peer-release.mjs';
 import {openStore} from '../store.mjs';
 import {limits} from '../limits.mjs';
 import {prepareGeminiStructureRequest} from '../../../src/agent-preview/gemini-preparation.mjs';
@@ -175,4 +175,12 @@ test('signed prepare requires the exact owner release snapshot before activating
   await f.send(prepare,f.prepare);
   await assert.rejects(f.send(generate,{sourceText,approvalRef:'approval-one'}),/APPROVAL_REQUIRED_OR_SPENT/);
   assert.deepEqual(f.calls,[]);
+});
+
+test('actual release accepts only the runtime receipt contract version',t=>{
+  const f=setup(t);
+  const actual={...f.release,mode:'ACTUAL_GEMINI',receiptContract:peerReceipts.id};
+  assert.equal(validateRelease(actual).receiptContract,peerReceipts.id);
+  for(const receiptContract of [f.release.receiptContract,'clear-preview-peer-receipts.2'])
+    assert.throws(()=>validateRelease({...actual,receiptContract}),/RELEASE_TARGET/);
 });

@@ -4,6 +4,7 @@ import {exact,hash,hex,opaque,requireRule as check} from './vendor/b-peer/contra
 import {validatePeerPin} from './vendor/b-peer/peer-transport.mjs';
 import {validateConfig} from './config.mjs';
 import {limits,previewModel} from './limits.mjs';
+import {peerReceipts} from './peer-receipts.mjs';
 export const preparePath='/v1/preview/prepare';
 export const peerPaths=['/v1/preview/generate','/v1/preview/execute','/v1/preview/observation-result'];
 
@@ -24,7 +25,8 @@ export function validateRelease(value) {
     && hex(value.config.artifactHash) && value.config.artifactHash!=='0'.repeat(64),'RELEASE_BINDING');
   check(value.targetRef==='core-page-manual-mark' && value.planTarget==='python-intro'
     && Number.isSafeInteger(value.maxObservationAgeSeconds) && value.maxObservationAgeSeconds>0
-    && value.maxObservationAgeSeconds<=10 && opaque(value.receiptContract),'RELEASE_TARGET');
+    && value.maxObservationAgeSeconds<=10
+    && (value.mode==='ACTUAL_GEMINI' ? value.receiptContract===peerReceipts.id : opaque(value.receiptContract)),'RELEASE_TARGET');
   return Object.freeze(structuredClone(value));
 }
 export function validateRegistration(value,release,now) {
