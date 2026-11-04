@@ -9,12 +9,13 @@ runInNewContext(readFileSync(new URL('../local_clearbridge/amd/build/course_nati
 
 function fixture(role, dispatch) {
     const actions = role === 'PARTICIPANT'
-        ? ['connect-google', 'select-wallet', 'check-network', 'sign-in', 'cancel', 'sign-out']
-        : ['connect-metamask', 'select-wallet', 'check-network', 'sign-in', 'cancel', 'sign-out'];
+        ? ['connect-google', 'select-wallet', 'check-network', 'sign-in', 'finish-connection', 'cancel', 'sign-out']
+        : ['connect-metamask', 'select-wallet', 'check-network', 'sign-in', 'finish-connection', 'cancel', 'sign-out'];
     const buttons = Object.fromEntries(actions.map(action => [action, {dataset: {walletAction: action}, hidden: true}]));
     const summary = {textContent: 'unavailable'};
     const stages = ['wallet', 'network', 'login'].map(stage => ({dataset: {walletStage: stage}, textContent: 'unknown'}));
-    const messages = ['choose', 'metamask', 'idle', 'busy', 'error', 'walletselected', 'networkready', 'loginready', 'authenticated']
+    const messages = ['choose', 'metamask', 'idle', 'busy', 'error', 'walletselected', 'networkready', 'loginready', 'authenticated',
+        'connectionpending', 'connected']
         .map(message => ({dataset: {walletMessage: message}, textContent: message}));
     const kinds = role === 'PARTICIPANT' ? ['wallet'] : ['provider', 'wallet'];
     const groups = kinds.map(kind => ({dataset: {walletOptions: kind}, hidden: true}));
@@ -47,6 +48,21 @@ function fixture(role, dispatch) {
 const base = role => ({
     role, busy: false, providers: [], choices: [], selectedChoiceId: null,
     networkReady: false, authenticated: false, error: null,
+});
+
+test('Moodle finish is a separate click, enabled only after authenticated CONNECTION_PENDING', async () => {
+    const commands = [];
+    const ui = fixture('PARTICIPANT', async command => commands.push(JSON.stringify(command)));
+    const view = {...base('PARTICIPANT'), choices: [{choiceId: 'wallet-one', address}], selectedChoiceId: 'wallet-one',
+        networkReady: true, authenticated: true, phase: 'AUTHENTICATED'};
+    ui.render(view, ['finish-connection']);
+    assert.equal(ui.buttons['finish-connection'].disabled, true);
+    ui.render({...view, phase: 'CONNECTION_PENDING'}, ['finish-connection']);
+    assert.deepEqual(commands, []);
+    await ui.click('finish-connection');
+    assert.deepEqual(commands, ['{"action":"finish-connection"}']);
+    ui.render({...view, phase: 'CONNECTED'}, ['sign-out']);
+    assert.equal(ui.buttons['finish-connection'].hidden, true);
 });
 const address = '0x' + 'a'.repeat(40);
 

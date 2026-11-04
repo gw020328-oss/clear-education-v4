@@ -50,6 +50,9 @@ $view = $isdemocourse ? \local_clearbridge\course_projection_page::data($course,
 if ($view !== null) {
     // The mapping capability alone does not enroll a course operator.
     $view['showconnection'] = is_enrolled($context, null, '', true);
+    if ($view['showconnection']) {
+        \local_clearbridge\course_native_wallet::enable_page($PAGE, $course->id, $USER->id, 'COURSE_OPERATOR');
+    }
 }
 echo $OUTPUT->header();
 if ($view !== null) {

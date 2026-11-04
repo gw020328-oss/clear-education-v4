@@ -4,7 +4,7 @@
     Moodle owns the controls. The wallet adapter supplies validated display state.
     Example context (json): {"student": true}
 }}
-<div data-clear-wallet-ui>
+<div data-clear-wallet-ui data-clear-wallet-role="{{#student}}participant{{/student}}{{^student}}operator{{/student}}">
     <p data-wallet-summary role="status">{{#str}} connectionstatusunavailable, local_clearbridge {{/str}}</p>
     <ol class="mb-0">
         <li class="mb-3">
@@ -48,6 +48,9 @@
             <button type="button" class="btn btn-primary" data-wallet-action="sign-in" hidden>
                 {{#str}} nativesignin, local_clearbridge {{/str}}
             </button>
+            <button type="button" class="btn btn-primary" data-wallet-action="finish-connection" hidden>
+                {{#str}} nativefinishconnection, local_clearbridge {{/str}}
+            </button>
         </li>
     </ol>
     <div class="mt-3">
@@ -68,5 +71,7 @@
         <span data-wallet-message="networkready">{{#str}} nativenetworkready, local_clearbridge {{/str}}</span>
         <span data-wallet-message="loginready">{{#str}} nativesigninready, local_clearbridge {{/str}}</span>
         <span data-wallet-message="authenticated">{{#str}} nativewalletauthenticated, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="connectionpending">{{#str}} nativeconnectionpending, local_clearbridge {{/str}}</span>
+        <span data-wallet-message="connected">{{#str}} nativeconnectioncompleted, local_clearbridge {{/str}}</span>
     </div>
 </div>

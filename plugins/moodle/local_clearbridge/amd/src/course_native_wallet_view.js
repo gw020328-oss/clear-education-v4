@@ -3,7 +3,7 @@ define([], function() {
     'use strict';
 
     const commandActions = new Set([
-        'connect-google', 'connect-metamask', 'select-wallet', 'check-network', 'sign-in', 'cancel', 'sign-out',
+        'connect-google', 'connect-metamask', 'select-wallet', 'check-network', 'sign-in', 'finish-connection', 'cancel', 'sign-out',
     ]);
     const shortAddress = address => address.slice(0, 6) + '…' + address.slice(-4);
 
@@ -55,6 +55,9 @@ define([], function() {
             if (action === 'sign-in') {
                 return hasWallet() && state.networkReady === true && state.authenticated !== true;
             }
+            if (action === 'finish-connection') {
+                return state.phase === 'CONNECTION_PENDING' && state.authenticated === true;
+            }
             return action === 'sign-out';
         };
 
@@ -80,7 +83,9 @@ define([], function() {
                 : waiting ? messages.busy : state && allowed.size ? messages.idle : defaultSummary;
             stages.wallet.textContent = hasWallet() ? messages.walletselected : defaultText.wallet;
             stages.network.textContent = state?.networkReady === true ? messages.networkready : defaultText.network;
-            stages.login.textContent = state?.authenticated === true ? messages.authenticated
+            stages.login.textContent = state?.phase === 'CONNECTED' && state.authenticated === true ? messages.connected
+                : state?.phase === 'CONNECTION_PENDING' && state.authenticated === true ? messages.connectionpending
+                : state?.authenticated === true ? messages.authenticated
                 : mayDispatch('sign-in') ? messages.loginready : defaultText.login;
             renderControls();
         };
@@ -107,6 +112,7 @@ define([], function() {
             // The final composition maps the exact A contract to this presentation input.
             state = view?.role === role ? {
                 busy: view.busy,
+                phase: view.phase,
                 providers: view.providers.map(({providerId}) => ({providerId})),
                 choices: view.choices.map(({choiceId, address}) => ({choiceId, address})),
                 selectedChoiceId: view.selectedChoiceId,

@@ -122,3 +122,6 @@ $string['nativewalletselected'] = '사용할 지갑을 선택했습니다.';
 $string['nativenetworkready'] = '이 강좌의 TEST 네트워크를 확인했습니다.';
 $string['nativesigninready'] = '이 지갑으로 로그인 서명을 요청할 수 있습니다.';
 $string['nativewalletauthenticated'] = '지갑 로그인을 확인했습니다.';
+$string['nativefinishconnection'] = 'CLEAR 연결 완료';
+$string['nativeconnectionpending'] = 'CLEAR 로그인에 성공했습니다. 이 Moodle 탭에서 연결 완료를 확인하세요.';
+$string['nativeconnectioncompleted'] = '이 Moodle 탭에서 CLEAR 연결을 완료했습니다.';

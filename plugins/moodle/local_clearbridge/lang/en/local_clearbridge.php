@@ -122,3 +122,6 @@ $string['nativewalletselected'] = 'A wallet has been selected.';
 $string['nativenetworkready'] = 'This course’s TEST network has been confirmed.';
 $string['nativesigninready'] = 'You can request a sign-in signature with this wallet.';
 $string['nativewalletauthenticated'] = 'Wallet sign-in has been confirmed.';
+$string['nativefinishconnection'] = 'Finish connecting CLEAR';
+$string['nativeconnectionpending'] = 'CLEAR sign-in succeeded. Confirm the connection in this Moodle tab.';
+$string['nativeconnectioncompleted'] = 'The CLEAR connection was confirmed in this Moodle tab.';
