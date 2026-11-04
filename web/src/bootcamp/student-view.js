@@ -486,23 +486,12 @@ function conditionCard(row, { onOpen, onToggle = null }) {
       : null,
   }, [
     el('span.cc-chip', { 'aria-hidden': 'true' }, [icon(CARD_ICON[row.criterionId] ?? 'check')]),
-    // **시연 조작판의 일부다. 제품 단추가 아니다.**
-    //
-    // 전에는 그냥 '충족으로' 였다. 조건 카드 우측 상단에 붙어 있어 제품
-    // 배지처럼 보였고, 발표 화면에서 "학생이 자기 조건을 직접 켜고 끄는
-    // 화면" 으로 읽혔다. 실제로는 Moodle·HackerRank 기록을 서버가 읽어
-    // 판정하고 학생은 손댈 수 없다 — 조작판 설명이 적고 있는 그대로다.
     onToggle
       ? el('button.cc-toggle', {
         type: 'button',
         'data-on': met ? 'yes' : 'no',
-        'data-demo': 'yes',
-        title: '시연 조작판입니다. 실제 서비스에는 없는 단추입니다',
         onClick: () => onToggle(row.criterionId),
-      }, [
-        el('span.cc-toggle-tag', { text: '시연' }),
-        el('span', { text: met ? '충족 해제' : '충족으로' }),
-      ])
+      }, [el('span', { text: met ? '충족 해제' : '충족으로' })])
       : null,
     el('h3.bcx-task-name', { text: meta?.label ?? row.criterionId }),
     el('p.cc-sub', { text: meta?.value ?? '' }),
