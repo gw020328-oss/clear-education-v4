@@ -1,6 +1,6 @@
 # Moodle 설치 플러그인 → CLEAR 읽기 초안 연결 계약
 
-2026-11-04 검토안. 기준 develop `a5653d64b939da9a1ededc85744d30b91c759f8f`. 단일 허용 기관, 단일 Moodle 설치·강좌, 해당 강좌에 활성 등록된 한 학생과 그 학생이 소유한 기존 CLEAR 신청 하나를 연결한다. 아래 이름은 제안된 계약이다. 2026-11-04 사전 권한 리뷰 revision 2를 반영했다. 계정 사전 결합과 권한 변경 직렬화 등 아래 구현 관문을 충족한 뒤 구현을 승인한다. 이 문서는 실행 검증이나 구현 승인 완료를 뜻하지 않는다.
+2026-11-04 검토안. 기준 develop `a5653d64b939da9a1ededc85744d30b91c759f8f`. 단일 허용 기관, 단일 Moodle 설치·강좌, 해당 강좌에 활성 등록된 한 학생과 그 학생이 소유한 기존 CLEAR 신청 하나를 연결한다. 아래 이름은 제안된 계약이다. 2026-11-04 사전 권한 리뷰와 저장소 결정 revision 3을 반영했다. 구체 기술 선택·합성 DB 증거·소유권은 [구현 결정안](MOODLE_BINDING_IMPLEMENTATION_DECISIONS.ko.md)을 따른다. 본부는 READ_PREVIEW/OBSERVED_AT 및 기존 지급 경로 분리를 수용했다. 실제 연결 구현은 본부 교차 리뷰와 C의 세션/snapshot 인수 뒤 승인한다. 이 문서는 실행 검증이나 구현 승인 완료를 뜻하지 않는다.
 
 ## 기존 경계
 
@@ -16,26 +16,29 @@
 3. **CLEAR 확인 및 소비.** 브라우저는 CLEAR 고정 경로로 돌아와 기존 세션의 same-origin POST를 실행한다. CLEAR는 등록된 고정 Moodle HTTPS 주소로 서버 조회를 보내며 상호 인증(제안 mTLS, 배포별 credential), 시간/크기 제한 및 redirect 거부를 적용한다. 플러그인은 서버에 저장한 확인 계정·세션 generation·활성 등록·capability를 하나의 원천 스냅샷으로 다시 확인한다. 서버 조회에 브라우저 세션이 자동 전달된다고 가정하지 않는다. CLEAR는 계정·강좌의 서버 응답을 연결 미리보기로 표시하고, 같은 세션의 별도 완료 POST에서 현재 응답의 지문과 직전 확인을 비교한 뒤 소비한다. 외부 요청 동안 DB 락을 잡지 않는다. 최종 DB 트랜잭션에서 세션·소유권·권한 revision·시도 상태·만료·매핑·명부 결합·설치 trustEpoch를 재검사하고, 유일 제약과 CAS를 적용해 시도 소비 및 OBSERVED_ONLY 바인딩 저장을 함께 커밋한다. 원천 등록 철회의 시점 보장은 아래 경쟁 조건 절을 따른다.
 4. **초안 조회.** 연결 참조는 접근권한으로 쓰지 않는다. 매 요청에서 현재 CLEAR 세션/소유권과 바인딩·명부·trust revision을 검사한다. Moodle은 지정 학생의 세션 확인 유효성, 활성 등록, 학생 capability 및 허용 대상 관측을 같은 스냅샷에서 읽는다. 과거 바인딩 확인을 새 관측의 권한으로 재사용하지 않는다. Moodle 실패, 지연 후 권한 변경, 기관 설정 변경 또는 불일치는 보류한다. 응답 직전에 현재 접근을 재확인한다. 반환값은 읽기 초안으로 한정한다.
 
-이중 확인만으로 relay를 막을 수 없다. 공격자가 자기 CLEAR 시도를 피해자에게 전달하고 피해자가 Moodle 확인을 누르면, 공격자는 자기 CLEAR 세션에서 완료할 수 있다. 따라서 기관이 사전에 확인한 participant↔설치·강좌·subject 명부 결합을 필수로 한다. 이메일 문자열, 표시 이름, 브라우저 userId, 이번 연결 요청 자체로 이 결합을 만들거나 갱신하지 않는다. subjectRef는 계정 삭제 후 다른 사람에게 재할당하지 않는다. 명부 결합의 출처·관리 권한·수정 이력과 rosterRevision은 본부의 별도 승인 대상이다. 마스킹된 계정 표시는 사용자 확인을 보조하며 서버 매칭을 대체하지 않는다.
+이중 확인만으로 relay를 막을 수 없다. 공격자가 자기 CLEAR 시도를 피해자에게 전달하고 피해자가 Moodle 확인을 누르면, 공격자는 자기 CLEAR 세션에서 완료할 수 있다. 따라서 기관이 사전에 확인한 participant↔설치·강좌·subject 명부 결합을 필수로 한다. 이메일 문자열, 표시 이름, 브라우저 userId, 이번 연결 요청 자체로 이 결합을 만들거나 갱신하지 않는다. subjectRef는 계정 삭제 후 다른 사람에게 재할당하지 않는다. 명부 결합의 출처·관리 권한·수정 이력과 rosterRevision은 구현 결정안의 signed roster 및 독립 CLEAR 승인 절차로 관리한다. 실제 명부와 승인은 아직 제공된 것으로 간주하지 않는다. 마스킹된 계정 표시는 사용자 확인을 보조하며 서버 매칭을 대체하지 않는다.
 
 ## 제안 DTO
 
 키를 정확히 제한한다. 식별자는 고정 형식 opaque 문자열, revision과 시간은 안전 정수, 시간은 서버 UTC epoch seconds, 만료 상한은 exclusive다. 브라우저 POST는 기존 JSON 크기 제한과 no-store를 적용한다. 브라우저 응답·URL·로그에는 원천 token, 학생 숫자 ID, 전체 LMS 레코드를 URL·로그·DTO에 남기지 않는다. CLEAR CSRF와 Moodle sesskey는 각각 자기 origin의 보호된 세션/form에서만 사용하며 타 origin 및 신규 연결 DTO에 복사하지 않는다. 시도 참조는 브라우저 form body로만 전달하며 로그에서 제거한다. 외부 redirect URL은 서버에 등록한 상수로 고정한다.
 
-| 방향 | 계약 revision 2 | 필드 및 규칙 |
+| 방향 | 계약 revision 3 | 필드 및 규칙 |
 | --- | --- | --- |
-| CLEAR browser → CLEAR 시작 | `clear-moodle-start.2` | 신청 ID는 경로, JSON `{version}`. 서버 응답 `{version,attemptRef,expiresAtExclusive}`. 임의 site/URL/course/user/wallet 필드 거부. |
-| Moodle server ↔ CLEAR server | `clear-moodle-attempt.2` | lookup 요청 `{version,attemptRef}`. 응답 `{version,attemptRef,installationRef,courseRef,audience,bindingScopeHash,expectedSubjectRef,rosterRevision,trustEpoch,expiresAtExclusive}`. 서버가 고정된 설치 인증과 범위를 먼저 대조. |
-| CLEAR server ↔ Moodle server | `clear-moodle-confirmation.2` | lookup 요청 `{version,attemptRef,bindingScopeHash}`. 응답 `{version,attemptRef,installationRef,courseRef,subjectRef,accountHint,audience,bindingScopeHash,confirmationRef,moodleSessionGeneration,enrolmentRevision,rosterRevision,trustEpoch,confirmedAt,checkedAt,expiresAtExclusive}`. 해당 설치·강좌에 한정된 `subjectRef`는 Moodle 서버가 부여한 안정적인 가명. 로컬 학생 ID 매핑은 Moodle 서버에만 둔다. `confirmationRef`는 시도마다 하나이며, 반복 조회는 동일 확인을 읽고 새 확인을 만들지 않는다. |
-| CLEAR browser ↔ CLEAR 미리보기 | `clear-moodle-confirm-preview.2` | same-origin POST `{version,attemptRef}`. 응답 `{version,attemptRef,installationRef,courseRef,accountHint,confirmationDigest,expiresAtExclusive}`. accountHint는 Moodle에서 확인한 최소 표시용 마스킹 값이며 저장·로그 대상에서 제외. 미리보기만으로 소비하지 않는다. |
-| CLEAR browser → CLEAR 완료 | `clear-moodle-complete.2` | JSON `{version,attemptRef,confirmationDigest}`. digest는 서버 생성 미리보기의 시도/설치/강좌/subject/확인 지문이며 인증 수단이 아니다. 응답 `{version,bindingRef,status,bindingRevision,expiresAtExclusive}`. |
-| CLEAR → CLEAR browser 초안 | `clear-moodle-read-preview.2` | `{version,applicationId,bindingRef,bindingRevision,scope:'READ_PREVIEW',sourceStatus:'OBSERVED_AT',enrolmentRevision,observedAt,expiresAtExclusive,observations,automaticEligibility:false,paymentAllowed:false}`. 관측 항목은 고정 논리 ID, 상태, 원천 확인 시각으로 제한. AI·정책 확정·원문 제공은 별도 경계. |
+| CLEAR browser → CLEAR 시작 | `clear-moodle-start.3` | 신청 ID는 경로, JSON `{version}`. 서버 응답 `{version,attemptRef,expiresAtExclusive}`. 임의 site/URL/course/user/wallet 필드 거부. |
+| Moodle server ↔ CLEAR server | `clear-moodle-attempt.3` | lookup 요청 `{version,attemptRef,requestRef}`. 응답 `{version,attemptRef,requestRef,installationRef,courseRef,audience,bindingScopeHash,expectedSubjectRef,rosterRevision,trustEpoch,issuerEpoch,expiresAtExclusive}`. 서버가 고정된 설치 인증과 범위를 먼저 대조. |
+| CLEAR server ↔ Moodle server | `clear-moodle-confirmation.3` | lookup 요청 `{version,attemptRef,bindingScopeHash,issuerEpoch,requestRef}`. 응답 `{version,attemptRef,requestRef,installationRef,courseRef,subjectRef,accountHint,audience,bindingScopeHash,confirmationRef,moodleSessionGeneration,enrolmentRevision,rosterRevision,trustEpoch,issuerEpoch,confirmedAt,checkedAt,expiresAtExclusive}`. 해당 설치·강좌에 한정된 `subjectRef`는 Moodle 서버가 부여한 안정적인 가명. 로컬 학생 ID 매핑은 Moodle 서버에만 둔다. `confirmationRef`는 시도마다 하나이며, 반복 조회는 동일 확인을 읽고 새 확인을 만들지 않는다. |
+| CLEAR browser ↔ CLEAR 미리보기 | `clear-moodle-confirm-preview.3` | same-origin POST `{version,attemptRef}`. 응답 `{version,attemptRef,installationRef,courseRef,accountHint,confirmationDigest,expiresAtExclusive}`. accountHint는 Moodle에서 확인한 최소 표시용 마스킹 값이며 저장·로그 대상에서 제외. 미리보기만으로 소비하지 않는다. |
+| CLEAR browser → CLEAR 완료 | `clear-moodle-complete.3` | JSON `{version,attemptRef,confirmationDigest}`. digest는 서버 생성 미리보기의 시도/설치/강좌/subject/확인 지문이며 인증 수단이 아니다. 응답 `{version,bindingRef,status,bindingRevision,expiresAtExclusive}`. |
+| CLEAR server ↔ Moodle server 관측 | `clear-moodle-observations.3` | 요청 `{version,requestRef,issuerEpoch,bindingScopeHash,confirmationRef}`. 응답 `{version,requestRef,installationRef,courseRef,subjectRef,audience,issuerEpoch,trustEpoch,rosterRevision,bindingScopeHash,confirmationRef,moodleSessionGeneration,enrolmentRevision,scope:'READ_PREVIEW',sourceStatus:'OBSERVED_AT',observedAt,checkedAt,expiresAtExclusive,observations}`. 학생/자료 대상은 서버 confirmation 및 설치 allowlist에서 결정하고 요청 userId/URL을 받지 않는다. |
+| CLEAR → CLEAR browser 초안 | `clear-moodle-read-preview.3` | `{version,applicationId,bindingRef,bindingRevision,scope:'READ_PREVIEW',sourceStatus:'OBSERVED_AT',enrolmentRevision,observedAt,expiresAtExclusive,observations,automaticEligibility:false,paymentAllowed:false}`. 관측 항목은 고정 논리 ID, 상태, 원천 확인 시각으로 제한. AI·정책 확정·원문 제공은 별도 경계. |
 
-`bindingScopeHash`는 버전 도메인, 무작위 시도, CLEAR 배포/설치/기관/강좌와 서버가 저장한 신청 컨텍스트, expectedSubjectRef, rosterRevision, trustEpoch를 결합한 지문이다. 완료 단계에서 재조회할 때 `checkedAt`은 바뀔 수 있으므로 확인 지문에는 넣지 않고 현재성을 별도 검사한다. confirmationDigest는 bindingScopeHash, confirmationRef, subjectRef, moodleSessionGeneration, enrolmentRevision을 도메인 분리된 정규 직렬화로 묶는다. 이 중 하나라도 달라지면 새 미리보기가 필요하다. accountHint는 등록된 가명으로 Moodle이 조회한 제한 길이의 표시 문자열이며 HTML로 해석하지 않는다. 브라우저가 제출하는 digest나 ref는 인증에 쓰지 않는다. Moodle 플러그인 lookup의 조회 및 현재성 semantics는 C 담당과 합의해야 한다. 첫 승인 범위에서 기존 Moodle token reader에 임의 endpoint/token을 주입하지 않는다.
+server observations 항목은 `{targetRef,status,observedAt}`이며 status는 `COMPLETE/INCOMPLETE/UNKNOWN/INACCESSIBLE` 중 하나다. targetRef는 설치 승인 allowlist에 있고 중복 없이 개수 상한을 적용한다. 학생 권한 실패는 부분 자료 대신 전체 거부이며 원문·자유 텍스트를 반환하지 않는다. 원천별 상태 변환은 C와 본부가 승인 대상 목록에 고정한다.
+
+`bindingScopeHash`는 버전 도메인, 무작위 시도, CLEAR 배포/설치/기관/강좌와 서버가 저장한 신청 컨텍스트, expectedSubjectRef, rosterRevision, trustEpoch, issuerEpoch, 로컬 authorityRevision을 결합한 지문이다. server lookup의 requestRef는 매 호출의 새 난수이며 exact echo를 확인한다. requestRef/checkedAt은 호출 현재성을 검증하고 안정적인 confirmationDigest에는 포함하지 않는다. `.2`와 `.3`는 상호 대체하지 않는다. 완료 단계에서 재조회할 때 `checkedAt`은 바뀔 수 있으므로 확인 지문에는 넣지 않고 현재성을 별도 검사한다. confirmationDigest는 bindingScopeHash, confirmationRef, subjectRef, moodleSessionGeneration, enrolmentRevision을 도메인 분리된 정규 직렬화로 묶는다. 이 중 하나라도 달라지면 새 미리보기가 필요하다. accountHint는 등록된 가명으로 Moodle이 조회한 제한 길이의 표시 문자열이며 HTML로 해석하지 않는다. 브라우저가 제출하는 digest나 ref는 인증에 쓰지 않는다. Moodle 플러그인 lookup의 조회 및 현재성 semantics는 C 담당과 합의해야 한다. 첫 승인 범위에서 기존 Moodle token reader에 임의 endpoint/token을 주입하지 않는다.
 
 ## 수명 및 거부
 
-- 시도는 발급 기준 최대 120초, 연결 lease는 최대 300초를 제안한다. 실제 값은 운영 승인 대상이다. 시도 만료는 CLEAR 세션, 사전 매핑, 설치 확인의 더 이른 만료를 상한으로 한다. CLEAR의 현재 시각과 Moodle의 확인·조회 시각을 검증한다. 미래 시각, 역행, 허용 오차 초과, 정확히 만료 시각 도달은 모두 거부한다. 이미 확인한 Moodle proof는 완료 직전에 다시 조회한다.
+- 시도는 발급 기준 최대 120초, 연결 lease는 최대 300초를 제안한다. 실제 값은 운영 승인 대상이다. 시도 만료는 CLEAR 세션, 사전 매핑, 설치 확인의 더 이른 만료를 상한으로 한다. CLEAR의 현재 시각과 Moodle의 확인·조회 시각을 검증한다. 허용 오차 밖의 미래 시각, 역행, 정확히 만료 시각 도달은 모두 거부한다. 오차 안의 미래 시각도 구현 결정안에 따라 잔여 수명을 보수적으로 줄인다. 이미 확인한 Moodle proof는 완료 직전에 다시 조회한다.
 - 시도 상태 `PENDING → CONSUMED`, 또는 `PENDING → EXPIRED/REVOKED`. 한번 소비한 요청에는 성공을 재실행하거나 바인딩을 재발급하지 않는다. 연결 응답을 잃으면 본인 상태 조회로 복구한다. 저장소 재시작 뒤에도 같은 시도를 다시 사용할 수 없어야 한다. DB 예외로 소비와 바인딩이 함께 롤백됐을 때만 동일한 미소비·미만료 시도를 재검토한다.
 - 바인딩은 신청 하나당 활성 1건, `(installationRef,courseRef,subjectRef)`당 활성 1건을 유일 제약으로 보호한다. 자동 덮어쓰기나 다른 신청으로의 이전을 허용하지 않는다. CLEAR에서 확인 가능한 로그아웃, 계정·체인 변경, 신청 종료, 기관/강좌/명부/trust revision 변경은 다음 권한 검사에서 거부한다. Moodle 등록 정지·삭제의 관측 경계는 아래 원천 스냅샷 규칙을 적용한다. 기존 시도나 바인딩을 새 CLEAR 세션으로 이월하지 않는다.
 - 오류는 인증 실패 401, 소유권/범위 위반 403 또는 대상 유무를 숨기는 동일 404, 권한 있는 본인의 소비·충돌 409, 만료 410, Moodle 현재성 확인 실패 503으로 제한한다. 등록 타인/타 신청/다른 Moodle 계정의 상태나 존재는 응답에 노출하지 않는다. 로그에는 오류 범주 및 허용 opaque 추적 ID만 기록한다.
@@ -71,7 +74,7 @@ Moodle의 활성 등록·capability·확인 세션과 허용 대상 자료를 �
 
 동일 시도의 재전송은 원격 확인을 다시 사용해 성공을 만들 수 없다. 트랜잭션에서 PENDING, 현재 generation, 만료, 예상 digest 및 authority/roster/trust revision을 조건으로 CAS하고 affected rows=1을 확인한다. 시도 소비, binding insert, 활성 유일 제약, 최소 감사 이벤트를 같은 DB 트랜잭션에 둔다. 경쟁에서 진 요청은 모두 롤백한다. 새로운 시도 발급·기존 시도 취소·기존 바인딩 만료 처리도 같은 신청/subject의 직렬화 규칙을 따른다. 두 worker가 사전 검사에 모두 통과한 장벽 시험을 요구한다.
 
-CLEAR 인증 DB에서 세션을 검사한 직후 다른 worker가 로그아웃을 커밋할 수 있다. 따라서 단순한 마지막 authorizeWorkflow 호출만으로 원자성을 주장할 수 없다. 인증/신청/명부/trust 상태 변경과 binding commit의 순서를 보장하는 서버 저장소 조정 또는 동등한 직렬화 메커니즘을 본부가 정해야 한다. 로컬 JS 단일 프로세스나 서로 다른 DB의 독립 revision 값만으로 충분하다고 간주하지 않는다. 종료·철회가 먼저 선형화되면 소비 실패, 소비가 먼저면 이후 접근은 종료·철회로 거부하는 순서를 검증한다. 기존 product access()를 가져와 이 문제를 해결하려 하면 refresh와 지급 관련 상태 변화가 섞이므로 구현 전 재검토한다.
+CLEAR 인증 DB에서 세션을 검사한 직후 다른 worker가 로그아웃을 커밋할 수 있다. 따라서 단순한 마지막 authorizeWorkflow 호출만으로 원자성을 주장할 수 없다. 이번 결정은 단일 호스트의 binding DB 연결에 인증/신청 DB를 ATTACH하여 BEGIN IMMEDIATE로 함께 잠그고, 같은 연결의 최소 SELECT와 main-only CAS를 실행하는 것이다. 명부/trust/preview 역할 정책도 main DB의 revision CAS로 직렬화한다. SQL authorizer로 인증/신청 DB 쓰기를 거부한다. 상세 부팅·역할 config 지문·lock 순서와 9건 합성 실험은 구현 결정안을 따른다. 로컬 JS 단일 프로세스나 서로 다른 DB의 독립 revision 값만으로 충분하다고 간주하지 않는다. 종료·철회가 먼저 선형화되면 소비 실패, 소비가 먼저면 이후 접근은 종료·철회로 거부하는 순서를 검증한다. 기존 product access()를 가져와 이 문제를 해결하려 하면 refresh와 지급 관련 상태 변화가 섞이므로 구현 전 재검토한다.
 
 ### 저장과 복구
 
@@ -79,7 +82,7 @@ CLEAR 인증 DB에서 세션을 검사한 직후 다른 worker가 로그아웃�
 
 최소 재사용 차단 레코드는 attempt digest, issuerEpoch, 소비 상태/시각 및 원래 만료만 저장한다. 정상 경로에서는 원래 최대 시도 수명과 승인 시계 오차가 지나기 전에 제거하지 않는다. 삭제된 시도는 알 수 없는 시도로 거부하며 클라이언트 정보로 재생성하지 않는다. 재사용되는 ref를 발급하지 않고 모든 조회는 서버가 발행한 현재 레코드를 요구한다. 백업/복제본 복구로 소비 상태가 되돌아간 경우 신규 epoch 활성화와 기존 바인딩 무효화 전 서비스 재개를 차단한다. 이 epoch는 복구 대상 DB와 함께 되돌아가면 안 된다.
 
-감사 보존은 계정 식별자를 뺀 오류 범주·설치 ref·비가역 추적 ref 중심으로 제한하며 구체 기간과 백업 삭제는 기관 승인을 받아야 한다. 세션 token 대신 서버 내부 세션 참조나 도메인 분리 HMAC을 쓰고 raw token/학생 숫자 ID/연결 확인 본문을 기록하지 않는다. 명부 매핑은 별도 관리 자료이며 이 단기 바인딩 저장소에 복제하지 않는다. 제안 상한과 복구 정책이 확정되기 전 운영 활성화는 보류한다.
+감사 보존은 계정 식별자를 뺀 오류 범주·설치 ref·비가역 추적 ref 중심으로 제한하며 구체 기간과 백업 삭제는 기관 승인을 받아야 한다. 세션 token 대신 서버 내부 세션 참조나 도메인 분리 HMAC을 쓰고 raw token/학생 숫자 ID/연결 확인 본문을 기록하지 않는다. 명부 매핑은 별도 관리 테이블의 승인된 자료이며 단기 binding 행에는 필요한 subject/revision 참조만 저장한다. 같은 main DB에 관리 테이블을 두어 활성 revision과 소비를 직렬화하되 원본 명부 파일을 복제하지 않는다. 제안 상한과 복구 정책이 확정되기 전 운영 활성화는 보류한다.
 
 ### 읽기 초안의 권한 분리
 
@@ -93,7 +96,7 @@ CLEAR 인증 DB에서 세션을 검사한 직후 다른 worker가 로그아웃�
 | C / 플러그인 | 별도 PHP 구현에서 로그인/sesskey/course context, 승인 학생 capability, 시도 확인과 고정 서버 lookup. DTO와 오류 분류만 공유. |
 | 본부 / 통합 | 별도 서버 호스트 라우트와 읽기 projection, 영속 DB migration/제약, HTTPS/인증서 배포·회전, 운영 설정, 새 테스트 CI. 구체 경로와 소유권을 권한 리뷰 후 확정. A의 PR149/web/지급 파일과 기존 고정 경로는 그대로 인수. |
 
-구현 승인 전 필수 결정은 명부 기반 사전 subject 결합, 설치 인증서 registry와 폐기 전파, Moodle 확인 세션 검증과 일관된 원천 스냅샷, CLEAR 권한 변경과 소비의 직렬화, 보존/복구 epoch 정책이다. 원격 철회는 OBSERVED_AT 의미를 수용할지 본부가 결정해야 한다. 모두 문서로 확정되기 전 실제 바인딩 구현 승인을 보류한다. PHP 플러그인과 CLEAR route는 아직 제공되지 않는다.
+명부 관리·설치 registry·CLEAR 직렬화·CAS/유일성·복구 epoch의 기술 결정과 경로별 소유권은 구현 결정안에 정리했다. 본부는 OBSERVED_AT 의미를 수용했다. C의 Moodle 확인 세션 및 원천 snapshot 인수, 본부의 교차 리뷰, 실제 기관 입력/운영 설정은 각각 별도 관문이다. 합성 구현과 실제 연결 활성화를 구분해 후속 배정한다. 이 계약의 confirmation PHP 경로와 CLEAR route는 아직 제공되지 않는다.
 
 ## 오프라인 검증 인수표
 
@@ -117,4 +120,4 @@ CLEAR 인증 DB에서 세션을 검사한 직후 다른 worker가 로그아웃�
 | 소비 전 백업 복원, nonce tombstone 삭제, 시간 역행 | 서비스 재개 전 epoch 교체/무효화 또는 차단. 과거 시도 재생성·소비 불가. |
 | 보존 한계와 read-only 경계 | 브라우저/로그에 raw ID·token·sesskey 없음. 스파이로 P0 evidence/decision/consent/vault 호출 0, product ledger 지문 전후 동일. |
 
-이 표는 구현 이후 실행할 테스트 사양이다. 실제 Moodle·CLEAR 로그인, 서명, 유료 모델 호출, DB 바인딩 및 지급 실측 증거는 포함하지 않는다.
+이 표는 제품 구현 이후 실행할 테스트 사양이다. 별도 합성 DB 기법 실험 9/9 통과는 구현 결정안에 기록했으며 이 전체 인수표 통과를 뜻하지 않는다. 실제 Moodle·CLEAR 로그인, 서명, 유료 모델 호출, 제품 DB 바인딩 및 지급 실측 증거는 포함하지 않는다.
