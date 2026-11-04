@@ -2561,3 +2561,84 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
 /* Current authenticated application identifiers must wrap inside the wallet iframe. */
 .team-application { overflow-wrap: anywhere; }
 .team-application button { white-space: normal; }
+
+/* ── 본선 패널 (finals-panels) ─────────────────────────────────────────
+   A 의 core 화면과 섞이지 않게 .fp- 로만 짓는다. 독립 preview 에서 쓰고,
+   통합할 때 A 가 자기 리듬에 맞춰 가져간다. */
+.fp-top { max-width: 940px; margin: 0 auto; padding: 32px 20px 8px; }
+.fp-top h1 { font-size: 22px; margin: 0 0 6px; }
+.fp-top p { margin: 0; color: var(--muted); line-height: 1.7; }
+
+.fp { max-width: 940px; margin: 0 auto 28px; padding: 22px 20px 26px; }
+.fp-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fp-head h2 { margin: 0; font-size: 18px; }
+.fp-sub { margin: 6px 0 16px; color: var(--muted); line-height: 1.7; }
+
+/* 합성인지 실제인지. **합성은 눈에 띄어야 한다** */
+.fp-mode {
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em;
+  border: 1px solid var(--line); color: var(--muted);
+}
+.fp-mode[data-mode="synthetic"] { border-color: #b8860b; color: #8a6508; background: #fdf6e3; }
+
+.fp-field { display: block; margin: 0 0 10px; }
+.fp-label { display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+.fp-input {
+  width: 100%; box-sizing: border-box; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 8px;
+  font: inherit; line-height: 1.6; resize: vertical;
+}
+.fp-actions { display: flex; gap: 8px; margin: 10px 0 14px; }
+.fp-btn {
+  padding: 9px 16px; border-radius: 8px; border: 0;
+  background: var(--fg); color: var(--card);
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.fp-btn[disabled] { opacity: 0.45; cursor: default; }
+
+.fp-note { margin: 8px 0; color: var(--muted); line-height: 1.7; font-size: 0.9rem; }
+.fp-note--ok { color: var(--accent); }
+.fp-note--warn { color: #9a3412; }
+.fp-note--wait { color: #8a6508; }
+
+.fp-sec { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.fp-sec-title { margin: 0 0 12px; font-size: 14px; }
+
+.fp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.fp-row { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; }
+.fp-row-title { margin: 0 0 6px; font-weight: 700; }
+.fp-quote {
+  margin: 0 0 8px; padding: 6px 10px;
+  border-left: 3px solid var(--line); color: var(--muted); line-height: 1.7;
+}
+.fp-hold { margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 10px; }
+
+.fp-pairs { display: grid; grid-template-columns: minmax(7em, auto) 1fr; gap: 3px 14px; margin: 0; }
+.fp-pairs dt { color: var(--muted); font-size: 0.86rem; }
+.fp-pairs dd { margin: 0; font-size: 0.9rem; word-break: break-word; }
+.fp-pair { display: contents; }
+
+/* 절감률. 대개 N/A 이고, N/A 일 때 더 조용해야 한다 */
+.fp-headline { margin: 18px 0 4px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; }
+.fp-headline-label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--muted); }
+.fp-headline-value { display: block; margin: 4px 0 6px; font-size: 34px; letter-spacing: -0.5px; }
+.fp-headline[data-na="yes"] .fp-headline-value { color: var(--muted); font-size: 26px; }
+.fp-headline-note { color: var(--muted); line-height: 1.7; font-size: 0.86rem; }
+
+@media (max-width: 620px) {
+  .fp-pairs { grid-template-columns: 1fr; gap: 1px 0; }
+  .fp-pairs dt { margin-top: 7px; }
+}
+
+/* 조건 변화 예문 칩. 지금 원문과 같은 것은 눌린 모양 */
+.fp-presets { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.fp-presets .fp-label { margin: 0 4px 0 0; }
+.fp-chip {
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer;
+}
+.fp-chip:hover { border-color: var(--fg); }
+.fp-chip[aria-pressed="true"] { background: var(--fg); color: var(--card); border-color: var(--fg); }
+.fp-chip[disabled] { opacity: 0.45; cursor: default; }
