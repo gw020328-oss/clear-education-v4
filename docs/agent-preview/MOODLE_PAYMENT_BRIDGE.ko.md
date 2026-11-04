@@ -57,3 +57,26 @@ Node24.21.0과 외부 네트워크 차단에서 신규 projection18·snapshot14 
 ```
 
 외부 보고에는 합성 검증 결과·코드 지문만 사용하며 비밀·원문·실제 사용자 식별 자료를 포함하지 않는다. 실제 owner resolver의 정본 epoch/ABA 방지와 교사 currentness는 B/C 계약 조립 및 독립 리뷰의 남은 관문이다.
+
+
+## P2 스키마 검증 보정
+
+후보 `42d6028148a77409ff2446398e410126cd37ba0b`에 대한 C 독립 리뷰의 P2를 보정했다. 최초 파일 identity/config 확인에 더해 매 조회의 BEGIN 안에서 R2 v2·E3 v1과 writer=0, 단일 metadata 행, 21개 의존 테이블의 열·STRICT·PK/UNIQUE/FK 정의, 47개 append-only/쓰기 경로 보호 trigger 정의를 확인한다. 같은 inode에서 버전·열·제약·trigger를 바꿔도 다음 조회는 MOODLE_PAYMENT_SCHEMA로 거부한다. 저장된 schema_version 숫자나 최초 검증 결과를 캐시하지 않는다. 지원하는 선언과 다른 schema는 자동 이행하지 않는다. 이 선언은 검증용이며 reader에서 CREATE/ALTER/UPDATE를 실행하지 않는다.
+
+보정 국소 결과: 스키마 변경 20개와 기존 snapshot 정상/withdraw 2개, C 원본 재현 1개(작업본 import 경로만 변경), 총23/23 통과. 별도 양 역할 canonical 100 TEST 정상/no-write 검사1/1도 통과했다. 각 변경 사례는 열린 reader와 새 reader가 모두 거부하고 canonical 호출 0회, 조회 전후 bootcamp/authentication DB bytes 동일함을 검사한다. C 재현은 기존 migrateProcedure의 BC_E3_SCHEMA 거부도 유지한다. 기존61개와 C 추가4개 결과는 재사용했고 전체 검사를 반복하지 않았다. 국소 실행 시 기존 의존성의 native RE2 부재에 따른 RegExp fallback 경고가 있었으며 원천/provider 네트워크 실행은 없다. 독립 C delta 리뷰와 실제 owner/HTTP 통합은 별도다.
+
+```sh
+./tools/node --import ./tests/ybm-collector/network-guard.mjs --test --test-name-pattern='schema fence|expired pending source request|latest withdraw' tests/bootcamp-store/moodle-payment-snapshot.test.mjs
+./tools/node --import ./tests/ybm-collector/network-guard.mjs --test --test-name-pattern='both own roles read exact' tests/bootcamp-store/moodle-payment-projection.test.mjs
+```
+
+## C 화면 연결에 필요한 경로와 책임
+
+| 연결 | 기존 경로/소유 파일 | 조립 입력과 제한 |
+| --- | --- | --- |
+| 참가자 내장 지갑·운영자 로그인 | CLEAR origin의 `/onboarding`, `/operator`; `tools/bootcamp/normal-host*.mjs`, `tools/bootcamp/live-context.mjs` | owner 고정 origin과 역할별 신청/세션. C는 top-level 인증 창을 열고 실제 로그인·서명은 사용자가 한다. |
+| 원천 확인·AI 승인 | `src/bootcamp/http.mjs`의 `/bootcamp/v4/applications/:applicationId/source-signature`, `reflection-approval` | 기존 driver와 인증된 CLEAR 창에서만 수행. Moodle의 확인 클릭이나 payment DTO를 서명·AI 호출 승인으로 치환하지 않는다. |
+| 수령 지갑 등록·양측 동의 | 같은 HTTP의 `/bootcamp/v3/applications/:applicationId/recipient-registration`, `review-consents`; `tools/bootcamp/test-client/driver.js` | 기존 payload/서명/멱등키·동일 판정·기한·양측 최근 검토 검사를 유지. C의 서버 polling으로 검토 신호를 만들지 않는다. |
+| Moodle 지급 영수증 표시 | 신규 `src/bootcamp/moodle-payment-snapshot.mjs`, `moodle-payment-projection.mjs` | 위 private owner mapping/resolver 및 별도 normal-receipt 인스턴스. C에는 displayOnly DTO만 전달한다. 실제 HTTP transport와 응답 인증/현재 Moodle 세션 결합은 아직 미구현이다. |
+
+C는 `plugins/moodle/**`의 로그인·강좌 권한, 화면·서버 transport를 소유한다. B의 학생 binding currentness는 별도 입력이며 운영자가 학생 세션을 대신 사용할 수 없다. A의 현재 변경 소유권은 신규 snapshot/projection 및 그 테스트·이 문서에 한정된다. 공용 `src/bootcamp/http.mjs`, `tools/bootcamp/live-context.mjs`, host/driver 및 기존 web 파일 조립은 본부의 소유 경로 배정 후 진행한다. 서버 중단 직접 청구·절전/재시작/복구 확대는 이번 정상 연결 수정에 포함하지 않는다.
