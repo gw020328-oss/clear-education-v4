@@ -2642,3 +2642,53 @@ body[data-demo-panel] .foot { padding-bottom: calc(var(--dp-h, 92px) + 28px); }
 .fp-chip:hover { border-color: var(--fg); }
 .fp-chip[aria-pressed="true"] { background: var(--fg); color: var(--card); border-color: var(--fg); }
 .fp-chip[disabled] { opacity: 0.45; cursor: default; }
+
+/* 읽기 제안 — 모듈에 넘기기 전에 사람이 보는 자리 */
+.fp-proposal { margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 10px; }
+.fp-proposal-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.fp-proposal-head .fp-label { margin: 0; }
+.fp-mode[data-mode="rules"] { border-color: var(--line); color: var(--muted); background: transparent; }
+.fp-proposal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fp-proposal-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline; gap: 4px 10px; font-size: 0.9rem;
+}
+.fp-proposal-src { color: var(--muted); overflow-wrap: anywhere; }
+.fp-proposal-arrow { color: var(--muted); }
+.fp-proposal-dst { font-weight: 700; }
+.fp-proposal-row[data-read="no"] .fp-proposal-dst { color: #9a3412; font-weight: 600; }
+.fp-proposal-row[data-read="dup"] .fp-proposal-dst { color: var(--muted); font-weight: 600; }
+.fp-proposal-note { grid-column: 1 / -1; font-size: 0.82rem; color: #8a6508; }
+@media (max-width: 620px) {
+  .fp-proposal-row { grid-template-columns: 1fr; }
+  .fp-proposal-arrow { display: none; }
+}
+
+/* 제안 출처 — 모델 제안일 때. 규칙은 위의 data-mode="rules" */
+.fp-mode[data-mode="model"] { border-color: #2563eb; color: #1d4ed8; background: #eff6ff; }
+
+/* 누가 읽었나 — 규칙 / 운영자 지정 */
+.fp-proposal-dst { display: inline-flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.fp-proposal-tag {
+  padding: 1px 6px; border-radius: 4px;
+  font-size: 0.74rem; font-weight: 700; letter-spacing: 0.02em;
+  background: var(--line); color: var(--muted);
+}
+.fp-proposal-tag[data-source="operator"] { background: #fdf6e3; color: #8a6508; }
+
+/* 운영자 직접 보완 — 못 읽은 조항 아래에만 */
+.fp-proposal-pick { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.fp-proposal-pick-label { font-size: 0.8rem; color: var(--muted); }
+.fp-proposal-pick select {
+  padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px;
+  font: inherit; font-size: 0.86rem; background: var(--card); color: var(--fg);
+}
+
+/* 읽기 제안 — "N개 찾았습니다, 맞나요?" 가 본문. 나머지는 접힌다 */
+.fp-proposal-ask { margin: 4px 0 8px; font-weight: 700; }
+.fp-proposal-warn { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.fp-proposal-warn .fp-proposal-ask { color: #9a3412; }
+.fp-proposal-rest { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.fp-proposal-rest > summary { cursor: pointer; font-size: 0.86rem; color: var(--muted); padding: 4px 0; }
+.fp-proposal-rest > summary:hover { color: var(--fg); }
+.fp-proposal-rest .fp-proposal-list { margin-top: 8px; }

@@ -17,7 +17,7 @@ import { aiComparePanel, CAPABILITY_LABEL } from '../src/bootcamp/finals-panels/
 import { opsMetricsPanel } from '../src/bootcamp/finals-panels/ops-metrics.js';
 import {
   PREVIEW_SOURCE, PREVIEW_DRAFT, PREVIEW_PLAN, PREVIEW_RESULT,
-  PREVIEW_PAYLOAD, METRICS_INPUT, METRICS_SUMMARY,
+  PREVIEW_PAYLOAD, METRICS_INPUT, METRICS_SUMMARY, PRESETS,
 } from '../src/bootcamp/finals-panels/fixtures.js';
 
 // 저장소의 **실제 모듈**. web/ 밖이지만 시험이라 괜찮다.
@@ -54,6 +54,8 @@ function installDom() {
   };
   return () => { delete globalThis.document; };
 }
+
+function* walk(node) { yield node; for (const c of node.children ?? []) yield* walk(c); }
 
 const settle = async () => { for (let i = 0; i < 20; i += 1) await new Promise((r) => setTimeout(r, 0)); };
 
@@ -231,5 +233,297 @@ test('안 준 값을 0 으로 적지 않는다', () => {
     const text = panel.node.textContent;
     assert.ok(text.includes('확인 전'), '없는 값을 없다고 적지 않았다');
     assert.ok(!/전체 경과\s*0/.test(text), '없는 값을 0 으로 적었다');
+  } finally { restore(); }
+});
+
+// ── 읽기 제안 — 학원 말투를 모듈이 아는 문장으로 ─────────────────────────
+//
+// structureSynthetic 은 문구가 정확히 같을 때만 읽는다. 15개 표현 중 5개만
+// 통과했고 백엔드가 지시한 ① 예문 "지정 강의 완료" 도 못 읽었다. 그래서
+// 모듈에 넘기기 전에 규칙으로 읽기 제안을 만들고 사람이 확인한다.
+//
+// 여기서 지키는 것 셋.
+//   1  읽은 것은 **모듈이 실제로 받아들이는** 정규 문장이어야 한다
+//   2  우리 조건이 아닌 것(출석률·수강률)은 읽지 않고 **이유**를 적는다
+//   3  정규 문장을 다시 넣으면 **그대로** 나와야 한다 — 쉼표가 찢기면 안 된다
+
+import { proposeReading, CANONICAL } from '../src/bootcamp/finals-panels/normalize.js';
+
+test('정규 문장 네 개는 실제 모듈이 전부 읽는다', () => {
+  for (const [cap, sentence] of Object.entries(CANONICAL)) {
+    const d = structureSynthetic(sentence);
+    assert.equal(d.status, 'READY', cap + ': 모듈이 정규 문장을 못 읽는다');
+    assert.equal(d.conditions[0]?.capability, cap, cap + ': 다른 조건으로 읽혔다');
+  }
+});
+
+test('학원 말투를 네 조건으로 읽고, 읽은 것은 모듈을 통과한다', () => {
+  const cases = [
+    ['지정 강의 완료', 'MOODLE_ACTIVITY_COMPLETION.1'],
+    ['무들 강의 다 들어야 함', 'MOODLE_ACTIVITY_COMPLETION.1'],
+    ['강의 전부 수강', 'MOODLE_ACTIVITY_COMPLETION.1'],
+    ['과제 내야 함', 'MOODLE_ASSIGNMENT_SUBMISSION.1'],
+    ['숙제 제출', 'MOODLE_ASSIGNMENT_SUBMISSION.1'],
+    ['회고 작성', 'REFLECTION_REQUIRED_TOPICS.1'],
+    ['회고 세 항목 써야 함', 'REFLECTION_REQUIRED_TOPICS.1'],
+    ['해커랭크 파이썬 자격증', 'HACKERRANK_CERTIFICATE_HOLDING.1'],
+    ['HackerRank 인증', 'HACKERRANK_CERTIFICATE_HOLDING.1'],
+  ];
+  for (const [text, cap] of cases) {
+    const p = proposeReading(text);
+    assert.equal(p.clauses[0].capability, cap, text);
+    // 읽은 정규 문장은 모듈이 실제로 받아들여야 한다
+    const d = structureSynthetic(p.canonicalText);
+    assert.equal(d.status, 'READY', text + ': 정규 문장이 모듈을 못 통과');
+    assert.equal(d.conditions[0].capability, cap, text + ': 모듈이 다른 조건으로 읽음');
+  }
+});
+
+test('출석률·수강률은 읽지 않고 이유를 적는다', () => {
+  for (const [text, part] of [
+    ['출석률 90% 이상', '출석률은'],
+    ['수강률 80% 이상', '수강률'],
+    ['강의 출석 100%', '출석률은'],
+  ]) {
+    const p = proposeReading(text);
+    assert.equal(p.readable, 0, text + ': 읽어 버렸다');
+    assert.equal(p.unreadable, 1, text);
+    assert.ok(p.clauses[0].note?.includes(part), text + ': 이유가 없다 — ' + p.clauses[0].note);
+  }
+});
+
+test('정규 문장을 넣으면 그대로 나온다 — 회고의 쉼표가 찢기지 않는다', () => {
+  const canon = Object.values(CANONICAL).join('; ');
+  const p = proposeReading(canon);
+  assert.equal(p.clauses.length, 4, '조항 수가 다르다 — 쉼표에서 찢겼다');
+  assert.equal(p.canonicalText, canon);
+  assert.equal(p.complete, true);
+});
+
+test('캐주얼한 한 문장이 네 조건으로 읽혀 ③ 예문과 같은 정규 문장이 된다', () => {
+  const p = proposeReading('강의 다 듣고, 숙제 내고, 회고 쓰고, 해커랭크 파이썬 자격증 있어야 함');
+  assert.equal(p.readable, 4);
+  assert.equal(p.complete, true);
+  assert.equal(p.canonicalText, PRESETS[2].source, '③ 예문과 다르다');
+});
+
+test('같은 조건이 두 번 나오면 한 번만 넘긴다', () => {
+  const p = proposeReading('과제 제출; 숙제 내기');
+  assert.equal(p.readable, 1);
+  assert.equal(p.duplicates.length, 1);
+  assert.equal(p.canonicalText, CANONICAL['MOODLE_ASSIGNMENT_SUBMISSION.1']);
+});
+
+test('화면이 못 읽은 조항을 못 읽음으로 두고 지어내지 않는다', () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: () => null });
+    const panel = aiComparePanel({ adapter: a, source: '숙제 제출; 출석률 90% 이상' });
+    const text = panel.node.textContent;
+
+    assert.ok(text.includes('읽기 제안'), '제안 블록이 없다');
+    assert.ok(text.includes('모델 아님'), '규칙 기반이라고 적지 않았다');
+    assert.ok(text.includes('과제 제출'), '읽은 조항을 안 보여줬다');
+    assert.ok(text.includes('1개 조건을 찾았습니다 — 맞나요?'), '찾은 개수를 묻지 않는다');
+    assert.ok(text.includes('확인하지 않는 것 1개'), '출석률 조항을 숨겼다');
+    assert.ok(text.includes('출석률은'), '못 읽은 이유를 안 적었다');
+    assert.ok(text.includes('읽은 것만 구조화'), '일부만 읽었는데 버튼이 그 사실을 안 적는다');
+    assert.ok(!text.includes('강의 활동 완료'), '출석률을 활동 완료로 지어냈다');
+  } finally { restore(); }
+});
+
+test('학원 원문과 정규 문장이 다르면 ① 절에 둘 다 보인다', () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({
+      mode: DATA_MODE.SYNTHETIC,
+      fixture: (input) => PRESETS.find((p) => p.source === input)?.payload ?? null,
+    });
+    const casual = '강의 다 듣고, 숙제 내고, 회고 쓰고, 해커랭크 파이썬 자격증 있어야 함';
+    const panel = aiComparePanel({ adapter: a, source: casual });
+    const btn = [...walk(panel.node)].find((n) => n.tagName === 'BUTTON' && n.textContent.includes('이대로 구조화'));
+    assert.ok(btn, '이대로 구조화 버튼이 없다');
+    for (const fn of btn.handlers.click ?? []) fn({});
+    const text = panel.node.textContent;
+
+    assert.ok(text.includes('"강의 다 듣고"'), '학원 원문이 사라졌다');
+    assert.ok(text.includes('정규 문장으로'), '정규 문장 대응을 안 보여줬다');
+    assert.ok(text.includes('Moodle 활동 완료'), '정규 문장이 없다');
+  } finally { restore(); }
+});
+
+test('못 읽을 말이 읽힌 조항 안에 삼켜지지 않는다', () => {
+  // 처음 버전이 "출석률 90% 이상, 해커랭크 …" 를 한 조항으로 붙여
+  // 출석률을 HackerRank 안에 숨겼다. 못 읽은 것은 **보여야** 한다.
+  const p = proposeReading('숙제 내고, 출석률 90% 이상, 해커랭크 파이썬 자격증 있어야 함');
+  assert.equal(p.clauses.length, 3, '쉼표에서 안 잘렸다');
+  assert.equal(p.readable, 2);
+  assert.equal(p.unreadable, 1);
+  const hr = p.clauses.find((c) => c.capability === 'HACKERRANK_CERTIFICATE_HOLDING.1');
+  assert.ok(hr && !hr.original.includes('출석률'), '출석률이 HackerRank 조항에 삼켜졌다');
+  const no = p.clauses.find((c) => !c.capability);
+  assert.ok(no.original.includes('출석률') && no.note?.includes('출석률은'));
+});
+
+test('출석률이 강의와 한 조항에 있어도 활동 완료로 읽지 않는다', () => {
+  const p = proposeReading('강의 출석률 90% 이상이면 완료');
+  assert.equal(p.readable, 0, '출석률 조항을 활동 완료로 읽었다');
+  assert.ok(p.clauses[0].note?.includes('출석률은'));
+});
+
+// ── 15조합 fixture · 정규 순서 · 운영자 직접 보완 · 제안자 교체 ──────────
+
+import { COMBOS } from '../src/bootcamp/finals-panels/fixtures.js';
+import { applyOverrides, emptyProposal } from '../src/bootcamp/finals-panels/normalize.js';
+
+test('15조합 fixture 는 실제 모듈이 지금 내놓는 값과 같다', () => {
+  const keys = Object.keys(COMBOS);
+  assert.equal(keys.length, 15, '조합 수가 15가 아니다');
+  for (const source of keys) {
+    const draft = structureSynthetic(source);
+    const plan = buildPlan(draft);
+    const result = executePublicDemo(plan, draft);
+    const fx = JSON.parse(JSON.stringify(COMBOS[source].payload));
+    assert.deepEqual(fx.draft, draft, source + ': draft 어긋남');
+    assert.deepEqual(fx.plan, plan, source + ': plan 어긋남');
+    assert.deepEqual(fx.result, result, source + ': result 어긋남');
+  }
+});
+
+test('운영자가 어떤 순서로 써도 모듈에는 정규 순서로 넘긴다', () => {
+  const p = proposeReading('숙제 내고, 강의 다 들어야 함');
+  assert.equal(p.clauses[0].capability, 'MOODLE_ASSIGNMENT_SUBMISSION.1', '화면 순서는 운영자 순서여야 한다');
+  assert.equal(p.canonicalText, 'Moodle 활동 완료; Moodle 과제 제출', '정규 순서가 아니다');
+  assert.ok(COMBOS[p.canonicalText], '정규 순서 문장이 15조합에 없다');
+});
+
+test('못 읽은 조항을 운영자가 직접 지정하면 읽은 것으로 넘긴다', () => {
+  const base = proposeReading('강의 완료; 이상한 문장 하나');
+  assert.equal(base.readable, 1);
+  const no = base.clauses.find((c) => !c.capability);
+  const over = new Map([[`${no.index}:${no.original}`, 'MOODLE_ASSIGNMENT_SUBMISSION.1']]);
+  const p = applyOverrides(base, over);
+  assert.equal(p.readable, 2);
+  const fixed = p.clauses.find((c) => c.original === no.original);
+  assert.equal(fixed.source, 'operator');
+  assert.ok(fixed.note.includes('운영자가 직접'));
+  assert.equal(p.canonicalText, 'Moodle 활동 완료; Moodle 과제 제출');
+});
+
+test('출석률 조항은 운영자도 조건으로 지정할 수 없다 — 조건 아님만 된다', () => {
+  const base = proposeReading('출석률 90% 이상');
+  const c = base.clauses[0];
+  const key = `${c.index}:${c.original}`;
+  const tried = applyOverrides(base, new Map([[key, 'MOODLE_ACTIVITY_COMPLETION.1']]));
+  assert.equal(tried.readable, 0, '출석률을 활동 완료로 바꿔 넣었다');
+  const held = applyOverrides(base, new Map([[key, 'NOT_A_CONDITION']]));
+  assert.equal(held.clauses[0].source, 'operator');
+  assert.ok(held.clauses[0].note.includes('조건이 아니라고'));
+});
+
+test('운영자 지정이 이미 읽은 조건과 겹치면 한 번만 넘긴다', () => {
+  const base = proposeReading('숙제 제출; 알 수 없는 조항');
+  const no = base.clauses.find((c) => !c.capability);
+  const p = applyOverrides(base, new Map([[`${no.index}:${no.original}`, 'MOODLE_ASSIGNMENT_SUBMISSION.1']]));
+  assert.equal(p.readable, 1);
+  assert.equal(p.duplicates.length, 1);
+});
+
+test('원문이 바뀌면 옛 지정은 다른 문장에 붙지 않는다', () => {
+  const a = proposeReading('알 수 없는 조항');
+  const key = `${a.clauses[0].index}:${a.clauses[0].original}`;
+  const over = new Map([[key, 'REFLECTION_REQUIRED_TOPICS.1']]);
+  assert.equal(applyOverrides(a, over).readable, 1);
+  const b = proposeReading('전혀 다른 조항');
+  assert.equal(applyOverrides(b, over).readable, 0, '옛 지정이 새 문장에 붙었다');
+});
+
+test('빈 제안은 아무것도 넘기지 않는다', () => {
+  const e = emptyProposal();
+  assert.equal(e.readable, 0);
+  assert.equal(e.canonicalText, '');
+  assert.equal(e.complete, false);
+});
+
+test('화면이 못 읽은 조항에 직접 지정 상자를 붙이고 제안 출처를 적는다', () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: () => null });
+    const panel = aiComparePanel({ adapter: a, source: '강의 완료; 이상한 문장 하나' });
+    const text = panel.node.textContent;
+    assert.ok(text.includes('프론트 규칙 기반 · 모델 아님'), '제안 출처가 없다');
+    assert.ok(text.includes('직접 지정'), '직접 지정 상자가 없다');
+    const selects = [...walk(panel.node)].filter((n) => n.tagName === 'SELECT');
+    assert.equal(selects.length, 1, '못 읽은 조항 하나에만 상자가 붙어야 한다');
+    // 출석률 조항은 경고 줄로만 보이고 지정 상자가 없다 — 조건으로 바꿀 길이 없어야 한다
+    const p2 = aiComparePanel({ adapter: a, source: '출석률 90% 이상' });
+    assert.ok(p2.node.textContent.includes('확인하지 않는 것 1개'), '출석률 경고가 없다');
+    const opts = [...walk(p2.node)].filter((n) => n.tagName === 'OPTION').map((n) => n.textContent);
+    assert.equal(opts.length, 0, '출석률 조항에 선택지가 열려 있다: ' + opts.join(', '));
+  } finally { restore(); }
+});
+
+test('제안자를 갈아끼우면 출처 표시가 따라 바뀌고 확인 화면은 그대로다', () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: () => null });
+    const gemini = { id: 'gemini', label: 'Gemini 제안 · 승인된 호출', propose: proposeReading };
+    const panel = aiComparePanel({ adapter: a, source: '숙제 제출', proposer: gemini });
+    const text = panel.node.textContent;
+    assert.ok(text.includes('Gemini 제안 · 승인된 호출'), '제안자 라벨이 안 바뀌었다');
+    assert.ok(!text.includes('모델 아님'), '규칙 라벨이 남아 있다');
+    assert.ok(text.includes('읽기 제안') && text.includes('과제 제출'), '확인 화면이 사라졌다');
+  } finally { restore(); }
+});
+
+// ── 실제 메타코드 안내문 ─────────────────────────────────────────────────
+
+import { REAL_NOTICE } from '../src/bootcamp/finals-panels/fixtures.js';
+
+test('실제 안내문에서 우리 조건 셋을 찾고 HackerRank 는 찾지 않는다', () => {
+  const p = proposeReading(REAL_NOTICE);
+  const caps = p.kept.map((c) => c.capability);
+  assert.deepEqual(caps, [
+    'MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1', 'REFLECTION_REQUIRED_TOPICS.1',
+  ], '찾은 조건이 다르다: ' + caps.join(', '));
+  assert.ok(!caps.includes('HACKERRANK_CERTIFICATE_HOLDING.1'), '안내문에 없는 HackerRank 를 지어냈다');
+  // 셋의 정규 문장은 15조합 안에 있어야 합성 모드에서 실제 결과가 나온다
+  assert.ok(COMBOS[p.canonicalText], '정규 문장이 15조합에 없다');
+});
+
+test('실제 안내문의 못 하는 조건 넷을 전부 짚는다', () => {
+  const p = proposeReading(REAL_NOTICE);
+  const flagged = p.clauses.filter((c) => c.notOurs).map((c) => c.original);
+  const expect = ['정답률', '출석률', '참석률', '(선택)'];
+  for (const word of expect) {
+    assert.ok(flagged.some((o) => o.includes(word)), word + ' 조항을 못 하는 조건으로 짚지 않았다 — ' + flagged.join(' | '));
+  }
+  // 인터뷰 줄을 후기(회고)로 오인하지 않는다
+  const interview = p.clauses.find((c) => c.original.includes('인터뷰'));
+  assert.equal(interview.capability, null, '(선택) 인터뷰를 회고로 읽었다');
+});
+
+test('제목 줄은 조항이 아니고, 괄호 안 쉼표에서 찢기지 않는다', () => {
+  const p = proposeReading(REAL_NOTICE);
+  assert.ok(!p.clauses.some((c) => c.original === '[환급 기준]'), '제목 줄이 조항으로 잡혔다');
+  assert.ok(!p.clauses.some((c) => /^1회 면제/.test(c.original)), '괄호 안 쉼표에서 찢겼다');
+  assert.ok(!p.clauses.some((c) => /^제세공과금/.test(c.original)), '금액 문장이 쉼표에서 찢겼다');
+  assert.ok(!p.clauses.some((c) => /^-\s/.test(c.original)), '글머리표가 남았다');
+});
+
+test('화면은 찾은 조건만 펴고 나머지는 접는다', () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+    const panel = aiComparePanel({ adapter: a, source: REAL_NOTICE });
+    const text = panel.node.textContent;
+    assert.ok(text.includes('3개 조건을 찾았습니다 — 맞나요?'), '찾은 개수를 묻지 않는다 — ' + text.slice(0, 300));
+    assert.ok(text.includes('확인하지 않는 것 4개'), '못 하는 조건 경고가 없다');
+    const details = [...walk(panel.node)].find((n) => n.tagName === 'DETAILS');
+    assert.ok(details, '읽지 않은 문장이 접혀 있지 않다');
+    assert.ok(details.textContent.includes('만족도'), '만족도 줄이 접힌 쪽에 없다');
+    // 찾은 목록에는 못 읽은 문장이 섞이면 안 된다
+    const foundList = [...walk(panel.node)].find((n) => n.className === 'fp-proposal-list');
+    assert.ok(!foundList.textContent.includes('만족도'), '찾은 목록에 못 읽은 문장이 섞였다');
   } finally { restore(); }
 });

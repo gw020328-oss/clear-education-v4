@@ -15,6 +15,30 @@
 
 import { el, clear } from '../../ui/dom.js';
 import { STATE, DATA_MODE } from './adapter.js';
+import { proposeReading, applyOverrides, emptyProposal, MANUAL_CHOICES } from './normalize.js';
+
+/**
+ * 제안자 — 원문을 읽어 "이렇게 읽었습니다" 를 만드는 쪽.
+ *
+ * 지금은 규칙이다. B 가 Gemini 호스트 포트를 열면 같은 모양의 제안자를
+ * 끼운다 — `{ id, label, propose(text) }`. `propose` 는 값이든 Promise 든
+ * 된다. 확인 화면은 바뀌지 않고 **출처 표시(label)만** 바뀐다.
+ * 오규원: "시연에서도 제안 출처를 표시하자."
+ */
+export const RULES_PROPOSER = Object.freeze({
+  id: 'rules',
+  label: '프론트 규칙 기반 · 모델 아님',
+  propose: proposeReading,
+});
+
+/** 운영자가 직접 고를 때 보이는 이름 */
+const MANUAL_LABEL = Object.freeze({
+  'MOODLE_ACTIVITY_COMPLETION.1': '강의 활동 완료',
+  'MOODLE_ASSIGNMENT_SUBMISSION.1': '과제 제출',
+  'REFLECTION_REQUIRED_TOPICS.1': '회고 세 항목',
+  'HACKERRANK_CERTIFICATE_HOLDING.1': 'HackerRank 인증서 보유',
+  NOT_A_CONDITION: '조건 아님 (보류)',
+});
 
 /** 네 기능의 사용자용 한글 라벨. 코드 이름을 그대로 내보내지 않는다 */
 export const CAPABILITY_LABEL = Object.freeze({
@@ -95,20 +119,96 @@ const short = (v) => {
  *   누르면 원문 칸에 들어가고 바로 구조화한다. 원문 칸은 그대로 고칠 수 있다 —
  *   심사위원이 "그럼 이건요?" 하고 바꿔도 같은 길로 간다.
  */
-export function aiComparePanel({ adapter, source = '', onSource = () => {}, presets = [] }) {
+export function aiComparePanel({
+  adapter, source = '', onSource = () => {}, presets = [], proposer = RULES_PROPOSER,
+}) {
   const box = el('section.fp', {});
   let text = source;
+  // 제안자가 읽은 원본. 운영자 지정을 얹기 전이다.
+  let base = emptyProposal();
+  // 운영자가 못 읽은 조항에 직접 붙인 것. 키는 "번호:원문" — 원문이 바뀌면 버려진다.
+  const overrides = new Map();
+  // 화면이 쓰는 최종 제안 = 제안자 원본 + 운영자 지정.
+  let proposal = base;
+  // 제안이 비동기(Gemini)일 때 늦게 온 답을 버리려고 번호를 매긴다.
+  let proposeStamp = 0;
+  let proposing = false;
+  // 마지막으로 모듈에 넘긴 제안. ① 절에서 학원 원문과 정규 문장을 짝짓는 데 쓴다.
+  // 그 뒤 원문이 바뀌어도 이 짝은 **보낸 당시** 기준이어야 한다.
+  let lastSent = null;
 
-  const run = () => { void adapter.request(text); };
+  const recompute = () => { proposal = applyOverrides(base, overrides); };
+
+  /** 제안자를 돌린다. 값이든 Promise 든 받고, 늦게 온 답은 버린다 */
+  const propose = (next) => {
+    const stamp = (proposeStamp += 1);
+    const got = proposer.propose(next);
+    if (typeof got?.then !== 'function') { base = got; recompute(); return; }
+    proposing = true; render();
+    got.then((value) => {
+      if (stamp !== proposeStamp) return;         // 그새 원문이 바뀌었다
+      base = value; proposing = false; recompute(); render();
+    }, () => {
+      if (stamp !== proposeStamp) return;
+      base = emptyProposal(); proposing = false; recompute(); render();
+    });
+  };
+
+  const run = () => {
+    if (proposal.readable === 0) return;
+    lastSent = proposal;
+    // 모듈에는 **정규 문장**을 넘긴다. 원문은 그대로 두고 화면에 나란히 보인다.
+    void adapter.request(proposal.canonicalText);
+  };
 
   const edit = (next) => {
     text = next;
+    propose(next);
     onSource(next);
     // 입력이 바뀌면 이전 결과는 이 입력의 것이 아니다.
-    adapter.markStale(next);
+    adapter.markStale(proposal.canonicalText);
+  };
+
+  /** 운영자가 못 읽은 조항을 직접 지정하거나 지운다 */
+  const override = (clause, choice) => {
+    const key = `${clause.index}:${clause.original}`;
+    if (!choice) overrides.delete(key); else overrides.set(key, choice);
+    recompute();
+    adapter.markStale(proposal.canonicalText);
+    render();
   };
 
   const pick = (preset) => { edit(preset.source); run(); };
+
+  /**
+   * 운영자 직접 보완 상자.
+   *
+   * 우리 조건이 아닌 조항(출석률 등)은 '조건 아님' 만 고를 수 있다 — 출석률을
+   * 활동 완료로 바꿔 넣는 길을 열어 주면 안 된다. 운영자가 이미 붙인 것은
+   * 같은 상자로 되돌린다.
+   */
+  const pickBox = (c) => {
+    const key = `${c.index}:${c.original}`;
+    return el('label.fp-proposal-pick', {}, [
+      el('span.fp-proposal-pick-label', { text: '직접 지정' }),
+      el('select', {
+        'aria-label': `"${c.original}" 조항을 직접 지정`,
+        onChange: (e) => override(c, e.target.value || null),
+      }, [
+        el('option', { value: '', text: '— 선택 —' }),
+        ...MANUAL_CHOICES
+          .filter((choice) => !c.notOurs || choice === 'NOT_A_CONDITION')
+          .map((choice) => el('option', {
+            value: choice,
+            selected: overrides.get(key) === choice ? 'selected' : null,
+            text: MANUAL_LABEL[choice] ?? choice,
+          })),
+      ]),
+    ]);
+  };
+
+  // 첫 제안. source 가 비어 있으면 빈 제안 그대로다.
+  if (text.trim() !== '') propose(text);
 
   const render = () => {
     clear(box);
@@ -120,6 +220,13 @@ export function aiComparePanel({ adapter, source = '', onSource = () => {}, pres
     const result = s.payload?.result ?? null;
     // stale 이면 값은 그리되 **지금 입력의 결과가 아니라고** 못 박는다.
     const stale = s.state === STATE.STALE;
+
+    // 제안을 셋으로 가른다 — 찾은 것 / 조건처럼 썼지만 우리가 못 하는 것 /
+    // 그 밖의 읽지 않은 문장. 운영자가 '조건 아님' 으로 표시한 것은 셋째에
+    // 둔다 — 자기가 한 표시를 보고 되돌릴 수 있어야 한다.
+    const found = proposal.clauses.filter((c) => c.canonical);
+    const notOurs = proposal.clauses.filter((c) => c.notOurs && c.source !== 'operator');
+    const unread = proposal.clauses.filter((c) => !c.canonical && !(c.notOurs && c.source !== 'operator'));
 
     box.append(...[
       el('header.fp-head', {}, [
@@ -159,12 +266,101 @@ export function aiComparePanel({ adapter, source = '', onSource = () => {}, pres
         }),
       ]),
 
+      // ── 읽기 제안 — 모듈에 넘기기 전에 사람이 본다 ─────────────────
+      //
+      // 조항마다 "이렇게 읽었습니다" 를 보여주고, 못 읽은 것은 못 읽었다고
+      // 둔다. 지어내지 않는다. 제안자는 지금 규칙이고 Gemini 포트가 열리면
+      // 이 자리만 바뀐다 — 확인 화면은 그대로다.
+      text.trim() !== ''
+        ? el('section.fp-proposal', { 'aria-label': '읽기 제안' }, [
+          el('header.fp-proposal-head', {}, [
+            el('span.fp-label', { text: '읽기 제안' }),
+            // 출처는 제안자가 말한다. 규칙이면 규칙, Gemini 면 Gemini.
+            el('span.fp-mode', {
+              'data-mode': proposer.id === 'rules' ? 'rules' : 'model',
+              text: proposer.label,
+            }),
+            proposing ? el('span.fp-proposal-note', { text: '제안을 만드는 중…' }) : null,
+          ].filter(Boolean)),
+          // ── 찾은 조건 — 이게 본문이다. "N개 찾았습니다, 맞나요?" ───────
+          //
+          // 실제 안내문은 대부분 조건이 아닌 글이다. 문장마다 "못 읽음" 을 붙여
+          // 두면 화면이 심문처럼 보인다. 찾은 것만 보이고, 나머지는 접는다.
+          el('p.fp-proposal-ask', {
+            text: found.length > 0
+              ? `${found.length}개 조건을 찾았습니다 — 맞나요?`
+              : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
+          }),
+          found.length > 0
+            ? el('ul.fp-proposal-list', {}, found.map((c) => el('li.fp-proposal-row', {
+              'data-read': 'yes', 'data-source': c.source ?? 'none',
+            }, [
+              el('span.fp-proposal-dst', {}, [
+                el('span', { text: CAPABILITY_LABEL[c.capability] ?? c.capability }),
+                el('span.fp-proposal-tag', {
+                  'data-source': c.source,
+                  text: c.source === 'operator' ? '운영자 지정' : c.source === 'rules' ? '규칙' : c.source,
+                }),
+              ]),
+              el('span.fp-proposal-arrow', { 'aria-hidden': 'true', text: '←' }),
+              el('span.fp-proposal-src', { text: `"${c.original}"` }),
+              c.note ? el('span.fp-proposal-note', { text: c.note }) : null,
+              // 운영자가 붙인 것은 되돌릴 수 있어야 한다
+              c.source === 'operator' ? pickBox(c) : null,
+            ].filter(Boolean))))
+            : null,
+
+          // ── 조건처럼 썼지만 우리가 못 하는 것 — 숨기지 않는다 ─────────
+          notOurs.length > 0
+            ? el('div.fp-proposal-warn', {}, [
+              el('p.fp-proposal-ask', {
+                text: `조건처럼 보이지만 CLEAR 가 확인하지 않는 것 ${notOurs.length}개`,
+              }),
+              el('ul.fp-proposal-list', {}, notOurs.map((c) => el('li.fp-proposal-row', { 'data-read': 'no' }, [
+                el('span.fp-proposal-src', { text: `"${c.original}"` }),
+                el('span.fp-proposal-note', { text: c.note ?? '' }),
+              ]))),
+            ])
+            : null,
+
+          // ── 읽지 않은 문장 — 접어 둔다. 빠진 게 있다고 느끼면 펴서 지정 ──
+          unread.length > 0
+            ? el('details.fp-proposal-rest', {}, [
+              el('summary', { text: `조건으로 읽지 않은 문장 ${unread.length}개 보기 · 빠진 조건이 있으면 여기서 직접 지정` }),
+              el('ul.fp-proposal-list', {}, unread.map((c) => el('li.fp-proposal-row', {
+                'data-read': c.capability ? 'dup' : 'no', 'data-source': c.source ?? 'none',
+              }, [
+                el('span.fp-proposal-src', { text: `"${c.original}"` }),
+                c.capability || c.source === 'operator'
+                  ? el('span.fp-proposal-dst', {}, [
+                    el('span', { text: c.capability ? '중복' : '조건 아님' }),
+                    c.source ? el('span.fp-proposal-tag', { 'data-source': c.source, text: c.source === 'operator' ? '운영자 지정' : '규칙' }) : null,
+                  ].filter(Boolean))
+                  : null,
+                c.note ? el('span.fp-proposal-note', { text: c.note }) : null,
+                pickBox(c),
+              ].filter(Boolean)))),
+            ])
+            : null,
+
+          el('p.fp-note', {
+            text: found.length > 0
+              ? '아래 버튼을 누르면 찾은 조건만 구조화합니다. 읽지 않은 문장은 넘기지 않습니다.'
+              : '4가지 조건(강의 활동 완료 · 과제 제출 · 회고 세 항목 · HackerRank 인증서)만 읽을 수 있습니다.',
+          }),
+        ])
+        : null,
+
       el('div.fp-actions', {}, [
         el('button.fp-btn', {
           type: 'button',
-          disabled: s.busy || text.trim() === '' ? 'disabled' : null,
+          disabled: s.busy || proposal.readable === 0 ? 'disabled' : null,
           onClick: run,
-        }, [el('span', { text: s.busy ? '구조화 중…' : '조건 구조화' })]),
+        }, [el('span', {
+          text: s.busy ? '구조화 중…'
+            : proposal.complete ? '이대로 구조화'
+              : proposal.readable > 0 ? '읽은 것만 구조화' : '조건 구조화',
+        })]),
       ]),
 
       el('p', { class: banner.tone ? `fp-note fp-note--${banner.tone}` : 'fp-note', text: banner.text }),
@@ -177,18 +373,25 @@ export function aiComparePanel({ adapter, source = '', onSource = () => {}, pres
       // ── ① 조항과 ② 조건 ─────────────────────────────────────────
       ...(draft ? section('① 쪼갠 조항과 ② 매핑한 조건', [
         stale ? el('p.fp-note.fp-note--wait', { text: '아래는 바뀌기 전 원문 기준입니다.' }) : null,
-        el('ul.fp-list', {}, (draft.conditions ?? []).map((c) => {
+        el('ul.fp-list', {}, (draft.conditions ?? []).map((c, i) => {
           const clause = (draft.clauses ?? []).find((x) => x.id === c.clauseId) ?? null;
+          // 모듈이 받은 정규 문장은 보낸 당시 제안의 i 번째 읽힌 조항이다.
+          // 학원이 쓴 말과 다르면 **둘 다** 보여준다 — 바꿔치기가 아니라 대응이다.
+          const sent = lastSent?.clauses.filter((x) => x.canonical)[i] ?? null;
+          const reworded = sent && clause && sent.original !== clause.text;
           return el('li.fp-row', {}, [
             el('p.fp-row-title', { text: CAPABILITY_LABEL[c.capability] ?? c.capability }),
-            // 원문 근거. 어느 글자에서 나왔는지 그대로 보여준다.
-            clause
-              ? el('blockquote.fp-quote', { text: `"${clause.text}"` })
-              : null,
+            // 원문 근거. 학원이 쓴 그대로를 먼저, 어느 글자에서 나왔는지 그대로.
+            el('blockquote.fp-quote', {
+              text: `"${reworded ? sent.original : (clause?.text ?? '')}"`,
+            }),
             el('dl.fp-pairs', {}, [
+              reworded ? pair('정규 문장으로', clause.text) : null,
+              // 운영자가 손으로 붙인 조건은 그렇다고 남긴다. 규칙이 읽은 것과 다르다.
+              sent?.source === 'operator' ? pair('누가 읽었나', '운영자가 직접 지정') : null,
               pair('읽는 곳', CAPABILITY_SOURCE[c.capability] ?? '미지정'),
               pair('대상', c.target ?? '미지정'),
-              clause ? pair('원문 위치', `${clause.start}–${clause.end}`) : null,
+              clause ? pair('정규 문장 위치', `${clause.start}–${clause.end}`) : null,
             ].filter(Boolean)),
           ]);
         })),

@@ -11,7 +11,15 @@ import { el, clear } from '../../ui/dom.js';
 import { createAdapter, DATA_MODE } from './adapter.js';
 import { aiComparePanel } from './ai-compare.js';
 import { opsMetricsPanel } from './ops-metrics.js';
-import { PRESETS, METRICS_SUMMARY } from './fixtures.js';
+import { PRESETS, COMBOS, METRICS_SUMMARY, REAL_NOTICE } from './fixtures.js';
+
+// ④ 는 **실제 공개 안내문**이다. 우리 조건 넷 중 셋만 있고 HackerRank 는
+// 없다 — 그래서 셋만 찾는 것이 맞는 동작이다. 합성 결과는 그 셋의 조합
+// fixture 에서 나온다.
+const DEMO_PRESETS = [
+  ...PRESETS.map(({ id, label, source }) => ({ id, label, source })),
+  { id: 'real-notice', label: '④ 메타코드 실제 안내문', source: REAL_NOTICE },
+];
 
 /**
  * @param {HTMLElement} root
@@ -23,11 +31,12 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
 
   // 실제 모드는 **일부러 비워 둔다.** run 이 없으니 어댑터가 '미연결' 로
   // 남고, 합성으로 떨어지지 않는다. 그게 보여야 하는 동작이다.
-  // 합성 fixture 는 **예문과 원문이 정확히 같을 때만** 답한다. 직접 고친
-  // 문장은 NO_FIXTURE 로 남는다 — 지어내지 않는다.
+  // 합성 fixture 는 4조건의 **15가지 조합 전부**에 있다. 읽기 제안이 정규
+  // 순서로 만든 문장이면 무엇이든 실제 모듈 결과가 나온다. 읽히지 않은
+  // 조항은 애초에 문장에 안 들어가므로 지어낼 일이 없다.
   const ai = createAdapter({
     mode,
-    fixture: (input) => PRESETS.find((p) => p.source === input)?.payload ?? null,
+    fixture: (input) => COMBOS[input]?.payload ?? null,
     run: null,
   });
   const ops = createAdapter({
@@ -41,7 +50,7 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
   const aiPanel = aiComparePanel({
     adapter: ai,
     source: first,
-    presets: PRESETS.map(({ id, label, source }) => ({ id, label, source })),
+    presets: DEMO_PRESETS,
   });
   const opsPanel = opsMetricsPanel({ adapter: ops });
 
