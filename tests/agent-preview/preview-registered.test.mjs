@@ -10,7 +10,17 @@ async function draft(x){
   const d=await x.request('/preview/generate',x.generate);assert.equal(d.status,200);return x.draftInput(d.body);
 }
 check('actual D runtime startup + signed prepare creates no grant; no-grant generation never reaches provider',async t=>{
-  const x=await registeredFixture(t,{actual:true});
+  // Observe attempted credential access without returning or reading its value.
+  // Even a future grant-guard regression cannot make this test call a provider.
+  const environment=process.env,fetch=globalThis.fetch;
+  let keyReads=0,providerCalls=0;
+  const onRuntimeStart=()=>{process.env=new Proxy(environment,{get(target,name){
+    if(name==='GEMINI_API_KEY'){keyReads++;return undefined;}
+    return Reflect.get(target,name);
+  }});
+  globalThis.fetch=()=>{providerCalls++;throw Error('ACTUAL_PROVIDER_DISABLED_IN_TEST');};};
+  t.after(()=>{process.env=environment;globalThis.fetch=fetch;});
+  const x=await registeredFixture(t,{actual:true,onRuntimeStart});
   assert.equal((await x.request('/preview/ownerRegistration',x.input)).status,404);
   for(const extra of [{release:x.release},{scopeHash:'f'.repeat(64)},{subjectRef:'other'},{courseRef:'other'}])
     assert.equal((await x.request('/preview/prepare',{...x.input,...extra})).status,422);
@@ -22,6 +32,7 @@ check('actual D runtime startup + signed prepare creates no grant; no-grant gene
   assert.deepEqual(x.approvals(),[]);
   assert.equal((await x.request('/preview/generate',x.generate)).status,422);
   assert.equal(x.trace.filter(v=>v.path.endsWith('/generate')).length,1);
+  assert.equal(keyReads,0);assert.equal(providerCalls,0);
 });
 check('explicit OFFLINE runtime runs signed prepare, separate grant, validated draft/review/observation through B HTTPS',async t=>{
   const x=await registeredFixture(t),input=await draft(x);

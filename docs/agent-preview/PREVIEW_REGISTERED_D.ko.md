@@ -13,7 +13,7 @@ Base `4705a3ffc197bcbe4bb127ece40f4ef429b0dc72`. 이 문서를 포함한 커밋�
 5. 브라우저 `/preview/prepare`는 exact `{version:'clear-self-preview-context.1',previewContextRef}`만 받는다. B가 owner export 단계 및 현재 권한을 재확인하고 signed `/v1/preview/prepare`에 exact registration body(context/release/toolBinding/capabilities/dataMode)를 보낸다. 승인 레코드 생성 기능은 없다.
 6. **별도 승인 원장**에서 해당 `approvalRef` / bodyHash / approvalBindingHash / expiry에 대한 승인이 필요하다. prepare 성공을 호출 승인으로 취급하지 않는다. 그 다음 기존 generate → review → observe HTTP 흐름을 수행한다.
 
-실제 runtime 검사는 D의 수정 없는 `startPeerRuntime`에 새 private JSON 및 공개 합성 HMAC key 파일을 제공했다. runtime은 loopback HTTP를 열고, 테스트 전용 loopback TLS proxy가 exact Host를 보존했다. B는 사설 CA와 IP 인증서 검증을 유지했다. 이 검사는 ACTUAL_GEMINI 모드의 prepare와 **승인 없는 generate 거부까지만** 수행했다. 실제 API 키/모델 요청은 사용하지 않았다.
+실제 runtime 검사는 D의 수정 없는 `startPeerRuntime`에 새 private JSON 및 공개 합성 HMAC key 파일을 제공했다. runtime은 loopback HTTP를 열고, 테스트 전용 loopback TLS proxy가 exact Host를 보존했다. B는 사설 CA와 IP 인증서 검증을 유지했다. 이 검사는 ACTUAL_GEMINI 모드의 prepare와 **승인 없는 generate 거부까지만** 수행했다. 실제 API 키/모델 요청은 사용하지 않았다. runtime 시작 직전에 테스트 전용 환경 접근 감시를 설치해 GEMINI_API_KEY 값을 반환하지 않고 접근 횟수를 세며, provider fetch는 항상 차단한다. 실제 startup/prepare/no-grant 검사에서 키 접근0/provider 호출0을 확인했다 (`/tmp/clear-registered-key-guard-final.log`).
 
 ## receipt와 실패 상태
 

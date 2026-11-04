@@ -33,7 +33,7 @@ async function loadD(){
   const modules=await Promise.all(['peer-engine','peer-http','peer-runtime','peer-receipts','peer-release','store','limits'].map(name=>import(pathToFileURL(join(root,'deploy/agent-preview',name+'.mjs')))));
   return Object.assign({},...modules);
 }
-export async function registeredFixture(t,{actual=false,installed=false,tamper,failModel=false}={}){
+export async function registeredFixture(t,{actual=false,installed=false,tamper,failModel=false,onRuntimeStart}={}){
   const d=await loadD(),c=installed?loadInstalledMoodle():null;
   const origin=`https://127.0.0.1:${await availablePort()}`;
   const f=await studentFixture(t,{origin,clock:()=>Math.floor(Date.now()/1000),sourceProfile:c?.profile??{targetRef:toolBinding.observationTargetRef}});
@@ -105,6 +105,7 @@ export async function registeredFixture(t,{actual=false,installed=false,tamper,f
     for(const [path,value] of [[releaseFile,release],[registrationFile,registration]])writeFileSync(path,JSON.stringify(value),{mode:0o600});
     writeFileSync(config.sharedSecretFile,key.toString('hex'),{mode:0o600});
     const previous=process.env.CLEAR_PEER_REGISTRATION;process.env.CLEAR_PEER_REGISTRATION=registrationFile;
+    onRuntimeStart?.();
     let runtime;try{runtime=await d.startPeerRuntime(releaseFile);}finally{if(previous===undefined)delete process.env.CLEAR_PEER_REGISTRATION;else process.env.CLEAR_PEER_REGISTRATION=previous;}
     cleanup.push(()=>runtime.stop());
     const proxy=createServer(tls,(req,res)=>{
