@@ -1,5 +1,14 @@
 # 개발 현황
 
+## 2026-11-04 조건 미리보기와 운영 지표
+
+main에서 재현할 수 있는 범위는 기존 시작 절차와 ProofAdapter 합성 검사 36개다. 아래 변경은 **develop 기준, main 미반영**이다. 원격 확인 **2026-11-04 11:14 KST** 기준 [main 481b9a1](https://github.com/gw020328-oss/clear-education-v4/commit/481b9a11284c63b428fbfb05feafca926293ae0c), [develop a5653d6](https://github.com/gw020328-oss/clear-education-v4/commit/a5653d64b939da9a1ededc85744d30b91c759f8f).
+
+- **조건 미리보기 코어 병합**. [#144](https://github.com/gw020328-oss/clear-education-v4/pull/144)는 제한 문법을 조건 계획으로 검증하는 코어와 공개 합성 모듈 예제를 추가했다. 범용 자연어 해석과 실제 Gemini 호출은 미검증 범위다. [공개 검증 보고서](https://github.com/gw020328-oss/clear-education-v4/blob/a5653d64b939da9a1ededc85744d30b91c759f8f/docs/agent-preview/VERIFICATION.ko.md)의 로컬 검증과 [최종 head 8e5a48f의 공통 CI 4개 성공](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41681536205)을 구분한다.
+- **운영 지표 기반 병합**. [#146](https://github.com/gw020328-oss/clear-education-v4/pull/146)의 지표 요약 어댑터와 [#145](https://github.com/gw020328-oss/clear-education-v4/pull/145)의 권한이 확인된 신청·실행별 관찰 조회가 병합됐다. 부분 관찰 수치는 기록 범위에서만 해석하며, 미제공 값과 0을 구분한다. 기관 전체 성과나 실제 운영 절감 효과는 미검증이다. [DTO 인계](https://github.com/gw020328-oss/clear-education-v4/blob/a5653d64b939da9a1ededc85744d30b91c759f8f/docs/operational-metrics/FRONTEND_HANDOFF.ko.md), [#146 head b706bb0 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41610076646), [#145 head 1fb7092 공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41616481557).
+- **팀원 화면과 남은 작업**. [#139](https://github.com/gw020328-oss/clear-education-v4/pull/139)는 역할별 기존 화면 연결과 최신 검토 조회 대기를 병합했다([head 8e70b83 공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41562406778)). 운영자 조건 미리보기 [#147](https://github.com/gw020328-oss/clear-education-v4/pull/147), 실행 권한의 시계 경계 보완 [#148](https://github.com/gw020328-oss/clear-education-v4/pull/148), 두 변경의 통합 [#149](https://github.com/gw020328-oss/clear-education-v4/pull/149)는 확인 시점에 열려 있다. #149 head 6298dc4에는 [취소된 검사](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41751519259)가 있다. 이번 갱신은 실제 성적 증명, 유료 호출, 사용자 지급, 배포의 새 검증을 포함하지 않는다.
+
+
 ## 2026-11-03 팀원 화면과 신청 동의 현황
 
 main의 기존 시작 명령과 ProofAdapter 합성 검사 36개가 공개 재현 범위다. 아래 팀원 UI와 동의·영수증 변경은 **develop 기준, main 미반영**이다. 원격 확인 **2026-11-03 17:19 KST** 기준 [main df840a4](https://github.com/gw020328-oss/clear-education-v4/commit/df840a45721ebcfbba193f938865403124af34ef), [develop e7f77ed](https://github.com/gw020328-oss/clear-education-v4/commit/e7f77ed2105234ca9be6f2a0027474195c342c1b).
