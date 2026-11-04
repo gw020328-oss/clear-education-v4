@@ -46,8 +46,10 @@ try {
 
     $client = new client($config, $scope, (int)$USER->id, $role);
     $attempt = $SESSION->local_clearbridge_login_intent ?? null;
-    $intent = is_array($attempt) && ($attempt['run'] ?? null) === $config['ownerRunId'] && ($attempt['role'] ?? null) === $role
-        ? ($attempt['intent'] ?? null) : null;
+    $intent = login::attempt_intent($attempt, $scope, $role);
+    // A changed or pre-upgrade mapping cannot authorize even an end of the old intent.
+    // Explicit start may create a new intent; the old owner attempt retains its original expiry.
+    current::require_rule($operation === 'start' || $attempt === null || $intent !== null);
     if ($operation === 'start') {
         current::require_rule(login::hex($_POST['challenge']));
         if (login::hex($intent)) {
@@ -58,7 +60,8 @@ try {
         $result = $client->request('start');
         $intent = $result['requestRef'];
         $proofs = client::proofs($config['proofKey'], $config['ownerRunId'], $intent, $result['launchCode'], $_POST['challenge']);
-        $SESSION->local_clearbridge_login_intent = ['run' => $config['ownerRunId'], 'role' => $role, 'intent' => $intent];
+        $SESSION->local_clearbridge_login_intent = ['run' => $config['ownerRunId'], 'role' => $role, 'intent' => $intent,
+            'scopeDigest' => login::scope_digest($scope)];
         $reply = ['status' => 'WAITING', 'expiresAtExclusive' => $result['expiresAtExclusive'],
             'launchCode' => $result['launchCode']] + $proofs;
     } else if (login::hex($intent)) {

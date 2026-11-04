@@ -61,6 +61,22 @@ final class course_login_authority {
         return $user === $scope['subjectUserId'] ? 'PARTICIPANT' : 'COURSE_OPERATOR';
     }
 
+    /** Canonical fingerprint of the complete, validated scalar scope. Kept inside Moodle. */
+    public static function scope_digest(array $scope): string {
+        ksort($scope, SORT_STRING);
+        return hash('sha256', json_encode($scope, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
+    }
+
+    public static function attempt_intent(mixed $attempt, array $scope, string $role): ?string {
+        if (!course_read_client::exact_keys($attempt, ['run', 'role', 'intent', 'scopeDigest'])
+                || $attempt['run'] !== $scope['ownerRunId'] || $attempt['role'] !== $role
+                || !self::hex($attempt['intent']) || !self::hex($attempt['scopeDigest'])
+                || !hash_equals($attempt['scopeDigest'], self::scope_digest($scope))) {
+            return null;
+        }
+        return $attempt['intent'];
+    }
+
     public static function capability(string $role): string {
         return $role === 'PARTICIPANT' ? 'local/clearbridge:view' : 'local/clearbridge:configure';
     }
@@ -193,7 +209,8 @@ final class course_login_authority {
         $actor = $q['role'] === 'PARTICIPANT' ? $scope['participantActorRef'] : $scope['operatorActorRef'];
         $sessionref = hash_hmac('sha256', implode("\n", ['CLEAR-MOODLE-LOGIN-SESSION-REF-1', $q['ownerRunId'],
             $scope['installationRef'], $scope['courseRef'], $scope['subjectRef'], $actor, $q['role'],
-            $record['sessionRowId'], $record['sessionCreatedAt'], $record['sessionBackend']]), $config['sessionKey']);
+            $record['sessionRowId'], $record['sessionCreatedAt'], $record['sessionBackend'],
+            self::scope_digest($scope)]), $config['sessionKey']);
         self::fence($record);
         return ['ownerRunId' => $q['ownerRunId'], 'role' => $q['role'], 'installationRef' => $scope['installationRef'],
             'courseRef' => $scope['courseRef'], 'subjectRef' => $scope['subjectRef'], 'actorRef' => $actor,

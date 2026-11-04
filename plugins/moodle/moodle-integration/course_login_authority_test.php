@@ -19,7 +19,7 @@ namespace {
     use local_clearbridge\course_login_authority as Login;
     use local_clearbridge\course_login_client as Client;
 
-    function login_record(string $operation = 'start', string $role = 'PARTICIPANT'): array {
+    function login_record(string $operation = 'start', string $role = 'PARTICIPANT', array $mapping = []): array {
         reset_bridge();
         unset($GLOBALS['CFG']->session_handler_class);
         $GLOBALS['CFG']->wwwroot = 'http://moodle.test';
@@ -27,6 +27,7 @@ namespace {
             'moodleOrigin' => 'http://moodle.test', 'courseId' => 7, 'courseRef' => 'course-1',
             'subjectUserId' => 42, 'subjectRef' => 'student-1', 'participantActorRef' => 'student-1',
             'operatorUserId' => 43, 'operatorActorRef' => 'teacher-1', 'expiresAtExclusive' => 2000000300];
+        $GLOBALS['f']['fixedscope'] = array_replace($GLOBALS['f']['fixedscope'], $mapping);
         $GLOBALS['DB'] = new class($GLOBALS['DB']) {
             public function __construct(private readonly object $inner) {}
             public function get_record($table, $where, $fields) {
@@ -112,6 +113,46 @@ namespace {
         expect($teacher['actorRef'] === 'teacher-1' && $teacher['subjectRef'] === 'student-1'
             && $teacher['sessionRef'] !== $answer['sessionRef'], 'distinct operator authority');
         echo "PASS teacher role and subject isolation\n";
+
+        foreach (['subjectUserId' => 'COURSE_OPERATOR', 'operatorUserId' => 'PARTICIPANT'] as $field => $role) {
+            $registry->revoke($q['moodleAuthorityRef'], $q['expiresAtExclusive']);
+            [$q, $r] = login_record('status', $role);
+            $registry->publish($r);
+            $before = Login::respond('status', $q, $config, $registry);
+            $registry->revoke($q['moodleAuthorityRef'], $q['expiresAtExclusive']);
+            // Keep run, public refs and the current actor's session identical.
+            [$q, $changed] = login_record('status', $role, [$field => 44]);
+            $registry->publish($changed);
+            $after = Login::respond('status', $q, $config, $registry);
+            expect($after['sessionRef'] !== $before['sessionRef'], 'full mapping must change owner identity');
+            unset($before['sessionRef'], $after['sessionRef']);
+            expect($after === $before && count($after) === 7, 'only opaque sessionRef changes, no new public IDs');
+            echo "PASS $field change rejects old owner identity with the same actor session\n";
+        }
+
+        [$q, $r] = login_record('finish', 'COURSE_OPERATOR');
+        $scope = $r['scope'];
+        $attempt = ['run' => 'run-1', 'role' => 'COURSE_OPERATOR', 'intent' => $q['intentRef'],
+            'scopeDigest' => Login::scope_digest($scope)];
+        expect(Login::attempt_intent($attempt, array_reverse($scope, true), 'COURSE_OPERATOR') === $q['intentRef'],
+            'same scope in different JSON key order remains usable');
+        $legacy = $attempt;
+        unset($legacy['scopeDigest']);
+        expect(Login::attempt_intent($legacy, $scope, 'COURSE_OPERATOR') === null, 'legacy intent needs new start');
+        foreach (['subjectUserId' => 44, 'operatorUserId' => 44, 'courseId' => 8] as $field => $value) {
+            $changed = array_replace($scope, [$field => $value]);
+            expect(Login::attempt_intent($attempt, $changed, 'COURSE_OPERATOR') === null,
+                'changed mapping exposes no old intent for status, finish, end or start cleanup');
+            expect($attempt['scopeDigest'] === Login::scope_digest($scope),
+                'rejecting the changed scope leaves the original attempt pinned');
+            echo "PASS $field change blocks SESSION intent reuse including old-intent end\n";
+        }
+        foreach ($scope as $field => $value) {
+            $changed = $scope;
+            $changed[$field] = is_int($value) ? $value + 1 : $value . '-changed';
+            expect(Login::scope_digest($changed) !== $attempt['scopeDigest'], 'every validated field is bound');
+        }
+        echo "PASS whole scope canonical binding, same-scope retry and legacy rejection\n";
     } finally {
         unset($GLOBALS['login_flush_hook']);
         cleanup_registry($path);
