@@ -5,7 +5,10 @@ import {requireRule as check} from '../policy/values.mjs';
 // registry nor authority: the intent's synchronous fence remains authoritative.
 export function createMoodleCommandScope({enabled, reserve}) {
   const requests = new AsyncLocalStorage();
-  const sync = value => { check(!value || typeof value.then !== 'function','MOODLE_COMMAND_ASYNC_COMMIT'); return value; };
+  const sync = value => {
+    if(value && typeof value.then === 'function') { Promise.resolve(value).catch(()=>{}); check(false,'MOODLE_COMMAND_ASYNC_COMMIT'); }
+    return value;
+  };
   return Object.freeze({
     async run(input, work) {
       if (!enabled() || input.command.method !== 'POST') return work();

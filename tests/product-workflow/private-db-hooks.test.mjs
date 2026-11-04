@@ -36,3 +36,11 @@ test('Promise hooks are rejected, before rolls back and after remains committed'
  assert.throws(()=>f.transaction(()=>f.db.exec('INSERT INTO effects VALUES(2)'),{afterCommit:()=>Promise.resolve()}),/ASYNC_HOOK/);
  assert.equal(f.db.prepare('SELECT count(*) AS n FROM effects').get().n,1);
 });
+test('rejected Promise hooks are observed without unhandled rejection or rollback after COMMIT',async t=>{
+ const f=fixture(t),unhandled=[],listener=e=>unhandled.push(e.message);process.on('unhandledRejection',listener);t.after(()=>process.off('unhandledRejection',listener));
+ assert.throws(()=>f.transaction(()=>f.db.exec('INSERT INTO effects VALUES(1)'),{beforeCommit:()=>Promise.reject(Error('before rejected'))}),/ASYNC_HOOK/);
+ assert.equal(f.db.prepare('SELECT count(*) AS n FROM effects').get().n,0);
+ assert.throws(()=>f.transaction(()=>f.db.exec('INSERT INTO effects VALUES(2)'),{afterCommit:()=>Promise.reject(Error('after rejected'))}),/ASYNC_HOOK/);
+ assert.equal(f.db.prepare('SELECT count(*) AS n FROM effects').get().n,1);assert.equal(f.db.isTransaction,false);
+ await new Promise(r=>setImmediate(r));assert.deepEqual(unhandled,[]);
+});

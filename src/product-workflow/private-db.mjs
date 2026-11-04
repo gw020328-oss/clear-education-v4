@@ -8,7 +8,12 @@ export function openPrivateDb(directory,name,environment,schema,tables){
   const path=join(root,name);try{closeSync(openSync(path,constants.O_CREAT|constants.O_EXCL|constants.O_WRONLY|constants.O_NOFOLLOW,0o600));}catch(e){if(e.code!=='EEXIST')throw e;}
   const f=lstatSync(path);check(f.isFile()&&!f.isSymbolicLink()&&f.nlink===1&&f.uid===process.getuid()&&(f.mode&0o777)===0o600,'WORKFLOW_DB_FILE');
   const db=new DatabaseSync(path,{timeout:5000,allowExtension:false});
-  const sync=value=>{check(!value||typeof value.then!=='function','WORKFLOW_DB_ASYNC_HOOK');};
+  const sync=value=>{
+    if(value&&typeof value.then==='function'){
+      Promise.resolve(value).catch(()=>{});
+      check(false,'WORKFLOW_DB_ASYNC_HOOK');
+    }
+  };
   const transaction=(fn,{beforeCommit,afterCommit}={})=>{
     check((beforeCommit===undefined||typeof beforeCommit==='function')
       &&(afterCommit===undefined||typeof afterCommit==='function'),'WORKFLOW_DB_HOOK');

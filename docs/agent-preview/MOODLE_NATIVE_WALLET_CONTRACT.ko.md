@@ -189,7 +189,9 @@ AsyncLocalStorage 인스턴스로 연결하고 DB hook은 해당 transaction 호
 거부한다. savepoint RELEASE를 COMMIT으로 보지 않으며 business `{error}`의
 invalidation-only COMMIT는 성공 소비가 아닌 UNKNOWN으로 닫는다.
 
-회고 승인은 두 기존 exclusive 파일 각각 직전 fence를 검사한다. 첫 durable effect
+회고 승인은 두 기존 exclusive 파일의 temp write/fsync 이후, 실제 linkSync 게시
+직전 beforePublish fence를 검사한다. writer의 rename 경로도 같은 optional 동기 hook을
+지원한다. 비동기 hook은 rejection을 관측한 뒤 동기 계약 오류로 거부한다. 첫 durable effect
 뒤 부분 실패 시 파일을 보존하고 재예약을 열지 않는다. 결과 유실은 같은 grant를
 재전송하지 않고 기존 durable operation receipt를 조회한다. 재시작 시 intent는
 폐기되므로 새 인증과 기존 결과 확인이 필요하다. source/AI 호출 및 실제 지급은

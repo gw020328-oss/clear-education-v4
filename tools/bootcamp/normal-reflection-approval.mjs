@@ -103,8 +103,8 @@ export function createNormalReflectionApproval({directory,config,authorize,getPr
       validateNormalReflectionClearance({packet:p,approval,codeState:code,day:currentDay()});
       // Synchronous exclusive writes; a partial failure is retained and cannot be retried into a new grant.
       try{
-        commandScope?.beforeFile();atomicPrivate(paths.evidence,evidence,{exclusive:true});commandScope?.afterFile();
-        commandScope?.beforeFile();atomicPrivate(paths.approval,approval,{exclusive:true});commandScope?.afterFile();
+        atomicPrivate(paths.evidence,evidence,{exclusive:true,beforePublish:()=>commandScope?.beforeFile()});commandScope?.afterFile();
+        atomicPrivate(paths.approval,approval,{exclusive:true,beforePublish:()=>commandScope?.beforeFile()});commandScope?.afterFile();
         commandScope?.filesCommitted();
       }
       catch{check(false,'BC_NORMAL_AI_APPROVAL_RECORD_FAILED');}
