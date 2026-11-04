@@ -21,7 +21,7 @@ final class course_login_client {
     public function request(string $operation, array $fields = []): array {
         $start = hrtime(true);
         $now = time();
-        $q = ['version' => course_login_authority::VERSION, 'requestRef' => bin2hex(random_bytes(32)),
+        $q = ['version' => course_login_authority::request_version($operation), 'requestRef' => bin2hex(random_bytes(32)),
             'ownerRunId' => $this->config['ownerRunId'], 'moodleAuthorityRef' => bin2hex(random_bytes(32)),
             'role' => $this->role, 'expiresAtExclusive' => min($now + 5, $this->scope['expiresAtExclusive'])] + $fields;
         course_login_authority::request_shape($operation, $q);
@@ -43,6 +43,16 @@ final class course_login_client {
     }
 
     public static function response_shape(string $operation, array $q, array $reply, int $now, int $runend): void {
+        if ($operation === 'authorize-command') {
+            course_login_authority::request_shape($operation, $q);
+            course_authority_currentness::require_rule(course_read_client::exact_keys($reply,
+                ['version', 'requestRef', 'status', 'expiresAtExclusive'])
+                && $reply['version'] === course_login_authority::COMMAND_VERSION
+                && $reply['requestRef'] === $q['requestRef'] && $reply['status'] === 'AUTHORIZED'
+                && $reply['expiresAtExclusive'] === $q['expiresAtExclusive']
+                && $reply['expiresAtExclusive'] > $now && $reply['expiresAtExclusive'] <= $runend);
+            return;
+        }
         $start = $operation === 'start';
         course_authority_currentness::require_rule(course_read_client::exact_keys($reply,
             ['version', 'requestRef', 'status', 'expiresAtExclusive', $start ? 'launchCode' : 'handback'])

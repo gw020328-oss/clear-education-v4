@@ -43,7 +43,7 @@ namespace {
         };
         $actor = $role === 'PARTICIPANT' ? 42 : 43;
         $GLOBALS['USER']->id = $actor;
-        $q = ['version' => Login::VERSION, 'requestRef' => str_repeat('1', 64), 'ownerRunId' => 'run-1',
+        $q = ['version' => Login::request_version($operation), 'requestRef' => str_repeat('1', 64), 'ownerRunId' => 'run-1',
             'moodleAuthorityRef' => str_repeat('2', 64), 'role' => $role, 'expiresAtExclusive' => 2000000005];
         if ($operation !== 'start') {
             $q['intentRef'] = str_repeat('3', 64);
@@ -51,10 +51,14 @@ namespace {
         if ($operation === 'finish') {
             $q += ['handback' => str_repeat('4', 64), 'finishProof' => str_repeat('5', 64)];
         }
+        if ($operation === 'authorize-command') {
+            $q['commandHash'] = str_repeat('6',64);
+        }
         $record = Login::capture($operation, $q, Login::scope('run-1'), $actor, 10000000000, 2000000000);
         return [$q, $record];
     }
 
+    if (defined('CLEAR_LOGIN_AUTHORITY_LIBRARY_ONLY')) { return; }
     $proof = Client::proofs(str_repeat('ab', 32), 'fixture-run', str_repeat('11', 32),
         str_repeat('22', 32), str_repeat('33', 32));
     expect($proof === ['browserProof' => 'da639afbb788b1f9bc2db5fa0c5afa6fa251282213be4d763be286c07b0cb8ca',

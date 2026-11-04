@@ -23,12 +23,14 @@ try {
     current::require_rule(($_SERVER['HTTP_ORIGIN'] ?? '') === $origin
         && empty($_SERVER['HTTP_AUTHORIZATION']) && empty($_SERVER['PHP_AUTH_USER']));
     $operation = $_POST['operation'] ?? '';
-    current::require_rule(in_array($operation, ['start', 'status', 'finish', 'end'], true));
+    current::require_rule(in_array($operation, ['start', 'status', 'finish', 'end', 'authorize-command'], true));
     $fields = ['id', 'sesskey', 'operation'];
     if ($operation === 'start') {
         $fields[] = 'challenge';
     } else if ($operation === 'finish') {
         $fields[] = 'finishProof';
+    } else if ($operation === 'authorize-command') {
+        $fields[] = 'commandHash';
     } else {
         $fields[] = 'intentTarget';
     }
@@ -37,6 +39,8 @@ try {
         && file_get_contents('php://input', false, null, 0, 1025) === http_build_query($_POST, '', '&', PHP_QUERY_RFC1738));
     if (in_array($operation, ['status', 'end'], true)) {
         current::require_rule(login::hex($_POST['intentTarget']));
+    } else if ($operation === 'authorize-command') {
+        current::require_rule(login::hex($_POST['commandHash']));
     }
     require_sesskey();
     $config = login::config();
@@ -55,6 +59,7 @@ try {
     // A changed or pre-upgrade mapping cannot authorize even an end of the old intent.
     // Explicit start may create a new intent; the old owner attempt retains its original expiry.
     current::require_rule($operation === 'start' || $attempt === null || $intent !== null);
+    current::require_rule($operation !== 'authorize-command' || login::hex($intent));
     if ($operation === 'start') {
         current::require_rule(login::hex($_POST['challenge']));
         if (login::hex($intent)) {
@@ -82,12 +87,18 @@ try {
             $candidate = $client->request('status', $fields);
             current::require_rule($candidate['status'] === 'RETURN_REQUIRED');
             $fields += ['handback' => $candidate['handback'], 'finishProof' => $_POST['finishProof']];
+        } else if ($operation === 'authorize-command') {
+            // A's authorizeCommand must confirm CONNECTED and the bound CLEAR context.
+            // C never treats UI state, a status projection or this hash alone as write authority.
+            $fields['commandHash'] = $_POST['commandHash'];
         }
         $result = $client->request($operation, $fields);
         if ($operation === 'end') {
             unset($SESSION->local_clearbridge_login_intent);
         }
-        $reply = ['status' => $result['status']];
+        $reply = $operation === 'authorize-command'
+            ? array_intersect_key($result, array_flip(['status', 'requestRef', 'expiresAtExclusive']))
+            : ['status' => $result['status']];
     }
     $status = 200;
 } catch (Throwable $error) {

@@ -127,7 +127,7 @@ final class course_authority_registry {
     public function lookup(array $request): ?array {
         return $this->transaction(function (&$state, $now) use ($request): ?array {
             if ($this->login) {
-                course_login_authority::request_shape('start', $request);
+                course_login_authority::base_shape($request);
             } else {
                 course_authority_currentness::request_shape($request);
             }

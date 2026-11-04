@@ -32,11 +32,13 @@ namespace local_clearbridge {
     function get_role_definitions($roles) { return ['cap' => 1]; }
     function get_role_definitions_uncached($roles) { return ['cap' => $GLOBALS['f']['definition']]; }
     // Transport shim isolates only page lease lifecycle. It is not TLS testing.
-    function curl_init($url) { return new \stdClass(); }
+    function curl_init($url) { return (object)['url'=>$url]; }
     function curl_setopt_array($handle, $options) { $handle->options = $options; return true; }
     function curl_exec($handle) {
         $request = json_decode($handle->options[CURLOPT_POSTFIELDS], true);
         $GLOBALS['f']['lastRequest'] = $request;
+        $GLOBALS['f']['lastUrl'] = $handle->url;
+        $GLOBALS['f']['lastHeaders'] = $handle->options[CURLOPT_HTTPHEADER];
         ($GLOBALS['f']['owner'])();
         if ($GLOBALS['f']['transportfail']) { return false; }
         $reply = ['version' => 'clear-moodle-course-read-response.1', 'requestRef' => $request['requestRef'],
@@ -44,6 +46,9 @@ namespace local_clearbridge {
             'expiresAtExclusive' => $request['expiresAtExclusive'], 'evidence' => ['fixture' => true],
             'payment' => ['version' => $GLOBALS['f']['paymentversion'] ?? 'clear-moodle-payment-status.1',
                 'requestRef' => $request['requestRef'], 'expiresAtExclusive' => $request['expiresAtExclusive']]];
+        if (isset($GLOBALS['f']['loginreply'])) {
+            $reply = $GLOBALS['f']['loginreply'];
+        }
         $raw = json_encode($reply);
         ($handle->options[CURLOPT_WRITEFUNCTION])($handle, $raw);
         return true;

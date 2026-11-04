@@ -20,6 +20,8 @@ namespace local_clearbridge {
                 'status' => ['status' => 'RETURN_REQUIRED', 'handback' => str_repeat('7',64)],
                 'finish' => ['status' => 'CONNECTED'],
                 'end' => ['status' => 'UNAVAILABLE'],
+                'authorize-command' => ['version'=>'clear-moodle-command.1','requestRef'=>str_repeat('e',64),
+                    'status'=>'AUTHORIZED','expiresAtExclusive'=>time()+5],
             };
         }
     }
@@ -89,13 +91,14 @@ try {
         $role=$label==='operator'?'PARTICIPANT':'COURSE_OPERATOR';
         $attempt=['run'=>'run-1','role'=>$role,'intent'=>str_repeat('1',64),'scopeDigest'=>$digest];
         if ($label==='legacy') { unset($attempt['scopeDigest']); }
-        foreach (['status','finish','end','start'] as $operation) {
+        foreach (['status','finish','end','start','authorize-command'] as $operation) {
             $current=array_replace($scope,$change);
             file_put_contents($root.'/case.json',json_encode(['scope'=>$current,'attempt'=>$attempt,
                 'user'=>$role==='PARTICIPANT'?42:43]));
             $body=['id'=>(string)$current['courseId'],'sesskey'=>'fixture','operation'=>$operation];
             if ($operation==='start') { $body['challenge']=str_repeat('2',64); }
             if ($operation==='finish') { $body['finishProof']=str_repeat('3',64); }
+            if ($operation==='authorize-command') { $body['commandHash']=str_repeat('6',64); }
             if (in_array($operation,['end','status'],true)) { $body['intentTarget']=$target($scope,$role,$attempt['intent']); }
             $context=stream_context_create(['http'=>['method'=>'POST','ignore_errors'=>true,
                 'header'=>"Origin: http://127.0.0.1:18891\r\nContent-Type: application/x-www-form-urlencoded;charset=UTF-8\r\n",
@@ -128,9 +131,15 @@ try {
                         throw new RuntimeException('new target not pinned');
                     }
                 }
+                if ($operation==='authorize-command' && (count($reply)!==3 || $reply['status']!=='AUTHORIZED'
+                        || $reply['requestRef']!==str_repeat('e',64) || !is_int($reply['expiresAtExclusive'])
+                        || $result['attempt']!==$attempt || $result['calls']!==[['operation'=>'authorize-command',
+                            'fields'=>['intentRef'=>$attempt['intent'],'commandHash'=>str_repeat('6',64)]]])) {
+                    throw new RuntimeException('command did not use server SESSION intent with exact browser response');
+                }
             }
         }
-        echo "PASS actual PHP dispatch $label scope across status/finish/end/start\n";
+        echo "PASS actual PHP dispatch $label scope across status/finish/end/start/authorize-command\n";
     }
     $send = static function(array $case, string $operation, array $extra = []) use ($root): array {
         file_put_contents($root.'/case.json',json_encode($case));
@@ -181,6 +190,19 @@ try {
         }
     }
     echo "PASS targeted normal end and repeated end/status are isolated and idempotent without a new registry\n";
+    [$reply,$state,$status]=$send($case,'authorize-command',['commandHash'=>str_repeat('6',64)]);
+    if ($status!==403 || $state['calls']!==[]) { throw new RuntimeException('command without current intent'); }
+    $case['attempt']=$old;
+    foreach ([[],['commandHash'=>'0x'.str_repeat('6',64)],['commandHash'=>str_repeat('A',64)],
+            ['commandHash'=>str_repeat('6',64),'intentRef'=>str_repeat('8',64)],
+            ['commandHash'=>str_repeat('6',64),'commandBinding'=>str_repeat('8',64)],
+            ['commandHash'=>str_repeat('6',64),'body'=>'{}']] as $extra) {
+        [$reply,$state,$status]=$send($case,'authorize-command',$extra);
+        if ($status!==403 || $state['calls']!==[] || $state['attempt']!==$old) {
+            throw new RuntimeException('invalid command browser DTO accepted');
+        }
+    }
+    echo "PASS command without SESSION intent or with malformed/extra caller binding/body cannot authorize\n";
 } finally {
     proc_terminate($server);
     proc_close($server);

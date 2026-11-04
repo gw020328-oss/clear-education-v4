@@ -6,6 +6,7 @@ defined('MOODLE_INTERNAL') || die();
 /** Pre-application Moodle login authority. Display leases cannot enter this registry. */
 final class course_login_authority {
     public const VERSION = 'clear-moodle-login-intent.1';
+    public const COMMAND_VERSION = 'clear-moodle-command.1';
     public const PATH = '/local/clearbridge/login_authority.php';
     private const BASE = ['version', 'requestRef', 'ownerRunId', 'moodleAuthorityRef', 'role', 'expiresAtExclusive'];
 
@@ -109,18 +110,33 @@ final class course_login_authority {
         }
     }
 
-    public static function request_shape(string $operation, array $q): void {
-        course_authority_currentness::require_rule(in_array($operation, ['start', 'status', 'end', 'finish'], true));
-        $tail = match ($operation) {
-            'start' => [],
-            'finish' => ['intentRef', 'handback', 'finishProof'],
-            default => ['intentRef'],
-        };
-        course_authority_currentness::require_rule(course_read_client::exact_keys($q, array_merge(self::BASE, $tail))
-            && $q['version'] === self::VERSION && self::hex($q['requestRef']) && self::hex($q['moodleAuthorityRef'])
+    public static function request_version(string $operation): string {
+        course_authority_currentness::require_rule(in_array($operation,
+            ['start', 'status', 'end', 'finish', 'authorize-command'], true));
+        return $operation === 'authorize-command' ? self::COMMAND_VERSION : self::VERSION;
+    }
+
+    /** Registry lookup uses the exact common header; an operation digest still binds all command fields. */
+    public static function base_shape(array $q): void {
+        course_authority_currentness::require_rule(course_read_client::exact_keys($q, self::BASE)
+            && in_array($q['version'], [self::VERSION, self::COMMAND_VERSION], true)
+            && self::hex($q['requestRef']) && self::hex($q['moodleAuthorityRef'])
             && course_authority_currentness::ref($q['ownerRunId'])
             && in_array($q['role'], ['PARTICIPANT', 'COURSE_OPERATOR'], true)
             && course_authority_currentness::positive($q['expiresAtExclusive']));
+    }
+
+    public static function request_shape(string $operation, array $q): void {
+        $version = self::request_version($operation);
+        $tail = match ($operation) {
+            'start' => [],
+            'finish' => ['intentRef', 'handback', 'finishProof'],
+            'authorize-command' => ['intentRef', 'commandHash'],
+            default => ['intentRef'],
+        };
+        self::base_shape(array_intersect_key($q, array_flip(self::BASE)));
+        course_authority_currentness::require_rule(course_read_client::exact_keys($q, array_merge(self::BASE, $tail))
+            && $q['version'] === $version);
         foreach ($tail as $key) {
             course_authority_currentness::require_rule(self::hex($q[$key]));
         }
@@ -138,10 +154,11 @@ final class course_login_authority {
             'request', 'operation', 'digest', 'scope', 'courseId', 'actorUserId', 'subjectUserId',
             'sessionRowId', 'sessionCreatedAt', 'sessionBackend', 'startedMonotonic', 'startedWall',
         ]) && is_array($r['request']) && is_array($r['scope']) && self::hex($r['digest'])
-            && in_array($r['operation'], ['start', 'status', 'end', 'finish'], true)
+            && in_array($r['operation'], ['start', 'status', 'end', 'finish', 'authorize-command'], true)
             && in_array($r['sessionBackend'], [\core\session\file::class, \core\session\database::class], true)
             && is_int($r['startedMonotonic']) && $r['startedMonotonic'] >= 0);
-        self::request_shape('start', $r['request']);
+        self::base_shape($r['request']);
+        course_authority_currentness::require_rule($r['request']['version'] === self::request_version($r['operation']));
         foreach (['courseId', 'actorUserId', 'subjectUserId', 'sessionRowId', 'sessionCreatedAt', 'startedWall'] as $key) {
             course_authority_currentness::require_rule(course_authority_currentness::positive($r[$key]));
         }
