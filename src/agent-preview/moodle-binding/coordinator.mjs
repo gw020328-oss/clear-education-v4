@@ -118,7 +118,8 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
   }
   const audit = (event, ref, now) => run('INSERT INTO main.audit VALUES(?,?,?,?)', randomRef(), event, ref, now);
   // The async boundary is here only. A timed-out promise can never re-enter commit.
-  async function lookup(context, applicationId, ref, kind, consume) {
+  async function lookup(context, applicationId, ref, kind, consume, signal) {
+    signal?.throwIfAborted();
     context = structuredClone(context);
     const requestRef = randomRef();
     let scope, request, started;
@@ -132,11 +133,21 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
     });
     let timer;
     const abort = new AbortController();
+    const cancel = () => abort.abort(signal.reason);
+    signal?.addEventListener('abort', cancel, { once:true });
     try {
+      signal?.throwIfAborted();
+      timer = setTimeout(() => abort.abort(Error('RESPONSE_TIMEOUT')), ptime.roundTripMs);
       const response = await Promise.race([
-        Promise.resolve().then(() => verifier.query(request, { signal: abort.signal })),
-        new Promise((_, reject) => { timer = setTimeout(() => { abort.abort(); reject(new Error('RESPONSE_TIMEOUT')); }, ptime.roundTripMs); }),
+        new Promise((_, reject) => {
+          abort.signal.addEventListener('abort', () => reject(abort.signal.reason), { once:true });
+        }),
+        Promise.resolve().then(() => {
+          abort.signal.throwIfAborted();
+          return verifier.query(request, { signal: abort.signal });
+        }),
       ]);
+      abort.signal.throwIfAborted();
       const received = sample(clock), r = validateDto(kind === 'OBSERVE' ? 'observations' : 'confirmation', response);
       requireRule(kind === 'OBSERVE' || r.attemptRef === ref, 'RESPONSE_ATTEMPT');
       const currentness = final => checkCurrentness({ response: r, requestRef, started, received, final, policy: ptime });
@@ -156,7 +167,7 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
     } catch (error) {
       try { transaction(() => run("UPDATE main.requests SET state='CANCELLED' WHERE id=? AND state='OPEN'", requestRef)); } catch { /* A revoked deployment must not regain write access for cleanup. */ }
       throw error;
-    } finally { clearTimeout(timer); abort.abort(); }
+    } finally { clearTimeout(timer); signal?.removeEventListener('abort', cancel); abort.abort(); }
   }
   try { transaction(() => null); } catch (e) { key.fill(0); db.close(); throw e; }
   return Object.freeze({
@@ -208,7 +219,7 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
         return validateDto('completeResult', { version: versions.complete, bindingRef: id, status: 'OBSERVED_ONLY', bindingRevision: state.row.generation, expiresAtExclusive: expires });
       });
     },
-    readPreview(context, applicationId, bindingRef) {
+    readPreview(context, applicationId, bindingRef, { signal } = {}) {
       requireRule(opaque(bindingRef), 'BINDING_REF');
       return lookup(context, applicationId, bindingRef, 'OBSERVE', ({ p, state, r }) => {
         requireRule(canonical(stableConfirmation(r)) === state.row.confirmation, 'CONFIRMATION_CHANGED');
@@ -216,7 +227,7 @@ export function createBindingCoordinator({ paths, control, verifier, timePolicy,
         return validateDto('readPreview', { version: versions.readPreview, applicationId, bindingRef, bindingRevision: get('SELECT generation FROM main.attempts WHERE id=?', state.row.attempt_id).generation,
           scope: 'READ_PREVIEW', sourceStatus: 'OBSERVED_AT', enrolmentRevision: r.enrolmentRevision, observedAt: r.observedAt,
           expiresAtExclusive: Math.min(state.row.expires_at, r.expiresAtExclusive - ptime.maxClockSkewSeconds), observations: r.observations, automaticEligibility: false, paymentAllowed: false });
-      });
+      }, signal);
     },
     // Metadata recovery after a lost complete response. Does not fetch source facts.
     bindingStatus(context, applicationId) {

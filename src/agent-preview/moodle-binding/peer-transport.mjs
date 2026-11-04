@@ -147,6 +147,7 @@ export function createPeerTransport({ pin, key, replay, clock = () => Math.floor
   // candidate deliberately has no LIVE activation profile pending exact-contract review.
   check(['DISABLED','OFFLINE_TEST'].includes(activation) && (activation !== 'OFFLINE_TEST' || typeof fetchImpl === 'function'), 'PEER_ACTIVATION');
   let closed = false;
+  const pending = new Set();
   return Object.freeze({
     async query(body, correlation, { signal } = {}) {
       check(!closed && activation === 'OFFLINE_TEST', 'PEER_DISABLED');
@@ -159,19 +160,24 @@ export function createPeerTransport({ pin, key, replay, clock = () => Math.floor
         expiresAtExclusive: Math.min(now + lifetime(p.path), correlation.expiresAtExclusive), requestHash: ZERO_HASH, status: 0 };
       window(meta, now, p.maxClockSkewSeconds);
       const wire = encodePeer(meta, body, k), controller = new AbortController();
-      const cancel = () => controller.abort(); signal?.addEventListener('abort', cancel, { once: true });
+      const cancel = () => controller.abort(Error('PEER_ABORTED'));
+      pending.add(controller);
+      signal?.addEventListener('abort', cancel, { once: true });
       let timer;
       try {
         signal?.throwIfAborted();
+        const cancelled = new Promise((_, reject) => {
+          controller.signal.addEventListener('abort', () => reject(controller.signal.reason), { once: true });
+        });
+        timer = setTimeout(() => controller.abort(Error('PEER_TIMEOUT')),
+          Math.min(timeoutMs, (meta.expiresAtExclusive - now - p.maxClockSkewSeconds) * 1000));
         const job = (async () => {
           const response = await fetchImpl(p.origin + p.path, { method: 'POST', redirect: 'error', cache: 'no-store',
             credentials: 'omit', headers: { 'content-type': 'application/json' }, body: wire, signal: controller.signal });
           if(response.url) check(response.url === p.origin + p.path, 'PEER_URL');
           return bounded(response, controller.signal);
         })();
-        const bytes = await Promise.race([job, new Promise((_, reject) => {
-          timer = setTimeout(() => { controller.abort(); reject(Error('PEER_TIMEOUT')); }, timeoutMs);
-        }), new Promise((_, reject) => controller.signal.addEventListener('abort', () => reject(Error('PEER_ABORTED')), { once: true }))]);
+        const bytes = await Promise.race([job, cancelled]);
         controller.signal.throwIfAborted(); check(!closed, 'PEER_CLOSED');
         const end = monotonic(); check(end >= start && end - start < timeoutMs, 'PEER_TIMEOUT');
         const result = decodePeer(bytes, k); pinned(result.meta, p, 'RESPONSE');
@@ -181,8 +187,13 @@ export function createPeerTransport({ pin, key, replay, clock = () => Math.floor
         replay.claim(result.meta, p.maxClockSkewSeconds);
         window(meta, clock(), p.maxClockSkewSeconds, true);
         return result.body;
-      } finally { clearTimeout(timer); signal?.removeEventListener('abort', cancel); controller.abort(); }
+      } finally {
+        clearTimeout(timer);
+        pending.delete(controller);
+        signal?.removeEventListener('abort', cancel);
+        controller.abort();
+      }
     },
-    close() { closed = true; k.fill(0); }
+    close() { closed = true; for(const controller of pending) controller.abort(Error('PEER_CLOSED')); k.fill(0); }
   });
 }

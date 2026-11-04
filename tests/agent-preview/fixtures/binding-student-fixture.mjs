@@ -53,7 +53,7 @@ export async function studentFixture(t, { acknowledged = true } = {}) {
   main.exec('PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL;' + schemas.main);
   main.prepare('INSERT INTO policy VALUES(1,?)').run(JSON.stringify(policy)); main.prepare('INSERT INTO clock VALUES(1,?)').run(state.wall); main.close(); chmodSync(paths.main, 0o600);
   const control = createSyntheticControlPlane(policy);
-  const verifier = createSyntheticVerifier(request => state.query ? state.query(request) : responseFor(request, policy, state.wall));
+  const verifier = createSyntheticVerifier((request, options) => state.query ? state.query(request, options) : responseFor(request, policy, state.wall));
   const config = { paths, projection, control, verifier, timePolicy, sessionKey,
     clock: { wall: () => state.wall, monotonic: () => performance.now() } };
   runtime = createBindingCoordinator(config);

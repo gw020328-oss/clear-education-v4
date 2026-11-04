@@ -96,3 +96,27 @@ test('delivery cannot refresh cached, copied, mutated or already dispatched trip
  const c=await x.contexts.observe(x.f.context,x.input);await x.contexts.deliverObservation(x.f.context,input,c,transport);
  assert.throws(()=>x.contexts.deliverObservation(x.f.context,input,c,transport),/CONTEXT_DELIVERY_EXPIRED/);assert.equal(calls,1);
 });
+
+for(const scenario of ['close','expiry']){
+ test('pending observation cancels on context '+scenario,{timeout:1000},async t=>{
+  const x=await fixture(t);x.ready();
+  let signal,release,started;
+  const entered=new Promise(resolve=>started=resolve);
+  x.f.state.query=(request,options)=>{
+   signal=options.signal;
+   return new Promise(resolve=>{release=()=>resolve(x.f.respond(request));started();});
+  };
+  const pending=x.contexts.observe(x.f.context,x.input);
+  await entered;
+  if(scenario==='close')x.contexts.close();
+  else {
+   x.setMono(60000);
+   assert.throws(()=>x.contexts.review(x.f.context,x.input),/CONTEXT_EXPIRED/);
+  }
+  await assert.rejects(pending,scenario==='close'?/CONTEXT_CLOSED/:/CONTEXT_EXPIRED/);
+  assert.equal(signal.aborted,true);
+  release();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(x.f.sql('main',"SELECT state FROM requests WHERE kind='OBSERVE'")[0].state,'CANCELLED');
+ });
+}

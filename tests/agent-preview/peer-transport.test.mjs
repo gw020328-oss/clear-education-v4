@@ -108,3 +108,24 @@ test('generate permits bounded long response but never a stale arriving request'
  }});t.after(()=>p.close());assert.deepEqual(await p.query(body,correlation),body);
  assert.throws(()=>createPeerTransport({pin,key,replay:client,timeoutMs:45000}),/PEER_TIMEOUT/);
 });
+
+for (const scenario of ['close','synchronous caller abort']) {
+ test('pending peer query cancels on '+scenario,{timeout:500},async t=>{
+  const caller=new AbortController();
+  let receivedSignal, release, claims=0;
+  const transport=createPeerTransport({pin,key,replay:{claim(){claims++;}},clock:()=>now,activation:'OFFLINE_TEST',
+   fetchImpl(_url,options){
+    receivedSignal=options.signal;
+    if(scenario==='synchronous caller abort')caller.abort();
+    return new Promise(resolve=>release=resolve);
+   }});
+  t.after(()=>transport.close());
+  const pending=transport.query(body,correlation,{signal:caller.signal});
+  if(scenario==='close')transport.close();
+  await assert.rejects(pending,scenario==='close'?/PEER_CLOSED/:/PEER_ABORTED/);
+  assert.equal(receivedSignal.aborted,true);
+  release(new Response('{}',{headers:{'content-type':'application/json'}}));
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(claims,0);
+ });
+}

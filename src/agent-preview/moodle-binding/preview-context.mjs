@@ -37,10 +37,18 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
       sessionDigest: digest(context.token)
     } };
   }
-  function forget(ref) { const r = records.get(ref); if(r) clearTimeout(r.timer); records.delete(ref); }
+  function forget(ref, reason = 'CONTEXT_EXPIRED') {
+    const r = records.get(ref);
+    records.delete(ref);
+    if(r) {
+      clearTimeout(r.timer);
+      r.lifetime.abort(Error(reason));
+    }
+  }
   function record(context, ref) {
     check(opaque(ref), 'CONTEXT_REF'); const live = current(context), r = records.get(ref);
-    check(r && live.at.now < r.expiresAtExclusive && live.at.mono >= r.beganMono && live.at.mono < r.expiresMono, 'CONTEXT_EXPIRED');
+    if(r && (live.at.now >= r.expiresAtExclusive || live.at.mono >= r.expiresMono)) forget(ref);
+    check(r && !r.lifetime.signal.aborted && live.at.mono >= r.beganMono, 'CONTEXT_EXPIRED');
     check(hash(live.scope) === r.scopeHash && live.expiry >= r.expiresAtExclusive, 'CONTEXT_CHANGED');
     return { r, live };
   }
@@ -64,7 +72,7 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
       const timer = setTimeout(() => forget(ref), (expiresAtExclusive - live.at.now) * 1000); timer.unref();
       records.set(ref, { scopeHash, bindingRef:live.scope.bindingRef, sourceHash:prepared.sourceHash, bodyHash:prepared.bodyHash,
         approvalBindingHash, model:prepared.model, expiresAtExclusive, beganMono:live.at.mono,
-        expiresMono:live.at.mono + (expiresAtExclusive - live.at.now)*1000, timer, draft:null, reviewed:false, active:false });
+        expiresMono:live.at.mono + (expiresAtExclusive - live.at.now)*1000, timer, lifetime:new AbortController(), draft:null, reviewed:false, active:false });
       return { version:PREVIEW_CONTEXT_VERSION, previewContextRef:ref, sourceHash:prepared.sourceHash,
         bodyHash:prepared.bodyHash, model:prepared.model, approvalBindingHash, expiresAtExclusive,
         automaticEligibility:false, paymentAllowed:false };
@@ -88,8 +96,22 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
       exact(input, ['version','previewContextRef','draftId','proposalHash']); check(input.version === PREVIEW_CONTEXT_VERSION, 'CONTEXT_VERSION');
       const {r} = record(context, input.previewContextRef); matching(r,input);
       check(r.reviewed && !r.active, 'CONTEXT_REVIEW_OR_BUSY'); r.active = true;
+      const controller = new AbortController();
+      const cancel = () => controller.abort(r.lifetime.signal.reason);
+      r.lifetime.signal.addEventListener('abort', cancel, { once:true });
       try {
-        const result = await coordinator.readPreview(context, applicationId, r.bindingRef), received = time();
+        const cancelled = new Promise((_, reject) => {
+          controller.signal.addEventListener('abort', () => reject(controller.signal.reason), { once:true });
+        });
+        const result = await Promise.race([
+          cancelled,
+          Promise.resolve().then(() => {
+            controller.signal.throwIfAborted();
+            return coordinator.readPreview(context, applicationId, r.bindingRef, { signal:controller.signal });
+          })
+        ]);
+        controller.signal.throwIfAborted();
+        const received = time();
         const {live} = record(context,input.previewContextRef);
         const items = result.observations.filter(item => item.targetRef === targetRef);
         check(items.length === 1 && result.scope === 'READ_PREVIEW' && result.sourceStatus === 'OBSERVED_AT'
@@ -103,7 +125,11 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
         observations.set(triple, { ref:input.previewContextRef, digest:hash(triple), finalMono:final.mono,
           expiry:Math.min(result.expiresAtExclusive,r.expiresAtExclusive,item.observedAt + policy.maxObservationAgeSeconds - policy.maxClockSkewSeconds) });
         return triple;
-      } finally {r.active = false;}
+      } finally {
+        r.lifetime.signal.removeEventListener('abort', cancel);
+        controller.abort();
+        r.active = false;
+      }
     },
     deliverObservation(context, input, observation, transport) {
       exact(input,['previewContextRef','draftId','proposalHash']); const {r} = record(context,input.previewContextRef); matching(r,input);
@@ -117,8 +143,8 @@ export function createPreviewContexts({ authentication, student, coordinator, ap
       // re-sign an arbitrary or cached triple with a new transport timestamp.
       return transport.query(Buffer.from(canonical(observation)), {
         contextRef:input.previewContextRef, sourceHash:r.sourceHash, proposalHash:r.draft.proposalHash,
-        expiresAtExclusive:receipt.expiry });
+        expiresAtExclusive:receipt.expiry }, { signal:r.lifetime.signal });
     },
-    close() { closed = true; for(const ref of records.keys()) forget(ref); }
+    close() { closed = true; for(const ref of records.keys()) forget(ref, 'CONTEXT_CLOSED'); }
   });
 }
