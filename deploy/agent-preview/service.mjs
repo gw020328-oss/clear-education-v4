@@ -4,22 +4,26 @@ import {prepareGeminiStructureRequest} from '../../src/agent-preview/gemini-prep
 import {requestGeminiPreview} from '../../src/agent-preview/gemini-response.mjs';
 import {developerTransport} from '../../src/ai-policy/gemini-evaluation.mjs';
 import {bindingHash, check, exact} from './config.mjs';
+import {limits,previewModel} from './limits.mjs';
+export {limits} from './limits.mjs';
 
 const actorKeys=['institutionId','courseId','operatorId','sourceText'];
 const gates={scope:'PRECONFIGURATION_ONLY', automaticEligibility:false, paymentAllowed:false,
   actualReclaimCall:false, actualPayout:false, dataMode:'DEMO_ACCOUNTS_ONLY'};
-export const limits=Object.freeze({countTokens:1,generateContent:1,automaticRetries:0,maxInputTokens:4096,maxOutputTokens:2048,
-  maximumGenerationCostUsd:'0.0063488',priceCheckedOn:'2026-11-04',priceSource:'https://aistudio.google.com/docs/pricing#gemini-3.5-flash-lite'});
-
-export function createService({config,store,observationAdapter=null,modelTransport=developerTransport(),clock=Date.now}) {
-  const binding=bindingHash(config), drafts=new Map();
-  let active=false;
+export function createService({config,store,observationAdapter=null,modelTransport=developerTransport(),clock=Date.now,
+  setTimer=setTimeout,clearTimer=clearTimeout}) {
+  const binding=bindingHash(config), drafts=new Map(),timers=new Map();
+  let active=false,closed=false;
   function actor(body,extra=[]) {
+    check(!closed,'SERVICE_CLOSED');
     exact(body,[...actorKeys,...extra]);
     for(const k of ['institutionId','courseId','operatorId']) check(body[k]===config[k],'ACTOR_SCOPE');
-    return prepareGeminiStructureRequest(body.sourceText);
+    const prepared=prepareGeminiStructureRequest(body.sourceText);
+    check(prepared.model===previewModel && prepared.body.generationConfig.maxOutputTokens===limits.maxOutputTokens,'MODEL_PROFILE_CHANGED');
+    return prepared;
   }
-  function prune() {for(const [id,d] of drafts) if(d.expires<=clock()) drafts.delete(id);}
+  function remove(id) {drafts.delete(id);if(timers.has(id)){clearTimer(timers.get(id));timers.delete(id);}}
+  function prune() {for(const [id,d] of drafts) if(d.expires<=clock()) remove(id);}
   return {
     prepare(body) {const p=actor(body);return {...gates,version:'clear-external-preview-preparation.1',
       sourceText:body.sourceText,bodyHash:p.bodyHash,sourceHash:p.sourceHash,model:p.model,bindingHash:binding,limits,actualModelCall:false};},
@@ -43,6 +47,7 @@ export function createService({config,store,observationAdapter=null,modelTranspo
             return modelTransport.request(model,'generateContent',request,signal);
           }});
         signal.throwIfAborted();
+        check(!closed,'SERVICE_CLOSED');
         // Keep only validated AST clauses, not provider metadata or raw reply. Memory TTL: 15 min.
         const {draft}=result;
         const rows=draft.clauses.map(c=>{
@@ -52,6 +57,8 @@ export function createService({config,store,observationAdapter=null,modelTranspo
         });
         const draftId=randomUUID(), expiresAt=clock()+900000;
         drafts.set(draftId,{sourceText:body.sourceText,rows,proposalHash:draft.proposalHash,expires:expiresAt});
+        // The timer closes over an opaque id only. Drop original text/AST references even while idle.
+        const timer=setTimer(()=>remove(draftId),900000);timer.unref?.();timers.set(draftId,timer);
         return {...gates,version:'clear-external-preview-draft.1',draftId,expiresAt,draft,
           model:p.model,bodyHash:p.bodyHash,actualModelCall:modelTransport.execution==='ACTUAL',
           modelProvenance:modelTransport.execution==='ACTUAL'?'ACTUAL_GEMINI_HTTP':'OFFLINE_TEST_TRANSPORT'};
@@ -76,14 +83,16 @@ export function createService({config,store,observationAdapter=null,modelTranspo
         check(saved.expires>clock(),'DRAFT_STALE_OR_UNREVIEWED');
         exact(observed,['targetRef','status','observedAt']);
         check(typeof observed.targetRef==='string' && observed.targetRef.length>0 && observed.targetRef.length<=128
-          && ['OBSERVED','UNKNOWN'].includes(observed.status) && Number.isSafeInteger(observed.observedAt)
-          && observed.observedAt<=clock() && clock()-observed.observedAt<=30000,'OBSERVATION_INVALID');
-        const observation={...observed,executionMode:'OFFLINE_TEST_ADAPTER',eligibility:'NOT_EVALUATED'};
+          && ['COMPLETE','INCOMPLETE','UNKNOWN','INACCESSIBLE'].includes(observed.status) && Number.isSafeInteger(observed.observedAt)
+          && observed.observedAt>0 && observed.observedAt<=Math.floor(clock()/1000)
+          && Math.floor(clock()/1000)-observed.observedAt<=30,'OBSERVATION_INVALID');
+        const observation={...observed,executionMode:'OFFLINE_TEST_ADAPTER',eligibility:'NOT_EVALUATED',
+          completionObserved:observed.status==='COMPLETE'};
         return {...gates,version:'clear-external-preview-observation.1',draftId:body.draftId,
           proposalHash:body.proposalHash,sourceHash:draft.sourceHash,plan,validation,
           planScope:'EXISTING_PUBLIC_PLAN_GRAMMAR_ONLY',executionBridge:'PENDING_B_C_APPROVED_BINDING_ADAPTER',observation};
       } finally {active=false;}
     },
-    close(){drafts.clear();}
+    close(){closed=true;for(const id of drafts.keys())remove(id);}
   };
 }

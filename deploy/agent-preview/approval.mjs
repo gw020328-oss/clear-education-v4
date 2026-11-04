@@ -3,6 +3,7 @@ import {validateConfig,bindingHash,check} from './config.mjs';
 import {openStore} from './store.mjs';
 import {prepareGeminiStructureRequest} from '../../src/agent-preview/gemini-preparation.mjs';
 import {limits} from './service.mjs';
+import {verifyArtifact} from './artifact.mjs';
 
 // Local administration only. Never mounted as an HTTP route. The CLI cannot infer user approval.
 process.umask(0o077);
@@ -10,6 +11,7 @@ const [command,sourceFile,ref]=process.argv.slice(2);
 try {
   check(['prepare','record-approved-input'].includes(command),'COMMAND');
   const config=validateConfig(JSON.parse(readFileSync(process.env.CLEAR_PREVIEW_CONFIG,'utf8')));
+  verifyArtifact(config.artifactHash,process.env.CLEAR_PREVIEW_BUILD_MANIFEST);
   const sourceText=readFileSync(sourceFile,'utf8').trim(),p=prepareGeminiStructureRequest(sourceText);
   const prepared={sourceText,model:p.model,bodyHash:p.bodyHash,bindingHash:bindingHash(config),limits};
   if(command==='record-approved-input') {

@@ -49,7 +49,11 @@ SQLite write/commit lock 획득 뒤 fresh clock으로 승인 만료를 검사하
 countTokens와 generateContent **각 호출 시작 시점** 모두 같은 승인 만료 이전이어야 한다.
 countTokens가 늦게 끝나 만료되면 generateContent를 보내지 않고 소비 상태를 유지한다.
 만료 전에 시작한 모델 응답의 수신 완료까지 승인 시간을 연장하거나 새 호출 권한으로 해석하지 않는다.
-검증된 AST만 메모리에 15분 보관하며 provider 원문 응답은 파일/로그에 보관하지 않는다.
+조건 원문 sourceText와 검증된 AST에서 파생한 rows를 최대15분 사용한다.
+idle 상태에서도 만료 타이머가 저장된 원문/rows 참조를 제거하며 close도 타이머와 참조를 정리한다.
+이벤트 루프가 정지/지연되면 타이머 콜백도 지연될 수 있지만 조회 시 별도 expiry 검사로 사용은 거부한다.
+JS GC/메모리 물리 zeroization 또는 프로세스 외부 사본의 삭제를 보장하지 않는다.
+provider 원문 응답은 파일/로그에 보관하지 않는다.
 서버 재시작 시 draft가 없어지며 이미 소비한 승인은 복구되지 않는다. 이는 재호출 권한이 아니다.
 
 공개 시연 입력: `Moodle에서 첫 학습 활동을 마쳐야 한다`.
@@ -75,6 +79,7 @@ HMAC 파일은 0600 권한의 hex64 키 한 개다. 환경 이름:
 | 이름 | 용도 |
 | --- | --- |
 | CLEAR_PREVIEW_CONFIG | 프로필 JSON의 절대 경로 |
+| CLEAR_PREVIEW_BUILD_MANIFEST | 로컬 repo 검증 시 staging build-manifest.json 경로; 컨테이너는 /app/build-manifest.json 기본값 |
 | GEMINI_API_KEY | 기존 서버측 Gemini 자격증명. 값 출력·이미지 포함 금지 |
 | CLEAR_APPROVED_BODY_HASH / CLEAR_APPROVED_BINDING_HASH | 승인 등록 CLI 전용 지문 |
 | CLEAR_PREVIEW_BUILD_CONTEXT | allowlist 패키지 빌드 디렉터리 |
@@ -121,3 +126,25 @@ Cloudflare 계정/도메인 없이 가능하지만 주소 변경과 가용성 �
 provider 실패 후 재시도 차단, plan 검토 지문 변경, 미연결 관측 차단을 포함한다.
 원격 Moodle/브라우저/실제 Gemini/지급 성공은 각각 별도 증거로 기록한다.
 Privy origin/redirect, 쿠키·CSRF, 학생 진입, TEST RPC는 현재 서버에 없는 후속 전체 흐름 인수 항목이다.
+
+## 배포 변경·복구 경계
+
+프로필 artifactHash는 `package.mjs`가 생성한 build-manifest.json 파일의 SHA-256이다.
+시작/승인 CLI는 manifest hash와 열거된 source bytes를 실제 파일과 대조한다.
+배포 epoch는 배포 관리자가 새로 생성한 UUIDv4이며 비밀이 아니다.
+approval binding은 artifactHash/deploymentEpoch/model/countTokens+generateContent/limits/가격 검토 버전까지 포함한다.
+코드·모델·호출상한·배포 epoch 변경 후 기존 승인은 재사용할 수 없다.
+
+외부 rollback floor나 시스템 clock rollback 탐지는 구현하지 않았다. 정상 전진 wall clock과 신뢰한 DB가 전제다.
+동일 DB snapshot과 동일 키·epoch를 함께 되돌리면 소진/nonce 복구 재사용을 자동 검출하지 못한다.
+DB 복구·삭제·손상·시계 역행이 의심되면 **즉시 서버/외부 라우트를 중지**한다.
+시각 동기화와 원인을 확인하고, DB 복구 전에 HMAC key 및 deploymentEpoch를 새로 발급해 양쪽 peer에 적용한다.
+새 epoch에서 이전 approvals는 binding 불일치로 차단되고 새 키는 과거 서명 요청을 차단한다.
+재개 후 직접 사용자 승인도 새로 받는다. 이전 epoch/key로 먼저 띄운 뒤 회전하는 순서는 금지한다.
+이 절차가 적용되지 않은 snapshot restore에 대한 자동 fail-closed 보장은 없다.
+
+B/C actual 응답 계약은 아직 인수하지 않았다. 관측 body 후보는 정확 `{targetRef,status,observedAt}`,
+status는 COMPLETE/INCOMPLETE/UNKNOWN/INACCESSIBLE, observedAt은 Unix seconds다.
+오프라인30초 검사는 actual 신선도 계약을 대신하지 않는다. B가 소유한 인증 envelope의
+context/request/source/proposal/audience/epoch/bodyHash/expiry 검증을 인수하기 전 actual503을 유지한다.
+최초 actual 접근은 학생 본인의 B auth/ACK 신청/현재 binding 경로이며 운영자 configure/HMAC은 위임 권한이 아니다.

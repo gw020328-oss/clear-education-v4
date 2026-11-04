@@ -1,6 +1,7 @@
 import {readFileSync, statSync} from 'node:fs';
 import {isAbsolute} from 'node:path';
 import {hash} from '../../src/agent-preview/index.mjs';
+import {previewModel,previewMethods,limits} from './limits.mjs';
 
 export function check(ok, code) { if (!ok) throw Error(code); }
 export function exact(value, keys) {
@@ -10,8 +11,10 @@ export function exact(value, keys) {
 export function validateConfig(raw) {
   const c = structuredClone(raw);
   exact(c, ['version', 'publicOrigin', 'port', 'institutionId', 'courseId', 'operatorId',
-    'dataMode', 'databasePath', 'sharedSecretFile']);
+    'dataMode', 'databasePath', 'sharedSecretFile', 'artifactHash', 'deploymentEpoch']);
   check(c.version === 'clear-external-preview-config.1' && c.dataMode === 'DEMO_ACCOUNTS_ONLY', 'CONFIG_MODE');
+  check(typeof c.artifactHash==='string' && /^[a-f0-9]{64}$/.test(c.artifactHash)
+    && typeof c.deploymentEpoch==='string' && /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(c.deploymentEpoch),'CONFIG_DEPLOYMENT');
   const origin = new URL(c.publicOrigin);
   check(origin.protocol === 'https:' && origin.origin === c.publicOrigin && !origin.username && !origin.password, 'CONFIG_PUBLIC_ORIGIN');
   check(Number.isSafeInteger(c.port) && c.port >= 1024 && c.port <= 65535, 'CONFIG_PORT');
@@ -22,7 +25,8 @@ export function validateConfig(raw) {
 }
 export function bindingHash(c) {
   return hash({version:c.version, publicOrigin:c.publicOrigin, institutionId:c.institutionId,
-    courseId:c.courseId, operatorId:c.operatorId, dataMode:c.dataMode});
+    courseId:c.courseId, operatorId:c.operatorId, dataMode:c.dataMode,artifactHash:c.artifactHash,
+    deploymentEpoch:c.deploymentEpoch,model:previewModel,methods:previewMethods,limits});
 }
 export function readSecret(path, pattern) {
   const stat = statSync(path);

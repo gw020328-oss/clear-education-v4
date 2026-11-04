@@ -47,6 +47,8 @@ deprecated로 표시되어 있어 그 파일을 추가하지 않는다. Dashboar
 | CLEAR_PREVIEW_INSTITUTION_ID | C/B와 확정한 시연 기관 ID |
 | CLEAR_PREVIEW_COURSE_ID | C/B와 확정한 강좌 ID 문자열 |
 | CLEAR_PREVIEW_OPERATOR_ID | C가 확인한 운영자 ID 문자열 |
+| CLEAR_PREVIEW_ARTIFACT_HASH | allowlist build-manifest.json 파일의 SHA-256, 시작 시 전체 열거 source bytes 검증 |
+| CLEAR_PREVIEW_DEPLOYMENT_EPOCH | 새 배포/복구 시 발급한 UUIDv4; 이전 승인 무효화 |
 | CLEAR_PREVIEW_HMAC_SECRET | 서버간 전용 hex64 secret. UI 브라우저/로그/이미지에 포함 금지 |
 | GEMINI_API_KEY | 기존 사용자 키의 안전한 서버 secret 등록. 실제 호출 승인은 별도 |
 

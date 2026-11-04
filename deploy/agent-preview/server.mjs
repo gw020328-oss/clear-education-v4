@@ -5,6 +5,7 @@ import {validateConfig,readSecret,check} from './config.mjs';
 import {openStore} from './store.mjs';
 import {authenticate} from './auth.mjs';
 import {createService} from './service.mjs';
+import {verifyArtifact} from './artifact.mjs';
 
 const routes=new Map([['/v1/preview/prepare','prepare'],['/v1/preview/generate','generate'],['/v1/preview/execute','execute']]);
 const publicErrors=new Set(['AUTH_REQUIRED','HOST_REJECTED','SERVER_TO_SERVER_ONLY','REQUEST_REPLAY',
@@ -52,6 +53,7 @@ if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   try {
     check(process.version==='v24.21.0','RUNTIME_VERSION');
     const config=validateConfig(JSON.parse(readFileSync(process.env.CLEAR_PREVIEW_CONFIG,'utf8')));
+    verifyArtifact(config.artifactHash,process.env.CLEAR_PREVIEW_BUILD_MANIFEST);
     const secret=readSecret(config.sharedSecretFile,/^[a-f0-9]{64}$/),store=openStore(config.databasePath);
     const service=createService({config,store}),server=createServer({config,secret,store,service});
     // Container deployments use host networking; only the TLS proxy reaches this loopback listener.

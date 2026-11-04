@@ -17,7 +17,7 @@ import {prepareGeminiStructureRequest} from '../../../src/agent-preview/gemini-p
 
 const sourceText='Moodle에서 첫 학습 활동을 마쳐야 한다';
 const config=validateConfig({version:'clear-external-preview-config.1',publicOrigin:'https://preview.example.invalid',port:18991,
-  institutionId:'clear-demo',courseId:'2',operatorId:'2',dataMode:'DEMO_ACCOUNTS_ONLY',databasePath:'/tmp/unused-preview.sqlite',sharedSecretFile:'/tmp/unused-secret'});
+  institutionId:'clear-demo',courseId:'2',operatorId:'2',dataMode:'DEMO_ACCOUNTS_ONLY',artifactHash:'c'.repeat(64),deploymentEpoch:'00000000-0000-4000-8000-000000000001',databasePath:'/tmp/unused-preview.sqlite',sharedSecretFile:'/tmp/unused-secret'});
 const body={institutionId:'clear-demo',courseId:'2',operatorId:'2',sourceText};
 function modelReply(text=sourceText) {
   return {candidates:[{finishReason:'STOP',content:{role:'model',parts:[{text:JSON.stringify({clauses:sourceClauses(text).map(c=>({
@@ -109,7 +109,7 @@ test('actual adapter absent fails closed after explicit review; stale text and r
   assert.equal(result.status,503);assert.equal(result.body.code,'OBSERVATION_ADAPTER_NOT_ACCEPTED');
 });
 test('offline adapter is labeled offline and never grants eligibility',async t=>{
-  let observed=0;const f=await fixture(t,{adapter:{execution:'OFFLINE_TEST',async observe(){observed++;return {targetRef:'demo-page',status:'OBSERVED',observedAt:Date.now()};}}});
+  let observed=0;const f=await fixture(t,{adapter:{execution:'OFFLINE_TEST',async observe(){observed++;return {targetRef:'demo-page',status:'COMPLETE',observedAt:Math.floor(Date.now()/1000)};}}});
   const r=await f.request('/v1/preview/generate',{...body,approvalRef:f.approve()});
   const result=await f.request('/v1/preview/execute',{...body,draftId:r.body.draftId,proposalHash:r.body.draft.proposalHash});
   assert.equal(result.status,200);assert.equal(observed,1);assert.equal(result.body.observation.executionMode,'OFFLINE_TEST_ADAPTER');
@@ -180,4 +180,42 @@ test('approval expires during countTokens: generation never starts and grant sta
   now-=120000;
   assert.equal((await f.request('/v1/preview/generate',request)).body.code,'APPROVAL_REQUIRED_OR_SPENT');
   assert.deepEqual(calls,['countTokens']);
+});
+test('idle expiry removes draft references; close cancels pending cleanup and rejects later access',async()=>{
+  const store=openStore(':memory:'),scheduled=new Map();let seq=0;
+  const service=createService({config,store,modelTransport:{execution:'OFFLINE',async request(model,method){
+    return method==='countTokens'?{totalTokens:500}:modelReply();
+  }},setTimer(fn,ms){assert.equal(ms,900000);const id=++seq;scheduled.set(id,fn);return id;},clearTimer(id){scheduled.delete(id);}});
+  const p=prepareGeminiStructureRequest(sourceText);
+  function approve(ref){store.register({ref,bodyHash:p.bodyHash,bindingHash:bindingHash(config),expires:Date.now()+60000});}
+  try {
+    approve('timer-approval-1');const first=await service.generate({...body,approvalRef:'timer-approval-1'});
+    assert.equal(scheduled.size,1);scheduled.get(1)();assert.equal(scheduled.size,0);
+    await assert.rejects(service.execute({...body,draftId:first.draftId,proposalHash:first.draft.proposalHash}),/DRAFT_STALE/);
+    approve('timer-approval-2');await service.generate({...body,approvalRef:'timer-approval-2'});
+    service.close();assert.equal(scheduled.size,0);assert.throws(()=>service.prepare(body),/SERVICE_CLOSED/);
+  } finally {service.close();store.close();}
+});
+test('artifact and deployment epoch invalidate old approvals',()=>{
+  const store=openStore(':memory:'),p=prepareGeminiStructureRequest(sourceText),now=Date.now();
+  try {
+    store.register({ref:'artifact-approval',bodyHash:p.bodyHash,bindingHash:bindingHash(config),expires:now+60000},now);
+    for(const changed of [{...config,artifactHash:'d'.repeat(64)},{...config,deploymentEpoch:'00000000-0000-4000-8000-000000000002'}]) {
+      assert.notEqual(bindingHash(changed),bindingHash(config));
+      assert.throws(()=>store.consume('artifact-approval',p.bodyHash,bindingHash(changed)),/APPROVAL_REQUIRED_OR_SPENT/);
+    }
+    assert.ok(store.consume('artifact-approval',p.bodyHash,bindingHash(config)).expires>now);
+  } finally {store.close();}
+});
+test('observation uses seconds and exact statuses; UNKNOWN/INACCESSIBLE are never completion',async t=>{
+  for(const status of ['COMPLETE','INCOMPLETE','UNKNOWN','INACCESSIBLE','OBSERVED']) {
+    const f=await fixture(t,{adapter:{execution:'OFFLINE_TEST',async observe(){return {targetRef:'demo-page',status,observedAt:Math.floor(Date.now()/1000)};}}});
+    const r=await f.request('/v1/preview/generate',{...body,approvalRef:f.approve()});
+    const result=await f.request('/v1/preview/execute',{...body,draftId:r.body.draftId,proposalHash:r.body.draft.proposalHash});
+    if(status==='OBSERVED')assert.equal(result.body.code,'OBSERVATION_INVALID');
+    else {assert.equal(result.status,200);assert.equal(result.body.observation.completionObserved,status==='COMPLETE');}
+  }
+  const f=await fixture(t,{adapter:{execution:'OFFLINE_TEST',async observe(){return {targetRef:'demo-page',status:'COMPLETE',observedAt:Date.now()};}}});
+  const r=await f.request('/v1/preview/generate',{...body,approvalRef:f.approve()});
+  assert.equal((await f.request('/v1/preview/execute',{...body,draftId:r.body.draftId,proposalHash:r.body.draft.proposalHash})).body.code,'OBSERVATION_INVALID');
 });

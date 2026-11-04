@@ -4,6 +4,7 @@ import {validateConfig,check} from './config.mjs';
 import {openStore} from './store.mjs';
 import {createService} from './service.mjs';
 import {createServer} from './server.mjs';
+import {verifyArtifact} from './artifact.mjs';
 
 export function railwayConfiguration(env) {
   check(env.RAILWAY_VOLUME_MOUNT_PATH==='/var/lib/clear-preview','PERSISTENT_VOLUME_REQUIRED');
@@ -12,6 +13,7 @@ export function railwayConfiguration(env) {
     port:Number(env.PORT??'8080'),institutionId:env.CLEAR_PREVIEW_INSTITUTION_ID,
     courseId:env.CLEAR_PREVIEW_COURSE_ID,operatorId:env.CLEAR_PREVIEW_OPERATOR_ID,
     dataMode:'DEMO_ACCOUNTS_ONLY',databasePath:'/var/lib/clear-preview/state/approvals.sqlite',
+    artifactHash:env.CLEAR_PREVIEW_ARTIFACT_HASH,deploymentEpoch:env.CLEAR_PREVIEW_DEPLOYMENT_EPOCH,
     // The generic profile requires this field. This runner takes the secret directly from env;
     // no private key/secret is written to this placeholder path or the image.
     sharedSecretFile:'/run/secrets/not-used-by-railway'});
@@ -21,6 +23,7 @@ if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   try {
     check(process.version==='v24.21.0','RUNTIME_VERSION');
     const config=railwayConfiguration(process.env),secret=process.env.CLEAR_PREVIEW_HMAC_SECRET;
+    verifyArtifact(config.artifactHash);
     // Railway mounts volumes as root. Initialize only this service's state subdirectory,
     // then drop privileges before opening the DB, reading Gemini credentials or accepting HTTP.
     if(process.getuid()===0) {
