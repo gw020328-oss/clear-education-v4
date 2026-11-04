@@ -5,27 +5,27 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {syncBuiltinESMExports} from 'node:module';
-import {consumeReviewedV65Sources} from '../../../src/hackathon-test-vault/reviewed-source-v65.mjs';
+import {consumeReviewedV66Sources} from '../../../src/hackathon-test-vault/reviewed-source-v66.mjs';
 import {createFreshMemoryStage,memoryStageTotals} from '../../../src/hackathon-test-vault/memory-stage-harness.mjs';
 
 const root=new URL('../../../',import.meta.url);
 const read=p=>fs.readFileSync(new URL(p,root));
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
-const recordPath='specs/bootcamp/hackathon-test-preview-peer-source-delta-v1.json';
+const recordPath='specs/bootcamp/hackathon-test-preview-registered-source-delta-v1.json';
 const record=JSON.parse(read(recordPath));
-const consume=()=>consumeReviewedV65Sources(JSON.parse(read('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
+const consume=()=>consumeReviewedV66Sources(JSON.parse(read('specs/bootcamp/hackathon-test-memory-source-intake-v6.json')));
 const git=(...args)=>execFileSync('git',args,{cwd:root});
 const tableSha=table=>sha(JSON.stringify(Object.fromEntries(Object.entries(table).sort(([a],[b])=>a<b?-1:a>b?1:0))));
 
-test('v65 candidate commit contains every declared source, wallet build input and preservation artifact',()=>{
+test('v66 candidate commit contains every declared source, wallet build input and preservation artifact',()=>{
  const current=consume(),scope=current.currentSourceCandidateScope,head=current.currentSourceCandidateHead;
- assert.equal(head,'300f21bac357287cbf6cc88ee3d99da8b0825f48');
+ assert.equal(head,'c4678c141d577dab41fa69fa970348d80860145e');
  assert.equal(head,record.candidateHead);
  assert.deepEqual(scope,record.candidateScope);
  assert.equal(scope.wholeRepository,false);
  assert.equal(git('cat-file','-t',head).toString().trim(),'commit');
  git('merge-base','--is-ancestor',head,'HEAD');
- assert.equal(Object.keys(current.sources).length,229);
+ assert.equal(Object.keys(current.sources).length,230);
  assert.equal(Object.keys(current.productWalletSources).length,24);
  assert.equal(tableSha(current.sources),scope.sourceManifestSha256);
  assert.equal(tableSha(current.productWalletSources),scope.productWalletManifestSha256);
@@ -36,7 +36,7 @@ test('v65 candidate commit contains every declared source, wallet build input an
    paths.set(path,expected);
   }
  }
- assert.equal(paths.size,263);
+ assert.equal(paths.size,266);
  for(const [path,expected]of paths){
   assert.equal(sha(git('show',head+':'+path)),expected,'candidate blob: '+path);
   assert.equal(sha(read(path)),expected,'current bytes: '+path);
@@ -46,7 +46,7 @@ test('v65 candidate commit contains every declared source, wallet build input an
   'web/src/bootcamp/team-entry.js','tools/embedded-wallet/build-product.mjs',
  ])assert.ok(paths.has(path),'explicit integration boundary: '+path);
  // The new guard and its consumer cannot claim to be blobs of their own predecessor.
- for(const path of [recordPath,'src/hackathon-test-vault/reviewed-source-v65.mjs',
+ for(const path of [recordPath,'src/hackathon-test-vault/reviewed-source-v66.mjs',
   'src/hackathon-test-vault/memory-stage-harness.mjs','tests/hackathon-test-vault/e5/preservation.mjs']){
   assert.equal(paths.has(path),false,'separately pinned control file: '+path);
  }
@@ -57,7 +57,11 @@ test('v65 candidate commit contains every declared source, wallet build input an
 });
 
 for(const [path,code]of [
- [recordPath,'STAGE_PEER_DELTA_PIN'],
+ [recordPath,'STAGE_REGISTERED_DELTA_PIN'],
+ ['src/agent-preview/moodle-binding/preview-registered.mjs','STAGE_REGISTERED_SOURCE_PIN'],
+ ['src/agent-preview/moodle-binding/preview-context.mjs','STAGE_PEER_SOURCE_PIN'],
+ ['src/agent-preview/moodle-binding/preview-http.mjs','STAGE_PEER_SOURCE_PIN'],
+ ['src/hackathon-test-vault/reviewed-source-v65.mjs','STAGE_REGISTERED_PREDECESSOR'],
  ['src/bootcamp/execution-operations.mjs','STAGE_SOURCE_PIN'],
  ['src/agent-preview/moodle-binding/peer-transport.mjs','STAGE_PEER_SOURCE_PIN'],
  ['src/product-workflow/http-development.mjs','STAGE_PEER_SOURCE_PIN'],
@@ -65,8 +69,8 @@ for(const [path,code]of [
  ['src/application/service.mjs','STAGE_SOURCE_PIN'],
  ['src/application/store.mjs','STAGE_SOURCE_PIN'],
  ['src/agent-preview/moodle-binding/student-profile.mjs','STAGE_STUDENT_SOURCE_PIN'],
- ['src/hackathon-test-vault/reviewed-source-v65.mjs','STAGE_SOURCE_PIN'],
-])test('v65 provenance rejects changed metadata before creating a runtime: '+path,async()=>{
+ ['src/hackathon-test-vault/reviewed-source-v66.mjs','STAGE_SOURCE_PIN'],
+])test('v66 provenance rejects changed metadata before creating a runtime: '+path,async()=>{
  const original=fs.readFileSync,target=fileURLToPath(new URL(path,root)),before=memoryStageTotals();
  fs.readFileSync=function(file,...args){
   const value=original.call(this,file,...args);
@@ -93,19 +97,21 @@ test('memory runtime forwards the integrated candidate and immutable limited sco
  }
 });
 
-test('v65 reviewed source changes match both immutable inputs and preserve the v64 guard',()=>{
+test('v66 reviewed source changes match both immutable inputs and preserve the v65 guard',()=>{
  for(const [path,change] of Object.entries(record.reviewedSourceChanges)) {
   assert.equal(sha(git('show',record.previousHead+':'+path)),change.before,path);
   assert.equal(sha(git('show',record.sourceHead+':'+path)),change.after,path);
   assert.equal(sha(read(path)),change.after,path);
  }
- const path='src/hackathon-test-vault/reviewed-source-v64.mjs';
+ const path='src/hackathon-test-vault/reviewed-source-v65.mjs';
  assert.deepEqual(read(path),git('show',record.previousHead+':'+path));
 });
 
-for(const [path,change] of Object.entries(record.changes))test('v65 rejects rollback to reviewed predecessor bytes: '+path,async()=>{
+const predecessorPeer=JSON.parse(read('specs/bootcamp/hackathon-test-preview-peer-source-delta-v1.json'));
+for(const [generation,delta,error] of [['v66',record,/STAGE_REGISTERED_DELTA/],['v65',predecessorPeer,/STAGE_PEER_DELTA/]]) {
+for(const [path,change] of Object.entries(delta.changes))test(generation+' rejects rollback to reviewed predecessor bytes: '+path,async()=>{
  const original=fs.readFileSync,target=fileURLToPath(new URL(path,root)),before=memoryStageTotals();
- const historical=git('show',record.previousHead+':'+path);
+ const historical=git('show',delta.previousHead+':'+path);
  assert.equal(sha(historical),change.before);
  fs.readFileSync=function(file,...args){
   if((file instanceof URL?fileURLToPath(file):file)===target)return historical;
@@ -113,7 +119,8 @@ for(const [path,change] of Object.entries(record.changes))test('v65 rejects roll
  };
  syncBuiltinESMExports();
  try{
-  await assert.rejects(()=>createFreshMemoryStage(),/STAGE_PEER_DELTA/);
+  await assert.rejects(()=>createFreshMemoryStage(),error);
   assert.deepEqual(memoryStageTotals(),before);
  }finally{fs.readFileSync=original;syncBuiltinESMExports();}
 });
+}

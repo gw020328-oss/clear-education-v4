@@ -1,0 +1,53 @@
+{
+  "version": "clear-preview-registered-source-delta.1",
+  "previousHead": "f54520be2af9060ba4ef56db54ad9073c78f7f44",
+  "sourceHead": "2910202784d0d63b59600000e2a6d787bccc5b16",
+  "candidateHead": "c4678c141d577dab41fa69fa970348d80860145e",
+  "previousGuardSha256": "d3d73adf5735127672534b2bee39637e16da471169f56cff329a2afc64796754",
+  "changes": {
+    "src/agent-preview/moodle-binding/preview-context.mjs": {
+      "before": "c7ae1af0ad9d53d93bad5f414f253381e6b260de11c48d6504a83651a3a2bea6",
+      "after": "a010414b1b9d5cb0b831bdd137dfc5e74576483bca808483124ea71b97875660"
+    },
+    "src/agent-preview/moodle-binding/preview-http.mjs": {
+      "before": "69c92e39d28debbcf9e5a4e3e2302bffd197b447a93fe3d89ca0622557b3b4fe",
+      "after": "0ff8af17119ef52a08200658b652489c6d6b23ca85a4fd653609f55630350cf8"
+    }
+  },
+  "reviewedSourceChanges": {
+    "src/agent-preview/moodle-binding/preview-context.mjs": {
+      "before": "c7ae1af0ad9d53d93bad5f414f253381e6b260de11c48d6504a83651a3a2bea6",
+      "after": "a010414b1b9d5cb0b831bdd137dfc5e74576483bca808483124ea71b97875660"
+    },
+    "src/agent-preview/moodle-binding/preview-http.mjs": {
+      "before": "69c92e39d28debbcf9e5a4e3e2302bffd197b447a93fe3d89ca0622557b3b4fe",
+      "after": "0ff8af17119ef52a08200658b652489c6d6b23ca85a4fd653609f55630350cf8"
+    }
+  },
+  "sourceAdditions": {
+    "src/agent-preview/moodle-binding/preview-registered.mjs": "a0ac31c6ef440a4f14f5dbfa209162b6525c73cf823022205c0b824a8e28da5e"
+  },
+  "sourceCount": 230,
+  "candidateScope": {
+    "kind": "EXACT_SOURCE_TABLES_AND_LISTED_ARTIFACTS",
+    "sourceManifestSha256": "15dbaa93a6843f546752d6257a78ae67e14d807a4238b6ae110b9e87a6b85146",
+    "productWalletSourceCount": 24,
+    "productWalletManifestSha256": "cc33bd45389c56edd893c5f5308cc831e15b2eb2db4e01e793cbefea94adad7c",
+    "wholeRepository": false,
+    "additionalArtifacts": {
+      "src/hackathon-test-vault/reviewed-source-v60.mjs": "2180a13829dd0902dbb57a8d053004f3abda50d1c904f8d67a3d98bda512e5f9",
+      "src/hackathon-test-vault/reviewed-source-v61.mjs": "25a5de00062b5ba8450b50cafecbcbe9b19cf1e4b5b784b7266df32198513e6d",
+      "specs/bootcamp/hackathon-test-operator-condition-preview-source-delta-v1.json": "5efe3a8280e4b7c988ec4ea8bc61da1be3db9b35018211edfd1696d923a8521f",
+      "specs/bootcamp/hackathon-test-runtime-fence-clock-source-delta-v1.json": "1e6eb52a7a1fac38239d5cdeb3547e5f518e231293b81872ca0903880ab98e22",
+      ".github/workflows/hackathon-e5b.yml": "a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef",
+      "src/hackathon-test-vault/reviewed-source-v62.mjs": "3575c245125e1353b353b0f4da168a195e3c5af9d0d57b2370907fb84d5dd13d",
+      "specs/bootcamp/hackathon-test-preview-fence-integration-v1.json": "f4a88b455048668fd4109f7a1ccb2ade2d22c50f27fc0c579560e10737990d47",
+      "src/hackathon-test-vault/reviewed-source-v63.mjs": "efaeca18fef87f8d7d0c5419ecc2b257301548d48d6a981d1c22ff8259267a4f",
+      "specs/bootcamp/hackathon-test-moodle-student-source-delta-v1.json": "574d543cd42d4c71b1a46102094ffce8d6fea2bed28bf3ffe1c62bebfb65bc05",
+      "src/hackathon-test-vault/reviewed-source-v64.mjs": "1a72392471eb61c23d6e00e15a962e40c0d9986d78659de6f4d99e6463f4eb81",
+      "specs/bootcamp/hackathon-test-runtime-heartbeat-clock-source-delta-v1.json": "97087ed45b75b7c4ef0e2ac100b7b55160033d682fc67f5293550e89ac22f1a2",
+      "src/hackathon-test-vault/reviewed-source-v65.mjs": "d3d73adf5735127672534b2bee39637e16da471169f56cff329a2afc64796754",
+      "specs/bootcamp/hackathon-test-preview-peer-source-delta-v1.json": "2e41a3436f7a1572a9e657799f3ac0550439c034ce172bed2b88a026581b5813"
+    }
+  }
+}

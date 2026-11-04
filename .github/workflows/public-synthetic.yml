@@ -89,10 +89,17 @@ jobs:
         run: |
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/product-workflow/*.test.mjs
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs specs/m3/demo.mjs
+      - name: Prepare exact reviewed D fixture for registered preview (offline only)
+        run: |
+          git fetch --no-tags origin ff0bef2c57312ddbf7006c295dbc583e3938a822
+          git worktree add --detach "$RUNNER_TEMP/clear-registered-d" ff0bef2c57312ddbf7006c295dbc583e3938a822
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/clear-registered-d/node_modules"
       - name: Offline Moodle binding tests and standalone demo
+        env:
+          CLEAR_D_REGISTERED_WORKTREE: ${{ runner.temp }}/clear-registered-d
         run: |
           ./tools/node --import ./tests/agent-preview/network-block.mjs --test tests/agent-preview/binding-module.test.mjs tests/agent-preview/binding-currentness.test.mjs tests/agent-preview/binding-student.test.mjs tests/agent-preview/peer-transport.test.mjs
-          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/agent-preview/preview-context.test.mjs tests/agent-preview/preview-local-integration.test.mjs
+          ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/agent-preview/preview-context.test.mjs tests/agent-preview/preview-local-integration.test.mjs tests/agent-preview/preview-registered.test.mjs
           ./tools/node --import ./tests/agent-preview/network-block.mjs src/agent-preview/moodle-binding/synthetic-demo.mjs
       - name: Offline Moodle preparation vectors and package checks
         run: ./tools/node --test tests/moodle-preparation/*.test.mjs
