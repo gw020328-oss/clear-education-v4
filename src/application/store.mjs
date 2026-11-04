@@ -39,6 +39,7 @@ export function openStore(directory, config, authority = null) {
       // Once migrated, a missing nonce table is data loss, not a new empty
       // store. Do not silently reset replay protection during startup.
       const version = prior ? JSON.parse(prior.config).schemaVersion : 0;
+      requireRule([0, 1, 2, 3, 4, 5].includes(version), 'DB_ENVIRONMENT_MISMATCH');
       for (const name of version >= 4 ? ['proof_sessions', 'proof_results'] : version === 3 ? ['proof_sessions'] : []) {
         requireRule(db.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name=?").get(name), 'DB_SCHEMA_INCOMPLETE');
       }
