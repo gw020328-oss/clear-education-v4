@@ -15,8 +15,8 @@ async function setup(t,{afterFile=()=>{}}={}) {
  t.after(()=>x.owner.close());
  const pins={audience:'offline-native-source',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
  const file=join(f.directory,'native-context.json');
- let expireSignature=false;
- const scope={...x.scope,assert(){if(expireSignature)x.advance(5);x.scope.assert();}};
+ let expireSignature=false,expireApproval=false;
+ const scope={...x.scope,assert(){if(expireSignature)x.advance(5);if(expireApproval){x.advance(1);f.setTime(START+240);}x.scope.assert();}};
  const ui=createNormalUiSession({authentication:{...f.service,authorizeWorkflow(c,w){const actor=f.service.authorizeWorkflow(c,w);x.scope.assertContext(c);return actor;}},
   participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time,commandScope:scope,
   beforeBind(candidate){atomicPrivate(file,{applicationId:candidate.applicationId},{exclusive:true,beforePublish:()=>scope.beforeFile()});scope.afterFile();afterFile(x);}});
@@ -24,12 +24,25 @@ async function setup(t,{afterFile=()=>{}}={}) {
  const command=resource=>({method:'POST',path:'/bootcamp/v4/applications/'+applicationId+'/'+resource,body:{},idempotencyKey:null});
  const bind=async()=>{const input=await x.grant(command('source-session'));return x.scope.run(input,()=>{ui.bindParticipant(f.aliceContext,applicationId,pins);x.scope.filesCommitted();});};
  const expected={version:'clear-hackerrank-request.1',...pins,applicationId,participantId:v.participantId,participantWallet:f.alice.address.toLowerCase(),criterionId:'python-basic-certificate',policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,nonce:H('nonce'),issuedAt:START,expiresAt:START+240};delete expected.dataMode;
- return {f,x,ui,file,pins,command,bind,expected,expireSignature(){expireSignature=true;}};
+ return {f,x,ui,file,pins,command,bind,expected,expireSignature(){expireSignature=true;},expireApproval(){expireApproval=true;}};
 }
 
 test('native source binding publishes exclusively and consumes its exact command once',async t=>{
  const z=await setup(t);await z.bind();assert(existsSync(z.file));assert.equal(z.ui.participant().wallet,z.f.aliceContext.wallet);
  z.x.lastReservation.finish();await assert.rejects(z.bind(),/MOODLE_COMMAND_UNAVAILABLE/);
+});
+
+test('original evidence approval can expire at the final fence while the new command grant remains current',async t=>{
+ const z=await setup(t);await z.bind();let resolutions=0;
+ const pending=z.ui.requestSignature(z.expected,requestMessage(z.expected));pending.then(()=>resolutions++,()=>{});
+ const view=z.ui.pendingSignature(z.f.aliceContext),signature=await z.f.alice.signMessage(view.message);
+ z.f.setTime(START+239);z.x.advance(239);
+ const command={...z.command('source-signature'),body:{approvalId:view.approvalId,signature}},input=await z.x.grant(command);
+ z.expireApproval();
+ await assert.rejects(z.x.scope.run(input,()=>z.ui.submitSignature(z.f.aliceContext,command.body)),/BC_UI_SIGNATURE_EXPIRED/);
+ await assert.rejects(pending,/BC_UI_SIGNATURE_EXPIRED/);assert.equal(resolutions,0);
+ assert.throws(()=>z.x.lastReservation.finish(),/NOT_COMMITTED/);
+ await assert.rejects(z.x.scope.run(input,()=>{}),/BINDING/);
 });
 
 test('source context expiry after temp fsync prevents publish and memory binding',async t=>{

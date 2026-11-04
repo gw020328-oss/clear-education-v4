@@ -88,8 +88,10 @@ export function createNormalUiSession({authentication,participantWallet,operator
    check(typeof body.signature==='string'&&/^0x[0-9a-fA-F]{130}$/.test(body.signature),'BC_UI_SIGNATURE');
    let signer;try{signer=verifyMessage(pending.message,body.signature).toLowerCase();}catch{}check(signer===participantWallet,'BC_UI_SIGNATURE');
    own(context,true);if(now()>=pending.expiresAt){cancel('BC_UI_SIGNATURE_EXPIRED');check(false,'BC_UI_SIGNATURE_EXPIRED');}
-   commandScope?.assert();
-   const p=pending;pending=null;clearTimeout(p.timer);clearInterval(p.authorityTimer);p.signal?.removeEventListener('abort',p.abort);p.message=null;p.resolve(body.signature);commandScope?.memoryCommitted();observeSource(diagnostics,'SIGNATURE_ACCEPTANCE','COMPLETED');observeSource(diagnostics,'SIGNATURE_WAIT','COMPLETED');
+   const p=pending;commandScope?.assert();
+   check(pending===p&&body.approvalId===p.id,'BC_UI_SIGNATURE_NOT_PENDING');
+   if(now()>=p.expiresAt){cancel('BC_UI_SIGNATURE_EXPIRED');check(false,'BC_UI_SIGNATURE_EXPIRED');}
+   pending=null;clearTimeout(p.timer);clearInterval(p.authorityTimer);p.signal?.removeEventListener('abort',p.abort);p.message=null;p.resolve(body.signature);commandScope?.memoryCommitted();observeSource(diagnostics,'SIGNATURE_ACCEPTANCE','COMPLETED');observeSource(diagnostics,'SIGNATURE_WAIT','COMPLETED');
    return freeze({approvalId:p.id,requestHash:p.requestHash,status:'PARTICIPANT_SIGNATURE_ACCEPTED',paymentAuthorization:false});
    }catch(error){observeSource(diagnostics,'SIGNATURE_ACCEPTANCE','FAILED',error);throw error;}
   },
