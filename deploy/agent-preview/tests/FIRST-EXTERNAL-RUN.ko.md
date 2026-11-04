@@ -22,7 +22,9 @@
 
 ## 승인 대상과 실행 순서
 
-배포 제안은 Railway Hobby의 독립 preview 서비스 1개, Singapore `asia-southeast1-eqsg3a`, 지속 볼륨 1개, 고정 HTTPS origin이다. 월 최소 USD 5이고 compute usage hard limit 제안은 USD 10/월이다. 한도 도달 시 해당 workspace 서비스가 중지되므로 전용 workspace에서 적용한다. 세금과 Gemini 비용은 별도다. 이전 AWS 계정은 배포 대상으로 확정하지 않았다. Railway 계정 접근과 새 비용이 승인되면 로그인, 전용 프로젝트·볼륨·HTTPS origin·한도 설정, 컨테이너 업로드, 키 등록이 필요하다. [Railway 가격](https://docs.railway.com/pricing/plans) · [리전](https://docs.railway.com/deployments/regions) · [사용량 한도](https://docs.railway.com/pricing/cost-control)
+2026-11-04 사용자 AWS 계정 보유 확인 후 우선 추천은 AWS Lightsail Linux/Unix public IPv4 1GB/40GB, 기본 월 USD 7로 변경했다. 계정 접근·도메인·실측 자원·최종 요금은 미확인이고 인프라 생성 및 비용은 아직 승인되지 않았다. `../RAILWAY.ko.md`의 최신 비교를 따른다. 아래는 기존 Railway 대안이다.
+
+기존 배포 제안은 Railway Hobby의 독립 preview 서비스 1개, Singapore `asia-southeast1-eqsg3a`, 지속 볼륨 1개, 고정 HTTPS origin이다. 월 최소 USD 5이고 compute usage hard limit 제안은 USD 10/월이다. 한도 도달 시 해당 workspace 서비스가 중지되므로 전용 workspace에서 적용한다. 세금과 Gemini 비용은 별도다. 이전 AWS 계정은 배포 대상으로 확정하지 않았다. Railway 계정 접근과 새 비용이 승인되면 로그인, 전용 프로젝트·볼륨·HTTPS origin·한도 설정, 컨테이너 업로드, 키 등록이 필요하다. [Railway 가격](https://docs.railway.com/pricing/plans) · [리전](https://docs.railway.com/deployments/regions) · [사용량 한도](https://docs.railway.com/pricing/cost-control)
 
 1. B/C exact 통합 후보를 받는다. C가 의도한 `python-intro` 조건과 실제 테스트 강좌의 승인된 Moodle Page mapping을 연결한다. D 계획에서 보이는 `python-intro`는 공개 계획의 참조다. 학생 본인, 현재 ACK 신청, 등록, 강좌, Page binding은 B/C에서 확인한다.
 2. B/D 역할과 HTTPS origin, audience, keyRef, 새 epoch, 정책 시간 한도, 모델과 limits hash를 확정한다. 승인할 후보의 Git SHA, source manifest digest, 이미지 digest, 실제 origin과 대상 mapping을 기록한다. 인프라 동의는 별도이며 Gemini 호출은 이 릴리스에 대한 한 건의 입력 승인과 결합한다.

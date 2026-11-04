@@ -1,0 +1,8 @@
+{
+  "commit": "7dd6e38eead383824e9cf13bcf04804751fa3a31",
+  "sourceDirectory": "src/agent-preview/moodle-binding",
+  "files": {
+    "contract.mjs": "9f20b90abc0f5dd951f55af0a6ebdb4592ac673448de6c664c9156d21d0ca961",
+    "peer-transport.mjs": "c0adbc530b7252d096e2ee8d5512a7512a5470da2520f2c56135a685d9708834"
+  }
+}

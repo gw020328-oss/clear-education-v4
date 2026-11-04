@@ -1,4 +1,28 @@
-# 본선 외부 서버 추천: Railway Hobby
+# 외부 서버 비교: AWS Lightsail 우선, Railway 대안
+
+## 2026-11-04 사용자 AWS 계정 보유 확인 후 추천 수정
+
+사용자가 기존 AWS 계정을 보유한다고 알려 주었다. 현재 추천은 **AWS Lightsail Linux/Unix 인스턴스 1개**다.
+초기 후보는 서울 리전, public IPv4 포함 1GB RAM/40GB SSD, 기본 월 USD 7이다.
+CLEAR 미리보기 API만 실행하며 Moodle 전체 서버를 같은 사양에 올린다는 뜻이 아니다.
+이미지는 로컬에서 빌드하고 서버 메모리·재시작·HTTPS 검증으로 적합성을 확인한다.
+2GB 월 USD 12 증설은 측정 후 별도 비용 판단 대상이다. 무료 혜택은 계정에서 확인 전 반영하지 않는다.
+[공식 요금](https://aws.amazon.com/lightsail/pricing/) · [서울 리전 지원](https://docs.aws.amazon.com/general/latest/gr/lightsail.html)
+
+현재 peer 런타임은 같은 호스트의 TLS 프록시, loopback listener, 지속 SQLite를 전제로 하므로 VM 구성과 맞는다.
+Lightsail에는 OS 보안 업데이트·HTTPS 프록시·도메인 설정이 필요하다. 도메인 보유 여부와 DNS 접근은 미확인이다.
+Railway는 자동 HTTPS와 제공 도메인, OS 관리 부담 감소가 장점이다.
+[Railway 공개 네트워크](https://docs.railway.com/networking/public-networking)
+
+USD 7은 서버 기본료이며 도메인·스냅샷·전송량 초과·세금·Gemini 비용은 별도다.
+AWS Budgets는 알림 지연이 있고 청구 hard cap이 아니다. Lightsail은 정지 상태도 과금된다.
+[AWS Budgets](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html) ·
+[Lightsail 과금](https://docs.aws.amazon.com/en_en/lightsail/latest/userguide/amazon-lightsail-frequently-asked-questions-faq-billing-and-account-management.html)
+
+현재 AWS 계정 접근·자원·크레딧·최종 요금은 미확인이다. 사용자 요청은 비교와 추천이며, 이 문서가 자원 생성 또는 결제 완료 증거는 아니다.
+아래 Railway 사양은 대안으로 보존하며 기존 승인 질문을 Railway 구매 승인으로 해석하지 않는다.
+
+## 기존 Railway 대안 사양
 
 2026-11-04 공식 문서 확인. 첫 read-only agent/API 서버 1개, Singapore region, persistent volume 1개를 권장한다.
 실제 기관 기록 접근은 B/C의 승인된 관측 계약 이후이며, 이 배포만으로 지급/Privy/RPC 이전이 끝나지 않는다.

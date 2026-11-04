@@ -37,15 +37,16 @@ test('canonical manifest passes; four-file, omitted, duplicate and extra entries
   rmSync(store);symlinkSync(join(f.staged,'deploy/agent-preview/config.mjs'),store);
   assert.throws(()=>verifyArtifact(sha(f.bytes)),/ARTIFACT_PATH/);
 });
-test('server, Railway and approval CLI reject tampered application before its top-level side effects',t=>{
+test('all server and approval entrypoints reject tampered application before its top-level side effects',t=>{
   const f=fixture(t),profile=join(f.dir,'profile.json');
-  writeFileSync(profile,JSON.stringify({artifactHash:sha(f.bytes)}));
+  writeFileSync(profile,JSON.stringify({artifactHash:sha(f.bytes),config:{artifactHash:sha(f.bytes)}}));
   const config=join(f.staged,'deploy/agent-preview/config.mjs');
   writeFileSync(config,readFileSync(config,'utf8')+'\nconsole.error("UNVERIFIED_APPLICATION_EVALUATED");\n');
   for(const [entry,args,error] of [['server.mjs',[],'PREVIEW_START_FAILED'],['railway.mjs',[],'PREVIEW_START_FAILED'],
-    ['approval.mjs',['prepare','/nonexistent'],'PREVIEW_APPROVAL_FAILED']]) {
+    ['approval.mjs',['prepare','/nonexistent'],'PREVIEW_APPROVAL_FAILED'],
+    ['peer-main.mjs',[],'PEER_START_FAILED'],['peer-register.mjs',[],'PEER_APPROVAL_FAILED']]) {
     const result=spawnSync(process.execPath,[join(f.staged,'deploy/agent-preview',entry),...args],{encoding:'utf8',
-      env:{CLEAR_PREVIEW_CONFIG:profile,CLEAR_PREVIEW_ARTIFACT_HASH:sha(f.bytes)}});
+      env:{CLEAR_PREVIEW_CONFIG:profile,CLEAR_PREVIEW_ARTIFACT_HASH:sha(f.bytes),CLEAR_PEER_RELEASE:profile}});
     assert.equal(result.status,1);assert.match(result.stderr,new RegExp(error));
     assert.doesNotMatch(result.stderr,/UNVERIFIED_APPLICATION_EVALUATED/);
   }

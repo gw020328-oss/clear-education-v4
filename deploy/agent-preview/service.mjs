@@ -12,13 +12,15 @@ const actorKeys=['institutionId','courseId','operatorId','sourceText'];
 const gates={scope:'PRECONFIGURATION_ONLY', automaticEligibility:false, paymentAllowed:false,
   actualReclaimCall:false, actualPayout:false, dataMode:'DEMO_ACCOUNTS_ONLY'};
 export function createService({config,store,observationAdapter=null,modelTransport=developerTransport(),clock=Date.now,
-  setTimer=setTimeout,clearTimer=clearTimeout,setOperationTimer=setTimeout,clearOperationTimer=clearTimeout,offlinePeerContext=null}) {
+  setTimer=setTimeout,clearTimer=clearTimeout,setOperationTimer=setTimeout,clearOperationTimer=clearTimeout,offlinePeerContext=null,registeredPeerContext=null}) {
   // In-process fixture input from B's context issuer. Never taken from an HTTP body.
-  const peer=offlinePeerContext && Object.freeze(structuredClone(offlinePeerContext));
+  check(!(offlinePeerContext && registeredPeerContext),'PEER_CONTEXT_MODE');
+  const inputPeer=registeredPeerContext??offlinePeerContext;
+  const peer=inputPeer && Object.freeze(structuredClone(inputPeer));
   if(peer) {
     exact(peer,['version','previewContextRef','sourceHash','bodyHash','model','approvalBindingHash',
       'expiresAtExclusive','automaticEligibility','paymentAllowed']);
-    check(modelTransport.execution==='OFFLINE' && peer.version==='clear-self-preview-context.1'
+    check((registeredPeerContext ? ['OFFLINE','ACTUAL'].includes(modelTransport.execution) : modelTransport.execution==='OFFLINE') && peer.version==='clear-self-preview-context.1'
       && peer.model===previewModel && peer.automaticEligibility===false && peer.paymentAllowed===false
       && [peer.previewContextRef,peer.sourceHash,peer.bodyHash,peer.approvalBindingHash].every(
         value=>typeof value==='string' && /^[a-f0-9]{64}$/.test(value) && value!=='0'.repeat(64))

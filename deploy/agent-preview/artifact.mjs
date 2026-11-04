@@ -10,7 +10,7 @@ const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 export function check(ok,code) {if(!ok)throw Error(code);}
 // SHA-256 of JSON.stringify(sorted canonical source paths). Changes require a reviewed
 // bootstrap update; the manifest cannot select its own executable coverage.
-const pathSetHash='4f2196db781e06ba960a1f99b255b5968c13e52b4ffb314eb930c7a7b6a86ade';
+const pathSetHash='c787a648fe46159f4d16843edf190ece8955fc9009b03524348b69e5b09317dc';
 export function verifyPaths(paths) {
   check(new Set(paths).size===paths.length && digest(JSON.stringify([...paths].sort()))===pathSetHash,'ARTIFACT_FILE_SET');
 }

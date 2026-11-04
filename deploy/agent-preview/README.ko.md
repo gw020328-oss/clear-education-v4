@@ -4,12 +4,12 @@
 Node 24.21.0, 기존 Gemini 3.5 Flash-Lite 전송기·응답 검사·계획 검사 재사용.
 로컬 지급 호스트, Privy, 체인/RPC, Attestor, 신청 DB에는 연결하지 않는다.
 
-현재 실제 관측 어댑터는 **미인수**다. `execute`는 `503 OBSERVATION_ADAPTER_NOT_ACCEPTED`로 차단한다.
+기존 v0 서버의 실제 관측 어댑터는 **미인수**다. `execute`는 `503 OBSERVATION_ADAPTER_NOT_ACCEPTED`로 차단한다.
 B/C의 승인된 학생·강좌·대상 binding 경로를 연결하기 전에는 REST 토큰으로 직접 학생 기록을 조회하지 않는다.
 테스트 어댑터는 `OFFLINE_TEST_ADAPTER`, 기존 계획 문법은 `PUBLIC_SYNTHETIC` 그대로 표시한다.
 이 상태의 서버/터널 성공은 Moodle 실조회·외부 compute·최종 지급 성공이 아니다.
 
-## API 계약
+## 기존 v0 API 계약
 
 모든 경로는 POST, 정확한 `Content-Type: application/json`, 본문 UTF-8 16 KiB 이하이다.
 추가/중복 JSON 필드, 압축 본문, 브라우저 Origin/Cookie/Sec-Fetch-Site, 다른 Host를 거부한다.
@@ -157,3 +157,33 @@ context/request/source/proposal/audience/epoch/bodyHash/expiry 검증을 인수�
 - 각 generate/execute는 45초 상한, 승인/초안 만료, HTTP 연결 종료, service close에 연결된 AbortSignal을 갖는다. dispatch 직전과 await 직후 closed/expiry를 확인한다. SIGTERM은 HTTP drain을 기다리기 전에 작업을 취소한다. 취소된 승인도 계속 소진 상태다.
 - 초안 TTL은 진행 중 observe도 취소한다. 응답하지 않는 adapter도 서비스 대기를 즉시 끝내고 늦은 응답은 버린다. 이는 서비스가 가진 참조 정리이며 비협조적 외부 adapter의 자체 메모리나 물리적 zeroization을 보장하지 않는다.
 - 실제 관측 adapter는 계속 미수락(503)이다. 외부 배포·실제 Moodle·유료 모델 호출은 이 보정 검사에 포함되지 않는다.
+
+
+## 독립 peer 런타임 후보 (미배포·검토 대기)
+
+`peer-main.mjs`는 별도 시작점이다. 기본 Docker CMD 및 v0 서버는 자동 전환하지 않는다.
+B codec/contract를 `vendor/b-peer/SOURCE.json`의 exact 커밋 바이트로 포함한다.
+`CLEAR_PEER_RELEASE`와 `CLEAR_PEER_REGISTRATION`은 UID1000 소유의 실제 0600 JSON 파일이다.
+release는 ACTUAL_GEMINI 모드, 공개 origin·epoch·source artifact·서명 pin·관측 대상·receipt 버전을 고정한다.
+registration은 신뢰된 운영 경로에서 받은 단일 B context/scopeHash/approvalRef를 사전 고정한다.
+현재 구현은 등록당 최대120초의 단일 context 수명이며 다중 사용자 상시 서비스는 아니다.
+
+서명 prepare 본문은 version/context/release/toolBinding/modelCapability/observationCapability/dataMode만 허용한다.
+release는 B의 같은 owner 배포 snapshot에서 생성한 deploymentEpoch/artifactHash/model/limitsHash 4개 필드다.
+D 고정 배포 값, signed meta epoch, context model과 exact 일치해야 한다. 브라우저 값으로 구성하지 않는다.
+prepare는 context를 활성화하지만 유료 호출 승인을 만들지 않는다. generate 전에 별도로 승인된
+releaseHash/bodyHash/approvalBindingHash를 `CLEAR_APPROVED_RELEASE_HASH`, `CLEAR_APPROVED_BODY_HASH`,
+`CLEAR_APPROVED_BINDING_HASH`로 전달해 `peer-register.mjs`에서 단회 원장을 등록한다.
+운영자는 직접 사용자 승인 근거를 확인해야 하며 환경 변수 일치만으로 승인 사실을 추론하지 않는다.
+
+B 서명 generate → draft → execute 검토 영수증 → observation-result 순서를 강제한다.
+D는 B가 검증한 `core-page-manual-mark`의 관측 triple만 받고 직접 Moodle 조회·자격 판정·지급은 하지 않는다.
+모든 반환의 paymentAllowed는 false다. 실제 전송기/AST 검증을 통과한 응답만 ACTUAL_GEMINI_HTTP로 표시한다.
+로컬 시험은 OFFLINE_TEST 전송기와 별도 test receipt를 사용하며 실제 호출 성공으로 표시하지 않는다.
+
+승인 DB와 peer-replay.sqlite는 동일 private 지속 디렉터리의 별도 파일이다.
+같은 context의 중복 prepare와 재시작 후 재등록을 거부하며 close/만료/요청 취소 시 진행 중 호출을 취소한다.
+전체 source manifest 검증은 애플리케이션 import보다 먼저 수행한다.
+서버는 loopback에만 bind하므로 같은 Linux 호스트의 TLS 프록시가 필요하다.
+AWS·Railway 비교는 [배포 후보 비교](RAILWAY.ko.md)를 따른다.
+실제 Gemini, B/C 통합 HTTPS, 원격 재시작 및 배포 성공은 아직 검증하지 않았다.
