@@ -271,3 +271,23 @@ for (const operation of ['finish', 'status']) {
     });
   }
 }
+
+test('a shorter transport lease fences issue, status, end and finish', async () => {
+  const x = fixture();
+  const expired = () => { throw Error('TRANSPORT_EXPIRED'); };
+  await assert.rejects(x.owner.issue(x.input('PARTICIPANT'), {assertCurrent: expired}), /TRANSPORT_EXPIRED/);
+  const a = await x.launch();
+  await a.complete();
+  assert.equal((await x.owner.status(a.next(), {assertCurrent: expired})).handback, null);
+  await x.owner.end(a.next({}, 'end'), {assertCurrent: expired});
+  const {handback, status} = await x.owner.status(a.next());
+  assert.equal(status, 'RETURN_REQUIRED');
+
+  let elapsed = 0, calls = 0;
+  x.onAuthenticate(() => { if (++calls === 2) elapsed += 6; });
+  const result = await x.owner.finish(a.next({handback, finishProof: a.finishProof}), {
+    assertCurrent: () => { if (elapsed >= 5) expired(); },
+  });
+  assert.equal(result.status, 'UNAVAILABLE');
+  assert.equal((await x.owner.status(a.next())).status, 'UNAVAILABLE');
+});

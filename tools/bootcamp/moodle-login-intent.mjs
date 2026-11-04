@@ -99,7 +99,7 @@ export function createMoodleLoginIntents({
     version: MOODLE_LOGIN_INTENT, requestRef: q.requestRef, status, expiresAtExclusive, handback,
   });
 
-  async function inspect(input, operation, {signal} = {}) {
+  async function inspect(input, operation, {signal, assertCurrent} = {}) {
     const t = time(), q = request(input, operation, t), a = attempts.get(q.intentRef);
     if (!a?.identity || a.request.role !== q.role) return answer(q, 'UNAVAILABLE');
     const before = a.phase;
@@ -110,11 +110,15 @@ export function createMoodleLoginIntents({
       // phase while authority was pending. Terminal phases never re-enter.
       if (operation === 'end') {
         requireCurrentOperation(q, t, grant, signal);
+        assertCurrent?.();
         clearAttempt(a, 'ENDED');
         return answer(q, 'UNAVAILABLE');
       }
       if (a.phase !== before) return answer(q, 'UNAVAILABLE');
-      if (!live(a, requireCurrentOperation(q, t, grant, signal))) return answer(q, 'EXPIRED');
+      if (!live(a, requireCurrentOperation(q, t, grant, signal))) {
+        assertCurrent?.();
+        return answer(q, 'EXPIRED');
+      }
       let expiry = Math.min(grant.expiresAtExclusive, a.expiresAtExclusive);
       if (before === 'CONNECTED' || before === 'AUTHENTICATED_PENDING_MOODLE') {
         expiry = Math.min(expiry, clearExpiry(q.role, a.context));
@@ -122,10 +126,14 @@ export function createMoodleLoginIntents({
         // Recheck before exposing a handback, without extending the attempt.
         const checked = requireCurrentOperation(q, t, grant, signal);
         check(a.phase === before && live(a, checked) && checked.wall < expiry, 'MOODLE_LOGIN_EXPIRED');
+        assertCurrent?.();
         const pending = before === 'AUTHENTICATED_PENDING_MOODLE';
         return answer(q, pending ? 'RETURN_REQUIRED' : 'CONNECTED', expiry, pending ? a.handback : null);
       }
-      if (['ISSUED', 'WAITING'].includes(before)) return answer(q, 'WAITING', expiry);
+      if (['ISSUED', 'WAITING'].includes(before)) {
+        assertCurrent?.();
+        return answer(q, 'WAITING', expiry);
+      }
       return answer(q, 'UNAVAILABLE');
     } catch {
       return answer(q, 'UNAVAILABLE');
@@ -133,7 +141,7 @@ export function createMoodleLoginIntents({
   }
 
   return Object.freeze({
-    async issue(input, {signal} = {}) {
+    async issue(input, {signal, assertCurrent} = {}) {
       const t = time(), q = request(input, 'start', t);
       for (const a of attempts.values()) if (!live(a, t)) clearAttempt(a, 'EXPIRED');
       check(t.wall < runExpiresAtExclusive && attempts.size < 32 && !attempts.has(q.requestRef), 'MOODLE_LOGIN_REPLAY');
@@ -143,15 +151,19 @@ export function createMoodleLoginIntents({
       try {
         const grant = await authority('start', q, t, signal);
         requireLive(a, signal);
+        const launchCode = token();
+        const finishProof = deriveFinishProof({ownerRunId, intentRef: q.requestRef, launchCode});
+        check(hex(finishProof), 'MOODLE_LOGIN_PROOF');
+        const finishProofHash = digest(finishProof), launchHash = digest(launchCode).toString('hex');
+        const checked = requireCurrentOperation(q, t, grant, signal);
+        check(a.phase === 'VERIFYING' && live(a, checked), 'MOODLE_LOGIN_EXPIRED');
+        assertCurrent?.();
         a.moodleHorizon = grant.expiresAtExclusive;
         a.moodleMonotonicEnd = t.mono + (a.moodleHorizon - t.wall) * 1000;
         a.expiresAtExclusive = Math.min(a.expiresAtExclusive, a.moodleHorizon);
         a.identity = grant.identity;
-        const launchCode = token();
-        const finishProof = deriveFinishProof({ownerRunId, intentRef: q.requestRef, launchCode});
-        check(hex(finishProof), 'MOODLE_LOGIN_PROOF');
-        a.finishProofHash = digest(finishProof);
-        a.launchHash = digest(launchCode).toString('hex');
+        a.finishProofHash = finishProofHash;
+        a.launchHash = launchHash;
         a.launchExpires = Math.min(t.wall + 120, a.expiresAtExclusive);
         a.launchMonotonicEnd = t.mono + 120000;
         a.phase = 'ISSUED';
@@ -209,7 +221,7 @@ export function createMoodleLoginIntents({
       browsers.delete(a.browserHash);
       return {status: 'AUTHENTICATED_PENDING_MOODLE'};
     },
-    async finish(input, {signal} = {}) {
+    async finish(input, {signal, assertCurrent} = {}) {
       const t = time(), q = request(input, 'finish', t), a = attempts.get(q.intentRef);
       if (a?.phase !== 'AUTHENTICATED_PENDING_MOODLE' || a.request.role !== q.role || !live(a, t)
         || !matches(q.handback, a.handbackHash) || !matches(q.finishProof, a.finishProofHash)) return answer(q, 'UNAVAILABLE');
@@ -225,6 +237,7 @@ export function createMoodleLoginIntents({
         const checked = requireCurrentOperation(q, t, grant, signal);
         check(a.phase === 'FINISHING' && live(a, checked) && checked.wall < expiry,
           'MOODLE_LOGIN_EXPIRED');
+        assertCurrent?.();
         a.expiresAtExclusive = Math.min(runExpiresAtExclusive, a.moodleHorizon, grant.expiresAtExclusive, expiry);
         a.monotonicEnd = Math.min(runMonotonicEnd, a.moodleMonotonicEnd, t.mono + (a.expiresAtExclusive - t.wall) * 1000);
         a.finishProofHash = a.handbackHash = a.handback = null;
