@@ -1,0 +1,13 @@
+{
+  "version": "clear-external-preview-config.1",
+  "publicOrigin": "https://preview.example.invalid",
+  "port": 18991,
+  "institutionId": "clear-demo",
+  "courseId": "2",
+  "operatorId": "2",
+  "dataMode": "DEMO_ACCOUNTS_ONLY",
+  "artifactHash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "deploymentEpoch": "00000000-0000-4000-8000-000000000000",
+  "databasePath": "/var/lib/clear-preview/approvals.sqlite",
+  "sharedSecretFile": "/run/secrets/clear-preview-hmac"
+}
