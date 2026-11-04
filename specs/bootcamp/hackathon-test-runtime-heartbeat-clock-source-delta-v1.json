@@ -1,0 +1,39 @@
+{
+  "version": "clear-runtime-heartbeat-clock-source-delta.1",
+  "previousHead": "fed992a86367936f713774355af2921e94fe0a29",
+  "sourceHead": "122f13b71c96ce8f36a50a69e2dfc4729d2c7211",
+  "candidateHead": "122f13b71c96ce8f36a50a69e2dfc4729d2c7211",
+  "previousGuardSha256": "efaeca18fef87f8d7d0c5419ecc2b257301548d48d6a981d1c22ff8259267a4f",
+  "changes": {
+    "src/bootcamp/execution-operations.mjs": {
+      "before": "18408ef671de74bed459758da6872207f20c6d486796d931d617a42aa284ff89",
+      "after": "2c22856eb92b65778fa097a383a7cdbf4f132520e8555f8cf9b7f75094bde1ad"
+    }
+  },
+  "reviewedSourceChanges": {
+    "src/bootcamp/execution-operations.mjs": {
+      "before": "18408ef671de74bed459758da6872207f20c6d486796d931d617a42aa284ff89",
+      "after": "2c22856eb92b65778fa097a383a7cdbf4f132520e8555f8cf9b7f75094bde1ad"
+    }
+  },
+  "sourceAdditions": {},
+  "sourceCount": 224,
+  "candidateScope": {
+    "kind": "EXACT_SOURCE_TABLES_AND_LISTED_ARTIFACTS",
+    "sourceManifestSha256": "22bd6565c06bdf7661fa43792d14b0435ae0327d76e8530fa772bb23b8aca49a",
+    "productWalletSourceCount": 24,
+    "productWalletManifestSha256": "cc33bd45389c56edd893c5f5308cc831e15b2eb2db4e01e793cbefea94adad7c",
+    "wholeRepository": false,
+    "additionalArtifacts": {
+      "src/hackathon-test-vault/reviewed-source-v60.mjs": "2180a13829dd0902dbb57a8d053004f3abda50d1c904f8d67a3d98bda512e5f9",
+      "src/hackathon-test-vault/reviewed-source-v61.mjs": "25a5de00062b5ba8450b50cafecbcbe9b19cf1e4b5b784b7266df32198513e6d",
+      "specs/bootcamp/hackathon-test-operator-condition-preview-source-delta-v1.json": "5efe3a8280e4b7c988ec4ea8bc61da1be3db9b35018211edfd1696d923a8521f",
+      "specs/bootcamp/hackathon-test-runtime-fence-clock-source-delta-v1.json": "1e6eb52a7a1fac38239d5cdeb3547e5f518e231293b81872ca0903880ab98e22",
+      ".github/workflows/hackathon-e5b.yml": "a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef",
+      "src/hackathon-test-vault/reviewed-source-v62.mjs": "3575c245125e1353b353b0f4da168a195e3c5af9d0d57b2370907fb84d5dd13d",
+      "specs/bootcamp/hackathon-test-preview-fence-integration-v1.json": "f4a88b455048668fd4109f7a1ccb2ade2d22c50f27fc0c579560e10737990d47",
+      "src/hackathon-test-vault/reviewed-source-v63.mjs": "efaeca18fef87f8d7d0c5419ecc2b257301548d48d6a981d1c22ff8259267a4f",
+      "specs/bootcamp/hackathon-test-moodle-student-source-delta-v1.json": "574d543cd42d4c71b1a46102094ffce8d6fea2bed28bf3ffe1c62bebfb65bc05"
+    }
+  }
+}
