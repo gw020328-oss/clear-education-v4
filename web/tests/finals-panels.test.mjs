@@ -998,3 +998,28 @@ test('실제 모드 + Gemini/운영자 중계 자리: 「제안 생성」 을 �
     assert.equal(UNCONNECTED_MODEL_PROPOSER.explicit, true);
   } finally { restore(); }
 });
+
+// ── 선택·면제 문장은 필수 조건으로 읽지 않는다 ───────────────────────────────
+
+test('규칙 제안기: "선택입니다"·"필수가 아닙니다"·"않아도 됩니다" 는 보류하고 필수로 읽지 않는다', () => {
+  const opt = proposeReading('해커랭크 인증서는 선택입니다');
+  assert.equal(opt.held, 1); assert.equal(opt.kept.length, 0);
+  assert.equal(opt.clauses[0].relation, 'OPTIONAL');
+  assert.deepEqual(opt.clauses[0].mentions, ['HACKERRANK_CERTIFICATE_HOLDING.1']);
+  assert.match(opt.clauses[0].note, /선택 사항/);
+
+  const notRequired = proposeReading('수료 후기 작성은 필수가 아닙니다');
+  assert.equal(notRequired.clauses[0].relation, 'OPTIONAL');
+
+  const neg = proposeReading('회고는 쓰지 않아도 됩니다');
+  assert.equal(neg.clauses[0].relation, 'NEGATION');
+  assert.equal(neg.kept.length, 0);
+
+  // 같은 단어라도 조건 요구 문장이면 그대로 읽는다
+  const plain = proposeReading('과제를 제출하고 선택 과제도 제출해 주세요');
+  assert.equal(plain.held, 0);
+  assert.ok(plain.kept.some((c) => c.capability === 'MOODLE_ASSIGNMENT_SUBMISSION.1'));
+  // 우리 조건이 안 섞인 문장은 수식이 있어도 보류가 아니라 그냥 안 읽는다
+  const none = proposeReading('주차 등록은 선택입니다');
+  assert.equal(none.held, 0);
+});
