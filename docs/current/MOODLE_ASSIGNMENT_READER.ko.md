@@ -14,3 +14,11 @@ normal-moodle-reader.php는 기존 소유자 전용 CLI 토큰 경계를 추적 
 소유자 조립에서 activity-reader.php mount의 bytes를 이 검토 파일로 교체하고, transport.parameters를 normalMoodleReadParameters, reader를 normalMoodleReadClient로 지정한다. 둘 다 source pin에 포함한 새 실행에서만 적용한다. 현재 r20에는 적용하지 않는다. 이 후보는 과제 MET를 직접 기록하지 않으며 기존 공식 Moodle adapter가 실제 응답의 mapped user/group/status를 검증한다.
 
 집중 합성 4개 검사는 원 target guard의 거부 재현, 정확한 두 메서드/기존 강의 읽기 전달, 다른 scope/쓰기/추가 필드 거부, 기존 소유자 callback 전후 거부와 취소 전달을 확인했다. PHP lint 통과. 실제 PHP role/enrol 변경 시험이나 서비스 권한 적용, 새 공식 source 수집은 아직 수행하지 않았다. 독립 권한 검토 뒤 실제 연결에서 확인한다.
+
+## F1 토큰 정리 회귀 수정
+
+초기 후보의 전역 membership 검사는 revoke까지 막았다. 고정 origin/dbhost/service2/user3 검사는 모든 action에 유지하고, 동적 membership 및 사용자 상태·등록·capability 검사는 prepare/issue에만 적용했다. revoke는 권한이 사라진 뒤에도 정확한 token/service/user 조건으로 삭제한다.
+
+`sh tests/fixtures/moodle-reader/run.sh`는 고정 PHP 이미지의 실제 인터프리터로 운영 PHP 파일을 실행한다. DB와 Moodle API만 격리 double이며 네트워크와 실제 DB mount는 없다. membership/역할/등록 소실, suspended/deleted user 각각에서 revoke 성공 및 동일 요청 재삭제의 멱등성, prepare/issue 거절을 확인한다. 다른 service/user/origin/dbhost의 revoke는 거절한다. token이 같아도 다른 service/user인 행과 같은 service/user의 다른 token은 유지한다. 총 19개 사례를 통과했다. 이전 base PHP는 첫 membership-loss revoke 사례에서 실패한다.
+
+이 검사는 실제 Moodle DB 권한 변경·토큰 발급이나 원천 수집을 수행한 결과가 아니다. 서비스 적용과 r21 실행은 재검토 후 진행한다. 변경하지 않은 JS policy의 기존 4개 검사는 이번 F1 수정에서 반복하지 않았다.

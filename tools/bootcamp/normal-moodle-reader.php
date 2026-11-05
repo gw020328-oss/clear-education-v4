@@ -10,12 +10,15 @@ $scope = json_decode(file_get_contents('/activity-reader-scope.json'), true, 4, 
 $request = json_decode(stream_get_contents(STDIN), true, 4, JSON_THROW_ON_ERROR);
 $service = (int) $scope['serviceId'];
 $user = 3;
-if ($service !== 2 || $scope['userId'] !== $user || !$DB->record_exists('external_services_users', ['externalserviceid' => $service, 'userid' => $user])) {
+if ($service !== 2 || $scope['userId'] !== $user) {
     throw new RuntimeException('ACTIVITY_READER_ACCOUNT');
 }
 $allowed = ['core_webservice_get_site_info', 'core_course_get_contents', 'core_completion_get_activities_completion_status',
     'mod_assign_get_assignments', 'mod_assign_get_submission_status'];
-if ($request['action'] !== 'revoke') {
+if (in_array($request['action'], ['prepare', 'issue'], true)) {
+if (!$DB->record_exists('external_services_users', ['externalserviceid' => $service, 'userid' => $user])) {
+    throw new RuntimeException('ACTIVITY_READER_ACCOUNT');
+}
 $members = $DB->get_fieldset_select('external_services_users', 'userid', 'externalserviceid = ?', [$service]);
 if (count($members) !== 1 || (int)reset($members) !== $user) { throw new RuntimeException('ACTIVITY_READER_ACCOUNT'); }
 $participant = $DB->get_record('user', ['id' => $user, 'deleted' => 0, 'suspended' => 0], '*', MUST_EXIST);
