@@ -180,6 +180,31 @@ export function aiComparePanel({
 
   const pick = (preset) => { edit(preset.source); run(); };
 
+  // ── 원문 칸 — 글자마다 다시 그리지 않는다 ──────────────────────────
+  //
+  // 전에는 글자 하나마다 제안을 다시 만들고 화면 전체를 다시 그렸다. 그러면
+  // textarea 가 새 요소로 바뀌는데, **한글은 조합 중**이라 글자가 깨지거나
+  // 안 쳐졌다. 이제 조합 중에는 손대지 않고, 손을 뗀 뒤 잠깐 있다가 한 번만
+  // 제안을 갱신한다. 서준형: "원문에 직접 타이핑이 안 된다."
+  let composing = false;
+  let editTimer = null;
+  const queueEdit = () => {
+    if (composing) return;
+    if (editTimer !== null) clearTimeout(editTimer);
+    editTimer = setTimeout(() => { editTimer = null; edit(text); render(); }, 250);
+  };
+  const sourceInput = () => {
+    const input = el('textarea.fp-input', {
+      rows: '3',
+      value: text,
+      'aria-label': '환급 안내문 원문',
+      onInput: (e) => { text = e.target.value; onSource(text); queueEdit(); },
+    });
+    input.addEventListener('compositionstart', () => { composing = true; });
+    input.addEventListener('compositionend', () => { composing = false; queueEdit(); });
+    return input;
+  };
+
   /**
    * 운영자 직접 보완 상자.
    *
@@ -266,12 +291,7 @@ export function aiComparePanel({
       // ── 원문 ──────────────────────────────────────────────────────
       el('label.fp-field', {}, [
         el('span.fp-label', { text: '환급 안내문 원문' }),
-        el('textarea.fp-input', {
-          rows: '3',
-          value: text,
-          'aria-label': '환급 안내문 원문',
-          onInput: (e) => { edit(e.target.value); render(); },
-        }),
+        sourceInput(),
       ]),
 
       // ── 읽기 제안 — 모듈에 넘기기 전에 사람이 본다 ─────────────────

@@ -631,3 +631,28 @@ test('입력을 고치면 진행 중이던 요청의 늦은 응답은 버려진�
   await b.request(PRESETS[0].source);
   assert.equal(b.current.state, STATE.SUCCESS);
 });
+
+// ── 원문 칸 타이핑 — 글자마다 다시 그리지 않는다 ──────────────────────────
+
+test('원문을 치는 동안은 화면을 다시 그리지 않고, 손을 뗀 뒤 한 번만 제안을 갱신한다', async () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+    const panel = aiComparePanel({ adapter: a, source: '' });
+    const ta = () => [...walk(panel.node)].find((n) => n.tagName === 'TEXTAREA');
+    const first = ta();
+    // 한글 조합 시작 → 글자 입력 → 아직 같은 요소여야 한다
+    for (const fn of first.handlers.compositionstart ?? []) fn({});
+    for (const fn of first.handlers.input ?? []) fn({ target: { value: '숙' } });
+    for (const fn of first.handlers.input ?? []) fn({ target: { value: '숙제' } });
+    await new Promise((r) => setTimeout(r, 300));
+    assert.equal(ta(), first, '조합 중에 textarea 가 새 요소로 바뀌었다');
+    assert.ok(!panel.node.textContent.includes('1개 조건을 찾았습니다'), '조합 중에 제안을 갱신했다');
+    // 조합 끝 → 잠시 뒤 한 번 갱신
+    for (const fn of first.handlers.input ?? []) fn({ target: { value: '숙제 제출' } });
+    for (const fn of first.handlers.compositionend ?? []) fn({});
+    await new Promise((r) => setTimeout(r, 350));
+    assert.ok(panel.node.textContent.includes('1개 조건을 찾았습니다'), '손을 뗀 뒤 제안이 갱신되지 않았다');
+    assert.equal(ta().value, '숙제 제출', '다시 그린 칸에 글이 그대로 있어야 한다');
+  } finally { restore(); }
+});
