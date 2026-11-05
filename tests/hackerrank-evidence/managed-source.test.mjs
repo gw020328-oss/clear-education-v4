@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 import {withManagedHackerRankSource} from '../../src/hackerrank-evidence/managed-source.mjs';
 import {syntheticRecipe,ACCOUNT_URL} from '../../src/hackerrank-evidence/recipes.mjs';
 import {hash} from '../../src/hackerrank-evidence/values.mjs';
+import {PassThrough} from 'node:stream';
+import {createInterface} from 'node:readline';
+import {createSourceDiagnostics} from '../../src/hackerrank-evidence/diagnostics.mjs';
 
 // Host lifecycle only. This invented profile is never sent to an attestor and
 // is not a reviewed live recipe. Fake transports cannot make a valid lease.
@@ -95,6 +98,31 @@ test('deferred launch follows a valid accepted signature, then waits for login',
  await withManagedHackerRankSource(x.session,x.input);
  assert.equal(x.calls.filter(c=>c==='OPEN_BROWSER').length,1);
  assert.deepEqual(x.calls.slice(-3),['CLOSE_BROWSER','CLOSE_ROUTE','CLOSE_CLIENT']);
+});
+test('closed host input after deferred navigation preserves the first READY failure and closes the source',async()=>{
+ const x=setup(),wallet=Wallet.createRandom(),input=new PassThrough();let held;
+ const diagnostics=createSourceDiagnostics({persist(){}});
+ x.input.deferReadyUntilCollection=true;x.input.diagnostics=diagnostics;
+ x.input.waitForReady=async()=>{
+  x.calls.push('READY');
+  const lines=createInterface({input,terminal:false});
+  const pending=new Promise((_,reject)=>lines.once('close',()=>reject(Error('NORMAL_HOST_INPUT_CLOSED'))));
+  input.end();await pending;
+ };
+ x.input.useSource=async source=>{
+  held=source;
+  return source.collectLease(requestFor(source.pins(),wallet),{isAuthorized:()=>true,
+   signRequest:message=>wallet.signMessage(message)});
+ };
+ await assert.rejects(withManagedHackerRankSource(x.session,x.input),/COLLECTION_FAILED/);
+ const d=diagnostics.snapshot();
+ assert.equal(d.firstFailure.stage,'PREPARED_SOURCE');
+ assert.equal(d.firstFailure.code,'NORMAL_HOST_INPUT_CLOSED');
+ assert.equal(d.stages.COLLECTOR_SETUP.state,'NOT_OBSERVED');
+ assert.equal(held.pins(),null);
+ assert(x.calls.indexOf('Page.navigate')<x.calls.indexOf('READY'));
+ assert.deepEqual(x.calls.slice(-3),['CLOSE_BROWSER','CLOSE_ROUTE','CLOSE_CLIENT']);
+ assert(!x.calls.some(c=>/Cookies|ResponseBody/.test(c)));
 });
 test('rejected, forged, expired, cancelled or revoked approval never opens a browser',async t=>{
  for(const mode of ['rejected','forged','expired','cancelled','revoked','closed'])await t.test(mode,async st=>{

@@ -24,6 +24,10 @@ test('fixed codes only: arbitrary text, nested causes, getters and hostile error
   assert.equal(sourceDiagnosticCode(value),'UNKNOWN_ERROR');
  assert.equal(sourceDiagnosticCode(Object.assign(Error(secret),{code:'ECONNRESET',stack:secret})),'ECONNRESET');
  assert.equal(sourceDiagnosticCode(Error('CLAIM_SIGNATURE')),'CLAIM_SIGNATURE');
+ for(const code of ['NORMAL_HOST_INPUT_CLOSED','NORMAL_HOST_CANCELLED']){
+  assert.equal(sourceDiagnosticCode(Object.assign(Error(code),{input:secret,stack:secret})),code);
+  assert.equal(sourceDiagnosticCode(Error(code+':'+secret)),'UNKNOWN_ERROR');
+ }
 });
 test('private durable snapshots retain the first boundary error without raw data or invented progress',t=>{
  const dir=realpathSync(mkdtempSync(join(tmpdir(),'source-diagnostics-'))),path=join(dir,'diagnostics.json');t.after(()=>rmSync(dir,{recursive:true,force:true}));

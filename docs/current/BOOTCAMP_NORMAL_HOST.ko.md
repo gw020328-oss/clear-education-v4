@@ -83,6 +83,10 @@ Bootcamp 오류 본문은 `{error:CODE}`이며 기존 `src/application/api-clien
 ./tools/node tools/bootcamp/normal-host.mjs run --name normal-demo-20261022 --activate
 ```
 
+실행 터미널의 표준 입력은 종료할 때까지 열어 둔다. Codex `exec_command`로 실행할 때는 `tty: true`를 지정하고 반환된 session ID로 `READY`/`FINISH`를 전달한다. 입력이 EOF인 기본 비대화형 실행에서는 HackerRank 창이 열린 뒤 첫 `READY` 대기가 `NORMAL_HOST_INPUT_CLOSED`로 즉시 실패할 수 있다. 사용자 로그인 완료를 확인하기 전에 `READY`를 미리 보내거나 입력 종료를 승인으로 취급하지 않는다. 실패 후에는 같은 실행을 재사용하지 않는다.
+
+원천 준비 실패 후 정리로 source pins가 폐기되면, 저장소가 미완료 요청을 철회하면서 revision을 올릴 수 있다. 이때 뒤에서 관측된 `BC_REVISION_CONFLICT`는 최초 원인이 아닐 수 있으므로 `source-diagnostics.json`의 `firstFailure`와 단계 순서를 우선 확인한다. 최신 revision으로 덮어쓰거나 수집을 자동 재시도하지 않는다.
+
 [공식 가격](https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite)은 2026-10-22 Standard 입력 $0.30/100만 token, 출력(thinking 포함) $2.50/100만 token으로 확인했다. 조건부 3000입력+1024출력 시나리오는 $0.00346이다. 공급자 하드 금액 제한이나 청구 검증을 뜻하지 않는다. 출력 1024, 원문 UTF8 2048 bytes, 전체 본문8192 bytes, generate1/count0/재시도0/continuation0/fallback0을 유지한다. 기존 cost acknowledgment에는 전송 중 USD0.05 초과 가능성을 명시한다. 키 존재 확인은 키 유효성/청구 계정/무료 여부 확인이 아니다.
 
 ## 검증 한계
