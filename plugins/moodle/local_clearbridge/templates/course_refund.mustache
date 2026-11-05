@@ -32,6 +32,12 @@
         <pre class="mt-3 text-wrap" hidden data-workflow-details="session operation registration" tabindex="0"></pre>
         <div hidden>
             <span data-workflow-message="panelconnected">{{#str}} nativeconnectioncompleted, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="activityreview">{{#str}} nativepanelactivityreview, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="activityqueued">{{#str}} nativepanelactivityqueued, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="activityrecorded">{{#str}} nativepanelactivityrecorded, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="activitylimited">{{#str}} nativepanelactivitylimited, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="activityunavailable">{{#str}} nativepanelactivityunavailable, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="activityconfirmed">{{#str}} nativepanelactivityconfirmed, local_clearbridge {{/str}}</span>
             <span data-workflow-message="panelunknown">{{#str}} nativepanelunknown, local_clearbridge {{/str}}</span>
             <span data-workflow-message="unavailable">{{#str}} nativeworkflowunavailable, local_clearbridge {{/str}}</span>
             <span data-workflow-message="ready">{{#str}} nativeworkflowready, local_clearbridge {{/str}}</span>
@@ -135,6 +141,7 @@
         {{/fixedscope}}
         {{#showconnection}}
         {{#student}}
+        <p data-native-activity-status role="status"></p>
         <div data-native-condition-cards></div>
         <button type="button" class="btn btn-secondary mb-2" data-workflow-action="bind-source-session" disabled>
             {{#str}} nativeworkflowbindsource, local_clearbridge {{/str}}

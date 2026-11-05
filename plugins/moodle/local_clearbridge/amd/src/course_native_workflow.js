@@ -3,7 +3,7 @@ define([], function() {
     'use strict';
 
     const writes = new Set(['create-application', 'bind-source-session', 'approve-source-signature',
-        'approve-registration', 'approve-reflection', 'consent']);
+        'approve-registration', 'approve-reflection', 'consent', 'refresh-activity']);
     const id = value => typeof value === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(value);
 
     const create = ({root, role, invoke, newKey, panels, courseId, origin}) => {
@@ -12,6 +12,7 @@ define([], function() {
         const details = [...root.querySelectorAll('[data-workflow-details]')];
         const applicationStatus = root.querySelector('#clearbridge-application-status');
         const panelStatus = root.querySelector('[data-native-panel-status]');
+        const activityStatus = root.querySelector('[data-native-activity-status]');
         const cardRoot = root.querySelector('[data-native-condition-cards]');
         const acknowledgment = root.querySelector('[data-workflow-ack]');
         const messages = Object.fromEntries([...root.querySelectorAll('[data-workflow-message]')]
@@ -31,6 +32,35 @@ define([], function() {
         let displayed = {};
         let cards;
         let cardsQueued = false;
+        let activityMode = false;
+        let activityVisit = null;
+        let activityResult = null;
+        const activityTargets = () => {
+            const targets = session?.conditionTargets;
+            if (!participant || courseId !== 2 || targets?.moodleOrigin !== origin || targets.courseId !== courseId
+                    || targets.applicationId !== applicationId || targets.version !== 'clear-student-condition-targets.1'
+                    || !Array.isArray(targets.targets) || targets.targets.length !== 1) {
+                return null;
+            }
+            const [target] = targets.targets;
+            return target?.criterionId === 'activity-complete' && target.cmId === 3 && target.module === 'page' ? targets : null;
+        };
+        const onlyActivity = rows => activityMode
+            ? rows?.filter(row => row.criterionId === 'activity-complete') : rows;
+        const activityView = () => application && activityMode
+            ? {...application, criteria: onlyActivity(application.criteria)} : application;
+        const revision = () => application?.target.expectedRevision;
+        const canVisit = () => activityTargets() && Number.isSafeInteger(revision()) && revision() > 0;
+        const hasActivityEvidence = () => {
+            const evidence = displayed.evidence;
+            return activityMode && ['activityqueued', 'activityrecorded'].includes(activityResult)
+                && application?.decision?.id === evidence?.manifest?.decision?.decisionId
+                && application?.decision?.hash === evidence?.manifest?.decision?.decisionHash
+                && application?.criteria.some(row => row.criterionId === 'activity-complete'
+                    && row.state === 'MET' && row.current === true && typeof row.evidenceId === 'string' && row.evidenceId !== ''
+                    && evidence?.availability?.some(item => item.criterionId === row.criterionId
+                        && item.evidenceId === row.evidenceId && item.status === 'VALID_AS_RECORDED'));
+        };
         const updatePanel = connected => {
             if (!panelStatus || !panels) {
                 return;
@@ -76,6 +106,7 @@ define([], function() {
             }
             switch (action) {
                 case 'read-session': return true;
+                case 'refresh-activity': return !!activityTargets();
                 case 'read-operation': return operation !== null;
                 case 'create-application': return participant && session && !session.failure && !applicationId && !createAttempted;
                 case 'bind-source-session': return participant && !!applicationId && !sourceBound;
@@ -167,6 +198,10 @@ define([], function() {
                 button.disabled = !enabled(button.dataset.workflowAction);
             }
             acknowledgment.disabled = closed || !ready || walletBusy || !!pending || unknown || reflection?.permitted !== true;
+            if (activityStatus) {
+                activityStatus.textContent = hasActivityEvidence() ? label('activityconfirmed') : activityResult ? label(activityResult)
+                    : activityTargets() && !canVisit() ? label('activityreview') : '';
+            }
             if (applicationStatus) {
                 applicationStatus.textContent = label(unknown ? 'unknown' : applicationId ? 'applicationknown' :
                     ready && session ? 'applicationreviewed' : 'applicationpending');
@@ -185,6 +220,7 @@ define([], function() {
             }
             pending = null;
             ready = false;
+            activityVisit = activityResult = null;
             closeCards();
             updatePanel(false);
             clear();
@@ -218,6 +254,7 @@ define([], function() {
                     // A null source binding can coexist with the durable create receipt.
                     sourceBound = result.applicationId !== null;
                     applicationId = result.applicationId ?? createdApplicationId;
+                    activityMode ||= Boolean(activityTargets());
                     if (operation && applicationId && operation.applicationId !== applicationId) {
                         operation = null;
                     }
@@ -242,8 +279,15 @@ define([], function() {
                         && result.role === (participant ? 'PARTICIPANT' : 'COURSE_OPERATOR') && result.target
                         && result.agreedPayment && Array.isArray(result.criteria));
                     application = result;
-                    displayed.application = {decision: result.decision, target: result.target, criteria: result.criteria,
+                    displayed.application = {decision: result.decision, target: result.target, criteria: onlyActivity(result.criteria),
                         agreedPayment: result.agreedPayment, funding: result.funding, consent: result.consent};
+                    break;
+                case 'refresh-activity':
+                    require(['QUEUED', 'RECORDED', 'UNAVAILABLE', 'RATE_LIMITED'].includes(result?.status)
+                        && (result.status === 'RATE_LIMITED' ? Number.isSafeInteger(result.retryAfterSeconds)
+                            && result.retryAfterSeconds > 0 : id(result.operationId)));
+                    activityResult = {QUEUED: 'activityqueued', RECORDED: 'activityrecorded',
+                        RATE_LIMITED: 'activitylimited', UNAVAILABLE: 'activityunavailable'}[result.status];
                     break;
                 case 'bind-source-session':
                     exactApp(result);
@@ -302,7 +346,8 @@ define([], function() {
                     exactApp(result);
                     require(result.version === 'clear-bootcamp-decision-evidence.1'
                         && result.role === (participant ? 'PARTICIPANT' : 'COURSE_OPERATOR'));
-                    displayed.evidence = {manifest: result.manifest, availability: result.availability};
+                    displayed.evidence = {manifest: result.manifest && {...result.manifest,
+                        criteria: onlyActivity(result.manifest.criteria)}, availability: onlyActivity(result.availability)};
                     break;
                 case 'read-operation':
                     require(result?.record?.applicationId === operation?.applicationId
@@ -315,6 +360,7 @@ define([], function() {
         const command = (action, choice) => {
             switch (action) {
                 case 'create-application': return {action, idempotencyKey: newKey()};
+                case 'refresh-activity': return {action, applicationId, expectedRevision: choice, idempotencyKey: newKey()};
                 case 'approve-reflection': return {action, reviewed: reflection, idempotencyKey: newKey()};
                 case 'consent': return {action, reviewed: application, value: choice, idempotencyKey: newKey()};
                 case 'approve-source-signature': return {action, reviewed: source};
@@ -384,24 +430,38 @@ define([], function() {
             }
             return result;
         };
+        const readOnReturn = async () => {
+            if (activityVisit) {
+                const visit = activityVisit;
+                if (!enabled('refresh-activity')) {
+                    throw new Error('TEST_BUSY_OR_ENDED');
+                }
+                activityVisit = null;
+                if (visit.applicationId === applicationId) {
+                    const result = await run('refresh-activity', visit.revision);
+                    if (!result) {
+                        throw new Error('CLEAR_WORKFLOW_UNAVAILABLE');
+                    }
+                }
+            }
+            await cardRead('read-application');
+            return {view: activityView()};
+        };
         const openCards = () => {
             if (!participant || !cardRoot || !panels || cards) {
                 return;
             }
             cards = panels.createConditionCards({
                 getState: () => ({
-                    view: application,
+                    view: activityView(),
                     busy: !ready || walletBusy || Boolean(pending),
                     session: session && {applicationId, boundApplicationId: session.applicationId, failure: session.failure,
                         phase: session.phase, aiApproval: session.aiApproval},
                     approval: source,
                 }),
-                read: async () => ({view: await cardRead('read-application')}),
+                read: readOnReturn,
                 loadEvidence: snapshot => cardRead('decision-evidence', snapshot.applicationId),
-                targets: () => {
-                    const targets = session?.conditionTargets;
-                    return targets?.moodleOrigin === origin && targets.courseId === courseId ? targets : null;
-                },
+                targets: () => canVisit() ? activityTargets() : null,
                 // The original page stays mounted while a reviewed link opens a new tab.
                 storage: panels.memoryStore(),
                 onOpen: () => root.querySelector('#clearbridge-decision-heading')?.scrollIntoView(),
@@ -409,6 +469,12 @@ define([], function() {
             });
         };
         const click = event => {
+            const link = event.target.closest?.('a.crc-go');
+            if (link && cardRoot?.contains(link) && link.href === origin + '/mod/page/view.php?id=3'
+                    && ready && canVisit() && !unknown) {
+                activityVisit = {applicationId, revision: revision()};
+                activityResult = null;
+            }
             const button = event.target.closest?.('[data-workflow-action]');
             if (buttons.includes(button)) {
                 return run(button.dataset.workflowAction, button.dataset.workflowChoice);

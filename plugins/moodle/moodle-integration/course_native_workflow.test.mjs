@@ -31,6 +31,7 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
     const status = {};
     const applicationStatus = {};
     const panelStatus = {};
+    const activityStatus = {};
     const ack = {addEventListener() {}, removeEventListener() {}};
     const details = {dataset: {workflowDetails: 'session operation registration application source reflection evidence receipt'}};
     const template = readFileSync(new URL('../local_clearbridge/templates/course_refund.mustache', import.meta.url), 'utf8');
@@ -42,7 +43,7 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
             '[data-workflow-details]': [details],
         })[selector],
         querySelector: selector => ({
-            '[data-native-condition-cards]': cardRoot, '[data-native-panel-status]': panelStatus,
+            '[data-native-condition-cards]': cardRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
             '[data-workflow-status]': status, '#clearbridge-application-status': applicationStatus, '[data-workflow-ack]': ack,
         })[selector],
         addEventListener: (event, fn) => { listeners[event] = fn; },
@@ -72,8 +73,9 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
             };
         },
     });
-    return {mounted, sent, validated, state, buttons, status, panelStatus, applicationStatus, details, ack, walletDispatch,
-        click: action => listeners.click?.({target: {closest: () => buttons[action]}})};
+    return {mounted, sent, validated, state, buttons, status, panelStatus, activityStatus, applicationStatus, details, ack, walletDispatch,
+        click: action => listeners.click?.({target: {closest: () => buttons[action]}}),
+        clickLink: link => listeners.click?.({target: {closest: selector => selector === 'a.crc-go' ? link : null}})};
 };
 
 test('explicit workflow follows returned application ID, preserves reviewed objects and verifies canonical receipt', async () => {
@@ -279,7 +281,7 @@ test('current native mount feeds D role status and clears the display after disc
     }
 });
 
-test('native cards open only matching course targets and reread stored decision on return', async () => {
+test('native lesson return queues once and confirms only matching current lesson evidence', async () => {
     class Node {
         constructor(tag) {
             this.tag = tag;
@@ -290,6 +292,8 @@ test('native cards open only matching course targets and reread stored decision 
         }
         set textContent(value) { this.text = String(value); }
         get textContent() { return this.text + this.children.map(node => node.textContent).join(' '); }
+        get href() { return this.attributes.href; }
+        contains(node) { return [...walk(this)].includes(node); }
         append(...nodes) { this.children.push(...nodes); }
         replaceChildren(...nodes) { this.children = nodes; }
         setAttribute(name, value) { this.attributes[name] = String(value); }
@@ -313,19 +317,24 @@ test('native cards open only matching course targets and reread stored decision 
     const cardRoot = new Node('div');
     let courseId = 9;
     let revision = 1;
+    let matchingEvidence = false;
     const targets = () => ({version: 'clear-student-condition-targets.1', applicationId: 'app-one',
         moodleOrigin: 'https://127.0.0.1:19474', courseId,
-        targets: [{criterionId: 'activity-complete', cmId: 31, module: 'page', name: 'Python'}]});
+        targets: [{criterionId: 'activity-complete', cmId: 3, module: 'page', name: 'Python'}]});
     const view = () => ({version: 'clear-bootcamp-normal-view.1', displayOnly: true,
-        applicationId: 'app-one', role: 'PARTICIPANT', target: {}, agreedPayment: {},
+        applicationId: 'app-one', role: 'PARTICIPANT', target: {expectedRevision: revision}, agreedPayment: {},
         decision: {id: 'decision-one', hash: 'hash-' + revision, revision, current: true},
         criteria: [{criterionId: 'activity-complete', state: revision === 1 ? 'UNKNOWN' : 'MET',
-            current: true, evidenceId: 'evidence-' + revision, evidenceRevision: revision}]});
+            current: revision > 1, evidenceId: 'evidence-' + revision, evidenceRevision: revision},
+        {criterionId: 'assignment-submitted', state: 'MET', current: true, evidenceId: 'outside-scope'}]});
     const ui = fixture(({action}) => ({
         'read-session': {...session('app-one'), conditionTargets: targets()},
         'read-application': view(),
+        'refresh-activity': {status: 'QUEUED', operationId: 'operation-lesson'},
         'decision-evidence': {version: 'clear-bootcamp-decision-evidence.1', role: 'PARTICIPANT', applicationId: 'app-one',
-            manifest: {decision: {decisionId: 'decision-one', decisionHash: 'hash-' + revision}, criteria: []}},
+            manifest: {decision: {decisionId: 'decision-one', decisionHash: 'hash-' + revision}, criteria: []},
+            availability: [{criterionId: 'activity-complete', evidenceId: matchingEvidence ? 'evidence-' + revision : 'other-evidence',
+                status: revision > 1 ? 'VALID_AS_RECORDED' : 'MISSING'}]},
     })[action], {cardRoot});
     const flush = () => new Promise(resolve => setImmediate(resolve));
     const link = () => [...walk(cardRoot)].find(node => node.tag === 'a' && node.attributes.href);
@@ -337,15 +346,32 @@ test('native cards open only matching course targets and reread stored decision 
         await ui.click('read-session');
         await ui.click('read-application');
         await flush();
-        assert.equal(link().attributes.href, 'https://127.0.0.1:19474/mod/page/view.php?id=31');
+        assert.equal(link().attributes.href, 'https://127.0.0.1:19474/mod/page/view.php?id=3');
         assert.equal(link().attributes.target, '_blank');
-        link().handlers.click();
-        revision = 2;
+        assert.match(cardRoot.textContent, /0 \/ 4 충족/);
+        const opened = link();
+        opened.handlers.click();
+        await ui.clickLink(opened);
+        assert.equal(ui.sent.filter(command => command.action === 'refresh-activity').length, 0);
         visibility.get('visibilitychange')();
         await flush();
+        assert.equal(ui.activityStatus.textContent, 'activityqueued');
         assert.equal(ui.sent.filter(command => command.action === 'read-application').length, 2);
+        const refreshes = () => ui.sent.filter(command => command.action === 'refresh-activity');
+        assert.deepEqual(refreshes().map(({idempotencyKey, ...command}) => command),
+            [{action: 'refresh-activity', applicationId: 'app-one', expectedRevision: 1}]);
+        assert.match(refreshes()[0].idempotencyKey, /^moodle-[a-f0-9-]+$/);
+        visibility.get('visibilitychange')();
+        revision = 2;
+        await ui.click('read-application');
+        await flush();
+        assert.equal(refreshes().length, 1);
+        assert.equal(ui.activityStatus.textContent, 'activityqueued');
+        matchingEvidence = true;
+        await ui.click('decision-evidence');
+        assert.equal(ui.activityStatus.textContent, 'activityconfirmed');
         assert.match(cardRoot.textContent, /1 \/ 4 충족/);
-        assert.ok(ui.sent.every(command => ['read-session', 'read-application', 'decision-evidence'].includes(command.action)));
+        assert.ok(ui.sent.every(command => ['read-session', 'read-application', 'decision-evidence', 'refresh-activity'].includes(command.action)));
     } finally {
         ui.mounted.destroy();
         assert.deepEqual(cardRoot.children, []);
