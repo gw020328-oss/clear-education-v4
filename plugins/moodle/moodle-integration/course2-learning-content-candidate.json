@@ -42,5 +42,22 @@
     "owner": "A runtime/database owner",
     "method": "After HQ content review, use Moodle supported module editing UI or owner-controlled Moodle API/core update path for content/intro fields only. No direct SQL, new completion rows or submission/post mutations. Re-read public module IDs/rules after update.",
     "userActions": "HQ to provide the currently running canonical lesson/assignment/forum URL and one required action at a time. Learner writes and runs their own work; no generated learner submission."
+  },
+  "courseIdentity": "개발·시연용 가상 Python 강좌의 학습자료 초안. 기관 공식 교재 또는 사용자 원문이 아님.",
+  "baselineReportedByA": {
+    "page.content": "<p>Python loops introduction, synthetic.</p>",
+    "assign.intro": "Synthetic bootcamp fixture",
+    "forum.intro": "Synthetic bootcamp fixture",
+    "assurance": "A readonly content report; exact raw field bytes must be checked and backed up by A before application."
+  },
+  "originalPreservation": "A exports the three original content fields to owner-local protected storage before a supported Moodle teacher edit. Candidate does not overwrite or export learner text, submissions, posts or completion rows.",
+  "policyComparison": {
+    "source": "specs/bootcamp/p0-policy.json",
+    "reflectionTopics": [
+      "work-performed",
+      "problem-solving-process",
+      "learning-takeaway"
+    ],
+    "noAdditionalGates": "No new word count, sentiment, effort, photo, grading or AI policy gate. Assignment instructions are learning guidance; server condition remains a real SUBMITTED record."
   }
 }
