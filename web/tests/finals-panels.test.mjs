@@ -673,3 +673,184 @@ test('"강의수강 후기적기 과제제출" 처럼 붙여 써도 셋을 다 �
   // 실제 안내문은 여전히 셋만 — 한 줄에서 둘이 겹쳐 잡히지 않는다
   assert.equal(proposeReading(REAL_NOTICE).kept.length, 3);
 });
+
+// ── PR #164 리뷰 1 · 원문을 고친 직후 실행해도 이전 조건을 보내지 않는다 ─────────
+
+const runBtn = (node) => [...walk(node)].find((n) => n.tagName === 'BUTTON' && String(n.className).includes('fp-btn'));
+const press = (n) => { for (const fn of n.handlers.click ?? []) fn({}); };
+const typeInto = (ta, value) => { for (const fn of ta.handlers.input ?? []) fn({ target: { value } }); };
+const textarea = (node) => [...walk(node)].find((n) => n.tagName === 'TEXTAREA');
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+test('원문을 고치고 250ms 안에 「이대로 구조화」 를 눌러도 이전 조건이 나가지 않는다 (PR #164 리뷰 1)', async () => {
+  const restore = installDom();
+  try {
+    const sent = [];
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => { sent.push(i); return COMBOS[i]?.payload ?? null; } });
+    const panel = aiComparePanel({ adapter: a, source: '강의 수강' });
+    const before = runBtn(panel.node);
+    assert.equal(before.textContent.trim(), '이대로 구조화');
+    typeInto(textarea(panel.node), '과제 제출');
+    // 화면은 아직 다시 그리지 않았지만 이 버튼은 그 자리에서 잠겼다
+    assert.equal(before.attributes.disabled, 'disabled', '입력 직후 실행 버튼이 잠기지 않았다');
+    assert.equal(before.textContent.trim(), '원문 반영 중…');
+    press(before);
+    assert.deepEqual(sent, [], '입력 직후 이전 원문의 조건이 전송됐다');
+    // 새 원문의 제안이 준비되면 그 조건으로만 나간다
+    await wait(350);
+    const after = runBtn(panel.node);
+    assert.equal(after.textContent.trim(), '이대로 구조화');
+    press(after);
+    assert.deepEqual(sent, ['Moodle 과제 제출']);
+  } finally { restore(); }
+});
+
+test('한글 조합이 시작되면 이미 예약된 갱신이 원문 칸을 다시 그리지 않고, 그동안 실행도 막힌다', async () => {
+  const restore = installDom();
+  try {
+    const sent = [];
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => { sent.push(i); return COMBOS[i]?.payload ?? null; } });
+    const panel = aiComparePanel({ adapter: a, source: '강의 수강' });
+    const ta = textarea(panel.node);
+    typeInto(ta, '강의 수강 ');            // 조합 없이 한 글자 — 갱신이 예약된다
+    for (const fn of ta.handlers.compositionstart ?? []) fn({});
+    typeInto(ta, '강의 수강 과');          // 예약된 갱신이 돌 시간이 지나도
+    await wait(320);
+    assert.equal(textarea(panel.node), ta, '조합 중에 예약된 타이머가 원문 칸을 다시 그렸다');
+    press(runBtn(panel.node));
+    assert.deepEqual(sent, [], '조합 중에 이전 제안으로 실행됐다');
+    typeInto(ta, '강의 수강 과제 제출');
+    for (const fn of ta.handlers.compositionend ?? []) fn({});
+    await wait(350);
+    assert.ok(panel.node.textContent.includes('2개 조건을 찾았습니다'), '조합이 끝난 뒤 제안이 갱신되지 않았다');
+    assert.equal(textarea(panel.node).value, '강의 수강 과제 제출');
+    press(runBtn(panel.node));
+    assert.deepEqual(sent, ['Moodle 활동 완료; Moodle 과제 제출']);
+  } finally { restore(); }
+});
+
+test('이전 원문의 비동기 제안이 늦게 와도 새 입력에 반영되지 않는다', async () => {
+  const restore = installDom();
+  try {
+    const pending = new Map();
+    const proposer = {
+      id: 'gemini', label: 'Gemini 제안 · 시험용',
+      propose: (t) => new Promise((resolve) => { pending.set(t, () => resolve(proposeReading(t))); }),
+    };
+    const sent = [];
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => { sent.push(i); return COMBOS[i]?.payload ?? null; } });
+    const panel = aiComparePanel({ adapter: a, source: '강의 수강', proposer });
+    typeInto(textarea(panel.node), '과제 제출');
+    pending.get('강의 수강')();           // 이전 원문의 제안이 늦게 도착
+    await settle();
+    press(runBtn(panel.node));
+    assert.deepEqual(sent, [], '늦게 온 이전 제안으로 실행됐다');
+    await wait(350);                       // 새 원문의 제안을 요청한다(아직 안 옴)
+    const foundRows = [...walk(panel.node)].filter((n) => n.attributes?.['data-read'] === 'yes');
+    assert.equal(foundRows.length, 0, '늦게 온 이전 제안이 화면에 들어왔다');
+    assert.ok(panel.node.textContent.includes('제안을 만드는 중'));
+    press(runBtn(panel.node));
+    assert.deepEqual(sent, [], '새 제안이 오기 전에 실행됐다');
+    pending.get('과제 제출')();
+    await settle();
+    press(runBtn(panel.node));
+    assert.deepEqual(sent, ['Moodle 과제 제출']);
+  } finally { restore(); }
+});
+
+test('원문을 고치는 순간 진행 중이던 구조화 요청의 응답은 버려진다', async () => {
+  const restore = installDom();
+  try {
+    let release;
+    const a = createAdapter({ mode: DATA_MODE.ACTUAL, run: () => new Promise((r) => { release = r; }) });
+    const panel = aiComparePanel({ adapter: a, source: '강의 수강' });
+    press(runBtn(panel.node));
+    assert.equal(a.current.state, STATE.LOADING);
+    typeInto(textarea(panel.node), '과제 제출');
+    assert.notEqual(a.current.state, STATE.LOADING, '입력 직후에도 이전 요청이 진행 중으로 남았다');
+    release(COMBOS['Moodle 활동 완료'].payload);
+    await settle();
+    assert.equal(a.current.payload, null, '이전 원문의 응답이 새 입력의 결과로 들어왔다');
+    await wait(320);                       // 예약된 갱신까지 끝난 뒤에도 그대로
+    assert.equal(a.current.payload, null);
+    assert.equal(runBtn(panel.node).textContent.trim(), '이대로 구조화');
+  } finally { restore(); }
+});
+
+// ── PR #164 리뷰 2 · 대안·대체 조건을 '모두 필요' 로 바꾸지 않는다 ─────────────
+
+test('「또는」·「대신」 조항은 자동 변환을 보류하고, 복수 필수 조건은 그대로 셋으로 읽는다 (PR #164 리뷰 2)', () => {
+  const alt = proposeReading('강의 수강 또는 과제 제출');
+  assert.equal(alt.readable, 0, '대안 조건을 필수 조건으로 바꿨다: ' + alt.canonicalText);
+  assert.equal(alt.complete, false);
+  assert.equal(alt.held, 1);
+  assert.equal(alt.clauses[0].relation, 'ALTERNATIVE');
+  assert.equal(alt.clauses[0].original, '강의 수강 또는 과제 제출');
+  assert.deepEqual(new Set(alt.clauses[0].mentions), new Set(['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1']));
+  assert.match(alt.clauses[0].note, /모두 필요/);
+
+  const sub = proposeReading('과제 제출 대신 후기 작성');
+  assert.equal(sub.readable, 0, '대체 조건을 필수 조건으로 바꿨다: ' + sub.canonicalText);
+  assert.equal(sub.complete, false);
+  assert.equal(sub.clauses[0].relation, 'SUBSTITUTE');
+  assert.deepEqual(new Set(sub.clauses[0].mentions), new Set(['MOODLE_ASSIGNMENT_SUBMISSION.1', 'REFLECTION_REQUIRED_TOPICS.1']));
+
+  const all = proposeReading('강의수강 후기적기 과제제출');
+  assert.deepEqual(all.kept.map((c) => c.capability), [
+    'MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1', 'REFLECTION_REQUIRED_TOPICS.1',
+  ]);
+  assert.equal(all.complete, true);
+  assert.equal(all.held, 0);
+});
+
+test('대안 관계는 쉼표로 나뉘어도 보류하고, 다른 조항을 읽었다고 전체를 읽었다고 하지 않는다', () => {
+  // 쉼표에서 나눴다면 두 조각이 각각 필수로 읽혔을 것이다
+  const comma = proposeReading('강의를 듣거나, 과제를 제출');
+  assert.equal(comma.readable, 0);
+  assert.equal(comma.held, 1);
+  // 보류 조항 + 정상 조항 — 정상 조항만 읽고 complete 는 아니다
+  const mixed = proposeReading('강의 수강 또는 과제 제출. 회고 작성');
+  assert.deepEqual(mixed.kept.map((c) => c.capability), ['REFLECTION_REQUIRED_TOPICS.1']);
+  assert.equal(mixed.complete, false, '보류 조항이 있는데 전체를 읽었다고 했다');
+  // 조건이 하나뿐인 '또는' 은 관계가 아니다 — 그대로 읽는다
+  const one = proposeReading('과제 제출 또는 업로드');
+  assert.equal(one.readable, 1);
+  assert.equal(one.complete, true);
+  // '하나' 의 '나' 는 대안이 아니다
+  assert.equal(proposeReading('과제 하나 제출하고 강의 수강').readable, 2);
+  // 운영자 지정으로도 보류 조항을 한 조건으로 덮지 않는다
+  const key = `${alt0().index}:${alt0().original}`;
+  const tried = applyOverrides(proposeReading('강의 수강 또는 과제 제출'), new Map([[key, 'MOODLE_ACTIVITY_COMPLETION.1']]));
+  assert.equal(tried.readable, 0);
+  assert.equal(tried.complete, false);
+  function alt0() { return proposeReading('강의 수강 또는 과제 제출').clauses[0]; }
+});
+
+test('화면이 보류 조항의 원문과 이유를 남기고, 나머지만 구조화해도 전체 정책 실행 가능으로 보이지 않는다', async () => {
+  const restore = installDom();
+  try {
+    const sent = [];
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => { sent.push(i); return COMBOS[i]?.payload ?? null; } });
+    const panel = aiComparePanel({ adapter: a, source: '강의 수강 또는 과제 제출. 회고 작성' });
+    let text = panel.node.textContent;
+    assert.ok(text.includes('자동 변환 보류 — 조건 관계 확인 필요 · 1개'));
+    assert.ok(text.includes('"강의 수강 또는 과제 제출"'), '보류 조항의 원문이 없다');
+    assert.ok(text.includes('모두 필요'), '보류 이유가 없다');
+    assert.ok(text.includes('문장에 보인 조건:'));
+    const btn = runBtn(panel.node);
+    assert.equal(btn.textContent.trim(), '읽은 것만 구조화', '보류 조항이 있는데 「이대로 구조화」 로 보인다');
+    press(btn);
+    await settle();
+    assert.deepEqual(sent, ['회고에 수행 내용, 문제해결 과정, 배운 점 포함'], '보류 조항이 함께 넘어갔다');
+    assert.equal(a.current.state, STATE.SUCCESS);
+    text = panel.node.textContent;
+    assert.ok(text.includes('조건 관계(또는·대신) 확인이 필요한 조항 1개'), '차단 문구에 보류 조항이 없다');
+    assert.ok(text.includes('실행 가능으로 보지 않습니다'));
+    assert.ok(!text.includes('지원 문법 안에서 모두 쪼갰습니다'), '성공 배너가 전체 성공처럼 읽힌다');
+
+    // 보류 조항만 있으면 실행할 것이 없다
+    const only = aiComparePanel({ adapter: createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: () => null }), source: '과제 제출 대신 후기 작성' });
+    assert.equal(runBtn(only.node).attributes.disabled, 'disabled');
+    assert.ok(only.node.textContent.includes('조건 사이의 관계를 확인해야 해서'));
+  } finally { restore(); }
+});

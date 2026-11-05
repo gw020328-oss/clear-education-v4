@@ -133,6 +133,11 @@ export function aiComparePanel({
   // 제안이 비동기(Gemini)일 때 늦게 온 답을 버리려고 번호를 매긴다.
   let proposeStamp = 0;
   let proposing = false;
+  // 지금 제안(base)이 **어느 원문**에서 나왔나. 화면의 원문(text)과 다르면
+  // 제안은 이전 입력의 것이다 — 실행하면 안 된다(PR #164 리뷰 1).
+  let proposedFor = text.trim() === '' ? text : null;
+  // 예문 칩을 눌렀는데 제안이 비동기라 아직이면, 준비되는 대로 그 원문으로 실행한다.
+  let runWhenReady = null;
   // 마지막으로 모듈에 넘긴 제안. ① 절에서 학원 원문과 정규 문장을 짝짓는 데 쓴다.
   // 그 뒤 원문이 바뀌어도 이 짝은 **보낸 당시** 기준이어야 한다.
   let lastSent = null;
@@ -143,19 +148,22 @@ export function aiComparePanel({
   const propose = (next) => {
     const stamp = (proposeStamp += 1);
     const got = proposer.propose(next);
-    if (typeof got?.then !== 'function') { base = got; recompute(); return; }
+    if (typeof got?.then !== 'function') { base = got; proposedFor = next; proposing = false; recompute(); return; }
     proposing = true; render();
-    got.then((value) => {
+    const settleProposal = (value) => {
       if (stamp !== proposeStamp) return;         // 그새 원문이 바뀌었다
-      base = value; proposing = false; recompute(); render();
-    }, () => {
-      if (stamp !== proposeStamp) return;
-      base = emptyProposal(); proposing = false; recompute(); render();
-    });
+      base = value; proposedFor = next; proposing = false; recompute();
+      if (runWhenReady !== null && runWhenReady === text) { runWhenReady = null; run(); }
+      render();
+    };
+    got.then(settleProposal, () => settleProposal(emptyProposal()));
   };
 
+  /** 화면의 원문과 같은 원문으로 만든 제안이 준비됐나. 아니면 실행하지 않는다 */
+  const proposalReady = () => !proposing && proposedFor === text && editTimer === null && !composing;
+
   const run = () => {
-    if (proposal.readable === 0) return;
+    if (!proposalReady() || proposal.readable === 0) return;
     lastSent = proposal;
     // 모듈에는 **정규 문장**을 넘긴다. 원문은 그대로 두고 화면에 나란히 보인다.
     void adapter.request(proposal.canonicalText);
@@ -178,7 +186,12 @@ export function aiComparePanel({
     render();
   };
 
-  const pick = (preset) => { edit(preset.source); run(); };
+  const pick = (preset) => {
+    stopEditTimer();
+    edit(preset.source);
+    // 제안이 비동기면 아직 이전 원문의 제안이다. 준비되면 그때 실행한다.
+    if (proposalReady()) run(); else { runWhenReady = preset.source; render(); }
+  };
 
   // ── 원문 칸 — 글자마다 다시 그리지 않는다 ──────────────────────────
   //
@@ -186,21 +199,67 @@ export function aiComparePanel({
   // textarea 가 새 요소로 바뀌는데, **한글은 조합 중**이라 글자가 깨지거나
   // 안 쳐졌다. 이제 조합 중에는 손대지 않고, 손을 뗀 뒤 잠깐 있다가 한 번만
   // 제안을 갱신한다. 서준형: "원문에 직접 타이핑이 안 된다."
+  //
+  // 다만 **무효화는 미루지 않는다**(PR #164 리뷰 1). 갱신을 기다리는 250ms 동안
+  // 화면의 원문은 새 글인데 제안·진행 중 요청은 이전 원문 그대로라, 그 사이
+  // 「이대로 구조화」 를 누르면 이전 조건이 나갔다. 그래서 글자가 바뀌는 순간
+  //   - 진행 중이던 비동기 제안을 버리고(늦게 와도 반영 안 됨)
+  //   - 어댑터의 진행 중 요청을 무효화하고 이전 결과를 stale 로 돌리고
+  //   - 실행 버튼만 그 자리에서 잠근다 — textarea 는 다시 그리지 않는다
+  // 실행은 지금 원문으로 만든 제안이 준비된 뒤에만 된다(proposalReady).
   let composing = false;
   let editTimer = null;
+  // 실행 버튼. 치는 동안에는 화면을 다시 그리지 않고 이것만 잠근다.
+  let runButton = null;
+  const typing = () => composing || editTimer !== null;
+  const stopEditTimer = () => { if (editTimer !== null) { clearTimeout(editTimer); editTimer = null; } };
+
+  /** 다시 그리지 않고 실행 버튼만 잠근다. 원문 칸(조합 중일 수 있다)은 그대로 둔다 */
+  const lockRun = () => {
+    if (!runButton) return;
+    runButton.setAttribute('disabled', 'disabled');
+    runButton.disabled = true;
+    const label = runButton.firstChild;
+    if (label) label.textContent = '원문 반영 중…';
+  };
+
+  /** 원문이 바뀌었다 — 이전 제안과 진행 중 요청은 이 원문의 것이 아니다 */
+  const invalidate = () => {
+    runWhenReady = null;
+    if (proposedFor === null && !proposing) { lockRun(); return; } // 이미 무효화했다
+    proposeStamp += 1;      // 진행 중 비동기 제안의 늦은 답을 버린다
+    proposing = false;
+    proposedFor = null;
+    adapter.markStale(null); // 진행 중 요청의 늦은 응답을 버리고 이전 결과를 stale 로
+    lockRun();
+  };
+
   const queueEdit = () => {
+    stopEditTimer();
+    // 조합 중이면 예약하지 않는다. compositionend 가 다시 예약한다.
     if (composing) return;
-    if (editTimer !== null) clearTimeout(editTimer);
-    editTimer = setTimeout(() => { editTimer = null; edit(text); render(); }, 250);
+    editTimer = setTimeout(() => {
+      editTimer = null;
+      // 예약한 뒤 조합이 시작됐으면 그리지 않는다(compositionstart 가 타이머를
+      // 지우지만, 이미 꺼낸 콜백이 늦게 도는 경우까지 막는다).
+      if (composing) return;
+      edit(text);
+      render();
+    }, 250);
   };
   const sourceInput = () => {
     const input = el('textarea.fp-input', {
       rows: '3',
       value: text,
       'aria-label': '환급 안내문 원문',
-      onInput: (e) => { text = e.target.value; onSource(text); queueEdit(); },
+      onInput: (e) => {
+        if (e.target.value === text) return;
+        // 타이머를 먼저 건다. 그래야 무효화가 부르는 다시 그리기가 미뤄진다.
+        text = e.target.value; onSource(text); queueEdit(); invalidate();
+      },
     });
-    input.addEventListener('compositionstart', () => { composing = true; });
+    // 조합이 시작되면 이미 예약된 갱신을 거둔다 — 조합 중에 textarea 를 다시 그리면 글자가 깨진다.
+    input.addEventListener('compositionstart', () => { composing = true; stopEditTimer(); });
     input.addEventListener('compositionend', () => { composing = false; queueEdit(); });
     return input;
   };
@@ -233,6 +292,10 @@ export function aiComparePanel({
   };
 
   const render = () => {
+    // 치는 중(조합 중이거나 갱신 대기 중)에는 다시 그리지 않는다. 어댑터 상태
+    // 변화나 늦게 온 응답이 부르는 다시 그리기도 여기서 미룬다 — 갱신 타이머가
+    // 돌 때 한 번에 그린다. 대신 실행 버튼은 잠가 둔다.
+    if (typing()) { lockRun(); return; }
     // 글자를 칠 때마다 다시 그리는데, 그러면 원문 칸이 새 요소로 바뀌어
     // 커서가 날아간다. 치던 중이면 자리와 커서를 기억했다가 되돌려 준다.
     const prevInput = typeof box.querySelector === 'function' ? box.querySelector('.fp-input') : null;
@@ -252,14 +315,17 @@ export function aiComparePanel({
     // **전체 환급 정책을 실행 가능으로 보지 않는다** — 본부 결정(11/4).
     const sentUnsupported = (lastSent?.clauses ?? [])
       .filter((c) => c.notOurs && c.source !== 'operator').length;
-    const policyBlocked = s.payload !== null && sentUnsupported > 0;
+    // 대안·대체 관계 때문에 보류한 조항도 같다. 나머지를 읽었어도 전체는 아니다(PR #164 리뷰 2).
+    const sentHeld = (lastSent?.clauses ?? []).filter((c) => c.held).length;
+    const policyBlocked = s.payload !== null && sentUnsupported + sentHeld > 0;
 
-    // 제안을 셋으로 가른다 — 찾은 것 / 조건처럼 썼지만 우리가 못 하는 것 /
-    // 그 밖의 읽지 않은 문장. 운영자가 '조건 아님' 으로 표시한 것은 셋째에
-    // 둔다 — 자기가 한 표시를 보고 되돌릴 수 있어야 한다.
+    // 제안을 넷으로 가른다 — 찾은 것 / 조건 관계 때문에 보류한 것 / 조건처럼
+    // 썼지만 우리가 못 하는 것 / 그 밖의 읽지 않은 문장. 운영자가 '조건 아님' 으로
+    // 표시한 것은 마지막에 둔다 — 자기가 한 표시를 보고 되돌릴 수 있어야 한다.
     const found = proposal.clauses.filter((c) => c.canonical);
+    const held = proposal.clauses.filter((c) => c.held);
     const notOurs = proposal.clauses.filter((c) => c.notOurs && c.source !== 'operator');
-    const unread = proposal.clauses.filter((c) => !c.canonical && !(c.notOurs && c.source !== 'operator'));
+    const unread = proposal.clauses.filter((c) => !c.canonical && !c.held && !(c.notOurs && c.source !== 'operator'));
 
     box.append(...[
       el('header.fp-head', {}, [
@@ -317,7 +383,9 @@ export function aiComparePanel({
           el('p.fp-proposal-ask', {
             text: found.length > 0
               ? `${found.length}개 조건을 찾았습니다 — 맞나요?`
-              : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
+              : held.length > 0
+                ? '조건 사이의 관계를 확인해야 해서 자동으로 읽지 않았습니다. 아래 보류한 조항을 봐 주세요.'
+                : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
           }),
           found.length > 0
             ? el('ul.fp-proposal-list', {}, found.map((c) => el('li.fp-proposal-row', {
@@ -336,6 +404,28 @@ export function aiComparePanel({
               // 운영자가 붙인 것은 되돌릴 수 있어야 한다
               c.source === 'operator' ? pickBox(c) : null,
             ].filter(Boolean))))
+            : null,
+
+          // ── 조건 관계(또는·대신) 때문에 보류한 것 — 숨기지 않는다 ──────
+          //
+          // 지금 형식은 "모두 필요" 만 표현한다. 대안·대체를 그 꼴로 옮기면 조건이
+          // 바뀐 채 전부 읽은 것처럼 보인다. 원문과 이유, 문장에 보인 조건을 남기고
+          // 직접 지정 상자는 두지 않는다 — 원문을 고쳐 다시 읽게 한다.
+          held.length > 0
+            ? el('div.fp-proposal-warn', { 'data-role': 'relation-held' }, [
+              el('p.fp-proposal-ask', {
+                text: `자동 변환 보류 — 조건 관계 확인 필요 · ${held.length}개`,
+              }),
+              el('ul.fp-proposal-list', {}, held.map((c) => el('li.fp-proposal-row', { 'data-read': 'held' }, [
+                el('span.fp-proposal-src', { text: `"${c.original}"` }),
+                (c.mentions ?? []).length > 0
+                  ? el('span.fp-proposal-dst', {}, [
+                    el('span', { text: `문장에 보인 조건: ${c.mentions.map((m) => CAPABILITY_LABEL[m] ?? m).join(' · ')}` }),
+                  ])
+                  : null,
+                el('span.fp-proposal-note', { text: c.note ?? '' }),
+              ].filter(Boolean)))),
+            ])
             : null,
 
           // ── 조건처럼 썼지만 우리가 못 하는 것 — 숨기지 않는다 ─────────
@@ -382,21 +472,25 @@ export function aiComparePanel({
         : null,
 
       el('div.fp-actions', {}, [
-        el('button.fp-btn', {
+        (runButton = el('button.fp-btn', {
           type: 'button',
-          disabled: s.busy || proposal.readable === 0 ? 'disabled' : null,
+          // 지금 원문으로 만든 제안이 아니면 누를 수 없다(PR #164 리뷰 1)
+          disabled: s.busy || !proposalReady() || proposal.readable === 0 ? 'disabled' : null,
           onClick: run,
         }, [el('span', {
           text: s.busy ? '구조화 중…'
-            : proposal.complete ? '이대로 구조화'
-              : proposal.readable > 0 ? '읽은 것만 구조화' : '조건 구조화',
-        })]),
+            : !proposalReady() ? (proposing ? '제안을 만드는 중…' : '원문 반영 중…')
+              : proposal.complete ? '이대로 구조화'
+                : proposal.readable > 0 ? '읽은 것만 구조화' : '조건 구조화',
+        })])),
       ]),
 
       el('p', {
         class: banner.tone ? `fp-note fp-note--${banner.tone}` : 'fp-note',
         // 미지원이 남은 채 성공했으면 "모두 쪼갰다" 가 아니다. 지원 조건만이다.
-        text: policyBlocked && s.state === STATE.SUCCESS ? '지원 조건만 쪼갰습니다.' : banner.text,
+        text: policyBlocked && s.state === STATE.SUCCESS
+          ? (sentUnsupported > 0 ? '지원 조건만 쪼갰습니다.' : '읽은 조건만 쪼갰습니다. 보류한 조항은 넘기지 않았습니다.')
+          : banner.text,
       }),
 
       // ── 전체 정책 실행 가능 표시 차단 ────────────────────────────
@@ -406,8 +500,11 @@ export function aiComparePanel({
       policyBlocked
         ? el('p.fp-note.fp-note--warn', {
           'data-role': 'policy-blocked',
-          text: `자동 검증 미지원 조건 ${sentUnsupported}개가 남아 있어 전체 환급 정책을 실행 가능으로 보지 않습니다. `
-            + '아래 결과는 지원 조건에 대한 것이며, 미지원 조건은 정책 확정 전 처리가 필요합니다.',
+          text: `${[
+            sentUnsupported > 0 ? `자동 검증 미지원 조건 ${sentUnsupported}개` : null,
+            sentHeld > 0 ? `조건 관계(또는·대신) 확인이 필요한 조항 ${sentHeld}개` : null,
+          ].filter(Boolean).join('와 ')}가 남아 있어 전체 환급 정책을 실행 가능으로 보지 않습니다. `
+            + '아래 결과는 읽은 조건에 대한 것이며, 남은 조항은 정책 확정 전 운영자 처리가 필요합니다.',
         })
         : null,
 
