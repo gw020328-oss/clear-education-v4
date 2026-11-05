@@ -15,6 +15,7 @@
         {{^student}}
         <h2 id="clearbridge-connection-heading">{{#str}} walletconnectionheading, local_clearbridge {{/str}}</h2>
         {{/student}}
+        <p data-native-panel-status role="status">{{#str}} nativepanelunknown, local_clearbridge {{/str}}</p>
         {{> local_clearbridge/course_native_connection }}
     </div>
 </section>
@@ -30,6 +31,8 @@
         </button>
         <pre class="mt-3 text-wrap" hidden data-workflow-details="session operation registration" tabindex="0"></pre>
         <div hidden>
+            <span data-workflow-message="panelconnected">{{#str}} nativeconnectioncompleted, local_clearbridge {{/str}}</span>
+            <span data-workflow-message="panelunknown">{{#str}} nativepanelunknown, local_clearbridge {{/str}}</span>
             <span data-workflow-message="unavailable">{{#str}} nativeworkflowunavailable, local_clearbridge {{/str}}</span>
             <span data-workflow-message="ready">{{#str}} nativeworkflowready, local_clearbridge {{/str}}</span>
             <span data-workflow-message="busy">{{#str}} nativeworkflowbusy, local_clearbridge {{/str}}</span>
@@ -132,6 +135,7 @@
         {{/fixedscope}}
         {{#showconnection}}
         {{#student}}
+        <div data-native-condition-cards></div>
         <button type="button" class="btn btn-secondary mb-2" data-workflow-action="bind-source-session" disabled>
             {{#str}} nativeworkflowbindsource, local_clearbridge {{/str}}
         </button>

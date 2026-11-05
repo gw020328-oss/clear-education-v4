@@ -209,3 +209,4 @@ $string['nativeworkflowdisplaysigned'] = 'Registration signature recorded';
 $string['nativeworkflowdisplaynotready'] = 'Registration is not ready';
 $string['nativeworkflowdisplayauthenticatedsourcesessionbound'] = 'The evidence session is linked.';
 $string['nativeworkflowdisplayparticipantsignatureaccepted'] = 'The evidence signature was accepted.';
+$string['nativepanelunknown'] = 'The current course connection is unconfirmed.';

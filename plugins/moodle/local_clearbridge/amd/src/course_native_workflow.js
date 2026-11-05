@@ -6,11 +6,13 @@ define([], function() {
         'approve-registration', 'approve-reflection', 'consent']);
     const id = value => typeof value === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(value);
 
-    const create = ({root, role, invoke, newKey}) => {
+    const create = ({root, role, invoke, newKey, panels, courseId, origin}) => {
         const buttons = [...root.querySelectorAll('[data-workflow-action]')];
         const status = root.querySelector('[data-workflow-status]');
         const details = [...root.querySelectorAll('[data-workflow-details]')];
         const applicationStatus = root.querySelector('#clearbridge-application-status');
+        const panelStatus = root.querySelector('[data-native-panel-status]');
+        const cardRoot = root.querySelector('[data-native-condition-cards]');
         const acknowledgment = root.querySelector('[data-workflow-ack]');
         const messages = Object.fromEntries([...root.querySelectorAll('[data-workflow-message]')]
             .map(node => [node.dataset.workflowMessage, node.textContent]));
@@ -27,6 +29,36 @@ define([], function() {
         let applicationId = null;
         let session, application, registration, source, reflection;
         let displayed = {};
+        let cards;
+        let cardsQueued = false;
+        const updatePanel = connected => {
+            if (!panelStatus || !panels) {
+                return;
+            }
+            // The validated current mount is the only source of CONNECTED. All other
+            // states, including an invalidated intent, clear the prior display.
+            const reply = {status: connected ? 'CONNECTED' : 'UNAVAILABLE'};
+            const visible = participant ? panels.toParticipantEntry(reply).clear.signedIn === true
+                : panels.toOperatorCourseLink(reply).connection.status === 'CONNECTED';
+            panelStatus.textContent = messages[visible ? 'panelconnected' : 'panelunknown'];
+        };
+        const paintCards = () => {
+            if (!cards || cardsQueued) {
+                return;
+            }
+            cardsQueued = true;
+            queueMicrotask(() => {
+                cardsQueued = false;
+                if (cards && ready) {
+                    cardRoot.replaceChildren(cards.render());
+                }
+            });
+        };
+        const closeCards = () => {
+            cards?.close();
+            cards = null;
+            cardRoot?.replaceChildren();
+        };
 
         const show = message => {
             status.textContent = messages[unknown ? 'unknown' : message];
@@ -145,6 +177,7 @@ define([], function() {
                 region.hidden = !visible;
                 region.textContent = visible;
             }
+            paintCards();
         };
         const disconnect = () => {
             if (pending?.write) {
@@ -152,6 +185,8 @@ define([], function() {
             }
             pending = null;
             ready = false;
+            closeCards();
+            updatePanel(false);
             clear();
             show('unavailable');
             render();
@@ -291,12 +326,7 @@ define([], function() {
             }
         };
 
-        const click = async event => {
-            const button = event.target.closest?.('[data-workflow-action]');
-            if (!buttons.includes(button)) {
-                return;
-            }
-            const {workflowAction: action, workflowChoice: choice} = button.dataset;
+        const run = async (action, choice) => {
             if (!enabled(action) || (action === 'consent' && !['AGREE', 'WITHDRAW'].includes(choice))) {
                 return;
             }
@@ -327,6 +357,7 @@ define([], function() {
                 }
                 accept(input, result);
                 show('success');
+                return result;
             } catch (error) {
                 if (pending !== task) {
                     return;
@@ -343,6 +374,46 @@ define([], function() {
                 }
             }
         };
+        const cardRead = async (action, expectedApplication = applicationId) => {
+            if (!ready || !expectedApplication || expectedApplication !== applicationId || !enabled(action)) {
+                throw new Error('TEST_BUSY_OR_ENDED');
+            }
+            const result = await run(action);
+            if (!result || !ready || expectedApplication !== applicationId) {
+                throw new Error('CLEAR_WORKFLOW_UNAVAILABLE');
+            }
+            return result;
+        };
+        const openCards = () => {
+            if (!participant || !cardRoot || !panels || cards) {
+                return;
+            }
+            cards = panels.createConditionCards({
+                getState: () => ({
+                    view: application,
+                    busy: !ready || walletBusy || Boolean(pending),
+                    session: session && {applicationId, boundApplicationId: session.applicationId, failure: session.failure,
+                        phase: session.phase, aiApproval: session.aiApproval},
+                    approval: source,
+                }),
+                read: async () => ({view: await cardRead('read-application')}),
+                loadEvidence: snapshot => cardRead('decision-evidence', snapshot.applicationId),
+                targets: () => {
+                    const targets = session?.conditionTargets;
+                    return targets?.moodleOrigin === origin && targets.courseId === courseId ? targets : null;
+                },
+                // The original page stays mounted while a reviewed link opens a new tab.
+                storage: panels.memoryStore(),
+                onOpen: () => root.querySelector('#clearbridge-decision-heading')?.scrollIntoView(),
+                onChange: paintCards,
+            });
+        };
+        const click = event => {
+            const button = event.target.closest?.('[data-workflow-action]');
+            if (buttons.includes(button)) {
+                return run(button.dataset.workflowAction, button.dataset.workflowChoice);
+            }
+        };
         root.addEventListener('click', click);
         acknowledgment.addEventListener('change', render);
         render();
@@ -353,12 +424,15 @@ define([], function() {
                 walletBusy = state?.busy === true;
                 if (!connected) {
                     disconnect();
+                    updatePanel(state?.role === role && state.phase === 'CONNECTED' && state.authenticated === true);
                     return;
                 }
                 if (!ready) {
                     show('ready');
                 }
                 ready = true;
+                updatePanel(true);
+                openCards();
                 render();
             },
             destroy() {

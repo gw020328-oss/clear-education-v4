@@ -1,7 +1,7 @@
 /** Fixed same-origin A module; C retains every workflow control and validates each view. */
 define(['local_clearbridge/course_native_wallet_contract', 'local_clearbridge/course_native_wallet_view',
-    'local_clearbridge/course_native_workflow'],
-function(contract, view, workflowView) {
+    'local_clearbridge/course_native_workflow', 'local_clearbridge/course_native_panels'],
+function(contract, view, workflowView, panels) {
     'use strict';
     const compose = ({element, config, mountCourseWallet, validateNativeWorkflowCommand}) => {
         config = contract.validateCourseWalletMountConfig(config);
@@ -16,6 +16,9 @@ function(contract, view, workflowView) {
         const workflow = workflowRoot && workflowView.create({
             root: workflowRoot,
             role,
+            panels,
+            courseId: config.courseId,
+            origin: config.origin,
             newKey: () => 'moodle-' + crypto.randomUUID(),
             invoke: input => {
                 if (closed || currentState?.phase !== 'CONNECTED' || currentState.authenticated !== true

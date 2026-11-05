@@ -209,3 +209,4 @@ $string['nativeworkflowdisplaysigned'] = '등록 서명 기록됨';
 $string['nativeworkflowdisplaynotready'] = '등록 준비 중';
 $string['nativeworkflowdisplayauthenticatedsourcesessionbound'] = '증빙 세션이 연결되었습니다.';
 $string['nativeworkflowdisplayparticipantsignatureaccepted'] = '증빙 서명이 접수되었습니다.';
+$string['nativepanelunknown'] = '현재 강좌의 연결 상태가 미확인입니다.';
