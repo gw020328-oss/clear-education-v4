@@ -153,3 +153,15 @@ test('parameter inventory rejects arbitrary templates, owners, methods and ambig
  assert.throws(()=>make([route,exact]));assert.throws(()=>make([exact,route]));
  assert.throws(()=>make([route,{owner:'A',path:'/bootcamp/v1/applications',methods:['GET'],query:[],slashArguments:true}]));
 });
+
+test('activity return routes require the private mode and only the fixed page ID',async()=>{
+ const {moodleActivityRefreshRoute}=await import('../../tools/bootcamp/moodle-front-door.mjs');
+ const page={owner:'C',path:'/mod/page/view.php',methods:['GET'],query:['id']};
+ const routes=[page,moodleActivityRefreshRoute];
+ assert.throws(()=>createMoodleFrontDoorPolicy({origin,routes}));
+ const policy=createMoodleFrontDoorPolicy({origin,routes,activityPageId:3});
+ assert.equal(policy.classify(request('/mod/page/view.php?id=3')).owner,'C');
+ for(const query of ['','?id=4','?id=03','?id=3&id=3','?id=%33','?id=3&forceview=1'])
+  assert.throws(()=>policy.classify(request(page.path+query)));
+ assert.equal(policy.classify(request('/bootcamp/v4/applications/app-a/source-refresh','POST')).owner,'A');
+});

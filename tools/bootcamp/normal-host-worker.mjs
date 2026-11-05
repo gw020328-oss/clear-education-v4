@@ -67,14 +67,14 @@ try{
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
      open:async opts=>{
-      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics,moodleFirst});
+      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics,moodleFirst,activityReturnOnly:config.activityReturnOnly});
       if(!createMoodleReadOptions)return context;
       try{const options=await createMoodleReadOptions({directory,report:context.report,signal});
        fail(options&&typeof options==='object','COURSE_READ_OWNER_PORT');
        return await attachNormalMoodleReadServer({context,options,signal});}
       catch(error){context.close();throw error;}
      },tls:loadTls(directory,config.tlsFingerprint),listen:listenNormalServer,
-     notify,async awaitResume({context,signal}){
+     notify,finishActivity:({signal})=>waitForCommand('FINISH',{signal}),async awaitResume({context,signal}){
       const stop=new AbortController(),combined=AbortSignal.any([signal,stop.signal]);
       try{return await Promise.race([context.waitForResume({signal:combined}),waitForCommand('FINISH',{signal:combined}).then(()=>{throw Error('NORMAL_HOST_EXPLICIT_FINISH');})]);}
       finally{stop.abort();}

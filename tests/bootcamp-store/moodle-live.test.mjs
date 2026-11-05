@@ -28,3 +28,45 @@ test('plain copied producer brand is not a live constructor capability',async t=
 test('lease loss during fresh probe rejects without evidence or request consumption',async t=>{
  const f=await fixture(t,{afterRead:(s,n)=>{if(n===12)s.available=false;}}),r=f.issue();await assert.rejects(f.collect(r),/BC_PRODUCER_FAILED|BC_SOURCE|BC_REQUEST|BC_REVISION/);assert.equal(f.counts().evidence,0);
 });
+
+test('activity return queues one fresh Moodle read and records only the pinned page evidence',async t=>{
+ const {createNormalActivityReturn}=await import('../../tools/bootcamp/normal-activity-return.mjs');
+ const {commandFixture}=await import('./moodle-command-fixture.mjs');
+ const f=await fixture(t),controller=new AbortController();
+ const commands=await commandFixture({authentication:f.service,
+  contexts:{PARTICIPANT:f.aliceContext,COURSE_OPERATOR:f.operatorContext}});
+ t.after(()=>{controller.abort();commands.owner.close();});
+ const refresh=createNormalActivityReturn({store:f.store,
+  mapping:{courseId:2,targets:{activity:{cmId:3,module:'page'}}},origin:'https://127.0.0.1:9477',
+  startedAt:START,now:()=>f.time,signal:controller.signal,sourceWindows:new Map(),
+  commandScope:commands.scope,authorize:(context,write)=>{
+   const actor=f.service.authorizeWorkflow(context,write);commands.scope.assertContext(context);return actor;
+  },getBinding:()=>({app:f.app,user:f.aliceContext}),key:f.key});
+ const before=f.view(f.app);
+ const body={criterionId:'activity-complete',expectedRevision:before.revision};
+ const post=async(role,key,data=body)=>{
+  const input=await commands.grant({method:'POST',path:'/bootcamp/v4/applications/'+f.app+'/source-refresh',body:data,idempotencyKey:key},role);
+  return commands.scope.run(input,()=>refresh.queue(input.context,f.app,data,key));
+ };
+ assert.equal(refresh.targets(f.operatorContext,f.app),null);
+ assert.deepEqual(refresh.targets(f.aliceContext,f.app).targets.map(x=>x.cmId),[3]);
+ assert.equal(f.view(f.app).evidence.length,0);
+ assert.equal(f.calls,0);
+ await assert.rejects(post('COURSE_OPERATOR','operator'),/FORBIDDEN/);
+ await assert.rejects(post('PARTICIPANT','wrong-source',{...body,criterionId:'reflection-topics'}),/BC_ACTIVITY_BODY/);
+ assert.equal(f.calls,0);
+ const queued=await post('PARTICIPANT','activity');
+ assert.equal(queued.status,'QUEUED');
+ await new Promise(r=>setImmediate(r));
+ const after=f.view(f.app);
+ assert.equal(after.evidence.length,1);
+ assert.equal(after.evidence[0].current,true);
+ assert.equal(after.evidence[0].record.condition,'MET');
+ assert.equal(after.evidence[0].record.criterionId,'activity-complete');
+ assert.equal(after.decision.record.conditionsStatus,'UNKNOWN');
+ assert.notEqual(after.decision.record.decisionId,before.decision.record.decisionId);
+ const calls=f.calls;
+ await assert.rejects(post('PARTICIPANT','activity'),/MOODLE_COMMAND_UNAVAILABLE/);
+ await assert.rejects(post('PARTICIPANT','stale-revision'),/BC_REVISION_CONFLICT/);
+ assert.equal(f.calls,calls);
+});

@@ -63,6 +63,11 @@ export async function composeNormalFlow({source,config,directory,signal,ports}){
   ports.notify({event:'NORMAL_HOST_ACTIVE',origin:config.origin,chainId:mounted.config.chainId,network:mounted.config.network,applicationId:null,sourceVerified:false});
   await waitUntil(()=>!!context.report().applicationId,{signal,timeoutMs:Math.max(1,(context.report().startedAt+1800)*1000-Date.now())});
   ports.notify({event:'APPLICATION_BOUND',applicationId:context.report().applicationId});
+  if(config.activityReturnOnly===true){
+   ports.notify({event:'MOODLE_ACTIVITY_RETURN_READY',command:'FINISH'});
+   await ports.finishActivity({signal});
+   return {applicationId:context.report().applicationId,completed:false,activityReturnOnly:true};
+  }
   const prepared=await context.collectSources({prepareReflection:true});
   await ports.awaitApproval({directory,prepared,signal,onPrepared:()=>ports.notify({event:'AWAITING_EXACT_AI_APPROVAL',applicationId:context.report().applicationId,approvalRequestPath:join(directory,'approval-request.json')})});
   for(;;){

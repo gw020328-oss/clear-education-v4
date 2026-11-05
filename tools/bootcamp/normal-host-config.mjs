@@ -24,6 +24,7 @@ export const localDay=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'
 export function codeState(){try{return {head:execFileSync('git',['rev-parse','HEAD'],{cwd:API_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim(),clean:execFileSync('git',['status','--porcelain','--untracked-files=all'],{cwd:API_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim()===''};}catch{throw Error('NORMAL_HOST_CODE_STATE');}}
 export function hostDirectory(name){fail(/^[a-z][a-z0-9-]{0,40}$/.test(name??''),'NORMAL_HOST_NAME');return join(HOST_PARENT,name);}
 export function validateHostConfig(c){
+ fail(c.activityReturnOnly===undefined||c.activityReturnOnly===true&&c.attestorMode===SELF_MODE&&typeof c.moodleReadOwnerSha256==='string','NORMAL_HOST_ACTIVITY_MODE');
  fail(c.attestorMode===undefined||['OFFICIAL',SELF_MODE].includes(c.attestorMode),'NORMAL_HOST_ATTESTOR_MODE');
  fail(c?.version===HOST_CONFIG_VERSION&&c.apiRoot===API_ROOT&&c.keySourceId===KEY_SOURCE&&c.moodleReader===MOODLE_READER&&c.moodleOwnerHead===MOODLE_OWNER_HEAD,'NORMAL_HOST_CONFIG');
  const u=new URL(c.origin);fail(u.origin===c.origin&&u.protocol==='https:'&&u.hostname==='127.0.0.1'&&Number(u.port)>=1024&&Number(u.port)<=65535,'NORMAL_HOST_ORIGIN');

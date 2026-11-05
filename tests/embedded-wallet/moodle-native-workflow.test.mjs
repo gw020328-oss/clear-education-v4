@@ -32,6 +32,7 @@ function fixture(){
  }};
  const wallet={pin:{address:w.address,chainId:31337},async personal(message){events.push('wallet');const s=await w.signMessage(message);afterSign();return s;},async typed(p){events.push('wallet');const types={...p.types};delete types.EIP712Domain;const s=await w.signTypedData(p.domain,types,p.message);afterSign();return s;}};
  const command=async input=>{await guard();events.push('grant-and-submit');commands.push(structuredClone(input));
+  if(input.path.endsWith('/source-refresh'))return{status:'QUEUED',operationId:'operation-activity'};
   if(input.path.endsWith('/source-signature')){assert.equal(verifyMessage(source.message,input.body.signature),w.address);return{approvalId:source.approvalId,requestHash:source.requestHash,status:'PARTICIPANT_SIGNATURE_ACCEPTED',paymentAuthorization:false};}
   if(input.path.endsWith('/review-consents'))return{version:'clear-bootcamp-procedure-operation.1',record:{applicationId:app,target:{decisionId:input.body.targetDecisionId}},current:true,usableForPayment:false};
   if(input.path.endsWith('/recipient-registration'))return{version:'clear-bootcamp-procedure-operation.1',record:{applicationId:app},current:true,usableForPayment:false};
@@ -40,7 +41,7 @@ function fixture(){
   throw Error('unexpected command');
  };
  const flow=createNativeWorkflow({session,wallet,config,command,guard});
- return{flow,events,commands,app,source,reg,reflection,procedure,operations,after:fn=>afterSign=fn,cancel:()=>active=false,role:v=>role=v};
+ return{flow,events,commands,app,source,reg,reflection,procedure,operations,info,after:fn=>afterSign=fn,cancel:()=>active=false,role:v=>role=v};
 }
 
 test('fixed workflow actions reject URLs, extra fields and missing command keys before I/O',()=>{
@@ -106,4 +107,17 @@ test('source approval ID changes before prompting require a fresh review even wh
  f.source.approvalId='approval-replaced';
  await assert.rejects(f.flow.run({action:'approve-source-signature',reviewed}),/SOURCE_STALE/);
  assert(!f.events.includes('wallet'));assert.equal(f.commands.length,0);
+});
+
+test('refresh activity uses the current participant session and the fixed command route without signing',async()=>{
+ const f=fixture(),action={action:'refresh-activity',applicationId:f.app,expectedRevision:1,idempotencyKey:'activity-one'};
+ await assert.rejects(f.flow.run(action),/MOODLE_ACTIVITY_UNAVAILABLE/);
+ f.info.conditionTargets={applicationId:f.app,targets:[{criterionId:'activity-complete'}]};
+ f.role('operator');
+ await assert.rejects(f.flow.run(action),/MOODLE_ACTIVITY_UNAVAILABLE/);
+ f.role('participant');
+ assert.deepEqual(await f.flow.run(action),{status:'QUEUED',operationId:'operation-activity'});
+ assert.deepEqual(f.commands,[{method:'POST',path:'/bootcamp/v4/applications/'+f.app+'/source-refresh',
+  body:{criterionId:'activity-complete',expectedRevision:1},idempotencyKey:'activity-one'}]);
+ assert(!f.events.includes('wallet'));
 });

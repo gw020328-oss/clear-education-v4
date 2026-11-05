@@ -138,3 +138,15 @@ for(const finish of [false,true])test('recipient wait resume stays inside one pa
  if(finish)await assert.rejects(work,/NORMAL_HOST_EXPLICIT_FINISH/);else assert.equal((await work).completed,true);
  assert.equal(payCalls,1);assert.equal(waits,1);assert.equal(continued,finish?0:1);assert.equal(f.resumed,1);assert.equal(f.events.filter(x=>x==='approval').length,1);assert.equal(f.closed,1);
 });
+
+test('activity-only run never invokes the normal evidence, model or payout stages',async()=>{
+ const f=flowFixture();
+ f.ports.finishActivity=async()=>{f.events.push('finish-activity');};
+ const result=await composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},
+  config:{...config(),activityReturnOnly:true},directory:'/offline',signal:f.controller.signal,ports:f.ports});
+ assert.equal(result.activityReturnOnly,true);
+ assert.equal(result.completed,false);
+ assert.ok(f.events.includes('MOODLE_ACTIVITY_RETURN_READY'));
+ for(const event of ['prepare-reflection','approval','resume-exact','pay'])assert.ok(!f.events.includes(event));
+ assert.equal(f.events.at(-1),'drain');
+});

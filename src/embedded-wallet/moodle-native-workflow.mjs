@@ -7,6 +7,7 @@ const same=(a,b)=>canonical(a)===canonical(b);
 const reviewChanged=()=>Object.assign(Error('AI_REVIEW_CHANGED'),{outcome:'NOT_SENT'});
 const fields={
  'read-session':[], 'create-application':['idempotencyKey'], 'read-application':['applicationId'],
+ 'refresh-activity':['applicationId','expectedRevision','idempotencyKey'],
  'bind-source-session':['applicationId'], 'read-source-signature':['applicationId'],
  'approve-source-signature':['reviewed'], 'read-registration':[], 'approve-registration':['reviewed'],
  'approve-reflection':['reviewed','idempotencyKey'], 'consent':['reviewed','value','idempotencyKey'],
@@ -17,6 +18,7 @@ const reads=new Set(['read-session','read-application','read-source-signature','
 export function validateNativeWorkflowCommand(input) {
  check(input&&Object.hasOwn(fields,input.action));exactKeys(input,['action',...fields[input.action]],'MOODLE_WORKFLOW_COMMAND');
  if(Object.hasOwn(input,'applicationId'))check(id(input.applicationId));
+ if(input.action==='refresh-activity')check(Number.isSafeInteger(input.expectedRevision)&&input.expectedRevision>0);
  if(input.action==='read-operation')check(id(input.operationId)&&['application','procedure'].includes(input.kind));
  if(Object.hasOwn(input,'idempotencyKey'))check(typeof input.idempotencyKey==='string'&&/^[a-z][a-z0-9.-]{0,79}$/.test(input.idempotencyKey));
  if(Object.hasOwn(input,'reviewed'))check(input.reviewed&&Object.getPrototypeOf(input.reviewed)===Object.prototype);
@@ -56,6 +58,15 @@ export function createNativeWorkflow({session,wallet,config,command,guard}) {
     result=await request('/bootcamp/v1/applications',{method:'POST',body:{},idempotencyKey:input.idempotencyKey,signal});
     check(id(result?.record?.applicationId)&&id(result?.record?.operationId),'MOODLE_WORKFLOW_RESPONSE');break;
    case 'read-application': result=await normal.view(input.applicationId,{signal});application=structuredClone(result);break;
+   case 'refresh-activity': {
+    const current=await normal.session({signal});
+    check(current.role==='PARTICIPANT'&&current.applicationId===input.applicationId
+      &&current.conditionTargets?.applicationId===input.applicationId
+      &&current.conditionTargets.targets?.some(t=>t.criterionId==='activity-complete'),'MOODLE_ACTIVITY_UNAVAILABLE');
+    result=await request('/bootcamp/v4/applications/'+input.applicationId+'/source-refresh',
+     {method:'POST',body:{criterionId:'activity-complete',expectedRevision:input.expectedRevision},idempotencyKey:input.idempotencyKey,signal});
+    break;
+   }
    case 'bind-source-session': result=await normal.bindSourceSession(input.applicationId,{signal});break;
    case 'read-source-signature': result=await normal.pendingSourceSignature(input.applicationId,{signal});source=structuredClone(result);break;
    case 'approve-source-signature': {

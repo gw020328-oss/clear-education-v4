@@ -8,7 +8,7 @@ export function moodleCommandDigest(input) {
   const {method,path,body,idempotencyKey} = input;
   check(method === 'POST' && (path === '/bootcamp/v1/applications'
     || /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/(recipient-registration|review-consents)$/.test(path)
-    || /^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/(reflection-approval|source-session|source-signature)$/.test(path)), 'MOODLE_COMMAND_ROUTE');
+    || /^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/(reflection-approval|source-session|source-signature|source-refresh)$/.test(path)), 'MOODLE_COMMAND_ROUTE');
   check(body && Object.getPrototypeOf(body) === Object.prototype
     && (typeof idempotencyKey === 'string' && /^[a-z][a-z0-9.-]{0,79}$/.test(idempotencyKey)
       || idempotencyKey === null && /\/(source-session|source-signature)$/.test(path)), 'MOODLE_COMMAND_SHAPE');

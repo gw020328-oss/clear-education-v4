@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {validateConfig} from '../../src/embedded-wallet/config.mjs';
-import {createMoodleFrontDoor,createMoodleFrontDoorPolicy,moodleNativeApplicationRoutes} from './moodle-front-door.mjs';
+import {createMoodleFrontDoor,createMoodleFrontDoorPolicy,moodleNativeApplicationRoutes,moodleActivityRefreshRoute} from './moodle-front-door.mjs';
 import {createMoodleOAuthReturn} from './moodle-oauth-return.mjs';
 import {createProductRpc} from '../embedded-wallet/product-rpc.mjs';
 import {productWalletMount} from '../embedded-wallet/product-mount.mjs';
@@ -30,7 +30,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
  }
  const wallets=productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi?.walletRuntime,moodleLogin:!!moodleLogin});
  if(moodleLogin&&!wallets)throw Error('MOODLE_LOGIN_WALLET_MOUNT');
- const native=prepareNative({options:moodleNative,assets,wallets,moodleLogin,origin:store.origin});
+ const native=prepareNative({options:moodleNative,assets,wallets,moodleLogin,origin:store.origin,activityPageId:normalUi?.activityPageId});
  const config=Object.freeze({version:NORMAL_HOST_VERSION,origin:store.origin,chainId,sourceMode,network:walletNetwork,phase:normalUi?'ACTIVE_LOCAL_TEST':'DISPLAY_ONLY',policyHash:p0PolicyHash(P0_POLICY),
   procedureHttpVersion:'clear-bootcamp-review-procedure.1',operationsHttpVersion:'clear-bootcamp-operations-projection.2',
   reviewConsentHttpImplemented:true,originalEvidenceHttpImplemented:false,executionReceiptHttpImplemented:typeof normalUi?.getPaymentReceipt==='function',
@@ -49,6 +49,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
     ||req.method==='POST'&&(/^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/(review-consents|recipient-registration)$/.test(req.url)||req.url==='/bootcamp/v1/applications');
    if(allowed||normalUi&&(req.method==='GET'&&req.url==='/bootcamp/v4/session'&&typeof normalUi.getSession==='function'||req.method==='GET'&&typeof normalUi.getPaymentReceipt==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/payment-receipt$/.test(req.url)||(req.method==='GET'||req.method==='POST')&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-signature$/.test(req.url)
     ||req.method==='POST'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-session$/.test(req.url)
+    ||req.method==='POST'&&typeof normalUi.refreshActivity==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-refresh$/.test(req.url)
     ||req.method==='POST'&&typeof normalUi.resume==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/resume$/.test(req.url)
     ||req.method==='POST'&&typeof normalUi.approveReflection==='function'&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/reflection-approval$/.test(req.url)))return bootcamp(req,res);
    res.writeHead(404,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end('{"error":"BC_NOT_FOUND"}');return;
@@ -90,7 +91,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
 
 // The hash-pinned owner supplies only C's reviewed inventory/handler and fixed
 // course. A routes, public assets and OAuth return cannot be supplied by C or a request.
-function prepareNative({options,assets,wallets,moodleLogin,origin}){
+function prepareNative({options,assets,wallets,moodleLogin,origin,activityPageId}){
  const marker=assets.get('/clear-moodle-native.html');
  const fail=ok=>{if(!ok)throw Error('MOODLE_NATIVE_FRONTEND_CONFIG');};
  if(options===null){fail(!marker&&!assets.has('/clear-moodle-native-assets.html')&&moodleLogin?.native!==true);return null;}
@@ -126,7 +127,8 @@ function prepareNative({options,assets,wallets,moodleLogin,origin}){
   {owner:'A',path:'/local/clearbridge/wallet-return',methods:['GET'],query:['privy_oauth_code','privy_oauth_state','privy_oauth_provider']},
   {owner:'A',path:'/clear-assets',methods:['GET'],query:[],slashArguments:true},
   ...moodleNativeApplicationRoutes,
+  ...(activityPageId===undefined?[]:[moodleActivityRefreshRoute,{owner:'C',path:'/mod/page/view.php',methods:['GET'],query:['id']}]),
  ];
- return {config,assets:publicAssets,policy:createMoodleFrontDoorPolicy({origin,routes:[...options.routes,...fixed]}),
+ return {config,assets:publicAssets,policy:createMoodleFrontDoorPolicy({origin,activityPageId,routes:[...options.routes,...fixed]}),
   oauthReturn:createMoodleOAuthReturn({config,courseId:options.courseId})};
 }

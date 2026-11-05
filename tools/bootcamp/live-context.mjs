@@ -36,6 +36,8 @@ import {readNormalView,normalSourceTarget} from './normal-current-view.mjs';
 import {createNormalSourceSequence} from './normal-source-sequence.mjs';
 import {createNormalReviewReaders,requireNormalConsentAction,REVIEW_WINDOW} from './normal-review-window.mjs';
 import {waitUntil} from './normal-host-flow.mjs';
+import {createNormalActivityReturn} from './normal-activity-return.mjs';
+import {executionErrorSummary} from '../../src/bootcamp/execution-diagnostics.mjs';
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 // Called from inside the store transaction: authenticate against the separate
@@ -131,7 +133,8 @@ export function createNormalMoodleReadBoundary({databasePath,authentication,getD
   close(){if(!closed){closed=true;contexts.clear();snapshots?.close();snapshots=null;}}
  });
 }
-export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics,moodleFirst=false}){
+export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics,moodleFirst=false,activityReturnOnly=false}){
+ ensure(!activityReturnOnly||moodleFirst,'BC_ACTIVITY_MODE');
  ensure(typeof moodleFirst==='boolean','BC_NORMAL_SOURCE_ORDER');
  ensure(typeof withReader==='function'&&typeof hackerRank?.pins==='function'&&typeof hackerRank.collectLease==='function'&&typeof reviewReflection==='function','BC_LIVE_PORTS_REQUIRED');
  preparationPath=resolve(preparationPath);const base=privateDirectory(dirname(preparationPath));
@@ -194,7 +197,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
     policyHash:m.policyHash,runtimeMappingHash,participantWallet:prepared.participantWallet,operatorWallet:prepared.operatorWallet,
     recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),expiresAtExclusive:startedAt+1800};}});
   const refreshProcedure=async(c,a)=>{
-   store.getOperationsProjection(c,a);if(failureState)return;requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
+   store.getOperationsProjection(c,a);if(failureState||activityReturnOnly)return;requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
    await connection.refresh(a);store.getOperationsProjection(c,a);
   };
   const readers=createNormalReviewReaders({now});
@@ -219,6 +222,10 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
     if(current.status==='RECIPIENT_WAIT_NOT_SENT'){paymentCheckpoint.requestResume();return;}
     if(current.status==='NOT_SENT')reflectionHost.authorizeResume();sourceSequence.requestResume();
    }});
+  const activityReturn=activityReturnOnly?createNormalActivityReturn({store,mapping,origin:origin.origin,
+   startedAt,now,signal:controller.signal,sourceWindows,commandScope,authorize:(c,w)=>ui.authorize(c,w),
+   getBinding:()=>{requireUiRule(moodleLogin?.native===true,'BC_ACTIVITY_MODE');if(app)ui.participant();return {app,user};},
+   key,observeFailure:error=>{report.activityRefreshFailure=executionErrorSummary(error);write();}}):null;
   const getSession=context=>{const actor=ui.authorize(context,false);if(app&&!failureState)readNormalView(()=>store.getOperationsProjection(context,app));
    // Observe only the real authenticated UI request, never a Moodle poll. Keep
    // this optional read binding out of the existing failure/resume UI path.
@@ -227,10 +234,14 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,failure:failureState?resumeControl.view():null,
    signingContext:actor.role==='participant'?productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}):null,
    recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),receiptRequired:true,
+   ...(activityReturn&&actor.role==='participant'?{conditionTargets:activityReturn.targets(context,app)}:{}),
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:failureState?null:reflectionApproval?.brief(context)??null});};
   const recipientView=(c,a,checkpoint)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,checkpoint,authorize:(c,w)=>ui.authorize(c,w)});};
-  const normalUi=Object.freeze({commandScope,walletRuntime:Object.freeze({instanceId:m.instanceId}),assertWritable(path){requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
+  const normalUi=Object.freeze({commandScope,walletRuntime:Object.freeze({instanceId:m.instanceId}),...(activityReturn?{activityPageId:activityReturn.pageId,refreshActivity:activityReturn.queue}:{}),
+   assertWritable(path){if(activityReturn)requireUiRule(path==='/bootcamp/v1/applications'||app&&[
+    '/bootcamp/v4/applications/'+app+'/source-session','/bootcamp/v4/applications/'+app+'/source-refresh',
+   ].includes(path),'BC_ACTIVITY_MODE');requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
    beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
     requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},
@@ -247,7 +258,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    },
    createFrontend({tls,webRoot,moodleNative=null}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,moodleNative,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
-    ui.participant();ensure(!closed&&!failureState,'BC_LIVE_CONTEXT');
+    ui.participant();ensure(!activityReturnOnly&&!closed&&!failureState,'BC_LIVE_CONTEXT');
     sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,moodleFirst,
      getReflectionRecovery:id=>producers['reflection-topics'].recovery(store.getRequest(user,app,id,{bridge:true}).record),sourceWindows,startedAt,now,nowMs:()=>Date.now(),signal:controller.signal,key,stage,diagnostics,waitForReaders,requireReaders:()=>readers.require()});
     const result=await sourceSequence.collect({prepareReflection});if(prepareReflection)return result;
@@ -256,7 +267,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
     sourceTarget=normalSourceTarget(result);report.realSourceVerified=true;stage('REGISTERED_SOURCE_ALL_CURRENT_MET');return result;
    },
    async pay({onRecipientWaitFailure}={}){
-    readNormalView(()=>ui.participant());ensure(!failureState&&report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;
+    readNormalView(()=>ui.participant());ensure(!activityReturnOnly&&!failureState&&report.realSourceVerified===true&&!paymentStarted&&!report.completed,'BC_LIVE_SOURCE_REQUIRED');paymentStarted=true;
     try{return await executeNormalPayment({store,connection,serviceContext,user,app,sourceTarget,requireReviewReaders:()=>readers.require(),
      assertRecipientWaitCurrent:paymentAuthority,
      onRecipientWaitFailure:async(error,checkpoint)=>{paymentCheckpoint=checkpoint;try{return await onRecipientWaitFailure?.(error)===true;}finally{paymentCheckpoint=null;}},

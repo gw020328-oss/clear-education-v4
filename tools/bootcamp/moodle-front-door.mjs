@@ -27,6 +27,9 @@ export const moodleNativeApplicationRoutes = Object.freeze([
 ].map(([version, tail, methods, query = []]) => Object.freeze({owner: 'A',
   path: app + version + '/applications/:applicationId/' + tail,
   methods: Object.freeze(methods), query: Object.freeze(query), idParameters: true})));
+export const moodleActivityRefreshRoute = Object.freeze({owner:'A',
+  path:'/bootcamp/v4/applications/:applicationId/source-refresh', methods:Object.freeze(['POST']),
+  query:Object.freeze([]), idParameters:true});
 const parameterMatch = (route, path) => route.idParameters && new RegExp('^' + route.path
   .split('/').map(segment => [':applicationId', ':operationId'].includes(segment) ? id : segment).join('/') + '$').test(path);
 const matchesPath = (route, path) => route.path === path || parameterMatch(route, path)
@@ -36,9 +39,10 @@ const headersFor = owner => new Set(owner === 'A'
     'x-wallet', 'x-chain-id', 'x-csrf-token', 'idempotency-key', 'x-clear-command-ref', 'x-clear-command-binding']
   : ['accept', 'accept-language', 'content-type', 'content-length', 'origin', 'sec-fetch-site', 'sec-fetch-mode', 'sec-fetch-dest']);
 
-export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 'MoodleSession'}) {
+export function createMoodleFrontDoorPolicy({origin, routes, activityPageId, moodleCookieName = 'MoodleSession'}) {
   const url = new URL(origin);
   check(url.origin === origin && url.protocol === 'https:' && url.hostname === '127.0.0.1' && url.port);
+  check(activityPageId===undefined||activityPageId===3);
   check(token.test(moodleCookieName) && !moodleCookieName.startsWith('__Host-clear-'));
   check(Array.isArray(routes) && routes.length > 0 && routes.length <= 256);
   const inventory = routes.map(route => {
@@ -47,9 +51,13 @@ export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 
     check(Array.isArray(route.methods) && route.methods.length > 0
       && route.methods.every(v => ['GET', 'POST', 'DELETE'].includes(v)));
     check(Array.isArray(route.query) && route.query.every(k => /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(k)));
+    if(route.path==='/mod/page/view.php')check(activityPageId===3&&route.owner==='C'
+      &&route.methods.join(',')==='GET'&&route.query.join(',')==='id'&&!route.slashArguments);
+    if(route.path.endsWith('/source-refresh'))check(activityPageId===3);
     check(route.idParameters === undefined || route.idParameters === true);
     if (route.idParameters) {
-      const fixed = moodleNativeApplicationRoutes.find(r => r.path === route.path);
+      const fixed = route.path === moodleActivityRefreshRoute.path ? moodleActivityRefreshRoute
+        : moodleNativeApplicationRoutes.find(r => r.path === route.path);
       check(fixed && route.owner === 'A' && !route.slashArguments && !route.walletDocument
         && JSON.stringify(route.methods) === JSON.stringify(fixed.methods)
         && JSON.stringify(route.query) === JSON.stringify(fixed.query));
@@ -91,6 +99,7 @@ export function createMoodleFrontDoorPolicy({origin, routes, moodleCookieName = 
     const search = new URLSearchParams(q < 0 ? '' : req.url.slice(q + 1));
     check([...search.keys()].length === new Set(search.keys()).size
       && [...search].every(([k, v]) => route.query.includes(k) && v.length <= 4096 && !/[\x00-\x1f\x7f]/.test(v)));
+    if(path==='/mod/page/view.php')check(q>=0&&req.url.slice(q+1)==='id='+activityPageId);
     // Only A consumes OAuth return parameters. A must not forward or log them.
     check(path === callback || ![...search.keys()].some(k => /oauth|access_token|id_token/i.test(k)));
     if (req.method !== 'GET') check(req.headers.origin === origin && req.headers['sec-fetch-site'] === 'same-origin');
