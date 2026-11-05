@@ -175,7 +175,8 @@ function conditionCard(criterionId, ctx) {
       row, evRow: ev.row, limitations: ev.limitations, phase: session?.phase ?? null,
       aiApproval: session?.aiApproval ?? null, sourceText,
       // 고치러 갔다 돌아와 아직 새 판정이 안 온 동안은 지난 글의 결과다
-      returned: [RETURN.CHECKING, RETURN.PENDING, RETURN.STALLED, RETURN.READ_FAILED, RETURN.CANNOT_CHECK].includes(ret.state),
+      // 떠나지 않고 「다시 확인」 만 누른 경우(departed=false)는 고친 글이 아니다.
+      returned: ret.departed !== false && [RETURN.CHECKING, RETURN.PENDING, RETURN.STALLED, RETURN.READ_FAILED, RETURN.CANNOT_CHECK].includes(ret.state),
     });
     extra = reflectionBlock(review, link);
     if (review.needsRewrite) verb = '회고 다시 쓰기';

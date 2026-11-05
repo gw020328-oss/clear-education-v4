@@ -42,7 +42,16 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
   const opId = req?.operationId ? ` · 접수 ${req.operationId}` : '';
   const retry = Number.isFinite(req?.retryAfterSeconds) ? `${req.retryAfterSeconds}초` : '잠시';
 
-  switch (ret?.state) {
+  // 떠난 기록이 없는 미충족 카드. 학생이 카드 버튼을 안 거치고 Moodle 에서 직접 마쳤을 수
+  // 있다 — 그때는 돌아와도 카드가 모른다. 「다시 확인」 으로 재확인을 요청할 길을 둔다.
+  // HackerRank 는 Moodle 재확인 대상이 아니라 제외.
+  if (!ret || ret.state === RETURN.IDLE || ret.state === undefined) {
+    if (row && row.state !== 'MET' && row.criterionId !== 'python-basic-certificate') {
+      return { tone: 'wait', text: 'Moodle 에서 직접 마치셨다면 「다시 확인」 을 눌러 주세요. 서버에 원천 재확인을 요청하고 판정을 다시 읽어요.', recheck: true };
+    }
+    return null;
+  }
+  switch (ret.state) {
     case RETURN.AWAY:
       return { tone: 'wait', text: `${where}에서 마치고 이 탭으로 돌아오시면 서버 판정을 다시 읽어요.`, recheck: false };
     case RETURN.CHECKING:
@@ -121,7 +130,8 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
       if (ret.sameState) {
         return { tone: 'wait', text: `재확인 완료 · 서버가 새 근거를 확인했어요 · 판정은 그대로 ${serverWord(row)}${at}`, recheck: false };
       }
-      return { tone: 'ok', text: `새 판정 확정 · 서버 판정이 바뀌었어요 · 지금 판정 ${serverWord(row)}${at}`, recheck: false };
+      // 바뀌었는데 아직 미충족이면(회고 미충족 등) 다시 확인할 길은 남긴다.
+      return { tone: 'ok', text: `새 판정 확정 · 서버 판정이 바뀌었어요 · 지금 판정 ${serverWord(row)}${at}`, recheck: row?.state !== 'MET' };
     }
     default:
       return null;

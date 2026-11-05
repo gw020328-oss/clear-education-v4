@@ -590,3 +590,33 @@ test('늦은 판정이 끝내 확인되지 않으면 STALLED 문구가 "판정�
   assert.match(returnLine(s, rowsAfter()[0]).text, /바뀌었지만/);
   assert.match(returnLine(s, rowsAfter()[0]).text, /다시 확인/);
 });
+
+
+// ── 7 · 카드 버튼을 안 거치고 Moodle 에서 직접 마친 경우 ─────────────────────
+
+test('떠난 기록이 없어도 「다시 확인」 이 새 방문을 만들어 재확인을 요청하고, 바뀐 판정이 기록되면 확정한다', async () => {
+  let reads = 0; let n = 0;
+  const { t, c, calls } = tracker({
+    refresh: () => (n++ === 0 ? { status: 'QUEUED', operationId: 'op-idle' } : { status: 'RECORDED', operationId: 'op-idle' }),
+    read: async () => (reads++ < 2 ? rowsBefore() : rowsAfter()),
+  });
+  assert.equal(t.status('activity-complete').state, RETURN.IDLE);
+  await t.recheck('activity-complete'); await flush();
+  const s = t.status('activity-complete');
+  assert.equal(s.state, RETURN.PENDING, '요청 뒤 읽었는데 ' + s.state);
+  assert.equal(s.departed, false);
+  assert.equal(s.refresh.status, REFRESH.QUEUED);
+  assert.equal(calls.filter((x) => Array.isArray(x)).length, 1);
+  await c.tick(100);
+  assert.equal(t.status('activity-complete').state, RETURN.UPDATED);
+});
+
+test('떠난 기록 없는 미충족 카드는 「다시 확인」 안내가 있고, 충족·HackerRank 는 없다', () => {
+  const idle = { state: RETURN.IDLE };
+  const unmet = returnLine(idle, row('assignment-submitted', 'NOT_MET'));
+  assert.equal(unmet.recheck, true);
+  assert.match(unmet.text, /직접 마치셨다면/);
+  assert.equal(returnLine(idle, row('assignment-submitted', 'MET')), null);
+  assert.equal(returnLine(idle, row('python-basic-certificate', 'UNKNOWN')), null);
+  assert.equal(returnLine(null, row('activity-complete', 'NOT_MET'))?.recheck, true);
+});

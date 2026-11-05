@@ -178,7 +178,7 @@ export function createReturnTracker({
         && (v.baseline === null || typeof v.baseline === 'string');
       if (ok) {
         visits.set(id, {
-          state: RETURN.AWAY, departedAt: v.departedAt, baseline: v.baseline, baselineState: v.baselineState ?? null,
+          state: RETURN.AWAY, departedAt: v.departedAt, departed: true, baseline: v.baseline, baselineState: v.baselineState ?? null,
           attempts: 0, checkedAt: null, error: null,
           nextAllowedAt: v.nextAllowedAt ?? 0, refresh: v.refresh ?? null, needsRefresh: false, requested: false,
           visitRef: nextVisitRef(),
@@ -391,7 +391,7 @@ export function createReturnTracker({
     if (closed || typeof criterionId !== 'string') return;
     const rows = getRows();
     visits.set(criterionId, {
-      state: RETURN.AWAY, departedAt: nowMs(), baseline: rowFingerprint(rows, criterionId),
+      state: RETURN.AWAY, departedAt: nowMs(), departed: true, baseline: rowFingerprint(rows, criterionId),
       baselineState: rowOf(rows, criterionId)?.state ?? null,
       attempts: 0, checkedAt: null, error: null,
       // 재확인 명령의 기준 — **신청 개정 번호**. 조건 근거 번호가 아니다.
@@ -422,8 +422,21 @@ export function createReturnTracker({
 
   /** 학생이 「다시 확인」 을 눌렀다. 멈췄던 재조회도 처음부터 다시 센다 */
   function recheck(criterionId) {
+    if (closed || typeof criterionId !== 'string') return undefined;
     const v = visits.get(criterionId);
-    if (closed || !v || !LIVE.has(v.state)) return undefined;
+    if (!v || !LIVE.has(v.state)) {
+      // 떠난 기록이 없어도 된다 — 학생이 카드 버튼을 안 거치고 Moodle 에서 직접 마친 뒤
+      // 「다시 확인」 을 눌렀다. 지금 판정을 기준으로 새 방문을 만들고 재확인을 요청한다.
+      // 돌아온 것이 아니므로 departed=false — 회고 카드가 '고친 글' 이라고 말하지 않는다.
+      const rows = getRows();
+      visits.set(criterionId, {
+        state: RETURN.CHECKING, departedAt: nowMs(), departed: false,
+        baseline: rowFingerprint(rows, criterionId), baselineState: rowOf(rows, criterionId)?.state ?? null,
+        attempts: 0, checkedAt: null, error: null, nextAllowedAt: v?.nextAllowedAt ?? 0,
+        refresh: null, needsRefresh: true, requested: false, held: null, lateChange: false, visitRef: nextVisitRef(),
+      });
+      return check();
+    }
     // 「다시 확인」 은 재확인 요청도 다시 보낸다. 멈춤·불가 뒤에 서버가 바뀌었을 수 있다.
     visits.set(criterionId, { ...v, state: RETURN.CHECKING, attempts: 0, error: null, needsRefresh: true, requested: false, held: null, lateChange: false, visitRef: nextVisitRef() });
     return check();
