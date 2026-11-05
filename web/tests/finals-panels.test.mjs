@@ -934,3 +934,37 @@ test('서버가 보류한 조항은 사유를 보이고 직접 지정 상자가 
     assert.equal(proposeReading('강의수강 후기적기 과제제출').kept.length, 3);
   } finally { restore(); }
 });
+
+// ── A 칸은 실행 결과가 아니라 **제안**을 따라간다 ─────────────────────────────
+//
+// Gemini·서버 중계 모드는 표시 전용이라 실행이 없다. 그래도 운영자는 찾은 조건마다
+// Moodle 항목을 지정해 봐야 하므로, 강좌 연결 칸은 B 가 찾은 조건 종류를 따라간다.
+// 글자마다 다시 그려도 종류 목록이 같으면 다시 알리지 않는다(운영자 선택이 지워지니까).
+
+test('onProposal: 찾은 조건 종류가 바뀔 때만 알리고, 나중에 끼워도(setOnProposal) 바로 한 번 알린다', async () => {
+  const restore = installDom();
+  try {
+    const seen = [];
+    const adapter = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (input) => COMBOS[input]?.payload ?? null, run: null });
+    const panel = aiComparePanel({ adapter, source: PRESETS[0].source, presets: [], onProposal: (caps) => seen.push(caps) });
+    await settle();
+    assert.ok(seen.length >= 1, '처음 그릴 때 한 번 알려야 한다');
+    assert.deepEqual(seen.at(-1), ['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1'], '① 예문은 활동+과제');
+    const n = seen.length;
+    panel.render(); panel.render();
+    assert.equal(seen.length, n, '같은 목록이면 다시 알리지 않는다');
+
+    const late = [];
+    panel.setOnProposal((caps) => late.push(caps));
+    assert.deepEqual(late, [['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1']], '나중에 끼우면 지금 목록을 바로 한 번');
+
+    // Gemini 대역(표시 전용)에서도 제안 생성 뒤 알린다 — 실행이 없어도 A 칸이 선다
+    const gem = [];
+    const g = aiComparePanel({ adapter, source: PRESETS[0].source, presets: [], proposer: OFFLINE_GEMINI_PROPOSER, onProposal: (caps) => gem.push(caps) });
+    await settle();
+    assert.deepEqual(gem.at(-1), [], '생성 전엔 빈 목록');
+    g.generate();
+    await settle();
+    assert.deepEqual(gem.at(-1), ['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1'], '생성 뒤 찾은 종류');
+  } finally { restore(); }
+});

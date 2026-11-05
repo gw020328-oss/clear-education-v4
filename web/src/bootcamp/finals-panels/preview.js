@@ -85,11 +85,9 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
   const linkLoad = createAdapter({ mode, fixture: linkFixture, run: null });
   const linkSave = createAdapter({ mode, fixture: saveFixture, run: null });
   const linkPanel = courseLinkPanel({ load: linkLoad, save: linkSave, scenario: 'unset', conditions: [] });
-  const followConditions = (snap) => {
-    if (snap.state !== 'success' || !snap.payload?.draft?.conditions) return;
-    linkPanel.setConditions(snap.payload.draft.conditions.map((c) => c.capability));
-  };
-  ai.subscribe(followConditions);
+  // 실행 결과(payload)가 아니라 B 의 **제안**을 따라간다. Gemini·서버 중계 모드는 표시
+  // 전용이라 실행이 없는데, 그래도 운영자는 찾은 조건마다 항목을 지정해 봐야 한다.
+  aiPanel.setOnProposal((caps) => linkPanel.setConditions(caps));
 
   root.append(
     el('header.fp-top', {}, [
