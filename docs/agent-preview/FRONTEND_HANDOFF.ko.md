@@ -48,3 +48,60 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 `executeReviewedGeminiPreview(packet, reviewedHash)`는 운영자가 확인한 proposalHash가 현재 응답과 일치하고 미결 질문이 없을 때만 허용 manifest에서 계획을 만들고 검증한다. 검토 지문은 내용 결합 수단이며 운영자 인증은 호스트 책임이다. 실행은 기존 Moodle·회고 grounding·Reclaim 합성 모듈로 연결되며 결과의 PUBLIC_SYNTHETIC 범위와 지급 금지를 유지한다.
 
 실제 호출 검토용 공개 입력은 `examples/clear-core/gemini-preview-demo.mjs`의 두 문장이다. 모델 gemini-3.5-flash-lite에 입력마다 generateContent 1회, 재시도 0회, 출력 상한 2048 tokens를 적용한다. 전송 범위는 인공 안내문, 원문 위치, 허용 capability/회고 항목 목록과 고정 프롬프트·스키마다. 두 본문 지문은 `450794af7d0d7284a74c0a3790fa1fec396715b0490c7d011ac09f4c27872a25`, `197c51f2aeb8630594fa1f233d620135dc0e958244f0851545af47789d8beae8`이다. 최신 단가와 비용 검토 및 직접 입력별 승인 이후 실제 결과를 별도로 기록한다.
+
+## 0.4.0 서버 조건 관계 검사와 구조화 DTO (2026-11-05, Claude)
+
+기준 develop `9a626a7`. 프롬프트·응답 schema·모델·`bodyHash` 는 바꾸지 않았다(기존 승인·fixture 지문 유지).
+
+**서버 보류 검사** — `reviewModelProposal` 은 모델의 `SUPPORTED` 를 그대로 믿지 않는다. 정규 문법 문장이 아닌 조항에 아래가 있으면 그 조항을 조건으로 만들지 않고 질문으로 남긴다. 원문 인용·위치는 그대로다. draft 에 `guards[{clauseId,kinds,modelStatus,modelCapability}]` 가 추가된다.
+
+| kind | 예 | 결과 |
+| --- | --- | --- |
+| ALTERNATIVE | 강의 수강 또는 과제 제출 | NEEDS_CLARIFICATION |
+| SUBSTITUTE | 과제 제출 대신 후기 작성 | NEEDS_CLARIFICATION |
+| NEGATION | 과제 제출은 필요 없습니다 | NEEDS_CLARIFICATION |
+| THRESHOLD | 강의 3개 이상 수강 | NEEDS_CLARIFICATION |
+| DEADLINE | 11월 30일까지 과제 제출 | NEEDS_CLARIFICATION |
+| OPTIONAL | (선택) 수료 후기 작성 | NEEDS_CLARIFICATION |
+| MULTIPLE_CONDITIONS | 강의수강 후기적기 과제제출 | NEEDS_CLARIFICATION |
+| CAPABILITY_CONTRADICTION | 실습 과제를 Moodle에 제출하세요 → 모델이 활동 완료 | NEEDS_CLARIFICATION |
+| UNSUPPORTED_MEASURE | 출석률 90% 이상 | UNSUPPORTED |
+
+질문이 하나라도 있으면 draft 는 READY 가 될 수 없어 `buildPlan` 이 `DRAFT_NOT_READY` 로 거부한다. 다른 조항을 읽었어도 마찬가지다.
+
+**프론트 규칙 제안자와의 차이** — 프론트 `normalize.js` 는 한 문장에서 조건 여럿을 뽑고(「강의수강 후기적기 과제제출」 → 셋), 정규 문장 `A; B; C` 로 이어 보낸다. 서버 계약은 `;`·줄바꿈으로 나눈 **한 조항 = 한 조건**이라, 같은 문장을 원문 그대로 Gemini 경로로 보내면 MULTIPLE_CONDITIONS 로 보류한다. 프론트의 대안·대체 보류(held)와 서버 보류는 같은 방향이지만 규칙은 따로 있다.
+
+**`src/agent-preview/condition-structuring.mjs`** — 리스너·네트워크 클라이언트 없음. 호스트 경로가 부른다.
+
+| 함수 | 역할 |
+| --- | --- |
+| `prepareStructuring(sourceText)` | 모델 호출 없는 검토 묶음(model·sourceHash·bodyHash·조항·한도) |
+| `structureWithGemini(sourceText,{approvalRef,claimAndDispatch,signal,transportExecution})` | 기존 `requestGeminiPreview` 를 한 번 부른다. stage `PROPOSED`·`APPROVAL_REQUIRED`·`MODEL_CALL_FAILED`·`MODEL_RESPONSE_REJECTED`. 실패 때 규칙 결과로 대신하지 않는다(`fallback:'NONE'`) |
+| `proposalDto(draft)` | 프론트 DTO `clear-condition-proposal.1` — 조항별 quote·start·end·status·capability·tool·question·serverGuard |
+| `rowsFromDraft(draft)` | 호스트가 원 응답 대신 저장할 행 |
+| `planReviewedProposal` / `executeReviewedProposal` | 운영자 검토 지문으로 재검토 → 등록 manifest 매핑 → `validatePlan` → 기존 PUBLIC_SYNTHETIC 실행. 결과에 `toolSelection:'MODEL_CLASSIFIES_CAPABILITY_CODE_MAPS_TOOL'`, `selectedBy:'CODE_TOOL_MANIFEST'`, `toolSource:'PUBLIC_FIXTURE'`, `actualMoodleQuery:false`, `actualReclaimVerification:false` |
+
+도구 선택: 모델은 조항마다 capability(조건 종류)만 고른다. 도구는 코드가 `TOOL_MANIFEST` 에서 매핑한다. 모델이 도구를 직접 고르는 경로는 없다.
+
+**HTTP** — develop 에는 서버 경로가 없다. 기존 경로는 D 의 Draft 연쇄(`deploy/agent-preview`, PR #154 계열)의 `/v1/preview/prepare`·`/generate`·`/execute` 다. 최소 확장안:
+
+- `generate` 응답에 `proposal`(=`proposalDto(draft)`)과 `modelCall`(stage·attempted·succeeded·errorCode·execution) 추가. 실패는 HTTP 오류와 함께 `stage` 를 그대로 준다.
+- `execute` 는 지금처럼 저장 행·proposalHash 로 재검토하되 결과를 `executeReviewedProposal` 모양(steps·validation·execution 원천 표시)으로 준다. D 의 실제 관측 연결(`ACTUAL_TOOL_NOT_ENABLED`·활동 1단계 제한)은 그대로 둔다.
+
+요청·응답 예시는 워크트리의 `CLAUDE_HANDOFF.md` 에 있다.
+
+**검사** — `./tools/node --import ./tests/agent-preview/network-block.mjs --test tests/agent-preview/condition-structuring.test.mjs` (11). 기존 developerTransport 에 시험용 fetch·키만 주입하고 승인은 bodyHash 단회 소비 대역이다. 실제 Gemini 호출 없음.
+
+## PR166 보정 후보: core 0.1.2 / 모델 draft v2
+
+기준 head `93c849b7027dca75877f878ba39534ef062582c9`. E가 확인한 `안 들어도`, `선택적으로`, `두 번`, `2시간`, 요일·ISO 날짜 기한과 같은 종류의 의무 두 개(`강의 A와 강의 B`)를 보류한다. `빠짐없이 완료`는 부정으로 보지 않고, `강의 수강 후기를 작성`의 강의는 후기의 주제로 처리한다. 별도 수강 의무(`강의를 수강하고 후기를 작성`)는 계속 복수 조건으로 보류한다. 이 검사는 알려진 표현에 대한 보수적 검사이며 임의 자연어의 의미 보장은 아니다.
+
+- `clear-preview-model-draft.2`는 원본 모델 행의 복사본 `modelRows`를 포함한다. 서버가 보류한 SUPPORTED 행과 중복 조건도 원형을 유지한다. `rowsFromDraft`는 직렬화 후에도 이 행과 `proposalHash`의 결합을 검사해 복사하여 반환한다. 표시용 `proposal.clauses`를 저장 행으로 대체하지 않는다.
+- `proposalHash=hash({sourceText,rows})`와 프롬프트·schema·모델·bodyHash는 그대로다. draft 버전/필드 및 검사 결과 때문에 `draftHash`와 이를 포함한 `planHash`는 달라진다. 과거 plan/draft를 재사용하지 않고 저장한 원본 행을 현재 core에서 재검토한다. `.1` draft만 남아 원본 응답/행이 없으면 `MODEL_ROWS_UNAVAILABLE`이며 새 제안을 받아야 한다. 원본 행과 hash가 맞지 않으면 `MODEL_ROWS_BINDING`이다.
+- `clear-condition-structuring.2`의 `actualModelCall`은 `true | false | null`이다. ACTUAL 호스트의 응답 수신은 true, 호스트 진입 전 거부/준비 단계와 오프라인 경로는 false다. 호스트의 예약 코드 `APPROVAL_REQUIRED_OR_SPENT`는 provider 전송 전 승인 거부만 뜻하므로 false다. 다른 ACTUAL 호스트 실패가 응답 없이 끝나면 null(전송 여부 미확인)이다. `modelCall.attempted`는 호스트 함수 진입일 뿐 승인 소비·전송 증거가 아니다. true 역시 호스트가 전달한 응답과 ACTUAL 선언에 따른 표시이지 독립적인 과금 영수증은 아니다. null을 true나 false로 강제 변환하지 않는다. countTokens와 generateContent의 세부 전송 단계는 D가 실제 호스트 근거로 인수할 사항이며 이 wrapper는 그 단계를 추정하지 않는다.
+- HTTP/프론트 소비자는 draft v2와 nullable 호출 표시를 인수해야 한다. D의 `/execute` 단일 활동/오프라인 관측 계약은 이 변경으로 확장되지 않는다. D 소유 HTTP 파일은 수정하지 않았고 호스트 전송 인터페이스도 그대로다.
+- `packages/clear-core`는 0.1.2 후보이며 0.1.1을 같은 버전으로 재출시하지 않는다. 별도 full-module 번들은 이번 범위에서 재패키징하지 않는다. 패키지 업그레이드 시 기존 모델 draft/plan 캐시를 무효화한다. 합성 규칙 draft 형식은 유지한다.
+
+후속 오보류 보정: 한글 수량의 시작이 앞 단어에 붙어 있으면 수량 후보로 보지 않는다. `포함한 회고`·`상세 회고`를 `한 회`·`세 회`로 읽지 않는다. 같은 종류의 명사 반복 검사에서 `강의와 관련된 활동`의 관계 수식어는 별도 대상으로 세지 않되, `강의와 관련된 활동 A와 활동 B`의 두 대상은 계속 보류한다. 이 보정은 새로운 조건 종류나 자연어 지원 범위를 정의하지 않는다. 모델 draft/행 보존/출처 표시 계약과 패키지 후보 버전은 위와 같다.
+
+수량 경계 설계 재검토(기준 `c11e13d`): 단위 뒤 조사 목록으로 수량을 인정하던 조건을 제거했다. 목록 밖 `두 번으로`·`두 번이나`가 지원 조건으로 축소되는 결함이 있었기 때문이다. 현재 기준은 **독립된 수량 어두 + 등록 단위 후보가 있으면 뒤 표현과 무관하게 보류**다. `포함한`·`상세`는 수량 어두가 아니므로 회고 명사의 일부를 횟수로 읽지 않는다. 반면 `한 회고`처럼 독립 수량 다음의 단위 후보가 명사의 시작일 수도 있는 경우는 모호한 수량문으로 보류한다. 단위 뒤 표현을 해석해 실행을 허용하지 않으며, 조사별 예외 목록을 확장하지 않는다. 이는 수량 손실 가능성을 잡는 보수적 검사이지 한국어 형태소 분석이나 모든 수량 표현의 완전한 판정이 아니다.

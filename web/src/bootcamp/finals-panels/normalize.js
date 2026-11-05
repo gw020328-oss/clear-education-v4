@@ -91,7 +91,7 @@ const RULES = Object.freeze([
   {
     capability: 'REFLECTION_REQUIRED_TOPICS.1',
     // '후기' 는 "후기 인터뷰 촬영" 에도 나온다. 후기는 **쓰는 것**일 때만 회고다.
-    any: [/회고/, /성찰/, /리플렉션/, /reflection/i, /후기.*(작성|쓰|게시|올리|블로그)/],
+    any: [/회고/, /성찰/, /리플렉션/, /reflection/i, /후기.*(작성|쓰|적|남기|기록|게시|올리|블로그)/],
     // 세 항목이 안 적혀 있어도 회고 조건은 세 항목이다. 그 사실을 알린다.
     note: (t) => (/(수행|문제|배운)/.test(t) ? null : '세 항목(수행 내용·문제해결 과정·배운 점)은 조건에 포함됩니다'),
   },
@@ -105,6 +105,37 @@ const RULES = Object.freeze([
     all: [/(강의|수업|활동|영상|lecture|activity)/i, /(완료|이수|수강|듣|들어|마치|완주|끝|complete)/i],
   },
 ]);
+
+/**
+ * 조건 **사이의 관계**를 바꾸는 말. (PR #164 리뷰 2)
+ *
+ * 지금 정규 문장은 "A; B" — **모두 필요**만 표현한다. "강의 수강 또는 과제 제출"
+ * (둘 중 하나)이나 "과제 제출 대신 후기 작성"(바꿔치기)을 그 꼴로 옮기면 조건이
+ * 더 엄격해진 채 "전부 읽었다" 고 말하게 된다. 그래서 한 문장에 조건이 둘 이상이고
+ * 이런 말이 있으면 그 문장은 **자동으로 바꾸지 않고 보류**한다.
+ *
+ * '나' 한 글자는 "하나" 에도 있어서, 조건 낱말 바로 앞의 '나/이나' 만 본다.
+ */
+const CONDITION_WORD = '(?:과제|숙제|강의|수업|활동|영상|회고|후기|성찰|리플렉션|해커|헤커|hackerrank|assignment|lecture|reflection)';
+const RELATIONS = Object.freeze([
+  ['ALTERNATIVE', new RegExp(`또는|혹은|거나|택\\s*1|택일|중\\s*(?:하나|한\\s*가지|1\\s*개)|\\bor\\b|(?:이)?나\\s+(?=${CONDITION_WORD})`, 'i')],
+  ['SUBSTITUTE', /대신|대체|갈음|\binstead\b/i],
+]);
+
+const RELATION_NOTE = Object.freeze({
+  ALTERNATIVE: '조건 중 하나만 채우면 되는 문장(또는)으로 보입니다. 지금 형식은 "모두 필요" 만 '
+    + '표현할 수 있어 자동으로 바꾸지 않았습니다. 어떤 조건을 요구할지 운영자가 정해 원문을 고쳐 주세요',
+  SUBSTITUTE: '한 조건을 다른 조건으로 바꾸는 문장(대신)으로 보입니다. 지금 형식은 대체 관계를 '
+    + '표현할 수 없어 자동으로 바꾸지 않았습니다. 최종 조건을 운영자가 정해 원문을 고쳐 주세요',
+});
+
+/** 이 문장이 조건 사이의 대안·대체 관계를 말하나. 조건이 둘 이상일 때만 본다 */
+function relationOf(sentence) {
+  if (distinctHits(sentence) < 2) return null;
+  // 바꿔치기가 대안보다 구체적이다. 둘 다 있으면 대체로 본다.
+  const found = RELATIONS.filter(([, re]) => re.test(sentence)).map(([kind]) => kind);
+  return found.includes('SUBSTITUTE') ? 'SUBSTITUTE' : found[0] ?? null;
+}
 
 /** 이 조항에 서로 다른 조건이 몇 개나 들어 있나. 둘 이상이면 더 나눈다 */
 // 한 문장에 서로 다른 조항이 몇 개 섞였나. **우리가 확인하지 않는 것도 한
@@ -129,7 +160,9 @@ function splitClauses(text) {
   for (const raw of shield(String(text ?? '')).split(SENTENCE)) {
     const sentence = clean(raw);
     if (!sentence || HEADING.test(sentence)) continue;
-    if (distinctHits(sentence) >= 2) {
+    // 대안·대체 관계가 있는 문장은 쪼개지 않는다. 쉼표에서 나누면 "듣거나, 내거나"
+    // 의 두 조각이 각각 '필수' 로 읽힌다. 통째로 두고 proposeReading 이 보류한다.
+    if (distinctHits(sentence) >= 2 && !relationOf(sentence)) {
       for (const piece of raw.split(SUB)) { const p = clean(piece); if (p) out.push(p); }
     } else {
       out.push(sentence);
@@ -142,38 +175,59 @@ function splitClauses(text) {
  * @param {string} text  학원이 쓴 안내문
  * @returns {{
  *   clauses: Array<{index:number, original:string, capability:string|null, canonical:string|null, note:string|null}>,
- *   readable: number, unreadable: number, duplicates: string[],
+ *   readable: number, unreadable: number, held: number, duplicates: string[],
  *   canonicalText: string, complete: boolean,
  * }}
+ *   대안·대체 관계로 보류한 조항은 `held:true`·`relation`·`mentions` 를 달고 canonical 이 없다.
  */
 export function proposeReading(text) {
   const parts = splitClauses(text);
 
   const seen = new Set();
   const duplicates = [];
-  const clauses = parts.map((original, index) => {
+  let index = 0;
+  const clauses = parts.flatMap((original) => {
+    // 조건 사이에 대안·대체 관계가 있으면 그 조항은 **자동으로 바꾸지 않는다.**
+    // 원문과 보류 사유, 문장에 보인 조건만 남긴다. 운영자 지정으로도 덮지 않는다
+    // — 하나를 고르면 관계가 또 사라진다. 원문을 고쳐서 다시 읽게 한다.
+    const relation = relationOf(original);
+    if (relation) {
+      const mentions = RULES.filter((r) =>
+        (r.any ? r.any.some((re) => re.test(original)) : true)
+        && (r.all ? r.all.every((re) => re.test(original)) : true)).map((r) => r.capability);
+      return [{
+        index: index++, original, capability: null, canonical: null,
+        note: RELATION_NOTE[relation], held: true, relation, mentions,
+      }];
+    }
+
     // 우리 조건이 아닌 말이 들어 있으면 **다른 단어가 뭐든** 읽지 않는다.
     const notOurs = NOT_OURS.find(([re]) => re.test(original));
     // notOurs 표식을 남긴다. 운영자가 이걸 조건으로 지정하는 길을 막는 데 쓴다.
-    if (notOurs) return { index, original, capability: null, canonical: null, note: notOurs[1], notOurs: true };
+    if (notOurs) return [{ index: index++, original, capability: null, canonical: null, note: notOurs[1], notOurs: true }];
 
-    const hit = RULES.find((r) =>
+    // 한 조항에 조건이 **여럿**일 수 있다 — "강의수강 후기적기 과제제출" 처럼
+    // 쉼표 없이 붙여 쓰면 쪼개지지 않는다. 그래서 첫 번째 하나만 고르지 않고
+    // 맞는 조건을 모두 낸다. 같은 원문이 조건 수만큼 줄로 보인다.
+    const hits = RULES.filter((r) =>
       (r.any ? r.any.some((re) => re.test(original)) : true)
       && (r.all ? r.all.every((re) => re.test(original)) : true));
 
-    if (!hit) return { index, original, capability: null, canonical: null, note: null };
-    // 같은 조건이 두 번 나오면 두 번째는 세지 않는다. 모듈도 거부한다.
-    if (seen.has(hit.capability)) {
-      duplicates.push(original);
-      return { index, original, capability: hit.capability, canonical: null, note: '앞에서 이미 읽은 조건입니다. 한 번만 넘깁니다' };
-    }
-    seen.add(hit.capability);
-    return {
-      index, original,
-      capability: hit.capability,
-      canonical: CANONICAL[hit.capability],
-      note: hit.note ? hit.note(original) : null,
-    };
+    if (hits.length === 0) return [{ index: index++, original, capability: null, canonical: null, note: null }];
+    return hits.map((hit) => {
+      // 같은 조건이 두 번 나오면 두 번째는 세지 않는다. 모듈도 거부한다.
+      if (seen.has(hit.capability)) {
+        duplicates.push(original);
+        return { index: index++, original, capability: hit.capability, canonical: null, note: '앞에서 이미 읽은 조건입니다. 한 번만 넘깁니다' };
+      }
+      seen.add(hit.capability);
+      return {
+        index: index++, original,
+        capability: hit.capability,
+        canonical: CANONICAL[hit.capability],
+        note: hit.note ? hit.note(original) : null,
+      };
+    });
   });
 
   return finish(clauses.map((c) => ({ ...c, source: c.capability ? 'rules' : null })), duplicates);
@@ -199,9 +253,11 @@ function finish(clauses, duplicates) {
     kept,
     readable: kept.length,
     unreadable: clauses.filter((c) => !c.capability).length,
+    // 대안·대체 관계 때문에 보류한 조항. 하나라도 있으면 전체를 읽은 것이 아니다.
+    held: clauses.filter((c) => c.held).length,
     duplicates,
     canonicalText: kept.map((c) => c.canonical).join('; '),
-    complete: clauses.length > 0 && kept.length === clauses.length,
+    complete: clauses.length > 0 && kept.length === clauses.length && !clauses.some((c) => c.held),
   });
 }
 
@@ -231,6 +287,7 @@ export function applyOverrides(proposal, overrides) {
   const duplicates = [...proposal.duplicates];
   const clauses = proposal.clauses.map((c) => {
     if (c.capability) return c;                       // 규칙이 읽은 것은 손대지 않는다
+    if (c.held) return c;                             // 대안·대체 보류 → 원문을 고쳐야 한다
     const choice = overrides.get(`${c.index}:${c.original}`);
     if (!choice) return c;
     if (choice === 'NOT_A_CONDITION') {
