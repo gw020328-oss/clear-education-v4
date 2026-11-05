@@ -3,7 +3,7 @@ define([], function() {
     'use strict';
 
     const writes = new Set(['create-application', 'bind-source-session', 'approve-source-signature',
-        'approve-registration', 'approve-reflection', 'consent', 'refresh-activity']);
+        'approve-registration', 'approve-reflection', 'consent', 'refresh-activity', 'start-certificate']);
     const id = value => typeof value === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(value);
 
     const create = ({root, role, invoke, newKey, panels, courseId, origin}) => {
@@ -32,6 +32,46 @@ define([], function() {
         let displayed = {};
         let cards;
         let cardsQueued = false;
+        let certificateAttempted = false;
+        let certificateAccepted = false;
+        let certificateTimer = null;
+        let certificatePolls = 0;
+        const stopCertificateReads = () => {
+            clearTimeout(certificateTimer);
+            certificateTimer = null;
+        };
+        const scheduleCertificateRead = () => {
+            stopCertificateReads();
+            if (!ready || closed || unknown || certificatePolls >= 6) {
+                return;
+            }
+            certificateTimer = setTimeout(async () => {
+                certificateTimer = null;
+                if (!ready || closed || unknown) {
+                    return;
+                }
+                if (pending || walletBusy) {
+                    certificatePolls++;
+                    scheduleCertificateRead();
+                    return;
+                }
+                certificatePolls++;
+                const result = await run('read-session');
+                if (result && ['START_ACCEPTED', 'SIGNATURE_ACCEPTED'].includes(certificate()?.state)) {
+                    scheduleCertificateRead();
+                }
+            }, 1000);
+        };
+        const certificateStates = ['NOT_READY', 'READY_TO_START', 'START_ACCEPTED', 'AWAITING_SIGNATURE',
+            'SIGNATURE_ACCEPTED', 'VERIFIED', 'UNAVAILABLE'];
+        const certificate = () => {
+            const value = session?.certificate;
+            return participant && sourceBound && session.phase === 'SOURCE_python-basic-certificate'
+                && value?.version === 'clear-certificate-start.1' && value.applicationId === applicationId
+                && value.criterionId === 'python-basic-certificate' && certificateStates.includes(value.state)
+                && value.startAllowed === (value.state === 'READY_TO_START')
+                && value.signatureReady === (value.state === 'AWAITING_SIGNATURE') ? value : null;
+        };
         let activityMode = false;
         let activityVisit = null;
         let activityResult = null;
@@ -81,8 +121,43 @@ define([], function() {
                 cardsQueued = false;
                 if (cards && ready) {
                     cardRoot.replaceChildren(cards.render());
+                    renderCertificateCard();
                 }
             });
+        };
+        const renderCertificateCard = () => {
+            const card = cardRoot.querySelector?.('[data-criterion="python-basic-certificate"]');
+            const block = card?.querySelector('[data-cert]');
+            const button = card?.querySelector('.crc-go');
+            if (!block || !button) {
+                return;
+            }
+            const value = certificate();
+            const state = value?.state;
+            const action = state === 'READY_TO_START' ? 'start-certificate'
+                : state === 'AWAITING_SIGNATURE' ? source ? 'approve-source-signature' : 'read-source-signature' : null;
+            const title = block.querySelector('.crc-title');
+            const note = block.querySelector('.crc-muted');
+            if (title) {
+                title.textContent = label(value ? 'certificate' + state.toLowerCase()
+                    : certificateAccepted ? 'certificatestartaccepted' : 'certificateunavailable');
+            }
+            if (note) {
+                note.textContent = label('certificatenote');
+            }
+            // Replace the original inert primary control. The upstream pinned card
+            // has no readiness-aware start contract, so C owns only this control.
+            const replacement = button.ownerDocument.createElement('button');
+            replacement.type = 'button';
+            replacement.className = 'cc-btn crc-go';
+            replacement.textContent = action ? label('certificate' + action) : label('certificatewait');
+            replacement.disabled = !action || !enabled(action);
+            replacement.addEventListener('click', () => {
+                if (action && enabled(action)) {
+                    void run(action);
+                }
+            });
+            button.replaceWith(replacement);
         };
         const closeCards = () => {
             cards?.close();
@@ -107,12 +182,15 @@ define([], function() {
             switch (action) {
                 case 'read-session': return true;
                 case 'refresh-activity': return !!activityTargets();
+                case 'start-certificate': return !certificateAttempted && certificate()?.startAllowed === true
+                    && Number.isSafeInteger(revision()) && revision() > 0;
                 case 'read-operation': return operation !== null;
                 case 'create-application': return participant && session && !session.failure && !applicationId && !createAttempted;
                 case 'bind-source-session': return participant && !!applicationId && !sourceBound;
-                case 'read-source-signature':
+                case 'read-source-signature': return certificate()?.signatureReady === true;
                 case 'read-registration': return participant && sourceBound;
-                case 'approve-source-signature': return participant && source && source.expiresAt > Date.now() / 1000;
+                case 'approve-source-signature': return certificate()?.signatureReady === true && source
+                    && source.applicationId === applicationId && source.expiresAt > Date.now() / 1000;
                 case 'approve-registration': return participant && registration?.status === 'AWAITING_SIGNATURE';
                 case 'approve-reflection': return reflection?.permitted === true && acknowledgment.checked
                     && reflection.approvalWindowEndsAtMs > Date.now();
@@ -220,6 +298,7 @@ define([], function() {
             }
             pending = null;
             ready = false;
+            stopCertificateReads();
             activityVisit = activityResult = null;
             closeCards();
             updatePanel(false);
@@ -281,6 +360,14 @@ define([], function() {
                     application = result;
                     displayed.application = {decision: result.decision, target: result.target, criteria: onlyActivity(result.criteria),
                         agreedPayment: result.agreedPayment, funding: result.funding, consent: result.consent};
+                    break;
+                case 'start-certificate':
+                    exactApp(result);
+                    require(result.version === 'clear-certificate-start-receipt.1'
+                        && result.criterionId === 'python-basic-certificate'
+                        && result.status === 'START_ACCEPTED' && result.paymentAuthorization === false);
+                    certificateAccepted = true;
+                    displayed.source = {status: 'CERTIFICATE_START_ACCEPTED'};
                     break;
                 case 'refresh-activity':
                     require(['QUEUED', 'RECORDED', 'UNAVAILABLE', 'RATE_LIMITED'].includes(result?.status)
@@ -361,6 +448,7 @@ define([], function() {
             switch (action) {
                 case 'create-application': return {action, idempotencyKey: newKey()};
                 case 'refresh-activity': return {action, applicationId, expectedRevision: choice, idempotencyKey: newKey()};
+                case 'start-certificate': return {action, applicationId, expectedRevision: revision(), idempotencyKey: newKey()};
                 case 'approve-reflection': return {action, reviewed: reflection, idempotencyKey: newKey()};
                 case 'consent': return {action, reviewed: application, value: choice, idempotencyKey: newKey()};
                 case 'approve-source-signature': return {action, reviewed: source};
@@ -385,6 +473,9 @@ define([], function() {
             }
             const task = {write: writes.has(action)};
             pending = task;
+            if (action === 'start-certificate') {
+                certificateAttempted = true;
+            }
             if (action === 'create-application') {
                 createAttempted = true;
             }
@@ -396,12 +487,14 @@ define([], function() {
             }
             show('busy');
             render();
+            let succeeded = false;
             try {
                 const result = await invoke(input);
                 if (pending !== task || !ready) {
                     return;
                 }
                 accept(input, result);
+                succeeded = true;
                 show('success');
                 return result;
             } catch (error) {
@@ -417,6 +510,10 @@ define([], function() {
                 if (pending === task) {
                     pending = null;
                     render();
+                    if (succeeded && ['start-certificate', 'approve-source-signature'].includes(action)) {
+                        certificatePolls = 0;
+                        scheduleCertificateRead();
+                    }
                 }
             }
         };

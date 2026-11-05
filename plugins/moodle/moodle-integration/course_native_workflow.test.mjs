@@ -281,7 +281,7 @@ test('current native mount feeds D role status and clears the display after disc
     }
 });
 
-test('native lesson return queues once and confirms only matching current lesson evidence', async () => {
+function installCardDom() {
     class Node {
         constructor(tag) {
             this.tag = tag;
@@ -292,10 +292,28 @@ test('native lesson return queues once and confirms only matching current lesson
         }
         set textContent(value) { this.text = String(value); }
         get textContent() { return this.text + this.children.map(node => node.textContent).join(' '); }
+        get ownerDocument() { return globalThis.document; }
+        querySelector(selector) {
+            return [...walk(this)].find(node => {
+                if (selector.startsWith('.')) {
+                    return node.className?.split(' ').includes(selector.slice(1));
+                }
+                const attr = selector.match(/^\[([^=]+)(?:="([^"]*)")?\]$/);
+                return attr && Object.hasOwn(node.attributes ?? {}, attr[1])
+                    && (attr[2] === undefined || node.attributes[attr[1]] === attr[2]);
+            });
+        }
+        replaceWith(replacement) {
+            const index = this.parent.children.indexOf(this);
+            this.parent.children[index] = replacement;
+            replacement.parent = this.parent;
+        }
         get href() { return this.attributes.href; }
         contains(node) { return [...walk(this)].includes(node); }
-        append(...nodes) { this.children.push(...nodes); }
-        replaceChildren(...nodes) { this.children = nodes; }
+        append(...nodes) {
+            for (const node of nodes) { node.parent = this; this.children.push(node); }
+        }
+        replaceChildren(...nodes) { this.children = []; this.append(...nodes); }
         setAttribute(name, value) { this.attributes[name] = String(value); }
         addEventListener(name, fn) { this.handlers[name] = fn; }
     }
@@ -314,6 +332,11 @@ test('native lesson return queues once and confirms only matching current lesson
         createElementNS: (_ns, tag) => new Node(tag),
         createTextNode: textContent => ({textContent}),
     };
+    return {Node, walk, visibility};
+}
+
+test('native lesson return queues once and confirms only matching current lesson evidence', async () => {
+    const {Node, walk, visibility} = installCardDom();
     const cardRoot = new Node('div');
     let courseId = 9;
     let revision = 1;
@@ -376,6 +399,118 @@ test('native lesson return queues once and confirms only matching current lesson
         ui.mounted.destroy();
         assert.deepEqual(cardRoot.children, []);
         assert.equal(visibility.size, 0);
+        delete globalThis.document;
+    }
+});
+
+test('certificate card starts only on its click, polls reads, and signs the displayed original packet on a separate click', async () => {
+    const {Node} = installCardDom();
+    const cardRoot = new Node('div');
+    let state = 'READY_TO_START';
+    const app = 'app-one';
+    const phase = 'SOURCE_python-basic-certificate';
+    const packet = {applicationId: app, approvalId: 'approval-cert', requestHash: '0x' + 'a'.repeat(64),
+        expiresAt: Math.floor(Date.now() / 1000) + 300, message: `Exact certificate message
+<keep literal>`,
+        purpose: 'HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION'};
+    const view = {version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: app, role: 'PARTICIPANT',
+        target: {expectedRevision: 1}, agreedPayment: {}, decision: {id: 'decision-one', hash: 'hash-one', current: true},
+        criteria: []};
+    let ui;
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+    const primary = () => cardRoot.querySelector('[data-criterion="python-basic-certificate"]').querySelector('.crc-go');
+    try {
+        ui = fixture(({action}) => {
+            if (action === 'read-session') {
+                return {...session(app), phase, certificate: {version: 'clear-certificate-start.1', applicationId: app,
+                    criterionId: 'python-basic-certificate', state, startAllowed: state === 'READY_TO_START',
+                    signatureReady: state === 'AWAITING_SIGNATURE'}};
+            }
+            if (action === 'read-application') { return view; }
+            if (action === 'start-certificate') {
+                state = 'AWAITING_SIGNATURE';
+                return {version: 'clear-certificate-start-receipt.1', applicationId: app,
+                    criterionId: 'python-basic-certificate', status: 'START_ACCEPTED', paymentAuthorization: false};
+            }
+            if (action === 'read-source-signature') { return packet; }
+            if (action === 'approve-source-signature') {
+                state = 'SIGNATURE_ACCEPTED';
+                return {approvalId: packet.approvalId, requestHash: packet.requestHash,
+                    status: 'PARTICIPANT_SIGNATURE_ACCEPTED', paymentAuthorization: false};
+            }
+            return {version: 'clear-bootcamp-decision-evidence.1', role: 'PARTICIPANT', applicationId: app,
+                manifest: {decision: {decisionId: 'decision-one', decisionHash: 'hash-one'}, criteria: []}};
+        }, {cardRoot});
+        await flush();
+        assert.deepEqual(ui.sent, []);
+        await ui.click('read-session');
+        await ui.click('read-application');
+        await flush();
+        assert.equal(primary().textContent, 'certificatestart-certificate');
+        assert.equal(primary().disabled, false);
+        assert.equal(ui.sent.filter(command => command.action === 'start-certificate').length, 0);
+        primary().handlers.click();
+        await flush();
+        assert.deepEqual(ui.sent.filter(command => command.action === 'start-certificate').map(({idempotencyKey, ...input}) => input),
+            [{action: 'start-certificate', applicationId: app, expectedRevision: 1}]);
+        assert.equal(ui.sent.filter(command => command.action === 'read-source-signature').length, 0);
+        await new Promise(resolve => setTimeout(resolve, 1100));
+        await flush();
+        assert.equal(primary().textContent, 'certificateread-source-signature');
+        primary().handlers.click();
+        await flush();
+        assert.ok(cardRoot.textContent.includes(packet.message));
+        assert.equal(ui.sent.filter(command => command.action === 'approve-source-signature').length, 0);
+        primary().handlers.click();
+        await flush();
+        assert.equal(ui.sent.at(-1).action, 'approve-source-signature');
+        assert.equal(ui.sent.at(-1).reviewed, packet);
+        assert.equal(ui.sent.filter(command => command.action === 'start-certificate').length, 1);
+    } finally {
+        ui?.mounted.destroy();
+        delete globalThis.document;
+    }
+});
+
+test('certificate readiness mismatches stay closed and a lost start response cannot restart from polling', async () => {
+    const {Node} = installCardDom();
+    const cardRoot = new Node('div');
+    let matching = false;
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') {
+            return {...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+                certificate: {version: 'clear-certificate-start.1', applicationId: matching ? 'app-one' : 'other-app',
+                    criterionId: 'python-basic-certificate', state: 'READY_TO_START', startAllowed: true, signatureReady: false}};
+        }
+        if (action === 'read-application') {
+            return {version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: 'app-one', role: 'PARTICIPANT',
+                target: {expectedRevision: 1}, agreedPayment: {}, criteria: [], decision: {}};
+        }
+        throw Object.assign(new Error('lost response'), {outcome: 'UNKNOWN'});
+    }, {cardRoot});
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+    const primary = () => cardRoot.querySelector('[data-criterion="python-basic-certificate"]').querySelector('.crc-go');
+    try {
+        await ui.click('read-session');
+        await ui.click('read-application');
+        await flush();
+        assert.equal(primary().disabled, true);
+        await ui.click('read-source-signature');
+        assert.equal(ui.sent.filter(command => command.action === 'read-source-signature').length, 0);
+        matching = true;
+        await ui.click('read-session');
+        await ui.click('read-application');
+        await flush();
+        primary().handlers.click();
+        await flush();
+        assert.equal(ui.status.textContent, 'unknown');
+        await ui.click('read-session');
+        await ui.click('read-application');
+        await flush();
+        assert.equal(primary().disabled, true);
+        assert.equal(ui.sent.filter(command => command.action === 'start-certificate').length, 1);
+    } finally {
+        ui.mounted.destroy();
         delete globalThis.document;
     }
 });
