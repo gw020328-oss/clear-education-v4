@@ -28,10 +28,10 @@ export function withSelectedReflectionReader(withReader,selection,now=()=>Math.f
  if(!selection)return withReader;
  const fixed=reflectionSelection(selection,{origin:selection.origin,participantWallet:selection.participantWallet,time:now()});
  const current=()=>check(now()>=fixed.observedAt&&now()<fixed.expiresAtExclusive,'BC_REFLECTION_SELECTION_EXPIRED');
- return use=>withReader(client=>use({call:async(method,args)=>{
-  current();
+ return use=>withReader(client=>use({call:async(method,args,signal)=>{
+  check(!signal?.aborted,'REVIEW_CANCELLED');current();
   if(method==='mod_forum_get_discussion_post')check(String(args.postid)===String(fixed.postId),'BC_REFLECTION_SELECTION_CHANGED');
-  const value=await client.call(method,args);current();
+  const value=await client.call(method,args,signal);check(!signal?.aborted,'REVIEW_CANCELLED');current();
   if(method==='mod_forum_get_discussion_post'){
    const p=value?.post;check(p?.id===fixed.postId&&p.discussionid===fixed.discussionId&&p.author?.id===fixed.authorId
     &&p.timecreated===fixed.createdAt&&p.timemodified===fixed.modifiedAt&&p.capabilities?.view===true
