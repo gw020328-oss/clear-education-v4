@@ -54,6 +54,14 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
         recheck: false,
       };
     case RETURN.PENDING:
+      // 판정은 바뀌었지만 이번 요청은 처리 전 — 지난 요청의 늦은 결과일 수 있다(회고 고침 직후).
+      if (ret.lateChange) {
+        return {
+          tone: 'wait',
+          text: `확인 중 · 서버 판정이 바뀌었지만 이번 재확인 요청${opId}은 아직 처리 전이에요. 지난 요청의 결과일 수 있어, 서버가 이번 요청을 읽은 뒤 한 번 더 확인해요.`,
+          recheck: true,
+        };
+      }
       if (req?.status === REFRESH.QUEUED) {
         return {
           tone: 'wait',
@@ -92,7 +100,9 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
     case RETURN.STALLED:
       return {
         tone: 'warn',
-        text: req?.status === REFRESH.QUEUED
+        text: ret.lateChange
+          ? `서버 판정은 바뀌었지만 이번 재확인 요청${opId}이 처리됐는지 확인하지 못했어요. 아래는 지금 서버가 가진 판정이에요. 자동 재조회는 멈췄어요. 잠시 뒤 「다시 확인」 을 눌러 주세요.`
+          : req?.status === REFRESH.QUEUED
           ? `아직 반영되지 않았어요. 재확인 요청은 접수됐지만${opId} 새 판정이 확정되지 않았어요. 자동 재조회는 멈췄어요. 잠시 뒤 「다시 확인」 을 눌러 주세요.`
           : '아직 반영되지 않았어요. 자동 재조회는 멈췄어요. 서버가 원천을 다시 읽은 뒤 「다시 확인」 을 눌러 주세요.',
         recheck: true,

@@ -63,9 +63,10 @@ function tracker({ refresh, read, rows = rowsBefore, followUpMs = [100, 200, 300
 // ── 1 · 접수는 판정이 아니다 ─────────────────────────────────────────────
 
 test('돌아오면 재확인을 요청하고, 접수(QUEUED)만으로는 PENDING 이지 UPDATED 가 아니다', async () => {
-  let current = rowsBefore();
+  const rowsBeforeRef = rowsBefore();
+  let current = rowsBeforeRef;
   const { t, c, calls } = tracker({
-    refresh: () => ({ status: 'QUEUED', operationId: 'op-1' }),
+    refresh: () => (current === rowsBeforeRef ? { status: 'QUEUED', operationId: 'op-1' } : { status: 'RECORDED', operationId: 'op-1' }),
     read: async () => current,
   });
   t.depart('activity-complete');
@@ -86,7 +87,8 @@ test('돌아오면 재확인을 요청하고, 접수(QUEUED)만으로는 PENDING
   current = rowsAfter();
   await c.tick(100);
   assert.equal(t.status('activity-complete').state, RETURN.UPDATED);
-  assert.equal(calls.filter((x) => Array.isArray(x)).length, 1, '접수 뒤에 또 요청했다');
+  // 바뀐 판정을 이번 요청의 결과로 확정하려고 한 번 더 묻는다(RECORDED 확인). 그 밖엔 없다
+  assert.equal(calls.filter((x) => Array.isArray(x)).length, 2, '접수 1 + 확정 확인 1 이어야 한다');
   assert.match(returnLine(t.status('activity-complete'), current[0]).text, /새 판정 확정.*충족/);
 });
 
@@ -464,7 +466,127 @@ for (const mode of ['depart', 'recheck', 'error']) {
     assert.deepEqual(t.status(id), before, '이전 조회의 결과·오류가 새 방문을 바꿨다');
     if (mode === 'depart') await t.arrive();
     else await c.tick(100);
-    assert.equal(sends, 2, '새 방문 요청은 복귀 또는 다음 타이머에서 정확히 한 번 복구');
+    // depart: 기준이 이미 바뀐 줄이라 접수 1 뿐. recheck·error: 기준은 옛 줄이라 접수 1 + 바뀐
+    // 판정의 확정 확인 1. 교체된 이전 방문의 요청은 어느 쪽에도 없다
+    assert.equal(sends, mode === 'depart' ? 2 : 3, '새 방문 요청만 있어야 한다(이전 방문 것은 없음)');
     t.close();
   });
 }
+
+// ── 6 · 늦은 판정 — 이번 요청 처리 전에 바뀐 판정은 확정하지 않는다 ──────────
+//
+// 회고를 "배운 점 빼고" 올리고 곧바로 고쳐 올린 뒤 돌아오면, 지난 글의 '미충족' 이
+// 이번 방문의 요청(접수 직후)과 겹쳐 도착한다. 그걸 "새 판정 확정 · 미충족 · 다시
+// 쓰세요" 로 닫으면 고친 글은 다시 읽히지 않는다(2026-11-05 화면에서 재현).
+
+test('늦은 판정: 접수(QUEUED)·제한 중에 바뀐 판정은 PENDING 으로 두고, 재요청이 RECORDED 를 주면 확정한다', async () => {
+  let reads = 0;
+  const answers = [
+    { status: 'QUEUED', operationId: 'op-late-1' },
+    { status: 'RATE_LIMITED', operationId: 'op-late-1', retryAfterSeconds: 1 },
+    { status: 'RECORDED', operationId: 'op-late-1' },
+  ];
+  const { t, c, calls } = tracker({
+    refresh: () => answers.shift() ?? { status: 'RECORDED', operationId: 'op-late-1' },
+    read: async () => (reads++ === 0 ? rowsBefore() : rowsAfter()),
+  });
+  t.depart('activity-complete');
+  await t.arrive(); await flush();
+  assert.equal(t.status('activity-complete').state, RETURN.PENDING);
+
+  // 재조회에서 판정이 바뀌어 있지만 요청은 접수 상태 → 같은 회차에 한 번 더 묻는다(제한) → 보류
+  await c.tick(100);
+  const held = t.status('activity-complete');
+  assert.equal(held.state, RETURN.PENDING, '늦은 판정인데 상태가 ' + held.state);
+  assert.equal(held.lateChange, true);
+  assert.equal(held.refresh.status, REFRESH.RATE_LIMITED);
+  assert.equal(calls.filter((x) => Array.isArray(x)).length, 2, '같은 회차에 재요청 한 번');
+  const line = returnLine(held, rowsAfter()[0]);
+  assert.match(line.text, /바뀌었지만/);
+  assert.match(line.text, /지난 요청의 결과일 수 있어/);
+  assert.equal(line.recheck, true);
+
+  // 제한(1초)이 지난 뒤: 재요청 → RECORDED → 같은 변화가 이번 요청의 결과로 확정
+  await c.tick(1000);
+  const done = t.status('activity-complete');
+  assert.equal(done.state, RETURN.UPDATED, '기록 뒤에도 상태가 ' + done.state);
+  assert.equal(done.sameState, false);
+  assert.equal(done.lateChange, false);
+  assert.equal(calls.filter((x) => Array.isArray(x)).length, 3);
+  assert.match(returnLine(done, rowsAfter()[0]).text, /새 판정 확정/);
+});
+
+test('늦은 판정: 같은 회차의 재요청이 바로 RECORDED 면 그 자리에서 확정한다', async () => {
+  let reads = 0;
+  let n = 0;
+  const { t, c, calls } = tracker({
+    refresh: () => (n++ === 0 ? { status: 'QUEUED', operationId: 'op-q' } : { status: 'RECORDED', operationId: 'op-q' }),
+    read: async () => (reads++ === 0 ? rowsBefore() : rowsAfter()),
+  });
+  t.depart('activity-complete');
+  await t.arrive(); await flush();
+  assert.equal(t.status('activity-complete').state, RETURN.UPDATED);
+  assert.equal(calls.filter((x) => Array.isArray(x)).length, 2);
+  void c;
+});
+
+test('돌아오자마자 화면이 먼저 읽은 바뀐 판정(요청 전)도 보류하고, 요청이 기록된 뒤 확정한다', async () => {
+  // 같은 탭으로 다녀오면 페이지가 새로 뜨고, 화면의 첫 조회(observe)가 arrive 보다 먼저 온다.
+  let n = 0;
+  const { t, c } = tracker({
+    refresh: () => (n++ === 0 ? { status: 'QUEUED', operationId: 'op-e' } : { status: 'RECORDED', operationId: 'op-e' }),
+    read: async () => rowsAfter(),
+  });
+  t.depart('activity-complete');
+  t.observe({ applicationId: APP, rows: rowsAfter(), current: true });
+  const early = t.status('activity-complete');
+  assert.equal(early.state, RETURN.PENDING, '요청 전 읽기인데 ' + early.state);
+  assert.equal(early.lateChange, true);
+  await t.arrive(); await flush();
+  assert.equal(t.status('activity-complete').state, RETURN.UPDATED, '접수 뒤 확정 확인(RECORDED)이 왔는데 ' + t.status('activity-complete').state);
+  void c;
+});
+
+test('재확인 경로가 없으면(지금 develop) 바뀐 판정은 전처럼 바로 확정한다 — 기다릴 근거가 없다', async () => {
+  const { t } = tracker({ refresh: null, read: async () => rowsAfter() });
+  t.depart('activity-complete');
+  await t.arrive(); await flush();
+  assert.equal(t.status('activity-complete').state, RETURN.UPDATED);
+});
+
+test('근거 없는 줄로 바뀐 것(회고 승인 대기·검토 중)은 새 판정이 아니다 — 계속 읽고, 근거가 오면 확정한다', async () => {
+  const interim = () => [{ criterionId: 'reflection-topics', state: 'MISSING', current: true, evidenceId: null, evidenceRevision: null, reasonCode: null }];
+  const reviewed = () => [row('reflection-topics', 'MET', 2)];
+  let reads = 0;
+  const { t, c } = tracker({
+    rows: () => [row('reflection-topics', 'NOT_MET', 1)],
+    refresh: () => ({ status: 'RECORDED', operationId: 'op-r' }),
+    read: async () => (reads++ < 3 ? interim() : reviewed()), // 요청 전 조회 1 + 복귀 읽기 1 + 재조회 1 은 중간 단계
+  });
+  t.depart('reflection-topics');
+  await t.arrive(); await flush();
+  const mid = t.status('reflection-topics');
+  assert.equal(mid.state, RETURN.PENDING, '근거 없는 중간 단계인데 ' + mid.state);
+  await c.tick(100);
+  assert.equal(t.status('reflection-topics').state, RETURN.PENDING);
+  await c.tick(200);
+  const done = t.status('reflection-topics');
+  assert.equal(done.state, RETURN.UPDATED);
+  assert.equal(done.sameState, false);
+});
+
+test('늦은 판정이 끝내 확인되지 않으면 STALLED 문구가 "판정은 바뀌었지만 처리 확인 못 함" 을 말한다', async () => {
+  let reads = 0;
+  const { t, c } = tracker({
+    refresh: () => ({ status: 'QUEUED', operationId: 'op-z' }),
+    read: async () => (reads++ === 0 ? rowsBefore() : rowsAfter()),
+  });
+  t.depart('activity-complete');
+  await t.arrive(); await flush();
+  for (let i = 0; i < 6; i += 1) await c.tick(400);
+  const s = t.status('activity-complete');
+  assert.equal(s.state, RETURN.STALLED, '상태가 ' + s.state);
+  assert.equal(s.lateChange, true);
+  assert.match(returnLine(s, rowsAfter()[0]).text, /바뀌었지만/);
+  assert.match(returnLine(s, rowsAfter()[0]).text, /다시 확인/);
+});

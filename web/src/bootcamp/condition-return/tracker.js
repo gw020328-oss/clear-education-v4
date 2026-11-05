@@ -5,6 +5,9 @@
 // 조회 API 로 판정을 다시 읽고, 지문과 비교한다.
 //
 //   달라졌다   → UPDATED  서버가 새 판정을 줬다. 그 판정을 그대로 보여 준다
+//     단, 접수 직후 첫 읽기에 이미 바뀌어 있으면 **지난 요청의 늦은 판정**이다 —
+//     보류(PENDING)하고 한 번 더 요청해 서버가 이미 읽었다(RECORDED)고 할 때 확정한다.
+//     근거(evidenceId) 없는 줄로 바뀐 것은 중간 단계라 확정하지 않고 계속 읽는다
 //   같다       → PENDING  '확인 중'. 정해진 간격으로 몇 번 더 읽는다
 //   끝내 같다  → STALLED  자동 재조회를 멈추고 「다시 확인」 만 남긴다
 //   못 읽었다  → READ_FAILED  이전 판정을 그대로 두고 그 사실을 말한다
@@ -61,6 +64,13 @@ const STORE_PREFIX = 'clear.condition-return.v1:';
 const LIVE = new Set([RETURN.AWAY, RETURN.CHECKING, RETURN.PENDING, RETURN.STALLED, RETURN.READ_FAILED, RETURN.CANNOT_CHECK]);
 
 const rowOf = (rows, criterionId) => (rows ?? []).find((r) => r?.criterionId === criterionId) ?? null;
+
+/**
+ * 이번 방문의 재확인 요청이 아직 처리 전인가. 접수(QUEUED)·제한(RATE_LIMITED)이면 그렇다.
+ * 요청 경로가 없거나(null) 못 보냈거나(REQUEST_FAILED) 미지원(UNAVAILABLE)·이미 읽음(RECORDED)이면
+ * 더 기다릴 근거가 없으니 바뀐 판정을 그대로 받는다.
+ */
+const unconfirmed = (v) => v?.requested === false || v?.refresh?.status === REFRESH.QUEUED || v?.refresh?.status === REFRESH.RATE_LIMITED;
 
 /**
  * 조건 한 줄의 지문. 서버가 판정을 바꾸면 이 중 하나가 바뀐다.
@@ -141,6 +151,7 @@ export function createReturnTracker({
   const nextVisitRef = () => (visitSeq += 1);
 
   const emit = () => { if (!closed) onChange(); };
+  const canRefresh = (id) => typeof refresh === 'function' && refreshFor(id);
 
   const persist = () => {
     const keep = {};
@@ -169,7 +180,7 @@ export function createReturnTracker({
         visits.set(id, {
           state: RETURN.AWAY, departedAt: v.departedAt, baseline: v.baseline, baselineState: v.baselineState ?? null,
           attempts: 0, checkedAt: null, error: null,
-          nextAllowedAt: v.nextAllowedAt ?? 0, refresh: v.refresh ?? null, needsRefresh: false,
+          nextAllowedAt: v.nextAllowedAt ?? 0, refresh: v.refresh ?? null, needsRefresh: false, requested: false,
           visitRef: nextVisitRef(),
         });
       }
@@ -208,24 +219,61 @@ export function createReturnTracker({
     for (const [id, v] of visits) {
       if (!LIVE.has(v.state) || (visitRefs && visitRefs.get(id) !== v.visitRef)) continue;
       const now = rowFingerprint(result.rows, id);
+      const row = rowOf(result.rows, id);
+      // 이번 요청 뒤 몇 번째 읽기인가. 요청 응답을 받을 때 0 으로 돌아간다.
+      const readsSince = (v.readsSince ?? 0) + 1;
+      const ref = v.held ?? v.baseline;
       // 현재 판정이 아니라는 응답은 반영으로 치지 않는다.
-      const differs = now !== null && now !== v.baseline && result.current !== false;
-      if (differs) {
-        // 새 근거는 왔는데 판정 상태는 같을 수 있다(미충족 → 새 근거로도 미충족).
-        // 그건 '재확인 완료' 이지 '판정이 바뀜' 이 아니다. 둘을 따로 적는다.
-        const sameState = (rowOf(result.rows, id)?.state ?? null) === (v.baselineState ?? null);
-        visits.set(id, { ...v, state: RETURN.UPDATED, sameState, checkedAt: at, updatedAt: at, error: null });
+      const differs = now !== null && now !== ref && result.current !== false;
+      // 보류했던 변화가 이번 요청의 결과로 확인됐다(서버가 이번 요청을 읽었다고 함).
+      const heldConfirmed = v.held != null && !unconfirmed(v) && now !== null && result.current !== false;
+
+      if (differs && !v.held && canRefresh(id) && unconfirmed(v)) {
+        // 이번 방문의 재확인 요청이 **아직 처리 전**(안 보냈거나·접수·제한)인데 판정이 바뀌어
+        // 있다. 그 변화는 지난 요청의 늦은 결과일 수 있다 — 회고를 고쳐 올리고 바로 돌아오면
+        // 지난 글의 '미충족' 이 이때 도착한다. 확정하지 않고 보류(held)로 적는다. 같은 회차에
+        // 한 번 더 물어 서버가 "이미 읽었다(RECORDED)" 고 하면 그때 확정한다(check 참고).
+        // 늘 접수만 답하는 서버라면 끝내 STALLED 로 닫히고 문구가 그 사실을 말한다.
+        const attempts = fromCheck ? v.attempts + 1 : v.attempts;
+        visits.set(id, {
+          ...v, attempts, readsSince, checkedAt: at, error: null, held: now, lateChange: true, needsRefresh: true,
+          state: attempts > followUpMs.length ? RETURN.STALLED : RETURN.PENDING,
+        });
         changed = true;
+      } else if (differs || heldConfirmed) {
+        const final = now !== v.baseline;
+        // 근거 없는 줄(evidenceId 없음)은 아직 판정이 아니다 — 회고 승인 대기·검토 중,
+        // HackerRank 검증 전이 그렇다. '새 판정 확정' 으로 닫지 않고 계속 읽는다.
+        const interim = !row?.evidenceId;
+        if (!final || interim) {
+          const attempts = fromCheck ? v.attempts + 1 : v.attempts;
+          const next = {
+            ...v, attempts, readsSince, checkedAt: at, error: null, held: null, lateChange: false,
+            state: attempts > followUpMs.length ? RETURN.STALLED : RETURN.PENDING,
+          };
+          // 중간 단계로 바뀐 것은 기준을 그 줄로 옮겨 다음 변화만 본다.
+          if (final && interim) { next.baseline = now; next.baselineState = row?.state ?? null; }
+          visits.set(id, next);
+          changed = changed || fromCheck || v.held != null || (final && interim);
+        } else {
+          // 새 근거는 왔는데 판정 상태는 같을 수 있다(미충족 → 새 근거로도 미충족).
+          // 그건 '재확인 완료' 이지 '판정이 바뀜' 이 아니다. 둘을 따로 적는다.
+          const sameState = (row?.state ?? null) === (v.baselineState ?? null);
+          visits.set(id, { ...v, state: RETURN.UPDATED, sameState, held: null, lateChange: false, readsSince, checkedAt: at, updatedAt: at, error: null });
+          changed = true;
+        }
       } else if (fromCheck && v.state !== RETURN.AWAY) {
         const attempts = v.attempts + 1;
         // 서버가 "이 조건은 재확인 못 한다" 고 했으면 더 묻지 않는다. '아직 확인할 수
         // 없음' 으로 두고 「다시 확인」 만 남긴다. 반영 안 됨(STALLED)과 다른 말이다.
         const cannot = v.refresh?.status === REFRESH.UNAVAILABLE;
         visits.set(id, {
-          ...v, attempts, checkedAt: at, error: null,
+          ...v, attempts, readsSince, checkedAt: at, error: null,
           state: cannot ? RETURN.CANNOT_CHECK : attempts > followUpMs.length ? RETURN.STALLED : RETURN.PENDING,
         });
         changed = true;
+      } else {
+        visits.set(id, { ...v, readsSince });
       }
     }
     if (changed) { persist(); emit(); }
@@ -260,7 +308,7 @@ export function createReturnTracker({
       const cur = visits.get(id);
       if (!cur || closed) continue;
       // null 은 "이 빌드엔 그 경로가 없다". 요청하지 않은 것과 같이 둔다.
-      if (r === null || r === undefined) { if (cur.visitRef === ref) visits.set(id, { ...cur, needsRefresh: false }); continue; }
+      if (r === null || r === undefined) { if (cur.visitRef === ref) visits.set(id, { ...cur, needsRefresh: false, requested: true }); continue; }
       const status = Object.values(REFRESH).includes(r.status) ? r.status : REFRESH.REQUEST_FAILED;
       if (cur.visitRef !== ref) {
         // 요청은 이미 나갔고 응답 전에 방문이 바뀌었다. 새 방문의 상태·요청 결과는 덮지 않고,
@@ -272,10 +320,13 @@ export function createReturnTracker({
       }
       visits.set(id, {
         ...cur,
-        // 제한에 걸렸으면 다음 읽기 때 다시 요청한다. 접수·기록·불가면 더 보내지 않는다.
-        needsRefresh: status === REFRESH.RATE_LIMITED,
+        requested: true,
+        // 제한에 걸렸으면 다음 읽기 때 다시 요청한다. 접수·기록·불가면 더 보내지 않는다 —
+        // 단, 늦은 판정을 보류 중이면 서버가 '이미 읽었다' 고 할 때까지 읽기마다 한 번 더 묻는다.
+        needsRefresh: status === REFRESH.RATE_LIMITED || (status === REFRESH.QUEUED && cur.held != null),
         nextAllowedAt: status === REFRESH.RATE_LIMITED && Number.isFinite(r.retryAfterSeconds)
           ? nowMs() + Math.max(0, r.retryAfterSeconds) * 1000 : 0,
+        readsSince: 0,
         refresh: {
           status,
           operationId: typeof r.operationId === 'string' ? r.operationId : null,
@@ -302,6 +353,15 @@ export function createReturnTracker({
         await requestRefresh(targets);
         const result = await read();
         observe(result, { fromCheck: true, visitRefs });
+        // 보류한 변화가 있으면 다음 간격을 기다리지 않고 지금 한 번 더 묻는다. 서버가
+        // RECORDED 라고 하면 같은 조회 결과로 바로 확정한다(정상 경로는 늦어지지 않는다).
+        // 제한에 걸리면 다음 간격에 다시 묻는다. 요청 수는 바뀐 조건당 한 번 더다.
+        const held = [...visits.entries()].filter(([id, v]) => v.held != null && v.needsRefresh
+          && visitRefs.get(id) === v.visitRef && nowMs() >= (v.nextAllowedAt ?? 0));
+        if (held.length > 0) {
+          await requestRefresh(held);
+          observe(result, { fromCheck: false, visitRefs });
+        }
       } catch (error) {
         const at = nowMs();
         for (const [id, v] of visits) {
@@ -336,7 +396,7 @@ export function createReturnTracker({
       attempts: 0, checkedAt: null, error: null,
       // 재확인 명령의 기준 — **신청 개정 번호**. 조건 근거 번호가 아니다.
       nextAllowedAt: visits.get(criterionId)?.nextAllowedAt ?? 0,
-      refresh: null, needsRefresh: false, visitRef: nextVisitRef(),
+      refresh: null, needsRefresh: false, requested: false, visitRef: nextVisitRef(),
     });
     persist(); emit();
   }
@@ -365,7 +425,7 @@ export function createReturnTracker({
     const v = visits.get(criterionId);
     if (closed || !v || !LIVE.has(v.state)) return undefined;
     // 「다시 확인」 은 재확인 요청도 다시 보낸다. 멈춤·불가 뒤에 서버가 바뀌었을 수 있다.
-    visits.set(criterionId, { ...v, state: RETURN.CHECKING, attempts: 0, error: null, needsRefresh: true, visitRef: nextVisitRef() });
+    visits.set(criterionId, { ...v, state: RETURN.CHECKING, attempts: 0, error: null, needsRefresh: true, requested: false, held: null, lateChange: false, visitRef: nextVisitRef() });
     return check();
   }
 
