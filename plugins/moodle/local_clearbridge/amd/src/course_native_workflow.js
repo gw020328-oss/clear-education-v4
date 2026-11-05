@@ -29,7 +29,7 @@ define([], function() {
         let operation = null;
         let applicationId = null;
         let session, application, registration, source, reflection;
-        let certificateSnapshot = null;
+        let decisionSnapshot = null;
         let displayed = {};
         let cards;
         let cardsQueued = false;
@@ -85,18 +85,35 @@ define([], function() {
             const targets = session?.conditionTargets;
             if (!participant || courseId !== 2 || targets?.moodleOrigin !== origin || targets.courseId !== courseId
                     || targets.applicationId !== applicationId || targets.version !== 'clear-student-condition-targets.1'
-                    || !Array.isArray(targets.targets) || targets.targets.length !== 1) {
+                    || !Array.isArray(targets.targets) || ![1, 3].includes(targets.targets.length)) {
                 return null;
             }
-            const [target] = targets.targets;
-            return target?.criterionId === 'activity-complete' && target.cmId === 3 && target.module === 'page' ? targets : null;
+            const expected = {'activity-complete': [3, 'page'], 'assignment-submitted': [4, 'assign'],
+                'reflection-topics': [5, 'forum']};
+            const seen = new Set();
+            for (const target of targets.targets) {
+                const pin = expected[target?.criterionId];
+                if (!pin || seen.has(target.criterionId) || target.cmId !== pin[0] || target.module !== pin[1]
+                        || Object.keys(target).some(key => !['criterionId', 'cmId', 'module', 'instanceId', 'name'].includes(key))
+                        || (target.module === 'forum' ? target.instanceId != null && target.instanceId !== 3
+                            : target.instanceId != null && target.instanceId !== 1)) { return null; }
+                seen.add(target.criterionId);
+            }
+            // The fixed forum link opens its existing container, never an unbound new-post form.
+            return seen.has('activity-complete') ? {...targets, targets: targets.targets.map(target => {
+                if (target.module !== 'forum') { return target; }
+                const {instanceId, ...container} = target;
+                return container;
+            })} : null;
         };
+        const moodleMode = () => activityTargets()?.targets.length === 3;
+        const pairedMode = () => certificateCompleted() || moodleMode();
         const certificateCompleted = () => certificate()?.state === 'VERIFIED'
             && session.phase === 'CERTIFICATE_ONLY_RECORDED';
         const onlyActivity = rows => activityMode && !certificateCompleted()
             ? rows?.filter(row => row.criterionId === 'activity-complete') : rows;
-        const activityView = () => certificateCompleted()
-            ? certificateSnapshot?.session === session ? certificateSnapshot.view : null
+        const activityView = () => pairedMode()
+            ? decisionSnapshot?.session === session ? decisionSnapshot.view : null
             : application && activityMode ? {...application, criteria: onlyActivity(application.criteria)} : application;
         const revision = () => application?.target.expectedRevision;
         const canVisit = () => activityTargets() && Number.isSafeInteger(revision()) && revision() > 0;
@@ -181,7 +198,7 @@ define([], function() {
             status.textContent = messages[unknown ? 'unknown' : message];
         };
         const clear = () => {
-            certificateSnapshot = null;
+            decisionSnapshot = null;
             session = application = registration = source = reflection = null;
             applicationId = null;
             sourceBound = false;
@@ -367,7 +384,7 @@ define([], function() {
                     if (certificateRevisionFloor?.applicationId !== applicationId) {
                         certificateRevisionFloor = null;
                     }
-                    activityMode ||= Boolean(activityTargets());
+                    activityMode = activityTargets()?.targets.length === 1;
                     if (operation && applicationId && operation.applicationId !== applicationId) {
                         operation = null;
                     }
@@ -485,7 +502,8 @@ define([], function() {
         const command = (action, choice) => {
             switch (action) {
                 case 'create-application': return {action, idempotencyKey: newKey()};
-                case 'refresh-activity': return {action, applicationId, expectedRevision: choice, idempotencyKey: newKey()};
+                case 'refresh-activity': return {action, applicationId, expectedRevision: choice.revision, idempotencyKey: newKey(),
+                    ...(choice.criterionId === 'assignment-submitted' ? {criterionId: choice.criterionId} : {})};
                 case 'start-certificate': return {action, applicationId, expectedRevision: certificateCasRevision(), idempotencyKey: newKey()};
                 case 'approve-reflection': return {action, reviewed: reflection, idempotencyKey: newKey()};
                 case 'consent': return {action, reviewed: application, value: choice, idempotencyKey: newKey()};
@@ -512,7 +530,7 @@ define([], function() {
             const task = {write: writes.has(action)};
             pending = task;
             if (['read-session', 'read-application', 'decision-evidence'].includes(action)) {
-                certificateSnapshot = null;
+                decisionSnapshot = null;
             }
             if (action === 'start-certificate') {
                 certificateAttempted = true;
@@ -521,6 +539,7 @@ define([], function() {
                 createAttempted = true;
             }
             if (task.write) {
+                decisionSnapshot = null;
                 if (action !== 'bind-source-session') {
                     certificateRevision = null;
                 }
@@ -538,11 +557,11 @@ define([], function() {
                     return;
                 }
                 accept(input, result);
-                if (action === 'read-session' && certificateCompleted()) {
+                if (action === 'read-session' && pairedMode()) {
                     const boundSession = session;
                     const app = applicationId;
                     const current = () => pending === task && ready && !closed && !walletBusy
-                        && session === boundSession && applicationId === app && certificateCompleted();
+                        && session === boundSession && applicationId === app && pairedMode();
                     const view = await invoke({action: 'read-application', applicationId: app});
                     if (!current()) { return; }
                     const decision = view?.decision;
@@ -564,18 +583,28 @@ define([], function() {
                         && evidence.currentDecision.applicationActive === true
                         && evidence.currentDecision.matchesRequestedDecision === true
                         && Array.isArray(evidence.manifest.criteria) && Array.isArray(evidence.availability));
-                    const row = view.criteria.find(item => item.criterionId === 'python-basic-certificate');
-                    const recorded = evidence.manifest.criteria.find(item => item.criterionId === row?.criterionId);
-                    const available = evidence.availability.find(item => item.criterionId === row?.criterionId);
-                    require(row?.state === 'MET' && row.current === true && id(row.evidenceId)
-                        && Number.isSafeInteger(row.evidenceRevision) && row.evidenceRevision > 0
-                        && recorded?.state === row.state && recorded.evidenceId === row.evidenceId
-                        && recorded.evidenceRevision === row.evidenceRevision && recorded.metadataStatus === 'RECORDED'
-                        && available?.evidenceId === row.evidenceId && available.status === 'VALID_AS_RECORDED');
+                    const criteria = certificateCompleted() ? ['python-basic-certificate']
+                        : ['activity-complete', 'assignment-submitted', 'reflection-topics'];
+                    for (const criterionId of criteria) {
+                        const rows = view.criteria.filter(item => item.criterionId === criterionId);
+                        const records = evidence.manifest.criteria.filter(item => item.criterionId === criterionId);
+                        const availability = evidence.availability.filter(item => item.criterionId === criterionId);
+                        require(rows.length === 1 && records.length === 1 && availability.length === 1);
+                        const [row] = rows, [recorded] = records, [available] = availability;
+                        require(['MET', 'NOT_MET', 'MISSING', 'UNKNOWN'].includes(row.state)
+                            && typeof row.current === 'boolean' && recorded.state === row.state
+                            && recorded.evidenceId === row.evidenceId && available.evidenceId === row.evidenceId
+                            && recorded.evidenceRevision === row.evidenceRevision);
+                        if (row.state === 'MET' || certificateCompleted()) {
+                            require(row.state === 'MET' && row.current === true && id(row.evidenceId)
+                                && Number.isSafeInteger(row.evidenceRevision) && row.evidenceRevision > 0
+                                && recorded.metadataStatus === 'RECORDED' && available.status === 'VALID_AS_RECORDED');
+                        }
+                    }
                     application = view;
                     displayed.application = view;
                     displayed.evidence = evidence;
-                    certificateSnapshot = {session: boundSession, view, evidence};
+                    decisionSnapshot = {session: boundSession, view, evidence};
                 }
                 succeeded = true;
                 show('success');
@@ -623,13 +652,14 @@ define([], function() {
                 }
                 activityVisit = null;
                 if (visit.applicationId === applicationId) {
-                    const result = await run('refresh-activity', visit.revision);
+                    if (visit.session !== session) { throw new Error('CLEAR_WORKFLOW_UNAVAILABLE'); }
+                    const result = await run('refresh-activity', visit);
                     if (!result) {
                         throw new Error('CLEAR_WORKFLOW_UNAVAILABLE');
                     }
                 }
             }
-            await cardRead('read-application');
+            await cardRead(moodleMode() ? 'read-session' : 'read-application');
             return {view: activityView()};
         };
         const openCards = () => {
@@ -645,9 +675,9 @@ define([], function() {
                     approval: source,
                 }),
                 read: readOnReturn,
-                loadEvidence: snapshot => certificateCompleted()
-                    ? certificateSnapshot?.session === session && snapshot.applicationId === applicationId
-                        ? Promise.resolve(certificateSnapshot.evidence) : Promise.reject(new Error('CLEAR_WORKFLOW_UNAVAILABLE'))
+                loadEvidence: snapshot => pairedMode()
+                    ? decisionSnapshot?.session === session && snapshot.applicationId === applicationId
+                        ? Promise.resolve(decisionSnapshot.evidence) : Promise.reject(new Error('CLEAR_WORKFLOW_UNAVAILABLE'))
                     : cardRead('decision-evidence', snapshot.applicationId),
                 targets: () => canVisit() ? activityTargets() : null,
                 // The original page stays mounted while a reviewed link opens a new tab.
@@ -658,10 +688,16 @@ define([], function() {
         };
         const click = event => {
             const link = event.target.closest?.('a.crc-go');
-            if (link && cardRoot?.contains(link) && link.href === origin + '/mod/page/view.php?id=3'
-                    && ready && canVisit() && !unknown) {
-                activityVisit = {applicationId, revision: revision()};
-                activityResult = null;
+            if (link && cardRoot?.contains(link) && ready && canVisit() && !unknown) {
+                const target = activityTargets().targets.find(item => link.href === origin
+                    + '/mod/' + item.module + '/view.php?id=' + item.cmId);
+                if (target) {
+                    activityVisit = null;
+                }
+                if (target && target.criterionId !== 'reflection-topics') {
+                    activityVisit = {session, applicationId, revision: revision(), criterionId: target.criterionId};
+                    activityResult = null;
+                }
             }
             const button = event.target.closest?.('[data-workflow-action]');
             if (buttons.includes(button)) {

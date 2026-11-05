@@ -1,0 +1,46 @@
+{
+  "version": "clear-course2-content-candidate.1",
+  "status": "REVIEW_ONLY_NOT_APPLIED",
+  "courseId": 2,
+  "format": "HTML",
+  "learningMode": "TEXT_AND_SELF_RUN_PYTHON_NOT_VIDEO",
+  "provenance": "New instructional content authored for review; no learner experience, output or submission is asserted.",
+  "preserve": [
+    "course and module IDs",
+    "completion rules",
+    "existing completion/submission/post records",
+    "role/enrollment/authority scope",
+    "server immutable reflection post binding"
+  ],
+  "modules": [
+    {
+      "cmId": 3,
+      "module": "page",
+      "instanceId": 1,
+      "fields": {
+        "content": "<h2>Python 반복문: 조건에 맞는 값 집계하기</h2><p>목표: 리스트를 for문으로 순회하고, if 조건과 누적 변수를 사용해 개수와 합계를 구합니다. 약 10분의 글 기반 실습입니다. 화면 열림에 따른 Moodle 완료 기록은 이해도나 동영상 시청을 증명하지 않습니다.</p><h3>1. 순회와 누적</h3><p>for value in values는 값을 하나씩 value에 넣습니다. 합계와 개수는 반복문 밖에서 0으로 초기화합니다. 반복문 안에서 초기화하면 앞선 결과가 사라집니다.</p><pre>values = [4, 9, 12, 17, 20]\ncount = 0\ntotal = 0\nfor value in values:\n    if value &gt; 10 and value % 2 == 0:\n        count += 1\n        total += value\nprint(count, total)</pre><p>value % 2 == 0은 짝수를 확인합니다. and는 두 조건을 모두 만족해야 참입니다. 위 예제의 선택 값은 12와 20이므로 개수 2, 합계 32입니다.</p><h3>2. 직접 실행하고 확인하기</h3><ol><li>사용 가능한 Python 3 환경에서 코드를 직접 실행하고 자신의 출력 결과를 확인합니다.</li><li>조건을 value &gt;= 10으로 바꾸고 리스트에 10을 추가해 결과가 달라지는 이유를 설명해 봅니다.</li><li>빈 리스트에서는 무엇이 출력될지 먼저 예상한 뒤 실행합니다.</li></ol><h3>3. 흔한 실수</h3><p>들여쓰기가 if 밖으로 벗어나면 조건과 관계없이 집계될 수 있습니다. count와 total의 초기화 위치를 확인하세요. 문제가 없었다면 어떤 입력으로 확인했는지 기록하면 됩니다.</p><p>실제로 읽고 실행한 뒤 지정 과제와 회고로 이동하세요. 실행하지 않은 결과나 경험을 제출 내용으로 쓰지 마세요.</p>"
+      }
+    },
+    {
+      "cmId": 4,
+      "module": "assign",
+      "instanceId": 1,
+      "fields": {
+        "intro": "<h2>실습 과제: 조건에 맞는 측정값 집계</h2><p>본인이 작성하고 실행한 Python 3 코드와 결과를 온라인 텍스트로 제출하세요. 파일 첨부는 사용하지 않습니다.</p><p>입력 리스트는 [6, 11, 14, 19, 22, 25]입니다. 12 이상인 짝수만 선택해 개수와 합계를 출력하세요. for, if, 두 누적 변수를 사용합니다.</p><ol><li>작성한 전체 코드</li><li>직접 실행한 출력과 선택된 값 설명</li><li>빈 리스트 및 경계값 12를 넣은 경우에 대해 예상과 실제 확인 결과</li></ol><p>기본 입력의 점검 기준은 개수 2, 합계 36입니다. 정답 숫자만 복사하지 말고 직접 실행한 코드와 확인 과정을 제출하세요. 실행하지 못했다면 그 사실과 막힌 지점을 정확히 적으세요.</p><p>「제출물 추가/편집」에서 작성 후 저장하고, 초안 상태라면 「과제 제출」까지 진행해 최종 제출 상태를 확인하세요. CLEAR 카드는 제출 기록을 읽으며 이 단계의 충족은 코드 채점·이해도 검증을 뜻하지 않습니다. 기존 제출물이 있으면 본인 내용을 확인한 후 필요한 수정만 하세요.</p>"
+      }
+    },
+    {
+      "cmId": 5,
+      "module": "forum",
+      "instanceId": 3,
+      "fields": {
+        "intro": "<h2>Python 실습 회고</h2><p>본인이 실제로 수행한 학습과 과제를 바탕으로 다음 세 주제를 구분해 작성하세요. 감정·노력 점수, 최소 글자 수, 사진은 요구하지 않습니다.</p><ol><li><strong>수행한 작업 (work-performed)</strong>: 실제로 작성·실행한 코드와 확인한 입력/출력을 구체적으로 설명합니다.</li><li><strong>문제 해결 과정 (problem-solving-process)</strong>: 만난 문제, 확인 방법, 수정 내용을 적습니다. 문제가 없었다면 「문제 없음」과 함께 경계값·빈 리스트·들여쓰기 등을 어떻게 점검했는지 설명합니다.</li><li><strong>배운 점 (learning-takeaway)</strong>: 반복문·조건·누적 변수에 대해 새로 이해한 점과 다음에 적용할 방법을 적습니다.</li></ol><p>다른 사람의 글이나 실행하지 않은 경험을 자신의 경험으로 쓰지 마세요. 기존 고정 글을 본인의 새 회고로 간주하지 않습니다. 새 글이나 수정 글을 CLEAR에 연결하려면 운영자가 본인 작성자·게시판·신청의 결합을 확인해야 합니다. 게시판 저장만으로 AI 검토나 회고 충족이 자동 완료되지는 않습니다. AI 검토는 별도 승인 단계입니다.</p>"
+      }
+    }
+  ],
+  "applicationHandoff": {
+    "owner": "A runtime/database owner",
+    "method": "After HQ content review, use Moodle supported module editing UI or owner-controlled Moodle API/core update path for content/intro fields only. No direct SQL, new completion rows or submission/post mutations. Re-read public module IDs/rules after update.",
+    "userActions": "HQ to provide the currently running canonical lesson/assignment/forum URL and one required action at a time. Learner writes and runs their own work; no generated learner submission."
+  }
+}

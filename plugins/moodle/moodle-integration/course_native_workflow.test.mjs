@@ -416,6 +416,69 @@ test('native lesson return queues once and confirms only matching current lesson
     }
 });
 
+test('three Moodle targets refresh only the clicked lesson or assignment and return matched evidence without forum writes', async () => {
+    const {Node, walk, visibility} = installCardDom();
+    const cardRoot = new Node('div');
+    const targets = {version: 'clear-student-condition-targets.1', applicationId: 'app-one', courseId: 2,
+        moodleOrigin: 'https://127.0.0.1:19474', targets: [
+            {criterionId: 'activity-complete', cmId: 3, module: 'page', instanceId: 1},
+            {criterionId: 'assignment-submitted', cmId: 4, module: 'assign', instanceId: 1},
+            {criterionId: 'reflection-topics', cmId: 5, module: 'forum', instanceId: 3},
+        ]};
+    let bad = false, recorded = false;
+    const view = () => ({...certificateView(), criteria: certificateView().criteria.map(row =>
+        row.criterionId === 'assignment-submitted' && recorded
+            ? {...row, state: 'MET', evidenceId: 'evidence-assignment', evidenceRevision: 2} : row)});
+    const evidence = () => ({...certificateEvidence(), manifest: {...certificateEvidence().manifest,
+        criteria: view().criteria.map(row => ({...row, metadataStatus: row.evidenceId ? 'RECORDED' : 'MISSING'}))},
+        availability: view().criteria.map(row => ({criterionId: row.criterionId, evidenceId: row.evidenceId,
+            status: row.evidenceId ? 'VALID_AS_RECORDED' : 'MISSING'}))});
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return {...session('app-one'), conditionTargets: targets}; }
+        if (action === 'read-application') { return view(); }
+        if (action === 'decision-evidence') {
+            const result = evidence();
+            if (bad) { result.manifest.decision.decisionHash = 'other-hash'; }
+            return result;
+        }
+        if (action === 'refresh-activity') { recorded = true; return {status: 'QUEUED', operationId: 'op-refresh'}; }
+        throw Error('unexpected write');
+    }, {cardRoot});
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+    const links = () => [...walk(cardRoot)].filter(node => node.tag === 'a' && node.className?.includes('crc-go'));
+    const returned = async () => { visibility.get('visibilitychange')?.(); await flush(); await flush(); };
+    try {
+        await ui.click('read-session'); await flush();
+        assert.deepEqual(links().map(link => link.href), targets.targets.map(t => targets.moodleOrigin + `/mod/${t.module}/view.php?id=${t.cmId}`));
+        const assignment = links().find(link => link.href.includes('/assign/'));
+        assignment.handlers.click(); await ui.clickLink(assignment); await returned();
+        const refresh = ui.sent.filter(row => row.action === 'refresh-activity');
+        assert.equal(refresh.length, 1);
+        assert.equal(refresh[0].criterionId, 'assignment-submitted');
+        assert.equal(refresh[0].expectedRevision, 2);
+        assert.match(cardRoot.querySelector('[data-criterion="assignment-submitted"]').textContent, /충족|MET/);
+        await returned();
+        assert.equal(ui.sent.filter(row => row.action === 'refresh-activity').length, 1);
+        const forum = links().find(link => link.href.includes('/forum/'));
+        forum.handlers.click(); await ui.clickLink(forum); await returned();
+        assert.equal(ui.sent.filter(row => row.action === 'refresh-activity').length, 1);
+        assert.doesNotMatch(cardRoot.querySelector('[data-criterion="reflection-topics"]').textContent, /서버 검증 완료/);
+        bad = true; await ui.click('read-session'); await flush();
+        assert.equal(ui.status.textContent, 'failure');
+        assert.doesNotMatch(cardRoot.querySelector('[data-criterion="assignment-submitted"]').textContent, /서버 판정.*충족/s);
+        bad = false;
+        const original = structuredClone(targets);
+        for (const mutate of [t => { t.applicationId = 'other-app'; }, t => { t.moodleOrigin = 'https://other.invalid'; },
+            t => { t.targets[1].cmId = 99; }, t => { t.targets[1] = t.targets[0]; },
+            t => { t.targets[1].href = 'https://other.invalid'; }, t => { t.targets[2].instanceId = 99; }]) {
+            Object.assign(targets, structuredClone(original)); mutate(targets);
+            await ui.click('read-session'); await flush();
+            assert.equal(links().length, 0);
+        }
+        assert.ok(ui.sent.every(row => ['read-session', 'read-application', 'decision-evidence', 'refresh-activity'].includes(row.action)));
+    } finally { ui.mounted.destroy(); delete globalThis.document; }
+});
+
 test('certificate card starts only on its click, polls reads, and signs the displayed original packet on a separate click', async () => {
     const {Node} = installCardDom();
     const cardRoot = new Node('div');
