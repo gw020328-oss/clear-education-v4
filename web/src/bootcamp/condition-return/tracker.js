@@ -144,7 +144,7 @@ export function createReturnTracker({
       if (LIVE.has(v.state)) {
         keep[id] = {
           departedAt: v.departedAt, baseline: v.baseline, baselineState: v.baselineState ?? null, attempts: v.attempts,
-          expectedRevision: v.expectedRevision ?? null, refresh: v.refresh ?? null,
+          nextAllowedAt: v.nextAllowedAt ?? 0, refresh: v.refresh ?? null,
         };
       }
     }
@@ -165,7 +165,7 @@ export function createReturnTracker({
         visits.set(id, {
           state: RETURN.AWAY, departedAt: v.departedAt, baseline: v.baseline, baselineState: v.baselineState ?? null,
           attempts: 0, checkedAt: null, error: null,
-          expectedRevision: v.expectedRevision ?? null, refresh: v.refresh ?? null, needsRefresh: false,
+          nextAllowedAt: v.nextAllowedAt ?? 0, refresh: v.refresh ?? null, needsRefresh: false,
         });
       }
     }
@@ -182,8 +182,7 @@ export function createReturnTracker({
     const due = waiting().map((v) => {
       const base = followUpMs[v.attempts - 1];
       // 서버가 "N초 뒤에" 라고 했으면 그보다 빨리 다시 묻지 않는다.
-      const retry = v.refresh?.status === REFRESH.RATE_LIMITED && Number.isFinite(v.refresh.retryAfterSeconds)
-        ? v.refresh.retryAfterSeconds * 1000 : 0;
+      const retry = Math.max(0, (v.nextAllowedAt ?? 0) - nowMs());
       return Number.isFinite(base) ? Math.max(base, retry) : base;
     }).filter((ms) => Number.isFinite(ms));
     if (due.length === 0) return;
@@ -236,10 +235,14 @@ export function createReturnTracker({
   async function requestRefresh(targets) {
     if (typeof refresh !== 'function') return;
     for (const [id, v] of targets) {
-      if (!v.needsRefresh || !refreshFor(id)) continue;
+      if (!v.needsRefresh || !refreshFor(id) || nowMs() < (v.nextAllowedAt ?? 0)) continue;
+      // read() may return a fresh snapshot without updating the host's getState().
+      const latest = await read();
+      if (!latest || latest.applicationId !== applicationId || latest.current === false) continue;
+      const revision = latest.decision?.revision ?? getRevision() ?? null;
       let r;
       try {
-        r = await refresh({ criterionId: id, expectedRevision: v.expectedRevision ?? null });
+        r = await refresh({ criterionId: id, expectedRevision: revision });
       } catch (error) {
         r = { status: REFRESH.REQUEST_FAILED, error: String(error?.code ?? error?.message ?? 'REQUEST_FAILED') };
       }
@@ -252,6 +255,8 @@ export function createReturnTracker({
         ...cur,
         // 제한에 걸렸으면 다음 읽기 때 다시 요청한다. 접수·기록·불가면 더 보내지 않는다.
         needsRefresh: status === REFRESH.RATE_LIMITED,
+        nextAllowedAt: status === REFRESH.RATE_LIMITED && Number.isFinite(r.retryAfterSeconds)
+          ? nowMs() + Math.max(0, r.retryAfterSeconds) * 1000 : 0,
         refresh: {
           status,
           operationId: typeof r.operationId === 'string' ? r.operationId : null,
@@ -310,7 +315,7 @@ export function createReturnTracker({
       baselineState: rowOf(rows, criterionId)?.state ?? null,
       attempts: 0, checkedAt: null, error: null,
       // 재확인 명령의 기준 — **신청 개정 번호**. 조건 근거 번호가 아니다.
-      expectedRevision: getRevision() ?? null,
+      nextAllowedAt: visits.get(criterionId)?.nextAllowedAt ?? 0,
       refresh: null, needsRefresh: false,
     });
     persist(); emit();

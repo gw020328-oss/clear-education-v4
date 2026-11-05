@@ -309,3 +309,49 @@ test('회고를 고치러 갔다 돌아와 새 판정 전이면 지난 글의 �
   assert.equal(settled.previous, false);
   assert.equal(settled.needsRewrite, true);
 });
+
+test('명령 직전 조회 revision 사용: 호스트 상태가 7이어도 최신 8, 충돌 뒤 수동 복구는 9', async () => {
+  let revision = 7;
+  let conflict = true;
+  const requests = [];
+  const t = createReturnTracker({
+    applicationId: APP, getRows: rowsBefore, getRevision: () => 7,
+    read: async () => ({ applicationId: APP, rows: rowsBefore(), decision: { revision }, current: true }),
+    refresh: async (req) => {
+      requests.push(req.expectedRevision);
+      if (conflict) { revision = 9; throw Object.assign(new Error('REVISION_CONFLICT'), { code: 'REVISION_CONFLICT' }); }
+      return { status: 'QUEUED' };
+    },
+    storage: memoryStore(), setTimer: () => 1, clearTimer: () => {},
+  });
+  t.depart('activity-complete'); revision = 8;
+  await t.arrive();
+  assert.deepEqual(requests, [8]);
+  assert.equal(t.status('activity-complete').state, RETURN.PENDING);
+  conflict = false;
+  await t.recheck('activity-complete');
+  assert.deepEqual(requests, [8, 9]);
+  t.close();
+});
+
+test('60초 제한은 수동·복귀·다른 조건 타이머에도 적용하고 만료 뒤 전송한다', async () => {
+  const c = clock(); const requests = []; let reads = 0;
+  const t = createReturnTracker({
+    applicationId: APP, getRows: rowsBefore, getRevision: () => 7,
+    read: async () => { reads++; return { applicationId: APP, rows: rowsBefore(), decision: { revision: 8 } }; },
+    refresh: async (req) => { requests.push({ ...req, at: c.nowMs() }); return { status: 'RATE_LIMITED', retryAfterSeconds: 60 }; },
+    storage: memoryStore(), ...c, followUpMs: [100, 200, 300],
+  });
+  t.depart('activity-complete'); await t.arrive();
+  await c.tick(1); await t.recheck('activity-complete');
+  assert.equal(requests.length, 1);
+  t.depart('activity-complete'); await t.arrive();
+  assert.equal(requests.length, 1, '다시 이동해도 제한 유지');
+  t.depart('assignment-submitted'); await t.arrive();
+  await c.tick(100);
+  assert.equal(requests.filter(r => r.criterionId === 'activity-complete').length, 1);
+  assert.ok(reads > requests.length, '저장 판정 조회는 계속');
+  await c.tick(59899); await t.recheck('activity-complete');
+  assert.equal(requests.filter(r => r.criterionId === 'activity-complete').length, 2);
+  t.close();
+});
