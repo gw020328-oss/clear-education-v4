@@ -213,3 +213,81 @@ test('미리보기 페이지의 녹화 재생 제안자는 대역이라고 적�
   assert.equal(p.explicit, true);
   assert.ok(p.label.includes('녹화 재생(대역)'));
 });
+
+// ── 재생성 중 이전 결과 제거 (PR #168 독립 리뷰) ─────────────────────
+//
+// 같은 원문으로 다시 생성하고 두 번째 응답을 기다리는 동안 이전 조건·
+// proposal-facts·이전 출처 배지가 남아 있었다.
+
+function gatedPanel(source) {
+  const replay = createReplayFetch();
+  const gates = [];
+  let hold = false;
+  const fetchImpl = async (url, init) => {
+    if (hold && url.endsWith('/generate')) await new Promise((r) => gates.push(r));
+    return replay(url, init);
+  };
+  const made = operatorPanel(source, { fetchImpl });
+  return { ...made, holdNext: () => { hold = true; }, release: () => { hold = false; gates.splice(0).forEach((r) => r()); } };
+}
+
+test('재생성을 시작하면 이전 조건·결과 정보·출처 배지를 내리고 최신 결과만 보인다', async () => {
+  const restore = installDom();
+  try {
+    const g = gatedPanel(PRESETS[0].source);
+    clickOn(byRole(g.panel.node, 'generate')); await settle();
+    assert.ok(g.panel.node.textContent.includes('2개 조건을 찾았습니다'));
+    assert.ok(byRole(g.panel.node, 'proposal-facts'));
+    g.holdNext();
+    clickOn(byRole(g.panel.node, 'generate')); await settle();
+    const waiting = g.panel.node.textContent;
+    assert.ok(!waiting.includes('2개 조건을 찾았습니다'), '재생성 중 이전 조건이 남았다');
+    assert.equal(byRole(g.panel.node, 'proposal-facts'), undefined, '재생성 중 이전 결과 정보가 남았다');
+    assert.ok(!waiting.includes('Gemini 오프라인 응답 대역 · 실제 호출 아님'), '재생성 중 이전 출처 배지가 남았다');
+    assert.ok(!waiting.includes('조건을 찾지 못했습니다') && !waiting.includes('직접 지정'), '대기 중 조건 없음·직접 지정으로 이끈다');
+    assert.ok(waiting.includes('이번 제안을 만드는 중입니다'));
+    const run = [...walk(g.panel.node)].find((n) => n.tagName === 'BUTTON' && n.attributes?.['data-role'] === undefined && n.textContent.includes('만드는 중'));
+    assert.equal(run?.attributes.disabled, 'disabled', '재생성 중 실행이 열려 있다');
+    g.release(); await settle();
+    assert.ok(g.panel.node.textContent.includes('2개 조건을 찾았습니다'));
+    assert.ok(byRole(g.panel.node, 'proposal-facts'));
+  } finally { restore(); }
+});
+
+test('결과 상자가 있던 뒤 재생성해도 이전 상자는 내려가고, 대기 중 입력을 바꾸면 늦은 응답은 버린다', async () => {
+  const restore = installDom();
+  try {
+    const g = gatedPanel(TEXT.dFailure);
+    clickOn(byRole(g.panel.node, 'generate')); await settle();
+    assert.equal(byRole(g.panel.node, 'relay-outcome')?.attributes['data-outcome'], 'FAILED');
+    g.holdNext();
+    clickOn(byRole(g.panel.node, 'generate')); await settle();
+    assert.equal(byRole(g.panel.node, 'relay-outcome'), undefined, '재생성 중 이전 결과 상자가 남았다');
+    type(g.panel, PRESETS[0].source);
+    await new Promise((r) => setTimeout(r, 300));
+    g.release(); await settle();
+    assert.equal(byRole(g.panel.node, 'relay-outcome'), undefined, '입력을 바꾼 뒤 늦은 응답이 반영됐다');
+    assert.ok(g.panel.node.textContent.includes('아직 제안을 만들지 않았습니다'));
+  } finally { restore(); }
+});
+
+test('상자는 하나만 — 제안자 예외는 생성 실패 상자, 정상 계약의 실패는 결과 상자', async () => {
+  const restore = installDom();
+  try {
+    // 정상 계약으로 받은 D 오류: 결과 상자만
+    const d = operatorPanel(TEXT.dFailure);
+    clickOn(byRole(d.panel.node, 'generate')); await settle();
+    assert.equal(byRole(d.panel.node, 'relay-outcome')?.attributes['data-outcome'], 'FAILED');
+    assert.equal(byRole(d.panel.node, 'proposal-failed'), undefined);
+    // 제안자 내부 예외(여기서는 화면 문맥 읽기 실패): 생성 실패 상자만, 원시 오류 없음
+    const request = createBootcampTransport({ origin: 'https://replay.clear.invalid', fetchImpl: createReplayFetch() });
+    const broken = createOperatorProposer({ request, appContextRef: () => { throw new Error('secret-context sk-live-1'); } });
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: () => null });
+    const panel = aiComparePanel({ adapter: a, source: PRESETS[0].source, proposer: broken });
+    clickOn(byRole(panel.node, 'generate')); await settle();
+    assert.ok(byRole(panel.node, 'proposal-failed'), '예외가 생성 실패로 보이지 않는다');
+    assert.equal(byRole(panel.node, 'relay-outcome'), undefined, '상자가 겹쳤다');
+    assert.ok(!panel.node.textContent.includes('sk-live') && !panel.node.textContent.includes('secret-context'));
+    assert.ok(!panel.node.textContent.includes('조건을 찾지 못했습니다'));
+  } finally { restore(); }
+});
