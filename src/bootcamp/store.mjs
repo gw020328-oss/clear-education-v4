@@ -310,7 +310,9 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       const controller=new AbortController(),combined=signal?AbortSignal.any([signal,controller.signal]):controller.signal;
       let timer,prepared;
       try{
-        prepared=await Promise.race([started.producer.prepareReflection(started.request,{signal:combined,isAuthorized:requestAuthority(context,applicationId,started.wallet,started.request)}),
+        const authority=requestAuthority(context,applicationId,started.wallet,started.request);
+        const isAuthorized=commandScope?.bindSourceAuthority(authority)??authority;
+        prepared=await Promise.race([started.producer.prepareReflection(started.request,{signal:combined,isAuthorized}),
           new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('BC_PRODUCER_TIMEOUT'));},Math.min(timeoutMs,Math.max(0,(started.request.expiresAt-epoch(now()))*1000)));})]);
         check(prepared.isCurrent(),'BC_LIVE_AI_PREPARATION_STALE');return prepared;
       }catch(e){controller.abort();prepared?.dispose();throw e;}finally{clearTimeout(timer);}

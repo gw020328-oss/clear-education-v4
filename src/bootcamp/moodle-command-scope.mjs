@@ -20,6 +20,12 @@ export function createMoodleCommandScope({enabled, reserve}) {
       });
     },
     assertContext(context) { requests.getStore()?.reservation.assertContext(context); },
+    bindSourceAuthority(readAuthority) {
+      // Capture only background preparation checks. An operator command may
+      // inspect that participant authority without inheriting its identity.
+      check(!requests.getStore(),'MOODLE_COMMAND_NESTED');
+      return () => requests.exit(() => sync(readAuthority()));
+    },
     assert() { requests.getStore()?.reservation.assert(); },
     business(work) {
       const state = requests.getStore(); if (!state) return work();

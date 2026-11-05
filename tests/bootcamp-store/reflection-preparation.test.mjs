@@ -5,9 +5,10 @@ import {storeFixture,START} from './fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 import {runFirstNormalReflection} from '../ai-review-precheck/first-normal-reflection-entry.mjs';
 import {reflectionContextHash} from '../../src/document-precheck/review/bootcamp-reflection.mjs';
+import {commandFixture} from './moodle-command-fixture.mjs';
 
 // All source responses are invented. No network, model/key/journal or real identity is used.
-async function fixture(t,{bindManagedRun,recovery,sourceValiditySeconds=null}={}){
+async function fixture(t,{bindManagedRun,recovery,sourceValiditySeconds=null,moodle=false}={}){
  const f=await storeFixture(t,{store:{mode:'ISOLATED_LIVE_TEST',producers:{},resolveSource:()=>null}});
  const state={available:true,authExpiresAt:START+(sourceValiditySeconds??240),rawExpiresAt:START+(sourceValiditySeconds??240),queryExpiresAt:START+(sourceValiditySeconds??240)};
  let review=async()=>{throw Error('OFFLINE_CALLBACK_STOP');};
@@ -23,15 +24,39 @@ async function fixture(t,{bindManagedRun,recovery,sourceValiditySeconds=null}={}
   assert.ok(method in responses,'unexpected network method');return structuredClone(responses[method]);}});
  const consumer=createLiveMoodleConsumer({criterionId:'reflection-topics',sourceValiditySeconds,withReader,resolvePin:pin,resolveLease:()=>state,modelVersion:'gemini-3.5-flash-lite',now:()=>f.time,
   reflectionHost:{bindManagedRun,recovery,codeState(){assert.equal(this.marker,true);return code;},day(){assert.equal(this.marker,true);return day;},marker:true},reviewReflection:async args=>{aiCalls++;seen=args;return review(args);}});
+ const commands=moodle?await commandFixture({authentication:f.service,
+  contexts:{PARTICIPANT:f.aliceContext,COURSE_OPERATOR:f.operatorContext}}):null;
+ if(commands){
+  t.after(()=>commands.owner.close());
+  f.configuration.commandScope=commands.scope;
+  f.configuration.authentication={...f.service,authorizeWorkflow(context,write){
+   const actor=f.service.authorizeWorkflow(context,write);commands.scope.assertContext(context);return actor;
+  }};
+ }
  f.configuration.producers={'reflection-topics':consumer};f.configuration.resolveSource=consumer.resolveSource;f.restart();
  const app=f.create(),issue=()=>f.store.issueBridgeRequest(f.aliceContext,app,{criterionId:'reflection-topics',expectedRevision:f.view(app).revision},f.key());
  const request=issue(),requestBody={requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision};
- return {f,state,consumer,app,requestBody,issue,get calls(){return calls;},get aiCalls(){return aiCalls;},get seen(){return seen;},
+ return {f,state,consumer,app,requestBody,issue,commands,get calls(){return calls;},get aiCalls(){return aiCalls;},get seen(){return seen;},
   setReview:v=>review=v,setCode:v=>code=v,setDay:v=>day=v,setBody:v=>body=v,setFormat:v=>format=v,setHook:v=>hook=v,
   prepare:options=>f.store.prepareBridgeReflection(f.aliceContext,app,requestBody,options),
   collect:()=>f.store.collectBridge(f.aliceContext,app,requestBody,f.key(),{timeoutMs:30000}),
   status:()=>f.store.getRequest(f.aliceContext,app,requestBody.requestId,{bridge:true}).status};
 }
+test('operator approval can check the prepared participant source without weakening the command fence',async t=>{
+ const x=await fixture(t,{moodle:true}),p=await x.prepare();
+ const {scope}=x.commands;
+ const input=await x.commands.grant({method:'POST',path:'/bootcamp/v4/applications/'+x.app+'/reflection-approval',
+  body:{},idempotencyKey:'source-authority-check'},'COURSE_OPERATOR');
+ await assert.rejects(scope.run(input,()=>{
+  assert.equal(p.isCurrent(),true);
+  scope.assertContext(x.f.operatorContext);
+  assert.throws(()=>scope.assertContext(x.f.aliceContext),/MOODLE_COMMAND_CONTEXT/);
+  x.state.authExpiresAt=START;
+  assert.equal(p.isCurrent(),false);
+  throw Error('OFFLINE_NO_APPROVAL');
+ }),/OFFLINE_NO_APPROVAL/);
+ assert.equal(x.aiCalls,0);
+});
 test('packet preparation returns no raw or model result; approval wait precedes execution timer and preserves exact packet',async t=>{
  const x=await fixture(t),p=await x.prepare(),count=x.calls;
  assert.equal(x.aiCalls,0);assert.equal(x.status(),'PENDING');assert.equal(x.f.counts().evidence,0);assert.equal(p.isCurrent(),true);
