@@ -64,6 +64,16 @@ export function mountConditionCardsPreview(root, { mode = null, win = globalThis
         { criterionId: 'reflection-topics', cmId: 2107, module: 'forum', instanceId: 31, name: '회고 게시판' },
       ],
     }),
+    // 원천 재확인 요청의 대역. 실제라면 A 의 source-refresh 를 부르는 자리다.
+    // 응답은 기록만 하고(접수·제한·기록·불가), 판정이 바뀌었는지는 그 뒤 read 가 정한다.
+    refresh: actual ? null : async ({ criterionId, expectedRevision }) => {
+      await sleep(200);
+      const r = server.refresh(criterionId, expectedRevision);
+      note(r === null
+        ? `재확인 요청 · ${LABEL[criterionId]} — 이 빌드엔 경로 없음(지금 develop)`
+        : `재확인 요청 · ${LABEL[criterionId]} → ${r.status}${r.operationId ? ` (${r.operationId})` : ''}${r.retryAfterSeconds ? ` · ${r.retryAfterSeconds}초 뒤` : ''}`);
+      return r;
+    },
     // 검사를 통과한 실제 모양의 주소(/mod/...)를 시연 대역 탭으로 돌린다. 원래 주소는 이름에 남긴다.
     adaptLinks: (links) => Object.freeze(Object.fromEntries(Object.entries(links).map(([id, link]) => [id,
       link.status === LINK.LINKED
@@ -103,14 +113,15 @@ export function mountConditionCardsPreview(root, { mode = null, win = globalThis
     const s = server.settings();
     return el('div.crc-demo-controls', {}, [
       el('strong', { text: '시연 조작' }),
-      el('label', {}, [
-        el('input', { type: 'radio', name: 'crc-mode', checked: s.mode === 'DELAYED', onChange: () => { server.setMode('DELAYED'); render(); } }),
-        el('span', { text: '서버가 원천을 다시 읽음 (요청한 기능)' }),
-      ]),
-      el('label', {}, [
-        el('input', { type: 'radio', name: 'crc-mode', checked: s.mode === 'NEVER', onChange: () => { server.setMode('NEVER'); render(); } }),
-        el('span', { text: '저장된 판정만 읽음 (지금 develop)' }),
-      ]),
+      ...[
+        ['ON_REQUEST', '돌아오면 재확인 요청 → 접수 → 지연 뒤 새 판정 확정 (A 의 source-refresh)'],
+        ['DELAYED', '요청 없이도 서버가 스스로 다시 읽음 (Moodle 이벤트 방식)'],
+        ['NEVER', '재확인 경로 없음 · 저장된 판정만 읽음 (지금 develop)'],
+        ['UNAVAILABLE', '재확인 경로는 있지만 이 조건은 미지원이라 답함'],
+      ].map(([mode, label]) => el('label', {}, [
+        el('input', { type: 'radio', name: 'crc-mode', checked: s.mode === mode, onChange: () => { server.setMode(mode); render(); } }),
+        el('span', { text: label }),
+      ])),
       el('label', {}, [
         el('span', { text: '반영 지연' }),
         el('select', { onChange: (e) => { server.setLag(Number(e.target.value)); render(); } },
@@ -151,7 +162,10 @@ export function mountConditionCardsPreview(root, { mode = null, win = globalThis
         }),
         actual
           ? el('p', { text: '실서버에 연결하지 않았습니다. 판정·이동 주소·인증 단계가 없다는 표시만 나와야 합니다.' })
-          : el('p', { text: '「서버가 원천을 다시 읽음」 은 A 에 요청한 재조회를 흉내 냅니다. 「저장된 판정만 읽음」 이 지금 develop 의 동작입니다.' }),
+          : el('p', {
+            text: '돌아오면 카드가 서버에 원천 재확인을 요청하고(접수), 서버가 다시 읽어 새 판정을 확정해야 충족으로 바뀝니다. '
+              + '접수와 확정은 다른 상태로 보입니다. 재확인 경로가 없는 지금 develop 은 「저장된 판정만 읽음」 입니다.',
+          }),
         controls(),
       ]),
       cards.render(),

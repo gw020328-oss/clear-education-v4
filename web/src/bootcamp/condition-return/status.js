@@ -16,7 +16,7 @@
 
 import { reasonText, displayState } from '../criteria.js';
 import { seoulText } from '../../ui/policy-view.js';
-import { RETURN } from './tracker.js';
+import { RETURN, REFRESH } from './tracker.js';
 
 export const STATE_TEXT = Object.freeze({
   MET: '충족', UNMET: '미충족', WAITING: '확인 전',
@@ -37,12 +37,51 @@ export const serverWord = (row) => (row ? STATE_TEXT[displayState(row).state] ??
  * @returns {null | {tone:'wait'|'ok'|'warn', text:string, recheck:boolean}}
  */
 export function returnLine(ret, row, { where = '원래 화면' } = {}) {
+  // 원천 재확인 요청의 결과. **접수(QUEUED)는 판정이 아니다** — 확정은 UPDATED 뿐이다.
+  const req = ret?.refresh ?? null;
+  const opId = req?.operationId ? ` · 접수 ${req.operationId}` : '';
+  const retry = Number.isFinite(req?.retryAfterSeconds) ? `${req.retryAfterSeconds}초` : '잠시';
+
   switch (ret?.state) {
     case RETURN.AWAY:
       return { tone: 'wait', text: `${where}에서 마치고 이 탭으로 돌아오시면 서버 판정을 다시 읽어요.`, recheck: false };
     case RETURN.CHECKING:
-      return { tone: 'wait', text: '확인 중 · 서버 판정을 다시 읽고 있어요.', recheck: false };
+      return {
+        tone: 'wait',
+        text: req?.status === REFRESH.QUEUED
+          ? `확인 중 · 원천 재확인 요청이 접수됐어요${opId}. 서버 판정을 다시 읽고 있어요.`
+          : '확인 중 · 서버 판정을 다시 읽고 있어요.',
+        recheck: false,
+      };
     case RETURN.PENDING:
+      if (req?.status === REFRESH.QUEUED) {
+        return {
+          tone: 'wait',
+          text: `확인 중 · 서버가 원천 재확인 요청을 접수했어요${opId}. 새 판정은 아직 확정되지 않았어요. 잠시 뒤 자동으로 한 번 더 읽어요.`,
+          recheck: true,
+        };
+      }
+      if (req?.status === REFRESH.RECORDED) {
+        return {
+          tone: 'wait',
+          text: '확인 중 · 서버가 원천을 다시 읽어 기록했지만 이 조건의 판정은 그대로예요. 잠시 뒤 한 번 더 읽어요.',
+          recheck: true,
+        };
+      }
+      if (req?.status === REFRESH.RATE_LIMITED) {
+        return {
+          tone: 'wait',
+          text: `확인 중 · 재확인 요청을 방금 보내서 ${retry} 뒤에 다시 요청해요. 그동안 저장된 판정은 그대로예요.`,
+          recheck: true,
+        };
+      }
+      if (req?.status === REFRESH.REQUEST_FAILED) {
+        return {
+          tone: 'wait',
+          text: '확인 중 · 원천 재확인 요청을 보내지 못했어요. 저장된 판정만 다시 읽고 있어요. 잠시 뒤 다시 요청해요.',
+          recheck: true,
+        };
+      }
       return {
         tone: 'wait',
         // 같다는 건 '아직 안 했다' 가 아니라 '서버가 아직 반영하지 않았다' 일 수 있다.
@@ -53,7 +92,15 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
     case RETURN.STALLED:
       return {
         tone: 'warn',
-        text: '아직 반영되지 않았어요. 자동 재조회는 멈췄어요. 서버가 원천을 다시 읽은 뒤 「다시 확인」 을 눌러 주세요.',
+        text: req?.status === REFRESH.QUEUED
+          ? `아직 반영되지 않았어요. 재확인 요청은 접수됐지만${opId} 새 판정이 확정되지 않았어요. 자동 재조회는 멈췄어요. 잠시 뒤 「다시 확인」 을 눌러 주세요.`
+          : '아직 반영되지 않았어요. 자동 재조회는 멈췄어요. 서버가 원천을 다시 읽은 뒤 「다시 확인」 을 눌러 주세요.',
+        recheck: true,
+      };
+    case RETURN.CANNOT_CHECK:
+      return {
+        tone: 'warn',
+        text: '아직 확인할 수 없어요 · 서버가 이 조건의 원천 재확인을 아직 지원하지 않아요. 아래는 저장된 판정 그대로예요.',
         recheck: true,
       };
     case RETURN.READ_FAILED:
@@ -61,7 +108,7 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
     case RETURN.UPDATED:
       return {
         tone: 'ok',
-        text: `서버 판정이 바뀌었어요 · 지금 판정 ${serverWord(row)}`
+        text: `새 판정 확정 · 서버 판정이 바뀌었어요 · 지금 판정 ${serverWord(row)}`
           + (ret.updatedAt ? ` · ${new Date(ret.updatedAt).toLocaleTimeString('ko-KR', { hour12: false })} 확인` : ''),
         recheck: false,
       };

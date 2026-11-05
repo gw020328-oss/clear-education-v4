@@ -7,6 +7,9 @@
 //                     (team-entry 라면 driver.readLive() 후 driver.snapshot())
 //   loadEvidence(s)   기존 decisionEvidence(applicationId, { decisionId })
 //   targets()         이동 정보(targets.js 의 제안 계약). 아직 없으면 null
+//   refresh(req)      원천 재확인 요청(A 의 source-refresh). 없으면 저장된 판정만 읽는다.
+//                     { criterionId, expectedRevision } → { status: QUEUED|RATE_LIMITED|RECORDED|UNAVAILABLE,
+//                     operationId?, retryAfterSeconds? } · null 이면 "이 빌드엔 없음"
 //   certificate       기존 driver 의 { start: bind, read: approval, sign: sign }
 //   onOpen(id)        기존 「자세히」 (조건 상세·근거 보기)
 //   onChange()        다시 그려 달라는 요청
@@ -24,6 +27,7 @@ export function createConditionCards({
   isBusy = (e) => (e?.code ?? e?.message) === 'TEST_BUSY_OR_ENDED',
   loadEvidence = null,
   targets = () => null,
+  refresh = null,
   certificate = null,
   onOpen = () => {},
   onChange = () => {},
@@ -89,6 +93,7 @@ export function createConditionCards({
         return fresh;
       },
       isBusy, storage, nowMs, setTimer, clearTimer, isVisible, onChange: notify,
+      refresh,
       ...(followUpMs ? { followUpMs } : {}),
     });
     tracker.attach({ doc, win });
