@@ -428,9 +428,13 @@ export function aiComparePanel({
           // 실제 안내문은 대부분 조건이 아닌 글이다. 문장마다 "못 읽음" 을 붙여
           // 두면 화면이 심문처럼 보인다. 찾은 것만 보이고, 나머지는 접는다.
           el('p.fp-proposal-ask', {
-            text: found.length > 0
-              ? `${found.length}개 조건을 찾았습니다 — 맞나요?`
-              : held.length > 0
+            text: failure
+              ? '제안이 없습니다 — 생성에 실패했습니다. 직접 지정으로 대신하지 않습니다.'
+              : explicit && !proposal.provenance
+                ? '아직 제안을 만들지 않았습니다. 「제안 생성」 을 누르면 Gemini 에 한 번 보냅니다.'
+                : found.length > 0
+                  ? `${found.length}개 조건을 찾았습니다 — 맞나요?`
+                  : held.length > 0
                 ? '조건 사이의 관계를 확인해야 해서 자동으로 읽지 않았습니다. 아래 보류한 조항을 봐 주세요.'
                 : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
           }),
