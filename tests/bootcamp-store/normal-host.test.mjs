@@ -150,3 +150,20 @@ test('activity-only run never invokes the normal evidence, model or payout stage
  for(const event of ['prepare-reflection','approval','resume-exact','pay'])assert.ok(!f.events.includes(event));
  assert.equal(f.events.at(-1),'drain');
 });
+
+test('certificate-only configuration is explicit, isolated and incompatible with activity-only',()=>{
+ const candidate={...config(),attestorMode:'SELF_ATTESTOR_TEST',moodleReadOwnerSha256:'a'.repeat(64),certificateCardOnly:true};
+ assert.equal(validateHostConfig(candidate).certificateCardOnly,true);
+ for(const patch of [{certificateCardOnly:false},{attestorMode:'OFFICIAL'},{moodleReadOwnerSha256:undefined},{activityReturnOnly:true}])
+  assert.throws(()=>validateHostConfig({...candidate,...patch}),/NORMAL_HOST_CERTIFICATE_MODE/);
+});
+test('certificate-only host stops after certificate and never prepares AI or pays',async()=>{
+ const f=flowFixture(),open=f.ports.open;
+ f.ports.open=async()=>({...await open(),async collectCertificate(){f.events.push('certificate-only');}});
+ f.ports.finishActivity=async()=>f.events.push('finish-certificate');
+ const result=await composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},
+  config:{...config(),certificateCardOnly:true},directory:'/offline',signal:f.controller.signal,ports:f.ports});
+ assert.equal(result.certificateCardOnly,true);assert.equal(result.completed,false);
+ assert(f.events.indexOf('certificate-only')<f.events.indexOf('finish-certificate'));
+ assert.equal(f.paid,0);assert.equal(f.resumed,0);assert(!f.events.includes('approval'));assert(!f.events.includes('prepare-reflection'));
+});

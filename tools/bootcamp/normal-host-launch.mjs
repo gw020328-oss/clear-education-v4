@@ -10,7 +10,7 @@ export async function launchNormalHostWorker({mode,name}){
  const root=await prepareRoot();
  const env={PATH:'/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin',HOME:process.env.HOME,CLEAR_LOCKED:'1',LOG_LEVEL:'silent'};
  // The one existing native Developer key source only. Registry child receives no model key.
- if(mode==='run'&&!loadHostConfig(name).config.activityReturnOnly&&typeof process.env.GEMINI_API_KEY==='string')env.GEMINI_API_KEY=process.env.GEMINI_API_KEY;
+ if(mode==='run'&&!loadHostConfig(name).config.activityReturnOnly&&!loadHostConfig(name).config.certificateCardOnly&&typeof process.env.GEMINI_API_KEY==='string')env.GEMINI_API_KEY=process.env.GEMINI_API_KEY;
  const child=spawn('/bin/sh',['-c','ulimit -c 0 || exit 1; exec "$@"','clear-normal-host','/usr/bin/lockf','-s','-k','-t','0',join(root,'.lock'),process.execPath,
   fileURLToPath(new URL('./normal-host-worker.mjs',import.meta.url)),mode,name],{detached:true,env,stdio:'inherit'});
  const handlers=new Map();for(const s of ['SIGINT','SIGTERM','SIGHUP']){const fn=()=>{try{process.kill(-child.pid,s);}catch{}};handlers.set(s,fn);process.once(s,fn);}

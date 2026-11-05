@@ -88,3 +88,15 @@ test('expired owner cannot advertise readiness or accept a certificate start',as
  assert.throws(()=>x.gate.view(x.context,x.app),/BC_CERTIFICATE_CLOSED/);
  await assert.rejects(x.gate.wait(),/BC_CERTIFICATE_CLOSED/);
 });
+
+test('certificate-only sequence never issues activity, assignment or reflection requests',async t=>{
+ const x=await fixture(t),issued=[];
+ const sequence=createNormalSourceSequence({store:{...x.store,
+  issueBridgeRequest(c,a,b){issued.push(b.criterionId);return{record:{target:{requestId:'request-fixture'},applicationRevision:1}};},
+  async collectBridge(c,a,b,k,options){options.assertAuthority();await x.gate.signature(async()=> 'synthetic-signature');}},
+  getContext:()=>x.context,applicationId:x.app,sourceWindows:new Map(),startedAt:START,now:()=>START,
+  signal:x.stop.signal,key:x.key,stage:name=>x.stage(name),waitForReaders:async()=>{},requireReaders(){},
+  certificateStart:x.gate,certificateOnly:true});
+ const pending=sequence.collect();await new Promise(r=>setImmediate(r));await x.post();await pending;
+ assert.deepEqual(issued,['python-basic-certificate']);assert.equal(x.gate.view(x.context,x.app).state,'VERIFIED');
+});

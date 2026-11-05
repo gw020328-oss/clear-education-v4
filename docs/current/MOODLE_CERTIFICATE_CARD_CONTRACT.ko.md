@@ -48,3 +48,7 @@ start의 정상 응답은 `{version:'clear-certificate-start-receipt.1', applica
 C 후속은 카드의 세 콜백과 준비 상태를 이 계약에 연결하는 최소 수정이다. 기존 실행 DB/체인/브라우저를 변경하지 않고, 새 조립 후보에서 사용자 직접 start·메시지 검토·서명 → 관리형 창 열기를 확인한다. C 후보 준비 전에는 사용자에게 서명을 요청하지 않는다.
 
 모델 추천은 서명·비동기 권한 수명 경계 때문에 GPT-6 Astra / High다. 실제 구현은 기존 GPT-6.1 Sol 세션이며, 현재 턴의 모델을 바꾸는 도구는 제공되지 않았다.
+
+## 실제 창 확인용 한정 실행
+
+`certificateCardOnly:true`는 SELF_ATTESTOR_TEST와 고정 Moodle native owner에 한정된 별도 로컬 실행 모드다. activityReturnOnly와 함께 사용할 수 없다. 참가자 신청 결합 후 인증서 조건의 명시 시작을 기다리고, 다른 Moodle 조건·회고 준비·AI 승인/호출·수령인 등록·지급은 수행하지 않는다. 결합 전·조회 중·서명 전에는 관리형 창이 없어야 한다. 유효한 서명 뒤 창이 열린 것을 확인한 다음, 이번 시험에서는 READY를 보내거나 추가 증빙을 수집할 필요가 없다. 명시 종료로 소유한 자원을 정리한다. 이 모드는 새 chain/runtime과 fresh Moodle intent를 사용하며 이전 지급 기록을 다시 실행하지 않는다.

@@ -6,9 +6,10 @@ import {requireNormalModelWindow,REVIEW_WINDOW} from './normal-review-window.mjs
 
 export function createNormalSourceSequence({store,getContext,applicationId,sourceWindows,startedAt,now,
   signal,key,stage,diagnostics,waitForReaders,requireReaders,onPrepared,nowMs=()=>now()*1000,
-  getReflectionRecovery=()=>({status:'UNOBSERVED',resumeAllowed:false}),sourceValiditySeconds=900,moodleFirst=false,certificateStart=null}){
+  getReflectionRecovery=()=>({status:'UNOBSERVED',resumeAllowed:false}),sourceValiditySeconds=900,moodleFirst=false,certificateStart=null,certificateOnly=false}){
   check(Number.isSafeInteger(sourceValiditySeconds)&&sourceValiditySeconds>0&&sourceValiditySeconds<=900,'BC_NORMAL_SOURCE_WINDOW');
   check(typeof moodleFirst==='boolean','BC_NORMAL_SOURCE_ORDER');
+  check(typeof certificateOnly==='boolean'&&(!certificateOnly||certificateStart),'BC_CERTIFICATE_MODE');
   let state='NEW',pending=null,failedCriterion=null,skipAccepted=false;
   const requireHr=()=>{const v=readNormalView(()=>store.getApplication(getContext(),applicationId));
     check(v.evidence.some(e=>e.current&&e.record.criterionId==='python-basic-certificate'&&e.record.condition==='MET'),'BC_NORMAL_NOT_MET');};
@@ -39,7 +40,7 @@ export function createNormalSourceSequence({store,getContext,applicationId,sourc
         if(resuming){requireReaders();requireHr();requireNormalModelWindow({...pending.preparation,isCurrent:()=>skipAccepted?accepted():pending.preparation.isCurrent()||getReflectionRecovery(pending.request.record.target.requestId).status==='RESULT_READY'},nowMs());}
         else await waitForReaders();
         const firstMoodle=moodleFirst&&prepareReflection;
-        const order=resuming?[...(skipAccepted?[]:['reflection-topics']),'activity-complete','assignment-submitted']:
+        const order=certificateOnly?['python-basic-certificate']:resuming?[...(skipAccepted?[]:['reflection-topics']),'activity-complete','assignment-submitted']:
           firstMoodle?['activity-complete','assignment-submitted','python-basic-certificate','reflection-topics']:
           ['python-basic-certificate','reflection-topics','activity-complete','assignment-submitted'];
         for(const criterionId of order){

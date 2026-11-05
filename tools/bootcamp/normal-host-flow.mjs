@@ -68,6 +68,12 @@ export async function composeNormalFlow({source,config,directory,signal,ports}){
    await ports.finishActivity({signal});
    return {applicationId:context.report().applicationId,completed:false,activityReturnOnly:true};
   }
+  if(config.certificateCardOnly===true){
+   await context.collectCertificate();
+   ports.notify({event:'MOODLE_CERTIFICATE_ONLY_RECORDED',command:'FINISH'});
+   await ports.finishActivity({signal});
+   return {applicationId:context.report().applicationId,completed:false,certificateCardOnly:true};
+  }
   const prepared=await context.collectSources({prepareReflection:true});
   await ports.awaitApproval({directory,prepared,signal,onPrepared:()=>ports.notify({event:'AWAITING_EXACT_AI_APPROVAL',applicationId:context.report().applicationId,approvalRequestPath:join(directory,'approval-request.json')})});
   for(;;){
