@@ -194,3 +194,12 @@ for(const [method,path,status,code,expected]of [
  let calls=0;const api=apiFor(()=>{calls++;return Response.json({error:code,detail:'secret-text'},{status})});
  const e=await errorOf(api(path,{method}));assert.equal(e.code,expected);assert.equal(calls,1,'transport never retries');assert.ok(!JSON.stringify(e).includes('secret'));
 });
+
+test('only the exact certificate-start POST CAS rejection keeps its fixed code',async()=>{
+ const path='/bootcamp/v4/applications/application-one/certificate-start';
+ for(const [method,target,status,expected]of [['POST',path,409,'BC_REVISION_CONFLICT'],['GET',path,409,'API_REQUEST_FAILED'],['POST','/applications',409,'API_REQUEST_FAILED'],['POST',path,403,'API_REQUEST_FAILED']]){
+  const api=apiFor(()=>Response.json({error:'BC_REVISION_CONFLICT',message:'private'},{status}));
+  const e=await errorOf(api(target,{method,...(method==='POST'?{body:{expectedRevision:1},idempotencyKey:'synthetic-one'}:{})}));
+  assert.equal(e.code,expected);assert(!JSON.stringify(e).includes('private'));assert.equal(e.retryable,false);
+ }
+});

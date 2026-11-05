@@ -298,3 +298,23 @@ test('expiry and direct destruction record once, and a later login starts a new 
  assert.equal(readCancelDiagnostic(x.storage).origin,'sign-out');await connectedDiagnostic(x);await x.controller.destroy();await x.controller.destroy();
  assert.equal(x.diagnosticWrites.length,2);assert.equal(readCancelDiagnostic(x.storage).origin,'destroy');assert.equal(readCancelDiagnostic(x.storage).sequence,2);
 });
+
+test('exact certificate CAS rejection preserves connection and requires explicit fresh review',async()=>{
+ // Inject the API layer's trusted fixed error, whose route/status allowlist is tested separately.
+ const cause=Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_REVISION_CONFLICT',status:409});
+ const f=fixture({requestError:cause});await connectedDiagnostic(f);
+ const before=f.stages.filter(s=>s==='/bootcamp/v4/session').length;
+ await assert.rejects(f.controller.runWorkflow({action:'start-certificate',applicationId:'application-one',expectedRevision:1,idempotencyKey:'start-one'}),error=>error.code==='MOODLE_CERTIFICATE_REVIEW_CHANGED'&&error.outcome==='HTTP_ERROR'&&error.serverEffect==='NOT_ACCEPTED');
+ assert.equal(f.view().authenticated,true);assert.equal(f.view().phase,'CONNECTED');
+ assert.equal(f.diagnosticWrites.length,0);assert(!f.stages.includes('revoke'));
+ assert.equal(f.stages.filter(s=>s==='/bootcamp/v4/session').length,before+1);
+ await f.controller.destroy();
+});
+
+test('certificate exception does not cover auth status, other writes or unknown conflicts',async()=>{
+ for(const [action,cause]of [['start-certificate',Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_REVISION_CONFLICT',status:401})],['start-certificate',Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_REVISION_CONFLICT',status:403})],['start-certificate',Object.assign(Error('API_REQUEST_FAILED'),{code:'API_REQUEST_FAILED',status:409})],['create-application',Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_REVISION_CONFLICT',status:409})]]){
+  const f=fixture(action==='create-application'?{commandError:cause}:{requestError:cause});await connectedDiagnostic(f);
+  await assert.rejects(f.controller.runWorkflow(action==='start-certificate'?{action,applicationId:'application-one',expectedRevision:1,idempotencyKey:'start-one'}:{action,idempotencyKey:'create-one'}));
+  assert.equal(f.view().authenticated,false);assert.equal(f.diagnosticWrites.length,1);assert(f.stages.includes('revoke'));await f.controller.destroy();
+ }
+});

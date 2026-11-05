@@ -141,7 +141,11 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
           && value?.error === 'BC_VIEW_STALE';
         const registrationCode=registrationPath.test(url.pathname)&&
           (response.status===404&&value?.error==='BC_NOT_FOUND'||response.status===409&&registrationErrors.has(value?.error))?value.error:null;
-        const code = registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
+        // Certificate start checks CAS before accepting its intent; this exact rejection is not a logout.
+        const certificateRevisionConflict=method==='POST'&&response.status===409
+          && /^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/certificate-start$/.test(url.pathname)
+          && value?.error==='BC_REVISION_CONFLICT';
+        const code = (certificateRevisionConflict?'BC_REVISION_CONFLICT':null) ?? registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
           : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
         throw failure(code, { method, status: response.status, requestId: uuid(value?.requestId) ? value.requestId : null,
           outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true });

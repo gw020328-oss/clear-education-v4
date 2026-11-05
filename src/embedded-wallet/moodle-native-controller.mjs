@@ -253,6 +253,10 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       workflow=null;
       const reviewChanged=command.action==='approve-reflection'&&cause?.message==='AI_REVIEW_CHANGED'&&cause?.outcome==='NOT_SENT';
       if(reviewChanged)throw Object.assign(Error('MOODLE_AI_REVIEW_CHANGED'),{code:'MOODLE_AI_REVIEW_CHANGED',outcome:'NOT_SENT'});
+      const certificateChanged=command.action==='start-certificate'&&cause?.status===409&&cause?.code==='BC_REVISION_CONFLICT';
+      if(certificateChanged&&stamp===epoch&&!closed&&authenticated&&phase==='CONNECTED'
+        &&session===captured&&wallet===capturedWallet)throw Object.assign(Error('MOODLE_CERTIFICATE_REVIEW_CHANGED'),
+          {code:'MOODLE_CERTIFICATE_REVIEW_CHANGED',outcome:'HTTP_ERROR',serverEffect:'NOT_ACCEPTED'});
       if(stamp===epoch&&!closed&&(!nativeWorkflowIsRead(command)||cause?.status===401||cause?.status===403
         ||['AUTH_REQUIRED','ROLE_CHANGED','PRODUCT_ROLE_CHANGED','FORBIDDEN','SESSION_CHANGED','SESSION_CONTEXT',
           'CANCELLED','WALLET_CONTEXT_CANCELLED'].includes(cause?.message)))await cancel('CANCELLED',{origin:'workflow-failure',action:command.action,cause});
