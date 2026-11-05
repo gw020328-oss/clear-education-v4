@@ -37,6 +37,21 @@ define([], function() {
         let certificateRevisionFloor = null;
         const certificateCasRevision = () => certificateRevision?.applicationId === applicationId
             ? certificateRevision.revision : null;
+        const retainViewRevision = (view, boundSession) => {
+            certificateRevision = null;
+            const revision = view?.target?.expectedRevision;
+            if (!ready || closed || walletBusy || !participant || !sourceBound || !boundSession
+                    || session !== boundSession || session.applicationId !== applicationId || session.failure
+                    || view?.version !== 'clear-bootcamp-normal-view.1' || view.displayOnly !== true
+                    || view.role !== 'PARTICIPANT' || view.applicationId !== applicationId
+                    || view.decision?.current !== true || !Number.isSafeInteger(revision) || revision <= 0
+                    || (certificateRevisionFloor?.applicationId === applicationId
+                        && revision < certificateRevisionFloor.revision)) {
+                return;
+            }
+            certificateRevision = {applicationId, revision};
+            certificateRevisionFloor = certificateRevision;
+        };
         let certificateAttempted = false;
         let certificateAccepted = false;
         let certificateTimer = null;
@@ -527,7 +542,7 @@ define([], function() {
                 show('failure');
                 return;
             }
-            const task = {write: writes.has(action)};
+            const task = {write: writes.has(action), session};
             pending = task;
             if (['read-session', 'read-application', 'decision-evidence'].includes(action)) {
                 decisionSnapshot = null;
@@ -557,6 +572,9 @@ define([], function() {
                     return;
                 }
                 accept(input, result);
+                if (action === 'read-application') {
+                    retainViewRevision(result, task.session);
+                }
                 if (action === 'read-session' && pairedMode()) {
                     const boundSession = session;
                     const app = applicationId;
@@ -605,6 +623,7 @@ define([], function() {
                     displayed.application = view;
                     displayed.evidence = evidence;
                     decisionSnapshot = {session: boundSession, view, evidence};
+                    retainViewRevision(view, boundSession);
                 }
                 succeeded = true;
                 show('success');

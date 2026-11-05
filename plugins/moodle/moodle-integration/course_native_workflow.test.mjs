@@ -15,7 +15,7 @@ const validate = process.env.CLEAR_NATIVE_WORKFLOW_CONTRACT
 const nativePanels = load('course_native_panels');
 const workflow = load('course_native_workflow');
 const contract = load('course_native_wallet_contract');
-const actions = ['read-session', 'create-application', 'read-application', 'bind-source-session',
+const actions = ['start-certificate', 'read-session', 'create-application', 'read-application', 'bind-source-session',
     'read-source-signature', 'approve-source-signature', 'read-registration', 'approve-registration',
     'approve-reflection', 'consent', 'payment-receipt', 'decision-evidence', 'read-operation'];
 const connected = (role = 'participant') => ({version: 'clear-moodle-wallet-view.1', role, phase: 'CONNECTED',
@@ -694,6 +694,76 @@ test('certificate completed evidence uses an atomic current pair and discards fa
         assert.doesNotMatch(text(), /VERIFIED/);
         assert.ok(ui.sent.every(row => ['read-session', 'read-application', 'decision-evidence'].includes(row.action)));
     } finally { ui.mounted.destroy(); delete globalThis.document; }
+});
+
+test('certificate start uses the current same-session view revision after application creation', async () => {
+    const {Node} = installCardDom();
+    const cardRoot = new Node('div');
+    let bound = false;
+    let revisionView = {...certificateView(), criteria: [], target: {expectedRevision: 5}};
+    const ui = fixture(input => {
+        if (input.action === 'create-application') { return {...receipt, record: {...receipt.record, applicationRevision: 1}}; }
+        if (input.action === 'bind-source-session') {
+            bound = true;
+            return {applicationId: 'app-one', status: 'AUTHENTICATED_SOURCE_SESSION_BOUND', paymentAuthorization: false};
+        }
+        if (input.action === 'read-session') { return {...session(bound ? 'app-one' : null), phase: 'SOURCE_python-basic-certificate',
+            certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+                state: 'READY_TO_START', startAllowed: true, signatureReady: false}}; }
+        if (input.action === 'decision-evidence') { return certificateEvidence(); }
+        if (input.action === 'read-application') { return revisionView; }
+        if (input.action === 'start-certificate') {
+            assert.equal(input.expectedRevision, 5, 'server CAS requires current revision rather than creation revision1');
+            return {version: 'clear-certificate-start-receipt.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+                status: 'START_ACCEPTED', paymentAuthorization: false};
+        }
+        throw Error('unexpected');
+    }, {cardRoot});
+    try {
+        for (const action of ['read-session', 'create-application', 'bind-source-session', 'read-session', 'read-application']) {
+            await ui.click(action);
+        }
+        await new Promise(resolve => setImmediate(resolve));
+        for (const mutate of [view => { view.target.expectedRevision = 3; }, view => { view.target.expectedRevision = '5'; },
+            view => { view.decision.current = false; }, view => { view.applicationId = 'other-app'; },
+            view => { view.role = 'COURSE_OPERATOR'; }]) {
+            revisionView = {...certificateView(), criteria: [], target: {expectedRevision: 5}};
+            mutate(revisionView);
+            await ui.click('read-application'); await new Promise(resolve => setImmediate(resolve));
+            await ui.click('start-certificate');
+            assert.equal(ui.sent.filter(input => input.action === 'start-certificate').length, 0);
+            revisionView = {...certificateView(), criteria: [], target: {expectedRevision: 5}};
+            await ui.click('read-session'); await ui.click('read-application');
+            await new Promise(resolve => setImmediate(resolve));
+        }
+        await ui.click('start-certificate');
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(ui.sent.find(input => input.action === 'start-certificate')?.expectedRevision, 5, JSON.stringify({sent:ui.sent,status:ui.status}));
+        assert.equal(ui.status.textContent, 'success');
+    } finally { ui.mounted.destroy(); delete globalThis.document; }
+});
+
+test('certificate view revision from a previous wallet session is discarded before acceptance', async () => {
+    let release;
+    let app = 'app-one';
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return session(app); }
+        if (action === 'read-application') { return new Promise(resolve => { release = resolve; }); }
+        throw Error('unexpected');
+    });
+    await ui.click('read-session');
+    const old = ui.click('read-application');
+    await new Promise(resolve => setImmediate(resolve));
+    await ui.walletDispatch({action: 'cancel'});
+    ui.state(connected());
+    app = 'other-app'; await ui.click('read-session');
+    release({...certificateView(), target: {expectedRevision: 99}});
+    await old;
+    assert.equal(ui.applicationStatus.textContent, 'applicationknown');
+    assert.doesNotMatch(ui.details.textContent, /expectedRevision.*99/);
+    await ui.click('start-certificate');
+    assert.equal(ui.sent.filter(input => input.action === 'start-certificate').length, 0);
+    ui.mounted.destroy();
 });
 
 test('certificate readiness mismatches stay closed and a lost start response cannot restart from polling', async () => {
