@@ -1,3 +1,4 @@
+import {readReflectionSelection} from './normal-reflection-selection.mjs';
 import {SELF_MODE} from '../../src/hackerrank-evidence/self-profile.mjs';
 import {verifyPrepared} from '../local-attestor-review/prepare.mjs';
 // Local owner configuration only. Never an HTTP/body configuration or source authority.
@@ -24,6 +25,7 @@ export const localDay=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul'
 export function codeState(){try{return {head:execFileSync('git',['rev-parse','HEAD'],{cwd:API_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim(),clean:execFileSync('git',['status','--porcelain','--untracked-files=all'],{cwd:API_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim()===''};}catch{throw Error('NORMAL_HOST_CODE_STATE');}}
 export function hostDirectory(name){fail(/^[a-z][a-z0-9-]{0,40}$/.test(name??''),'NORMAL_HOST_NAME');return join(HOST_PARENT,name);}
 export function validateHostConfig(c){
+ fail(c.reflectionSelectionSha256===undefined||/^[a-f0-9]{64}$/.test(c.reflectionSelectionSha256),'NORMAL_HOST_REFLECTION_SELECTION');
  fail(c.activityReturnOnly===undefined||c.activityReturnOnly===true&&c.attestorMode===SELF_MODE&&typeof c.moodleReadOwnerSha256==='string','NORMAL_HOST_ACTIVITY_MODE');
  fail(c.certificateCardOnly===undefined||c.certificateCardOnly===true&&!c.activityReturnOnly&&c.attestorMode===SELF_MODE&&typeof c.moodleReadOwnerSha256==='string','NORMAL_HOST_CERTIFICATE_MODE');
  fail(c.attestorMode===undefined||['OFFICIAL',SELF_MODE].includes(c.attestorMode),'NORMAL_HOST_ATTESTOR_MODE');
@@ -89,6 +91,7 @@ export function hostReadiness({directory,config:c}){
  const readerMatches=existsSync(c.moodleReader)&&sha(readFileSync(c.moodleReader))===c.moodleReaderSha256;if(!readerMatches)blockers.push('MOODLE_READER_CODE_CHANGED');
  let priceReview;if(!c.activityReturnOnly&&!c.certificateCardOnly)try{priceReview=readPriceReview(directory);}catch{blockers.push('TODAY_PRICE_REVIEW_REQUIRED');}
  const aiSpent=existsSync(join(directory,'ai-reflection/spent.paid-wire.v3.lock'));if(aiSpent)blockers.push('NORMAL_RUN_AI_JOURNAL_ALREADY_SPENT');
+ try{readReflectionSelection(directory,c);}catch{blockers.push('NORMAL_HOST_REFLECTION_SELECTION');}
  const used=existsSync(join(directory,'run.used.json'));if(used)blockers.push('NORMAL_HOST_ALREADY_USED');
  const code=codeState();if(!code.clean)blockers.push('CLEAN_CODE_REQUIRED_FOR_ACTIVATION');
  const aiApprovalAuthorityConfigured=!!probe(()=>readNormalAiAuthority({directory,config:c,codeHead:code.head}));

@@ -1,3 +1,4 @@
+import {reflectionSelection as validateReflectionSelection,selectedReflectionTarget} from './normal-reflection-selection.mjs';
 import {requireProfileMode} from '../../src/hackerrank-evidence/self-profile.mjs';
 // Prepare identity and a new TEST realm; no source collection, model call or allocation.
 import {mkdirSync,readFileSync} from 'node:fs';
@@ -12,7 +13,7 @@ import {createApplicationService} from '../../src/application/service.mjs';
 import {LIVE_WORKER_RECIPE_HASH} from '../../src/bootcamp/reclaim-live-consumer.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 const now=()=>Math.floor(Date.now()/1000);
-export async function prepareLiveInput({hackerRankPins=null,attestorMode='OFFICIAL',identityPreparationPath=null,uiIdentity=null,executionVersion=2}={}){
+export async function prepareLiveInput({hackerRankPins=null,attestorMode='OFFICIAL',identityPreparationPath=null,uiIdentity=null,executionVersion=2,reflectionSelection=null}={}){
  requireProfileMode(hackerRankPins?.selfAttestor,attestorMode,attestorMode==='SELF_ATTESTOR_TEST'?hackerRankPins?.selfAttestor:null);
  if(![1,2].includes(executionVersion))throw Error('E5_EXECUTION_VERSION');
  if(uiIdentity){
@@ -22,6 +23,7 @@ export async function prepareLiveInput({hackerRankPins=null,attestorMode='OFFICI
    ||uiIdentity.participantWallet===uiIdentity.operatorWallet)throw Error('BC_LIVE_UI_IDENTITY');
  }
  if(uiIdentity&&hackerRankPins?.recipeHash!==LIVE_WORKER_RECIPE_HASH)throw Error('BC_LIVE_HR_WORKER_REQUIRED');
+ if(reflectionSelection){if(!uiIdentity)throw Error('BC_REFLECTION_SELECTION');reflectionSelection=validateReflectionSelection(reflectionSelection,{...uiIdentity,time:now()});}
  const instanceId='normal-live-'+randomUUID(),directory=fileURLToPath(new URL('../../private/bootcamp-normal-live/'+instanceId+'/',import.meta.url));mkdirSync(directory,{recursive:true,mode:0o700});
  let participant,operator;
  if(uiIdentity){participant={address:uiIdentity.participantWallet};operator={address:uiIdentity.operatorWallet};}
@@ -40,8 +42,8 @@ export async function prepareLiveInput({hackerRankPins=null,attestorMode='OFFICI
  if(reportHash!==p0Hash('E6-FIXTURE-REPORT',report)||reportHash!=='0x5c475d6f41d23f119f4ed16a6e8de8276051f362717362e5bc5cc39e89a74c28')throw Error('BC_LIVE_OWNER_PIN');
  const mapping={version:'clear-bootcamp-normal-runtime-mapping.1',revision:1,...(hackerRankPins?.selfAttestor?{selfAttestor:hackerRankPins.selfAttestor}:{}),policyHash:p0PolicyHash(P0_POLICY),participantWallet:participant.address.toLowerCase(),
   sourceScope:'LOCAL_GENERATED_DEMO_ACCOUNT_NOT_REAL_IDENTITY',environmentRef:report.environmentRef,runRef:report.runRef,sourceVersion:report.sourceVersion,apiVersion:report.apiVersion,fixtureReportHash:reportHash,courseId:report.courseId,
-  targets:{activity:report.activity,assignment:report.assignment,reflection:report.reflection},completionSetupReceiptHash:report.completionSetupReceiptHash,
-  moodleUserId:3,accountBindingRef:'normal-demo-user3',hackerRank:{certificateName:'Python (Basic)',...(hackerRankPins?{trustStatus:'REVIEWED',audience:hackerRankPins.audience,trustConfigHash:hackerRankPins.trustConfigHash,recipeHash:hackerRankPins.recipeHash,expectedClaimOwner:hackerRankPins.expectedClaimOwner}:{trustStatus:'UNCONFIGURED_BLOCKED'})}};
+  targets:{activity:report.activity,assignment:report.assignment,reflection:selectedReflectionTarget(report.reflection,reflectionSelection)},completionSetupReceiptHash:report.completionSetupReceiptHash,
+  ...(reflectionSelection?{reflectionSelection}:{}),moodleUserId:3,accountBindingRef:'normal-demo-user3',hackerRank:{certificateName:'Python (Basic)',...(hackerRankPins?{trustStatus:'REVIEWED',audience:hackerRankPins.audience,trustConfigHash:hackerRankPins.trustConfigHash,recipeHash:hackerRankPins.recipeHash,expectedClaimOwner:hackerRankPins.expectedClaimOwner}:{trustStatus:'UNCONFIGURED_BLOCKED'})}};
  const runtimeMappingHash=p0Hash('NORMAL-REGISTERED-MAPPING',mapping);atomicPrivate(join(directory,'mapping.json'),{mapping,runtimeMappingHash},{exclusive:true});
  const e=await createEnvironment({runtimeMappingHash,blockPeriodSeconds:1,executionVersion});let auth,store;
  try{

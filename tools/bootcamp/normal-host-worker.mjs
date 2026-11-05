@@ -1,3 +1,4 @@
+import {readReflectionSelection} from './normal-reflection-selection.mjs';
 // Enter only through normal-host-launch's real lockf/ulimit boundary.
 import {createSourceDiagnostics,observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
 import {randomBytes,randomUUID} from 'node:crypto';
@@ -50,6 +51,7 @@ try{
   else readPriceReview(directory);
   fail(!existsSync(join(directory,'prepared-listener.lock')),'NORMAL_HOST_STOP_PREPARED_LISTENER_FIRST');
   atomicPrivate(join(directory,'run.used.json'),{version:'clear-bootcamp-normal-host-one-run.2',hostName:name,runId:'normal-run-'+randomUUID(),startedAt:Date.now(),code:readiness.code},{exclusive:true});
+  const reflectionSelection=readReflectionSelection(directory,config);
   const managedRun=sourceOnly?null:openManagedNormalReflectionRun(name);
   diagnostics=createSourceDiagnostics({persist:value=>atomicPrivate(join(directory,'source-diagnostics.json'),value)});
   const trust=await loadTrust();
@@ -71,7 +73,7 @@ try{
    complete=await withManagedHackerRankSource(session,{selfAttestor,trustConfig:trust,commitmentKey:key,selectedCertificateId:config.selectedCertificateId,signal,diagnostics,
     deferReadyUntilCollection:moodleFirst,
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
-    useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
+    useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:opts=>prepareLiveInput({...opts,reflectionSelection}),
      open:async opts=>{
       const context=await openLiveContext({...opts,withReader,reflectionHost:host?.reflectionHost??null,reviewReflection,diagnostics,moodleFirst,activityReturnOnly:activityOnly,certificateCardOnly:certificateOnly});
       if(!createMoodleReadOptions)return context;
