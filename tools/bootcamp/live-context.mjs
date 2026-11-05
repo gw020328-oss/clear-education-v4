@@ -259,7 +259,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    configureMoodleLogin(options,{native=false}={}){
     ensure(!closed&&!mounted&&!moodleLogin,'MOODLE_LOGIN_CONFIG');
     moodleLogin=createNormalMoodleLogin({options,ownerRunId:runId,runExpiresAtExclusive:startedAt+1800,
-     authentication:auth,wallets:{PARTICIPANT:participant.address,COURSE_OPERATOR:operator.address},now,signal:controller.signal,native});
+     authentication:auth,wallets:{PARTICIPANT:participant.address,COURSE_OPERATOR:operator.address},now,signal:controller.signal,native,diagnostics});
     if(native&&!activityReturnOnly)certificateStart=createNormalCertificateStart({store,commandScope,
      authorize:(c,w)=>ui.authorize(c,w),getBinding:()=>({app,user}),validateParticipant:()=>ui.participant(),
      now,expiresAt:startedAt+1800,signal:controller.signal,getStage:()=>report.stage});

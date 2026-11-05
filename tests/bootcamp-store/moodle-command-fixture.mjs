@@ -5,7 +5,7 @@ import {MOODLE_COMMAND_VERSION,moodleCommandDigest} from '../../src/embedded-wal
 import {START} from './fixture.mjs';
 export const hex=n=>n.toString(16).padStart(64,'0');
 export const createCommand=(key='native-create')=>({method:'POST',path:'/bootcamp/v1/applications',body:{},idempotencyKey:key});
-export async function commandFixture({authentication,contexts}={}){
+export async function commandFixture({authentication,contexts,diagnostics}={}){
  let wall=START,mono=0,seq=0,current=true,sessionRef=hex(99),afterAuth=()=>{},authorityDenied=false;
  const verificationOperations=[],records=new Map();let loseExecutionResponse=false;
  contexts??={PARTICIPANT:{token:hex(10),wallet:'0x'+'12'.repeat(20),chainId:12345,csrf:hex(11)},
@@ -14,7 +14,7 @@ export async function commandFixture({authentication,contexts}={}){
  const proof=x=>createHmac('sha256','invented-proof-key').update(JSON.stringify(x)).digest('hex');
  const auth=c=>{const a=authentication?authentication.whoami(c):{wallet:c.wallet,role:c.wallet.toLowerCase()===wallets.PARTICIPANT?'participant':'operator',expiresAt:START+1200};
   authentication?.authorizeWorkflow(c,true);afterAuth();return a;};
- const owner=createMoodleLoginIntents({ownerRunId:'run-fixture',runExpiresAtExclusive:START+1800,wallets,
+ const owner=createMoodleLoginIntents({ownerRunId:'run-fixture',runExpiresAtExclusive:START+1800,wallets,diagnostics,
   scope:{installationRef:'installation',courseRef:'course',subjectRef:'student',actorRefs:{PARTICIPANT:'student',COURSE_OPERATOR:'teacher'}},
   now:()=>wall,monotonic:()=>mono,deriveBrowserProof:proof,deriveFinishProof:proof,authenticateClear:auth,
   verifyMoodle:async({operation,request:q})=>{verificationOperations.push(operation);

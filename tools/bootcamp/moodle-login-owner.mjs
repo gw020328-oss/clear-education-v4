@@ -5,7 +5,7 @@ import {createMoodleLoginAuthority, createMoodleLoginProofs} from './moodle-logi
 
 // The run owner supplies fixed topology, credentials and scope through its
 // already hash-pinned module. None can be selected by an HTTP caller.
-export function createNormalMoodleLogin({options, ownerRunId, runExpiresAtExclusive, authentication, wallets, now, signal, native = false}) {
+export function createNormalMoodleLogin({options, ownerRunId, runExpiresAtExclusive, authentication, wallets, now, signal, native = false, diagnostics}) {
   exactKeys(options, ['moodleOrigin', 'scope', 'proofKey', 'reverseKey', 'reverseCa', 'connectionPort'], 'MOODLE_LOGIN_CONFIG');
   check(options.proofKey !== options.reverseKey, 'MOODLE_LOGIN_CONFIG');
   const proofs = createMoodleLoginProofs(options.proofKey);
@@ -15,7 +15,7 @@ export function createNormalMoodleLogin({options, ownerRunId, runExpiresAtExclus
     authority = createMoodleLoginAuthority({moodleOrigin: options.moodleOrigin, reverseKey: options.reverseKey, ca: options.reverseCa,
       connectionPort: options.connectionPort, signal, now});
     intents = createMoodleLoginIntents({
-      ownerRunId, runExpiresAtExclusive, scope: options.scope, wallets, verifyMoodle: authority.verify,
+      ownerRunId, runExpiresAtExclusive, scope: options.scope, wallets, verifyMoodle: authority.verify, diagnostics,
       deriveBrowserProof: proofs.deriveBrowserProof, deriveFinishProof: proofs.deriveFinishProof, now,
       authenticateClear: context => {
         authentication.authorizeWorkflow(context, true);

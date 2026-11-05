@@ -1,6 +1,7 @@
 import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
 import {canonical, exactKeys, requireRule as check} from '../../src/policy/values.mjs';
 import {MOODLE_COMMAND_VERSION, moodleCommandDigest} from '../../src/embedded-wallet/moodle-command.mjs';
+import {observeMoodleCommand} from '../../src/hackerrank-evidence/diagnostics.mjs';
 
 export const MOODLE_LOGIN_INTENT = 'clear-moodle-login-intent.1';
 const roles = ['PARTICIPANT', 'COURSE_OPERATOR'];
@@ -17,7 +18,7 @@ const routes = Object.freeze({PARTICIPANT: '/onboarding', COURSE_OPERATOR: '/ope
 // the independent verifier checks the original Moodle session and current ACL.
 export function createMoodleLoginIntents({
   ownerRunId, runExpiresAtExclusive, scope, wallets, verifyMoodle, authenticateClear, deriveBrowserProof, deriveFinishProof,
-  now = () => Math.floor(Date.now() / 1000), monotonic = () => performance.now(),
+  now = () => Math.floor(Date.now() / 1000), monotonic = () => performance.now(), diagnostics,
 }) {
   exactKeys(scope, ['installationRef', 'courseRef', 'subjectRef', 'actorRefs'], 'MOODLE_LOGIN_CONFIG');
   exactKeys(scope.actorRefs, roles, 'MOODLE_LOGIN_CONFIG');
@@ -269,29 +270,38 @@ export function createMoodleLoginIntents({
     status(input, options) { return inspect(input, 'status', options); },
     end(input, options) { return inspect(input, 'end', options); },
     async authorizeCommand(input, {signal, assertCurrent} = {}) {
-      const t = time();
-      exactKeys(input, [...requestKeys,'intentRef','commandHash'], 'MOODLE_COMMAND_REQUEST');
-      check(input.version === MOODLE_COMMAND_VERSION && hex(input.commandHash)
-        && typeof assertCurrent === 'function' && signal instanceof AbortSignal, 'MOODLE_COMMAND_REQUEST');
-      // Reuse the same strict identity/expiry shape without widening login DTOs.
-      const {commandHash, ...loginInput} = input;
-      request({...loginInput,version:MOODLE_LOGIN_INTENT}, 'status', t);
-      const q = Object.freeze(structuredClone(input)), a = attempts.get(q.intentRef);
-      check(a?.phase === 'CONNECTED' && a.request.role === q.role && a.commandBindingHash
-        && a.commands.size < 64 && !a.commands.has(q.requestRef)
-        && ![...a.commands.values()].some(c => c.hash === commandHash), 'MOODLE_COMMAND_UNAVAILABLE');
-      // Reserve this C authorization reference before awaiting the independent verifier.
-      const command = {phase:'VERIFYING',hash:commandHash}; a.commands.set(q.requestRef,command);
+      observeMoodleCommand(diagnostics,'ENTER');
+      let phase='STRICT_REQUEST';
       try {
-        const grant = await authority('authorize-command', q, t, signal);
-        check(grant.identity === a.identity && a.phase === 'CONNECTED'
-          && grant.expiresAtExclusive >= q.expiresAtExclusive && a.expiresAtExclusive >= q.expiresAtExclusive, 'MOODLE_COMMAND_IDENTITY');
-        clearExpiry(q.role, a.context);
-        requireLive(a,signal); requireCurrentOperation(q,t,grant,signal); assertCurrent();
-        Object.assign(command,{phase:'AUTHORIZED',q,t,grant,signal,assertCurrent});
-        return {version:MOODLE_COMMAND_VERSION,requestRef:q.requestRef,status:'AUTHORIZED',
-          expiresAtExclusive:q.expiresAtExclusive};
-      } catch (error) { command.phase = 'UNKNOWN'; throw error; }
+        const t = time();
+        exactKeys(input, [...requestKeys,'intentRef','commandHash'], 'MOODLE_COMMAND_REQUEST');
+        check(input.version === MOODLE_COMMAND_VERSION && hex(input.commandHash)
+          && typeof assertCurrent === 'function' && signal instanceof AbortSignal, 'MOODLE_COMMAND_REQUEST');
+        // Reuse the same strict identity/expiry shape without widening login DTOs.
+        const {commandHash, ...loginInput} = input;
+        request({...loginInput,version:MOODLE_LOGIN_INTENT}, 'status', t);
+        const q = Object.freeze(structuredClone(input)), a = attempts.get(q.intentRef);
+        phase='CONNECTED_AND_UNUSED';
+        check(a?.phase === 'CONNECTED' && a.request.role === q.role && a.commandBindingHash
+          && a.commands.size < 64 && !a.commands.has(q.requestRef)
+          && ![...a.commands.values()].some(c => c.hash === commandHash), 'MOODLE_COMMAND_UNAVAILABLE');
+        // Reserve this C authorization reference before awaiting the independent verifier.
+        const command = {phase:'VERIFYING',hash:commandHash}; a.commands.set(q.requestRef,command);
+        try {
+          phase='REVERSE_AUTHORITY';
+          const grant = await authority('authorize-command', q, t, signal);
+          phase='IDENTITY_HORIZON';
+          check(grant.identity === a.identity && a.phase === 'CONNECTED'
+            && grant.expiresAtExclusive >= q.expiresAtExclusive && a.expiresAtExclusive >= q.expiresAtExclusive, 'MOODLE_COMMAND_IDENTITY');
+          phase='CLEAR_AUTH'; clearExpiry(q.role, a.context);
+          phase='LIVE_CURRENTNESS';
+          requireLive(a,signal); requireCurrentOperation(q,t,grant,signal); assertCurrent();
+          Object.assign(command,{phase:'AUTHORIZED',q,t,grant,signal,assertCurrent});
+          observeMoodleCommand(diagnostics,'RETURN');
+          return {version:MOODLE_COMMAND_VERSION,requestRef:q.requestRef,status:'AUTHORIZED',
+            expiresAtExclusive:q.expiresAtExclusive};
+        } catch (error) { command.phase = 'UNKNOWN'; throw error; }
+      } catch(error) { observeMoodleCommand(diagnostics,phase,error); throw error; }
     },
     async reserveCommand({requestRef,commandBinding,context,command:input,signal}) {
       check(hex(requestRef) && hex(commandBinding) && signal instanceof AbortSignal, 'MOODLE_COMMAND_REQUEST');

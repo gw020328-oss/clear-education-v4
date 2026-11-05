@@ -1,7 +1,22 @@
 // Observer only. No request, identity, raw input, message, stack or transport
 // object is serialized. These fixed vocabularies require explicit source review.
 import {types} from 'node:util';
+import {RuleError} from '../policy/values.mjs';
 import {CLAIM_RETURN_REASON_HINTS} from './claim-return-diagnostics.mjs';
+const moodleCommandPhases=new Set(['ENTER','STRICT_REQUEST','CONNECTED_AND_UNUSED','REVERSE_AUTHORITY',
+ 'IDENTITY_HORIZON','CLEAR_AUTH','LIVE_CURRENTNESS','RETURN']);
+const moodleCommandCodes=new Set(['MOODLE_COMMAND_REQUEST','MOODLE_LOGIN_REQUEST','MOODLE_COMMAND_UNAVAILABLE',
+ 'MOODLE_LOGIN_CLOCK','MOODLE_LOGIN_LEASE_EXPIRED','MOODLE_LOGIN_AUTHORITY','MOODLE_COMMAND_IDENTITY',
+ 'MOODLE_LOGIN_CLEAR_ACTOR','MOODLE_LOGIN_EXPIRED','MOODLE_LOGIN_AUTHORITY_REQUEST',
+ 'MOODLE_LOGIN_AUTHORITY_EXPIRED','MOODLE_LOGIN_AUTHORITY_RESPONSE','MOODLE_LOGIN_JSON',
+ 'AUTH_REQUIRED','FORBIDDEN','CSRF','SESSION_CONTEXT']);
+function moodleCommandCode(error){
+ try{
+  if(types.isProxy(error)||Object.getPrototypeOf(error)!==RuleError.prototype)return 'UNKNOWN';
+  const code=Object.getOwnPropertyDescriptor(error,'message')?.value;
+  return typeof code==='string'&&moodleCommandCodes.has(code)?code:'UNKNOWN';
+ }catch{return 'UNKNOWN';}
+}
 export const SOURCE_DIAGNOSTIC_STAGES=Object.freeze([
  'NORMAL_FLOW','MANAGED_SOURCE','HR_COLLECTION','PREPARED_SOURCE',
  'SIGNATURE_WAIT','SIGNATURE_ACCEPTANCE','PARTICIPANT_ENVELOPE_VERIFY','COLLECTOR_SETUP',
@@ -86,6 +101,7 @@ function sendDetails(value){
  return Object.freeze(result);
 }
 export function createSourceDiagnostics({persist,monotonicNow=()=>performance.now()}={}){
+ const moodleCommands=[];
  const stages=Object.fromEntries(SOURCE_DIAGNOSTIC_STAGES.map(stage=>[stage,{state:'NOT_OBSERVED',completedObserved:false}]));
  const events=[],starts=new Map();let persistence='COMPLETE',timing='COMPLETE',firstFailure=null,truncated=false,origin,last;
  const elapsed=()=>{
@@ -98,9 +114,16 @@ export function createSourceDiagnostics({persist,monotonicNow=()=>performance.no
  };
  elapsed();
  const snapshot=()=>structuredClone({version:'clear-normal-source-diagnostics.5',persistence,timing,truncated,
-  signatureAcceptance:stages.SIGNATURE_ACCEPTANCE.completedObserved?'ACCEPTED':'UNKNOWN',stages,firstFailure,events});
+  signatureAcceptance:stages.SIGNATURE_ACCEPTANCE.completedObserved?'ACCEPTED':'UNKNOWN',stages,firstFailure,events,
+  ...(moodleCommands.length?{moodleCommands}: {})});
  const save=()=>{try{if(typeof persist!=='function')throw null;persist(snapshot());}catch{persistence='INCOMPLETE';}};
- const diagnostics=Object.freeze({snapshot,record(stage,state,error,details){
+ const diagnostics=Object.freeze({snapshot,recordMoodleCommand(phase,error){
+  if(!moodleCommandPhases.has(phase))return;
+  if(moodleCommands.length>=128){if(!truncated){truncated=true;save();}return;}
+  moodleCommands.push(Object.freeze({sequence:moodleCommands.length+1,phase,
+   error:phase==='ENTER'||phase==='RETURN'?null:moodleCommandCode(error)}));
+  save();
+ },record(stage,state,error,details){
   if(!SOURCE_DIAGNOSTIC_STAGES.includes(stage)||!['STARTED','COMPLETED','FAILED','DEFERRED','OBSERVED'].includes(state))return;
   if(state==='DEFERRED'&&(stage!=='UI_APPLICATION_PROJECTION'||sourceDiagnosticCode(error)!=='BC_VIEW_STALE'))return;
   const sdkReturn=stage.endsWith('_SDK_RETURN'),send=stage.endsWith('_SDK_RPC_SEND'),sdkCall=stage.endsWith('_SDK_CALL')||stage.endsWith('_SDK_CLAIM_RPC')||send;
@@ -139,4 +162,9 @@ export function observeSource(diagnostics,stage,state,error,details){
  // Never change an original result/exception, trigger an async retry, or call
  // an untrusted duck-typed observer. Persistence is synchronous, best effort.
  try{if(owned.has(diagnostics))diagnostics.record(stage,state,error,details);}catch{}
+}
+// Shares the existing private run sink, but adds no timestamps or authority data.
+// Absence means only "not observed": transport may reject before owner entry.
+export function observeMoodleCommand(diagnostics,phase,error){
+ try{if(owned.has(diagnostics))diagnostics.recordMoodleCommand(phase,error);}catch{}
 }
