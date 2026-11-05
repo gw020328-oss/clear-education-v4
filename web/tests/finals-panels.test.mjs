@@ -968,3 +968,33 @@ test('onProposal: 찾은 조건 종류가 바뀔 때만 알리고, 나중에 끼
     assert.deepEqual(gem.at(-1), ['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1'], '생성 뒤 찾은 종류');
   } finally { restore(); }
 });
+
+// ── 실제 모드에는 대역을 끼우지 않는다 ───────────────────────────────────────
+//
+// ?mode=ACTUAL&proposer=gemini 에서 오프라인 대역이 "2개 조건을 찾았습니다" 를 내면
+// 실제 모드가 합성으로 떨어진 것이다(11/5 화면 재현). 자리만 같고 누르면 미연결이다.
+
+import { mountFinalsPreview, UNCONNECTED_MODEL_PROPOSER } from '../src/bootcamp/finals-panels/preview.js';
+
+test('실제 모드 + Gemini/운영자 중계 자리: 「제안 생성」 을 눌러도 보내지 않고 미연결 결과 상자만 보인다', async () => {
+  const restore = installDom();
+  try {
+    for (const proposer of ['gemini', 'operator']) {
+      const root = document.createElement('div');
+      mountFinalsPreview(root, { mode: DATA_MODE.ACTUAL, proposer });
+      await settle();
+      const gen = [...walk(root)].find((n) => n.attributes?.['data-role'] === 'generate');
+      assert.ok(gen, proposer + ': 「제안 생성」 자리가 있어야 한다');
+      for (const f of gen.handlers.click ?? []) f({ preventDefault() {} });
+      await settle();
+      const box = [...walk(root)].find((n) => n.attributes?.['data-role'] === 'relay-outcome');
+      assert.ok(box, proposer + ': 미연결 결과 상자가 없다');
+      assert.equal(box.attributes['data-outcome'], 'FAILED');
+      const text = root.textContent;
+      assert.ok(!/개 조건을 찾았습니다/.test(text), proposer + ': 실제 모드에서 대역 결과가 나왔다');
+      assert.ok(/보내지 않/.test(text), proposer + ': 보내지 않았다는 말이 없다');
+      assert.ok(!/오프라인 응답 대역/.test(text), proposer + ': 실제 모드에 대역 배지가 보인다');
+    }
+    assert.equal(UNCONNECTED_MODEL_PROPOSER.explicit, true);
+  } finally { restore(); }
+});
