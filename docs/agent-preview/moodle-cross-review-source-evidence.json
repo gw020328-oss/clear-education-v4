@@ -1,0 +1,69 @@
+{
+  "evidenceKind": "READ_ONLY_SOURCE_REVIEW",
+  "moodleRelease": "4.5.15 (Build: 20261005)",
+  "coreVersion": "2024100715.00",
+  "sourceContainer": "clear-moodle-e6-20261018-web-1",
+  "cHead": "26b0bc36eaeb14ccfbffc8962456008dde0472f8",
+  "bContractHead": "0ec25db95697ec02140485bc394cb58a6d6dd769",
+  "databaseRead": false,
+  "credentialsRead": false,
+  "testsRerun": false,
+  "files": [
+    {
+      "path": "auth/manual/auth.php",
+      "sha256": "49c3ba88de0372ef367d2cf14fa0cff1956ff36284868c00ec471ea1391c7c48"
+    },
+    {
+      "path": "lib/accesslib.php",
+      "sha256": "79bacbb124d839a01bd27cf739ce974cb84c8769dade847c8aee715beeca4c1d"
+    },
+    {
+      "path": "lib/classes/session/database.php",
+      "sha256": "4058b3e8806a07845688fc3d0530e8e3afa84f3bbcb1b59226891773c471da90"
+    },
+    {
+      "path": "lib/classes/session/handler.php",
+      "sha256": "5e1e973e5bcbf20ee2271fb9cdac66fbcd3bda764a8458cceb5eec626e878b8c"
+    },
+    {
+      "path": "lib/classes/session/manager.php",
+      "sha256": "9df63e19e4b4e87ae592e29b5973ef85429b0481fae95d5aac7f238850361154"
+    },
+    {
+      "path": "lib/completionlib.php",
+      "sha256": "098e7613124cc22ef9bfa8ae5f2aed63c25d5b38b7979ff61c759df57366d319"
+    },
+    {
+      "path": "lib/db/install.xml",
+      "sha256": "e7bf9c817c23ae7f36ab1c743ce7582e3637fb81188634101ad200e3e0179c44"
+    },
+    {
+      "path": "lib/enrollib.php",
+      "sha256": "2ea6518d0c5421424f6251a9791b8b866d3d22bcc4a29b5d5381ac8ea2e569b7"
+    },
+    {
+      "path": "lib/modinfolib.php",
+      "sha256": "5d48ec9c09d235e192e639b6496078cd4f44cf3ef4c33706b2c5a8b79eda09ac"
+    },
+    {
+      "path": "lib/moodlelib.php",
+      "sha256": "c21b06b67ec21130c3cebcddcec0b0f7d90645c7a1862fb04c70eb4153a62854"
+    },
+    {
+      "path": "mod/assign/db/install.xml",
+      "sha256": "3ba4a8378c8c51fca8cbd608b567bfcc8198319cde24902d8e0b07ab50c15ee6"
+    },
+    {
+      "path": "mod/assign/lib.php",
+      "sha256": "e023c30b0950e6d005bf108f43aaf5a322606ff96482ac9ccce4d53918af4bbc"
+    },
+    {
+      "path": "mod/assign/locallib.php",
+      "sha256": "887f8a1888fabb79109e8f2cbe15be68ac8226d3ad84c8baad3382bbb21828dc"
+    },
+    {
+      "path": "version.php",
+      "sha256": "5e0ad9b07a25cb41f683ec6ca92fc2a21a14f9656acc7dfbd864ae2b37c3d6df"
+    }
+  ]
+}
