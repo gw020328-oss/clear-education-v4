@@ -13,6 +13,7 @@ import {bridgeFixture} from '../bootcamp-execution/bridge-fixture.mjs';
 import {database,H,ZERO} from '../bootcamp-execution/fixture.mjs';
 import {requireRule as check} from '../../src/policy/values.mjs';
 import {e4Hash} from '../../src/bootcamp/execution-e4-ports.mjs';
+import {normalProcedurePorts,certificateWriteAllowed} from '../../tools/bootcamp/live-context.mjs';
 
 async function fixture(t,{f:provided,normalUi=null}={}){
  const f=provided??await procedureFixture(t),tlsDirectory=join(f.directory,'c1-tls');mkdirSync(tlsDirectory,{mode:0o700});
@@ -57,6 +58,48 @@ test('product HTTPS procedure GET survives a forward second after canonical refr
  const result=await x.raw(`/bootcamp/v3/applications/${a}/procedure`);armed=false;
  assert.equal(result.status,200);assert.equal(result.body.asOf,f.time);assert.equal(refreshes,1);
  assert.deepEqual(f.counts(),before);assert.equal(x.posts(),0);
+});
+
+for(const certificateOnly of [false,true])test('certificate read with unregistered payment ports: '+(certificateOnly?'source-only projection':'original 409'),async t=>{
+ const f=await procedureFixture(t),a=f.create();await f.accept(a,'python-basic-certificate');let chainReads=0;
+ const ports={...f.configuration.procedurePorts,chain(){chainReads++;check(false,'BC_E3_REGISTERED_BINDING');}};
+ f.configuration.procedurePorts=normalProcedurePorts({procedurePorts:ports},certificateOnly);f.restart();
+ const x=await fixture(t,{f,normalUi:{refreshProcedure(c,id){f.store.getOperationsProjection(c,id);},
+  assertWritable(path){check(certificateWriteAllowed(path,a),'BC_CERTIFICATE_MODE');}}});
+ const before=f.counts(),route='/bootcamp/v3/applications/'+a,read=await x.raw(route+'/procedure');
+ if(!certificateOnly){assert.equal(read.status,409);assert.deepEqual(read.body,{error:'BC_E3_REGISTERED_BINDING'});assert.equal(chainReads,1);return;}
+ assert.equal(read.status,200);
+ const client=x.client(f.aliceContext),view=await client.view(a),evidence=await client.decisionEvidence(a);
+ const row=view.criteria.find(r=>r.criterionId==='python-basic-certificate'),basis=evidence.manifest.criteria.find(r=>r.criterionId===row.criterionId);
+ assert.equal(row.state,'MET');assert.equal(row.current,true);assert.equal(basis.metadataStatus,'RECORDED');
+ assert.equal(basis.evidenceId,row.evidenceId);assert.equal(basis.evidenceRevision,row.evidenceRevision);
+ assert.equal(evidence.manifest.decision.decisionId,view.decision.id);assert.equal(evidence.manifest.decision.decisionHash,view.decision.hash);
+ assert.equal(evidence.availability.find(r=>r.criterionId===row.criterionId).status,'VALID_AS_RECORDED');
+ assert.equal(view.decision.evidenceCurrent,false);assert.notEqual(view.decision.conditionsStatus,'MET');
+ assert.equal(view.funding.implementation,'NOT_IMPLEMENTED');assert.equal(view.funding.status,null);
+ assert.equal(view.procedure.id,null);assert.equal(view.payment.acceptedRight,null);assert.equal(view.payment.receivedAtoms,null);
+ assert.equal(read.body.execution.paymentAuthority,false);assert.equal(chainReads,0);assert.deepEqual(f.counts(),before);
+ assert.equal((await x.raw(route+'/procedure',{context:f.bobContext})).status,403);
+ assert.equal((await x.raw(route+'/decision-evidence',{context:f.bobContext})).status,403);
+ for(const resource of ['review-publications','review-consents','recipient-registration']){
+  const denied=await x.raw(route+'/'+resource,{method:'POST',body:{},idempotencyKey:'denied-'+resource});
+  assert.equal(denied.status,resource==='review-publications'?404:409);
+  if(resource!=='review-publications')assert.deepEqual(denied.body,{error:'BC_CERTIFICATE_MODE'});
+ }
+ assert.deepEqual(f.counts(),before);assert.equal(chainReads,0);
+ f.service.logout(f.aliceContext);
+ assert.equal((await x.raw(route+'/procedure')).status,401);assert.equal((await x.raw(route+'/decision-evidence')).status,401);
+});
+
+for(const change of ['expiry','source'])test('certificate-only currentness rejects '+change+' without payment ports',async t=>{
+ const f=await procedureFixture(t);f.configuration.procedurePorts=normalProcedurePorts({},true);f.restart();
+ const a=f.create();await f.accept(a,'python-basic-certificate');const x=await fixture(t,{f}),client=x.client(f.aliceContext);
+ const old=await client.view(a);assert.equal(old.criteria.find(r=>r.criterionId==='python-basic-certificate').current,true);
+ if(change==='expiry')f.setTime(START+301);else f.change(a,'python-basic-certificate',{rawAvailable:false});
+ const current=await client.view(a),evidence=await client.decisionEvidence(a);
+ assert.equal(current.criteria.find(r=>r.criterionId==='python-basic-certificate').current,false);
+ assert.notEqual(evidence.availability.find(r=>r.criterionId==='python-basic-certificate').status,'VALID_AS_RECORDED');
+ assert.equal(current.payment.acceptedRight,null);assert.equal(current.funding.status,null);
 });
 test('S4 same-origin HTTPS mount serves both roles and historical decision GET while rejecting writes and foreign owners',async t=>{
  const x=await fixture(t),a=x.f.create();await x.f.complete(a);

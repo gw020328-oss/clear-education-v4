@@ -82,3 +82,13 @@ Moodle 지갑 controller는 `cancel` 정규화 및 retire/release 전에 최초 
 진단의 고정 원인 목록에 기존 오류 두 개 `MOODLE_LOGIN_UNAVAILABLE`, `MOODLE_CERTIFICATE_UNAVAILABLE`만 추가했다. `course()`의 기존 비정상/redirect 응답 거부는 같은 오류로 유지하되 실제 응답의 정수 HTTP status 100–599만 Error.status에 보존한다. error body는 읽지 않는다. 무효 status 또는 getter 실패는 생략하며 응답 거부는 그대로다. start-certificate workflow의 해당 요청 실패는 최초 CANCEL_TRIGGER에 기록되므로 후속 end 실패가 덮어쓰지 않는다. 별도 stage·endpoint·C PHP 변경은 없다. 성공 응답 파싱, 기존 finish의 status 확인, catch/취소/명령/재시도 정책은 유지한다.
 
 검증 33개 통과: `moodle-native-login-diagnostics.test.mjs`, `moodle-native-controller.test.mjs`, `moodle-native-workflow.test.mjs`. 로그 `/tmp/clear-r7-login-diagnostics-tests.log`. 새 회귀는 HTTP 범위·형 검사, redirect 거부, hostile status getter, 거부 body 미열람/명령 미전송, authorize403→end500에서도 최초403 보존, 두 고정 코드와 임의 문자열 배제를 검증한다. 이는 다음 시험의 진단정보 보완이며 실제 r7 원인 해결이나 복구 성공을 뜻하지 않는다. 실제 새 실행/재로그인/신청 재생성은 수행하지 않았다.
+
+### r16 인증서 전용 판정 조회 구성 보정 (2026-11-05)
+
+r16에서는 사용자 서명 후 HackerRank 로그인을 확인하고 READY를 한 번 전달했다. 인증서 증빙은 검증·저장됐고 확인 시점 DB의 해당 조건은 MET/current였다. 하지만 Moodle 카드에는 판정 없음·근거 없음이 표시됐으며 procedure GET의 HTTP 409를 관측했다. 원 HTTP 응답의 error 본문은 확인하지 않았다.
+
+코드 경로상 인증서 전용 실행은 지급 신청을 체인에 등록하지 않고 procedure 갱신도 생략한다. 그런데 저장소에 등록형 지급 ports를 주입하여, 판정 조회의 첫 chain 관측이 `BC_E3_REGISTERED_BINDING` guard에서 막힌다. 같은 미등록 port 조건을 합성 HTTPS 시험에서 구성하여 409와 이 고정 코드를 재현했다. 이는 실제 응답 본문을 수집했다는 뜻은 아니다.
+
+소유자 설정 `certificateCardOnly === true`에서만 기존 null procedure ports를 선택한다. 기존 `NOT_IMPLEMENTED`/null 실행 표시를 사용하고 저장된 조건별 판정·근거를 조회한다. 조건 하나의 MET를 전체 조건 충족이나 지급 권한으로 바꾸지 않는다. 일반 실행의 등록형 ports와 오류 거부는 그대로이며, 예외를 잡아서 성공으로 바꾸는 fallback은 없다. 브라우저 입력으로 이 설정을 선택할 수 없다. 인증·신청 소유권·현재성·Moodle 명령·기존 쓰기 제한과 5초 관측 기한은 변경하지 않는다.
+
+합성 검증 38개 통과: `normal-frontend`, `procedure-read-clock`, `normal-certificate-start`. 새 회귀는 원 409 재현, 같은 신청·판정·증빙 revision의 MET/current와 RECORDED/VALID_AS_RECORDED 조회, 전체 조건 미충족, 지급 정보 없음, 등록·동의 차단, 타 사용자·로그아웃·원천 무효화·만료를 확인했다. 이 검증은 수정본의 실제 Moodle 카드 표시 성공이나 재실행을 포함하지 않는다. RE2 네이티브 모듈 부재의 기존 RegExp fallback 경고가 있었으나 시험은 통과했다. 추천 Astra / High, 실제 수행 Sol을 구분한다.
