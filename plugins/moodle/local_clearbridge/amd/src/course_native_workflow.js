@@ -70,7 +70,8 @@ define([], function() {
             'SIGNATURE_ACCEPTED', 'VERIFIED', 'UNAVAILABLE'];
         const certificate = () => {
             const value = session?.certificate;
-            return participant && sourceBound && session.phase === 'SOURCE_python-basic-certificate'
+            return participant && sourceBound && (session.phase === 'SOURCE_python-basic-certificate'
+                    || session.phase === 'CERTIFICATE_ONLY_RECORDED' && value?.state === 'VERIFIED')
                 && value?.version === 'clear-certificate-start.1' && value.applicationId === applicationId
                 && value.criterionId === 'python-basic-certificate' && certificateStates.includes(value.state)
                 && value.startAllowed === (value.state === 'READY_TO_START')
@@ -133,7 +134,7 @@ define([], function() {
             const card = cardRoot.querySelector?.('[data-criterion="python-basic-certificate"]');
             const block = card?.querySelector('[data-cert]');
             const button = card?.querySelector('.crc-go');
-            if (!block || !button) {
+            if (!block) {
                 return;
             }
             const value = certificate();
@@ -148,6 +149,9 @@ define([], function() {
             }
             if (note) {
                 note.textContent = label('certificatenote');
+            }
+            if (!button) {
+                return;
             }
             // Replace the original inert primary control. The upstream pinned card
             // has no readiness-aware start contract, so C owns only this control.

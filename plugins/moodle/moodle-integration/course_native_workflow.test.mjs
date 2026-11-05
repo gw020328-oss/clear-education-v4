@@ -483,6 +483,59 @@ test('certificate card starts only on its click, polls reads, and signs the disp
     }
 });
 
+test('certificate completed phase displays only authenticated matching VERIFIED and permits no certificate writes', async () => {
+    const {Node} = installCardDom();
+    const cardRoot = new Node('div');
+    const completed = {...session('app-one'), phase: 'CERTIFICATE_ONLY_RECORDED',
+        certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one',
+            criterionId: 'python-basic-certificate', state: 'VERIFIED', startAllowed: false, signatureReady: false}};
+    let current = completed;
+    const ui = fixture(({action}) => {
+        if (action === 'create-application') { return {...receipt, record: {...receipt.record, applicationRevision: 1}}; }
+        if (action === 'read-session') { return current; }
+        throw Error('unexpected certificate write');
+    }, {cardRoot});
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+    try {
+        current = session();
+        await ui.click('read-session');
+        await flush();
+        await ui.click('create-application');
+        await flush();
+        const cases = [
+            [completed, true],
+            [{...completed, phase: 'SOURCE_python-basic-certificate'}, true],
+            ...['NOT_READY', 'READY_TO_START', 'START_ACCEPTED', 'AWAITING_SIGNATURE',
+                'SIGNATURE_ACCEPTED', 'UNAVAILABLE'].map(state => [{...completed,
+                    certificate: {...completed.certificate, state,
+                        startAllowed: state === 'READY_TO_START', signatureReady: state === 'AWAITING_SIGNATURE'}}, false]),
+            [{...completed, phase: 'OTHER_COMPLETION'}, false],
+            [{...completed, certificate: {...completed.certificate, applicationId: 'other-app'}}, false],
+            [{...completed, certificate: {...completed.certificate, criterionId: 'other-criterion'}}, false],
+            [{...completed, certificate: {...completed.certificate, version: 'other-version'}}, false],
+            [{...completed, certificate: {...completed.certificate, startAllowed: true}}, false],
+            [{...completed, certificate: {...completed.certificate, signatureReady: true}}, false],
+            [{...completed, role: 'OPERATOR'}, false],
+            [{...completed, applicationId: null}, false],
+        ];
+        for (const [value, accepted] of cases) {
+            current = value;
+            await ui.click('read-session');
+            await flush();
+            const card = cardRoot.querySelector('[data-criterion="python-basic-certificate"]');
+            assert.equal(card.textContent.includes('certificateverified'), accepted, JSON.stringify(value) + ' rendered=' + card.textContent + ' sent=' + JSON.stringify(ui.sent) + ' status=' + ui.status.textContent);
+            assert.equal(card.querySelector('.crc-go')?.disabled ?? true, true);
+            for (const action of ['start-certificate', 'read-source-signature', 'approve-source-signature']) {
+                await ui.click(action);
+            }
+        }
+        assert.ok(ui.sent.every(command => ['read-session', 'create-application'].includes(command.action)));
+    } finally {
+        ui.mounted.destroy();
+        delete globalThis.document;
+    }
+});
+
 test('certificate readiness mismatches stay closed and a lost start response cannot restart from polling', async () => {
     const {Node} = installCardDom();
     const cardRoot = new Node('div');
