@@ -12,7 +12,7 @@
 // 받지 못했으면 버튼을 '이동 주소 미제공' 으로 잠근다. 강좌 번호나 cmId 를
 // 주소창·fixture 에서 주워 와서 링크를 만들지 않는다.
 //
-// 제안 계약 (A·C 요청 — docs/pivot/학생_조건카드_요청_20261105.ko.md)
+// 제안 계약 (A·C 요청 — docs/pivot/학생_조건카드_인계_20261105.ko.md)
 //
 //   {
 //     version: 'clear-student-condition-targets.1',
