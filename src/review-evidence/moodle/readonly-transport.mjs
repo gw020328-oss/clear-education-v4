@@ -9,7 +9,7 @@ export function createPinnedReadTransport({baseUrl,parameters,tokenProvider,fetc
    &&/^[0-9]{1,10}$/.test(String(params[k]))))throw Error('REVIEW_PARAMETERS');
   const capturedArgs=Object.fromEntries(keys.map(k=>[k,String(params[k])]));
   if(closed||signal?.aborted)throw Error('REVIEW_CANCELLED');
-  const combined=AbortSignal.any([controller.signal,AbortSignal.timeout(timeoutMs),...(signal?[signal]:[])]);let reader;
+  const combined=AbortSignal.any([controller.signal,AbortSignal.timeout(timeoutMs),...(signal?[signal]:[])]);let reader,httpStatus=null;
   try{
    const token=await new Promise((resolve,reject)=>{
     const abort=()=>reject(Error('ABORT'));combined.addEventListener('abort',abort,{once:true});
@@ -21,6 +21,7 @@ export function createPinnedReadTransport({baseUrl,parameters,tokenProvider,fetc
    const r=await fetchImpl(baseUrl+'/webservice/rest/server.php',{method:'POST',
     body:new URLSearchParams({wstoken:token,wsfunction:method,moodlewsrestformat:'json',...capturedArgs}),
     redirect:'error',credentials:'omit',cache:'no-store',signal:combined});
+   httpStatus=Number.isInteger(r.status)&&r.status>=100&&r.status<=599?r.status:null;
    if(r.status===401)throw Error('REVIEW_AUTH');if(r.status===403)throw Error('REVIEW_ACCESS');if(!r.ok)throw Error('REVIEW_UNAVAILABLE');
    reader=r.body.getReader();let n=0;const chunks=[];
    for(;;){const x=await reader.read();if(x.done)break;n+=x.value.length;if(n>262144)throw Error('REVIEW_RESPONSE_LIMIT');chunks.push(x.value);}
@@ -34,10 +35,11 @@ export function createPinnedReadTransport({baseUrl,parameters,tokenProvider,fetc
    }
    return v;
   }catch(e){
-   if(closed||signal?.aborted)throw Error('REVIEW_CANCELLED');
-   if(combined.aborted)throw Error('REVIEW_TIMEOUT');
-   if(['REVIEW_AUTH','REVIEW_ACCESS','REVIEW_UNAVAILABLE','REVIEW_RESPONSE_LIMIT','REVIEW_NOT_FOUND_OR_UNAVAILABLE'].includes(e?.message))throw Error(e.message);
-   throw Error('REVIEW_UNAVAILABLE');
+   const code=closed||signal?.aborted?'REVIEW_CANCELLED':combined.aborted?'REVIEW_TIMEOUT':
+    ['REVIEW_AUTH','REVIEW_ACCESS','REVIEW_UNAVAILABLE','REVIEW_RESPONSE_LIMIT','REVIEW_NOT_FOUND_OR_UNAVAILABLE'].includes(e?.message)?e.message:'REVIEW_UNAVAILABLE';
+   const failure=Error(code,{cause:e});
+   Object.defineProperty(failure,'httpStatus',{value:httpStatus,enumerable:false});
+   throw failure;
   }finally{if(reader){await reader.cancel().catch(()=>{});reader.releaseLock();}}
  }
  return Object.freeze({call,close(){closed=true;controller.abort();}});
