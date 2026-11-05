@@ -1,3 +1,4 @@
+import {cancelDiagnosticKey,readCancelDiagnostic,createCancelDiagnostic} from '../../src/embedded-wallet/cancel-diagnostics.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
@@ -10,10 +11,12 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator', workflowGate, document} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   target.document = document;
   const provider = new EventEmitter(), calls = [], stages = [], views = [];
+  const values=new Map(),diagnosticWrites=[];
+  target.localStorage={getItem:k=>values.get(k)??null,setItem(k,v){if(storageFailure)throw Error('denied');values.set(k,v);diagnosticWrites.push(JSON.parse(v));stages.push('diagnostic');}};
   let currentAddress = address;
   provider.request = async ({method}) => {
     calls.push(method);
@@ -36,11 +39,12 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
       async authenticate() { stages.push('authenticate'); return {role: serverRole}; },
       async assertSession(signal) { stages.push('assert-session'); await wallet.guard(signal);
         return {wallet: address, role: serverRole, expiresAt: Math.floor(Date.now()/1000)+60}; },
-      async request(path){stages.push(path);await workflowGate;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
+      async request(path){stages.push(path);await workflowGate;if(requestError)throw requestError;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
       async dispose() { stages.push('revoke'); if (rejectedRevoke) throw Error('synthetic'); },
     }),
-    loginFactory: () => Object.fromEntries(['begin','complete','finish','end'].map(method => [method, async () => {
+    loginFactory: () => Object.fromEntries(['begin','complete','finish','end','command'].map(method => [method, async () => {
       stages.push(method);
+      if(method==='command'&&commandError)throw commandError;
       if (method === 'finish' && changeAccountsOnFinish) currentAddress = '0x'+'34'.repeat(20);
       if (method === 'end') { await endGate; if (rejectedEnd) throw Error('synthetic lost end response'); }
     }]))});
@@ -50,7 +54,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
     await controller.dispatch({action: 'select-wallet', choiceId: view().choices[0].choiceId});
     await controller.dispatch({action: 'check-network'});
   }
-  return {controller, view, views, calls, stages, provider, ready};
+  return {controller, view, views, calls, stages, provider, ready,diagnosticWrites,storage:target.localStorage};
 }
 
 test('Moodle mount/discovery do not request accounts, switch chain or sign; every stage is explicit', async () => {
@@ -239,4 +243,58 @@ test('visible Moodle readers keep the session fresh after an explicit read and s
   await tick(); assert.equal(reads(),3);
   await f.controller.destroy();
   await tick(); assert.equal(reads(),3);
+});
+
+async function connectedDiagnostic(f){await f.ready();await f.controller.dispatch({action:'sign-in'});await f.controller.dispatch({action:'finish-connection'});}
+test('read 409 does not cancel or record; auth and write failures retain pre-normalized cause',async()=>{
+ const f=fixture({requestError:Object.assign(Error('BC_VIEW_STALE'),{status:409})});await connectedDiagnostic(f);
+ await assert.rejects(f.controller.runWorkflow({action:'read-session'}));
+ assert.equal(f.view().authenticated,true);assert.equal(f.diagnosticWrites.length,0);await f.controller.destroy();
+ for(const kind of ['auth','write']){
+  const cause=Object.assign(Error(kind==='auth'?'AUTH_REQUIRED':'API_REQUEST_FAILED'),{status:kind==='auth'?401:409,body:'secret'});
+  const x=fixture(kind==='auth'?{requestError:cause}:{commandError:cause});await connectedDiagnostic(x);
+  const action=kind==='auth'?'read-session':'create-application';
+  await assert.rejects(x.controller.runWorkflow({action,...(kind==='write'?{idempotencyKey:'synthetic-create'}:{})}));
+  assert.equal(x.view().authenticated,false);assert.equal(x.diagnosticWrites.length,1);
+  assert.deepEqual(readCancelDiagnostic(x.storage),{version:1,event:'CANCEL_TRIGGER',sequence:1,origin:'workflow-failure',action,causeCode:cause.message,httpStatus:cause.status});
+  assert(x.stages.indexOf('diagnostic')<x.stages.indexOf('revoke'));
+  await x.controller.destroy();await x.controller.destroy();assert.equal(x.diagnosticWrites.length,1);
+ }
+});
+test('explicit cancel during pending read records once before duplicate disposal',async()=>{
+ let release;const f=fixture({workflowGate:new Promise(r=>{release=r;})});await connectedDiagnostic(f);
+ const pending=f.controller.runWorkflow({action:'read-session'});pending.catch(()=>{});
+ await new Promise(r=>setImmediate(r));await f.controller.dispatch({action:'cancel'});release();await assert.rejects(pending);
+ await f.controller.destroy();await f.controller.destroy();
+ assert.equal(f.diagnosticWrites.length,1);assert.equal(readCancelDiagnostic(f.storage).origin,'explicit-cancel');
+});
+test('dispatch and wallet changes have distinct first triggers; storage failure cannot block revoke',async()=>{
+ const f=fixture({serverRole:'participant'});await f.ready();await f.controller.dispatch({action:'sign-in'});
+ assert.equal(readCancelDiagnostic(f.storage).origin,'dispatch-failure');assert.equal(readCancelDiagnostic(f.storage).causeCode,'ROLE_CHANGED');await f.controller.destroy();
+ for(const storageFailure of [false,true]){
+  const x=fixture({storageFailure});await connectedDiagnostic(x);x.provider.emit('accountsChanged');await new Promise(r=>setImmediate(r));
+  assert(x.stages.includes('revoke'));if(!storageFailure)assert.equal(readCancelDiagnostic(x.storage).origin,'wallet-change');
+  await x.controller.destroy();
+ }
+});
+test('local diagnostic persists only fixed vocabulary after controller destruction',async()=>{
+ const secret='token-cookie-wallet-application-signature-body-url-stack';
+ const f=fixture({commandError:Object.assign(Error(secret),{code:secret,status:403,stack:secret,body:secret})});await connectedDiagnostic(f);
+ await assert.rejects(f.controller.runWorkflow({action:'create-application',idempotencyKey:'synthetic-create'}));await f.controller.destroy();
+ const d=readCancelDiagnostic(f.storage);assert.equal(d.causeCode,'UNKNOWN');assert.equal(d.httpStatus,403);
+ assert(!f.storage.getItem(cancelDiagnosticKey).includes(secret));
+ assert.deepEqual(Object.keys(d).sort(),['action','causeCode','event','httpStatus','origin','sequence','version']);
+ const recorder=createCancelDiagnostic(f.storage);recorder.record('destroy','NONE',new Proxy({},{get(){throw Error(secret);}}));
+ assert.equal(readCancelDiagnostic(f.storage).sequence,2);assert.equal(readCancelDiagnostic(f.storage).causeCode,'UNKNOWN');
+ recorder.record('destroy','NONE');assert.equal(readCancelDiagnostic(f.storage).sequence,2);
+});
+
+test('expiry and direct destruction record once, and a later login starts a new diagnostic sequence',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const f=fixture();await connectedDiagnostic(f);t.mock.timers.tick(60000);await new Promise(r=>setImmediate(r));
+ assert.equal(readCancelDiagnostic(f.storage).origin,'expiry');assert.equal(readCancelDiagnostic(f.storage).causeCode,'EXPIRED');
+ assert(f.stages.includes('revoke'));await f.controller.destroy();assert.equal(f.diagnosticWrites.length,1);
+ const x=fixture();await connectedDiagnostic(x);await x.controller.dispatch({action:'sign-out'});
+ assert.equal(readCancelDiagnostic(x.storage).origin,'sign-out');await connectedDiagnostic(x);await x.controller.destroy();await x.controller.destroy();
+ assert.equal(x.diagnosticWrites.length,2);assert.equal(readCancelDiagnostic(x.storage).origin,'destroy');assert.equal(readCancelDiagnostic(x.storage).sequence,2);
 });

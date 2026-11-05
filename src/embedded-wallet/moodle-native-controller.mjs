@@ -1,3 +1,4 @@
+import {createCancelDiagnostic} from './cancel-diagnostics.mjs';
 import {validateConfig} from './config.mjs';
 import {walletChoices, selectedIdentity, connectSelectedWallet} from './privy-adapter.mjs';
 import {discoverMetaMask, requestMetaMaskAddress, connectMetaMask} from './metamask-adapter.mjs';
@@ -14,6 +15,8 @@ const check = (ok, code) => { if (!ok) throw Error(code); };
 export function createCourseWalletController({config, sdk, target, onState, fetch: fetchImpl = globalThis.fetch,
   sessionFactory = createClearSession, loginFactory = createNativeMoodleLogin}) {
   const c = validateConfig(config), role = config.role;
+  let diagnosticStorage;try { diagnosticStorage=target.localStorage; } catch {}
+  const cancellationDiagnostic=createCancelDiagnostic(diagnosticStorage);
   check(c.surface === 'MOODLE_NATIVE' && ['participant', 'operator'].includes(role), 'MOODLE_WALLET_CONFIG');
   const api = createSameOriginApi({origin: c.origin, fetch: fetchImpl});
   const moodle = loginFactory({config, api, fetch: fetchImpl, locks: target.navigator.locks});
@@ -106,8 +109,9 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     })();
     return closing;
   }
-  function cancel(code = 'CANCELLED') {
+  function cancel(code = 'CANCELLED', trigger = {origin:'explicit-cancel',action:'cancel',cause:{message:code}}) {
     if (cancellation) return cancellation;
+    cancellationDiagnostic.record(trigger.origin,trigger.action,trigger.cause);
     epoch++; busy?.abort(); busy = null; phase = code === 'EXPIRED' ? 'EXPIRED' : 'CANCELLED';
     moodle.invalidate?.();
     selected = null; candidates = []; network = authenticated = false;
@@ -126,13 +130,13 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     snapshot = {...value, externalWalletsDisabled: true};
     let next;
     try { next = walletChoices(snapshot.user, snapshot.wallets); }
-    catch { void cancel('WALLET_CHANGED'); return; }
+    catch { void cancel('WALLET_CHANGED',{origin:'wallet-change',action:'NONE',cause:{message:'WALLET_CHANGED'}}); return; }
     if (selected && !next.some(p => p.sdkUserId === selected.sdkUserId && p.walletId === selected.walletId && p.address === selected.address)) {
-      void cancel('WALLET_CHANGED'); return;
+      void cancel('WALLET_CHANGED',{origin:'wallet-change',action:'NONE',cause:{message:'WALLET_CHANGED'}}); return;
     }
     if (wallet) {
       try { selectedIdentity(snapshot, selected, c.chainId); }
-      catch { void cancel('WALLET_CHANGED'); return; }
+      catch { void cancel('WALLET_CHANGED',{origin:'wallet-change',action:'NONE',cause:{message:'WALLET_CHANGED'}}); return; }
     }
     candidates = next.slice(0,32).map(p => ({...p, selector: candidates.find(old => old.sdkUserId === p.sdkUserId
       && old.walletId === p.walletId && old.address === p.address)?.selector ?? selector('choice')}));
@@ -145,7 +149,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     emit();
   }) : () => {};
   async function dispatch(input) {
-    if (authExpiry && Date.now() >= authExpiry * 1000) { await cancel('EXPIRED'); return; }
+    if (authExpiry && Date.now() >= authExpiry * 1000) { await cancel('EXPIRED',{origin:'expiry',action:'NONE',cause:{message:'EXPIRED'}}); return; }
     const command = validateCourseWalletCommand(input);
     check(!closed && allowed().includes(command.action), 'MOODLE_WALLET_ACTION_NOT_ALLOWED');
     if (command.action === 'cancel') { await cancel(); return; }
@@ -166,7 +170,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
         } else if (command.action === 'check-network') {
           check(selected, 'STALE_SELECTION'); await release(); current(stamp,signal);
           phase = 'CHECKING_NETWORK'; emit(); let boundary;
-          const onInvalidate = () => { if (wallet === boundary) void cancel('WALLET_CHANGED'); };
+          const onInvalidate = () => { if (wallet === boundary) void cancel('WALLET_CHANGED',{origin:'wallet-change',action:'NONE',cause:{message:'WALLET_CHANGED'}}); };
           if (role === 'participant') {
             await bounded(() => selected.wallet.switchChain(c.chainId), {signal}); current(stamp,signal);
             boundary = await connectSelectedWallet({readSnapshot: () => snapshot, selection: selected, chainId: c.chainId,
@@ -191,7 +195,8 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
           const actor = await session.assertSession(signal); current(stamp,signal); check(result.role === role, 'ROLE_CHANGED');
           check(Number.isSafeInteger(actor.expiresAt) && actor.expiresAt * 1000 > Date.now(), 'AUTH_REQUIRED');
           authExpiry = actor.expiresAt;
-          expiryTimer = setTimeout(() => { void cancel('EXPIRED'); }, Math.min(2147483647, authExpiry * 1000 - Date.now()));
+          cancellationDiagnostic.reset();
+          expiryTimer = setTimeout(() => { void cancel('EXPIRED',{origin:'expiry',action:'NONE',cause:{message:'EXPIRED'}}); }, Math.min(2147483647, authExpiry * 1000 - Date.now()));
           authenticated = true; phase = 'AUTHENTICATED'; emit();
           await moodle.complete(session, signal); current(stamp,signal); phase = 'CONNECTION_PENDING';
         } else if (command.action === 'finish-connection') {
@@ -204,6 +209,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
           check(session === finishingSession && wallet === finishingWallet && authenticated, 'AUTH_REQUIRED');
           phase = 'CONNECTED';
         } else if (command.action === 'sign-out') {
+          cancellationDiagnostic.record('sign-out','sign-out');
           phase = 'REVOKING'; emit(); await release(); current(stamp,signal);
           await endMoodle(signal); current(stamp,signal);
           if (role === 'participant') { await sdk.logout(); current(stamp,signal); }
@@ -213,6 +219,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       }, {signal, timeoutMs: 120000});
     } catch (cause) {
       if (stamp === epoch && !closed) {
+        cancellationDiagnostic.record('dispatch-failure',command.action,cause);
         controller.abort();
         // A timed out signature is never reused. Revoke even an uncertain login.
         try { await retire(); } catch {}
@@ -248,7 +255,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       if(reviewChanged)throw Object.assign(Error('MOODLE_AI_REVIEW_CHANGED'),{code:'MOODLE_AI_REVIEW_CHANGED',outcome:'NOT_SENT'});
       if(stamp===epoch&&!closed&&(!nativeWorkflowIsRead(command)||cause?.status===401||cause?.status===403
         ||['AUTH_REQUIRED','ROLE_CHANGED','PRODUCT_ROLE_CHANGED','FORBIDDEN','SESSION_CHANGED','SESSION_CONTEXT',
-          'CANCELLED','WALLET_CONTEXT_CANCELLED'].includes(cause?.message)))await cancel();
+          'CANCELLED','WALLET_CONTEXT_CANCELLED'].includes(cause?.message)))await cancel('CANCELLED',{origin:'workflow-failure',action:command.action,cause});
       throw Object.assign(Error('MOODLE_WORKFLOW_UNAVAILABLE'),{code:'MOODLE_WORKFLOW_UNAVAILABLE',
         outcome:nativeWorkflowIsRead(command)?'NOT_SENT':'UNKNOWN'});
     }finally{if(busy===controller)busy=null;emit();}
@@ -263,11 +270,12 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       current(stamp,controller.signal); check(session === captured,'AUTH_REQUIRED'); return result;
     } catch(error) {
       // A failed response never permits this command to be automatically sent again.
-      if (stamp === epoch && !closed) await cancel();
+      if (stamp === epoch && !closed) await cancel('CANCELLED',{origin:'command-failure',action:'NONE',cause:error});
       throw error;
     } finally { if(busy === controller) busy = null; emit(); }
   }, async destroy() {
     if (closed) return;
+    cancellationDiagnostic.record('destroy','NONE');
     closed = true; epoch++; busy?.abort(); busy = null; stopDiscovery();
     moodle.invalidate?.();
     selected = null; candidates = []; providers = []; phase = 'CLOSED'; network = authenticated = false;

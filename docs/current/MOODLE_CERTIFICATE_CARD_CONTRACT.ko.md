@@ -64,3 +64,13 @@ r6은 신청 연결 후 `SIGNATURE_WAIT STARTED`까지 도달했다. 따라서 �
 최소 보정 후보는 live owner가 서명 broker에 전달하는 신청 조회 callback에 기존 `readNormalView`를 적용한다. 정확한 typed `BC_VIEW_STALE`인 경우에만 실패한 조회를 버리고 인증을 포함한 store 조회를 한 번 새로 수행한다. 서명 제출/명령/원천 수집은 재실행하지 않는다. 지속 충돌·실제 취소·기한·소유권·CSRF·서명 검증은 기존 거부 경계를 유지한다. 이 수정은 확인된 조회 충돌 경로의 보정이며 r6 전체 취소 원인이 입증되었다는 주장은 아니다. C 변경이나 실제 재실행은 독립 검토 이후 판단한다.
 
 검증: `ui-session-projection`, `ui-session`, `ui-session-http`, `normal-certificate-start` 53개 통과. 새 테스트는 초 경계 충돌 후 동일 서명 요청 조회/단회 수락 및 충돌 도중 실제 logout 거부를 확인한다. 로컬 로그 `/tmp/clear-r6-projection-fix.log`. 실제 신청·지급 기록은 변경하지 않았다.
+
+### 취소 최초 원인 로컬 진단 (r6 후속)
+
+Moodle 지갑 controller는 `cancel` 정규화 및 retire/release 전에 최초 `CANCEL_TRIGGER`를 기록한다. 동일 연결의 후속 취소·폐기는 덮어쓰지 않으며, 새 로그인 성공 후 다음 연결에서 새 원인을 기록할 수 있다. 허용된 origin/action/causeCode, HTTP 상태(100–599 또는 null), 정수 sequence, 고정 event/version만 저장한다. 임의 SDK error/code/message·stack·본문·주소·토큰·쿠키·서명·URL은 저장하지 않는다. 진단 실패/저장 거부는 취소 흐름에 영향을 주지 않는다. 인증/취소/재시도 정책 변경은 없다.
+
+인수 위치는 해당 Moodle origin과 **동일 Chrome 프로필**의 로컬 저장소 키 `clear.moodle.cancel.diagnostic.v1`이다. 기존 OAuth 로컬 진단의 허용 목록 방식을 사용하며 서버 전송/새 telemetry endpoint는 없다. 페이지 controller 폐기나 창 닫기 후에도 프로필 localStorage가 보존되는 동안 확인할 수 있다. DevTools Application → Local Storage → 해당 Moodle origin에서 **이 키 하나만** 확인한다. 프로필 삭제/사이트 데이터 삭제/저장 차단 시 보존을 보장하지 않는다. sequence는 이 controller가 관측한 저장 기록에 대한 순서이며 여러 탭 간 전역 순서를 증명하지 않는다. 마지막 연결의 최초 원인 하나만 유지하므로 재로그인 전에 필요한 기록을 인수한다. 기록은 브라우저 관측 자료이며 인증/지급 권한 증거로 사용하지 않는다.
+
+연결 종료 경로 분류: workflow-failure, explicit-cancel, wallet-change, expiry, dispatch-failure, command-failure, sign-out, destroy. 원래 오류 코드가 허용 목록에 없으면 UNKNOWN이다. 직접 command 경로는 전체 경로/명령 본문을 기록하지 않고 action NONE을 사용한다. read HTTP409는 기존 정책대로 취소하지 않으며 기록도 생성하지 않는다. 401/403 또는 write 실패로 취소될 때 해당 최초 원인이 CANCELLED로 바뀌기 전에 기록된다.
+
+검증: `tests/embedded-wallet/moodle-native-controller.test.mjs` 17개 통과, `/tmp/clear-cancel-trigger-tests.log`. read409 유지, write/auth 오류 원인, 명시 취소와 중복 폐기, dispatch/wallet/expiry/sign-out/destroy, 저장 실패 중 revoke, 비밀값 제거/hostile getter, 새 연결 sequence를 확인했다. 실제 재실행 및 frontend bundle 교체는 이 검증에 포함하지 않는다.
