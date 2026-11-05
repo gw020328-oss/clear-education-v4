@@ -656,3 +656,20 @@ test('원문을 치는 동안은 화면을 다시 그리지 않고, 손을 뗀 �
     assert.equal(ta().value, '숙제 제출', '다시 그린 칸에 글이 그대로 있어야 한다');
   } finally { restore(); }
 });
+
+// ── 쉼표 없이 붙여 쓴 한 문장에서 조건 여럿 ─────────────────────────────
+
+test('"강의수강 후기적기 과제제출" 처럼 붙여 써도 셋을 다 찾는다', () => {
+  const p = proposeReading('강의수강 후기적기 과제제출');
+  assert.deepEqual(p.kept.map((c) => c.capability), [
+    'MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1', 'REFLECTION_REQUIRED_TOPICS.1',
+  ], '찾은 조건: ' + p.kept.map((c) => c.capability).join(', '));
+  assert.ok(COMBOS[p.canonicalText], '정규 문장이 15조합에 없다');
+  // 같은 원문이 세 줄로 보이지만 index 는 겹치지 않는다
+  assert.deepEqual(p.clauses.map((c) => c.index), [0, 1, 2]);
+  // 후기 '적기' 가 회고로 읽힌다. (선택) 인터뷰는 여전히 아니다
+  assert.equal(proposeReading('후기 적어 주세요').kept[0]?.capability, 'REFLECTION_REQUIRED_TOPICS.1');
+  assert.equal(proposeReading('(선택) 수료 후기 인터뷰 촬영').kept.length, 0);
+  // 실제 안내문은 여전히 셋만 — 한 줄에서 둘이 겹쳐 잡히지 않는다
+  assert.equal(proposeReading(REAL_NOTICE).kept.length, 3);
+});

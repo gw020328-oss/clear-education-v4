@@ -91,7 +91,7 @@ const RULES = Object.freeze([
   {
     capability: 'REFLECTION_REQUIRED_TOPICS.1',
     // '후기' 는 "후기 인터뷰 촬영" 에도 나온다. 후기는 **쓰는 것**일 때만 회고다.
-    any: [/회고/, /성찰/, /리플렉션/, /reflection/i, /후기.*(작성|쓰|게시|올리|블로그)/],
+    any: [/회고/, /성찰/, /리플렉션/, /reflection/i, /후기.*(작성|쓰|적|남기|기록|게시|올리|블로그)/],
     // 세 항목이 안 적혀 있어도 회고 조건은 세 항목이다. 그 사실을 알린다.
     note: (t) => (/(수행|문제|배운)/.test(t) ? null : '세 항목(수행 내용·문제해결 과정·배운 점)은 조건에 포함됩니다'),
   },
@@ -151,29 +151,35 @@ export function proposeReading(text) {
 
   const seen = new Set();
   const duplicates = [];
-  const clauses = parts.map((original, index) => {
+  let index = 0;
+  const clauses = parts.flatMap((original) => {
     // 우리 조건이 아닌 말이 들어 있으면 **다른 단어가 뭐든** 읽지 않는다.
     const notOurs = NOT_OURS.find(([re]) => re.test(original));
     // notOurs 표식을 남긴다. 운영자가 이걸 조건으로 지정하는 길을 막는 데 쓴다.
-    if (notOurs) return { index, original, capability: null, canonical: null, note: notOurs[1], notOurs: true };
+    if (notOurs) return [{ index: index++, original, capability: null, canonical: null, note: notOurs[1], notOurs: true }];
 
-    const hit = RULES.find((r) =>
+    // 한 조항에 조건이 **여럿**일 수 있다 — "강의수강 후기적기 과제제출" 처럼
+    // 쉼표 없이 붙여 쓰면 쪼개지지 않는다. 그래서 첫 번째 하나만 고르지 않고
+    // 맞는 조건을 모두 낸다. 같은 원문이 조건 수만큼 줄로 보인다.
+    const hits = RULES.filter((r) =>
       (r.any ? r.any.some((re) => re.test(original)) : true)
       && (r.all ? r.all.every((re) => re.test(original)) : true));
 
-    if (!hit) return { index, original, capability: null, canonical: null, note: null };
-    // 같은 조건이 두 번 나오면 두 번째는 세지 않는다. 모듈도 거부한다.
-    if (seen.has(hit.capability)) {
-      duplicates.push(original);
-      return { index, original, capability: hit.capability, canonical: null, note: '앞에서 이미 읽은 조건입니다. 한 번만 넘깁니다' };
-    }
-    seen.add(hit.capability);
-    return {
-      index, original,
-      capability: hit.capability,
-      canonical: CANONICAL[hit.capability],
-      note: hit.note ? hit.note(original) : null,
-    };
+    if (hits.length === 0) return [{ index: index++, original, capability: null, canonical: null, note: null }];
+    return hits.map((hit) => {
+      // 같은 조건이 두 번 나오면 두 번째는 세지 않는다. 모듈도 거부한다.
+      if (seen.has(hit.capability)) {
+        duplicates.push(original);
+        return { index: index++, original, capability: hit.capability, canonical: null, note: '앞에서 이미 읽은 조건입니다. 한 번만 넘깁니다' };
+      }
+      seen.add(hit.capability);
+      return {
+        index: index++, original,
+        capability: hit.capability,
+        canonical: CANONICAL[hit.capability],
+        note: hit.note ? hit.note(original) : null,
+      };
+    });
   });
 
   return finish(clauses.map((c) => ({ ...c, source: c.capability ? 'rules' : null })), duplicates);
