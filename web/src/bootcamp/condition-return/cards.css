@@ -1,0 +1,98 @@
+/* 환급 조건 카드의 이동·복귀 덧붙임 (web/src/bootcamp/condition-return)
+ *
+ * web/src 아래에 둔다. 제품 빌드(tools/embedded-wallet/build-product.mjs --team)는
+ * web/src · web/fonts · web/styles.css 만 복사하므로 여기 있어야 함께 실린다.
+ *
+ * web/styles.css 는 백엔드 무결성 검사의 지문 대상이라 고치지 않는다. 카드
+ * 뼈대(.cc · .cc-rows · .cc-btn)는 그쪽 것을 그대로 쓰고, 새로 붙는 줄만 여기 둔다.
+ * 제품 CSP 가 style 속성을 막으므로(style-src-attr 'none') 인라인 스타일을 쓰지 않는다. */
+
+.crc-grid { align-items: stretch; }
+
+.crc-status {
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  background: var(--line-soft);
+  color: var(--fg);
+}
+.crc-status[data-tone="wait"] { background: var(--navy-soft); }
+.crc-status[data-tone="ok"] { background: var(--ok-soft); color: var(--ok); font-weight: 600; }
+.crc-status[data-tone="warn"] { background: var(--warn-bg); color: var(--warn-tag-fg); }
+
+.crc-block { margin: 0 0 12px; }
+.crc-title { margin: 0 0 4px; font-size: 0.82rem; font-weight: 700; }
+.crc-muted { margin: 4px 0 0; font-size: 0.76rem; line-height: 1.6; color: var(--muted); }
+.crc-reason { margin: 6px 0 0; font-size: 0.78rem; line-height: 1.6; color: var(--warn-tag-fg); }
+
+.crc-facts { margin: 6px 0 0; font-size: 0.76rem; }
+.crc-facts div {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 5px 0; border-bottom: 1px solid var(--line-soft);
+}
+.crc-facts div:last-child { border-bottom: 0; }
+.crc-facts dt { color: var(--muted); }
+.crc-facts dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-weight: 500; }
+
+.crc-topics { margin: 8px 0 0; padding: 0; list-style: none; font-size: 0.76rem; }
+.crc-topics li {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px;
+  padding: 6px 0; border-bottom: 1px solid var(--line-soft);
+}
+.crc-topics li:last-child { border-bottom: 0; }
+.crc-topic { font-weight: 600; }
+.crc-topic-state { color: var(--muted); }
+.crc-topics li[data-met="yes"] .crc-topic-state { color: var(--ok); font-weight: 600; }
+.crc-topics li[data-met="no"] .crc-topic-state { color: var(--warn-tag-fg); font-weight: 600; }
+.crc-quote, .crc-loc { grid-column: 1 / -1; color: var(--muted); line-height: 1.5; }
+.crc-quote { font-style: normal; background: var(--accent-soft); color: var(--fg); padding: 2px 4px; border-radius: 3px; }
+
+.crc-message summary { cursor: pointer; font-size: 0.76rem; color: var(--muted); }
+.crc-message pre {
+  margin: 6px 0 0; padding: 8px 10px; max-height: 12em; overflow: auto;
+  white-space: pre-wrap; word-break: break-all;
+  font: 0.72rem/1.5 ui-monospace, Consolas, monospace;
+  background: var(--line-soft); border-radius: 6px;
+}
+
+.crc-target { margin: 0 0 10px; font-size: 0.74rem; color: var(--muted); overflow-wrap: anywhere; }
+.crc-target[data-missing="yes"] { color: var(--warn-tag-fg); }
+
+.crc-actions { display: flex; flex-direction: column; gap: 8px; margin: auto 0 0; padding-top: 4px; }
+.crc-actions .cc-btn { margin: 0; text-decoration: none; }
+.crc-actions .cc-btn[disabled] { cursor: not-allowed; opacity: 0.55; }
+.crc-card[data-state="met"] .crc-go { background: var(--card); color: var(--fg); border-color: var(--line); }
+
+.crc-sub-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.crc-sub-btn:hover { background: var(--line-soft); }
+.crc-sub-btn[disabled] { cursor: not-allowed; opacity: 0.55; }
+.crc-actions { flex-direction: row; flex-wrap: wrap; }
+.crc-actions .crc-go { flex: 1 1 100%; }
+.crc-actions .crc-sub-btn { flex: 1 1 0; }
+
+/* ── 독립 프리뷰 ─────────────────────────────────────────────────────── */
+.crc-preview { max-width: 1120px; margin: 0 auto; padding: 32px 16px 64px; }
+.crc-preview h1 { margin: 0 0 6px; font-size: 1.5rem; letter-spacing: -0.03em; }
+.crc-preview-top p { margin: 4px 0; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+.crc-demo-controls {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+  margin: 18px 0 0; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 10px;
+  font-size: 0.82rem;
+}
+.crc-demo-controls label { display: inline-flex; gap: 6px; align-items: center; }
+.crc-demo-log { margin: 12px 0 0; font: 0.72rem/1.6 ui-monospace, Consolas, monospace; color: var(--muted); }
+.crc-standin { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+.crc-standin textarea { width: 100%; min-height: 9em; font: inherit; padding: 8px; }
+.crc-standin .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
