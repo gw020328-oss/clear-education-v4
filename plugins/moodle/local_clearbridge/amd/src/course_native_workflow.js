@@ -32,6 +32,10 @@ define([], function() {
         let displayed = {};
         let cards;
         let cardsQueued = false;
+        let certificateRevision = null;
+        let certificateRevisionFloor = null;
+        const certificateCasRevision = () => certificateRevision?.applicationId === applicationId
+            ? certificateRevision.revision : null;
         let certificateAttempted = false;
         let certificateAccepted = false;
         let certificateTimer = null;
@@ -183,7 +187,7 @@ define([], function() {
                 case 'read-session': return true;
                 case 'refresh-activity': return !!activityTargets();
                 case 'start-certificate': return !certificateAttempted && certificate()?.startAllowed === true
-                    && Number.isSafeInteger(revision()) && revision() > 0;
+                    && Number.isSafeInteger(certificateCasRevision()) && certificateCasRevision() > 0;
                 case 'read-operation': return operation !== null;
                 case 'create-application': return participant && session && !session.failure && !applicationId && !createAttempted;
                 case 'bind-source-session': return participant && !!applicationId && !sourceBound;
@@ -298,6 +302,7 @@ define([], function() {
             }
             pending = null;
             ready = false;
+            certificateRevision = null;
             stopCertificateReads();
             activityVisit = activityResult = null;
             closeCards();
@@ -312,6 +317,20 @@ define([], function() {
             }
         };
         const exactApp = result => require(result?.applicationId === applicationId && id(applicationId));
+        const retainCertificateRevision = result => {
+            const row = result?.record;
+            certificateRevision = null;
+            if (row?.applicationId !== applicationId || result.current !== true
+                    || !Number.isSafeInteger(row.applicationRevision) || row.applicationRevision <= 0) {
+                return;
+            }
+            if (certificateRevisionFloor?.applicationId === applicationId
+                    && row.applicationRevision < certificateRevisionFloor.revision) {
+                return;
+            }
+            certificateRevision = {applicationId, revision: row.applicationRevision};
+            certificateRevisionFloor = certificateRevision;
+        };
         const record = (result, kind) => {
             const row = result?.record;
             require(id(row?.applicationId) && id(row.operationId) && typeof result.current === 'boolean');
@@ -333,6 +352,12 @@ define([], function() {
                     // A null source binding can coexist with the durable create receipt.
                     sourceBound = result.applicationId !== null;
                     applicationId = result.applicationId ?? createdApplicationId;
+                    if (certificateRevision?.applicationId !== applicationId) {
+                        certificateRevision = null;
+                    }
+                    if (certificateRevisionFloor?.applicationId !== applicationId) {
+                        certificateRevisionFloor = null;
+                    }
                     activityMode ||= Boolean(activityTargets());
                     if (operation && applicationId && operation.applicationId !== applicationId) {
                         operation = null;
@@ -350,6 +375,7 @@ define([], function() {
                 }
                 case 'create-application':
                     createdApplicationId = applicationId = record(result, 'application').applicationId;
+                    retainCertificateRevision(result);
                     displayed.operation = operation;
                     break;
                 case 'read-application':
@@ -439,6 +465,9 @@ define([], function() {
                 case 'read-operation':
                     require(result?.record?.applicationId === operation?.applicationId
                         && result.record.operationId === operation.operationId && typeof result.current === 'boolean');
+                    if (operation.kind === 'application') {
+                        retainCertificateRevision(result);
+                    }
                     displayed.operation = {...operation, current: result.current};
                     break;
             }
@@ -448,7 +477,7 @@ define([], function() {
             switch (action) {
                 case 'create-application': return {action, idempotencyKey: newKey()};
                 case 'refresh-activity': return {action, applicationId, expectedRevision: choice, idempotencyKey: newKey()};
-                case 'start-certificate': return {action, applicationId, expectedRevision: revision(), idempotencyKey: newKey()};
+                case 'start-certificate': return {action, applicationId, expectedRevision: certificateCasRevision(), idempotencyKey: newKey()};
                 case 'approve-reflection': return {action, reviewed: reflection, idempotencyKey: newKey()};
                 case 'consent': return {action, reviewed: application, value: choice, idempotencyKey: newKey()};
                 case 'approve-source-signature': return {action, reviewed: source};
@@ -480,6 +509,9 @@ define([], function() {
                 createAttempted = true;
             }
             if (task.write) {
+                if (action !== 'bind-source-session') {
+                    certificateRevision = null;
+                }
                 // A write can invalidate every earlier review packet and receipt observation.
                 application = registration = source = reflection = null;
                 acknowledgment.checked = false;
@@ -504,6 +536,7 @@ define([], function() {
                 const reviewChanged = input.action === 'approve-reflection'
                     && error?.code === 'MOODLE_AI_REVIEW_CHANGED' && error?.outcome === 'NOT_SENT';
                 clear();
+                certificateRevision = null;
                 unknown ||= task.write && !reviewChanged;
                 show('failure');
             } finally {

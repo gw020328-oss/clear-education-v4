@@ -407,6 +407,7 @@ test('certificate card starts only on its click, polls reads, and signs the disp
     const {Node} = installCardDom();
     const cardRoot = new Node('div');
     let state = 'READY_TO_START';
+    let bound = false;
     const app = 'app-one';
     const phase = 'SOURCE_python-basic-certificate';
     const packet = {applicationId: app, approvalId: 'approval-cert', requestHash: '0x' + 'a'.repeat(64),
@@ -421,8 +422,15 @@ test('certificate card starts only on its click, polls reads, and signs the disp
     const primary = () => cardRoot.querySelector('[data-criterion="python-basic-certificate"]').querySelector('.crc-go');
     try {
         ui = fixture(({action}) => {
+            if (action === 'create-application') {
+                return {...receipt, record: {...receipt.record, applicationRevision: 1}};
+            }
+            if (action === 'bind-source-session') {
+                bound = true;
+                return {applicationId: app, status: 'AUTHENTICATED_SOURCE_SESSION_BOUND', paymentAuthorization: false};
+            }
             if (action === 'read-session') {
-                return {...session(app), phase, certificate: {version: 'clear-certificate-start.1', applicationId: app,
+                return {...session(bound ? app : null), phase, certificate: {version: 'clear-certificate-start.1', applicationId: app,
                     criterionId: 'python-basic-certificate', state, startAllowed: state === 'READY_TO_START',
                     signatureReady: state === 'AWAITING_SIGNATURE'}};
             }
@@ -444,8 +452,11 @@ test('certificate card starts only on its click, polls reads, and signs the disp
         await flush();
         assert.deepEqual(ui.sent, []);
         await ui.click('read-session');
-        await ui.click('read-application');
+        await ui.click('create-application');
+        await ui.click('bind-source-session');
+        await ui.click('read-session');
         await flush();
+        assert.equal(ui.sent.filter(command => command.action === 'read-application').length, 0);
         assert.equal(primary().textContent, 'certificatestart-certificate');
         assert.equal(primary().disabled, false);
         assert.equal(ui.sent.filter(command => command.action === 'start-certificate').length, 0);
@@ -476,9 +487,20 @@ test('certificate readiness mismatches stay closed and a lost start response can
     const {Node} = installCardDom();
     const cardRoot = new Node('div');
     let matching = false;
+    let bound = false;
     const ui = fixture(({action}) => {
+        if (action === 'create-application') {
+            return {...receipt, record: {...receipt.record, applicationRevision: 1}};
+        }
+        if (action === 'bind-source-session') {
+            bound = true;
+            return {applicationId: 'app-one', status: 'AUTHENTICATED_SOURCE_SESSION_BOUND', paymentAuthorization: false};
+        }
+        if (action === 'read-operation') {
+            return {...receipt, record: {...receipt.record, applicationRevision: 1}};
+        }
         if (action === 'read-session') {
-            return {...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+            return {...session(bound ? 'app-one' : null), phase: 'SOURCE_python-basic-certificate',
                 certificate: {version: 'clear-certificate-start.1', applicationId: matching ? 'app-one' : 'other-app',
                     criterionId: 'python-basic-certificate', state: 'READY_TO_START', startAllowed: true, signatureReady: false}};
         }
@@ -492,23 +514,99 @@ test('certificate readiness mismatches stay closed and a lost start response can
     const primary = () => cardRoot.querySelector('[data-criterion="python-basic-certificate"]').querySelector('.crc-go');
     try {
         await ui.click('read-session');
-        await ui.click('read-application');
+        await ui.click('create-application');
+        await ui.click('bind-source-session');
+        await ui.click('read-session');
         await flush();
         assert.equal(primary().disabled, true);
         await ui.click('read-source-signature');
         assert.equal(ui.sent.filter(command => command.action === 'read-source-signature').length, 0);
         matching = true;
         await ui.click('read-session');
-        await ui.click('read-application');
+        await ui.click('read-operation');
         await flush();
         primary().handlers.click();
         await flush();
         assert.equal(ui.status.textContent, 'unknown');
         await ui.click('read-session');
-        await ui.click('read-application');
+        await ui.click('read-operation');
         await flush();
         assert.equal(primary().disabled, true);
         assert.equal(ui.sent.filter(command => command.action === 'start-certificate').length, 1);
+    } finally {
+        ui.mounted.destroy();
+        delete globalThis.document;
+    }
+});
+
+test('certificate revision comes only from current matching operation receipts and can be recovered after reconnect', async () => {
+    const {Node} = installCardDom();
+    const cardRoot = new Node('div');
+    let bound = false;
+    let returned = {...receipt, record: {...receipt.record, applicationRevision: 2}};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') {
+            return {...session(bound ? 'app-one' : null), phase: 'SOURCE_python-basic-certificate',
+                certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one',
+                    criterionId: 'python-basic-certificate', state: 'READY_TO_START', startAllowed: true, signatureReady: false}};
+        }
+        if (action === 'create-application' || action === 'read-operation') { return returned; }
+        if (action === 'bind-source-session') {
+            bound = true;
+            return {applicationId: 'app-one', status: 'AUTHENTICATED_SOURCE_SESSION_BOUND', paymentAuthorization: false};
+        }
+        // The mock server's revision has advanced. Its CAS remains the final fence.
+        if (action === 'start-certificate') {
+            throw Object.assign(new Error('BC_REVISION_CONFLICT'), {outcome: 'UNKNOWN'});
+        }
+        throw new Error('procedure queries are forbidden');
+    }, {cardRoot});
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+    const primary = () => cardRoot.querySelector('[data-criterion="python-basic-certificate"]').querySelector('.crc-go');
+    try {
+        await ui.click('read-session');
+        await ui.click('create-application');
+        await ui.click('bind-source-session');
+        await ui.click('read-session');
+        await flush();
+        assert.equal(primary().disabled, false);
+        await ui.walletDispatch({action: 'cancel'});
+        ui.state(connected());
+        await ui.click('read-session');
+        await flush();
+        assert.equal(primary().disabled, true);
+        await ui.click('read-operation');
+        await flush();
+        assert.equal(primary().disabled, false);
+
+        for (const invalid of [
+            {...returned, record: {...returned.record, applicationId: 'other-app'}},
+            {...returned, record: {...returned.record, applicationRevision: undefined}},
+            {...returned, record: {...returned.record, applicationRevision: 1}},
+            {...returned, current: false},
+            {...returned, record: {...returned.record, applicationRevision: 2.5}},
+        ]) {
+            const valid = returned;
+            returned = invalid;
+            await ui.click('read-operation');
+            await ui.click('read-session');
+            await flush();
+            assert.equal(primary().disabled, true);
+            returned = valid;
+            await ui.click('read-operation');
+            await flush();
+            assert.equal(primary().disabled, false);
+        }
+        primary().handlers.click();
+        await flush();
+        assert.equal(ui.sent.at(-1).expectedRevision, 2);
+        assert.equal(ui.status.textContent, 'unknown');
+        await ui.click('read-session');
+        await ui.click('read-operation');
+        await flush();
+        assert.equal(primary().disabled, true);
+        assert.equal(ui.sent.filter(input => input.action === 'start-certificate').length, 1);
+        assert.ok(ui.sent.every(input => !['read-application', 'approve-source-signature'].includes(input.action)));
     } finally {
         ui.mounted.destroy();
         delete globalThis.document;
