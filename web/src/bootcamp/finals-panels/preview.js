@@ -15,7 +15,7 @@ import { courseLinkPanel } from './course-link.js';
 import { linkFixture, saveFixture } from './course-link-fixtures.js';
 import { PRESETS, COMBOS, METRICS_SUMMARY, REAL_NOTICE } from './fixtures.js';
 import { RULES_PROPOSER } from './ai-compare.js';
-import { OFFLINE_GEMINI_PROPOSER } from './gemini-fixture.js';
+import { OFFLINE_GEMINI_PROPOSER, FAILING_GEMINI_PROPOSER } from './gemini-fixture.js';
 
 // ④ 는 **실제 공개 안내문**이다. 우리 조건 넷 중 셋만 있고 HackerRank 는
 // 없다 — 그래서 셋만 찾는 것이 맞는 동작이다. 합성 결과는 그 셋의 조합
@@ -59,12 +59,12 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
 
   // ① 에서 시작한다. 발표자가 ②③ 을 눌러 조건이 느는 것을 보여준다.
   const first = PRESETS[0].source;
-  const useGemini = proposer === 'gemini';
+  const useGemini = proposer === 'gemini' || proposer === 'gemini-fail';
   const aiPanel = aiComparePanel({
     adapter: ai,
     source: first,
     presets: DEMO_PRESETS,
-    proposer: useGemini ? OFFLINE_GEMINI_PROPOSER : RULES_PROPOSER,
+    proposer: proposer === 'gemini-fail' ? FAILING_GEMINI_PROPOSER : useGemini ? OFFLINE_GEMINI_PROPOSER : RULES_PROPOSER,
   });
   const opsPanel = opsMetricsPanel({ adapter: ops });
 
@@ -96,9 +96,13 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
       // 제안자 전환. 같은 확인 화면에 규칙 / Gemini(오프라인 대역) 를 번갈아 끼운다.
       el('div.fp-presets', { role: 'group', 'aria-label': '제안자' }, [
         el('span.fp-label', { text: '제안자' }),
-        ...[['rules', '프론트 규칙 (지금)'], ['gemini', 'Gemini 오프라인 대역 (제안 생성 버튼)']].map(([id, label]) => {
+        ...[
+          ['rules', '프론트 규칙 (지금)'],
+          ['gemini', 'Gemini 오프라인 대역 (제안 생성 버튼)'],
+          ['gemini-fail', 'Gemini 실패 대역 (전송 여부 미확인)'],
+        ].map(([id, label]) => {
           const href = `?mode=${mode === DATA_MODE.ACTUAL ? 'ACTUAL' : 'SYNTHETIC'}&proposer=${id}`;
-          return el('a.fp-chip', { href, 'aria-pressed': (useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
+          return el('a.fp-chip', { href, 'aria-pressed': proposer === id ? 'true' : 'false' }, [el('span', { text: label })]);
         }),
       ]),
       useGemini
@@ -126,6 +130,6 @@ if (typeof window !== 'undefined' && document.querySelector('#finals-root')) {
   const params = new URL(window.location.href).searchParams;
   mountFinalsPreview(document.querySelector('#finals-root'), {
     mode: params.get('mode') === 'ACTUAL' ? DATA_MODE.ACTUAL : DATA_MODE.SYNTHETIC,
-    proposer: params.get('proposer') === 'gemini' ? 'gemini' : 'rules',
+    proposer: ['gemini', 'gemini-fail'].includes(params.get('proposer')) ? params.get('proposer') : 'rules',
   });
 }

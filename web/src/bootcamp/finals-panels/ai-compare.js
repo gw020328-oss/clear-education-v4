@@ -16,6 +16,7 @@
 import { el, clear } from '../../ui/dom.js';
 import { STATE, DATA_MODE } from './adapter.js';
 import { proposeReading, applyOverrides, emptyProposal, MANUAL_CHOICES } from './normalize.js';
+import { callLabel } from './condition-proposal.js';
 
 /**
  * 제안자 — 원문을 읽어 "이렇게 읽었습니다" 를 만드는 쪽.
@@ -148,6 +149,8 @@ export function aiComparePanel({
 
   /** 명시적 제안자(Gemini): 입력마다 부르지 않고 「제안 생성」 을 눌러야 한 번 돈다 */
   const explicit = proposer.explicit === true;
+  // 마지막 생성이 실패했으면 그 표시(failureView 결과). 성공하거나 원문이 바뀌면 지운다.
+  let failure = null;
 
   /** 제안자를 돌린다. 값이든 Promise 든 받고, 늦게 온 답은 버린다 */
   const propose = (next) => {
@@ -157,6 +160,8 @@ export function aiComparePanel({
     proposing = true; render();
     const settleProposal = (value) => {
       if (stamp !== proposeStamp) return;         // 그새 원문이 바뀌었다
+      // 생성 실패(failureView)는 제안이 아니다. 제안을 비우고 실패만 적는다.
+      if (value?.kind === 'GENERATION_FAILURE') { failure = value; value = emptyProposal(); } else { failure = null; }
       base = value; proposedFor = next; proposing = false; recompute();
       if (runWhenReady !== null && runWhenReady === text) { runWhenReady = null; run(); }
       render();
@@ -181,7 +186,7 @@ export function aiComparePanel({
     if (explicit) {
       // 입력마다 유료 모델을 부르지 않는다. 이전 제안은 이 원문의 것이 아니니 비우고,
       // 늦게 오는 답도 버린다. 다시 보려면 「제안 생성」 을 눌러야 한다.
-      proposeStamp += 1; proposing = false; runWhenReady = null;
+      proposeStamp += 1; proposing = false; runWhenReady = null; failure = null;
       base = emptyProposal(); proposedFor = null; overrides.clear(); recompute();
     } else {
       propose(next);
@@ -224,11 +229,18 @@ export function aiComparePanel({
   const sourceBadge = () => {
     const kind = proposer.kind ?? (proposer.id === 'rules' ? 'rules' : 'model');
     if (kind === 'rules') return el('span.fp-mode', { 'data-mode': 'rules', text: proposer.label });
+    // 생성 실패 — 제안은 없고, 실제 호출 여부는 응답이 말한 대로(true/false/**null=미확인**)
+    if (failure) return el('span.fp-mode', { 'data-mode': 'model-failed', text: `Gemini 생성 실패 · ${failure.label}` });
     const prov = proposal.provenance ?? null;
     if (!prov) return el('span.fp-mode', { 'data-mode': 'model-idle', text: proposer.idleLabel ?? proposer.label });
-    return prov.actualModelCall === true
-      ? el('span.fp-mode', { 'data-mode': 'model', text: 'Gemini 실제 호출 · 서버 검토 거침' })
-      : el('span.fp-mode', { 'data-mode': 'model-fixture', text: 'Gemini 오프라인 응답 대역 · 실제 호출 아님' });
+    if (prov.modelCall?.execution === 'OFFLINE_TEST_TRANSPORT') {
+      return el('span.fp-mode', { 'data-mode': 'model-fixture', text: 'Gemini 오프라인 응답 대역 · 실제 호출 아님' });
+    }
+    // null 은 세 출처 중 하나로 임의 분류하지 않는다 — '전송 여부 미확인' 그대로.
+    return el('span.fp-mode', {
+      'data-mode': prov.actualModelCall === true ? 'model' : prov.actualModelCall === null ? 'model-unknown' : 'model-fixture',
+      text: `Gemini · ${callLabel(prov.actualModelCall)}`,
+    });
   };
 
   // ── 원문 칸 — 글자마다 다시 그리지 않는다 ──────────────────────────
@@ -539,6 +551,16 @@ export function aiComparePanel({
                   : proposal.readable > 0 ? '읽은 것만 구조화' : '조건 구조화',
         })])),
       ].filter(Boolean)),
+
+      // 생성 실패 — 단계와 오류 코드, 실제 호출 여부(미확인 포함)를 그대로. 제안으로 바꾸지 않는다.
+      failure
+        ? el('p.fp-note.fp-note--warn', {
+          'data-role': 'generation-failure',
+          text: `Gemini 제안을 만들지 못했습니다 · 단계 ${failure.stage}`
+            + (failure.modelCall?.errorCode ? ` · 오류 ${failure.modelCall.errorCode}` : '')
+            + ` · ${failure.label}. 원문을 그대로 두고 「제안 다시 생성」 을 누르거나, 규칙 제안자로 바꿔 보세요.`,
+        })
+        : null,
 
       explicit
         ? el('p.fp-note', {

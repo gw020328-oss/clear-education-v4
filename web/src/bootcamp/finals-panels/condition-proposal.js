@@ -1,6 +1,7 @@
-// Gemini 조건 제안 → 화면 제안 변환기. E 세션 후보(docs/pivot/gemini-proposal-candidate, 6530201)를 그대로 가져왔다.
-// 이미 생성된 서버 응답(clear-external-preview-draft.1 / clear-condition-proposal.1)을 바꿀 뿐이다.
-// fetch · 승인 소비 · 모델 호출 · 실행기는 없다. 초기 .1 응답용이며 .2 계약과 호출 여부 미확정(null)은 최종 연결 때 맞춘다.
+// Gemini 조건 제안 → 화면 제안 변환기 **v2.1**. E 세션 후보(docs/pivot/gemini-proposal-candidate, d696f03)를 그대로 가져왔다.
+// native clear-condition-structuring.2 성공(PROPOSED)과 D 성공 envelope clear-external-preview-draft.1(methods 포함)을 받는다.
+// 실패는 failureView 로 따로 표시한다. actualModelCall:null 은 "전송 여부 미확인" — false 로 바꾸지 않는다.
+// fetch · 승인 소비 · 모델 호출 · 실행기는 없다. 기본 실행 계약 DISPLAY_ONLY.
 // Convert an ALREADY GENERATED server reply. No fetch, approval consumption, model call or executor.
 const fail = code => { throw Object.assign(Error(code), {code}); };
 const check = (value, code='PROPOSAL_INVALID') => { if (!value) fail(code); };
@@ -21,7 +22,7 @@ const shaSource = async sourceText => {
   const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2,'0')).join('');
 };
-export async function toPanelProposal(sourceText, generated, {expectedBodyHash, now, executionContract='DISPLAY_ONLY'} = {}) {
+async function panelFromSuccess(sourceText, generated, {expectedBodyHash, now, executionContract='DISPLAY_ONLY'} = {}) {
   check(typeof sourceText === 'string' && sourceText.length > 0 && sourceText.length <= 4096 && sourceText.isWellFormed());
   check(Number.isSafeInteger(now), 'PROPOSAL_CLOCK_REQUIRED');
   check(['DISPLAY_ONLY','D_SINGLE_ACTIVITY_OFFLINE.1'].includes(executionContract));
@@ -82,4 +83,75 @@ export async function toPanelProposal(sourceText, generated, {expectedBodyHash, 
       proposalHash:p.proposalHash,sourceHash:p.sourceHash,bodyHash:generated.bodyHash,expiresAt:generated.expiresAt},
     provenance:{modelCall:structuredClone(call), actualModelCall:generated.actualModelCall},
   });
+}
+
+
+// Successor API: native wrapper .2 uses caller-owned server storage identity; D success .1 stays separate.
+const canonical = v => Array.isArray(v) ? v.map(canonical) : v && typeof v==='object'
+  ? Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])) : v;
+const digest = async v => {
+  const bytes=new TextEncoder().encode(JSON.stringify(canonical(v)));
+  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
+};
+export function callLabel(value) {
+  check(value===true || value===false || value===null,'MODEL_CALL_STATE');
+  return value===null ? '전송 여부 미확인' : value ? '실제 모델 응답 수신 · 도구 실행과 별개' : '실제 모델 호출 없음';
+}
+export function failureView(packet) {
+  check(packet?.version==='clear-condition-structuring.2','STRUCTURING_VERSION');
+  check(['APPROVAL_REQUIRED','MODEL_CALL_FAILED','MODEL_RESPONSE_REJECTED'].includes(packet.stage));
+  check(packet.proposal===null && packet.draft===null && packet.fallback==='NONE');
+  const c=packet.modelCall;
+  check(c && typeof c.attempted==='boolean' && typeof c.replied==='boolean' && c.succeeded===false);
+  // Native wrapper default HOST_SUPPLIED is explicit; missing/unknown transport is invalid.
+  check(Object.hasOwn(c,'execution') && ['ACTUAL','OFFLINE_TEST_TRANSPORT','HOST_SUPPLIED'].includes(c.execution),'MODEL_CALL_EXECUTION');
+  check(!c.replied || c.attempted);
+  const expected=c.execution!=='ACTUAL'||!c.attempted ? false : c.replied ? true
+    : c.errorCode==='APPROVAL_REQUIRED_OR_SPENT' ? false : null;
+  check(packet.actualModelCall===expected,'MODEL_CALL_STATE');
+  return frozen({kind:'GENERATION_FAILURE',stage:packet.stage,canExecute:false,proposal:null,
+    actualModelCall:expected,label:callLabel(expected),modelCall:structuredClone(c)});
+}
+async function verifyNative(sourceText, draft, proposal) {
+  check(draft?.version==='clear-preview-model-draft.2','MODEL_ROWS_UNAVAILABLE');
+  check(draft.sourceText===sourceText && draft.sourceHash===await shaSource(sourceText),'PROPOSAL_SOURCE_BINDING');
+  check(Array.isArray(draft.modelRows) && draft.modelRows.length===draft.clauses.length);
+  check(await digest({sourceText,rows:draft.modelRows})===draft.proposalHash,'MODEL_ROWS_BINDING');
+  const {draftHash,...body}=draft;
+  check(await digest(body)===draftHash,'DRAFT_HASH_BINDING');
+  check(proposal.draftHash===draftHash && proposal.proposalHash===draft.proposalHash && proposal.status===draft.status);
+  for(let i=0;i<draft.clauses.length;i++) {
+    const c=draft.clauses[i],row=draft.modelRows[i],p=proposal.clauses[i];
+    check(row.quote===c.text && row.start===c.start && row.end===c.end,'MODEL_ROWS_SPAN');
+    const condition=draft.conditions.find(x=>x.clauseId===c.id),q=draft.questions.find(x=>x.clauseId===c.id);
+    const guard=draft.guards.find(x=>x.clauseId===c.id)??null;
+    check(p.clauseId===c.id && p.status===(condition?'SUPPORTED':q?.reason)
+      && p.capability===(condition?.capability??null) && p.question===(q?.question??null));
+    const expected=guard?{kinds:guard.kinds,modelStatus:guard.modelStatus,modelCapability:guard.modelCapability}:null;
+    check(await digest(expected)===await digest(p.serverGuard),'GUARDS_BINDING');
+  }
+}
+export async function toPanelProposal(sourceText, packet, context={}) {
+  packet=structuredClone(packet); context=structuredClone(context);
+  check(hex(context.expectedProposalHash) && packet?.proposal?.proposalHash===context.expectedProposalHash,'CURRENT_PROPOSAL_PIN');
+  check(packet.version==='clear-condition-structuring.2' || packet.version==='clear-external-preview-draft.1','STRUCTURING_VERSION');
+  if(packet.version==='clear-condition-structuring.2') {
+    check(packet.stage==='PROPOSED' && packet.fallback==='NONE','GENERATION_NOT_SUCCESS');
+    check(packet.modelCall?.attempted===true && packet.modelCall.model==='gemini-3.5-flash-lite','MODEL_CALL_STATE');
+    await verifyNative(sourceText,packet.draft,packet.proposal);
+    const envelope={...packet,version:'clear-external-preview-draft.1',draftId:context.draftId,
+      expiresAt:context.expiresAt,bodyHash:packet.modelCall.bodyHash};
+    const panel=await panelFromSuccess(sourceText,envelope,context);
+    return frozen({...panel,cacheVersion:'clear-panel-model-cache.2',modelRows:structuredClone(packet.draft.modelRows)});
+  }
+  const c=packet.modelCall;
+  check(c?.attempted===true && c.replied===true && c.succeeded===true && c.errorCode===null,'D_CALL_STATE');
+  for(const name of ['countTokens','generateContent']) {
+    check(c.methods?.[name]?.invoked===true && c.methods[name].replied===true,'D_METHOD_STATE');
+  }
+  check(c.model===packet.model && c.model==='gemini-3.5-flash-lite','D_MODEL');
+  check(packet.modelProvenance===(c.execution==='ACTUAL'?'ACTUAL_GEMINI_HTTP':'OFFLINE_TEST_TRANSPORT'),'D_PROVENANCE');
+  await verifyNative(sourceText,packet.draft,packet.proposal);
+  const panel=await panelFromSuccess(sourceText,packet,context);
+  return frozen({...panel,cacheVersion:'clear-panel-model-cache.2',modelRows:structuredClone(packet.draft.modelRows)});
 }

@@ -223,3 +223,5 @@
 /* 출처 배지 — 규칙 / Gemini 실제 / Gemini 오프라인 대역 / 생성 전 */
 .fp-mode[data-mode="model-fixture"] { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
 .fp-mode[data-mode="model-idle"] { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+.fp-mode[data-mode="model-failed"] { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.fp-mode[data-mode="model-unknown"] { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }

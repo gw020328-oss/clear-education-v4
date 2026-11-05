@@ -934,3 +934,41 @@ test('서버가 보류한 조항은 사유를 보이고 직접 지정 상자가 
     assert.equal(proposeReading('강의수강 후기적기 과제제출').kept.length, 3);
   } finally { restore(); }
 });
+
+// ── v2.1 변환기 — 생성 실패와 '전송 여부 미확인'(null) ───────────────────
+
+import { FAILING_GEMINI_PROPOSER, offlineGeminiPacket } from '../src/bootcamp/finals-panels/gemini-fixture.js';
+import { toPanelProposal, callLabel } from '../src/bootcamp/finals-panels/condition-proposal.js';
+
+test('생성이 실패하면 제안을 만들지 않고, 실제 호출 여부 null 은 "전송 여부 미확인" 으로만 적는다', async () => {
+  const restore = installDom();
+  try {
+    const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+    const panel = aiComparePanel({ adapter: a, source: PRESETS[0].source, proposer: FAILING_GEMINI_PROPOSER });
+    clickOn(byRole(panel.node, 'generate'));
+    await settle();
+    const text = panel.node.textContent;
+    assert.ok(byRole(panel.node, 'generation-failure'), '실패 표시가 없다');
+    assert.ok(text.includes('전송 여부 미확인'), 'null 을 미확인으로 적지 않았다: ' + text.slice(0, 300));
+    assert.ok(text.includes('MODEL_CALL_FAILED') && text.includes('GEMINI_NETWORK_FAILURE'));
+    assert.ok(!text.includes('개 조건을 찾았습니다'), '실패인데 제안이 생겼다');
+    assert.ok(!text.includes('실제 호출 아님') && !text.includes('실제 모델 응답 수신'), 'null 을 세 출처 중 하나로 분류했다');
+    const run = [...walk(panel.node)].find((n) => n.tagName === 'BUTTON' && !n.attributes['data-role'] && n.textContent.includes('구조화') || n.textContent?.includes('제안 생성 전'));
+    assert.ok(run === undefined || run.attributes.disabled === 'disabled', '실패인데 실행이 열려 있다');
+    assert.equal(callLabel(null), '전송 여부 미확인');
+  } finally { restore(); }
+});
+
+test('오프라인 대역 패킷은 v2.1 변환기의 지문 검사를 통과하고 modelRows 와 cacheVersion 을 낸다', async () => {
+  const text = PRESETS[1].source;
+  const { packet, context } = await offlineGeminiPacket(text, { now: 1000 });
+  const out = await toPanelProposal(text, packet, context);
+  assert.equal(out.cacheVersion, 'clear-panel-model-cache.2');
+  assert.equal(out.modelRows.length, 3);
+  assert.equal(out.readable, 3);
+  assert.equal(out.canExecute, false, '기본은 표시 전용');
+  assert.equal(out.provenance.actualModelCall, false);
+  // 지문 하나라도 틀리면 거부 — 대역이 변환기 검사를 우회하지 않는다
+  const tampered = structuredClone(packet); tampered.draft.modelRows[0].quote = 'x';
+  await assert.rejects(toPanelProposal(text, tampered, context));
+});
