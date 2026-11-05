@@ -34,3 +34,14 @@ test('return command rejects arbitrary condition IDs and retains legacy page inp
  assert.equal(validateNativeWorkflowCommand({...old,criterionId:'assignment-submitted'}).criterionId,'assignment-submitted');
  for(const criterionId of ['reflection-topics','python-basic-certificate','arbitrary',null])assert.throws(()=>validateNativeWorkflowCommand({...old,criterionId}));
 });
+
+for(const criterionId of ['activity-complete','assignment-submitted'])for(const clock of ['wall','monotonic'])test('source original '+clock+' horizon is exclusive for '+criterionId,async t=>{
+ const c=await commandFixture();t.after(()=>c.owner.close());c.limitAuthority(START+20);
+ const app='application-horizon',command={method:'POST',path:'/bootcamp/v4/applications/'+app+'/source-refresh',body:{criterionId,expectedRevision:1},idempotencyKey:'horizon-one'};
+ const input=await c.grant(command);c.advance(2); // Reservation must not restart the source's original 20-second horizon.
+ const authority=await c.scope.run(input,()=>{const fence=c.scope.captureActivityAuthority(app);c.scope.memoryCommitted();return fence;});
+ c.advance(4);authority(); // Original POST five-second lease ended; source still valid.
+ if(clock==='wall')c.advance(14);else c.drift(14000);
+ assert.throws(authority,/MOODLE_ACTIVITY_AUTHORITY/);
+ await assert.rejects(c.scope.run(input,()=>assert.fail('consumed command must not run')),/MOODLE_COMMAND_UNAVAILABLE|MOODLE_COMMAND_BINDING/);
+});

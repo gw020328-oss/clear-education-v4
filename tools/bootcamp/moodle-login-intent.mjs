@@ -315,6 +315,7 @@ export function createMoodleLoginIntents({
       // Retain the already verified authorization horizon for an accepted
       // asynchronous source operation; command execution keeps its short lease.
       const sourceExpiresAt = command.grant.expiresAtExclusive;
+      const sourceMonotonicEnd = command.t.mono + (sourceExpiresAt - command.t.wall) * 1000;
       // Claim before awaiting C: only this POST can consume the original record.
       // C rechecks its original session and full scope now, then retires that
       // record. A lost response cannot release this reservation for replay.
@@ -360,7 +361,8 @@ export function createMoodleLoginIntents({
               && moodleCommandDigest(input) === hash,code);
             clearExpiry(a.request.role,context);
             requireLive(a);
-            check(time().wall < expiresAt && command.phase === 'CONSUMED'
+            const sourceTime = time();
+            check(sourceTime.wall < expiresAt && sourceTime.mono < sourceMonotonicEnd && command.phase === 'CONSUMED'
               && a.phase === 'CONNECTED' && a.identity === identity
               && canonical(a.context) === fixedContext,code);
           };

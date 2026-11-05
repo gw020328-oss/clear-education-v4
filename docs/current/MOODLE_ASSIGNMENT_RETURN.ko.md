@@ -11,3 +11,9 @@
 검증은 `normal-assignment-return`, `moodle-live`, `moodle-native-workflow`, `normal-frontend` 43개 통과다. 합성 네트워크/저장소 및 명령 fixture를 사용했다. 실제 학습·제출·카드 갱신 성공은 아직 확인하지 않았다. 새 회고 선택과 AI 비용 승인은 별도 현재성 검토가 필요하며 과거 selectedPostId1을 새 회고로 취급하지 않는다.
 
 같은 persistent Moodle DB의 읽기 검사에서 매핑·자동 열람 완료 규칙·과제 제출 설정·과거 완료/제출 상태는 일치했다. 그러나 교재와 과제/회고 안내는 synthetic fixture 내용이어서 실제 학습 자료의 준비가 남아 있다. 기존 학습 결과를 초기화하거나 직접 완료 처리하지 않는다. 실제 글·답안·학습 행동은 사용자가 수행한다.
+
+## 원래 source grant의 단조 시계 상한 보정
+
+독립 검토에서 기존 activity 경로에도 존재했던 수명 결함을 확인했다. 원 source grant의 wall 만료는 보존했지만 더 긴 intent/run 단조 시계만 검사하여, wall이 멈추고 단조 시계가 원 source grant 만료를 지난 경우 거부하지 못했다. authorization 때 저장한 command.t의 wall/mono와 원 grant 만료로 sourceMonotonicEnd를 계산한다. reserve/capture 시각에서 기한을 새로 시작하지 않는다. 수집 fence는 wall·source mono·기존 intent/run 상한을 모두 검사한다. POST의 5초 기한·단회 소비·로그아웃 검사는 그대로다.
+
+`normal-assignment-return`, `moodle-live`, `normal-certificate-start` 24개 통과. 추가 회귀 네 개는 activity/assignment 각각의 wall/mono 배타적 만료와 예약 2초 지연에도 원래 20초 source 기한 보존, POST 만료 뒤 원 source 기한 안의 정상 fence 및 소비 명령 재실행 거부를 검증한다. 실제 런타임 적용은 독립 후속 검토 뒤다.
