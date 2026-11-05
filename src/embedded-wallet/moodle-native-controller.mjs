@@ -8,6 +8,7 @@ import {createNativeMoodleLogin} from './moodle-native-login.mjs';
 import {moodleCommandDigest} from './moodle-command.mjs';
 import {createNativeWorkflow,validateNativeWorkflowCommand,nativeWorkflowIsRead} from './moodle-native-workflow.mjs';
 import {MOODLE_WALLET_VERSION, validateCourseWalletView, validateCourseWalletCommand} from './moodle-native-contract.mjs';
+import {REVIEW_WINDOW} from '../../tools/bootcamp/test-client/review-window.js';
 
 const check = (ok, code) => { if (!ok) throw Error(code); };
 export function createCourseWalletController({config, sdk, target, onState, fetch: fetchImpl = globalThis.fetch,
@@ -21,6 +22,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   let wallet = null, session = null, workflow = null, closing = null, candidates = [], providers = [];
   let cancellation = null, moodleEndUnknown = false, endingMoodle = null;
   let authExpiry = 0, expiryTimer;
+  let reviewTimer, reviewRead;
   let snapshot = {ready: false, authenticated: false, user: null, wallets: [], walletsReady: false, externalWalletsDisabled: true};
   const selector = kind => kind + '-' + epoch + '-' + (++sequence);
   function allowed() {
@@ -49,6 +51,26 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     return view;
   }
   function current(stamp, signal) { check(!closed && stamp === epoch && !signal.aborted, 'CANCELLED'); }
+  function stopReviewReader() {
+    clearInterval(reviewTimer); reviewTimer = undefined;
+    reviewRead?.abort(); reviewRead = undefined;
+  }
+  function startReviewReader() {
+    if (reviewTimer !== undefined || !target.document) return;
+    reviewTimer = setInterval(async () => {
+      if (target.document.visibilityState !== 'visible' || phase !== 'CONNECTED' || !authenticated
+        || !session || !wallet || busy || reviewRead) return;
+      const controller = new AbortController(), stamp = epoch, captured = session, capturedWallet = wallet;
+      const signal = controller.signal;
+      reviewRead = controller;
+      try {
+        await capturedWallet.guard(signal); current(stamp, signal);
+        // Keep the server's reader observation fresh without replacing the operator's reviewed input.
+        await captured.request('/bootcamp/v4/session', {signal});
+      } catch { /* Explicit workflow reads report authentication and transport errors. */ }
+      finally { if (reviewRead === controller) reviewRead = undefined; }
+    }, REVIEW_WINDOW.pollMs);
+  }
   async function endMoodle(signal) {
     if (endingMoodle) return endingMoodle;
     // A target mismatch (NOT_CURRENT) or a later status cannot confirm that this
@@ -70,6 +92,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   }
   async function release() {
     if (closing) return closing;
+    stopReviewReader();
     const priorSession = session, priorWallet = wallet;
     clearTimeout(expiryTimer); authExpiry = 0;
     wallet = null; workflow = null; network = authenticated = false;
@@ -214,9 +237,15 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
     workflow??=createNativeWorkflow({session:captured,wallet:capturedWallet,config:c,guard,
       command:async(input,signal)=>{await guard(signal);return moodle.command(captured,input,signal);}});
     busy=controller;emit();
-    try{return await bounded(()=>workflow.run(command,{signal:controller.signal}),{signal:controller.signal,timeoutMs:120000});}
+    try{
+      const result = await bounded(()=>workflow.run(command,{signal:controller.signal}),{signal:controller.signal,timeoutMs:120000});
+      if (command.action === 'read-session') startReviewReader();
+      return result;
+    }
     catch(cause){
       workflow=null;
+      const reviewChanged=command.action==='approve-reflection'&&cause?.message==='AI_REVIEW_CHANGED'&&cause?.outcome==='NOT_SENT';
+      if(reviewChanged)throw Object.assign(Error('MOODLE_AI_REVIEW_CHANGED'),{code:'MOODLE_AI_REVIEW_CHANGED',outcome:'NOT_SENT'});
       if(stamp===epoch&&!closed&&(!nativeWorkflowIsRead(command)||cause?.status===401||cause?.status===403
         ||['AUTH_REQUIRED','ROLE_CHANGED','PRODUCT_ROLE_CHANGED','FORBIDDEN','SESSION_CHANGED','SESSION_CONTEXT',
           'CANCELLED','WALLET_CONTEXT_CANCELLED'].includes(cause?.message)))await cancel();

@@ -77,7 +77,13 @@ test('registration decision change after signature refuses submit',async()=>{
 test('AI review is explicit, uses exact current input, and never calls an AI provider',async()=>{
  const f=fixture(),reviewed=(await f.flow.run({action:'read-session'})).aiApproval;
  assert.equal(f.commands.length,0);
- f.reflection.planHash=id('changed');await assert.rejects(f.flow.run({action:'approve-reflection',reviewed,idempotencyKey:'approval-one'}),/AI_REVIEW_CHANGED/);
+ f.reflection.permitted=false;
+ await assert.rejects(f.flow.run({action:'approve-reflection',reviewed,idempotencyKey:'approval-stale'}),
+  {message:'AI_REVIEW_CHANGED',outcome:'NOT_SENT'});
+ assert.equal(f.commands.length,0);
+ f.reflection.permitted=true;
+ const refreshed=(await f.flow.run({action:'read-session'})).aiApproval;
+ f.reflection.planHash=id('changed');await assert.rejects(f.flow.run({action:'approve-reflection',reviewed:refreshed,idempotencyKey:'approval-one'}),/AI_REVIEW_CHANGED/);
  assert.equal(f.commands.length,0);
  const current=(await f.flow.run({action:'read-session'})).aiApproval;
  await f.flow.run({action:'approve-reflection',reviewed:current,idempotencyKey:'approval-two'});

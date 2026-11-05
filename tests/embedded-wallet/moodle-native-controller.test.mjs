@@ -10,8 +10,9 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator', workflowGate} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate, document} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
+  target.document = document;
   const provider = new EventEmitter(), calls = [], stages = [], views = [];
   let currentAddress = address;
   provider.request = async ({method}) => {
@@ -218,4 +219,24 @@ test('workflow reads require the original completed connection and cancellation 
  assert(f.stages.includes('/bootcamp/v4/session'));await f.controller.dispatch({action:'cancel'});release();
  await assert.rejects(reading,e=>e.code==='MOODLE_WORKFLOW_UNAVAILABLE'&&e.outcome==='NOT_SENT');
  assert.equal(f.view().authenticated,false);await f.controller.destroy();
+});
+
+test('visible Moodle readers keep the session fresh after an explicit read and stop on teardown', async t => {
+  t.mock.timers.enable({apis:['setInterval']});
+  const document = {visibilityState:'visible'}, f = fixture({document});
+  t.after(() => f.controller.destroy());
+  await f.ready();
+  await f.controller.dispatch({action:'sign-in'});
+  await f.controller.dispatch({action:'finish-connection'});
+  const reads = () => f.stages.filter(path => path === '/bootcamp/v4/session').length;
+  const tick = async () => {t.mock.timers.tick(1000); await new Promise(r=>setImmediate(r));};
+  await tick(); assert.equal(reads(),0);
+  await f.controller.runWorkflow({action:'read-session'});
+  await tick(); assert.equal(reads(),2);
+  document.visibilityState='hidden';
+  await tick(); assert.equal(reads(),2);
+  document.visibilityState='visible';
+  await tick(); assert.equal(reads(),3);
+  await f.controller.destroy();
+  await tick(); assert.equal(reads(),3);
 });

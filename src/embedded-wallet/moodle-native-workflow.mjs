@@ -4,6 +4,7 @@ import {canonical,exactKeys} from '../policy/values.mjs';
 const check=(ok,code='MOODLE_WORKFLOW_COMMAND')=>{if(!ok)throw Error(code);};
 const id=v=>typeof v==='string'&&/^[a-z][a-z0-9.-]{0,63}$/.test(v);
 const same=(a,b)=>canonical(a)===canonical(b);
+const reviewChanged=()=>Object.assign(Error('AI_REVIEW_CHANGED'),{outcome:'NOT_SENT'});
 const fields={
  'read-session':[], 'create-application':['idempotencyKey'], 'read-application':['applicationId'],
  'bind-source-session':['applicationId'], 'read-source-signature':['applicationId'],
@@ -67,7 +68,7 @@ export function createNativeWorkflow({session,wallet,config,command,guard}) {
     check(reflection&&same(reflection,input.reviewed)&&reflection.permitted===true,'AI_REVIEW_REQUIRED');
     const reviewed=reflection;reflection=null;
     const latest=(await normal.session({signal})).aiApproval;
-    check(latest?.permitted===true&&same(aiBody(latest),aiBody(reviewed)),'AI_REVIEW_CHANGED');
+    if (latest?.permitted!==true||!same(aiBody(latest),aiBody(reviewed))) throw reviewChanged();
     result=await request('/bootcamp/v4/applications/'+reviewed.applicationId+'/reflection-approval',
      {method:'POST',body:aiBody(reviewed),idempotencyKey:input.idempotencyKey,signal});break;
    }
