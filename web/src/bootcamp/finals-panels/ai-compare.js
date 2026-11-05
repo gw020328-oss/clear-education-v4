@@ -104,6 +104,27 @@ const ERROR_TEXT = Object.freeze({
   RUN_FAILED: '실행 중 오류가 났습니다.',
 });
 
+// ── 받은 제안의 모양 검사 ───────────────────────────────────────────
+//
+// 화면과 applyOverrides 가 읽는 칸만 본다. 변환기 계약을 새로 정하는 것이 아니라
+// 그리다 깨지는 값(예: { clauses: [null] })을 생성 실패로 돌리려는 것이다.
+const optString = (v) => v === null || v === undefined || typeof v === 'string';
+const optBool = (v) => v === undefined || typeof v === 'boolean';
+const isClause = (c) => c !== null && typeof c === 'object' && !Array.isArray(c)
+  && Number.isSafeInteger(c.index) && typeof c.original === 'string'
+  && optString(c.canonical) && optString(c.capability) && optString(c.note) && optString(c.source)
+  && optBool(c.held) && optBool(c.notOurs)
+  && (c.mentions === undefined || (Array.isArray(c.mentions) && c.mentions.every((m) => typeof m === 'string')))
+  && (c.serverGuard === null || c.serverGuard === undefined
+    || (typeof c.serverGuard === 'object' && Array.isArray(c.serverGuard.kinds)
+      && c.serverGuard.kinds.every((k) => typeof k === 'string') && optString(c.serverGuard.modelCapability)));
+const isProposal = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
+  && Array.isArray(v.clauses) && v.clauses.every(isClause)
+  && Number.isSafeInteger(v.readable) && v.readable >= 0
+  && typeof v.complete === 'boolean' && typeof v.canonicalText === 'string' && Array.isArray(v.duplicates)
+  && (v.serverBinding === undefined || v.serverBinding === null || typeof v.serverBinding === 'object')
+  && (v.provenance === undefined || v.provenance === null || typeof v.provenance === 'object');
+
 const short = (v) => {
   const s = String(v ?? '');
   return s.length > 18 ? `${s.slice(0, 10)}…${s.slice(-6)}` : s;
@@ -143,6 +164,9 @@ export function aiComparePanel({
   let lastSent = null;
   // 서버 제안의 만료 시각에 한 번 다시 그린다.
   let expiryTimer = null;
+  // 이번 제안 생성이 실패했나. '조건이 없는 정상 응답' 과 다르다 — 실패를
+  // 빈 제안으로 바꿔 "조건을 찾지 못했습니다" 로 보이면 안 된다.
+  let failed = false;
 
   // 서버(Gemini) 제안은 운영자 지정으로 덮지 않는다 — 서버가 보류한 조항을 프론트가
   // 실행 가능하게 바꾸면 안 된다(오규원 11/5). 규칙 제안만 지정을 얹는다.
@@ -151,19 +175,56 @@ export function aiComparePanel({
   /** 명시적 제안자(Gemini): 입력마다 부르지 않고 「제안 생성」 을 눌러야 한 번 돈다 */
   const explicit = proposer.explicit === true;
 
+  /** 이전 제안·운영자 지정을 내린다. 생성 실패와 명시적 (재)생성 시작이 같이 쓴다 */
+  const dropProposal = () => { base = emptyProposal(); overrides.clear(); recompute(); };
+
+  /**
+   * 제안 생성 실패. 이전 제안·운영자 지정을 버리고 실행을 잠근다(proposedFor=null).
+   * 오류 내용은 들고 있지 않는다 — 화면에는 고정 안내만 나간다.
+   */
+  const failProposal = () => {
+    failed = true; proposing = false; runWhenReady = null; proposedFor = null;
+    dropProposal();
+  };
+
+  /** 받은 값을 채택한다. 모양이 틀리거나 채택 중 깨지면 false — 부른 쪽이 실패로 돌린다 */
+  const adopt = (value, next) => {
+    if (!isProposal(value)) return false;
+    try { base = value; recompute(); } catch { return false; }
+    proposedFor = next; proposing = false;
+    return true;
+  };
+
   /** 제안자를 돌린다. 값이든 Promise 든 받고, 늦게 온 답은 버린다 */
   const propose = (next) => {
     const stamp = (proposeStamp += 1);
-    const got = proposer.propose(next);
-    if (typeof got?.then !== 'function') { base = got; proposedFor = next; proposing = false; recompute(); return; }
+    failed = false;
+    let got;
+    // 동기 예외도 실패다. 던진 값을 화면으로 넘기지 않는다.
+    try { got = proposer.propose(next); } catch { failProposal(); return; }
+    if (typeof got?.then !== 'function') {
+      if (!adopt(got, next)) failProposal();
+      return;
+    }
+    // 명시적 생성(재생성 포함)은 이전 제안을 내린다. 기다리는 동안 이전 결과가
+    // 이번 생성의 결과처럼 보이지 않게, 실패하면 그 자리에 실패만 남게.
+    if (explicit) dropProposal();
     proposing = true; render();
-    const settleProposal = (value) => {
-      if (stamp !== proposeStamp) return;         // 그새 원문이 바뀌었다
-      base = value; proposedFor = next; proposing = false; recompute();
+    const settleProposal = (ok, value) => {
+      if (stamp !== proposeStamp) return;         // 그새 원문이 바뀌었거나 새로 생성했다
+      if (!ok || !adopt(value, next)) { failProposal(); render(); return; }
       if (runWhenReady !== null && runWhenReady === text) { runWhenReady = null; run(); }
       render();
     };
-    got.then(settleProposal, () => settleProposal(emptyProposal()));
+    // then 이 스스로 던지는 thenable 도 거절로 받는다. 채택·그리기에서 난 오류도
+    // 실패로 닫는다 — 미처리 rejection 으로 남기지 않는다.
+    Promise.resolve(got)
+      .then((value) => settleProposal(true, value), () => settleProposal(false))
+      .catch(() => {
+        if (stamp !== proposeStamp) return;
+        failProposal();
+        try { render(); } catch { /* 빈 제안은 그려진다. 여기서 더 던지지 않는다 */ }
+      });
   };
 
   /** 화면의 원문과 같은 원문으로 만든 제안이 준비됐나. 아니면 실행하지 않는다 */
@@ -172,7 +233,7 @@ export function aiComparePanel({
   const run = () => {
     // 서버 제안은 표시 전용이다. canonicalText 는 호환용 원문일 뿐, 규칙·fixture 실행기에
     // 넘기지 않는다. 실행은 CLEAR 서버 중계 경로가 붙은 뒤의 일이다.
-    if (!proposalReady() || proposal.readable === 0 || proposal.serverBinding) return;
+    if (failed || !proposalReady() || proposal.readable === 0 || proposal.serverBinding) return;
     lastSent = proposal;
     // 모듈에는 **정규 문장**을 넘긴다. 원문은 그대로 두고 화면에 나란히 보인다.
     void adapter.request(proposal.canonicalText);
@@ -185,7 +246,7 @@ export function aiComparePanel({
       // 늦게 오는 답도 버린다. 다시 보려면 「제안 생성」 을 눌러야 한다.
       // 제안자에게도 알린다 — 진행 중 요청을 끊고 채택한 지문(pin)을 버린다.
       proposer.invalidate?.();
-      proposeStamp += 1; proposing = false; runWhenReady = null;
+      proposeStamp += 1; proposing = false; runWhenReady = null; failed = false;
       base = emptyProposal(); proposedFor = null; overrides.clear(); recompute();
     } else {
       propose(next);
@@ -209,6 +270,8 @@ export function aiComparePanel({
     edit(preset.source);
     // 명시적 제안자면 예문을 넣기만 한다. 생성은 버튼으로.
     if (explicit) { render(); return; }
+    // 제안이 바로 실패했으면 실행을 예약하지 않는다. 다시 시도는 버튼으로.
+    if (failed) { render(); return; }
     // 제안이 비동기면 아직 이전 원문의 제안이다. 준비되면 그때 실행한다.
     if (proposalReady()) run(); else { runWhenReady = preset.source; render(); }
   };
@@ -221,16 +284,21 @@ export function aiComparePanel({
     render();
   };
 
+  /** 실패 뒤 「다시 시도」. 같은 원문으로 한 번 더 부른다 — 자동 재시도는 없다 */
+  const retry = () => { if (failed) generate(); };
+
   /**
    * 출처 배지. 셋을 섞지 않는다 — 규칙 / Gemini 실제 호출 / Gemini 오프라인 대역.
    * 실제 호출 여부는 제안자 이름이 아니라 **응답의 provenance** 가 말한다.
    */
   const sourceBadge = () => {
     const kind = proposer.kind ?? (proposer.id === 'rules' ? 'rules' : 'model');
+    // 실패는 출처가 아니다. 이전 제안의 배지를 남기지 않는다.
+    if (failed) return el('span.fp-mode', { 'data-mode': 'failed', text: '제안 생성 실패 · 받은 결과 없음' });
     if (kind === 'rules') return el('span.fp-mode', { 'data-mode': 'rules', text: proposer.label });
     const prov = proposal.provenance ?? null;
     // 실패·승인 대기도 '생성 전' 이 아니다. 제안자 이름만 보이고 결과는 아래 상자가 말한다.
-    if (!prov) return el('span.fp-mode', { 'data-mode': 'model-idle', text: proposal.outcome ? proposer.label : (proposer.idleLabel ?? proposer.label) });
+    if (!prov) return el('span.fp-mode', { 'data-mode': 'model-idle', text: proposal.outcome || proposing ? proposer.label : (proposer.idleLabel ?? proposer.label) });
     return prov.actualModelCall === true
       ? el('span.fp-mode', { 'data-mode': 'model', text: 'Gemini 실제 호출 · 서버 검토 거침' })
       : el('span.fp-mode', { 'data-mode': 'model-fixture', text: 'Gemini 오프라인 응답 대역 · 실제 호출 아님' });
@@ -360,7 +428,7 @@ export function aiComparePanel({
     }
     const outcome = proposal.outcome ?? null;
     const outcomeFailed = outcome !== null && outcome.kind !== 'PROPOSED';
-    const idle = explicit && !proposing && !proposal.provenance && !outcome;
+    const idle = explicit && !proposing && !failed && !proposal.provenance && !outcome;
     const s = adapter.current;
     const banner = BANNER[s.state] ?? BANNER[STATE.ERROR];
     const draft = s.payload?.draft ?? null;
@@ -435,16 +503,34 @@ export function aiComparePanel({
           //
           // 실제 안내문은 대부분 조건이 아닌 글이다. 문장마다 "못 읽음" 을 붙여
           // 두면 화면이 심문처럼 보인다. 찾은 것만 보이고, 나머지는 접는다.
-          // 서버 중계 결과(승인 필요·만료·실패·미확인)는 제안과 섞지 않고 따로 보인다.
-          outcomeFailed ? outcomeBox(outcome) : null,
-          outcomeFailed || idle || proposing ? null : el('p.fp-proposal-ask', {
-            text: found.length > 0
-              ? `${found.length}개 조건을 찾았습니다 — 맞나요?`
-              : held.length > 0
-                ? '조건 사이의 관계를 확인해야 해서 자동으로 읽지 않았습니다. 아래 보류한 조항을 봐 주세요.'
-                : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
-          }),
-          idle ? el('p.fp-proposal-ask', { text: '아직 제안을 만들지 않았습니다. 「제안 생성」 을 눌러야 한 번 보냅니다.' }) : null,
+          // 상자는 하나만. 제안자 예외·잘못된 응답은 #167 생성 실패 상자, 정상 계약으로
+          // 받은 승인 필요·만료·D 오류·결과 미확인은 #168 결과 상자. 실패·대기·만료 때
+          // '조건 없음 · 직접 지정' 으로 이끌지 않는다.
+          failed
+            ? el('div.fp-proposal-warn', { 'data-role': 'proposal-failed' }, [
+              el('p.fp-proposal-ask', { text: '제안을 생성하지 못했습니다' }),
+              el('p.fp-proposal-note', {
+                text: '통신이나 서버 문제로 이번 생성이 끝나지 않았습니다. 원문에 조건이 없거나 지원하지 않는 '
+                  + '조건이라는 뜻이 아닙니다. 이전 제안은 쓰지 않으니 다시 시도해 주세요.',
+              }),
+              el('button.fp-btn', {
+                type: 'button',
+                'data-role': 'retry',
+                disabled: proposing || typing() || text.trim() === '' ? 'disabled' : null,
+                onClick: retry,
+              }, [el('span', { text: '다시 시도' })]),
+            ])
+            : outcomeFailed ? outcomeBox(outcome)
+              : idle ? el('p.fp-proposal-ask', { text: '아직 제안을 만들지 않았습니다. 「제안 생성」 을 눌러야 한 번 보냅니다.' })
+                : el('p.fp-proposal-ask', {
+                  text: proposing && proposal.clauses.length === 0
+                    ? '이번 제안을 만드는 중입니다. 결과가 오면 여기에 보입니다.'
+                    : found.length > 0
+                      ? `${found.length}개 조건을 찾았습니다 — 맞나요?`
+                      : held.length > 0
+                        ? '조건 사이의 관계를 확인해야 해서 자동으로 읽지 않았습니다. 아래 보류한 조항을 봐 주세요.'
+                        : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
+                }),
           // 받은 제안의 출처·호출·만료. 모델 응답과 도구 실행은 다른 사실이다.
           outcome?.kind === 'PROPOSED' ? proposedFacts(proposal) : null,
           found.length > 0
@@ -532,7 +618,7 @@ export function aiComparePanel({
             ])
             : null,
 
-          el('p.fp-note', {
+          failed || outcomeFailed || idle || (proposing && proposal.clauses.length === 0) ? null : el('p.fp-note', {
             text: found.length > 0
               ? '아래 버튼을 누르면 찾은 조건만 구조화합니다. 읽지 않은 문장은 넘기지 않습니다.'
               : '4가지 조건(강의 활동 완료 · 과제 제출 · 회고 세 항목 · HackerRank 인증서)만 읽을 수 있습니다.',
@@ -550,7 +636,7 @@ export function aiComparePanel({
             onClick: generate,
           }, [el('span', {
             text: proposing ? (proposer.busyLabel ?? 'Gemini 에 보내는 중…')
-              : proposal.provenance || outcome ? '제안 다시 생성' : (proposer.generateLabel ?? '제안 생성 (Gemini)'),
+              : proposal.provenance || outcome || failed ? '제안 다시 생성' : (proposer.generateLabel ?? '제안 생성 (Gemini)'),
           })])
           : null,
         (runButton = el('button.fp-btn', {
@@ -561,6 +647,7 @@ export function aiComparePanel({
           onClick: run,
         }, [el('span', {
           text: proposal.serverBinding ? (proposer.displayOnlyButton ?? '표시 전용 · 실행은 서버 중계 연결 뒤')
+            : failed ? '제안 생성 실패 · 실행할 제안 없음'
             : s.busy ? '구조화 중…'
               : !proposalReady() ? (proposing ? '제안을 만드는 중…' : explicit ? '제안 생성 전' : '원문 반영 중…')
                 : proposal.complete ? '이대로 구조화'
