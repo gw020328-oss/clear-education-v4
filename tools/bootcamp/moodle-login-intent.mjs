@@ -311,6 +311,10 @@ export function createMoodleLoginIntents({
       check(a?.phase === 'CONNECTED' && command?.phase === 'AUTHORIZED'
         && command.hash === commandHash && matches(commandBinding,a.commandBindingHash)
         && canonical(context) === canonical(a.context), 'MOODLE_COMMAND_BINDING');
+      // C's execute-command reply is deliberately capped to the POST lease.
+      // Retain the already verified authorization horizon for an accepted
+      // asynchronous source operation; command execution keeps its short lease.
+      const sourceExpiresAt = command.grant.expiresAtExclusive;
       // Claim before awaiting C: only this POST can consume the original record.
       // C rechecks its original session and full scope now, then retires that
       // record. A lost response cannot release this reservation for replay.
@@ -346,7 +350,7 @@ export function createMoodleLoginIntents({
             && (!activity || input.body?.criterionId === 'activity-complete'),code);
           sourceAuthorityTaken = true;
           const identity = a.identity, fixedContext = canonical(context), hash = command.hash;
-          const expiresAt = command.grant.expiresAtExclusive;
+          const expiresAt = sourceExpiresAt;
           // The POST grant is consumed once. This read-only fence follows its
           // original connected intent, not the five-second transport lease.
           return () => {

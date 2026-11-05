@@ -55,6 +55,23 @@ test('authority is rechecked after pending signature and before any browser can 
  const signed=Promise.withResolvers(),pending=x.gate.signature(()=>signed.promise);
  const rejected=assert.rejects(pending,/FORBIDDEN/);x.replace();signed.resolve('synthetic-signature');await rejected;
 });
+test('actual C execute lease cap permits human signature wait but never reuses the POST',async t=>{
+ const x=await fixture(t);x.stage();const wait=x.gate.wait();await x.post();await wait;
+ const signed=Promise.withResolvers(),pending=x.gate.signature(()=>signed.promise);
+ x.advance(6);
+ assert.equal(x.gate.view(x.context,x.app).signatureReady,true);
+ assert.throws(()=>x.commands.lastReservation.assert(),/MOODLE_COMMAND_BINDING/);
+ await assert.rejects(x.post(),/MOODLE_COMMAND_UNAVAILABLE/);
+ x.advance(20);signed.resolve('synthetic-reviewed-signature');await pending;x.gate.complete();
+ assert.equal(x.gate.view(x.context,x.app).state,'VERIFIED');
+});
+test('source wait keeps the shorter original authorization horizon despite a longer connected intent',async t=>{
+ const x=await fixture(t);x.commands.limitAuthority(START+9);x.stage();
+ const wait=x.gate.wait();await x.post();const accepted=await wait;
+ x.advance(6);accepted.assertAuthority();x.advance(3);
+ assert.throws(accepted.assertAuthority,/MOODLE_CERTIFICATE_AUTHORITY/);
+ assert.throws(()=>x.gate.view(x.context,x.app),/MOODLE_CERTIFICATE_AUTHORITY/);
+});
 test('closing or expiry makes readiness unavailable and releases waiting owner',async t=>{
  const x=await fixture(t);x.stage();const wait=x.gate.wait();const rejected=assert.rejects(wait,/BC_CERTIFICATE_CLOSED/);
  x.stop.abort();await rejected;await assert.rejects(x.post(),/BC_CERTIFICATE_CLOSED/);
