@@ -96,3 +96,9 @@
 .crc-standin { max-width: 640px; margin: 40px auto; padding: 0 16px; }
 .crc-standin textarea { width: 100%; min-height: 9em; font: inherit; padding: 8px; }
 .crc-standin .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+
+/* 미충족 회고 — 어디를 고쳐 다시 써야 하는지 */
+.crc-fix {
+  margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn-tag-fg, #b45309);
+  background: var(--warn-bg, #fef3c7); color: var(--fg); font-size: 0.82rem; line-height: 1.55; border-radius: 0 8px 8px 0;
+}

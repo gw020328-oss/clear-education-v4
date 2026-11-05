@@ -99,16 +99,23 @@ export function createDemoServer({ store, nowMs = () => Date.now() }) {
     if (s.mode === 'DELAYED') return at + s.lagMs;
     if (s.mode === 'ON_REQUEST') {
       const req = s.refresh?.[criterionId];
-      if (!req?.requestedAt) return null;
-      return Math.max(at, req.requestedAt) + s.lagMs;
+      // 요청은 **그 시점까지의 기록**만 읽는다. 요청 뒤에 생긴 기록(고쳐 올린 회고 등)은
+      // 다시 요청해야 읽는다 — 그래야 "고치기만 하고 돌아오지 않았는데 바뀌는" 일이 없다.
+      if (!req?.requestedAt || req.requestedAt < at) return null;
+      return req.requestedAt + s.lagMs;
     }
     return null;
   };
   const seen = (s, criterionId, at) => { const t = readAt(s, criterionId, at); return t !== null && nowMs() >= t; };
 
   function reflectionStage(s) {
-    const r = s.moodle.reflection;
-    if (!r || !seen(s, 'reflection-topics', r.at)) return { stage: 'NONE' };
+    const cur = s.moodle.reflection;
+    // 고쳐 올린 글을 아직 안 읽었으면 **지난 판정**이 그대로다. 실서버도 그렇다 —
+    // 새 글이 있다고 판정이 사라지지 않고, 다시 읽어야 바뀐다.
+    const r = cur && seen(s, 'reflection-topics', cur.at) ? cur
+      : s.moodle.reflectionPrev && seen(s, 'reflection-topics', s.moodle.reflectionPrev.at) ? s.moodle.reflectionPrev
+        : null;
+    if (!r) return { stage: 'NONE' };
     const t = nowMs() - readAt(s, 'reflection-topics', r.at);
     if (t < s.lagMs) return { stage: 'APPROVAL' };
     if (t < s.lagMs * 2) return { stage: 'REVIEWING' };
@@ -266,7 +273,11 @@ export function createDemoServer({ store, nowMs = () => Date.now() }) {
     // Moodle·HackerRank 대역 탭이 부른다
     completeActivity: () => update((s) => { s.moodle.activityAt ??= nowMs(); }),
     submitAssignment: () => update((s) => { s.moodle.assignmentAt ??= nowMs(); }),
-    submitReflection: (text) => update((s) => { s.moodle.reflection = { text: String(text).slice(0, 4000), at: nowMs() }; }),
+    submitReflection: (text) => update((s) => {
+      // 이미 읽힌 글이 있으면 지난 판정의 근거로 남긴다
+      if (s.moodle.reflection && seen(s, 'reflection-topics', s.moodle.reflection.at)) s.moodle.reflectionPrev = s.moodle.reflection;
+      s.moodle.reflection = { text: String(text).slice(0, 4000), at: nowMs() };
+    }),
     consentHr: () => update((s) => { if (s.hr.signedAt) s.hr.consentAt ??= nowMs(); }),
     reset: () => store.reset(),
   });

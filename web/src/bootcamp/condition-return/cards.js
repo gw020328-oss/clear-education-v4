@@ -61,11 +61,19 @@ function moodleBlock(criterionId, ev, evidenceState, row) {
   return text ? el('p.crc-muted', { text }) : null;
 }
 
-function reflectionBlock(review) {
+function reflectionBlock(review, link) {
   return el('div.crc-block', { 'data-review': review.state }, [
     el('p.crc-title', { text: review.title }),
     review.note ? el('p.crc-muted', { text: review.note }) : null,
     review.reason ? el('p.crc-reason', { text: `판정 사유 · ${review.reason}` }) : null,
+    // 미충족이면 어디를 고쳐 다시 써야 하는지 바로. 버튼도 「회고 다시 쓰기」 가 된다.
+    review.needsRewrite
+      ? el('p.crc-fix', {
+        text: `다시 쓸 곳 · ${link?.status === LINK.LINKED ? (link.name ?? '회고 게시판') : '회고 게시판 (주소 미제공)'}`
+          + (review.lackingLabels.length ? ` — 보충할 항목: ${review.lackingLabels.join(' · ')}` : '')
+          + '. 글을 고치거나 새로 올린 뒤 이 탭으로 돌아오면 다시 검토를 요청해요.',
+      })
+      : null,
     review.topics.length
       ? el('div', {}, [
         review.previous ? el('p.crc-muted', { text: '아래는 지난 검토 결과예요. 새 검토가 끝나면 바뀌어요.' }) : null,
@@ -103,20 +111,25 @@ function certificateBlock(cert) {
 
 // ── 버튼 ────────────────────────────────────────────────────────────────
 
-function goControl(criterionId, link, { tracker, cert, certificate, busy }) {
+function goControl(criterionId, link, { tracker, cert, certificate, busy, verb = null }) {
   if (criterionId === 'python-basic-certificate') {
     const act = cert?.action;
     if (!act) return null;
     const run = certificate?.[act.kind];
+    // 「다시 진행」 은 호스트가 로그인 창을 다시 여는 동작(resume)이 있어야 한다.
+    // 없으면 잠근 채 그 사실을 적는다 — 다시 서명하게 돌리지 않는다.
+    const missing = typeof run !== 'function';
     return el('button.cc-btn.crc-go', {
       type: 'button',
-      disabled: busy || typeof run !== 'function',
+      disabled: busy || missing,
+      'aria-disabled': missing ? 'true' : null,
+      title: missing && act.kind === 'resume' ? '로그인 창을 다시 여는 동작을 호스트가 아직 제공하지 않아요' : null,
       onClick: () => {
-        // 서명하면 학생은 HackerRank 로그인 창으로 간다. 돌아오면 다시 읽는다.
-        if (act.kind === 'sign') tracker?.depart(criterionId);
+        // 서명하거나 다시 진행하면 학생은 HackerRank 창으로 간다. 돌아오면 다시 읽는다.
+        if (act.kind === 'sign' || act.kind === 'resume') tracker?.depart(criterionId);
         void run?.();
       },
-    }, [el('span', { text: act.label }), icon('arrowUpRight')]);
+    }, [el('span', { text: missing && act.kind === 'resume' ? `${act.label} · 호스트 동작 미제공` : act.label }), icon('arrowUpRight')]);
   }
   if (link?.status === LINK.LINKED) {
     return el('a.cc-btn.crc-go', {
@@ -124,7 +137,7 @@ function goControl(criterionId, link, { tracker, cert, certificate, busy }) {
       target: '_blank',
       rel: 'noopener noreferrer',
       onClick: () => tracker?.depart(criterionId),
-    }, [el('span', { text: link.verb }), icon('arrowUpRight')]);
+    }, [el('span', { text: verb ?? link.verb }), icon('arrowUpRight')]);
   }
   return el('button.cc-btn.crc-go', { type: 'button', disabled: true, 'aria-disabled': 'true' }, [
     el('span', { text: `${verbFor(criterionId)} · 주소 미제공` }),
@@ -156,11 +169,14 @@ function conditionCard(criterionId, ctx) {
 
   let extra = null;
   let cert = null;
+  let verb = null;
   if (criterionId === 'reflection-topics') {
-    extra = reflectionBlock(reflectionReview({
+    const review = reflectionReview({
       row, evRow: ev.row, limitations: ev.limitations, phase: session?.phase ?? null,
       aiApproval: session?.aiApproval ?? null, sourceText,
-    }));
+    });
+    extra = reflectionBlock(review, link);
+    if (review.needsRewrite) verb = '회고 다시 쓰기';
   } else if (criterionId === 'python-basic-certificate') {
     cert = certificateStatus({ row, evRow: ev.row, availability: ev.availability, session, approval, signedAtMs });
     extra = certificateBlock(cert);
@@ -190,7 +206,7 @@ function conditionCard(criterionId, ctx) {
 
     el('div.crc-actions', {}, [
       // 이미 충족이면 다시 갈 이유가 적다. 그래도 길은 남긴다 — 기록을 볼 수 있다.
-      goControl(criterionId, link, { tracker, cert, certificate, busy }),
+      goControl(criterionId, link, { tracker, cert, certificate, busy, verb }),
       line?.recheck
         ? el('button.crc-sub-btn', {
           type: 'button', disabled: busy || ret.state === RETURN.CHECKING,

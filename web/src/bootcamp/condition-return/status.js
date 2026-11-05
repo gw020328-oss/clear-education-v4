@@ -229,8 +229,14 @@ export function reflectionReview({ row = null, evRow = null, limitations = null,
     note = '회고를 쓰신 뒤 CLEAR 가 Moodle 에서 그 글을 읽어야 AI 검토가 시작돼요.';
   }
 
+  // 미충족이면 **어디를 고쳐 다시 써야 하는지** 바로 보여야 한다 (오규원 11/5).
+  // 서버 판정이 미충족이고 검토가 끝났을 때만이다. 검토 중엔 아직 모른다.
+  const needsRewrite = state === REVIEW.REVIEWED && row?.state !== 'MET';
+
   return Object.freeze({
     state, title, note, reason,
+    needsRewrite,
+    lackingLabels: Object.freeze(lacking.map((t) => t.label)),
     // 검토 중이면 아래 항목은 지난 검토의 것이다. 새 결과처럼 보이지 않게 표시한다.
     previous: (inApproval || inReview) && reviewed,
     topics: Object.freeze(topics),
@@ -304,8 +310,14 @@ export function certificateStatus({ row = null, evRow = null, availability = nul
   const phase = session?.phase ?? null;
   const inHr = phase === 'SOURCE_python-basic-certificate';
   if (signedAtMs && (inHr || !row?.evidenceId)) {
-    return out(CERT.VERIFYING, '확인 중 · 서버 검증 대기',
-      'HackerRank 로그인과 증명 동의를 마치면 서버가 Reclaim 증명을 검증해요. 끝나면 이 탭에서 결과를 보여 드려요.');
+    // 서명은 했는데 서버 판정이 아직이다. 로그인 창을 닫았거나 동의를 취소했으면
+    // 여기서 멈춘 것처럼 보인다 — 그래서 **다시 진행** 길을 남긴다. 다시 서명하게
+    // 하지 않는다. 호스트가 로그인 창을 다시 여는 동작(resume)을 부른다.
+    return out(CERT.VERIFYING, '검증 중 · 서버 검증 대기',
+      'HackerRank 로그인과 증명 동의를 마치면 서버가 Reclaim 증명을 검증해요. 끝나면 이 탭에서 결과를 보여 드려요. '
+      + '로그인 창을 닫았거나 동의를 취소했다면 「다시 진행」 으로 그 창을 다시 열 수 있어요. 서명은 다시 하지 않아요.', {
+      action: Object.freeze({ kind: 'resume', label: '다시 진행' }),
+    });
   }
   if (inHr && approval) {
     return out(CERT.SIGN, '인증서 확인 메시지 서명', '아래 메시지는 증명 확인 승인이며 지급 승인이 아니에요. 서명하면 HackerRank 로그인으로 넘어가요.', {

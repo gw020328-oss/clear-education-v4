@@ -90,6 +90,12 @@ export function mountConditionCardsPreview(root, { mode = null, win = globalThis
         server.signHr(); cards.markSigned(); note('표시한 메시지에 서명 (시연)');
         await refreshNow();
       },
+      // 로그인 창을 닫았거나 동의를 취소한 뒤 「다시 진행」. 서명은 다시 하지 않고 창만 다시 연다.
+      // 실제라면 호스트의 "로그인 창 다시 열기" 동작이다 — A 에 요청(필요 항목).
+      resume: async () => {
+        win.open?.(`${STANDIN}?c=python-basic-certificate`, '_blank', 'noopener');
+        note('HackerRank 창 다시 열기 (다시 진행 · 서명 없음)');
+      },
     },
     onOpen: (id) => {
       selected = id; evidence = null; render();

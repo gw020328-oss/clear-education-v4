@@ -16,6 +16,8 @@ export function mountParticipantPreview(root, { mode = DATA_MODE.SYNTHETIC } = {
   const panel = participantEntryPanel({
     adapter,
     scenario: first,
+    // 정상 연결 뒤 학생이 보는 다음 화면은 환급 조건 카드다(오규원 11/5). 독립 미리보기끼리 잇는다.
+    continueHref: './condition-cards.html',
     // 시나리오 칩은 합성에서만. 실제 모드에 보이면 고를 수 있는 것처럼 읽힌다.
     scenarios: mode === DATA_MODE.SYNTHETIC ? ENTRY_SCENARIOS.map(({ id, label }) => ({ id, label })) : [],
   });

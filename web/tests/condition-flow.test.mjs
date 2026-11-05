@@ -207,3 +207,68 @@ test('시연 서버 대역: 기본 ON_REQUEST 는 요청 없이는 안 바뀌고
   assert.equal(server.refresh('activity-complete', 1), null);
   assert.equal(server.refresh('python-basic-certificate', 1), null);
 });
+
+// ── 회고 · HackerRank ─────────────────────────────────────────────────────
+
+import { reflectionReview, certificateStatus, REVIEW, CERT } from '../src/bootcamp/condition-return/status.js';
+
+test('회고가 검토 뒤 미충족이면 보충할 항목과 다시 쓸 필요를 바로 말한다', () => {
+  const evRow = { metadataStatus: 'RECORDED', checks: { topics: [
+    { topicId: 'work-performed', state: 'PRESENT', location: { start: 0, end: 10 } },
+    { topicId: 'problem-solving-process', state: 'PRESENT', location: { start: 11, end: 20 } },
+    { topicId: 'learning-takeaway', state: 'ABSENT', location: null },
+  ] } };
+  const unmet = reflectionReview({ row: { criterionId: 'reflection-topics', state: 'NOT_MET', evidenceId: 'e1', reasonCode: null }, evRow });
+  assert.equal(unmet.state, REVIEW.REVIEWED);
+  assert.equal(unmet.needsRewrite, true);
+  assert.deepEqual(unmet.lackingLabels, ['배운 점']);
+  assert.match(unmet.reason, /배운 점\(없음\)/);
+
+  const met = reflectionReview({ row: { criterionId: 'reflection-topics', state: 'MET', evidenceId: 'e2' }, evRow: { ...evRow, checks: { topics: evRow.checks.topics.map((t) => ({ ...t, state: 'PRESENT' })) } } });
+  assert.equal(met.needsRewrite, false);
+
+  // 검토 중엔 아직 모른다 — 다시 쓰라고 하지 않는다
+  const reviewing = reflectionReview({ row: { criterionId: 'reflection-topics', state: 'NOT_MET', evidenceId: 'e1' }, evRow, phase: 'SOURCE_reflection-topics' });
+  assert.equal(reviewing.needsRewrite, false);
+});
+
+test('HackerRank: 서명 뒤 서버 판정 전이면 「다시 진행」 이 있고, 충족이면 없다', () => {
+  const signed = certificateStatus({
+    row: { criterionId: 'python-basic-certificate', state: 'UNKNOWN', evidenceId: null, current: true },
+    session: { applicationId: 'a', boundApplicationId: 'a', phase: 'SOURCE_python-basic-certificate' },
+    signedAtMs: 1,
+  });
+  assert.equal(signed.state, CERT.VERIFYING);
+  assert.equal(signed.action?.kind, 'resume');
+  assert.match(signed.title, /검증 중/);
+  assert.match(signed.note, /다시 진행/);
+  assert.ok(!/다시 서명/.test(signed.action.label));
+
+  const verified = certificateStatus({
+    row: { criterionId: 'python-basic-certificate', state: 'MET', evidenceId: 'e', current: true },
+    session: { applicationId: 'a', boundApplicationId: 'a', phase: 'AUTHENTICATED' }, signedAtMs: 1,
+  });
+  assert.equal(verified.state, CERT.VERIFIED);
+  assert.equal(verified.action, null);
+});
+
+test('시연 대역: 회고를 배운 점 없이 올리면 미충족, 고쳐 올리고 다시 요청하면 충족', () => {
+  let now = 50_000;
+  let saved = null;
+  const store = { load: () => saved ?? { v: 1, mode: 'ON_REQUEST', lagMs: 1000, moodle: { activityAt: null, assignmentAt: null, reflection: null }, hr: { boundAt: null, messageAt: null, signedAt: null, consentAt: null }, refresh: {} }, save: (s) => { saved = s; }, reset: () => { saved = null; } };
+  const server = createDemoServer({ store, nowMs: () => now });
+  server.submitReflection('for 반복문으로 목록의 합계를 구하는 코드를 작성했습니다.\n빈 목록에서 결과가 달라져 초기값을 0으로 두고 다시 확인했습니다.');
+  assert.equal(server.refresh('reflection-topics', null).status, 'QUEUED');
+  now += 3100; // 접수 → 승인 대기 → 검토 중 → 검토 완료
+  const r1 = server.view().criteria[2];
+  assert.equal(r1.state, 'NOT_MET');
+  const ev1 = server.decisionEvidence().manifest.criteria[2];
+  assert.equal(ev1.checks.topics.find((t) => t.topicId === 'learning-takeaway').state, 'ABSENT');
+
+  server.submitReflection('for 반복문으로 목록의 합계를 구하는 코드를 작성했습니다.\n빈 목록에서 결과가 달라져 초기값을 0으로 두고 다시 확인했습니다.\n초기값과 경계 입력을 함께 점검해야 한다는 점을 배웠습니다.');
+  now += 10_000;
+  assert.equal(server.view().criteria[2].state, 'NOT_MET', '고쳐 올리기만 하고 요청 전인데 바뀌었다');
+  assert.equal(server.refresh('reflection-topics', 1).status, 'QUEUED');
+  now += 3100;
+  assert.equal(server.view().criteria[2].state, 'MET');
+});

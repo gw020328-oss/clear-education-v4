@@ -29,26 +29,35 @@ export function mountStandin(root, { criterionId, win = globalThis } = {}) {
           el('div.pill-row', {}, [pill('과제 제출', () => { server.submitAssignment(); finish('Moodle 이 제출을 기록했어요.'); })]),
         ];
       case 'reflection-topics': {
-        const box = el('textarea', { 'aria-label': '회고', value: DEMO_REFLECTION_TEXT });
+        // 이미 올린 글이 있으면 그 글을 채워 둔다 — 미충족 뒤 「회고 다시 쓰기」 로 온 경우다.
+        const existing = server.reflectionText();
+        const box = el('textarea', { 'aria-label': '회고', value: existing ?? DEMO_REFLECTION_TEXT });
         const without = Object.entries(DEMO_REFLECTION).filter(([k]) => k !== 'learning-takeaway').map(([, v]) => v).join('\n');
         return [
-          el('h1', { text: '회고 게시판 · 새 글' }),
+          el('h1', { text: existing ? '회고 게시판 · 내 글 고치기' : '회고 게시판 · 새 글' }),
           el('p', { text: '(시연용 Moodle 회고 작성 화면 대역) 수행 내용 · 문제 해결 과정 · 배운 점을 적습니다.' }),
           box,
           el('div.pill-row', {}, [
-            pill('회고 제출', () => { server.submitReflection(box.value); finish('Moodle 게시판에 회고가 올라갔어요.'); }),
+            pill(existing ? '고쳐서 다시 제출' : '회고 제출', () => { server.submitReflection(box.value); finish('Moodle 게시판에 회고가 올라갔어요.'); }),
             pill('배운 점 빼고 제출 (미충족 시연)', () => { server.submitReflection(without); finish('Moodle 게시판에 회고가 올라갔어요.'); }),
-          ]),
+            existing ? pill('세 항목 다 넣어 다시 제출', () => { server.submitReflection(DEMO_REFLECTION_TEXT); finish('Moodle 게시판의 회고를 고쳤어요.'); }) : null,
+          ].filter(Boolean)),
         ];
       }
       case 'python-basic-certificate':
         return [
           el('h1', { text: 'HackerRank 로그인 · 증명 동의' }),
           el('p', { text: '(시연용 대역) 실제 흐름에서는 호스트가 연 HackerRank 창에서 로그인하고 Reclaim 증명 생성에 동의합니다.' }),
-          el('div.pill-row', {}, [pill('로그인하고 증명에 동의', () => {
-            server.consentHr();
-            finish('증명 동의를 마쳤어요. 서버가 증명을 검증하면 CLEAR 탭에 결과가 나와요.');
-          })]),
+          el('div.pill-row', {}, [
+            pill('로그인하고 증명에 동의', () => {
+              server.consentHr();
+              finish('증명 동의를 마쳤어요. 서버가 증명을 검증하면 CLEAR 탭에 결과가 나와요.');
+            }),
+            // 창을 닫거나 취소한 경우. 아무것도 기록하지 않는다 — 카드는 '검증 중' 에 남고 「다시 진행」 이 보인다.
+            pill('동의하지 않고 닫기 (취소 시연)', () => {
+              finish('동의하지 않고 닫았어요. CLEAR 탭의 카드에서 「다시 진행」 으로 이 창을 다시 열 수 있어요.');
+            }),
+          ]),
         ];
       default:
         return [el('h1', { text: '알 수 없는 항목' })];
