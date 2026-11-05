@@ -70,6 +70,20 @@ Node 24.21.0 + network-block으로 변경 영향에 해당하는 **6개 테스�
 
 이 후속에서 이전 62개/독립 36개 전체를 반복하지 않았다. `modelRows`/hash/nullable provenance 및 HTTP 계약은 수정하지 않았다. push·merge·실제 호출은 수행하지 않았다.
 
+## PR166 수량 보류 기준 재검토 (2026-11-05, B)
+
+기준 `c11e13d3386429674f7c6bfbd11ff568108d50b4`. 이전 후속의 단위 뒤 조사 허용 목록이 `으로`/`이나`를 빠뜨려 수량을 버리는 P1을 만들었다. 원인에 따라 조사 목록 자체를 제거했다. 독립된 수량 어두와 단위 후보가 있으면 뒤 표현과 관계없이 보류한다. 앞 단어 경계는 유지해 `포함한 회고`/`상세 회고`의 부분문자열을 수량으로 보지 않는다. `한 회고`처럼 독립 수량 뒤 단위와 명사의 시작이 모호한 경우도 보류한다. 한국어 완전 판정이나 새 조건 지원을 뜻하지 않는다. 설계 근거는 인수 문서의 수량 경계 재검토 절에 기록했다.
+
+새 조사 회귀 2개와 후행 표현/모호 수량 묶음 1개를 추가해 수정 전 **6pass/3fail**, 수정 후 **9/9 PASS**를 확인했다. 기존 오보류 3문장, `두번`/`두 번을`/`한 회`/`세 회`, 단일 관계 수식어와 실제 병렬 대상 대조도 이 묶음에 포함된다. 원본 SUPPORTED 행을 같은 proposalHash로 검토해도 수량문은 `DRAFT_NOT_READY`로 거부된다.
+
+```sh
+./tools/node --import ./tests/agent-preview/network-block.mjs --test \
+  --test-name-pattern='수량 조사 회귀|수량 후보|오보류 회귀|한글 수량|E 반례|빠짐없이 완료' \
+  tests/agent-preview/condition-structuring.test.mjs
+```
+
+Node 24.21.0, network-block. 로그 `/private/tmp/clear-b-pr166-count-before.log`, `/private/tmp/clear-b-pr166-count-after.log`. 이전 62/36 전체를 반복하지 않았다. 모델 행/hash/provenance·HTTP 계약·후보 버전은 변경하지 않았고, push·merge·유료 호출은 수행하지 않았다. 요청 설정 Astra/High, 실제 실행 모델은 세션 정보상 Astra다.
+
 ## 0.2.0 독립 모듈 예제
 
 고정 Node/npm 환경에서 다음 명령을 실행한다. 첫 설치는 공개 npm 의존성을 받을 수 있어야 한다. 캐시를 준비한 뒤에는 깨끗한 폴더에서 같은 설치 명령에 `--offline`을 추가할 수 있다.

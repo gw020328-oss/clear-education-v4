@@ -325,6 +325,32 @@ test('한글 수량 및 실제 병렬 대상은 수식어 보정 후에도 실�
   }
 });
 
+for (const notice of [
+  '강의를 두 번으로 나누어 수강하세요',
+  '강의를 두 번이나 수강해야 합니다',
+]) test(`수량 조사 회귀: ${notice}`, async () => {
+  const {result} = await propose(notice, ['activity']);
+  assert.ok(result.draft.guards.some(g => g.kinds.includes('THRESHOLD')));
+  assert.throws(() => approveAndRun(notice, result), /DRAFT_NOT_READY/);
+});
+
+test('수량 후보는 후행 표현을 해석하지 않고 보류한다', async () => {
+  for (const notice of [
+    '강의를 두 번쯤 수강하세요',
+    '강의를 두 번씩만 수강하세요',
+    '강의를 두 번이라도 수강하세요',
+    '강의를 두 시간으로 나누어 수강하세요',
+    '강의를 두시간이나 수강하세요',
+    // 단위인지 명사의 시작인지 모호해도 독립 수량 후보를 지워 실행하지 않는다.
+    '한 회고를 작성하세요',
+  ]) {
+    const label = notice.includes('회고') ? 'reflection' : 'activity';
+    const {result} = await propose(notice, [label]);
+    assert.ok(result.draft.guards.some(g => g.kinds.includes('THRESHOLD')), notice);
+    assert.throws(() => approveAndRun(notice, result), /DRAFT_NOT_READY/, notice);
+  }
+});
+
 test('저장 행은 보류·중복·모델 질문을 포함한 원 제안과 hash를 복원한다', async () => {
   for (const [notice, labels] of [
     ['강의 수강 또는 과제 제출', ['activity']],

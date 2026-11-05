@@ -83,9 +83,11 @@ const GUARDS = [
  ['ALTERNATIVE', new RegExp(`또는|혹은|거나|택\\s*1|택일|중\\s*(?:하나|한\\s*가지|1\\s*개)|\\bor\\b|(?:이)?나\\s+(?=${CONDITION_WORD})`, 'iu')],
  ['SUBSTITUTE', /대신|대체|갈음|\binstead\b/iu],
  ['NEGATION', /않|(?<!빠짐)없이|없어도|(?:^|\s)안\s+(?:들|듣|하|해|내|보|받|제출|수강|완료|이수|작성)|필요\s*(?:하지\s*)?없|제외|불필요|면제|아니|금지|생략|미(?:제출|수강|완료|이수)|\bnot\b|\bwithout\b|\bexcept\b/iu],
- // Korean counts must be tokens, not suffixes of 포함한/상세 or prefixes of 회고.
- // Count units may end the token or take a separate case/quantity particle.
- ['THRESHOLD', /\d+(?:\.\d+)?\s*(?:%|퍼센트|회|번|개|건|편|시간|분)|(?<![\p{L}\p{N}])(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*(?:회|번|개|건|편|시간|분)(?=$|[^\p{L}\p{N}]|(?:을|를|이|가|은|는|만|씩|도|에|의|까지|동안|마다)(?=$|[^\p{L}\p{N}]))|이상|이하|미만|초과|최소|최대|at\s+least|more\s+than|less\s+than/iu],
+ // A count must start outside another word (포함한/상세 are not counts).
+ // Once a numeral + unit prefix exists, hold regardless of the suffix. This
+ // detects possible lost quantities, not Korean morphology; ambiguous noun
+ // prefixes after a genuine numeral are held too. No particle allowlist.
+ ['THRESHOLD', /\d+(?:\.\d+)?\s*(?:%|퍼센트|회|번|개|건|편|시간|분)|(?<![\p{L}\p{N}])(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*(?:회|번|개|건|편|시간|분)|이상|이하|미만|초과|최소|최대|at\s+least|more\s+than|less\s+than/iu],
  // '끝까지'·'마지막까지' 는 기한이 아니다. 날짜·시각·이름 붙은 시점 뒤의 '까지' 만 본다.
  ['DEADLINE', /\d+\s*월\s*\d+\s*일|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d+\s*(?:일|시)\s*까지|(?:[월화수목금토일]요일|오늘|내일|이번\s*주|다음\s*주|주말|월말|수료\s*전|종강\s*전)\s*까지|기한|마감|deadline/iu]
 ];
