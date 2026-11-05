@@ -15,3 +15,5 @@ PHP scope의 forumSelection이 있을 때만 서비스 allowlist에 forum 3개 r
 r17 HR은 종료된 이전 application/source lease의 성공 증거다. 새 application에서 현재 유효한 것으로 복사하지 않는다. 안전한 재사용 포트가 없으므로 전체모드 준비 완료 뒤 기존 카드 시작·사용자 서명·HackerRank 로그인 경로를 1회 사용한다. 회고도 이번 입력에 대한 운영자 비용승인을 기다린다.
 
 시연 준비 순서: 검토된 source pins/ZIP/가격·운영자 지정·키 존재·고정 학생/강좌 준비 → 양측 Moodle 로그인/지갑 서명 → 신청/원천조회 → 인증서 카드 시작/서명/HR 로그인 → 운영자 exact 회고 비용 승인 → 수령인 등록 → 양측 같은 판정 동의 → 100 TEST 영수증·잔액 전후·거래 확정 기록. 실행 TTL 30분 및 원천 currentness 900초를 넘기지 않게 사용자 안내는 전체 준비 후 한 번 한다. 성공 환경은 영수증 확인 전 FINISH하지 않는다. 장기 보존/영상은 TTL 및 민감정보 수명과 구분하며 기존 정상 cleanup을 유지한다.
+
+B의 음성검사 한계를 반영해 PHP harness는 실패 exit뿐 아니라 예상 RuntimeException 원인 코드(고정 scope/동적 account/명시적 user-unavailable double)도 확인한다. 사용자 조회 필터 id3/deleted0/suspended0도 double에서 검증하며 예상하지 않은 DB/API 메서드 오류는 통과할 수 없다. PHP 이미지의 오류 출력이 stdout으로 설정되어 있어 stdout+stderr에서 검사한다. 강화된 동일31사례 PASS이며 실환경 권한 변경 시험과는 구분한다.

@@ -12,8 +12,9 @@ function runCase($name,$changes,$action,$success,$scope=null) {
     $out=stream_get_contents($pipes[1]); fclose($pipes[1]);
     $err=stream_get_contents($pipes[2]); fclose($pipes[2]); $exit=proc_close($p);
     $r=json_decode(file_get_contents('/scratch/result.json'),true);
+    $expectedError = (($changes['origin'] ?? 'https://127.0.0.1:9477') !== 'https://127.0.0.1:9477' || ($changes['dbhost'] ?? 'db') !== 'db' || (($scope['forumSelection']['postId'] ?? 3) !== 3)) ? 'ACTIVITY_READER_SCOPE' : ((($changes['suspended'] ?? false) || ($changes['deleted'] ?? false)) ? 'USER_UNAVAILABLE' : 'ACTIVITY_READER_ACCOUNT');
     $ok=$success ? ($exit===0 && $out==='{"revoked":true}' && $r['deletes']===[['token'=>str_repeat('a',32),'externalserviceid'=>2,'userid'=>3]] && $r['remaining']===3)
-        : ($exit!==0 && $r['deletes']===[] && $r['remaining']===4);
+        : ($exit!==0 && str_contains($err.$out, 'RuntimeException: '.$expectedError) && $r['deletes']===[] && $r['remaining']===4);
     if (!$ok) { fwrite(STDERR,"FAIL $name\n"); exit(1); }
     }
     echo "PASS $name\n"; $tests++;

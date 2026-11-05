@@ -14,6 +14,7 @@ class ReaderDBDouble {
     function get_fieldset_select($table,...$args) { return [3]; }
     function get_record($table,...$args) {
         global $c;
+        if ($table === 'user' && $args[0] !== ['id'=>3,'deleted'=>0,'suspended'=>0]) throw new RuntimeException('UNEXPECTED_USER_FILTER');
         if (($c['suspended'] ?? false) || ($c['deleted'] ?? false)) throw new RuntimeException('USER_UNAVAILABLE');
         if ($table === 'forum_posts') return (object)['id'=>3,'discussion'=>3,'userid'=>($c['authorChanged'] ?? false)?9:3,'created'=>100,'modified'=>($c['metadataChanged'] ?? false)?101:100,'deleted'=>0];
         if ($table === 'forum_discussions') return (object)['id'=>3,'forum'=>3,'course'=>2];
