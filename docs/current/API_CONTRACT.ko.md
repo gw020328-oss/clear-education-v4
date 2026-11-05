@@ -174,3 +174,7 @@ B2a의 [전체 시험 증거 계약](EXAM_EVIDENCE.ko.md)은 내부 합성 함�
 `normalUi.approveReflection`을 설치한 별도 시험 호스트에만 `POST /bootcamp/v4/applications/:id/reflection-approval`을 허용한다. 기존 TLS·origin·세션·CSRF·application 범위 검사를 적용하고 native 비용 승인자가 해당 호스트/HEAD에 사전 지정한 지갑만 승인할 수 있다. 미지정 기본값은 차단이다. 본문은 version/applicationId/bodySha256/planHash/contextHash/runBindingHash/codeHead/model/action/costAcknowledgment이며 action은 `APPROVE_THIS_INPUT_ONCE`다. 원문·키·모델 설정은 받지 않는다. 응답은 `clear-normal-ai-approval-receipt.1`, app/binding/status=RECORDED/generate 한도 1/paymentConsentIncluded=false다. 중복·부분 기록·spent는 새 승인을 만들지 않는다. 이 POST는 모델을 호출하거나 지급에 동의하지 않는다.
 
 인증된 `/bootcamp/v4/session`의 시험용 추가 메타데이터는 phase, reviewScreensReady, expectedPayment(수령자·토큰·100000000 atoms·TEST·6 decimals), aiApproval(hash 기반 승인 범위·제한·권한·상태·원래 만료·운영 예산)다. `/bootcamp` 기존 소비자는 종전 필드를 유지한다. normal client의 조회 모델은 `sourceValidUntilExclusive`를 추가하며 원문 접근 만료와 구분한다. 구체적 운영과 권한 출처는 [v22 경계 검토](BOOTCAMP_R13_REVIEW_WINDOW_REVIEW.ko.md)를 따른다. 제품 프론트 완료나 실제 실행 승인이 아니다.
+
+### Moodle native 인증서 카드의 명시 시작 후보 (2026-11-05)
+
+[인증서 카드 계약](MOODLE_CERTIFICATE_CARD_CONTRACT.ko.md)에 따라 native 참가자의 별도 `start-certificate` 명령, POST `/bootcamp/v4/applications/:id/certificate-start`와 세션 `certificate` 준비 상태를 추가한다. 공용 신청 결합 및 GET은 수집/창 열기를 시작하지 않는다. 정확한 시작 명령 접수와 참가자 서명 검증 뒤에만 관리형 HackerRank 창을 연다. 기존 source-signature 조회·서명 포트는 재사용한다. C 카드 연결 및 실제 클릭·창 시험은 별도 확인 전까지 미완료다.

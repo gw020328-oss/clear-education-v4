@@ -326,16 +326,15 @@ export function createMoodleLoginIntents({
       };
       command.phase = 'RESERVED';
       try { fence(); } catch(error) { command.phase = 'UNKNOWN'; throw error; }
-      let activityAuthorityTaken = false;
-      return Object.freeze({
-        assert: fence,
-        captureActivityAuthority(applicationId) {
+      let sourceAuthorityTaken = false;
+      const captureSourceAuthority = (applicationId,kind) => {
           fence();
-          check(!activityAuthorityTaken && a.request.role === 'PARTICIPANT'
+          const activity=kind==='activity',code=activity?'MOODLE_ACTIVITY_AUTHORITY':'MOODLE_CERTIFICATE_AUTHORITY';
+          check(!sourceAuthorityTaken && a.request.role === 'PARTICIPANT'
             && typeof applicationId === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(applicationId)
-            && input.method === 'POST' && input.path === '/bootcamp/v4/applications/'+applicationId+'/source-refresh'
-            && input.body?.criterionId === 'activity-complete','MOODLE_ACTIVITY_AUTHORITY');
-          activityAuthorityTaken = true;
+            && input.method === 'POST' && input.path === '/bootcamp/v4/applications/'+applicationId+(activity?'/source-refresh':'/certificate-start')
+            && (!activity || input.body?.criterionId === 'activity-complete'),code);
+          sourceAuthorityTaken = true;
           const identity = a.identity, fixedContext = canonical(context), hash = command.hash;
           const expiresAt = command.grant.expiresAtExclusive;
           // The POST grant is consumed once. This read-only fence follows its
@@ -344,14 +343,18 @@ export function createMoodleLoginIntents({
             check(command.phase === 'CONSUMED' && a.phase === 'CONNECTED'
               && a.identity === identity && matches(commandBinding,a.commandBindingHash)
               && canonical(a.context) === fixedContext && canonical(context) === fixedContext
-              && moodleCommandDigest(input) === hash,'MOODLE_ACTIVITY_AUTHORITY');
+              && moodleCommandDigest(input) === hash,code);
             clearExpiry(a.request.role,context);
             requireLive(a);
             check(time().wall < expiresAt && command.phase === 'CONSUMED'
               && a.phase === 'CONNECTED' && a.identity === identity
-              && canonical(a.context) === fixedContext,'MOODLE_ACTIVITY_AUTHORITY');
+              && canonical(a.context) === fixedContext,code);
           };
-        },
+      };
+      return Object.freeze({
+        assert: fence,
+        captureActivityAuthority(applicationId) {return captureSourceAuthority(applicationId,'activity');},
+        captureCertificateAuthority(applicationId) {return captureSourceAuthority(applicationId,'certificate');},
         assertContext(candidate) { check(canonical(candidate) === canonical(context),'MOODLE_COMMAND_CONTEXT'); fence(); },
         durable() { check(command.phase === 'RESERVED' || command.phase === 'EFFECT','MOODLE_COMMAND_BINDING'); command.phase = 'EFFECT'; },
         committed() { check(['RESERVED','EFFECT'].includes(command.phase),'MOODLE_COMMAND_BINDING'); command.phase = 'CONSUMED'; },

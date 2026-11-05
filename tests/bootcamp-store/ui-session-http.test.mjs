@@ -14,15 +14,16 @@ import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {requestMessage} from '../../src/hackerrank-evidence/request.mjs';
 import {commandFixture} from './moodle-command-fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
-async function fixture(t,{withReceipt=false,refreshProcedure=null,native=false}={}){
+async function fixture(t,{withReceipt=false,refreshProcedure=null,native=false,withCertificate=false}={}){
  const f=await procedureFixture(t),a=f.create(),v=f.store.getApplication(f.aliceContext,a),H=x=>p0Hash('OFFLINE-UI-HTTP',x);
  const pins={audience:'offline-ui-http',trustConfigHash:H('trust'),recipeHash:H('recipe'),expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
  const commands=native?await commandFixture({authentication:f.service,contexts:{PARTICIPANT:f.aliceContext,COURSE_OPERATOR:f.operatorContext}}):null;
  if(commands)t.after(()=>commands.owner.close());
  const ui=createNormalUiSession({authentication:f.service,participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),getApplication:(c,a)=>f.store.getApplication(c,a),now:()=>f.time,commandScope:commands?.scope});
- let boundApp=null;
+ let boundApp=null;const certificateCalls=[];
  const normalUi={commandScope:commands?.scope,getSession(c){const actor=ui.authorize(c);if(boundApp)f.store.getOperationsProjection(c,boundApp);const app=boundApp;return {version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app,policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},bindParticipant(c,id){ui.bindParticipant(c,id,pins);boundApp=id;commands?.scope.filesCommitted();return {applicationId:id,paymentAuthorization:false};},
   pendingSignature(c,id){assert.equal(id,a);return ui.pendingSignature(c);},submitSignature(c,id,b){assert.equal(id,a);return ui.submitSignature(c,b);}};
+ if(withCertificate)normalUi.startCertificate=(c,id,body,key)=>{ui.authorize(c,true);commands.scope.assert();commands.scope.memoryCommitted();certificateCalls.push({id,body,key});return{status:'START_ACCEPTED',applicationId:id};};
  if(withReceipt)normalUi.getPaymentReceipt=createNormalReceiptReader({authorize:(c,id)=>f.store.getOperationsProjection(c,id),readReport:()=>({applicationId:a,recipient:f.alice.address.toLowerCase(),runtimeMappingHash:v.runtimeMappingHash,sourceMode:'SYNTHETIC_TEST_SOURCE',realSourceVerified:false,stages:[],completed:false}),readCanonicalClaim:async()=>assert.fail('no tx should be read'),runtimeHash:H('runtime'),runtimeMappingHash:v.runtimeMappingHash,policyHash:v.policyHash,recipient:f.alice.address.toLowerCase(),token:'0x'+'12'.repeat(20)});
  if(refreshProcedure)normalUi.refreshProcedure=(...args)=>refreshProcedure({f,a},...args);
  const dir=join(f.directory,'ui-tls');mkdirSync(dir,{mode:0o700});const fingerprint=createCertificates(dir);
@@ -38,7 +39,7 @@ async function fixture(t,{withReceipt=false,refreshProcedure=null,native=false}=
  }
  const expected={version:'clear-hackerrank-request.1',...pins,applicationId:a,participantId:v.participantId,participantWallet:f.alice.address.toLowerCase(),criterionId:'python-basic-certificate',policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,nonce:H('nonce'),issuedAt:START,expiresAt:START+240};delete expected.dataMode;
  const client=context=>createNormalBootcampClient({request:async(path,options)=>{const r=await raw(path.split('/').at(-1),{...options,context});if(r.status!==200)throw Error(r.body.error);return r.body;}});
- return {f,ui,a,raw,expected,client,mounted,commands};
+ return {f,ui,a,raw,expected,client,mounted,commands,certificateCalls};
 }
 test('HTTPS browser session binds the app, receives only its exact approval and returns its own signature',async t=>{
  const x=await fixture(t);assert.equal((await x.raw('source-session',{method:'POST',body:{}})).status,200);
@@ -151,4 +152,16 @@ test('session bootstrap uses authenticated role without caller-selected app or w
  const signed=await write('source-signature',{approvalId:view.body.approvalId,signature});
  assert.equal((await signed.send()).status,200);assert.equal(await pending,signature);
  assert.equal((await signed.send()).status,409);
+});
+
+test('certificate start crosses the HTTPS allowlist only as an opted-in exact native POST',async t=>{
+ const disabled=await fixture(t);assert.equal((await disabled.raw('certificate-start',{method:'POST',body:{expectedRevision:1}})).status,404);
+ const x=await fixture(t,{native:true,withCertificate:true}),body={expectedRevision:1},key='certificate-one';
+ assert.equal((await x.raw('certificate-start')).status,404);
+ assert.equal((await x.raw('/bootcamp/v4/session')).status,200);assert.equal(x.certificateCalls.length,0);
+ assert.equal((await x.raw('certificate-start',{method:'POST',body,headers:{'idempotency-key':key}})).status,409);
+ const grant=await x.commands.grant({method:'POST',path:'/bootcamp/v4/applications/'+x.a+'/certificate-start',body,idempotencyKey:key});
+ const send=()=>x.raw('certificate-start',{method:'POST',body,headers:{'idempotency-key':key,'x-clear-command-ref':grant.requestRef,'x-clear-command-binding':grant.commandBinding}});
+ assert.equal((await send()).status,200);assert.deepEqual(x.certificateCalls,[{id:x.a,body,key}]);
+ assert.equal((await send()).status,409);assert.equal(x.certificateCalls.length,1);
 });

@@ -1,3 +1,4 @@
+import {createNormalCertificateStart} from './normal-certificate-start.mjs';
 import {waitForNormalRecipientRegistration} from './normal-recipient-wait.mjs';
 import {createNormalResumeControl} from './normal-resume-control.mjs';
 import {normalFailureState} from './normal-failure-wait.mjs';
@@ -151,12 +152,12 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
  const m=loadRuntime(prepared.environmentId);ensure(sha(m)===prepared.runtimeHash&&m.version===(prepared.runtimeVersion??'clear-e5-test-runtime.1')&&m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
- let auth,store,connection,provider,ui,resumeControl,mounted,moodleRead,moodleLogin,user,app,participantId,sourceTarget,sourceSequence=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
+ let auth,store,connection,provider,ui,resumeControl,mounted,moodleRead,moodleLogin,user,app,participantId,sourceTarget,sourceSequence=null,certificateStart=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
  const stage=name=>{report.stage=name;write();};
- const close=()=>{if(closed)return;closed=true;resumeControl?.cancel();controller.abort();moodleLogin?.close();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
+ const close=()=>{if(closed)return;closed=true;certificateStart?.close();resumeControl?.cancel();controller.abort();moodleLogin?.close();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
  try{
   await startEnvironment(prepared.environmentId);started=true;
   const reader=new ExecutionReader(m);ensure((await reader.call('applicationIds',[],await reader.block()))[0].length===0,'BC_LIVE_REQUIRES_UNUSED_TEST_REALM');
@@ -172,7 +173,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    const t=c==='activity-complete'?{...mapping.targets.activity,module:'page',selectedPostId:null}:c==='assignment-submitted'?{...mapping.targets.assignment,module:'assign',selectedPostId:null}:{cmId:mapping.targets.reflection.cmId,instanceId:mapping.targets.reflection.forumId,module:'forum',selectedPostId:mapping.targets.reflection.selectedPostId};
    return {environmentRef:mapping.environmentRef,runRef:mapping.runRef,sourceVersion:mapping.sourceVersion,apiVersion:mapping.apiVersion,fixtureReportHash:mapping.fixtureReportHash,courseId:mapping.courseId,participantMapping:{participantId,applicationId:app,moodleUserId:mapping.moodleUserId,accountBindingRef:mapping.accountBindingRef,revision:mapping.revision},target:{targetLogicalId:c==='activity-complete'?'python-intro-activity':c==='assignment-submitted'?'python-practice-task':'python-reflection',...t},completionSetupReceiptHash:c==='activity-complete'?mapping.completionSetupReceiptHash:null};};
   const producers=Object.fromEntries(['activity-complete','assignment-submitted','reflection-topics'].map(criterionId=>[criterionId,createLiveMoodleConsumer({criterionId,withReader,resolvePin,resolveLease,reviewReflection,modelVersion:'gemini-3.5-flash-lite',reflectionHost,sourceValiditySeconds:900,now})]));
-  producers['python-basic-certificate']=createLiveReclaimConsumer({selfAttestor:mapping.selfAttestor??null,pins:hackerRank.pins,collectLease:(request,options)=>hackerRank.collectLease(request,{...options,signRequest:message=>ui.requestSignature(request,message,{signal:options.signal})}),resolveLease,now});
+  producers['python-basic-certificate']=createLiveReclaimConsumer({selfAttestor:mapping.selfAttestor??null,pins:hackerRank.pins,collectLease:(request,options)=>hackerRank.collectLease(request,{...options,signRequest:message=>certificateStart?certificateStart.signature(()=>ui.requestSignature(request,message,{signal:options.signal})):ui.requestSignature(request,message,{signal:options.signal})}),resolveLease,now});
   const services={version:'clear-bootcamp-test-execution-port.1',runtimeId:m.environmentId,runtimePinHash:prepared.runtimeHash,authorizeService(c){ensure(c===serviceContext&&!closed&&!failureState&&now()<startedAt+1800,'BC_LIVE_SERVICE');return {serviceId:'normal-worker',runtimeId:m.environmentId,expiresAt:startedAt+1800};},reader:{async snapshot(){throw Error('BC_NORMAL_LEGACY_READER_DISABLED');}},envelope:{async lookup(){throw Error('BC_NORMAL_LEGACY_ENVELOPE_DISABLED');}}};
   connection=openDevelopmentConnection({environmentId:m.environmentId,sourceMode:'REGISTERED_TEST_SOURCE'});
   store=createBootcampStore({directory:join(directory,'store'),authentication:uiAuthentication,commandScope,instanceId,demoStartedAt:startedAt,mode:'ISOLATED_LIVE_TEST',runtimeMappingHash,producers,onCollectionFailure:failure=>{report.collectionFailure=failure;write();},resolveSource:r=>producers[r.criterionId]?.resolveSource(r),now,operatorBindings:[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],procedurePorts:connection.procedurePorts,executionServices:services,executionBridge:connection.configuration});
@@ -232,6 +233,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    // this optional read binding out of the existing failure/resume UI path.
    if(!failureState&&now()<startedAt+1800)moodleRead.observeSession(context);
    readers.observe(actor.role.toUpperCase());return Object.freeze({
+   ...(certificateStart&&actor.role==='participant'&&app?{certificate:certificateStart.view(context,app)}:{}),
    version:'clear-bootcamp-normal-session.1',role:actor.role.toUpperCase(),applicationId:app??null,policyHash:m.policyHash,runtimeMappingHash,phase:report.stage,failure:failureState?resumeControl.view():null,
    signingContext:actor.role==='participant'?productSigningContext({runtime:m,pins,applicationId:app,participantId,participant:prepared.participantWallet}):null,
    recipientRegistrationRequired:m.version==='clear-e5-test-runtime.2',procedureReady:!!report.chainApplicationId,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),receiptRequired:true,
@@ -239,7 +241,8 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    reviewScreensReady:readers.ready(),expectedPayment:{recipient:prepared.participantWallet,token:m.tokenAddress.toLowerCase(),
     amountAtoms:'100000000',symbol:'TEST',decimals:6},aiApproval:failureState?null:reflectionApproval?.brief(context)??null});};
   const recipientView=(c,a,checkpoint)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,checkpoint,authorize:(c,w)=>ui.authorize(c,w)});};
-  const normalUi=Object.freeze({commandScope,walletRuntime:Object.freeze({instanceId:m.instanceId}),...(activityReturn?{activityPageId:activityReturn.pageId,refreshActivity:activityReturn.queue}:{}),
+  const normalUi=Object.freeze({commandScope,
+   startCertificate(c,a,b,k){requireUiRule(certificateStart,'BC_CERTIFICATE_UNAVAILABLE');return certificateStart.start(c,a,b,k);},walletRuntime:Object.freeze({instanceId:m.instanceId}),...(activityReturn?{activityPageId:activityReturn.pageId,refreshActivity:activityReturn.queue}:{}),
    assertWritable(path){if(activityReturn)requireUiRule(path==='/bootcamp/v1/applications'||app&&[
     '/bootcamp/v4/applications/'+app+'/source-session','/bootcamp/v4/applications/'+app+'/source-refresh',
    ].includes(path),'BC_ACTIVITY_MODE');requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
@@ -255,12 +258,15 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
     ensure(!closed&&!mounted&&!moodleLogin,'MOODLE_LOGIN_CONFIG');
     moodleLogin=createNormalMoodleLogin({options,ownerRunId:runId,runExpiresAtExclusive:startedAt+1800,
      authentication:auth,wallets:{PARTICIPANT:participant.address,COURSE_OPERATOR:operator.address},now,signal:controller.signal,native});
+    if(native&&!activityReturnOnly)certificateStart=createNormalCertificateStart({store,commandScope,
+     authorize:(c,w)=>ui.authorize(c,w),getBinding:()=>({app,user}),validateParticipant:()=>ui.participant(),
+     now,expiresAt:startedAt+1800,signal:controller.signal,getStage:()=>report.stage});
     return moodleLogin.owner;
    },
    createFrontend({tls,webRoot,moodleNative=null}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,moodleNative,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
    async collectSources({prepareReflection=false}={}){
     ui.participant();ensure(!activityReturnOnly&&!closed&&!failureState,'BC_LIVE_CONTEXT');
-    sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,moodleFirst,
+    sourceSequence??=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,moodleFirst,certificateStart,
      getReflectionRecovery:id=>producers['reflection-topics'].recovery(store.getRequest(user,app,id,{bridge:true}).record),sourceWindows,startedAt,now,nowMs:()=>Date.now(),signal:controller.signal,key,stage,diagnostics,waitForReaders,requireReaders:()=>readers.require()});
     const result=await sourceSequence.collect({prepareReflection});if(prepareReflection)return result;
     ensure(result.decision.record.conditionsStatus==='MET'&&result.evidence.length===4

@@ -8,6 +8,7 @@ import {prepareHackerRankSource} from './prepared-source.mjs';
 import {createHackerRankVerifier} from './verifier.mjs';
 import {browserCookieReader} from './browser-source.mjs';
 import {ACCOUNT_URL} from './recipes.mjs';
+import {verifyParticipant} from './request.mjs';
 import {check,freeze,isSourceId,EvidenceError} from './values.mjs';
 
 async function whileActive(signal,run){
@@ -56,15 +57,22 @@ export async function withManagedHackerRankSource(session,{
   route=await openRoute({client:connection.client,signal:scope,allowHost:host=>selfAttestor?config.selfAttestor.hosts.includes(host):['hackerrank.com','hrcdn.net'].some(d=>host===d||host.endsWith('.'+d))});
   const browserEnded=new AbortController();
   live=AbortSignal.any([scope,route.signal,browserEnded.signal]);live.throwIfAborted();
-  browser=await launchBrowser(session,{synthetic:false,proxyUrl:route.proxyUrl,headless:false,signal:live});
-  browser.closed.then(()=>browserEnded.abort(),()=>browserEnded.abort());live.throwIfAborted();
-  const {targetInfos}=await browser.send('Target.getTargets'),page=targetInfos.find(t=>t.type==='page');check(page,'COLLECTOR_BROWSER_PAGE');
-  const {sessionId}=await browser.send('Target.attachToTarget',{targetId:page.targetId,flatten:true});live.throwIfAborted();
+  let readCookies;
+  const openBrowser=async guard=>{
+   guard();check(!browser,'COLLECTOR_BROWSER_USED');
+   browser=await launchBrowser(session,{synthetic:false,proxyUrl:route.proxyUrl,headless:false,signal:live});
+   browser.closed.then(()=>browserEnded.abort(),()=>browserEnded.abort());guard();
+   const {targetInfos}=await browser.send('Target.getTargets');guard();
+   const page=targetInfos.find(t=>t.type==='page');check(page,'COLLECTOR_BROWSER_PAGE');
+   const {sessionId}=await browser.send('Target.attachToTarget',{targetId:page.targetId,flatten:true});guard();
+   readCookies=browserCookieReader(browser,sessionId);
+   const navigation=await browser.send('Page.navigate',{url:ACCOUNT_URL},sessionId);guard();check(!navigation.errorText,'COLLECTOR_NAVIGATION');
+  };
   source=prepareHackerRankSource({trustConfig:config,commitmentKey:key,selectedCertificateId,diagnostics,
-   client:connection.client,routeClient:route.client,readCookies:browserCookieReader(browser,sessionId)});
+   client:connection.client,routeClient:route.client,readCookies:input=>{check(readCookies,'COLLECTOR_BROWSER_REQUIRED');return readCookies(input);}});
   onAbort=()=>source.close();live.addEventListener('abort',onAbort,{once:true});live.throwIfAborted();
-  const navigation=await browser.send('Page.navigate',{url:ACCOUNT_URL},sessionId);check(!navigation.errorText,'COLLECTOR_NAVIGATION');
   if(!deferReadyUntilCollection){
+   await openBrowser(()=>live.throwIfAborted());
    await waitForReady({signal:live});live.throwIfAborted();check(source.pins(),'TRUST_EXPIRED');
   }
   const ownerClosed=new AbortController(),readySignal=AbortSignal.any([live,ownerClosed.signal]);
@@ -74,16 +82,22 @@ export async function withManagedHackerRankSource(session,{
    await waitForReady({signal:readySignal});
    check(!readySignal.aborted,'COLLECTOR_CANCELLED');check(source.pins(),'TRUST_EXPIRED');
   });
-  // Explicit fixed-Moodle owner mode exposes only the SAME prepared pins before
-  // human readiness. Every collection still passes the shared readiness gate;
-  // no signature, cookie or claim is requested by this wrapper before it opens.
+  // Native Moodle exposes the SAME pins without opening a window. The server's
+  // accepted participant signature precedes browser launch and login readiness.
   const ownerSource=deferReadyUntilCollection?freeze({status:source.status,pins:source.pins,
    close(){source.close();ownerClosed.abort();},
    async collectLease(request,options={}){
     const collectionSignal=options.signal?AbortSignal.any([readySignal,options.signal]):readySignal;
     const guard=()=>{check(source.pins(),'COLLECTOR_CLOSED');check(!collectionSignal.aborted,'COLLECTOR_CANCELLED');
      check(typeof options.isAuthorized==='function'&&options.isAuthorized()===true,'COLLECTOR_AUTHORITY');};
-    guard();await whileActive(collectionSignal,ready);guard();return source.collectLease(request,{...options,signal:collectionSignal});
+    guard();const expected=freeze(structuredClone(request));
+    return source.collectLease(expected,{...options,signal:collectionSignal,async signRequest(message){
+     guard();check(typeof options.signRequest==='function','COLLECTOR_HOST_PORTS');
+     const signature=await whileActive(collectionSignal,()=>options.signRequest(message));guard();
+     verifyParticipant({request:expected,signature},expected,config,Math.floor(Date.now()/1000));
+     await openBrowser(guard);guard();await whileActive(collectionSignal,ready);guard();
+     return signature;
+    }});
    }}):source;
   // Only this port crosses to the integration owner: no browser, cookie reader,
   // signing key, transcript or raw claim. API request issuance stays external.

@@ -25,6 +25,11 @@ export function createMoodleCommandScope({enabled, reserve}) {
       check(reservation,'MOODLE_ACTIVITY_AUTHORITY');
       return reservation.captureActivityAuthority(applicationId);
     },
+    captureCertificateAuthority(applicationId) {
+      const reservation = requests.getStore()?.reservation;
+      check(reservation,'MOODLE_CERTIFICATE_AUTHORITY');
+      return reservation.captureCertificateAuthority(applicationId);
+    },
     bindSourceAuthority(readAuthority) {
       // Later readers must use the source owner's scope. Preserve a command's
       // reservation when present, including its expiry and completion fence.

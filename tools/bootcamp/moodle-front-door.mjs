@@ -21,6 +21,7 @@ export const moodleNativeApplicationRoutes = Object.freeze([
   [3, 'recipient-registration', ['GET', 'POST'], ['checkpoint']],
   [3, 'review-consents', ['POST']],
   [4, 'source-session', ['POST']],
+  [4, 'certificate-start', ['POST']],
   [4, 'source-signature', ['GET', 'POST']],
   [4, 'reflection-approval', ['POST']],
   [4, 'payment-receipt', ['GET']],

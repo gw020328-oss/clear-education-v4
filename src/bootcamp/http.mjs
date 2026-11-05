@@ -43,12 +43,13 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
         check(req.method==='GET'&&typeof normalUi?.getSession==='function','BC_NOT_FOUND');result=normalUi.getSession(context);
       }
       else if(v4){
-        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt|reflection-approval|resume|source-refresh)$/.exec(path);
+        const m=/^\/bootcamp\/v4\/applications\/([a-z][a-z0-9.-]{0,63})\/(source-session|source-signature|payment-receipt|reflection-approval|resume|source-refresh|certificate-start)$/.exec(path);
         check(normalUi&&m,'BC_NOT_FOUND');const [,a,resource]=m;
         if(req.method==='GET'&&resource==='payment-receipt'){check(typeof normalUi.getPaymentReceipt==='function','BC_NOT_FOUND');result=await normalUi.getPaymentReceipt(context,a);}
         else if(req.method==='GET'&&resource==='source-signature')result=normalUi.pendingSignature(context,a);
         else if(req.method==='POST'&&resource==='source-signature')result=normalUi.submitSignature(context,a,body);
         else if(req.method==='POST'&&resource==='source-session'){exactKeys(body,[],'BC_UI_SESSION_BODY');result=normalUi.bindParticipant(context,a);}
+        else if(req.method==='POST'&&resource==='certificate-start'){check(typeof normalUi.startCertificate==='function','BC_NOT_FOUND');result=normalUi.startCertificate(context,a,body,key);}
         else if(req.method==='POST'&&resource==='source-refresh'){check(typeof normalUi.refreshActivity==='function','BC_NOT_FOUND');result=normalUi.refreshActivity(context,a,body,key);}
         else if(req.method==='POST'&&resource==='resume'){check(typeof normalUi.resume==='function','BC_NOT_FOUND');result=normalUi.resume(context,a,body);}
         else if(req.method==='POST'&&resource==='reflection-approval'){check(typeof normalUi.approveReflection==='function','BC_NOT_FOUND');result=normalUi.approveReflection(context,a,body,key);}

@@ -33,6 +33,7 @@ function fixture(){
  const wallet={pin:{address:w.address,chainId:31337},async personal(message){events.push('wallet');const s=await w.signMessage(message);afterSign();return s;},async typed(p){events.push('wallet');const types={...p.types};delete types.EIP712Domain;const s=await w.signTypedData(p.domain,types,p.message);afterSign();return s;}};
  const command=async input=>{await guard();events.push('grant-and-submit');commands.push(structuredClone(input));
   if(input.path.endsWith('/source-refresh'))return{status:'QUEUED',operationId:'operation-activity'};
+  if(input.path.endsWith('/certificate-start'))return{version:'clear-certificate-start-receipt.1',applicationId:app,criterionId:'python-basic-certificate',status:'START_ACCEPTED',paymentAuthorization:false};
   if(input.path.endsWith('/source-signature')){assert.equal(verifyMessage(source.message,input.body.signature),w.address);return{approvalId:source.approvalId,requestHash:source.requestHash,status:'PARTICIPANT_SIGNATURE_ACCEPTED',paymentAuthorization:false};}
   if(input.path.endsWith('/review-consents'))return{version:'clear-bootcamp-procedure-operation.1',record:{applicationId:app,target:{decisionId:input.body.targetDecisionId}},current:true,usableForPayment:false};
   if(input.path.endsWith('/recipient-registration'))return{version:'clear-bootcamp-procedure-operation.1',record:{applicationId:app},current:true,usableForPayment:false};
@@ -120,4 +121,24 @@ test('refresh activity uses the current participant session and the fixed comman
  assert.deepEqual(f.commands,[{method:'POST',path:'/bootcamp/v4/applications/'+f.app+'/source-refresh',
   body:{criterionId:'activity-complete',expectedRevision:1},idempotencyKey:'activity-one'}]);
  assert(!f.events.includes('wallet'));
+});
+
+test('certificate start needs authoritative matching stage and readiness; session reads do not write or sign',async()=>{
+ const f=fixture(),command={action:'start-certificate',applicationId:f.app,expectedRevision:1,idempotencyKey:'cert-one'};
+ await f.flow.run({action:'read-session'});assert.equal(f.commands.length,0);
+ await assert.rejects(f.flow.run(command),/MOODLE_CERTIFICATE_UNAVAILABLE/);
+ f.info.phase='SOURCE_python-basic-certificate';
+ await assert.rejects(f.flow.run(command),/MOODLE_CERTIFICATE_UNAVAILABLE/);
+ f.info.certificate={applicationId:f.app,criterionId:'python-basic-certificate',startAllowed:true};
+ const result=await f.flow.run(command);assert.equal(result.status,'START_ACCEPTED');
+ assert.equal(f.commands.length,1);assert(!f.events.includes('wallet'));
+ assert.equal(f.commands[0].path,'/bootcamp/v4/applications/'+f.app+'/certificate-start');
+ assert.deepEqual(f.commands[0].body,{expectedRevision:1});
+ f.role('operator');await assert.rejects(f.flow.run(command),/MOODLE_CERTIFICATE_UNAVAILABLE/);f.role('participant');
+ for(const patch of [{phase:'SOURCE_activity-complete'},
+  {certificate:{...f.info.certificate,startAllowed:false}},{certificate:{...f.info.certificate,applicationId:'other'}}]){
+  const saved={...f.info};Object.assign(f.info,patch);
+  await assert.rejects(f.flow.run(command),/MOODLE_CERTIFICATE_UNAVAILABLE/);Object.assign(f.info,saved);
+ }
+ assert.equal(f.commands.length,1);
 });

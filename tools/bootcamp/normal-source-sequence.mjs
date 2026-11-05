@@ -6,7 +6,7 @@ import {requireNormalModelWindow,REVIEW_WINDOW} from './normal-review-window.mjs
 
 export function createNormalSourceSequence({store,getContext,applicationId,sourceWindows,startedAt,now,
   signal,key,stage,diagnostics,waitForReaders,requireReaders,onPrepared,nowMs=()=>now()*1000,
-  getReflectionRecovery=()=>({status:'UNOBSERVED',resumeAllowed:false}),sourceValiditySeconds=900,moodleFirst=false}){
+  getReflectionRecovery=()=>({status:'UNOBSERVED',resumeAllowed:false}),sourceValiditySeconds=900,moodleFirst=false,certificateStart=null}){
   check(Number.isSafeInteger(sourceValiditySeconds)&&sourceValiditySeconds>0&&sourceValiditySeconds<=900,'BC_NORMAL_SOURCE_WINDOW');
   check(typeof moodleFirst==='boolean','BC_NORMAL_SOURCE_ORDER');
   let state='NEW',pending=null,failedCriterion=null,skipAccepted=false;
@@ -46,12 +46,14 @@ export function createNormalSourceSequence({store,getContext,applicationId,sourc
           check(!signal?.aborted,'BC_CANCELLED');
           if(criterionId==='reflection-topics'&&!resuming){await waitForReaders();requireHr();}
           const context=getContext();failedCriterion=criterionId;stage('SOURCE_'+criterionId);let request;
+          const certificate=criterionId==='python-basic-certificate'&&certificateStart?await certificateStart.wait():null;
           if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','STARTED');
+          certificate?.assertAuthority();
           if(resuming&&criterionId==='reflection-topics')request=pending.request;
           else{
             sourceWindows.set(criterionId,now()+(criterionId==='python-basic-certificate'?Math.max(900,sourceValiditySeconds):sourceValiditySeconds));
             request=store.issueBridgeRequest(context,applicationId,{criterionId,
-              expectedRevision:readNormalView(()=>store.getApplication(context,applicationId)).revision},key());
+              expectedRevision:certificate?.expectedRevision??readNormalView(()=>store.getApplication(context,applicationId)).revision},key());
           }
           const body={requestId:request.record.target.requestId,expectedRevision:request.record.applicationRevision};
           if(prepareReflection&&criterionId==='reflection-topics'){
@@ -60,12 +62,12 @@ export function createNormalSourceSequence({store,getContext,applicationId,sourc
             pending={request,preparation,collectionKey:key()};state='WAITING';onPrepared?.(preparation);
             stage('AWAITING_EXACT_REFLECTION_APPROVAL');return preparation;
           }
-          await store.collectBridge(context,applicationId,body,criterionId==='reflection-topics'?(pending?.collectionKey??key()):key(),{signal,
+          await store.collectBridge(context,applicationId,body,criterionId==='reflection-topics'?(pending?.collectionKey??key()):key(),{signal,...(certificate?{assertAuthority:certificate.assertAuthority}:{}),
             timeoutMs:criterionId==='python-basic-certificate'?300000:30000});
-          if(criterionId==='python-basic-certificate')observeSource(diagnostics,'HR_COLLECTION','COMPLETED');
+          if(criterionId==='python-basic-certificate'){certificateStart?.complete();observeSource(diagnostics,'HR_COLLECTION','COMPLETED');}
         }
         state='DONE';return readNormalView(()=>store.getApplication(getContext(),applicationId));
-      }catch(error){state='FAILED';throw error;}
+      }catch(error){if(failedCriterion==='python-basic-certificate')certificateStart?.fail();state='FAILED';throw error;}
     },
   });
 }

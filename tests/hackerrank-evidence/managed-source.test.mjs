@@ -1,4 +1,6 @@
 import test from 'node:test';
+import {Wallet} from 'ethers';
+import {POLICY_HASH} from '../../src/hackerrank-evidence/request.mjs';
 import assert from 'node:assert/strict';
 import {withManagedHackerRankSource} from '../../src/hackerrank-evidence/managed-source.mjs';
 import {syntheticRecipe,ACCOUNT_URL} from '../../src/hackerrank-evidence/recipes.mjs';
@@ -62,42 +64,57 @@ test('one prepared owner reaches the host only after ready and closes on return'
  assert.equal(x.calls.filter(c=>c==='OPEN_CLIENT').length,1);
  assert(!x.calls.some(c=>/Cookies|ResponseBody/.test(c)));
 });
-test('deferred readiness exposes pins first and shares one wait without accessing browser data',async()=>{
+function requestFor(pins,wallet){const now=Math.floor(Date.now()/1000);return {
+ version:'clear-hackerrank-request.1',audience:pins.audience,participantId:'participant-test',
+ participantWallet:wallet.address.toLowerCase(),applicationId:'application-test',criterionId:'python-basic-certificate',
+ policyHash:POLICY_HASH,runtimeMappingHash:'0x'+'34'.repeat(32),trustConfigHash:pins.trustConfigHash,
+ recipeHash:pins.recipeHash,expectedClaimOwner:pins.expectedClaimOwner,nonce:'0x'+'56'.repeat(32),
+ issuedAt:now,expiresAt:now+240,selectedCertificateId:pins.selectedCertificateId};}
+test('deferred host and repeated pin reads open no browser',async()=>{
  const x=setup();x.input.deferReadyUntilCollection=true;
- const ready=Promise.withResolvers(),entered=Promise.withResolvers();
- let signed=0,allowed=true;
- x.input.waitForReady=async()=>{x.calls.push('READY');entered.resolve();await ready.promise;};
+ x.input.useSource=async source=>{for(let i=0;i<3;i++)assert(source.pins());
+  assert(!x.calls.includes('OPEN_BROWSER'));assert(!x.calls.includes('READY'));};
+ await withManagedHackerRankSource(x.session,x.input);
+ assert.deepEqual(x.calls,['OPEN_CLIENT','OPEN_ROUTE','CLOSE_ROUTE','CLOSE_CLIENT']);
+});
+test('deferred launch follows a valid accepted signature, then waits for login',async()=>{
+ const x=setup(),wallet=Wallet.createRandom();x.input.deferReadyUntilCollection=true;
+ const entered=Promise.withResolvers(),accepted=Promise.withResolvers(),ready=Promise.withResolvers(),stop=new AbortController();
+ x.input.waitForReady=async()=>{x.calls.push('READY');ready.resolve();await new Promise(()=>{});};
  x.input.useSource=async source=>{
-  assert(source.pins());assert(!x.calls.includes('READY'));
-  const options={isAuthorized:()=>allowed,signRequest:()=>{signed++;}};
-  const cancel=new AbortController(),a=source.collectLease({}, {...options,signal:cancel.signal}),b=source.collectLease({},options);
-  const aRejected=assert.rejects(a,/COLLECTOR_CANCELLED/),bRejected=assert.rejects(b,/COLLECTOR_AUTHORITY/);
-  await entered.promise;assert.equal(signed,0);
-  cancel.abort();await aRejected;
-  assert(source.pins());allowed=false;ready.resolve();await bRejected;
+  const pending=source.collectLease(requestFor(source.pins(),wallet),{signal:stop.signal,isAuthorized:()=>true,
+   async signRequest(message){x.calls.push('SIGN_REQUEST');entered.resolve();await accepted.promise;
+    x.calls.push('SIGN_ACCEPTED');return wallet.signMessage(message);}});
+  const rejected=assert.rejects(pending,/COLLECTOR_CANCELLED/);
+  await entered.promise;assert(!x.calls.includes('OPEN_BROWSER'));assert(!x.calls.includes('READY'));
+  accepted.resolve();await ready.promise;
+  assert(x.calls.indexOf('SIGN_ACCEPTED')<x.calls.indexOf('OPEN_BROWSER'));
+  assert(x.calls.indexOf('Page.navigate')<x.calls.indexOf('READY'));
+  stop.abort();await rejected;
  };
  await withManagedHackerRankSource(x.session,x.input);
- assert.equal(x.calls.filter(c=>c==='READY').length,1);assert.equal(signed,0);
+ assert.equal(x.calls.filter(c=>c==='OPEN_BROWSER').length,1);
+ assert.deepEqual(x.calls.slice(-3),['CLOSE_BROWSER','CLOSE_ROUTE','CLOSE_CLIENT']);
 });
-test('deferred wait ends on close, host cancellation, or expired trust before signing',async t=>{
- for(const mode of ['close','host','expiry'])await t.test(mode,async st=>{
-  const x=setup(),stop=new AbortController(),entered=Promise.withResolvers(),ready=Promise.withResolvers();
-  x.input.deferReadyUntilCollection=true;x.input.signal=stop.signal;
-  let signed=0,gateSignal;
-  x.input.waitForReady=async({signal})=>{gateSignal=signal;entered.resolve();await ready.promise;};
+test('rejected, forged, expired, cancelled or revoked approval never opens a browser',async t=>{
+ for(const mode of ['rejected','forged','expired','cancelled','revoked','closed'])await t.test(mode,async st=>{
+  const x=setup(),wallet=Wallet.createRandom(),stop=new AbortController();let allowed=true;
+  x.input.deferReadyUntilCollection=true;
   x.input.useSource=async source=>{
-   const pending=source.collectLease({}, {isAuthorized:()=>true,signRequest:()=>{signed++;}});
-   const rejected=assert.rejects(pending,mode==='expiry'?/TRUST_EXPIRED/:/COLLECTOR_CANCELLED/);
-   await entered.promise;
-   if(mode==='expiry'){st.mock.method(Date,'now',()=>x.config.expiresAt*1000);ready.resolve();}
-   else if(mode==='close')source.close();
-   else stop.abort();
-   await rejected;assert.equal(source.pins(),null);
-   if(mode!=='expiry')assert(gateSignal.aborted);
+   const request=requestFor(source.pins(),wallet);
+   await assert.rejects(source.collectLease(request,{signal:stop.signal,isAuthorized:()=>allowed,
+    async signRequest(message){
+     if(mode==='rejected')throw Error('USER_REJECTED');
+     if(mode==='cancelled')stop.abort();
+     if(mode==='revoked')allowed=false;
+     if(mode==='closed')source.close();
+     if(mode==='expired')st.mock.method(Date,'now',()=>request.expiresAt*1000);
+     return (mode==='forged'?Wallet.createRandom():wallet).signMessage(message);
+    }}));
   };
-  const run=withManagedHackerRankSource(x.session,x.input);
-  if(mode==='host')await assert.rejects(run,/COLLECTOR_CANCELLED/);else await run;
-  assert.equal(signed,0);assert.deepEqual(x.calls.slice(-3),['CLOSE_BROWSER','CLOSE_ROUTE','CLOSE_CLIENT']);
+  await withManagedHackerRankSource(x.session,x.input);
+  assert(!x.calls.includes('OPEN_BROWSER'));assert(!x.calls.includes('READY'));
+  assert.deepEqual(x.calls.slice(-2),['CLOSE_ROUTE','CLOSE_CLIENT']);
  });
 });
 test('caller trust and key changes during transport cannot change prepared pins',async()=>{
