@@ -854,3 +854,83 @@ test('화면이 보류 조항의 원문과 이유를 남기고, 나머지만 구
     assert.ok(only.node.textContent.includes('조건 사이의 관계를 확인해야 해서'));
   } finally { restore(); }
 });
+
+// ── Gemini 제안자 자리 — 명시적 생성 · 출처 배지 · 서버 보류 (오규원 11/5) ──────
+
+import { OFFLINE_GEMINI_PROPOSER } from '../src/bootcamp/finals-panels/gemini-fixture.js';
+
+const geminiPanel = (source) => {
+  const a = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (i) => COMBOS[i]?.payload ?? null });
+  return { a, panel: aiComparePanel({ adapter: a, source, proposer: OFFLINE_GEMINI_PROPOSER }) };
+};
+const byRole = (node, role) => [...walk(node)].find((n) => n.attributes?.['data-role'] === role);
+const clickOn = (btn) => { for (const fn of btn.handlers.click ?? []) fn({}); };
+
+test('Gemini 제안자는 첫 화면·입력에서 부르지 않고 「제안 생성」 을 눌러야 돈다', async () => {
+  const restore = installDom();
+  try {
+    const { panel } = geminiPanel(PRESETS[0].source);
+    await settle();
+    let text = panel.node.textContent;
+    assert.ok(!text.includes('개 조건을 찾았습니다'), '버튼 전에 제안이 생겼다');
+    assert.ok(text.includes('「제안 생성」 을 눌러야 호출'), '생성 전 배지가 없다');
+    const gen = byRole(panel.node, 'generate');
+    assert.ok(gen, '제안 생성 버튼이 없다');
+    assert.equal(gen.attributes.disabled, undefined);
+    clickOn(gen);
+    await settle();
+    text = panel.node.textContent;
+    assert.ok(text.includes('2개 조건을 찾았습니다'), '생성 뒤 제안이 없다: ' + text.slice(0, 200));
+    assert.ok(text.includes('Gemini 오프라인 응답 대역 · 실제 호출 아님'), '출처 배지가 대역임을 안 적었다');
+    assert.ok(!text.includes('Gemini 실제 호출'), '실제 호출이라고 적었다');
+  } finally { restore(); }
+});
+
+test('Gemini 제안은 표시 전용 — 구조화 버튼은 잠기고 규칙·fixture 실행기로 넘어가지 않는다', async () => {
+  const restore = installDom();
+  try {
+    const { a, panel } = geminiPanel(PRESETS[0].source);
+    clickOn(byRole(panel.node, 'generate'));
+    await settle();
+    const run = [...walk(panel.node)].find((n) => n.tagName === 'BUTTON' && n.textContent.includes('표시 전용'));
+    assert.ok(run, '표시 전용 버튼이 없다');
+    assert.equal(run.attributes.disabled, 'disabled');
+    clickOn(run);
+    await settle();
+    assert.equal(a.current.state, STATE.IDLE, '서버 제안이 실행기로 넘어갔다');
+    assert.ok(panel.node.textContent.includes('실행은 CLEAR 서버가 중계하는 경로가 붙은 뒤'));
+  } finally { restore(); }
+});
+
+test('원문을 고치면 Gemini 제안은 비워지고 자동으로 다시 부르지 않는다', async () => {
+  const restore = installDom();
+  try {
+    const { panel } = geminiPanel(PRESETS[0].source);
+    clickOn(byRole(panel.node, 'generate'));
+    await settle();
+    assert.ok(panel.node.textContent.includes('2개 조건을 찾았습니다'));
+    const ta = [...walk(panel.node)].find((n) => n.tagName === 'TEXTAREA');
+    for (const fn of ta.handlers.input ?? []) fn({ target: { value: PRESETS[0].source + '; 회고 작성' } });
+    await new Promise((r) => setTimeout(r, 400));
+    await settle();
+    const text = panel.node.textContent;
+    assert.ok(!text.includes('개 조건을 찾았습니다'), '고친 뒤에도 이전 제안이 남아 있다');
+    assert.ok(text.includes('「제안 생성」 을 눌러야 호출'), '자동으로 다시 불렀거나 배지가 안 돌아왔다');
+  } finally { restore(); }
+});
+
+test('서버가 보류한 조항은 사유를 보이고 직접 지정 상자가 없다 — 한 문장 여러 조건', async () => {
+  const restore = installDom();
+  try {
+    const { panel } = geminiPanel('강의수강 후기적기 과제제출');
+    clickOn(byRole(panel.node, 'generate'));
+    await settle();
+    const text = panel.node.textContent;
+    assert.ok(text.includes('자동 변환 보류'), '보류 묶음이 없다');
+    assert.ok(text.includes('서버 보류 사유: MULTIPLE_CONDITIONS'), '서버 보류 사유가 없다: ' + text.slice(0, 300));
+    assert.ok(!text.includes('개 조건을 찾았습니다'), '보류인데 조건을 찾았다고 했다');
+    assert.equal([...walk(panel.node)].filter((n) => n.tagName === 'SELECT').length, 0, '서버 보류 조항에 직접 지정 상자가 열렸다');
+    // 규칙 제안자였다면 셋을 찾았을 문장이다 — 서버 계약에선 쪼개지 않는다
+    assert.equal(proposeReading('강의수강 후기적기 과제제출').kept.length, 3);
+  } finally { restore(); }
+});

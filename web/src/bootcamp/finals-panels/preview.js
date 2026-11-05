@@ -14,6 +14,8 @@ import { opsMetricsPanel } from './ops-metrics.js';
 import { courseLinkPanel } from './course-link.js';
 import { linkFixture, saveFixture } from './course-link-fixtures.js';
 import { PRESETS, COMBOS, METRICS_SUMMARY, REAL_NOTICE } from './fixtures.js';
+import { RULES_PROPOSER } from './ai-compare.js';
+import { OFFLINE_GEMINI_PROPOSER } from './gemini-fixture.js';
 
 // ④ 는 **실제 공개 안내문**이다. 우리 조건 넷 중 셋만 있고 HackerRank 는
 // 없다 — 그래서 셋만 찾는 것이 맞는 동작이다. 합성 결과는 그 셋의 조합
@@ -28,7 +30,15 @@ const DEMO_PRESETS = [
  * @param {object} [options]
  * @param {string} [options.mode]  SYNTHETIC | ACTUAL — 주소의 ?mode= 로도 바꾼다
  */
-export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
+/**
+ * @param {HTMLElement} root
+ * @param {object} [options]
+ * @param {string} [options.mode]      SYNTHETIC | ACTUAL — 주소의 ?mode= 로도 바꾼다
+ * @param {string} [options.proposer]  'rules' | 'gemini' — 주소의 ?proposer= 로 바꾼다.
+ *   'gemini' 는 **오프라인 응답 대역**이다. 실제 Gemini 호출이 아니고, 「제안 생성」 을
+ *   눌러야 한 번 돈다. 실제 연결 때는 propose 만 CLEAR 서버 중계 호출로 바뀐다.
+ */
+export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer = 'rules' } = {}) {
   clear(root);
 
   // 실제 모드는 **일부러 비워 둔다.** run 이 없으니 어댑터가 '미연결' 로
@@ -49,10 +59,12 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
 
   // ① 에서 시작한다. 발표자가 ②③ 을 눌러 조건이 느는 것을 보여준다.
   const first = PRESETS[0].source;
+  const useGemini = proposer === 'gemini';
   const aiPanel = aiComparePanel({
     adapter: ai,
     source: first,
     presets: DEMO_PRESETS,
+    proposer: useGemini ? OFFLINE_GEMINI_PROPOSER : RULES_PROPOSER,
   });
   const opsPanel = opsMetricsPanel({ adapter: ops });
 
@@ -81,7 +93,18 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
           : '실제 모드입니다. 아직 연결된 경로가 없어 미연결로 표시됩니다. '
             + '합성 자료로 자동 전환하지 않습니다.',
       }),
-    ]),
+      // 제안자 전환. 같은 확인 화면에 규칙 / Gemini(오프라인 대역) 를 번갈아 끼운다.
+      el('div.fp-presets', { role: 'group', 'aria-label': '제안자' }, [
+        el('span.fp-label', { text: '제안자' }),
+        ...[['rules', '프론트 규칙 (지금)'], ['gemini', 'Gemini 오프라인 대역 (제안 생성 버튼)']].map(([id, label]) => {
+          const href = `?mode=${mode === DATA_MODE.ACTUAL ? 'ACTUAL' : 'SYNTHETIC'}&proposer=${id}`;
+          return el('a.fp-chip', { href, 'aria-pressed': (useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
+        }),
+      ]),
+      useGemini
+        ? el('p', { text: 'Gemini 대역: 서버가 Gemini 로 할 분류를 이 페이지 안에서 흉내 냅니다. 실제 호출 아님. 한 조항 = 한 조건이고, 여러 조건이 한 문장에 있으면 서버처럼 보류합니다. 제안은 표시 전용입니다.' })
+        : null,
+    ].filter(Boolean)),
     aiPanel.node,
     el('p.fp-flow', { text: '↓ 조건이 정해지면, 조건마다 Moodle 의 어느 항목을 읽을지 운영자가 지정합니다.' }),
     linkPanel.node,
@@ -100,8 +123,9 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC } = {}) {
 }
 
 if (typeof window !== 'undefined' && document.querySelector('#finals-root')) {
-  const picked = new URL(window.location.href).searchParams.get('mode');
+  const params = new URL(window.location.href).searchParams;
   mountFinalsPreview(document.querySelector('#finals-root'), {
-    mode: picked === 'ACTUAL' ? DATA_MODE.ACTUAL : DATA_MODE.SYNTHETIC,
+    mode: params.get('mode') === 'ACTUAL' ? DATA_MODE.ACTUAL : DATA_MODE.SYNTHETIC,
+    proposer: params.get('proposer') === 'gemini' ? 'gemini' : 'rules',
   });
 }

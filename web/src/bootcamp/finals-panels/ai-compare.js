@@ -142,7 +142,12 @@ export function aiComparePanel({
   // 그 뒤 원문이 바뀌어도 이 짝은 **보낸 당시** 기준이어야 한다.
   let lastSent = null;
 
-  const recompute = () => { proposal = applyOverrides(base, overrides); };
+  // 서버(Gemini) 제안은 운영자 지정으로 덮지 않는다 — 서버가 보류한 조항을 프론트가
+  // 실행 가능하게 바꾸면 안 된다(오규원 11/5). 규칙 제안만 지정을 얹는다.
+  const recompute = () => { proposal = base.serverBinding ? base : applyOverrides(base, overrides); };
+
+  /** 명시적 제안자(Gemini): 입력마다 부르지 않고 「제안 생성」 을 눌러야 한 번 돈다 */
+  const explicit = proposer.explicit === true;
 
   /** 제안자를 돌린다. 값이든 Promise 든 받고, 늦게 온 답은 버린다 */
   const propose = (next) => {
@@ -163,7 +168,9 @@ export function aiComparePanel({
   const proposalReady = () => !proposing && proposedFor === text && editTimer === null && !composing;
 
   const run = () => {
-    if (!proposalReady() || proposal.readable === 0) return;
+    // 서버 제안은 표시 전용이다. canonicalText 는 호환용 원문일 뿐, 규칙·fixture 실행기에
+    // 넘기지 않는다. 실행은 CLEAR 서버 중계 경로가 붙은 뒤의 일이다.
+    if (!proposalReady() || proposal.readable === 0 || proposal.serverBinding) return;
     lastSent = proposal;
     // 모듈에는 **정규 문장**을 넘긴다. 원문은 그대로 두고 화면에 나란히 보인다.
     void adapter.request(proposal.canonicalText);
@@ -171,7 +178,14 @@ export function aiComparePanel({
 
   const edit = (next) => {
     text = next;
-    propose(next);
+    if (explicit) {
+      // 입력마다 유료 모델을 부르지 않는다. 이전 제안은 이 원문의 것이 아니니 비우고,
+      // 늦게 오는 답도 버린다. 다시 보려면 「제안 생성」 을 눌러야 한다.
+      proposeStamp += 1; proposing = false; runWhenReady = null;
+      base = emptyProposal(); proposedFor = null; overrides.clear(); recompute();
+    } else {
+      propose(next);
+    }
     onSource(next);
     // 입력이 바뀌면 이전 결과는 이 입력의 것이 아니다.
     adapter.markStale(proposal.canonicalText);
@@ -189,8 +203,32 @@ export function aiComparePanel({
   const pick = (preset) => {
     stopEditTimer();
     edit(preset.source);
+    // 명시적 제안자면 예문을 넣기만 한다. 생성은 버튼으로.
+    if (explicit) { render(); return; }
     // 제안이 비동기면 아직 이전 원문의 제안이다. 준비되면 그때 실행한다.
     if (proposalReady()) run(); else { runWhenReady = preset.source; render(); }
+  };
+
+  /** 「제안 생성」 — 지금 원문으로 제안자를 한 번 부른다 */
+  const generate = () => {
+    if (proposing || typing() || text.trim() === '') return;
+    stopEditTimer();
+    propose(text);
+    render();
+  };
+
+  /**
+   * 출처 배지. 셋을 섞지 않는다 — 규칙 / Gemini 실제 호출 / Gemini 오프라인 대역.
+   * 실제 호출 여부는 제안자 이름이 아니라 **응답의 provenance** 가 말한다.
+   */
+  const sourceBadge = () => {
+    const kind = proposer.kind ?? (proposer.id === 'rules' ? 'rules' : 'model');
+    if (kind === 'rules') return el('span.fp-mode', { 'data-mode': 'rules', text: proposer.label });
+    const prov = proposal.provenance ?? null;
+    if (!prov) return el('span.fp-mode', { 'data-mode': 'model-idle', text: proposer.idleLabel ?? proposer.label });
+    return prov.actualModelCall === true
+      ? el('span.fp-mode', { 'data-mode': 'model', text: 'Gemini 실제 호출 · 서버 검토 거침' })
+      : el('span.fp-mode', { 'data-mode': 'model-fixture', text: 'Gemini 오프라인 응답 대역 · 실제 호출 아님' });
   };
 
   // ── 원문 칸 — 글자마다 다시 그리지 않는다 ──────────────────────────
@@ -369,11 +407,8 @@ export function aiComparePanel({
         ? el('section.fp-proposal', { 'aria-label': '읽기 제안' }, [
           el('header.fp-proposal-head', {}, [
             el('span.fp-label', { text: '읽기 제안' }),
-            // 출처는 제안자가 말한다. 규칙이면 규칙, Gemini 면 Gemini.
-            el('span.fp-mode', {
-              'data-mode': proposer.id === 'rules' ? 'rules' : 'model',
-              text: proposer.label,
-            }),
+            // 출처는 제안자와 응답이 말한다. 규칙 / Gemini 실제 호출 / Gemini 오프라인 대역.
+            sourceBadge(),
             proposing ? el('span.fp-proposal-note', { text: '제안을 만드는 중…' }) : null,
           ].filter(Boolean)),
           // ── 찾은 조건 — 이게 본문이다. "N개 찾았습니다, 맞나요?" ───────
@@ -421,6 +456,15 @@ export function aiComparePanel({
                 (c.mentions ?? []).length > 0
                   ? el('span.fp-proposal-dst', {}, [
                     el('span', { text: `문장에 보인 조건: ${c.mentions.map((m) => CAPABILITY_LABEL[m] ?? m).join(' · ')}` }),
+                  ])
+                  : null,
+                // 서버가 보류한 이유. 운영자 지정으로 풀 수 없다 — 원문을 고쳐 다시 생성한다.
+                c.serverGuard
+                  ? el('span.fp-proposal-dst', {}, [
+                    el('span', {
+                      text: `서버 보류 사유: ${(c.serverGuard.kinds ?? []).join(' · ')}`
+                        + (c.serverGuard.modelCapability ? ` · 모델이 본 조건: ${CAPABILITY_LABEL[c.serverGuard.modelCapability] ?? c.serverGuard.modelCapability}` : ''),
+                    }),
                   ])
                   : null,
                 el('span.fp-proposal-note', { text: c.note ?? '' }),
@@ -472,18 +516,39 @@ export function aiComparePanel({
         : null,
 
       el('div.fp-actions', {}, [
+        // 명시적 제안자(Gemini)만 보인다. 입력마다 부르지 않고 이걸 눌러야 한 번 돈다.
+        explicit
+          ? el('button.fp-btn.fp-btn--primary', {
+            type: 'button',
+            'data-role': 'generate',
+            disabled: proposing || typing() || text.trim() === '' ? 'disabled' : null,
+            onClick: generate,
+          }, [el('span', { text: proposing ? 'Gemini 에 보내는 중…' : proposal.provenance ? '제안 다시 생성' : '제안 생성 (Gemini)' })])
+          : null,
         (runButton = el('button.fp-btn', {
           type: 'button',
-          // 지금 원문으로 만든 제안이 아니면 누를 수 없다(PR #164 리뷰 1)
-          disabled: s.busy || !proposalReady() || proposal.readable === 0 ? 'disabled' : null,
+          // 지금 원문으로 만든 제안이 아니면 누를 수 없다(PR #164 리뷰 1).
+          // 서버 제안은 표시 전용이라 여기서는 실행하지 않는다.
+          disabled: s.busy || !proposalReady() || proposal.readable === 0 || proposal.serverBinding ? 'disabled' : null,
           onClick: run,
         }, [el('span', {
-          text: s.busy ? '구조화 중…'
-            : !proposalReady() ? (proposing ? '제안을 만드는 중…' : '원문 반영 중…')
-              : proposal.complete ? '이대로 구조화'
-                : proposal.readable > 0 ? '읽은 것만 구조화' : '조건 구조화',
+          text: proposal.serverBinding ? '표시 전용 · 실행은 서버 중계 연결 뒤'
+            : s.busy ? '구조화 중…'
+              : !proposalReady() ? (proposing ? '제안을 만드는 중…' : explicit ? '제안 생성 전' : '원문 반영 중…')
+                : proposal.complete ? '이대로 구조화'
+                  : proposal.readable > 0 ? '읽은 것만 구조화' : '조건 구조화',
         })])),
-      ]),
+      ].filter(Boolean)),
+
+      explicit
+        ? el('p.fp-note', {
+          text: proposal.serverBinding
+            ? 'Gemini 제안은 표시 전용입니다. 실행은 CLEAR 서버가 중계하는 경로가 붙은 뒤에 됩니다(계약 미확정). '
+              + '서버가 보류한 조항은 직접 지정으로 풀 수 없고, 원문을 고쳐 다시 생성해야 합니다.'
+            : '입력할 때마다 부르지 않습니다. 「제안 생성」 을 누를 때 한 번 호출합니다(실제 연결 시 유료). '
+              + '원문을 고치면 이전 제안은 비워집니다.',
+        })
+        : null,
 
       el('p', {
         class: banner.tone ? `fp-note fp-note--${banner.tone}` : 'fp-note',
@@ -644,9 +709,10 @@ export function aiComparePanel({
   // 첫 제안은 **render 가 정의된 뒤에** 부른다. 제안자가 비동기(Gemini)면
   // propose 가 곧바로 render() 를 부르는데, 위에 두면 아직 없는 함수를
   // 불러 첫 화면이 깨진다 — 오규원 PR #160 리뷰 1번.
-  if (text.trim() !== '') propose(text);
+  // 명시적 제안자는 첫 화면에서도 부르지 않는다 — 버튼을 눌러야 한다.
+  if (text.trim() !== '' && !explicit) propose(text);
   render();
-  return { node: box, render };
+  return { node: box, render, generate };
 }
 
 /**
