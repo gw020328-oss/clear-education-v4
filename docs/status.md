@@ -1,5 +1,14 @@
 # 개발 현황
 
+## 2026-11-05 운영자 강좌 연결과 미리보기
+
+아래 병합 상태는 develop 기준이다. 원격 확인 **2026-11-05 11:01 KST** 기준 [main de01557](https://github.com/gw020328-oss/clear-education-v4/commit/de01557f64fb6772a9ddfd145cd3c7b0788f292d), [develop 2977883](https://github.com/gw020328-oss/clear-education-v4/commit/2977883df06a408bfcd01102595e4fa66811b4ee).
+
+- **병합 완료**. [#160](https://github.com/gw020328-oss/clear-education-v4/pull/160)은 운영자 강좌 연결, 조건 초안, 참가자 연결 상태를 별도 합성 화면으로 추가했다. 조건 계획 예시는 공개 합성 자료에 대한 모듈 결과를 사용한다. 강좌 매핑 저장과 참가자의 실제 연결은 서버 연동 대기다. 기존 로그인·지갑·지급 경로와 별개다. [최종 head 6d5df50](https://github.com/gw020328-oss/clear-education-v4/commit/6d5df50f8a18e3acd24e15d7b7788d586e28e037)는 develop 병합 커밋과 트리가 같고 [CI 4개](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41856614857)가 모두 성공했다.
+- **진행 중**. [#149](https://github.com/gw020328-oss/clear-education-v4/pull/149)의 운영자 미리보기·실행 권한 통합은 열린 상태이며, [head 54ca048 공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41773142995)를 포함한 검사 8개가 성공했다. [#153](https://github.com/gw020328-oss/clear-education-v4/pull/153)의 Moodle 학생 출처 확인과 [#159](https://github.com/gw020328-oss/clear-education-v4/pull/159)의 등록형 미리보기 통합도 개발 PR 범위다. #159 [head 735243f](https://github.com/gw020328-oss/clear-education-v4/commit/735243fd30617470651675013beaff96f5c4afbe)는 [공개 CI](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41799452195)를 포함한 검사 8개가 성공했다.
+- **검증 범위**. #159의 [등록형 연동 보고서](https://github.com/gw020328-oss/clear-education-v4/blob/735243fd30617470651675013beaff96f5c4afbe/docs/agent-preview/PREVIEW_REGISTERED_D.ko.md)는 로컬 TLS 연동과 승인 없는 생성 요청의 차단을 기록한다. 보존된 검증 결과이며, 실제 Gemini 호출, 실제 성적 증명, 사용자 지급, 외부 배포는 이번 갱신에서 확인되지 않았다.
+
+
 ## 2026-11-04 조건 미리보기와 운영 지표
 
 아래 병합 상태는 develop 기준이다. 원격 확인 **2026-11-04 11:14 KST** 기준 [main 481b9a1](https://github.com/gw020328-oss/clear-education-v4/commit/481b9a11284c63b428fbfb05feafca926293ae0c), [develop a5653d6](https://github.com/gw020328-oss/clear-education-v4/commit/a5653d64b939da9a1ededc85744d30b91c759f8f).
