@@ -347,7 +347,7 @@ export function createMoodleLoginIntents({
           check(!sourceAuthorityTaken && a.request.role === 'PARTICIPANT'
             && typeof applicationId === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(applicationId)
             && input.method === 'POST' && input.path === '/bootcamp/v4/applications/'+applicationId+(activity?'/source-refresh':'/certificate-start')
-            && (!activity || input.body?.criterionId === 'activity-complete'),code);
+            && (!activity || ['activity-complete','assignment-submitted'].includes(input.body?.criterionId)),code);
           sourceAuthorityTaken = true;
           const identity = a.identity, fixedContext = canonical(context), hash = command.hash;
           const expiresAt = sourceExpiresAt;

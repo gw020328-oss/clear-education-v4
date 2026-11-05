@@ -1,16 +1,21 @@
-// Local, owner-selected mode. The only source is the pinned Moodle page.
+// Local, owner-selected mode. Only the pinned Moodle page and assignment can be refreshed.
 // The write request grants one bounded job; its HTTP reservation is not a
 // long-lived source lease. The job retains its original Moodle intent fence.
 import {AsyncResource} from 'node:async_hooks';
 import {exactKeys,requireRule as check} from '../../src/policy/values.mjs';
 import {readNormalView} from './normal-current-view.mjs';
 
-const criterionId = 'activity-complete';
+const allowed = ['activity-complete','assignment-submitted'];
 
 export function createNormalActivityReturn({store, mapping, origin, startedAt, now, signal,
   sourceWindows, commandScope, authorize, getBinding, validateParticipant=()=>{}, key, observeFailure}) {
-  const {courseId, targets: {activity}} = mapping;
+  const {courseId, targets: {activity,assignment,reflection}} = mapping;
   check(courseId === 2 && activity.module === 'page' && activity.cmId === 3,'BC_ACTIVITY_MAPPING');
+  if(assignment)check(assignment.cmId===4&&assignment.instanceId===1,'BC_ACTIVITY_MAPPING');
+  if(reflection)check(reflection.cmId===5&&reflection.forumId===3,'BC_ACTIVITY_MAPPING');
+  const targets=[{criterionId:'activity-complete',cmId:3,module:'page',instanceId:activity.instanceId??1,name:'지정 강의'},
+    ...(assignment?[{criterionId:'assignment-submitted',cmId:4,module:'assign',instanceId:1,name:'지정 과제'}]:[]),
+    ...(reflection?[{criterionId:'reflection-topics',cmId:5,module:'forum',instanceId:3,name:'지정 회고'}]:[])];
   const owner = new AsyncResource('CLEAR_MOODLE_ACTIVITY_OWNER');
   const attempts = new Map();
   let pending = false;
@@ -29,11 +34,12 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
       const {app, user} = binding();
       if (!app || applicationId !== app || context.token !== user.token) return null;
       return {version:'clear-student-condition-targets.1', applicationId:app, moodleOrigin:origin,
-        courseId, targets:[{criterionId, cmId:activity.cmId, module:'page', name:'지정 강의'}]};
+        courseId, targets:structuredClone(targets)};
     },
     queue(context, applicationId, body, requestKey) {
       exactKeys(body,['criterionId','expectedRevision'],'BC_ACTIVITY_BODY');
-      check(body.criterionId === criterionId && Number.isSafeInteger(body.expectedRevision)
+      const criterionId=body.criterionId;
+      check(allowed.includes(criterionId)&&targets.some(t=>t.criterionId===criterionId) && Number.isSafeInteger(body.expectedRevision)
         && body.expectedRevision > 0 && typeof requestKey === 'string'
         && /^[a-z][a-z0-9.-]{0,79}$/.test(requestKey),'BC_ACTIVITY_BODY');
       const actor = authorize(context,true);
@@ -42,7 +48,7 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
       validateParticipant();
       const previous = attempts.get(requestKey);
       if (previous) {
-        check(previous.expectedRevision === body.expectedRevision,'BC_IDEMPOTENCY_CONFLICT');
+        check(previous.criterionId===criterionId&&previous.expectedRevision === body.expectedRevision,'BC_IDEMPOTENCY_CONFLICT');
         commandScope.assert();
         commandScope.memoryCommitted();
         return previous.reply;
@@ -56,7 +62,7 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
         return {status:'RATE_LIMITED',retryAfterSeconds:5};
       }
       const operationId = key();
-      const attempt = {expectedRevision:body.expectedRevision, reply:{status:'QUEUED',operationId}};
+      const attempt = {criterionId,expectedRevision:body.expectedRevision, reply:{status:'QUEUED',operationId}};
       const assertIntent = commandScope.captureActivityAuthority(app);
       commandScope.assert();
       commandScope.memoryCommitted();

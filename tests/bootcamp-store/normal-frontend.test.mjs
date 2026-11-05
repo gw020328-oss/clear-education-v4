@@ -60,10 +60,10 @@ test('product HTTPS procedure GET survives a forward second after canonical refr
  assert.deepEqual(f.counts(),before);assert.equal(x.posts(),0);
 });
 
-for(const certificateOnly of [false,true])test('certificate read with unregistered payment ports: '+(certificateOnly?'source-only projection':'original 409'),async t=>{
+for(const certificateOnly of [false,true,'activity'])test('certificate read with unregistered payment ports: '+(certificateOnly?'source-only projection':'original 409'),async t=>{
  const f=await procedureFixture(t),a=f.create();await f.accept(a,'python-basic-certificate');let chainReads=0;
  const ports={...f.configuration.procedurePorts,chain(){chainReads++;check(false,'BC_E3_REGISTERED_BINDING');}};
- f.configuration.procedurePorts=normalProcedurePorts({procedurePorts:ports},certificateOnly);f.restart();
+ f.configuration.procedurePorts=normalProcedurePorts({procedurePorts:ports},certificateOnly,certificateOnly==='activity');f.restart();
  const x=await fixture(t,{f,normalUi:{refreshProcedure(c,id){f.store.getOperationsProjection(c,id);},
   assertWritable(path){check(certificateWriteAllowed(path,a),'BC_CERTIFICATE_MODE');}}});
  const before=f.counts(),route='/bootcamp/v3/applications/'+a,read=await x.raw(route+'/procedure');

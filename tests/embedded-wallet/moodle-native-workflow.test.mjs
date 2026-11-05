@@ -123,6 +123,19 @@ test('refresh activity uses the current participant session and the fixed comman
  assert(!f.events.includes('wallet'));
 });
 
+test('refresh assignment uses the current participant session and the fixed command route without signing',async()=>{
+ const f=fixture(),action={action:'refresh-activity',applicationId:f.app,expectedRevision:1,idempotencyKey:'activity-one',criterionId:'assignment-submitted'};
+ await assert.rejects(f.flow.run(action),/MOODLE_ACTIVITY_UNAVAILABLE/);
+ f.info.conditionTargets={applicationId:f.app,targets:[{criterionId:'assignment-submitted'}]};
+ f.role('operator');
+ await assert.rejects(f.flow.run(action),/MOODLE_ACTIVITY_UNAVAILABLE/);
+ f.role('participant');
+ assert.deepEqual(await f.flow.run(action),{status:'QUEUED',operationId:'operation-activity'});
+ assert.deepEqual(f.commands,[{method:'POST',path:'/bootcamp/v4/applications/'+f.app+'/source-refresh',
+  body:{criterionId:'assignment-submitted',expectedRevision:1},idempotencyKey:'activity-one'}]);
+ assert(!f.events.includes('wallet'));
+});
+
 test('certificate start needs authoritative matching stage and readiness; session reads do not write or sign',async()=>{
  const f=fixture(),command={action:'start-certificate',applicationId:f.app,expectedRevision:1,idempotencyKey:'cert-one'};
  await f.flow.run({action:'read-session'});assert.equal(f.commands.length,0);
