@@ -21,10 +21,10 @@ export function createMoodleCommandScope({enabled, reserve}) {
     },
     assertContext(context) { requests.getStore()?.reservation.assertContext(context); },
     bindSourceAuthority(readAuthority) {
-      // Capture only background preparation checks. An operator command may
-      // inspect that participant authority without inheriting its identity.
-      check(!requests.getStore(),'MOODLE_COMMAND_NESTED');
-      return () => requests.exit(() => sync(readAuthority()));
+      // Later readers must use the source owner's scope. Preserve a command's
+      // reservation when present, including its expiry and completion fence.
+      const owner = requests.getStore();
+      return () => requests.run(owner, () => sync(readAuthority()));
     },
     assert() { requests.getStore()?.reservation.assert(); },
     business(work) {

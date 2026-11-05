@@ -155,3 +155,36 @@ test('durable pre-claim failure retains exact preparation only until its origina
  await assert.rejects(x.collect(),/BC_PRODUCER_FAILED/);assert.equal(x.aiCalls,2);assert.equal(x.status(),'PENDING');
  x.f.setTime(START+240);assert.equal(prepared.isCurrent(),false);await assert.rejects(x.collect());assert.equal(x.aiCalls,2);
 });
+
+test('operator command inspecting a running review preserves participant source authority',async t=>{
+ const x=await fixture(t,{moodle:true}),prepared=await x.prepare();
+ const entered=Promise.withResolvers(),release=Promise.withResolvers();
+ x.setReview(async()=>{entered.resolve();await release.promise;throw Error('OFFLINE_CALLBACK_STOP');});
+ const collecting=assert.rejects(x.collect(),/BC_PRODUCER_FAILED/);
+ await entered.promise;
+ try{
+  const input=await x.commands.grant({method:'POST',path:'/bootcamp/v4/applications/'+x.app+'/reflection-approval',
+   body:{},idempotencyKey:'running-source-check'},'COURSE_OPERATOR');
+  await assert.rejects(x.commands.scope.run(input,()=>{
+   assert.equal(prepared.isCurrent(),true);
+   x.commands.scope.assertContext(x.f.operatorContext);
+   assert.throws(()=>x.commands.scope.assertContext(x.f.aliceContext),/MOODLE_COMMAND_CONTEXT/);
+   throw Error('OFFLINE_NO_APPROVAL');
+  }),/OFFLINE_NO_APPROVAL/);
+ }finally{release.resolve();await collecting;}
+});
+
+test('captured command source authority retains its original reservation fence',async t=>{
+ const x=await fixture(t,{moodle:true});
+ const input=await x.commands.grant({method:'POST',path:'/bootcamp/v4/applications/'+x.app+'/reflection-approval',
+  body:{},idempotencyKey:'captured-command'},'COURSE_OPERATOR');
+ let authority;
+ await assert.rejects(x.commands.scope.run(input,()=>{
+  authority=x.commands.scope.bindSourceAuthority(()=>{
+   x.commands.scope.assertContext(x.f.operatorContext);return true;
+  });
+  assert.equal(authority(),true);
+  throw Error('OFFLINE_NO_APPROVAL');
+ }),/OFFLINE_NO_APPROVAL/);
+ assert.throws(authority);
+});

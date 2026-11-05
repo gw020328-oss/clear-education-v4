@@ -19,3 +19,13 @@ test('filesystem diagnostics retain fixed code and source-defined location witho
  }
  assert.equal(executionErrorSummary(Object.assign(Error('ENOENT'),{failurePhase:'/private/path'})).failurePhase,undefined);
 });
+
+test('post-model source failures retain fixed codes while arbitrary source text stays redacted',()=>{
+ for(const code of ['MSE_RAW_UNAVAILABLE','MSE_SOURCE_CHANGED','MSE_SOURCE_UNAVAILABLE','REVIEW_AUTH','REVIEW_TIMEOUT','REVIEW_UNAVAILABLE','BCM_SOURCE_CHANGED','E6_OWNED_CLI_FAILED']){
+  const error=Object.assign(Error(code),{body:'private source text',token:'private token'});
+  const result=executionErrorSummary(error);
+  assert.equal(result.code,code);
+  assert.doesNotMatch(JSON.stringify(result),/private/);
+ }
+ assert.equal(executionErrorSummary(Error('REVIEW_AUTH private token')).code,'UNCLASSIFIED');
+});

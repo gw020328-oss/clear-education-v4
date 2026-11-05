@@ -339,7 +339,8 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       // Read-only lease authority: no recursive source resolution/transaction.
       // A consumed request retains raw access only while its exact accepted
       // evidence is the valid head. A new decision never revives a retired head.
-      const isAuthorized=requestAuthority(context,applicationId,started.wallet,started.request);
+      const authority=requestAuthority(context,applicationId,started.wallet,started.request);
+      const isAuthorized=commandScope?.bindSourceAuthority(authority)??authority;
       try{
         candidate=await Promise.race([Promise.resolve().then(()=>{
           check(!controller.signal.aborted,'BC_CANCELLED');
