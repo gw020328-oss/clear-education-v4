@@ -1,0 +1,63 @@
+{
+  "version": "clear-moodle-student-source-delta.1",
+  "previousHead": "54ca048b77dc605b3e2d2adaae0b8f83b8fe3049",
+  "sourceHead": "5f528d7e65385ec92083fe43b79849dccffc2e07",
+  "candidateHead": "1ca60b56c1b87384b2f6fb474f6fc14808c8f8e8",
+  "previousGuardSha256": "3575c245125e1353b353b0f4da168a195e3c5af9d0d57b2370907fb84d5dd13d",
+  "changes": {
+    "src/application/service.mjs": {
+      "before": "dcb20937bd52594f80a02cfd8950d29e7ae597cf96466274c325ce9781bb528c",
+      "after": "2341b32d251f8eb5dabb9c79e74f6ca18ef7b8c25df51f942e2a29f200fa693e"
+    },
+    "src/application/store.mjs": {
+      "before": "53ee817f5fecb6f7430525727efa210b42ec8b8e4d07a983376045e377183ff2",
+      "after": "f1cdaade9322eb8da83df855f1d95ac5bd6a87e787285567472e1b120fa0acdf"
+    }
+  },
+  "sourceAdditions": {
+    "src/product-workflow/student-http-service.mjs": "4f6c3962cbf0a31b9c1f37b9f4b51e07e42e82aa1526a7cd22cf72ee3abeae47",
+    "src/agent-preview/moodle-binding/contract.mjs": "9f20b90abc0f5dd951f55af0a6ebdb4592ac673448de6c664c9156d21d0ca961",
+    "src/agent-preview/moodle-binding/coordinator.mjs": "9b85301ed3e262fc76f210de368a5d44886382ec34995d2dfd2851a3000206cd",
+    "src/agent-preview/moodle-binding/currentness.mjs": "379eb0e3e25b4a9b77bf44ae43afe53ada45841273ee18a0136bf8f066d94a49",
+    "src/agent-preview/moodle-binding/index.mjs": "9a3db19f3b100dc25046af980c602b08560d244eeb47f313b7943f7564ff16d4",
+    "src/agent-preview/moodle-binding/projection-profiles.mjs": "c3bbb02cae1571048bf0f8fd580cfc612ff7db7379084c699275de110b90f075",
+    "src/agent-preview/moodle-binding/schema.mjs": "665f0c12207fcc0c82e8bd7be5e0738e7791140480869177fa61e84ceab94f08",
+    "src/agent-preview/moodle-binding/sql-policy.mjs": "9f11c3b3b0d8e1a78f120cd8b2651ccf1a7b708e986d618385a107a59a229692",
+    "src/agent-preview/moodle-binding/student-profile.mjs": "4eb505ed65f580fc0a1a387d1da1a31c4cfaa999c2091430ff25367e508ea786",
+    "src/agent-preview/moodle-binding/synthetic-demo.mjs": "a8b659ba965e0d8c43eb894455cad7cf716d9037cecde2087c9b9e7575706b42",
+    "src/agent-preview/moodle-binding/synthetic.mjs": "e7224d4756cd1be2d19bd81deb84af7ff86e0f3c6d78197d674387feac990679",
+    "src/policy/mvp/compiler.mjs": "0f6c666883bf9cec18b34f3e839a41231b96ca9febaeaaade3916f0029c8a1e7",
+    "src/policy/benefit-amount.mjs": "dc6118be971b481cd7820c6c7685367d8fb90123e860dd0663ac8d56a8898a4d"
+  },
+  "sourceCount": 224,
+  "candidateScope": {
+    "kind": "EXACT_SOURCE_TABLES_AND_LISTED_ARTIFACTS",
+    "sourceManifestSha256": "77d823318332705ca7b0b70847564e7fb905c11e1ae06e3ea0ef96f28b6ec0a9",
+    "productWalletSourceCount": 24,
+    "productWalletManifestSha256": "cc33bd45389c56edd893c5f5308cc831e15b2eb2db4e01e793cbefea94adad7c",
+    "wholeRepository": false,
+    "additionalArtifacts": {
+      "src/hackathon-test-vault/reviewed-source-v60.mjs": "2180a13829dd0902dbb57a8d053004f3abda50d1c904f8d67a3d98bda512e5f9",
+      "src/hackathon-test-vault/reviewed-source-v61.mjs": "25a5de00062b5ba8450b50cafecbcbe9b19cf1e4b5b784b7266df32198513e6d",
+      "specs/bootcamp/hackathon-test-operator-condition-preview-source-delta-v1.json": "5efe3a8280e4b7c988ec4ea8bc61da1be3db9b35018211edfd1696d923a8521f",
+      "specs/bootcamp/hackathon-test-runtime-fence-clock-source-delta-v1.json": "1e6eb52a7a1fac38239d5cdeb3547e5f518e231293b81872ca0903880ab98e22",
+      ".github/workflows/hackathon-e5b.yml": "a173ad50d1a096cabb1ad9ec39b457f86c9e04f3cc5523b7b3a6828ae4af8cef",
+      "src/hackathon-test-vault/reviewed-source-v62.mjs": "3575c245125e1353b353b0f4da168a195e3c5af9d0d57b2370907fb84d5dd13d",
+      "specs/bootcamp/hackathon-test-preview-fence-integration-v1.json": "f4a88b455048668fd4109f7a1ccb2ade2d22c50f27fc0c579560e10737990d47"
+    }
+  },
+  "reviewedSourceChanges": {
+    "src/application/service.mjs": {
+      "before": "dcb20937bd52594f80a02cfd8950d29e7ae597cf96466274c325ce9781bb528c",
+      "after": "2341b32d251f8eb5dabb9c79e74f6ca18ef7b8c25df51f942e2a29f200fa693e"
+    },
+    "src/application/store.mjs": {
+      "before": "53ee817f5fecb6f7430525727efa210b42ec8b8e4d07a983376045e377183ff2",
+      "after": "f1cdaade9322eb8da83df855f1d95ac5bd6a87e787285567472e1b120fa0acdf"
+    },
+    "src/product-workflow/student-http-service.mjs": {
+      "before": "4c6acf4b2c21eb24cb1ee911e11a22e852c099351b395060ff28dbc6040ee251",
+      "after": "4f6c3962cbf0a31b9c1f37b9f4b51e07e42e82aa1526a7cd22cf72ee3abeae47"
+    }
+  }
+}

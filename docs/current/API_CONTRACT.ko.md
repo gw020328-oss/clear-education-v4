@@ -1,3 +1,7 @@
+## 등록형 preview 준비 계약 (2026-11-04)
+
+[등록형 D 계약](../agent-preview/PREVIEW_REGISTERED_D.ko.md)은 별도 preview 서비스의 소유자 구성에서만 활성화된다. 인증된 동일 출처 `POST /preview/prepare`는 정확한 `{version, previewContextRef}`를 받고 현재 B 문맥과 D 서명 등록 영수증을 검증한다. 승인 생성·모델 호출·지급 권한을 부여하지 않는다. `ownerRegistration`, `registrationScope`, `draftScope`는 private composition API이며 브라우저 route가 아니다. generate/review/observe는 기존 인증·CSRF·현재성·단회 승인 검사를 유지한다. v66 통합 및 합성 CI 범위는 [소스 인수 기록](../agent-preview/PREVIEW_SOURCE_INTEGRATION.ko.md)을 따른다. 실제 활성화와 UI 연결은 별도다.
+
 ## 제품 HTTPS checkpoint 경로 (2026-11-01 후속)
 
 제품 frontend-server와 브라우저 createSameOriginApi 전송 계층은 기존 recipient-registration GET의 단일 `?checkpoint=<encoded JSON>`을 전달한다. 이 경로만 URL-safe 인코딩 값 1–768자로 허용하고, 다른 query·중복 파라미터·다른 경로·POST query·fragment는 계속 거부한다. 기존 하위 handler의 256자/정확한 number·hash·time 파서, 인증/소유자·canonical 연속성·CAS 검사는 그대로 수행한다. `BC_NOT_FOUND`/`API_ORIGIN`은 등록 실패 UI의 고정 코드 허용 목록에 추가되어 PRE_SIGN_READ 단계의 route/전송 거부를 원문 없이 구분한다. 브라우저 전송 계층은 해당 등록 경로의 고정 HTTP status/error만 안전한 `.code`로 보존하며, UI는 허용 목록의 `.code`를 사용한다. 기존 HTTP `.message` 호환성과 다른 경로의 오류 가림은 유지한다.

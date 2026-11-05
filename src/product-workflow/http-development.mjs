@@ -73,3 +73,13 @@ export async function startSourceDevelopment({directory,webRoot,studentPolicies,
  let closing;
  return {config:publicConfig,close(){return closing??=(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));await Promise.allSettled([...pending]);await documentWorkflow?.close();evaluationWorkflow?.close();studentWorkflow.close();workflow.close();authentication.close();release();})();}};
 }
+
+// Explicit independent preview handler; startSourceDevelopment never mounts it.
+// Caller owns separately provisioned auth/student/coordinator files. No existing
+// development data directory, RPC, payment handler or TLS proxy is opened here.
+export async function createPreviewDevelopmentHandler({ enabled = false, authentication, contexts, cookieNamespace = 'preview', allowLoopbackHttpForTests = false }) {
+  const origin = new URL(authentication.origin);
+  check(origin.protocol === 'https:' && ['127.0.0.1','[::1]'].includes(origin.hostname), 'PREVIEW_LOOPBACK_CONFIG');
+  const {createPreviewHttpHandler} = await import('../agent-preview/moodle-binding/preview-http.mjs');
+  return createPreviewHttpHandler({authentication,contexts,enabled,cookieNamespace,allowLoopbackHttpForTests});
+}

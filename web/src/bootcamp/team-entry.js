@@ -5,6 +5,7 @@ import {testActionAvailability} from '/team-review-window.js';
 import {createPreparationRenderer} from './team-render.js';
 import {teamApplicationSection} from './team-application.js';
 import {studentSection} from './student-view.js';
+import {conditionPreview} from './condition-preview.js';
 import {operatorSection} from './operator-view.js';
 import {teamReceiptStatus} from './team-application.js';
 import {evidenceDetail} from './live-evidence.js';
@@ -14,7 +15,9 @@ async function start(){
  if(started||!window.clearTeamRuntime)return;started=true;
  const port=window.clearTeamRuntime,actor=await port.bridge.login(await port.bridge.publicRead('/__dev/config'));
  location.hash='#/bootcamp/live/'+(actor.role==='operator'?'operator':'participant');
- const box=el('section.bcx',{}),main=document.querySelector('#main');main.append(box);main.hidden=false;
+ const box=el('section.bcx',{}),main=document.querySelector('#main');main.append(box);
+ if(actor.role==='operator')main.append(conditionPreview());
+ main.hidden=false;
  let packet=null,ack=null,registrationBusy=false,manual=false,selectedCondition=null,evidence=null,evidenceError=false,actionError='';
  let paint;
  const driver=createTestDriver({session:port.bridge,createNormalClient:createNormalBootcampClient,elapsedNow:()=>performance.now(),changed:()=>render()});
