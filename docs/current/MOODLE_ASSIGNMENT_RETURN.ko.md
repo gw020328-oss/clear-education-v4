@@ -17,3 +17,7 @@
 독립 검토에서 기존 activity 경로에도 존재했던 수명 결함을 확인했다. 원 source grant의 wall 만료는 보존했지만 더 긴 intent/run 단조 시계만 검사하여, wall이 멈추고 단조 시계가 원 source grant 만료를 지난 경우 거부하지 못했다. authorization 때 저장한 command.t의 wall/mono와 원 grant 만료로 sourceMonotonicEnd를 계산한다. reserve/capture 시각에서 기한을 새로 시작하지 않는다. 수집 fence는 wall·source mono·기존 intent/run 상한을 모두 검사한다. POST의 5초 기한·단회 소비·로그아웃 검사는 그대로다.
 
 `normal-assignment-return`, `moodle-live`, `normal-certificate-start` 24개 통과. 추가 회귀 네 개는 activity/assignment 각각의 wall/mono 배타적 만료와 예약 2초 지연에도 원래 20초 source 기한 보존, POST 만료 뒤 원 source 기한 안의 정상 fence 및 소비 명령 재실행 거부를 검증한다. 실제 런타임 적용은 독립 후속 검토 뒤다.
+
+## 활동 전용 실행의 정식 읽기 화면
+
+조립 중 기존 front door가 page3만 등록하고 assign4/forum5의 카드 목적지 GET을 등록하지 않은 것을 확인했다. activityPageId3인 기존 소유자 모드에 한해 세 개의 정식 view 경로를 등록한다. page는 id=3, assign은 id=4, forum은 id=5의 정확한 query만 허용한다. POST·추가 action·중복/인코딩 ID·다른 항목·새 게시글 폼은 허용하지 않는다. Moodle의 기존 세션/역할 권한 검사는 상류 서버에서 유지한다. 신규 두 모듈 및 기존 page 경로 집중 검사 3개 통과. 실제 카드 클릭과 복귀 판정 갱신은 조립 후 확인한다.

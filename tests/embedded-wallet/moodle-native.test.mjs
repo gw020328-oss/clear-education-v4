@@ -165,3 +165,14 @@ test('activity return routes require the private mode and only the fixed page ID
   assert.throws(()=>policy.classify(request(page.path+query)));
  assert.equal(policy.classify(request('/bootcamp/v4/applications/app-a/source-refresh','POST')).owner,'A');
 });
+
+for(const [module,id] of [['assign',4],['forum',5]])test('fixed '+module+' learning view requires mode, exact ID and read-only route',async()=>{
+ const {moodleLearningViewRoutes}=await import('../../tools/bootcamp/moodle-front-door.mjs');
+ const route=moodleLearningViewRoutes.find(r=>r.path==='/mod/'+module+'/view.php');
+ assert.throws(()=>createMoodleFrontDoorPolicy({origin,routes:[route]}));
+ const policy=createMoodleFrontDoorPolicy({origin,routes:[route],activityPageId:3});
+ assert.equal(policy.classify(request(route.path+'?id='+id)).owner,'C');
+ for(const query of ['', '?id=1','?id=0'+id,'?id=%3'+id,'?id='+id+'&id='+id,'?id='+id+'&action=editsubmission'])assert.throws(()=>policy.classify(request(route.path+query)));
+ assert.throws(()=>policy.classify(request(route.path+'?id='+id,'POST')));
+ for(const patch of [{owner:'A'},{methods:['GET','POST']},{query:['id','action']},{slashArguments:true}])assert.throws(()=>createMoodleFrontDoorPolicy({origin,routes:[{...route,...patch}],activityPageId:3}));
+});

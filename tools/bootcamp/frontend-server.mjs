@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {validateConfig} from '../../src/embedded-wallet/config.mjs';
-import {createMoodleFrontDoor,createMoodleFrontDoorPolicy,moodleNativeApplicationRoutes,moodleActivityRefreshRoute} from './moodle-front-door.mjs';
+import {createMoodleFrontDoor,createMoodleFrontDoorPolicy,moodleNativeApplicationRoutes,moodleActivityRefreshRoute,moodleLearningViewRoutes} from './moodle-front-door.mjs';
 import {createMoodleOAuthReturn} from './moodle-oauth-return.mjs';
 import {createProductRpc} from '../embedded-wallet/product-rpc.mjs';
 import {productWalletMount} from '../embedded-wallet/product-mount.mjs';
@@ -128,7 +128,7 @@ function prepareNative({options,assets,wallets,moodleLogin,origin,activityPageId
   {owner:'A',path:'/local/clearbridge/wallet-return',methods:['GET'],query:['privy_oauth_code','privy_oauth_state','privy_oauth_provider']},
   {owner:'A',path:'/clear-assets',methods:['GET'],query:[],slashArguments:true},
   ...moodleNativeApplicationRoutes,
-  ...(activityPageId===undefined?[]:[moodleActivityRefreshRoute,{owner:'C',path:'/mod/page/view.php',methods:['GET'],query:['id']}]),
+  ...(activityPageId===undefined?[]:[moodleActivityRefreshRoute,...moodleLearningViewRoutes]),
  ];
  return {config,assets:publicAssets,policy:createMoodleFrontDoorPolicy({origin,activityPageId,routes:[...options.routes,...fixed]}),
   oauthReturn:createMoodleOAuthReturn({config,courseId:options.courseId})};

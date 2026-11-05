@@ -31,6 +31,8 @@ export const moodleNativeApplicationRoutes = Object.freeze([
 export const moodleActivityRefreshRoute = Object.freeze({owner:'A',
   path:'/bootcamp/v4/applications/:applicationId/source-refresh', methods:Object.freeze(['POST']),
   query:Object.freeze([]), idParameters:true});
+const learningIds=Object.freeze({'/mod/page/view.php':3,'/mod/assign/view.php':4,'/mod/forum/view.php':5});
+export const moodleLearningViewRoutes=Object.freeze(Object.keys(learningIds).map(path=>Object.freeze({owner:'C',path,methods:Object.freeze(['GET']),query:Object.freeze(['id'])})));
 const parameterMatch = (route, path) => route.idParameters && new RegExp('^' + route.path
   .split('/').map(segment => [':applicationId', ':operationId'].includes(segment) ? id : segment).join('/') + '$').test(path);
 const matchesPath = (route, path) => route.path === path || parameterMatch(route, path)
@@ -52,7 +54,7 @@ export function createMoodleFrontDoorPolicy({origin, routes, activityPageId, moo
     check(Array.isArray(route.methods) && route.methods.length > 0
       && route.methods.every(v => ['GET', 'POST', 'DELETE'].includes(v)));
     check(Array.isArray(route.query) && route.query.every(k => /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(k)));
-    if(route.path==='/mod/page/view.php')check(activityPageId===3&&route.owner==='C'
+    if(Object.hasOwn(learningIds,route.path))check(activityPageId===3&&route.owner==='C'
       &&route.methods.join(',')==='GET'&&route.query.join(',')==='id'&&!route.slashArguments);
     if(route.path.endsWith('/source-refresh'))check(activityPageId===3);
     check(route.idParameters === undefined || route.idParameters === true);
@@ -100,7 +102,7 @@ export function createMoodleFrontDoorPolicy({origin, routes, activityPageId, moo
     const search = new URLSearchParams(q < 0 ? '' : req.url.slice(q + 1));
     check([...search.keys()].length === new Set(search.keys()).size
       && [...search].every(([k, v]) => route.query.includes(k) && v.length <= 4096 && !/[\x00-\x1f\x7f]/.test(v)));
-    if(path==='/mod/page/view.php')check(q>=0&&req.url.slice(q+1)==='id='+activityPageId);
+    if(Object.hasOwn(learningIds,path))check(q>=0&&req.url.slice(q+1)==='id='+learningIds[path]);
     // Only A consumes OAuth return parameters. A must not forward or log them.
     check(path === callback || ![...search.keys()].some(k => /oauth|access_token|id_token/i.test(k)));
     if (req.method !== 'GET') check(req.headers.origin === origin && req.headers['sec-fetch-site'] === 'same-origin');
