@@ -49,11 +49,13 @@ namespace local_clearbridge {
         if (isset($GLOBALS['f']['loginreply'])) {
             $reply = $GLOBALS['f']['loginreply'];
         }
-        $raw = json_encode($reply);
+        $raw = $GLOBALS['f']['rawreply'] ?? json_encode($reply);
         ($handle->options[CURLOPT_WRITEFUNCTION])($handle, $raw);
         return true;
     }
-    function curl_getinfo($handle, $option) { return $option === CURLINFO_RESPONSE_CODE ? 200 : 'application/json'; }
+    function curl_getinfo($handle, $option) {
+        return $option === CURLINFO_RESPONSE_CODE ? ($GLOBALS['f']['httpstatus'] ?? 200) : 'application/json';
+    }
     function curl_close($handle) {}
     class course_refund {
         public static function is_demo_course($id) { return $id === 7; }

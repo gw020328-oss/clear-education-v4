@@ -9,6 +9,42 @@ $level = ob_get_level();
 ob_start();
 $status = 403;
 $reply = ['status' => 'UNAVAILABLE'];
+// Only fixed stages and a numeric upstream status reach the existing PHP error log.
+// This observer neither consumes request values nor changes the public response.
+$commanddiagnostic = ($_POST['operation'] ?? null) === 'authorize-command';
+$commandphase = 'INPUT';
+$commandhttp = null;
+$commandrejected = false;
+$diagnose = static function (?string $phase = null, string $event = 'ENTER', mixed $http = null)
+        use ($commanddiagnostic, &$commandphase, &$commandhttp, &$commandrejected): void {
+    if (!$commanddiagnostic || $commandrejected) {
+        return;
+    }
+    try {
+        $actionphases = ['INPUT', 'BOOTSTRAP', 'INPUT_FIELDS', 'SESSKEY', 'CONFIG_SCOPE',
+            'MOODLE_AUTHORITY', 'SESSION_INTENT', 'CLIENT_DISPATCH', 'RESPONSE_PROJECTION'];
+        $clientphases = ['COMMAND_SHAPE', 'AUTHORITY_CAPTURE', 'REGISTRY_OPEN', 'PUBLICATION',
+            'AUTHORITY_TRANSPORT', 'RESPONSE_DECODE', 'ORIGIN_RECHECK', 'LEASE_RECHECK',
+            'RESPONSE_SCHEMA', 'CLIENT_ACCEPTED'];
+        if (($phase !== null && !in_array($phase, array_merge($actionphases, $clientphases), true))
+                || !in_array($event, ['ENTER', 'HTTP', 'SUCCEEDED', 'REJECTED'], true)) {
+            return;
+        }
+        $commandphase = $phase ?? $commandphase;
+        if ($event === 'HTTP') {
+            $commandhttp = is_int($http) && $http >= 100 && $http <= 599 ? $http : null;
+        }
+        $commandrejected = $event === 'REJECTED';
+        @error_log('CLEAR_MOODLE_COMMAND_DIAGNOSTIC ' . json_encode([
+            'version' => 1, 'event' => $event, 'phase' => $commandphase,
+            'origin' => in_array($commandphase, $actionphases, true) ? 'LOGIN_ACTION' : 'LOGIN_CLIENT',
+            'upstreamHttpStatus' => $commandhttp,
+        ], JSON_THROW_ON_ERROR));
+    } catch (Throwable $ignored) {
+        // Logging failure must not authorize, reject, retry or interrupt cleanup.
+    }
+};
+$diagnose('INPUT');
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST'
             || ($_SERVER['REQUEST_URI'] ?? '') !== '/local/clearbridge/login_action.php'
@@ -16,8 +52,10 @@ try {
             || ($_SERVER['CONTENT_TYPE'] ?? '') !== 'application/x-www-form-urlencoded;charset=UTF-8') {
         throw new RuntimeException('Rejected');
     }
+    $diagnose('BOOTSTRAP');
     define('AJAX_SCRIPT', true);
     require __DIR__ . '/../../config.php';
+    $diagnose('INPUT_FIELDS');
     $moodleurl = parse_url($CFG->wwwroot);
     $origin = $moodleurl['scheme'] . '://' . $moodleurl['host'] . (isset($moodleurl['port']) ? ':' . $moodleurl['port'] : '');
     current::require_rule(($_SERVER['HTTP_ORIGIN'] ?? '') === $origin
@@ -42,9 +80,12 @@ try {
     } else if ($operation === 'authorize-command') {
         current::require_rule(login::hex($_POST['commandHash']));
     }
+    $diagnose('SESSKEY');
     require_sesskey();
+    $diagnose('CONFIG_SCOPE');
     $config = login::config();
     $scope = login::scope($config['ownerRunId']);
+    $diagnose('MOODLE_AUTHORITY');
     $course = get_course((int)$_POST['id']);
     require_login($course, false, null, false, true);
     $role = login::role($scope, (int)$course->id, (int)$USER->id);
@@ -53,7 +94,8 @@ try {
     current::require_rule(is_enrolled($context, null, '', true) && !is_siteadmin()
         && !\core\session\manager::is_loggedinas() && empty($USER->access['rsw']));
 
-    $client = new client($config, $scope, (int)$USER->id, $role);
+    $client = new client($config, $scope, (int)$USER->id, $role, $commanddiagnostic ? $diagnose : null);
+    $diagnose('SESSION_INTENT');
     $attempt = $SESSION->local_clearbridge_login_intent ?? null;
     $intent = login::attempt_intent($attempt, $scope, $role);
     // A changed or pre-upgrade mapping cannot authorize even an end of the old intent.
@@ -92,16 +134,20 @@ try {
             // C never treats UI state, a status projection or this hash alone as write authority.
             $fields['commandHash'] = $_POST['commandHash'];
         }
+        $diagnose('CLIENT_DISPATCH');
         $result = $client->request($operation, $fields);
         if ($operation === 'end') {
             unset($SESSION->local_clearbridge_login_intent);
         }
+        $diagnose('RESPONSE_PROJECTION');
         $reply = $operation === 'authorize-command'
             ? array_intersect_key($result, array_flip(['status', 'requestRef', 'expiresAtExclusive']))
             : ['status' => $result['status']];
     }
     $status = 200;
+    $diagnose(null, 'SUCCEEDED');
 } catch (Throwable $error) {
+    $diagnose(null, 'REJECTED');
     // A lost response leaves the operation uncertain; status on the same Moodle page can recover it.
 }
 while (ob_get_level() > $level) {

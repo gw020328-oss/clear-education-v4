@@ -11,10 +11,20 @@ namespace local_clearbridge {
         public static function is_demo_course($id) { return $id === $GLOBALS['case']['scope']['courseId']; }
     }
     class course_login_client {
-        public function __construct(...$args) {}
+        public function __construct($config, $scope, $user, $role, private readonly ?\Closure $diagnostic = null) {}
         public static function proofs(...$args) { return ['browserProof' => str_repeat('b',64), 'finishProof' => str_repeat('f',64)]; }
         public function request($operation, $fields = []) {
             $GLOBALS['calls'][] = ['operation' => $operation, 'fields' => $fields];
+            if ($this->diagnostic && isset($GLOBALS['case']['diagnostic'])) {
+                $case = $GLOBALS['case']['diagnostic'];
+                ($this->diagnostic)($case['phase'], 'HTTP', $case['http']);
+                if (!empty($case['reject'])) {
+                    ($this->diagnostic)(null, 'REJECTED');
+                    // A secondary cleanup failure cannot overwrite the original rejection.
+                    ($this->diagnostic)('ORIGIN_RECHECK');
+                    throw new \RuntimeException('SYNTHETIC_PRIVATE_EXCEPTION');
+                }
+            }
             return match ($operation) {
                 'start' => ['requestRef' => str_repeat('9',64), 'launchCode' => str_repeat('8',64), 'expiresAtExclusive' => time()+120],
                 'status' => ['status' => 'RETURN_REQUIRED', 'handback' => str_repeat('7',64)],
@@ -32,6 +42,7 @@ namespace {
     require CLASS_ROOT . '/course_authority_currentness.php';
     require CLASS_ROOT . '/course_login_authority.php';
     $case = json_decode(file_get_contents(__DIR__.'/case.json'), true);
+    if (!empty($case['sinkfails'])) { ini_set('error_log', __DIR__); }
     session_id($case['sessionid'] ?? 'synthetic-session-one');
     $CFG = (object)['wwwroot' => 'http://127.0.0.1:18891',
         'local_clearbridge_login' => ['enabled'=>true,'origin'=>'https://owner.test:19473',
@@ -51,7 +62,9 @@ namespace {
     function get_course($id) { return (object)['id'=>$id]; }
     function require_login(...$args) {}
     class context_course { public static function instance($id) { return (object)['id'=>$id]; } }
-    function require_capability(...$args) {}
+    function require_capability(...$args) {
+        if (($GLOBALS['case']['permission'] ?? true) !== true) { throw new RuntimeException('SYNTHETIC_PRIVATE_ROLE'); }
+    }
     function is_enrolled(...$args) { return true; }
     function is_siteadmin() { return false; }
 }
@@ -61,7 +74,7 @@ namespace core\session {
 BOOT;
 $bootstrap = str_replace('CLASS_ROOT', var_export($classes, true), $bootstrap);
 file_put_contents($root . '/config.php', $bootstrap);
-$server = proc_open([PHP_BINARY, '-S', '127.0.0.1:18891', '-t', $root],
+$server = proc_open([PHP_BINARY, '-d', 'error_log='.$root.'/diagnostic.log', '-S', '127.0.0.1:18891', '-t', $root],
     [0 => ['pipe', 'r'], 1 => ['file', $root . '/server.log', 'w'], 2 => ['file', $root . '/server.log', 'a']], $pipes);
 if (!is_resource($server)) { throw new RuntimeException('server'); }
 fclose($pipes[0]);
@@ -142,14 +155,21 @@ try {
         echo "PASS actual PHP dispatch $label scope across status/finish/end/start/authorize-command\n";
     }
     $send = static function(array $case, string $operation, array $extra = []) use ($root): array {
+        file_put_contents($root.'/diagnostic.log', '');
         file_put_contents($root.'/case.json',json_encode($case));
-        $body=['id'=>(string)$case['scope']['courseId'],'sesskey'=>'fixture','operation'=>$operation]+$extra;
+        $body=['id'=>(string)$case['scope']['courseId'],'sesskey'=>$case['sesskey']??'fixture','operation'=>$operation]+$extra;
         $context=stream_context_create(['http'=>['method'=>'POST','ignore_errors'=>true,
             'header'=>"Origin: http://127.0.0.1:18891\r\nContent-Type: application/x-www-form-urlencoded;charset=UTF-8\r\n",
             'content'=>http_build_query($body,'','&',PHP_QUERY_RFC1738)]]);
         $raw=file_get_contents('http://127.0.0.1:18891/local/clearbridge/login_action.php',false,$context);
+        $diagnostics = [];
+        foreach (file($root.'/diagnostic.log', FILE_IGNORE_NEW_LINES) as $line) {
+            $prefix = 'CLEAR_MOODLE_COMMAND_DIAGNOSTIC ';
+            $at = strpos($line, $prefix);
+            if ($at !== false) { $diagnostics[] = json_decode(substr($line, $at+strlen($prefix)), true, 8, JSON_THROW_ON_ERROR); }
+        }
         return [json_decode($raw,true,8,JSON_THROW_ON_ERROR),json_decode(file_get_contents($root.'/result.json'),true),
-            str_contains($http_response_header[0],'200')?200:403];
+            str_contains($http_response_header[0],'200')?200:403,$diagnostics];
     };
     $old=['run'=>'run-1','role'=>'PARTICIPANT','intent'=>str_repeat('1',64),'scopeDigest'=>$digest];
     $case=['scope'=>$scope,'attempt'=>$old,'user'=>42];
@@ -208,6 +228,58 @@ try {
         throw new RuntimeException('reverse-only execute accepted by browser dispatcher');
     }
     echo "PASS reverse-only execute-command is rejected by actual browser dispatcher without owner calls\n";
+
+    foreach (['ok','fields','sesskey','permission','intent','upstream','unknown-phase','sink-fails'] as $scenario) {
+        $case=['scope'=>$scope,'attempt'=>$old,'user'=>42];
+        $extra=['commandHash'=>str_repeat('6',64)];
+        switch ($scenario) {
+            case 'fields': $extra['body']='SYNTHETIC_PRIVATE_BODY'; break;
+            case 'sesskey': $case['sesskey']='SYNTHETIC_PRIVATE_SESSKEY'; break;
+            case 'permission': $case['permission']=false; break;
+            case 'intent': $case['attempt']=null; break;
+            case 'upstream': $case['diagnostic']=['phase'=>'AUTHORITY_TRANSPORT','http'=>503,'reject'=>true]; break;
+            case 'unknown-phase': $case['diagnostic']=['phase'=>'SYNTHETIC_PRIVATE_PHASE','http'=>'SYNTHETIC_PRIVATE_HTTP','reject'=>true]; break;
+            case 'sink-fails': $case['sinkfails']=true; break;
+        }
+        [$reply,$state,$status,$events]=$send($case,'authorize-command',$extra);
+        $ok = in_array($scenario,['ok','sink-fails'],true);
+        if ($status!==($ok?200:403) || (!$ok && $reply!==['status'=>'UNAVAILABLE'])) {
+            throw new RuntimeException('diagnostics changed public response');
+        }
+        if (!$events || $events[0]!==['version'=>1,'event'=>'ENTER','phase'=>'INPUT',
+                'origin'=>'LOGIN_ACTION','upstreamHttpStatus'=>null]) { throw new RuntimeException('missing safe entry'); }
+        if ($scenario!=='sink-fails') {
+            $last=end($events);
+            $phase=match($scenario) {'ok'=>'RESPONSE_PROJECTION','fields'=>'INPUT_FIELDS','sesskey'=>'SESSKEY',
+                'permission'=>'MOODLE_AUTHORITY','intent'=>'SESSION_INTENT','upstream'=>'AUTHORITY_TRANSPORT',
+                'unknown-phase'=>'CLIENT_DISPATCH'};
+            if ($last!==['version'=>1,'event'=>$ok?'SUCCEEDED':'REJECTED','phase'=>$phase,
+                    'origin'=>$scenario==='upstream'?'LOGIN_CLIENT':'LOGIN_ACTION',
+                    'upstreamHttpStatus'=>$scenario==='upstream'?503:null]) { throw new RuntimeException('wrong failure stage'); }
+            if (count(array_filter($events,static fn($row)=>$row['event']==='REJECTED'))!==($ok?0:1)) {
+                throw new RuntimeException('first rejection not latched');
+            }
+        }
+        $encoded=json_encode($events);
+        foreach (['SYNTHETIC_PRIVATE',str_repeat('6',64),'run-1','synthetic-session-one','student-1','fixture'] as $forbidden) {
+            if (str_contains($encoded,$forbidden)) { throw new RuntimeException('private value reached diagnostic'); }
+        }
+        echo "PASS actual PHP diagnostic $scenario keeps fixed fields, first failure and unchanged response\n";
+    }
+    foreach ([100,599,99,600,'503',null] as $http) {
+        $case=['scope'=>$scope,'attempt'=>$old,'user'=>42,
+            'diagnostic'=>['phase'=>'AUTHORITY_TRANSPORT','http'=>$http,'reject'=>true]];
+        [,,,$events]=$send($case,'authorize-command',['commandHash'=>str_repeat('6',64)]);
+        $expected=is_int($http)&&$http>=100&&$http<=599?$http:null;
+        if (end($events)['upstreamHttpStatus']!==$expected) { throw new RuntimeException('HTTP status not bounded'); }
+    }
+    echo "PASS actual PHP diagnostic upstream status is only integer 100..599 or null\n";
+    $case=['scope'=>$scope,'attempt'=>$old,'user'=>42];
+    foreach (['status','end','finish','start','execute-command'] as $operation) {
+        [,,,$events]=$send($case,$operation,['intentTarget'=>$oldtarget]);
+        if ($events!==[]) { throw new RuntimeException('non-command diagnostic emitted'); }
+    }
+    echo "PASS actual PHP diagnostics stay silent for all other operations\n";
 } finally {
     proc_terminate($server);
     proc_close($server);

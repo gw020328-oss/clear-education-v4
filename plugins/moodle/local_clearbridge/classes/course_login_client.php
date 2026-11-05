@@ -6,7 +6,7 @@ defined('MOODLE_INTERNAL') || die();
 /** C-to-A signed operations. Only operation digests cross into the private registry. */
 final class course_login_client {
     public function __construct(private readonly array $config, private readonly array $scope,
-            private readonly int $user, private readonly string $role) {
+            private readonly int $user, private readonly string $role, private readonly ?\Closure $diagnostic = null) {
     }
 
     public static function proofs(string $key, string $run, string $intent, string $code, string $challenge): array {
@@ -19,28 +19,51 @@ final class course_login_client {
     }
 
     public function request(string $operation, array $fields = []): array {
+        $diagnose = function (?string $phase, string $event = 'ENTER', mixed $http = null) use ($operation): void {
+            if ($operation !== 'authorize-command' || $this->diagnostic === null) {
+                return;
+            }
+            try {
+                ($this->diagnostic)($phase, $event, $http);
+            } catch (\Throwable $ignored) {
+                // Observers cannot alter authorization or the publication cleanup.
+            }
+        };
         $start = hrtime(true);
         $now = time();
+        $diagnose('COMMAND_SHAPE');
         $q = ['version' => course_login_authority::request_version($operation), 'requestRef' => bin2hex(random_bytes(32)),
             'ownerRunId' => $this->config['ownerRunId'], 'moodleAuthorityRef' => bin2hex(random_bytes(32)),
             'role' => $this->role, 'expiresAtExclusive' => min($now + 5, $this->scope['expiresAtExclusive'])] + $fields;
         course_login_authority::request_shape($operation, $q);
+        $diagnose('AUTHORITY_CAPTURE');
         $record = course_login_authority::capture($operation, $q, $this->scope, $this->user, $start, $now);
+        $diagnose('REGISTRY_OPEN');
         $registry = new course_authority_registry($this->config['registry'], $this->config['ownerRunId'], true);
         $retain = false;
         try {
+            $diagnose('PUBLICATION');
             $registry->publish($record);
-            $reply = $this->exchange('/v1/moodle/connect/' . $operation, $q, $start);
+            $diagnose('AUTHORITY_TRANSPORT');
+            $reply = $this->exchange('/v1/moodle/connect/' . $operation, $q, $start, $diagnose);
+            $diagnose('ORIGIN_RECHECK');
             course_login_authority::check_origin($record);
+            $diagnose('LEASE_RECHECK');
             $mono = hrtime(true);
             $wall = time();
             course_authority_currentness::require_rule($wall >= $now && $wall < $q['expiresAtExclusive']
                 && $mono >= $start && $mono - $start < 5_000_000_000);
+            $diagnose('RESPONSE_SCHEMA');
             self::response_shape($operation, $q, $reply, $wall, $this->scope['expiresAtExclusive']);
             // Preserve only a fully validated command publication, with its ORIGINAL deadline.
             // execute-command consumes this same record; no fresh lease is issued at execution.
             $retain = $operation === 'authorize-command';
+            $diagnose('CLIENT_ACCEPTED');
             return $reply;
+        } catch (\Throwable $error) {
+            // Preserve the first failure stage even if publication cleanup also fails.
+            $diagnose(null, 'REJECTED');
+            throw $error;
         } finally {
             if (!$retain) {
                 $registry->revoke($q['moodleAuthorityRef'], $q['expiresAtExclusive']);
@@ -86,7 +109,7 @@ final class course_login_client {
         }
     }
 
-    private function exchange(string $path, array $q, int $start): array {
+    private function exchange(string $path, array $q, int $start, \Closure $diagnose): array {
         $stamp = time();
         $nonce = bin2hex(random_bytes(16));
         $body = json_encode($q, JSON_THROW_ON_ERROR);
@@ -122,8 +145,15 @@ final class course_login_client {
             ]) && curl_exec($curl) !== false && curl_getinfo($curl, CURLINFO_RESPONSE_CODE) === 200
                 && strtolower(trim(explode(';', (string)curl_getinfo($curl, CURLINFO_CONTENT_TYPE), 2)[0])) === 'application/json');
         } finally {
+            try {
+                $http = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+                $diagnose('AUTHORITY_TRANSPORT', 'HTTP', is_int($http) && $http >= 100 && $http <= 599 ? $http : null);
+            } catch (\Throwable $ignored) {
+                // Never replace the original transport result with an observation failure.
+            }
             curl_close($curl);
         }
+        $diagnose('RESPONSE_DECODE');
         $reply = json_decode($raw, true, 8, JSON_THROW_ON_ERROR);
         course_authority_currentness::require_rule(is_array($reply)
             && json_encode($reply, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES) === $raw);
