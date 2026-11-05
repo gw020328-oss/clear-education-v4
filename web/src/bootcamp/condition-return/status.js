@@ -105,13 +105,14 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
       };
     case RETURN.READ_FAILED:
       return { tone: 'warn', text: '최신 판정을 읽지 못했어요. 아래는 이전에 읽은 판정이에요.', recheck: true };
-    case RETURN.UPDATED:
-      return {
-        tone: 'ok',
-        text: `새 판정 확정 · 서버 판정이 바뀌었어요 · 지금 판정 ${serverWord(row)}`
-          + (ret.updatedAt ? ` · ${new Date(ret.updatedAt).toLocaleTimeString('ko-KR', { hour12: false })} 확인` : ''),
-        recheck: false,
-      };
+    case RETURN.UPDATED: {
+      const at = ret.updatedAt ? ` · ${new Date(ret.updatedAt).toLocaleTimeString('ko-KR', { hour12: false })} 확인` : '';
+      // 새 근거는 확인됐는데 판정 상태가 같은 경우 — '바뀌었다' 가 아니라 '재확인 완료'.
+      if (ret.sameState) {
+        return { tone: 'wait', text: `재확인 완료 · 서버가 새 근거를 확인했어요 · 판정은 그대로 ${serverWord(row)}${at}`, recheck: false };
+      }
+      return { tone: 'ok', text: `새 판정 확정 · 서버 판정이 바뀌었어요 · 지금 판정 ${serverWord(row)}${at}`, recheck: false };
+    }
     default:
       return null;
   }
@@ -175,7 +176,12 @@ export const REVIEW = Object.freeze({
  * @param {object|null} o.aiApproval 세션 aiApproval 요약
  * @param {string|null} [o.sourceText] 원문. **실서버는 주지 않는다.** 시연 데이터만
  */
-export function reflectionReview({ row = null, evRow = null, limitations = null, phase = null, aiApproval = null, sourceText = null } = {}) {
+export function reflectionReview({
+  row = null, evRow = null, limitations = null, phase = null, aiApproval = null, sourceText = null,
+  // 학생이 글을 고치러 갔다 돌아와 아직 서버가 새 글을 반영하지 않은 상태(tracker 가 확인 중).
+  // 이때 보이는 검토 결과는 **지난 글의 것**이다 — 새 글의 결과처럼 보이면 안 된다(오규원 11/5).
+  returned = false,
+} = {}) {
   const inApproval = phase === 'AWAITING_EXACT_REFLECTION_APPROVAL' || aiApproval?.status === 'WAITING';
   const inReview = !inApproval && (phase === 'SOURCE_reflection-topics' || aiApproval?.status === 'RECORDED');
   const topicsRaw = Array.isArray(evRow?.checks?.topics) ? evRow.checks.topics : [];
@@ -219,6 +225,10 @@ export function reflectionReview({ row = null, evRow = null, limitations = null,
     state = REVIEW.REVIEWING;
     title = '확인 중 · AI 가 회고를 검토하고 있어요';
     note = '세 항목(수행 내용 · 문제 해결 과정 · 배운 점)이 글에 있는지 봅니다. 점수를 매기지 않습니다.';
+  } else if (reviewed && returned) {
+    state = REVIEW.REVIEWED;
+    title = `지난 글의 검토 결과 · ${serverWord(row)} — 고친 글은 아직 검토 전`;
+    note = '서버가 새 글을 다시 읽고 승인·검토해야 결과가 바뀌어요. 아래 항목은 지난 글 기준이에요.';
   } else if (reviewed) {
     state = REVIEW.REVIEWED;
     title = row.state === 'MET' ? 'AI 검토 완료 · 세 항목 확인' : `AI 검토 완료 · ${serverWord(row)}`;
@@ -231,14 +241,15 @@ export function reflectionReview({ row = null, evRow = null, limitations = null,
 
   // 미충족이면 **어디를 고쳐 다시 써야 하는지** 바로 보여야 한다 (오규원 11/5).
   // 서버 판정이 미충족이고 검토가 끝났을 때만이다. 검토 중엔 아직 모른다.
-  const needsRewrite = state === REVIEW.REVIEWED && row?.state !== 'MET';
+  // 돌아와서 새 글을 기다리는 중엔 또 다시 쓰라고 하지 않는다.
+  const needsRewrite = state === REVIEW.REVIEWED && row?.state !== 'MET' && !returned;
 
   return Object.freeze({
     state, title, note, reason,
     needsRewrite,
     lackingLabels: Object.freeze(lacking.map((t) => t.label)),
-    // 검토 중이면 아래 항목은 지난 검토의 것이다. 새 결과처럼 보이지 않게 표시한다.
-    previous: (inApproval || inReview) && reviewed,
+    // 검토 중이거나 고친 글을 기다리는 중이면 아래 항목은 지난 검토의 것이다.
+    previous: ((inApproval || inReview) || returned) && reviewed,
     topics: Object.freeze(topics),
     originalNote: topics.length ? originalNote : null,
     meta: Object.freeze([

@@ -54,6 +54,7 @@ function tracker({ refresh, read, rows = rowsBefore, followUpMs = [100, 200, 300
     getRows: rows,
     read: async () => { calls.push('read'); return { applicationId: APP, rows: await read(), current: true }; },
     refresh: refresh ? async (req) => { calls.push(['refresh', req]); return refresh(req); } : null,
+    getRevision: () => 7,
     storage: memoryStore(), nowMs: c.nowMs, setTimer: c.setTimer, clearTimer: c.clearTimer, followUpMs,
   });
   return { t, c, calls };
@@ -71,7 +72,7 @@ test('돌아오면 재확인을 요청하고, 접수(QUEUED)만으로는 PENDING
   await t.arrive(); await flush();
 
   const req = calls.find((x) => Array.isArray(x));
-  assert.deepEqual(req[1], { criterionId: 'activity-complete', expectedRevision: 1 }, '요청에 기준 회차가 없다');
+  assert.deepEqual(req[1], { criterionId: 'activity-complete', expectedRevision: 7 }, '요청의 기준은 신청 개정 번호(7)여야 한다 — 조건 근거 번호(1)가 아니다');
   const s = t.status('activity-complete');
   assert.equal(s.state, RETURN.PENDING, '접수만 됐는데 상태가 ' + s.state);
   assert.equal(s.refresh.status, REFRESH.QUEUED);
@@ -271,4 +272,40 @@ test('시연 대역: 회고를 배운 점 없이 올리면 미충족, 고쳐 올
   assert.equal(server.refresh('reflection-topics', 1).status, 'QUEUED');
   now += 3100;
   assert.equal(server.view().criteria[2].state, 'MET');
+});
+
+
+// ── 오규원 11/5 답: 재확인 완료 vs 새 판정, 고친 회고는 지난 결과로 ─────────────
+
+test('새 근거가 왔지만 판정 상태가 같으면 "재확인 완료 · 판정 그대로" 이지 "새 판정 확정" 이 아니다', async () => {
+  let current = rowsBefore();
+  const { t } = tracker({ refresh: () => ({ status: 'RECORDED', operationId: 'op-s' }), read: async () => current });
+  t.depart('activity-complete'); await t.arrive(); await flush();
+  // 같은 NOT_MET 인데 근거 회차만 2 로 — 서버가 다시 읽어 새 근거를 남겼다
+  current = [row('activity-complete', 'NOT_MET', 2), row('python-basic-certificate', 'UNKNOWN')];
+  await t.recheck('activity-complete'); await flush();
+  const s = t.status('activity-complete');
+  assert.equal(s.state, RETURN.UPDATED);
+  assert.equal(s.sameState, true);
+  const text = returnLine(s, current[0]).text;
+  assert.match(text, /재확인 완료/);
+  assert.match(text, /판정은 그대로 미충족/);
+  assert.ok(!/새 판정 확정/.test(text));
+});
+
+test('회고를 고치러 갔다 돌아와 새 판정 전이면 지난 글의 결과라고 적고 다시 쓰라고 하지 않는다', () => {
+  const evRow = { metadataStatus: 'RECORDED', checks: { topics: [
+    { topicId: 'work-performed', state: 'PRESENT', location: { start: 0, end: 10 } },
+    { topicId: 'problem-solving-process', state: 'PRESENT', location: { start: 11, end: 20 } },
+    { topicId: 'learning-takeaway', state: 'ABSENT', location: null },
+  ] } };
+  const row0 = { criterionId: 'reflection-topics', state: 'NOT_MET', evidenceId: 'e1', reasonCode: null };
+  const waiting = reflectionReview({ row: row0, evRow, returned: true });
+  assert.equal(waiting.previous, true);
+  assert.equal(waiting.needsRewrite, false);
+  assert.match(waiting.title, /지난 글의 검토 결과/);
+  assert.match(waiting.title, /아직 검토 전/);
+  const settled = reflectionReview({ row: row0, evRow, returned: false });
+  assert.equal(settled.previous, false);
+  assert.equal(settled.needsRewrite, true);
 });

@@ -94,6 +94,8 @@ export function createConditionCards({
       },
       isBusy, storage, nowMs, setTimer, clearTimer, isVisible, onChange: notify,
       refresh,
+      // 재확인 명령의 기준 번호 = 지금 화면이 가진 **신청(판정) 개정 번호**
+      getRevision: () => snapshotOf(getState())?.decision?.revision ?? null,
       ...(followUpMs ? { followUpMs } : {}),
     });
     tracker.attach({ doc, win });

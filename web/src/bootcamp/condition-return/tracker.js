@@ -112,6 +112,9 @@ export function createReturnTracker({
   isBusy = () => false,
   refresh = null,
   refreshFor = defaultRefreshFor,
+  // 재확인 명령에 넣는 **신청 개정 번호**(오규원 11/5: expectedRevision 은 명령의 기준이
+  // 되는 신청 개정 번호이지, 조건 근거 번호(evidenceRevision)가 아니다).
+  getRevision = () => null,
   storage = sessionStore(),
   nowMs = () => Date.now(),
   setTimer = setTimeout,
@@ -140,7 +143,7 @@ export function createReturnTracker({
     for (const [id, v] of visits) {
       if (LIVE.has(v.state)) {
         keep[id] = {
-          departedAt: v.departedAt, baseline: v.baseline, attempts: v.attempts,
+          departedAt: v.departedAt, baseline: v.baseline, baselineState: v.baselineState ?? null, attempts: v.attempts,
           expectedRevision: v.expectedRevision ?? null, refresh: v.refresh ?? null,
         };
       }
@@ -160,7 +163,8 @@ export function createReturnTracker({
         && (v.baseline === null || typeof v.baseline === 'string');
       if (ok) {
         visits.set(id, {
-          state: RETURN.AWAY, departedAt: v.departedAt, baseline: v.baseline, attempts: 0, checkedAt: null, error: null,
+          state: RETURN.AWAY, departedAt: v.departedAt, baseline: v.baseline, baselineState: v.baselineState ?? null,
+          attempts: 0, checkedAt: null, error: null,
           expectedRevision: v.expectedRevision ?? null, refresh: v.refresh ?? null, needsRefresh: false,
         });
       }
@@ -203,7 +207,10 @@ export function createReturnTracker({
       // 현재 판정이 아니라는 응답은 반영으로 치지 않는다.
       const differs = now !== null && now !== v.baseline && result.current !== false;
       if (differs) {
-        visits.set(id, { ...v, state: RETURN.UPDATED, checkedAt: at, updatedAt: at, error: null });
+        // 새 근거는 왔는데 판정 상태는 같을 수 있다(미충족 → 새 근거로도 미충족).
+        // 그건 '재확인 완료' 이지 '판정이 바뀜' 이 아니다. 둘을 따로 적는다.
+        const sameState = (rowOf(result.rows, id)?.state ?? null) === (v.baselineState ?? null);
+        visits.set(id, { ...v, state: RETURN.UPDATED, sameState, checkedAt: at, updatedAt: at, error: null });
         changed = true;
       } else if (fromCheck && v.state !== RETURN.AWAY) {
         const attempts = v.attempts + 1;
@@ -300,9 +307,10 @@ export function createReturnTracker({
     const rows = getRows();
     visits.set(criterionId, {
       state: RETURN.AWAY, departedAt: nowMs(), baseline: rowFingerprint(rows, criterionId),
+      baselineState: rowOf(rows, criterionId)?.state ?? null,
       attempts: 0, checkedAt: null, error: null,
-      // 재확인 요청에 "이 회차 기준" 으로 보낸다. 서버가 그 사이 바뀐 것을 알 수 있게.
-      expectedRevision: rowOf(rows, criterionId)?.evidenceRevision ?? null,
+      // 재확인 명령의 기준 — **신청 개정 번호**. 조건 근거 번호가 아니다.
+      expectedRevision: getRevision() ?? null,
       refresh: null, needsRefresh: false,
     });
     persist(); emit();
