@@ -70,11 +70,11 @@ export function createOperatorPreviewRelay({authentication,resolveOperatorPrevie
   clock=Date.now,monotonic=()=>performance.now(),ttlMs=60000,executionContract='DISPLAY_ONLY',
   setTimer=setTimeout,clearTimer=clearTimeout}={}) {
   check(positive(ttlMs) && ttlMs<=900000 && ['DISPLAY_ONLY','D_SINGLE_ACTIVITY_OFFLINE.1'].includes(executionContract));
-  const records=new Map(),sessions=new Map(),spent=new Map(),operations=new Set();let closed=false,revision=0,inFlight=0,wallFloor=0,monoFloor=0;
+  const records=new Map(),sessions=new Map(),spent=new Map(),operations=new Set(),publications=new WeakMap();let closed=false,revision=0,inFlight=0,wallFloor=0,monoFloor=0;
   function time(){const wall=clock(),mono=monotonic();check(positive(wall)&&wall>=wallFloor&&Number.isFinite(mono)&&mono>=monoFloor,'PREVIEW_EXPIRED');
     wallFloor=wall;monoFloor=mono;return {wall,mono};}
   function forget(r){if(!r)return;records.delete(r.id);if(sessions.get(r.session)===r.id)sessions.delete(r.session);
-    clearTimer(r.timer);r.controller.abort();r.sourceText=r.generated=r.approval=r.prepared=null;}
+    clearTimer(r.timer);r.controller.abort();r.sourceText=r.generated=r.approval=r.prepared=r.publication=null;}
   function shorten(r,end){const at=time();r.expires=Math.min(r.expires,end);
     r.monoEnd=Math.min(r.monoEnd,at.mono+Math.max(0,r.expires-at.wall));
     clearTimer(r.timer);r.timer=setTimer(()=>forget(r),Math.max(0,Math.min(r.expires-at.wall,r.monoEnd-at.mono)));r.timer.unref?.();}
@@ -133,6 +133,33 @@ export function createOperatorPreviewRelay({authentication,resolveOperatorPrevie
     failure:{kind:'D_HTTP',status:response.status,error:response.body}});forget(r);return result;}
   function request(input,keys){input=copy(input);exact(input,['version',...keys]);check(input.version===OPERATOR_PREVIEW_VERSION);return freeze(input);}
   const api={
+    // Publication-only port: no native reservation, D dispatch or approval
+    // restoration. The original result object is a one-use in-process capability.
+    // send must synchronously write/end the response; never await after the final
+    // currentness check and before that write.
+    async publish(context,result,{signal}={},send){
+      configuration();context=credentials(context);check(signal instanceof AbortSignal&&typeof send==='function','PREVIEW_UNAVAILABLE');
+      const entry=publications.get(result);check(entry,'PREVIEW_ALREADY_USED');
+      check(entry.session===hash({token:context.token,wallet:context.wallet.toLowerCase(),chainId:context.chainId}),'PREVIEW_FORBIDDEN');
+      publications.delete(result); // Consumed before any await; failures never restore it.
+      const r=entry.record,controller=new AbortController();let active=true,timer;
+      const options=optionsFor(r,{signal:AbortSignal.any([signal,controller.signal]),assertCurrent(){
+        const now=time();check(active&&now.wall<entry.wallEnd&&now.mono<entry.monoEnd,'PREVIEW_EXPIRED');
+        check(r.publication===entry&&r.id===entry.id&&r.revision===entry.revision&&r.session===entry.session
+          &&r.scopeHash===entry.scopeHash&&r.phase===entry.phase&&r.expires===entry.expires,'PREVIEW_STALE');
+      }});
+      operations.add(controller);
+      try{
+        live(r,options);const now=time();
+        timer=setTimer(()=>controller.abort(),Math.max(0,Math.min(entry.wallEnd-now.wall,entry.monoEnd-now.mono,r.expires-now.wall,r.monoEnd-now.mono)));timer.unref?.();
+        // Re-resolve scope after runCommand finishes. The returned synchronous
+        // check covers changes after this await, including the snapshot callback.
+        const assertCurrent=await current(r,context,options);
+        const body=JSON.stringify(result);assertCurrent();live(r,options);
+        sync(()=>send(body));
+      }catch(error){forget(r);throw error;}
+      finally{active=false;controller.abort();clearTimer(timer);operations.delete(controller);}
+    },
     async prepare(context,input,options){configuration();context=credentials(context);input=request(input,['sourceText']);fence(options);
       const prepared=prepareGeminiStructureRequest(input.sourceText),session=authenticate(context).session;
       forget(records.get(sessions.get(session)));
@@ -226,7 +253,17 @@ export function createOperatorPreviewRelay({authentication,resolveOperatorPrevie
     const timer=setTimer(()=>controller.abort(),45000);timer.unref?.();
     const guarded={signal,assertCurrent(){const now=time();
       check(active&&now.wall<at.wall+45000&&now.mono<at.mono+45000,'PREVIEW_EXPIRED');sync(options.assertCurrent);}};
-    try{return await bounded(api[operation](context,input,guarded),signal);}
+    try{const result=await bounded(api[operation](context,input,guarded),signal);
+      if(result.stage!=='FAILED'){
+        const r=records.get(result.contextRef);check(r,'PREVIEW_STALE');live(r,guarded);
+        check(r.revision===result.revision&&r.phase===result.stage
+          &&(!Object.hasOwn(result,'expiresAt')||result.expiresAt===r.expires),'PREVIEW_STALE');
+        const entry={record:r,id:r.id,revision:r.revision,session:r.session,scopeHash:r.scopeHash,phase:r.phase,
+          expires:r.expires,wallEnd:at.wall+45000,monoEnd:at.mono+45000};
+        r.publication=entry;publications.set(result,entry);
+      }
+      return result;
+    }
     finally{active=false;controller.abort();clearTimer(timer);operations.delete(controller);inFlight--;}
   };
   return Object.freeze(wrapped);

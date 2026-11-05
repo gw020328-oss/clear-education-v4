@@ -67,6 +67,14 @@ const relay = createOperatorPreviewRelay({authentication, resolveOperatorPreview
 const handler = createOperatorPreviewHandler({enabled: true, origin, authentication, relay, runCommand});
 ```
 
+### HTTP 최종 게시 경계 (E F1 수정)
+
+`relay.publish(context, result, {signal}, send)`는 `runCommand`의 **모든 await 및 finish가 끝난 뒤** 사용하는 서버 전용 성공 응답 게시 포트다. HTTP handler는 이 포트를 필수로 요구한다. `result`는 같은 relay가 발급한 원 frozen 객체여야 하며 JSON 복제본이나 브라우저가 보낸 값은 거절한다. 원 session/context/revision/scope/deployment/phase/expiry와 결과 객체에 결합된 단회 권한을 await 전에 소비하고, 현재 scope를 다시 조회한다. 다른 세션, 대체된 context/결과, 무효화, 만료 또는 실패 뒤에는 재사용할 수 없다.
+
+`send`는 직렬화된 JSON 문자열을 받아 동기적으로 `res.writeHead(200); res.end(body)`를 실행하는 콜백이다. 원 응답을 직렬화한 뒤 마지막 동기 검사에서 현재 session/CSRF, scope snapshot.assertCurrent, 원 context/revision/배포/phase/만료, 취소를 재확인한다. **그 검사와 send/res.end 사이에 await는 없다.** 마지막 scope 조회가 끝난 뒤 발생한 변경도 이 동기 검사에서 거절한다. 소스가 없는 D_HTTP 오류 envelope는 기존 실패 경로를 유지한다.
+
+게시 포트는 새 native lease를 발급·연장하거나 이미 finish된 grant를 다시 검사·복구하지 않는다. D 호출/승인 등록/소비 복구를 실행할 수도 없다. 대기 한도는 원 relay 요청의 45초 및 원 context TTL에서 남은 시간만 사용하고 재시작하지 않는다. 게시 실패도 generate의 승인 소비 상태를 되돌리지 않는다. A는 native finish 완료까지 기존 계약을 지키며, 그 이후 preview 현재성은 이 게시 포트가 확인한다.
+
 `enabled` 기본값은 false다. callback·resolver 누락을 대체 구현으로 보완하지 않는다. A는 종료 때 relay.close(), 로그아웃·권한 변경 때 해당 context의 relay.invalidate(contextRef)를 호출하고 현재성 검사도 유지해야 한다. 입력 편집 시 프론트 세대를 즉시 올려 기존 proposal/cache/실행 핀을 폐기한다. 오래된 응답으로 새 핀을 갱신하지 않는다. generate/execute는 각각 명시적 클릭에서만 실행하며 E 기본 `DISPLAY_ONLY`를 유지한다.
 
 ## D 전송 및 직접 승인
@@ -97,7 +105,10 @@ TTL 기본 60초, 상한 15분이며 세션·scope·승인·D draft 만료의 �
 
 ```sh
 ./tools/node --import ./tests/agent-preview/network-block.mjs --test \
-  tests/agent-preview/operator-relay.test.mjs tests/agent-preview/operator-http.test.mjs
+  tests/agent-preview/operator-relay.test.mjs tests/agent-preview/operator-http.test.mjs \
+  tests/agent-preview/operator-publication.test.mjs
 ```
 
 고정 Node 24.21.0, 네트워크 차단 preload, 합성 세션·scope·native fence·D 응답만 사용한다. auth/원문 hash/서버 revision/동시 소비/재사용/만료 단축/중도 취소/늦은 응답/고정 D DTO/HTTP 오류 상태/기본 실행 금지를 검사한다. 기존 core guard 전체 시험, live A native command, D 실서버 HMAC, 실제 승인 등록·모델·지급은 이 검증에 포함하지 않는다.
+
+E F1 수정 검증은 신규 `operator-publication.test.mjs`만 집중 실행한다. 기존 a4e83b7의 45 PASS 기록은 재사용하며 재실행한 결과로 세지 않는다. E F2의 outer TTL/cache adapter는 E 소유 후속이며 이 변경에서 수정하지 않는다.

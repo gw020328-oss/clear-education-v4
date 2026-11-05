@@ -29,7 +29,7 @@ export function createOperatorPreviewHandler({enabled=false,origin,authenticatio
   let expected;try{expected=new URL(origin);}catch{}
   const configured=enabled===true&&expected?.protocol==='https:'&&expected.origin===origin
     &&typeof authentication?.authorizeWorkflow==='function'&&typeof runCommand==='function'
-    &&['prepare','generate','execute'].every(k=>typeof relay?.[k]==='function');
+    &&['prepare','generate','execute','publish'].every(k=>typeof relay?.[k]==='function');
   let pending=0;
   function authorize(context){let actor;
     try{actor=authentication.authorizeWorkflow(context,true);}catch{reject('PREVIEW_AUTH_REQUIRED',403);}
@@ -75,8 +75,11 @@ export function createOperatorPreviewHandler({enabled=false,origin,authenticatio
         assertFence(fence,signal);result=value;return value;
       })),signal);
       check(invoked&&result!==undefined,'PREVIEW_UNAVAILABLE',503);authorize(context);check(!signal.aborted,'PREVIEW_CANCELLED',409);
-      const status=result.stage==='FAILED'&&result.failure?.kind==='D_HTTP'?result.failure.status:200;
-      res.writeHead(status);res.end(JSON.stringify(result));
+      if(result.stage==='FAILED'&&result.failure?.kind==='D_HTTP'){
+        res.writeHead(result.failure.status);res.end(JSON.stringify(result));
+      }else{
+        await relay.publish(context,result,{signal},body=>{res.writeHead(200);res.end(body);});
+      }
     }catch(error){
       const fault=faults.get(error),body=fault?envelope(fault.code):operatorPreviewFailure(error);
       const code=body.failure.code,status=fault?.status??(code==='PREVIEW_UNAVAILABLE'?503:code==='PREVIEW_FORBIDDEN'?403
