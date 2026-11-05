@@ -141,7 +141,7 @@ const short = (v) => {
  *   심사위원이 "그럼 이건요?" 하고 바꿔도 같은 길로 간다.
  */
 export function aiComparePanel({
-  adapter, source = '', onSource = () => {}, presets = [], proposer = RULES_PROPOSER,
+  adapter, source = '', onSource = () => {}, presets = [], proposer = RULES_PROPOSER, onStatus = () => {},
 }) {
   const box = el('section.fp', {});
   let text = source;
@@ -810,6 +810,17 @@ export function aiComparePanel({
       ]) : []),
     ].filter(Boolean));
 
+    // 바깥(Moodle 운영자 화면)이 상태 줄을 그릴 수 있게 지금 제안 상태를 알린다.
+    // 화면 판단은 여기서 한 번만 한다 — 바깥이 내부 칸을 다시 해석하지 않게.
+    try {
+      onStatus(Object.freeze({
+        phase: proposalPhase({ proposing, failed, outcome, proposal, idle: explicit && !proposing && !failed && !proposal.provenance && !outcome }),
+        held: proposal.held ?? 0,
+        actualModelCall: proposal.provenance?.actualModelCall ?? null,
+        expiresAt: proposal.serverBinding?.expiresAt ?? null,
+      }));
+    } catch { /* 상태 알림 실패가 패널을 깨지 않는다 */ }
+
     if (keepCaret) {
       const nextInput = box.querySelector('.fp-input');
       if (nextInput) {
@@ -850,6 +861,28 @@ function modeChip(s) {
     'data-mode': synthetic ? 'synthetic' : 'actual',
     text: synthetic ? '합성 자료' : s.actualUnavailable ? '실제 — 미연결' : '실제 자료',
   });
+}
+
+/**
+ * 제안 상태 하나. 생성 전 / 생성 중 / 승인 필요 / 성공 / 서버 보류 / 생성 실패 / 만료 / 결과 미확인.
+ * 제안자 예외·잘못된 값(failed)과 정상 계약으로 받은 결과(outcome)를 섞지 않는다.
+ */
+export const PROPOSAL_PHASE = Object.freeze({
+  IDLE: 'IDLE', GENERATING: 'GENERATING', APPROVAL_REQUIRED: 'APPROVAL_REQUIRED', SUCCESS: 'SUCCESS',
+  SERVER_HELD: 'SERVER_HELD', FAILED: 'FAILED', EXPIRED: 'EXPIRED', UNKNOWN: 'UNKNOWN',
+});
+function proposalPhase({ proposing, failed, outcome, proposal, idle }) {
+  if (proposing) return PROPOSAL_PHASE.GENERATING;
+  if (failed) return PROPOSAL_PHASE.FAILED;
+  if (outcome && outcome.kind !== 'PROPOSED') {
+    return ({ APPROVAL_REQUIRED: PROPOSAL_PHASE.APPROVAL_REQUIRED, EXPIRED: PROPOSAL_PHASE.EXPIRED,
+      UNKNOWN: PROPOSAL_PHASE.UNKNOWN })[outcome.kind] ?? PROPOSAL_PHASE.FAILED;
+  }
+  if (proposal.provenance || outcome?.kind === 'PROPOSED') {
+    return (proposal.held ?? 0) > 0 ? PROPOSAL_PHASE.SERVER_HELD : PROPOSAL_PHASE.SUCCESS;
+  }
+  if (idle) return PROPOSAL_PHASE.IDLE;
+  return PROPOSAL_PHASE.IDLE;
 }
 
 const section = (title, children) => [
