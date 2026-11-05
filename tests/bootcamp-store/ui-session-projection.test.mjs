@@ -5,12 +5,13 @@ import {DatabaseSync} from 'node:sqlite';
 import {join} from 'node:path';
 import {storeFixture,START} from './fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
+import {readNormalView} from '../../tools/bootcamp/normal-current-view.mjs';
 import {RuleError} from '../../src/policy/values.mjs';
 import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {createSourceDiagnostics} from '../../src/hackerrank-evidence/diagnostics.mjs';
 import {requestMessage} from '../../src/hackerrank-evidence/request.mjs';
 
-async function fixture(t){
+async function fixture(t,{ownerRetry=false}={}){
  t.mock.timers.enable({apis:['setInterval','setTimeout']});
  let time=START,cross=false,ticks=0,readError=null,patch=null,afterRead=()=>{},authError=null;
  const f=await storeFixture(t,{store:{now:()=>{if(cross&&++ticks===2){time++;cross=false;}return time;}}});
@@ -19,7 +20,7 @@ async function fixture(t){
   expectedClaimOwner:'0x'+'11'.repeat(20),selectedCertificateId:null,dataMode:'RECLAIM_SIGNED_RECORD'};
  const ui=createNormalUiSession({authentication:{authorizeWorkflow(c,w){if(authError)throw authError;return f.service.authorizeWorkflow(c,w);}},
   participantWallet:f.alice.address.toLowerCase(),operatorWallet:f.operator.address.toLowerCase(),now:()=>time,diagnostics,
-  getApplication(c,a){if(readError){afterRead();throw readError;}const view=f.store.getApplication(c,a);afterRead();return patch?{...view,...patch}:view;}});
+  getApplication(c,a){const read=()=>{if(readError){const error=readError;afterRead();throw error;}const view=f.store.getApplication(c,a);afterRead();return patch?{...view,...patch}:view;};return ownerRetry?readNormalView(read):read();}});
  t.after(()=>ui.close());ui.bindParticipant(f.aliceContext,applicationId,pins);
  const expected={version:'clear-hackerrank-request.1',...pins,applicationId,participantId:v.participantId,participantWallet:f.alice.address.toLowerCase(),
   criterionId:'python-basic-certificate',policyHash:v.policyHash,runtimeMappingHash:v.runtimeMappingHash,nonce:H('nonce'),issuedAt:START,expiresAt:START+900};delete expected.dataMode;
@@ -126,4 +127,18 @@ test('an uninspectable thrown value cannot bypass safe cancellation',async t=>{
  const x=await fixture(t);x.readError(new Proxy({},{getPrototypeOf(){throw Error('synthetic trap');},getOwnPropertyDescriptor(){throw Error('synthetic trap');}}));
  t.mock.timers.tick(250);await assert.rejects(x.pending,/BC_UI_CONTEXT_UNAVAILABLE/);
  assert.equal(x.diagnostics.snapshot().firstFailure.code,'UNKNOWN_ERROR');x.noEffects();
+});
+
+// The live owner retries only the projection callback, never approval submission.
+test('live owner rereads a second-boundary conflict before exposing the pending signature',async t=>{
+ const x=await fixture(t,{ownerRetry:true});x.setTime(START+46);x.cross();
+ assert.equal(x.ui.pendingSignature(x.f.aliceContext).approvalId,x.approval.approvalId);
+ assert.equal(x.settled,false);
+ assert.equal(x.submit().status,'PARTICIPANT_SIGNATURE_ACCEPTED');assert.equal(await x.pending,x.signature);x.noEffects();
+});
+test('live owner fresh read still rejects revocation during a conflicting projection',async t=>{
+ const x=await fixture(t,{ownerRetry:true});x.readError(new RuleError('BC_VIEW_STALE'));
+ x.afterRead(()=>{x.f.service.logout(x.f.aliceContext);x.readError(null);x.afterRead(()=>{});});
+ assert.throws(()=>x.ui.pendingSignature(x.f.aliceContext),/AUTH_REQUIRED/);
+ await flush();assert.equal(x.settled,true);assert.match(x.error.message,/BC_UI_CONTEXT_UNAVAILABLE/);x.noEffects();
 });
