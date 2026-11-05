@@ -326,8 +326,32 @@ export function createMoodleLoginIntents({
       };
       command.phase = 'RESERVED';
       try { fence(); } catch(error) { command.phase = 'UNKNOWN'; throw error; }
+      let activityAuthorityTaken = false;
       return Object.freeze({
         assert: fence,
+        captureActivityAuthority(applicationId) {
+          fence();
+          check(!activityAuthorityTaken && a.request.role === 'PARTICIPANT'
+            && typeof applicationId === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(applicationId)
+            && input.method === 'POST' && input.path === '/bootcamp/v4/applications/'+applicationId+'/source-refresh'
+            && input.body?.criterionId === 'activity-complete','MOODLE_ACTIVITY_AUTHORITY');
+          activityAuthorityTaken = true;
+          const identity = a.identity, fixedContext = canonical(context), hash = command.hash;
+          const expiresAt = command.grant.expiresAtExclusive;
+          // The POST grant is consumed once. This read-only fence follows its
+          // original connected intent, not the five-second transport lease.
+          return () => {
+            check(command.phase === 'CONSUMED' && a.phase === 'CONNECTED'
+              && a.identity === identity && matches(commandBinding,a.commandBindingHash)
+              && canonical(a.context) === fixedContext && canonical(context) === fixedContext
+              && moodleCommandDigest(input) === hash,'MOODLE_ACTIVITY_AUTHORITY');
+            clearExpiry(a.request.role,context);
+            requireLive(a);
+            check(time().wall < expiresAt && command.phase === 'CONSUMED'
+              && a.phase === 'CONNECTED' && a.identity === identity
+              && canonical(a.context) === fixedContext,'MOODLE_ACTIVITY_AUTHORITY');
+          };
+        },
         assertContext(candidate) { check(canonical(candidate) === canonical(context),'MOODLE_COMMAND_CONTEXT'); fence(); },
         durable() { check(command.phase === 'RESERVED' || command.phase === 'EFFECT','MOODLE_COMMAND_BINDING'); command.phase = 'EFFECT'; },
         committed() { check(['RESERVED','EFFECT'].includes(command.phase),'MOODLE_COMMAND_BINDING'); command.phase = 'CONSUMED'; },

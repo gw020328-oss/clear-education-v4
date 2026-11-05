@@ -20,6 +20,11 @@ export function createMoodleCommandScope({enabled, reserve}) {
       });
     },
     assertContext(context) { requests.getStore()?.reservation.assertContext(context); },
+    captureActivityAuthority(applicationId) {
+      const reservation = requests.getStore()?.reservation;
+      check(reservation,'MOODLE_ACTIVITY_AUTHORITY');
+      return reservation.captureActivityAuthority(applicationId);
+    },
     bindSourceAuthority(readAuthority) {
       // Later readers must use the source owner's scope. Preserve a command's
       // reservation when present, including its expiry and completion fence.

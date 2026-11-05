@@ -1,6 +1,6 @@
 // Local, owner-selected mode. The only source is the pinned Moodle page.
 // The write request grants one bounded job; its HTTP reservation is not a
-// long-lived source lease. The job still rechecks the bound participant.
+// long-lived source lease. The job retains its original Moodle intent fence.
 import {AsyncResource} from 'node:async_hooks';
 import {exactKeys,requireRule as check} from '../../src/policy/values.mjs';
 import {readNormalView} from './normal-current-view.mjs';
@@ -54,6 +54,7 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
       }
       const operationId = key();
       const attempt = {expectedRevision:body.expectedRevision, reply:{status:'QUEUED',operationId}};
+      const assertIntent = commandScope.captureActivityAuthority(app);
       commandScope.assert();
       commandScope.memoryCommitted();
       attempts.set(requestKey,attempt);
@@ -63,13 +64,20 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
       // changing the authority of the participant's asynchronous source probe.
       setImmediate(() => owner.runInAsyncScope(async () => {
         try {
+          assertIntent();
           const current = binding();
           check(current.app === app && current.user.token === user.token,'FORBIDDEN');
+          const assertAuthority = () => {
+            assertIntent();
+            const current = binding();
+            check(current.app === app && current.user.token === user.token,'FORBIDDEN');
+          };
           const deadline = Math.min(startedAt + 1800, now() + 900);
           if ((sourceWindows.get(criterionId) ?? 0) <= now()) sourceWindows.set(criterionId,deadline);
+          assertAuthority();
           const issued = store.issueBridgeRequest(user,app,{criterionId,expectedRevision:attempt.expectedRevision},key());
           await store.collectBridge(user,app,{requestId:issued.record.target.requestId,
-            expectedRevision:issued.record.applicationRevision},key(),{signal,timeoutMs:30000});
+            expectedRevision:issued.record.applicationRevision},key(),{signal,timeoutMs:30000,assertAuthority});
           attempt.reply = {status:'RECORDED',operationId};
         } catch (error) {
           attempt.reply = {status:'UNAVAILABLE',operationId};

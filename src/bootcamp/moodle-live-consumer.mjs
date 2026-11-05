@@ -36,7 +36,9 @@ export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,reso
    const authority=()=>{check(current(),'BC_LIVE_MOODLE_AUTHORITY');const x=resolveLease(r);return {available:true,requestHash:bootcampMoodleRequestHash(q),pinHash:p0Hash('MOODLE-PIN',pin),sourceEpoch:generation,authExpiresAtMs:x.authExpiresAt*1000,rawExpiresAtMs:x.rawExpiresAt*1000,queryExpiresAtMs:x.queryExpiresAt*1000};};
    let handle,rawLease,review=null,observationContextHash=null;
    try{
-    handle=await openMoodleSourceSession({request:q,collect:(request,{signal})=>withReader(client=>readBootcampMoodle({client,request,getCurrentRequest:()=>{authority();return q;},getCurrentContext:()=>{authority();return q.context;},getCurrentPin:()=>{authority();return resolvePin(r);},signal,now:()=>now()*1000})),resolveCurrent:authority,signal,now:()=>now()*1000});
+    handle=await openMoodleSourceSession({request:q,collect:(request,{signal})=>withReader(client=>readBootcampMoodle({
+      client:{async call(...args){authority();const result=await client.call(...args);authority();return result;}},
+      request,getCurrentRequest:()=>{authority();return q;},getCurrentContext:()=>{authority();return q.context;},getCurrentPin:()=>{authority();return resolvePin(r);},signal,now:()=>now()*1000})),resolveCurrent:authority,signal,now:()=>now()*1000});
     for(const h of owners)if(!h.isCurrent())owners.delete(h);check(owners.size<32,'BC_RAW_CAPACITY');owners.add(handle);const meta=handle.metadata;let raw=await handle.getRaw({signal});const facts=meta.facts;let acceptedFacts;
     if(criterionId==='activity-complete')acceptedFacts={capability:c.capability,targetLogicalId:c.targetLogicalId,completionState:facts.completionState,completionMode:facts.completionMode,completionRuleHash:facts.completionRuleHash,sourceCompletedAt:facts.sourceCompletedAt};
     else if(criterionId==='assignment-submitted')acceptedFacts={capability:c.capability,targetLogicalId:c.targetLogicalId,submissionState:facts.submissionState,sourceSubmittedAt:facts.sourceSubmittedAt};

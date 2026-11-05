@@ -317,7 +317,8 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
         check(prepared.isCurrent(),'BC_LIVE_AI_PREPARATION_STALE');return prepared;
       }catch(e){controller.abort();prepared?.dispose();throw e;}finally{clearTimeout(timer);}
     },
-    async collect(context,applicationId,body,key,{signal,timeoutMs=5000,bridge=false}={}){
+    async collect(context,applicationId,body,key,{signal,timeoutMs=5000,bridge=false,assertAuthority=()=>{}}={}){
+      assertAuthority();
       exactKeys(body,['requestId','expectedRevision'],'BC_COLLECT_BODY');id(body.requestId);revision(body.expectedRevision);
       check(Number.isSafeInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=(mode==='ISOLATED_LIVE_TEST'?300000:30000),'BC_TIMEOUT');
       const route=(bridge?'collect2:':'collect:')+applicationId;
@@ -339,7 +340,8 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       // Read-only lease authority: no recursive source resolution/transaction.
       // A consumed request retains raw access only while its exact accepted
       // evidence is the valid head. A new decision never revives a retired head.
-      const authority=requestAuthority(context,applicationId,started.wallet,started.request);
+      const requestCurrent=requestAuthority(context,applicationId,started.wallet,started.request);
+      const authority=()=>{try{assertAuthority();return requestCurrent();}catch{return false;}};
       const isAuthorized=commandScope?.bindSourceAuthority(authority)??authority;
       try{
         candidate=await Promise.race([Promise.resolve().then(()=>{
@@ -365,6 +367,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
       reconcile(applicationId);
       let validateCollected=()=>{};
       try{return access(context,applicationId,true,(a,wallet,time)=>{
+        assertAuthority();
         const prior=replay(wallet,route,key,body);if(prior)return projection(prior);
         check(wallet===started.wallet,'FORBIDDEN');ready(a);cas(a,body.expectedRevision);window(a,time);
         check(!failure,'BC_PRODUCER_FAILED');check(!controller.signal.aborted&&!signal?.aborted,'BC_CANCELLED');
@@ -383,6 +386,7 @@ export function createBootcampStore({directory,authentication,instanceId,demoSta
         const writeTime=epoch(now()),writeGuard=source(a,r.criterionId,writeTime);
         check(writeTime>=time&&writeGuard&&requestGuardHash(writeGuard,r.version)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
         validateCollected=(currentApp,at)=>{
+          assertAuthority();
           const guard=source(currentApp,r.criterionId,at);
           check(guard&&requestGuardHash(guard,r.version)===r.sourceGuardHash,'BC_COMMIT_CONTEXT');
           check(at<r.expiresAt&&at<r.receiptWindowUntilExclusive,'BC_RECEIPT_WINDOW');
