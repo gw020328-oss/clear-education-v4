@@ -218,6 +218,34 @@ test('reflection approval requires returned authority and explicit acknowledgmen
     assert.match(ui.details.textContent, /airecorded/);
 });
 
+test('a reflection approval stopped before submission can be refreshed and approved explicitly', async () => {
+    const approval = {version: 'clear-normal-exact-ai-approval-display.1', applicationId: 'app-one',
+        permitted: true, approvalWindowEndsAtMs: Date.now() + 60000, bodySha256: 'input-hash', model: 'test-model',
+        scenarioUsd: '0.00346', runBindingHash: 'run-binding'};
+    let attempts = 0;
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') {
+            return {...session('app-one'), aiApproval: approval};
+        }
+        if (++attempts === 1) {
+            throw Object.assign(Error('stale'), {code: 'MOODLE_AI_REVIEW_CHANGED', outcome: 'NOT_SENT'});
+        }
+        return {version: 'clear-normal-ai-approval-receipt.1', applicationId: 'app-one',
+            runBindingHash: approval.runBindingHash, status: 'RECORDED', paymentConsentIncluded: false};
+    });
+    await ui.click('read-session');
+    ui.ack.checked = true;
+    await ui.click('approve-reflection');
+    assert.equal(ui.status.textContent, 'failure');
+    await ui.click('read-session');
+    assert.equal(attempts, 1);
+    assert.equal(ui.ack.checked, false);
+    ui.ack.checked = true;
+    await ui.click('approve-reflection');
+    assert.equal(attempts, 2);
+    assert.match(ui.details.textContent, /airecorded/);
+});
+
 test('application evidence status follows evidenceCurrent for missing, expired and current evidence', async () => {
     const cases = [
         {evidenceCurrent: false, state: 'UNKNOWN', reasonCode: 'SOURCE_UNAVAILABLE'},

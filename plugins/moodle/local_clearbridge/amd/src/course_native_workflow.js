@@ -327,12 +327,14 @@ define([], function() {
                 }
                 accept(input, result);
                 show('success');
-            } catch {
+            } catch (error) {
                 if (pending !== task) {
                     return;
                 }
+                const reviewChanged = input.action === 'approve-reflection'
+                    && error?.code === 'MOODLE_AI_REVIEW_CHANGED' && error?.outcome === 'NOT_SENT';
                 clear();
-                unknown ||= task.write;
+                unknown ||= task.write && !reviewChanged;
                 show('failure');
             } finally {
                 if (pending === task) {
