@@ -181,3 +181,74 @@ test('입력마다 부르는 제안자도 실패하면 예문 실행으로 넘�
     assertFailureShown(x.panel, x.a);
   } finally { restore(); }
 });
+
+// ── 잘못된 제안 값 (PR #167 독립 리뷰) ───────────────────────────────
+//
+// 예전 검사는 clauses 가 배열인지만 봤다. { clauses: [null] } 은 통과한 뒤 그리다가
+// TypeError 로 깨졌다(동기: 클릭 처리 중 예외, 비동기: 미처리 rejection).
+
+const fields = { readable: 0, complete: false, canonicalText: '', duplicates: [] };
+const INVALID = [
+  ['clauses:[null]', { clauses: [null] }],
+  ['빈 조항 객체', { clauses: [{}], ...fields }],
+  ['조항 canonical 이 숫자', { clauses: [{ index: 0, original: 'x', canonical: 5 }], ...fields }],
+  ['serverGuard.kinds 가 문자열', { clauses: [{ index: 0, original: 'x', canonical: null, serverGuard: { kinds: 'ALTERNATIVE' } }], ...fields }],
+  ['mentions 에 null', { clauses: [{ index: 0, original: 'x', canonical: null, held: true, mentions: [null] }], ...fields }],
+  ['readable 이 문자열', { clauses: [], ...fields, readable: '1' }],
+  ['canonicalText 없음', { clauses: [], readable: 0, complete: false, duplicates: [] }],
+  ['duplicates 없음', { clauses: [], readable: 0, complete: false, canonicalText: '' }],
+  ['배열', []],
+  ['문자열', 'proposal'],
+];
+
+test('잘못된 제안 값은 동기·Promise 반환 모두 고정 생성 실패로 — 예외·미처리 rejection 없음', async () => {
+  const restore = installDom();
+  try {
+    for (const [name, value] of INVALID) {
+      for (const mode of ['sync', 'async']) {
+        const proposer = { id: 'gemini', kind: 'model', explicit: true, label: '시험',
+          propose: mode === 'sync' ? () => structuredClone(value) : async () => structuredClone(value) };
+        const { a, panel } = panelWith(proposer);
+        assert.doesNotThrow(() => clickOn(byRole(panel.node, 'generate')), `${name}/${mode}: 클릭 중 예외`);
+        await settle();
+        try { assertFailureShown(panel, a); } catch (e) { e.message = `${name}/${mode}: ${e.message}`; throw e; }
+      }
+    }
+    // 입력마다 부르는 제안자가 첫 화면에서 잘못된 값을 줘도 같다
+    const eager = { id: 'gemini', kind: 'model', label: '시험', propose: () => ({ clauses: [null] }) };
+    let made;
+    assert.doesNotThrow(() => { made = panelWith(eager); });
+    assertFailureShown(made.panel, made.a);
+  } finally { restore(); }
+});
+
+test('잘못된 값 뒤 재시도 성공 — 실패 상자가 걷히고 이번 제안만 보인다', async () => {
+  const restore = installDom();
+  try {
+    let n = 0;
+    const proposer = { id: 'gemini', kind: 'model', explicit: true, label: '시험',
+      propose: async (t) => (++n === 1 ? { clauses: [null] } : OFFLINE_GEMINI_PROPOSER.propose(t)) };
+    const { panel } = panelWith(proposer);
+    clickOn(byRole(panel.node, 'generate')); await settle();
+    assert.ok(byRole(panel.node, 'proposal-failed'));
+    clickOn(byRole(panel.node, 'retry')); await settle();
+    assert.equal(byRole(panel.node, 'proposal-failed'), undefined);
+    assert.ok(panel.node.textContent.includes('2개 조건을 찾았습니다'));
+  } finally { restore(); }
+});
+
+test('정상 제안·서버 보류·표시 전용 잠금은 그대로 받는다', async () => {
+  const restore = installDom();
+  try {
+    const ok = panelWith(OFFLINE_GEMINI_PROPOSER);
+    clickOn(byRole(ok.panel.node, 'generate')); await settle();
+    assert.ok(ok.panel.node.textContent.includes('2개 조건을 찾았습니다'));
+    const run = [...walk(ok.panel.node)].find((n) => n.tagName === 'BUTTON' && n.textContent.includes('표시 전용'));
+    assert.equal(run.attributes.disabled, 'disabled');
+    const held = panelWith(OFFLINE_GEMINI_PROPOSER, '강의수강 후기적기 과제제출');
+    clickOn(byRole(held.panel.node, 'generate')); await settle();
+    assert.equal(byRole(held.panel.node, 'proposal-failed'), undefined);
+    assert.ok(held.panel.node.textContent.includes('서버 보류 사유: MULTIPLE_CONDITIONS'));
+    assert.equal([...walk(held.panel.node)].filter((n) => n.tagName === 'SELECT').length, 0);
+  } finally { restore(); }
+});
