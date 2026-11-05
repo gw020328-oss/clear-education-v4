@@ -356,3 +356,88 @@ test('60초 제한은 수동·복귀·다른 조건 타이머에도 적용하고
   assert.equal(requests.filter(r => r.criterionId === 'activity-complete').length, 2);
   t.close();
 });
+
+// ── 조회 대기 중 폐기·교체 (PR #165 최종 리뷰 P2) ───────────────────────
+//
+// 재확인 요청 직전의 최신 조회(await read()) 동안 추적기가 닫히거나 그 조건의 방문이
+// 새 depart/recheck 로 바뀌면, 조회가 끝난 뒤 이전 요청을 보내거나 새 방문을 덮으면 안 된다.
+
+/** 첫 조회(명령 직전 조회)만 손으로 끝내는 추적기. answer() 뒤 조회는 바로 답한다 */
+function gated({ refresh = async () => ({ status: 'QUEUED', operationId: 'op' }), revision = 8 } = {}) {
+  const reads = []; const requests = []; let open = false;
+  const snapshot = () => ({ applicationId: APP, rows: rowsBefore(), decision: { revision }, current: true });
+  const t = createReturnTracker({
+    applicationId: APP, getRows: rowsBefore, getRevision: () => 7,
+    read: () => (open ? Promise.resolve(snapshot()) : new Promise((resolve) => reads.push(() => resolve(snapshot())))),
+    refresh: async (req) => { requests.push(req); return refresh(req); },
+    storage: memoryStore(), setTimer: () => 1, clearTimer: () => {}, followUpMs: [100, 200, 300],
+  });
+  const answer = async () => { open = true; while (reads.length) reads.shift()(); await flush(); };
+  return { t, reads, requests, answer };
+}
+
+test('조회 대기 중 추적기를 닫으면 조회가 끝나도 재확인 요청을 보내지 않는다', async () => {
+  const g = gated();
+  g.t.depart('activity-complete');
+  const pending = g.t.arrive();
+  await flush();
+  assert.equal(g.reads.length, 1, '명령 직전 조회가 대기 중이어야 한다');
+  g.t.close();
+  await g.answer();
+  await pending;
+  assert.equal(g.requests.length, 0, '닫힌 추적기가 재확인 요청을 보냈다');
+});
+
+test('조회 대기 중 같은 조건을 다시 떠나면 이전 방문의 요청을 보내지 않고 새 방문을 덮지 않는다', async () => {
+  const g = gated();
+  g.t.depart('activity-complete');
+  const pending = g.t.arrive();
+  await flush();
+  g.t.depart('activity-complete');            // 새 방문 — 아직 떠나 있다
+  await g.answer();
+  await pending;
+  assert.equal(g.requests.length, 0, '교체된 방문에 이전 요청을 보냈다');
+  const s = g.t.status('activity-complete');
+  assert.equal(s.state, RETURN.AWAY, '새 방문 상태가 덮였다: ' + s.state);
+  assert.equal(s.refresh, null);
+  g.t.close();
+});
+
+test('응답 대기 중 방문이 바뀌면 그 응답이 새 방문의 상태·요청 결과를 덮지 않는다(제한 시각만 이어 받는다)', async () => {
+  let release;
+  const g = gated({ refresh: () => new Promise((r) => { release = r; }) });
+  g.t.depart('activity-complete');
+  const pending = g.t.arrive();
+  await flush(); await g.answer();
+  assert.equal(g.requests.length, 1);
+  g.t.depart('activity-complete');            // 요청은 이미 나갔다. 응답 전에 새 방문
+  release({ status: 'RATE_LIMITED', retryAfterSeconds: 60 });
+  await flush(); await g.answer(); await pending;
+  const s = g.t.status('activity-complete');
+  assert.equal(s.state, RETURN.AWAY, '새 방문 상태가 덮였다');
+  assert.equal(s.refresh, null, '이전 응답이 새 방문 결과로 적혔다');
+  assert.equal(s.needsRefresh, false);
+  assert.ok(s.nextAllowedAt > 0, '조건별 제한 시각은 이어 받아야 한다');
+  g.t.close();
+});
+
+test('조회 대기 중 「다시 확인」 으로 바뀐 방문에도 이전 요청을 보내지 않는다', async () => {
+  const g = gated();
+  g.t.depart('activity-complete');
+  const pending = g.t.arrive();
+  await flush();
+  void g.t.recheck('activity-complete');
+  await g.answer(); await pending;
+  assert.equal(g.requests.length, 0, '다시 확인 전 요청이 나갔다');
+  g.t.close();
+});
+
+test('정상 활성 방문은 최신 조회의 revision 으로 재확인 1건', async () => {
+  const g = gated({ revision: 12 });
+  g.t.depart('activity-complete');
+  const pending = g.t.arrive();
+  await flush(); await g.answer(); await pending;
+  assert.deepEqual(g.requests, [{ criterionId: 'activity-complete', expectedRevision: 12 }]);
+  assert.equal(g.t.status('activity-complete').refresh.status, REFRESH.QUEUED);
+  g.t.close();
+});

@@ -135,6 +135,10 @@ export function createReturnTracker({
   let lastCheckAt = null;
   let closed = false;
   let detach = null;
+  // 방문 식별. depart·recheck 마다 새로 매긴다. 조회·요청을 기다리는 동안 방문이
+  // 바뀌었으면 이전 방문의 요청을 보내거나 새 방문을 덮지 않는다. 저장하지 않는다.
+  let visitSeq = 0;
+  const nextVisitRef = () => (visitSeq += 1);
 
   const emit = () => { if (!closed) onChange(); };
 
@@ -166,6 +170,7 @@ export function createReturnTracker({
           state: RETURN.AWAY, departedAt: v.departedAt, baseline: v.baseline, baselineState: v.baselineState ?? null,
           attempts: 0, checkedAt: null, error: null,
           nextAllowedAt: v.nextAllowedAt ?? 0, refresh: v.refresh ?? null, needsRefresh: false,
+          visitRef: nextVisitRef(),
         });
       }
     }
@@ -235,9 +240,15 @@ export function createReturnTracker({
   async function requestRefresh(targets) {
     if (typeof refresh !== 'function') return;
     for (const [id, v] of targets) {
+      if (closed) return;
       if (!v.needsRefresh || !refreshFor(id) || nowMs() < (v.nextAllowedAt ?? 0)) continue;
+      const ref = v.visitRef;
       // read() may return a fresh snapshot without updating the host's getState().
       const latest = await read();
+      // 조회하는 동안 닫혔거나(로그아웃·신청 전환) 이 조건의 방문이 새 depart·recheck 로
+      // 바뀌었으면 보내지 않는다. 제한 시각도 지금 방문 기준으로 다시 본다.
+      const live = visits.get(id);
+      if (closed || !live || live.visitRef !== ref || !live.needsRefresh || nowMs() < (live.nextAllowedAt ?? 0)) continue;
       if (!latest || latest.applicationId !== applicationId || latest.current === false) continue;
       const revision = latest.decision?.revision ?? getRevision() ?? null;
       let r;
@@ -249,8 +260,16 @@ export function createReturnTracker({
       const cur = visits.get(id);
       if (!cur || closed) continue;
       // null 은 "이 빌드엔 그 경로가 없다". 요청하지 않은 것과 같이 둔다.
-      if (r === null || r === undefined) { visits.set(id, { ...cur, needsRefresh: false }); continue; }
+      if (r === null || r === undefined) { if (cur.visitRef === ref) visits.set(id, { ...cur, needsRefresh: false }); continue; }
       const status = Object.values(REFRESH).includes(r.status) ? r.status : REFRESH.REQUEST_FAILED;
+      if (cur.visitRef !== ref) {
+        // 요청은 이미 나갔고 응답 전에 방문이 바뀌었다. 새 방문의 상태·요청 결과는 덮지 않고,
+        // 서버가 준 조건별 제한 시각만 이어 받는다(더 늦은 쪽).
+        if (status === REFRESH.RATE_LIMITED && Number.isFinite(r.retryAfterSeconds)) {
+          visits.set(id, { ...cur, nextAllowedAt: Math.max(cur.nextAllowedAt ?? 0, nowMs() + Math.max(0, r.retryAfterSeconds) * 1000) });
+        }
+        continue;
+      }
       visits.set(id, {
         ...cur,
         // 제한에 걸렸으면 다음 읽기 때 다시 요청한다. 접수·기록·불가면 더 보내지 않는다.
@@ -316,7 +335,7 @@ export function createReturnTracker({
       attempts: 0, checkedAt: null, error: null,
       // 재확인 명령의 기준 — **신청 개정 번호**. 조건 근거 번호가 아니다.
       nextAllowedAt: visits.get(criterionId)?.nextAllowedAt ?? 0,
-      refresh: null, needsRefresh: false,
+      refresh: null, needsRefresh: false, visitRef: nextVisitRef(),
     });
     persist(); emit();
   }
@@ -345,7 +364,7 @@ export function createReturnTracker({
     const v = visits.get(criterionId);
     if (closed || !v || !LIVE.has(v.state)) return undefined;
     // 「다시 확인」 은 재확인 요청도 다시 보낸다. 멈춤·불가 뒤에 서버가 바뀌었을 수 있다.
-    visits.set(criterionId, { ...v, state: RETURN.CHECKING, attempts: 0, error: null, needsRefresh: true });
+    visits.set(criterionId, { ...v, state: RETURN.CHECKING, attempts: 0, error: null, needsRefresh: true, visitRef: nextVisitRef() });
     return check();
   }
 
