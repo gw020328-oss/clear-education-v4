@@ -339,7 +339,8 @@ test('60초 제한은 수동·복귀·다른 조건 타이머에도 적용하고
   const t = createReturnTracker({
     applicationId: APP, getRows: rowsBefore, getRevision: () => 7,
     read: async () => { reads++; return { applicationId: APP, rows: rowsBefore(), decision: { revision: 8 } }; },
-    refresh: async (req) => { requests.push({ ...req, at: c.nowMs() }); return { status: 'RATE_LIMITED', retryAfterSeconds: 60 }; },
+    refresh: async (req) => { requests.push({ ...req, at: c.nowMs() }); return req.criterionId === 'assignment-submitted'
+      ? { status: 'QUEUED' } : { status: 'RATE_LIMITED', retryAfterSeconds: 60 }; },
     storage: memoryStore(), ...c, followUpMs: [100, 200, 300],
   });
   t.depart('activity-complete'); await t.arrive();
