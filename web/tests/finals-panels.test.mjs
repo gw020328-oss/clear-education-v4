@@ -950,7 +950,10 @@ test('생성이 실패하면 제안을 만들지 않고, 실제 호출 여부 nu
     const text = panel.node.textContent;
     assert.ok(byRole(panel.node, 'generation-failure'), '실패 표시가 없다');
     assert.ok(text.includes('전송 여부 미확인'), 'null 을 미확인으로 적지 않았다: ' + text.slice(0, 300));
-    assert.ok(text.includes('MODEL_CALL_FAILED') && text.includes('GEMINI_NETWORK_FAILURE'));
+    // 오류 본문·단계 코드는 화면에 내지 않는다(오규원 374e0d7). 고정 안내 + 다시 시도 + 호출 여부만.
+    assert.ok(byRole(panel.node, 'proposal-failed'), '고정 실패 안내 상자가 없다');
+    assert.ok(byRole(panel.node, 'retry'), '다시 시도 버튼이 없다');
+    assert.ok(!text.includes('GEMINI_NETWORK_FAILURE'), '오류 코드를 화면에 냈다');
     assert.ok(!text.includes('개 조건을 찾았습니다'), '실패인데 제안이 생겼다');
     assert.ok(!text.includes('실제 호출 아님') && !text.includes('실제 모델 응답 수신'), 'null 을 세 출처 중 하나로 분류했다');
     const run = [...walk(panel.node)].find((n) => n.tagName === 'BUTTON' && !n.attributes['data-role'] && n.textContent.includes('구조화') || n.textContent?.includes('제안 생성 전'));
