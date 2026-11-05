@@ -297,6 +297,34 @@ test('빠짐없이 완료와 강의 수강 후기는 단일 긍정 의무로 검
   assert.ok(clauseGuardKinds('Moodle 활동을 빠짐없이 완료하고 과제 제출 없이 수료하세요', CAP.activity).includes('NEGATION'));
 });
 
+for (const [notice, label] of [
+  ['수행 내용과 문제해결 과정 및 배운 점을 포함한 회고를 작성하세요', 'reflection'],
+  ['상세 회고를 작성하세요', 'reflection'],
+  ['강의와 관련된 활동을 완료하세요', 'activity'],
+]) test(`오보류 회귀: ${notice}`, async () => {
+  const {result} = await propose(notice, [label]);
+  assert.deepEqual(result.draft.guards, []);
+  assert.equal(result.draft.status, 'OPERATOR_REVIEW_REQUIRED');
+  assert.equal(approveAndRun(notice, result).validation.ok, true);
+});
+
+test('한글 수량 및 실제 병렬 대상은 수식어 보정 후에도 실행하지 않는다', async () => {
+  for (const [notice, kind] of [
+    ['강의를 한 회 완료하세요', 'THRESHOLD'],
+    ['강의를 세 회 완료하세요', 'THRESHOLD'],
+    ['강의를 두 번 완료하세요', 'THRESHOLD'],
+    ['강의를 두번 완료하세요', 'THRESHOLD'],
+    ['강의를 두 번을 완료하세요', 'THRESHOLD'],
+    ['강의 A와 강의 B를 모두 완료하세요', 'MULTIPLE_CONDITIONS'],
+    ['강의와 활동을 완료하세요', 'MULTIPLE_CONDITIONS'],
+    ['강의와 관련된 활동 A와 활동 B를 완료하세요', 'MULTIPLE_CONDITIONS'],
+  ]) {
+    const {result} = await propose(notice, ['activity']);
+    assert.ok(result.draft.guards.some(g => g.kinds.includes(kind)), notice);
+    assert.throws(() => approveAndRun(notice, result), /DRAFT_NOT_READY/, notice);
+  }
+});
+
 test('저장 행은 보류·중복·모델 질문을 포함한 원 제안과 hash를 복원한다', async () => {
   for (const [notice, labels] of [
     ['강의 수강 또는 과제 제출', ['activity']],

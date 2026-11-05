@@ -101,3 +101,5 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 - `clear-condition-structuring.2`의 `actualModelCall`은 `true | false | null`이다. ACTUAL 호스트의 응답 수신은 true, 호스트 진입 전 거부/준비 단계와 오프라인 경로는 false다. 호스트의 예약 코드 `APPROVAL_REQUIRED_OR_SPENT`는 provider 전송 전 승인 거부만 뜻하므로 false다. 다른 ACTUAL 호스트 실패가 응답 없이 끝나면 null(전송 여부 미확인)이다. `modelCall.attempted`는 호스트 함수 진입일 뿐 승인 소비·전송 증거가 아니다. true 역시 호스트가 전달한 응답과 ACTUAL 선언에 따른 표시이지 독립적인 과금 영수증은 아니다. null을 true나 false로 강제 변환하지 않는다. countTokens와 generateContent의 세부 전송 단계는 D가 실제 호스트 근거로 인수할 사항이며 이 wrapper는 그 단계를 추정하지 않는다.
 - HTTP/프론트 소비자는 draft v2와 nullable 호출 표시를 인수해야 한다. D의 `/execute` 단일 활동/오프라인 관측 계약은 이 변경으로 확장되지 않는다. D 소유 HTTP 파일은 수정하지 않았고 호스트 전송 인터페이스도 그대로다.
 - `packages/clear-core`는 0.1.2 후보이며 0.1.1을 같은 버전으로 재출시하지 않는다. 별도 full-module 번들은 이번 범위에서 재패키징하지 않는다. 패키지 업그레이드 시 기존 모델 draft/plan 캐시를 무효화한다. 합성 규칙 draft 형식은 유지한다.
+
+후속 오보류 보정(기준 `279254a`): 한글 수량은 앞의 단어와 분리된 수량 토큰과 뒤의 단위/조사 경계를 확인한다. `포함한 회고`·`상세 회고`를 `한 회`·`세 회`로 읽지 않는다. 같은 종류의 명사 반복 검사에서 `강의와 관련된 활동`의 관계 수식어는 별도 대상으로 세지 않되, `강의와 관련된 활동 A와 활동 B`의 두 대상은 계속 보류한다. 이 보정은 새로운 조건 종류나 자연어 지원 범위를 정의하지 않는다. 모델 draft/행 보존/출처 표시 계약과 패키지 후보 버전은 위와 같다.

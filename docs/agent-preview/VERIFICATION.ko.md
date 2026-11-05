@@ -50,6 +50,26 @@ Node 24.21.0에서 네트워크 차단으로 아래 62개 모두 통과했다. �
 
 추가로 E의 `output/handoff/CLEAR_PR166_REVIEW_2026-11-05/reproduce.mjs`를 `EXPECT_FIXED=1`로 현재 후보에 실행해 **36/36 통과**했다(`/private/tmp/clear-b-pr166-e-fixed.log`). 처음 후보의 34/36에서 누락된 `과제는 선택입니다`를 추가하고, 호스트 예약 코드 `APPROVAL_REQUIRED_OR_SPENT`는 전송 전 거부(false), 그 밖의 미응답 실패는 unknown(null)으로 계약을 구분한 뒤 62개 및 독립 36개를 재확인했다. E 재현 스크립트는 수정하지 않았다. 62개와 36개에는 의미상 중복 사례가 있으므로 독립 검증 범위로 표기하고 사례 수를 합산하지 않는다.
 
+## PR166 한글 수량·관계 수식어 오보류 후속 (2026-11-05, B)
+
+기준 `279254afe16725ed79ec36bb50cc81ff19c38200`. E가 발견한 아래 3문장을 독립 회귀로 추가해 수정 전 3개 모두 실패를 확인했다.
+
+- `수행 내용과 문제해결 과정 및 배운 점을 포함한 회고를 작성하세요`
+- `상세 회고를 작성하세요`
+- `강의와 관련된 활동을 완료하세요`
+
+한글 횟수의 수량 토큰 및 단위/조사 경계를 제한하고, 같은 종류의 복수 대상 검사에서 정확한 관계 수식어만 제외했다. 원래 `두 번`, 붙여 쓴 `두번`, 조사 붙은 `두 번을`, `한 회`/`세 회`, `강의 A와 강의 B`, `강의와 활동`, `관련된 활동 A와 활동 B`는 계속 실행을 차단한다.
+
+Node 24.21.0 + network-block으로 변경 영향에 해당하는 **6개 테스트 모두 통과**했다. 새 정상 회귀 3개, 한글 수량/병렬 대상 대조 1개와 기존 E 반례·오보류 묶음 2개다. 수정 전 로그 `/private/tmp/clear-b-pr166-boundary-before.log`는 3pass/3fail, 수정 후 `/private/tmp/clear-b-pr166-boundary-after.log`는 6pass/0fail이다.
+
+```sh
+./tools/node --import ./tests/agent-preview/network-block.mjs --test \
+  --test-name-pattern='오보류 회귀|한글 수량|E 반례|빠짐없이 완료' \
+  tests/agent-preview/condition-structuring.test.mjs
+```
+
+이 후속에서 이전 62개/독립 36개 전체를 반복하지 않았다. `modelRows`/hash/nullable provenance 및 HTTP 계약은 수정하지 않았다. push·merge·실제 호출은 수행하지 않았다.
+
 ## 0.2.0 독립 모듈 예제
 
 고정 Node/npm 환경에서 다음 명령을 실행한다. 첫 설치는 공개 npm 의존성을 받을 수 있어야 한다. 캐시를 준비한 뒤에는 깨끗한 폴더에서 같은 설치 명령에 `--offline`을 추가할 수 있다.
