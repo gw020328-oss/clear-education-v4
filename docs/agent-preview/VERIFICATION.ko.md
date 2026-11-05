@@ -32,6 +32,24 @@
 
 수정 검증: 네트워크 차단 core 41개(기존 29 + 집중 회귀 12), 클린 tarball 설치/실행 1개 성공. 설치한 패키지에서도 보고된 배열 권한/외부참조 및 draft undefined 재현이 거부된다. 기존 Moodle59/grounding10은 이 수정에서 반복하지 않았다. 배포물 버전은 @clear/preview-core 0.1.1이며 실제 API/로그인/서명은 여전히 미실행이다.
 
+## PR166 core 0.1.2 후보 보정 (2026-11-05, B)
+
+기준 `93c849b7027dca75877f878ba39534ef062582c9`. E 반례를 새 테스트 4개 묶음으로 추가했을 때 기존 11개 통과/새 4개 실패를 확인한 뒤 수정했다. 부정·선택·횟수·시간·요일/ISO 기한·동일 capability 복수 의무는 정확한 원문/span과 검토 hash에도 실행이 거부된다. `빠짐없이 완료`, `강의 수강 후기 작성`의 오보류를 해소하되 별도 수강+후기 의무는 계속 보류한다.
+
+Node 24.21.0에서 네트워크 차단으로 아래 62개 모두 통과했다. 원본 모델 행의 JSON 왕복/hash/guard 보존, caller 객체 비동결·내부 복사본 동결, 변조·구버전 draft 거부, ACTUAL 호스트 진입 후 미응답 실패의 호출 여부 unknown도 포함한다. 임시 클린 폴더의 0.1.2 tarball을 오프라인 설치하여 버전·모델 draft v2·부정문 실행 거부·기존 합성 예제를 확인했다.
+
+```sh
+./tools/node --import ./tests/agent-preview/network-block.mjs --test \
+  tests/agent-preview/core.test.mjs \
+  tests/agent-preview/gemini-response.test.mjs \
+  tests/agent-preview/condition-structuring.test.mjs \
+  tests/agent-preview/package.test.mjs
+```
+
+로컬 로그: `/private/tmp/clear-b-pr166-before.log`(수정 전), `/private/tmp/clear-b-pr166-regression.log`(62/62). E의 이전 127개 검증 전체는 반복하지 않았다. 프롬프트/응답 schema/모델/bodyHash 관련 소스와 D HTTP 파일은 변경하지 않았다. 실제 Gemini·Moodle·Reclaim 호출, 지급, merge 또는 배포는 수행하지 않았다. draft/hash와 nullable provenance의 소비자 인수 사항은 `FRONTEND_HANDOFF.ko.md`의 PR166 보정 후보 절에 기록했다.
+
+추가로 E의 `output/handoff/CLEAR_PR166_REVIEW_2026-11-05/reproduce.mjs`를 `EXPECT_FIXED=1`로 현재 후보에 실행해 **36/36 통과**했다(`/private/tmp/clear-b-pr166-e-fixed.log`). 처음 후보의 34/36에서 누락된 `과제는 선택입니다`를 추가하고, 호스트 예약 코드 `APPROVAL_REQUIRED_OR_SPENT`는 전송 전 거부(false), 그 밖의 미응답 실패는 unknown(null)으로 계약을 구분한 뒤 62개 및 독립 36개를 재확인했다. E 재현 스크립트는 수정하지 않았다. 62개와 36개에는 의미상 중복 사례가 있으므로 독립 검증 범위로 표기하고 사례 수를 합산하지 않는다.
+
 ## 0.2.0 독립 모듈 예제
 
 고정 Node/npm 환경에서 다음 명령을 실행한다. 첫 설치는 공개 npm 의존성을 받을 수 있어야 한다. 캐시를 준비한 뒤에는 깨끗한 폴더에서 같은 설치 명령에 `--offline`을 추가할 수 있다.

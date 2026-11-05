@@ -20,7 +20,7 @@ import {buildPlan, executePublicDemo, hash, reviewModelProposal, sourceClauses, 
 import {prepareGeminiStructureRequest} from './gemini-preparation.mjs';
 import {requestGeminiPreview} from './gemini-response.mjs';
 
-export const STRUCTURING_VERSION = 'clear-condition-structuring.1';
+export const STRUCTURING_VERSION = 'clear-condition-structuring.2';
 /** How tools are chosen in the current implementation. */
 export const TOOL_SELECTION = 'MODEL_CLASSIFIES_CAPABILITY_CODE_MAPS_TOOL';
 
@@ -74,14 +74,15 @@ export function proposalDto(draft) {
   });
 }
 
-/** Rows a host may store instead of the provider reply. Same shape as the model output. */
+/** Original model rows, never effective/held rows. Legacy drafts need a fresh proposal. */
 export function rowsFromDraft(draft) {
-  return draft.clauses.map(c => {
-    const question = draft.questions.find(x => x.clauseId === c.id) ?? null;
-    const condition = draft.conditions.find(x => x.clauseId === c.id) ?? null;
-    return {quote: c.text, start: c.start, end: c.end, status: question?.reason ?? 'SUPPORTED',
-      capability: question ? null : condition.capability, question: question?.question ?? null};
-  });
+  if (draft.version !== 'clear-preview-model-draft.2' || !Array.isArray(draft.modelRows)) {
+    throw Object.assign(new Error('MODEL_ROWS_UNAVAILABLE'), {code: 'MODEL_ROWS_UNAVAILABLE'});
+  }
+  if (hash({sourceText: draft.sourceText, rows: draft.modelRows}) !== draft.proposalHash) {
+    throw Object.assign(new Error('MODEL_ROWS_BINDING'), {code: 'MODEL_ROWS_BINDING'});
+  }
+  return draft.modelRows.map(row => ({...row}));
 }
 
 /**
@@ -105,7 +106,12 @@ export async function structureWithGemini(sourceText, {approvalRef, claimAndDisp
     return reply;
   } : claimAndDispatch;
   const failed = (stage, error) => Object.freeze({
-    ...gates, version: STRUCTURING_VERSION, stage, actualModelCall: call.attempted && transportExecution === 'ACTUAL',
+    // Host entry proves neither consumption nor dispatch. The host's reserved
+    // APPROVAL_REQUIRED_OR_SPENT code means rejection before provider dispatch.
+    // Other failures without a reply cannot establish dispatch: null = unknown.
+    ...gates, version: STRUCTURING_VERSION, stage,
+    actualModelCall: transportExecution !== 'ACTUAL' || !call.attempted ? false : call.replied ? true
+      : codeOf(error) === 'APPROVAL_REQUIRED_OR_SPENT' ? false : null,
     modelCall: {...call, succeeded: false, errorCode: SAFE_FAILURE.test(codeOf(error)) || RESPONSE_REJECTED.test(codeOf(error)) ? codeOf(error) : 'MODEL_CALL_FAILED'},
     fallback: 'NONE', proposal: null, draft: null,
   });

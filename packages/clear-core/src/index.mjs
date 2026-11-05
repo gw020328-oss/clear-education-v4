@@ -79,13 +79,13 @@ const CAPABILITY_HINTS = [
 ];
 const GUARDS = [
  ['UNSUPPORTED_MEASURE', /출석|출결|참석률|참여율|수강률|시청률|시청\s*시간|정답률|점수|점\s*이상|등급|만점|취업|면접/u],
- ['OPTIONAL', /\(\s*선택\s*\)|선택\s*사항|optional/iu],
+ ['OPTIONAL', /\(\s*선택\s*\)|선택\s*사항|선택적|선택(?:입니다|이다|임)|optional/iu],
  ['ALTERNATIVE', new RegExp(`또는|혹은|거나|택\\s*1|택일|중\\s*(?:하나|한\\s*가지|1\\s*개)|\\bor\\b|(?:이)?나\\s+(?=${CONDITION_WORD})`, 'iu')],
  ['SUBSTITUTE', /대신|대체|갈음|\binstead\b/iu],
- ['NEGATION', /않|없이|없어도|필요\s*(?:하지\s*)?없|제외|불필요|면제|아니|금지|생략|미(?:제출|수강|완료|이수)|\bnot\b|\bwithout\b|\bexcept\b/iu],
- ['THRESHOLD', /\d+(?:\.\d+)?\s*(?:%|퍼센트|회|번|개|건|편)|이상|이하|미만|초과|최소|최대|at\s+least|more\s+than|less\s+than/iu],
+ ['NEGATION', /않|(?<!빠짐)없이|없어도|(?:^|\s)안\s+(?:들|듣|하|해|내|보|받|제출|수강|완료|이수|작성)|필요\s*(?:하지\s*)?없|제외|불필요|면제|아니|금지|생략|미(?:제출|수강|완료|이수)|\bnot\b|\bwithout\b|\bexcept\b/iu],
+ ['THRESHOLD', /\d+(?:\.\d+)?\s*(?:%|퍼센트|회|번|개|건|편|시간|분)|(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*(?:회|번|개|건|편|시간|분)|이상|이하|미만|초과|최소|최대|at\s+least|more\s+than|less\s+than/iu],
  // '끝까지'·'마지막까지' 는 기한이 아니다. 날짜·시각·이름 붙은 시점 뒤의 '까지' 만 본다.
- ['DEADLINE', /\d+\s*월\s*\d+\s*일|\d+\s*(?:일|시)\s*까지|(?:오늘|내일|이번\s*주|다음\s*주|주말|월말|수료\s*전|종강\s*전)\s*까지|기한|마감|deadline/iu]
+ ['DEADLINE', /\d+\s*월\s*\d+\s*일|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d+\s*(?:일|시)\s*까지|(?:[월화수목금토일]요일|오늘|내일|이번\s*주|다음\s*주|주말|월말|수료\s*전|종강\s*전)\s*까지|기한|마감|deadline/iu]
 ];
 const GUARD_QUESTION = freeze({
  UNSUPPORTED_MEASURE: '출석률·점수 같은 기준은 자동 검증을 지원하지 않습니다. 정책 확정 전 운영자 처리가 필요합니다.',
@@ -105,8 +105,13 @@ export function capabilityHints(text) {
 export function clauseGuardKinds(text, capability) {
  if (grammar.some(re => re.test(text))) return [];
  const kinds = GUARDS.filter(([, re]) => re.test(text)).map(([kind]) => kind);
- const hints = capabilityHints(text);
- if (hints.length >= 2) kinds.push('MULTIPLE_CONDITIONS');
+ // A lecture-review noun phrase names the review's subject, not a second
+ // completion obligation. Separate verbs such as 수강하고 remain visible.
+ const obligations = text.replace(/(?:강의|수업|활동|영상)\s+(?:(?:수강|시청)\s+)?(?=후기)/gu, '');
+ const hints = capabilityHints(obligations);
+ const repeated = /(?:와|과)\s|및|그리고|,|하고/u.test(obligations) && CAPABILITY_HINTS.some(([cap, [noun]]) =>
+  hints.includes(cap) && [...obligations.matchAll(new RegExp(noun.source, `${noun.flags}g`))].length > 1);
+ if (hints.length >= 2 || repeated) kinds.push('MULTIPLE_CONDITIONS');
  else if (hints.length === 1 && capability && hints[0] !== capability) kinds.push('CAPABILITY_CONTRADICTION');
  return kinds;
 }
@@ -147,8 +152,10 @@ export function reviewModelProposal(sourceText, rows, reviewedHash) {
  const proposalHash = hash({sourceText, rows});
  const status = questions.some(question => question.reason === 'UNSUPPORTED') ? 'UNSUPPORTED'
   : questions.length ? 'NEEDS_CLARIFICATION' : reviewedHash === proposalHash ? 'READY' : 'OPERATOR_REVIEW_REQUIRED';
- const draft = signed({version: 'clear-preview-model-draft.1', executionMode: 'MODEL_PROPOSAL',
-  sourceText, sourceHash: hash(sourceText), proposalHash, clauses, conditions, questions, guards, status});
+ // Preserve the proposal before server holds, without freezing caller-owned rows.
+ const modelRows = rows.map(row => ({...row}));
+ const draft = signed({version: 'clear-preview-model-draft.2', executionMode: 'MODEL_PROPOSAL',
+  sourceText, sourceHash: hash(sourceText), proposalHash, modelRows, clauses, conditions, questions, guards, status});
  reviewedDrafts.add(draft);
  return draft;
 }

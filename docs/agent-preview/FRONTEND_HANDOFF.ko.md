@@ -91,3 +91,13 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 요청·응답 예시는 워크트리의 `CLAUDE_HANDOFF.md` 에 있다.
 
 **검사** — `./tools/node --import ./tests/agent-preview/network-block.mjs --test tests/agent-preview/condition-structuring.test.mjs` (11). 기존 developerTransport 에 시험용 fetch·키만 주입하고 승인은 bodyHash 단회 소비 대역이다. 실제 Gemini 호출 없음.
+
+## PR166 보정 후보: core 0.1.2 / 모델 draft v2
+
+기준 head `93c849b7027dca75877f878ba39534ef062582c9`. E가 확인한 `안 들어도`, `선택적으로`, `두 번`, `2시간`, 요일·ISO 날짜 기한과 같은 종류의 의무 두 개(`강의 A와 강의 B`)를 보류한다. `빠짐없이 완료`는 부정으로 보지 않고, `강의 수강 후기를 작성`의 강의는 후기의 주제로 처리한다. 별도 수강 의무(`강의를 수강하고 후기를 작성`)는 계속 복수 조건으로 보류한다. 이 검사는 알려진 표현에 대한 보수적 검사이며 임의 자연어의 의미 보장은 아니다.
+
+- `clear-preview-model-draft.2`는 원본 모델 행의 복사본 `modelRows`를 포함한다. 서버가 보류한 SUPPORTED 행과 중복 조건도 원형을 유지한다. `rowsFromDraft`는 직렬화 후에도 이 행과 `proposalHash`의 결합을 검사해 복사하여 반환한다. 표시용 `proposal.clauses`를 저장 행으로 대체하지 않는다.
+- `proposalHash=hash({sourceText,rows})`와 프롬프트·schema·모델·bodyHash는 그대로다. draft 버전/필드 및 검사 결과 때문에 `draftHash`와 이를 포함한 `planHash`는 달라진다. 과거 plan/draft를 재사용하지 않고 저장한 원본 행을 현재 core에서 재검토한다. `.1` draft만 남아 원본 응답/행이 없으면 `MODEL_ROWS_UNAVAILABLE`이며 새 제안을 받아야 한다. 원본 행과 hash가 맞지 않으면 `MODEL_ROWS_BINDING`이다.
+- `clear-condition-structuring.2`의 `actualModelCall`은 `true | false | null`이다. ACTUAL 호스트의 응답 수신은 true, 호스트 진입 전 거부/준비 단계와 오프라인 경로는 false다. 호스트의 예약 코드 `APPROVAL_REQUIRED_OR_SPENT`는 provider 전송 전 승인 거부만 뜻하므로 false다. 다른 ACTUAL 호스트 실패가 응답 없이 끝나면 null(전송 여부 미확인)이다. `modelCall.attempted`는 호스트 함수 진입일 뿐 승인 소비·전송 증거가 아니다. true 역시 호스트가 전달한 응답과 ACTUAL 선언에 따른 표시이지 독립적인 과금 영수증은 아니다. null을 true나 false로 강제 변환하지 않는다. countTokens와 generateContent의 세부 전송 단계는 D가 실제 호스트 근거로 인수할 사항이며 이 wrapper는 그 단계를 추정하지 않는다.
+- HTTP/프론트 소비자는 draft v2와 nullable 호출 표시를 인수해야 한다. D의 `/execute` 단일 활동/오프라인 관측 계약은 이 변경으로 확장되지 않는다. D 소유 HTTP 파일은 수정하지 않았고 호스트 전송 인터페이스도 그대로다.
+- `packages/clear-core`는 0.1.2 후보이며 0.1.1을 같은 버전으로 재출시하지 않는다. 별도 full-module 번들은 이번 범위에서 재패키징하지 않는다. 패키지 업그레이드 시 기존 모델 draft/plan 캐시를 무효화한다. 합성 규칙 draft 형식은 유지한다.

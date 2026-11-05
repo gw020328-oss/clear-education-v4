@@ -5,7 +5,7 @@
 //   ./tools/node --import ./tests/agent-preview/network-block.mjs --test tests/agent-preview/condition-structuring.test.mjs
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {sourceClauses, clauseGuardKinds, structureSynthetic} from '../../src/agent-preview/index.mjs';
+import {sourceClauses, clauseGuardKinds, structureSynthetic, reviewModelProposal} from '../../src/agent-preview/index.mjs';
 import {prepareGeminiStructureRequest} from '../../src/agent-preview/gemini-preparation.mjs';
 import {developerTransport} from '../../src/ai-policy/gemini-evaluation.mjs';
 import {
@@ -259,4 +259,96 @@ test('실제 호출과 오프라인 시험을 구분해 기록한다', async () 
   assert.equal(result.modelCall.execution, 'OFFLINE_TEST_TRANSPORT');
   assert.equal(result.modelCall.provenance, 'HOST_SUPPLIED_PROVIDER_RESPONSE');
   assert.equal(approveAndRun(notice, result).actualModelCall, false);
+});
+
+test('E 반례: 원문과 검토 hash가 정확해도 표현할 수 없는 의무는 실행되지 않는다', async () => {
+  for (const [notice, label, kind] of [
+    ['강의를 안 들어도 됩니다', 'activity', 'NEGATION'],
+    ['선택적으로 과제를 제출하세요', 'assignment', 'OPTIONAL'],
+    ['과제는 선택입니다', 'assignment', 'OPTIONAL'],
+    ['강의를 두 번 완료하세요', 'activity', 'THRESHOLD'],
+    ['강의 2시간을 수강하세요', 'activity', 'THRESHOLD'],
+    ['금요일까지 강의를 완료하세요', 'activity', 'DEADLINE'],
+    ['2026-11-06까지 강의를 완료하세요', 'activity', 'DEADLINE'],
+    ['강의 A와 강의 B를 모두 완료하세요', 'activity', 'MULTIPLE_CONDITIONS'],
+    ['과제 A와 과제 B를 제출하세요', 'assignment', 'MULTIPLE_CONDITIONS'],
+  ]) {
+    const {result} = await propose(notice, [label]);
+    assert.ok(result.draft.guards.some(g => g.kinds.includes(kind)), notice);
+    assert.equal(result.proposal.operatorCanApprove, false, notice);
+    const rows = rowsFor(notice, [label]);
+    assert.throws(() => executeReviewedProposal({sourceText: notice, rows, reviewedHash: result.proposal.proposalHash}), /DRAFT_NOT_READY/, notice);
+  }
+});
+
+test('빠짐없이 완료와 강의 수강 후기는 단일 긍정 의무로 검토할 수 있다', async () => {
+  for (const [notice, label, tool] of [
+    ['Moodle 활동을 빠짐없이 완료하세요', 'activity', 'moodle.activity.public'],
+    ['강의 수강 후기를 작성하세요', 'reflection', 'reflection.topics.public'],
+    ['수행 내용과 문제해결 과정과 배운 점을 빠짐없이 회고에 포함하세요', 'reflection', 'reflection.topics.public'],
+  ]) {
+    const {result} = await propose(notice, [label]);
+    assert.deepEqual(result.draft.guards, [], notice);
+    assert.deepEqual(approveAndRun(notice, result).steps.map(s => s.tool), [tool]);
+  }
+  // 후기의 주제를 활동 의무로 세지 않되, 별도로 요구한 수강은 지우지 않는다.
+  assert.ok(clauseGuardKinds('강의를 수강하고 후기를 작성하세요', CAP.reflection).includes('MULTIPLE_CONDITIONS'));
+  assert.ok(clauseGuardKinds('강의 수강 후기를 작성하세요', CAP.activity).includes('CAPABILITY_CONTRADICTION'));
+  assert.ok(clauseGuardKinds('Moodle 활동을 빠짐없이 완료하고 과제 제출 없이 수료하세요', CAP.activity).includes('NEGATION'));
+});
+
+test('저장 행은 보류·중복·모델 질문을 포함한 원 제안과 hash를 복원한다', async () => {
+  for (const [notice, labels] of [
+    ['강의 수강 또는 과제 제출', ['activity']],
+    ['지정 강의를 끝까지 들으세요; 강의를 완료하세요', ['activity', 'activity']],
+    ['출석 확인', [{status: 'UNSUPPORTED', question: '이 기준을 확인하세요.'}]],
+  ]) {
+    const {result} = await propose(notice, labels);
+    const rows = rowsFromDraft(JSON.parse(JSON.stringify(result.draft)));
+    assert.deepEqual(rows, rowsFor(notice, labels));
+    const restored = reviewModelProposal(notice, rows);
+    assert.equal(restored.proposalHash, result.draft.proposalHash);
+    assert.equal(restored.draftHash, result.draft.draftHash);
+    assert.deepEqual(restored.guards, result.draft.guards);
+    assert.throws(() => approveAndRun(notice, result), /DRAFT_NOT_READY/);
+    rows[0].quote = 'changed';
+    assert.equal(result.draft.modelRows[0].quote, sourceClauses(notice)[0].text);
+  }
+  const old = structureSynthetic('Moodle 활동 완료');
+  assert.throws(() => rowsFromDraft(old), /MODEL_ROWS_UNAVAILABLE/);
+  const raw = rowsFor('Moodle 활동 완료', ['activity']);
+  const draft = reviewModelProposal('Moodle 활동 완료', raw);
+  assert.equal(Object.isFrozen(raw[0]), false, 'caller의 행을 동결하지 않는다');
+  raw[0].quote = 'changed';
+  assert.equal(draft.modelRows[0].quote, 'Moodle 활동 완료');
+  assert.ok(Object.isFrozen(draft.modelRows[0]));
+  const tampered = structuredClone(draft);
+  tampered.modelRows[0].capability = CAP.assignment;
+  assert.throws(() => rowsFromDraft(tampered), /MODEL_ROWS_BINDING/);
+  const legacy = structuredClone(draft);
+  legacy.version = 'clear-preview-model-draft.1';
+  delete legacy.modelRows;
+  assert.throws(() => rowsFromDraft(legacy), /MODEL_ROWS_UNAVAILABLE/);
+});
+
+test('ACTUAL 호스트 진입은 실제 전송의 증거가 아니다', async () => {
+  const notice = 'Moodle 활동 완료';
+  const rejected = await structureWithGemini(notice, {approvalRef: 'spent', transportExecution: 'ACTUAL',
+    claimAndDispatch: async () => { throw Object.assign(Error('spent'), {code: 'APPROVAL_REQUIRED_OR_SPENT'}); }});
+  assert.equal(rejected.actualModelCall, false, '호스트의 전송 전 승인 거부 코드');
+  assert.equal(rejected.modelCall.attempted, true, '호스트 포트 진입 기록');
+  assert.equal(rejected.modelCall.replied, false);
+  const none = await structureWithGemini(notice, {transportExecution: 'ACTUAL'});
+  assert.equal(none.actualModelCall, false);
+  const failed = await structureWithGemini(notice, {approvalRef: 'test', transportExecution: 'ACTUAL',
+    claimAndDispatch: async () => { throw Error('transport outcome unknown'); }});
+  assert.equal(failed.actualModelCall, null);
+  // ACTUAL 라벨만 시뮬레이션한다. 아래 포트는 네트워크 없는 인공 응답이다.
+  const answered = await structureWithGemini(notice, {approvalRef: 'test', transportExecution: 'ACTUAL',
+    claimAndDispatch: async () => reply(rowsFor(notice, ['activity']))});
+  assert.equal(answered.actualModelCall, true);
+  const rejectedReply = await structureWithGemini(notice, {approvalRef: 'test', transportExecution: 'ACTUAL',
+    claimAndDispatch: async () => ({candidates: []})});
+  assert.equal(rejectedReply.actualModelCall, true);
+  assert.equal(rejectedReply.stage, 'MODEL_RESPONSE_REJECTED');
 });
