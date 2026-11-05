@@ -74,3 +74,11 @@ Moodle 지갑 controller는 `cancel` 정규화 및 retire/release 전에 최초 
 연결 종료 경로 분류: workflow-failure, explicit-cancel, wallet-change, expiry, dispatch-failure, command-failure, sign-out, destroy. 원래 오류 코드가 허용 목록에 없으면 UNKNOWN이다. 직접 command 경로는 전체 경로/명령 본문을 기록하지 않고 action NONE을 사용한다. read HTTP409는 기존 정책대로 취소하지 않으며 기록도 생성하지 않는다. 401/403 또는 write 실패로 취소될 때 해당 최초 원인이 CANCELLED로 바뀌기 전에 기록된다.
 
 검증: `tests/embedded-wallet/moodle-native-controller.test.mjs` 17개 통과, `/tmp/clear-cancel-trigger-tests.log`. read409 유지, write/auth 오류 원인, 명시 취소와 중복 폐기, dispatch/wallet/expiry/sign-out/destroy, 저장 실패 중 revoke, 비밀값 제거/hostile getter, 새 연결 sequence를 확인했다. 실제 재실행 및 frontend bundle 교체는 이 검증에 포함하지 않는다.
+
+### r7 최초 원인 분류 보완 (2026-11-05)
+
+실제 r7 로컬 진단은 `workflow-failure/start-certificate/UNKNOWN`, HTTP 상태 null, sequence 1이었다. 해당 키만 인수한 안전 사본은 `/private/tmp/clear-a-certificate-assembly-20261105/r7-cancel-trigger.json`이다. 서버 원천 진단은 events 0으로, 서명 대기 도달 근거가 없다. Moodle `login_action.php`는 Throwable을 일반 응답으로 가리고 Apache 접근 기록도 `/dev/null`로 설정되어 있어, 이미 관측한 403이 authorize-command인지 정리 end인지 기존 비밀없는 기록으로 확정하지 못했다. 원본 요청 본문/쿠키/토큰/서명/원천 증명은 열람하지 않았다.
+
+진단의 고정 원인 목록에 기존 오류 두 개 `MOODLE_LOGIN_UNAVAILABLE`, `MOODLE_CERTIFICATE_UNAVAILABLE`만 추가했다. `course()`의 기존 비정상/redirect 응답 거부는 같은 오류로 유지하되 실제 응답의 정수 HTTP status 100–599만 Error.status에 보존한다. error body는 읽지 않는다. 무효 status 또는 getter 실패는 생략하며 응답 거부는 그대로다. start-certificate workflow의 해당 요청 실패는 최초 CANCEL_TRIGGER에 기록되므로 후속 end 실패가 덮어쓰지 않는다. 별도 stage·endpoint·C PHP 변경은 없다. 성공 응답 파싱, 기존 finish의 status 확인, catch/취소/명령/재시도 정책은 유지한다.
+
+검증 33개 통과: `moodle-native-login-diagnostics.test.mjs`, `moodle-native-controller.test.mjs`, `moodle-native-workflow.test.mjs`. 로그 `/tmp/clear-r7-login-diagnostics-tests.log`. 새 회귀는 HTTP 범위·형 검사, redirect 거부, hostile status getter, 거부 body 미열람/명령 미전송, authorize403→end500에서도 최초403 보존, 두 고정 코드와 임의 문자열 배제를 검증한다. 이는 다음 시험의 진단정보 보완이며 실제 r7 원인 해결이나 복구 성공을 뜻하지 않는다. 실제 새 실행/재로그인/신청 재생성은 수행하지 않았다.

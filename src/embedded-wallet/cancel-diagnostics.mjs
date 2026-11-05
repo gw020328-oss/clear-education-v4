@@ -6,7 +6,7 @@ const actions = new Set(['NONE','connect-google','connect-metamask','select-wall
  'approve-source-signature','read-registration','approve-registration','approve-reflection','consent','payment-receipt','decision-evidence','read-operation']);
 const codes = new Set(['UNKNOWN','CANCELLED','EXPIRED','WALLET_CHANGED','AUTH_REQUIRED','FORBIDDEN','CSRF','ROLE_CHANGED','PRODUCT_ROLE_CHANGED',
  'SESSION_CHANGED','SESSION_CONTEXT','WALLET_CONTEXT_CANCELLED','STALE_SELECTION','NETWORK_UNAVAILABLE','WALLET_REJECTED','WALLET_TIMEOUT',
- 'API_REQUEST_FAILED','API_NETWORK','API_TIMEOUT','API_ABORTED','API_RESPONSE_INVALID','BC_VIEW_STALE','MOODLE_WORKFLOW_UNAVAILABLE']);
+ 'MOODLE_LOGIN_UNAVAILABLE','MOODLE_CERTIFICATE_UNAVAILABLE','API_REQUEST_FAILED','API_NETWORK','API_TIMEOUT','API_ABORTED','API_RESPONSE_INVALID','BC_VIEW_STALE','MOODLE_WORKFLOW_UNAVAILABLE']);
 function property(value,key) { try { return value?.[key]; } catch { return undefined; } }
 export function readCancelDiagnostic(storage) {
  try {

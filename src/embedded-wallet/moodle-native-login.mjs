@@ -13,7 +13,15 @@ export function createNativeMoodleLogin({config, api, fetch: fetchImpl = globalT
       method: 'POST', credentials: 'same-origin', redirect: 'error', cache: 'no-store', signal,
       body: new URLSearchParams({id: String(config.courseId), sesskey: config.sesskey, operation, ...fields}),
     });
-    check(response.ok && !response.redirected);
+    if (!(response.ok && !response.redirected)) {
+      // Keep the original rejection and never parse its body. Only the numeric
+      // HTTP status survives for the local first-cancellation diagnostic.
+      const error = Error('MOODLE_LOGIN_UNAVAILABLE');
+      try { const status = response.status;
+        if (Number.isInteger(status) && status >= 100 && status <= 599) error.status = status;
+      } catch {} // A hostile status getter cannot replace the original rejection.
+      throw error;
+    }
     const result = await response.json(); signal?.throwIfAborted(); return result;
   }
   return Object.freeze({
