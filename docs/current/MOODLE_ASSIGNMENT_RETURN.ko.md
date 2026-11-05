@@ -21,3 +21,9 @@
 ## 활동 전용 실행의 정식 읽기 화면
 
 조립 중 기존 front door가 page3만 등록하고 assign4/forum5의 카드 목적지 GET을 등록하지 않은 것을 확인했다. activityPageId3인 기존 소유자 모드에 한해 세 개의 정식 view 경로를 등록한다. page는 id=3, assign은 id=4, forum은 id=5의 정확한 query만 허용한다. POST·추가 action·중복/인코딩 ID·다른 항목·새 게시글 폼은 허용하지 않는다. Moodle의 기존 세션/역할 권한 검사는 상류 서버에서 유지한다. 신규 두 모듈 및 기존 page 경로 집중 검사 3개 통과. 실제 카드 클릭과 복귀 판정 갱신은 조립 후 확인한다.
+
+## r18 최초 신청 결합 차단 보정
+
+실제 r18은 신청 저장 뒤 증빙 확인 시작에서 연결 미확인·쓰기 결과 불명확을 표시했고, worker는 신청 미결합/원천 증빙 0 상태였다. 코드 경로상 activityReturnOnly의 쓰기 검사에서 source-session을 이미 결합된 app에만 허용하여 최초 결합 요청을 BC_ACTIVITY_MODE로 거부한다. 원 HTTP 오류 본문을 읽었다는 의미는 아니다.
+
+미결합 상태에서는 정확한 형식의 기존 source-session 경로만 허용하도록 별도 activityWriteAllowed를 사용한다. 결합 뒤에는 기존 동일 app의 source-session/source-refresh만 허용하고 생성 경로는 보존한다. 초기 예외는 원천 수집·서명·AI·등록·동의·지급을 허용하지 않는다. 기존 HTTP 인증·Moodle 단회 명령·실제 참가자와 신청 소유권·ACTIVE 검사는 바꾸지 않는다. 실제 저장소와 UI broker/명령 scope를 사용한 집중 2개 합성 검사는 이전 guard의 거부, 저장된 신청 단회 결합, 운영자·없는 신청·다른 신청·재결합 및 비허용 경로 거부를 확인했다. 실제 r18은 수정 전 프로세스로 유지했고 hot patch 또는 재로그인은 수행하지 않았다.

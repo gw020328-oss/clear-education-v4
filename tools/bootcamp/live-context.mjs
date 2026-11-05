@@ -1,3 +1,4 @@
+export const activityWriteAllowed=(path,app)=>Boolean(path==='/bootcamp/v1/applications'||!app&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-session$/.test(path)||app&&['source-session','source-refresh'].some(t=>path==='/bootcamp/v4/applications/'+app+'/'+t));
 import {withSelectedReflectionReader} from './normal-reflection-selection.mjs';
 export const certificateWriteAllowed=(path,app)=>Boolean(path==='/bootcamp/v1/applications'||!app&&/^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/source-session$/.test(path)||app&&['source-session','certificate-start','source-signature'].some(t=>path==='/bootcamp/v4/applications/'+app+'/'+t));
 import {createNormalCertificateStart} from './normal-certificate-start.mjs';
@@ -249,9 +250,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   const recipientView=(c,a,checkpoint)=>{requireUiRule(a===app,'BC_LIVE_CONTEXT');return readRecipientRegistration({store,connection,context:c,applicationId:a,checkpoint,authorize:(c,w)=>ui.authorize(c,w)});};
   const normalUi=Object.freeze({commandScope,
    startCertificate(c,a,b,k){requireUiRule(certificateStart,'BC_CERTIFICATE_UNAVAILABLE');return certificateStart.start(c,a,b,k);},walletRuntime:Object.freeze({instanceId:m.instanceId}),...(activityReturn?{activityPageId:activityReturn.pageId,refreshActivity:activityReturn.queue}:{}),
-   assertWritable(path){if(certificateCardOnly)requireUiRule(certificateWriteAllowed(path,app),'BC_CERTIFICATE_MODE');if(activityReturn)requireUiRule(path==='/bootcamp/v1/applications'||app&&[
-    '/bootcamp/v4/applications/'+app+'/source-session','/bootcamp/v4/applications/'+app+'/source-refresh',
-   ].includes(path),'BC_ACTIVITY_MODE');requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
+   assertWritable(path){if(certificateCardOnly)requireUiRule(certificateWriteAllowed(path,app),'BC_CERTIFICATE_MODE');if(activityReturn)requireUiRule(activityWriteAllowed(path,app),'BC_ACTIVITY_MODE');requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
    beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
     requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},
