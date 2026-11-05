@@ -56,3 +56,10 @@ ESBUILD=<esbuild 경로> docs/agent-preview/moodle-operator-panel/assemble-harne
 하네스는 `configure.php` 모양의 HTML에 C의 실제 AMD 소스(패치 적용본)와 빌드한 번들을 올린 것이다. A 핸들은 대역이고, `?port=replay`일 때만 PR #168의 녹화 응답을 재생한다. **실제 Moodle·실제 CLEAR 인증·실제 Gemini 연결의 성공이 아니다.**
 
 이 PC는 전역 `core.autocrlf=true`다. 빈 git에서 패치를 적용하면 CRLF가 생겨 셸 스크립트가 깨진다. 스크립트는 `-c core.autocrlf=false`로 적용한다. C 저장소는 `.gitattributes`의 `* text eol=lf`로 막힌다.
+
+## 연결 현재성
+
+`readConnection`은 동기 snapshot 포트다. 예외·Promise 반환은 미연결로 닫는다.
+각 prepare/generate 전후와 비동기 변환 완료 뒤 실제 snapshot을 다시 읽고 세션·강좌가 달라지면 이전 요청·결과를 폐기한다.
+`subscribe`는 선택이지만, 유휴 화면에서도 즉시 로그아웃/권한 철회를 반영하려면 owner가 동기 알림과 해제 함수를 제공해야 한다.
+알림 없는 owner는 상태 변경 때 `refresh()`를 호출해야 하며, 알림 누락 시에도 다음 요청/응답 채택 경계에서는 재검사한다.

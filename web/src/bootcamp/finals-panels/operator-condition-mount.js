@@ -50,7 +50,13 @@ const OPAQUE = /^[A-Za-z0-9_.:-]{1,96}$/;
 function connectionOf(readConnection, previewRequest, courseId) {
   if (typeof previewRequest !== 'function') return { ok: false, reason: 'NO_PREVIEW_PORT' };
   let c = null;
-  try { c = readConnection(); } catch { c = null; }
+  try {
+    c = readConnection();
+    if (c && typeof c.then === 'function') {
+      Promise.resolve(c).catch(() => {});
+      c = null; // This port is synchronous; never adopt an async snapshot.
+    }
+  } catch { c = null; }
   if (!c || c.status !== 'CONNECTED' || c.authenticated !== true || c.role !== 'operator'
     || typeof c.sessionRef !== 'string' || !OPAQUE.test(c.sessionRef)) return { ok: false, reason: 'NOT_SIGNED_IN' };
   if (c.courseId !== courseId) return { ok: false, reason: 'OTHER_COURSE' };
@@ -110,12 +116,30 @@ export function mountOperatorConditionPanel(root, {
     drop();
     key = nextKey;
     const current = key;
-    // 요청마다 같은 연결인지 확인한다. 바뀌었으면 보내지 않는다.
-    const request = (path, options) => {
-      if (closed || key !== current) return Promise.reject(Object.assign(new Error('OPERATOR_CONTEXT_CHANGED'), { code: 'OPERATOR_CONTEXT_CHANGED', outcome: 'NOT_SENT' }));
-      return previewRequest(path, options);
+    // Re-read authority hints at each async boundary, even without notifications.
+    const assertConnection = (sent = false) => {
+      const c = connectionOf(readConnection, previewRequest, courseId);
+      if (!closed && key === current && c.ok && c.key === current) return;
+      if (!closed && key === current) {
+        if (c.ok) open(c.key); else showUnconnected(c.reason);
+      }
+      throw Object.assign(new Error('OPERATOR_CONTEXT_CHANGED'), {
+        code: 'OPERATOR_CONTEXT_CHANGED', outcome: sent ? 'UNKNOWN' : 'NOT_SENT',
+      });
     };
-    proposer = createOperatorProposer({ request, appContextRef: () => key ?? 'closed', label: 'Gemini 제안 · CLEAR 서버 중계' });
+    const request = async (path, options) => {
+      assertConnection();
+      try { return await previewRequest(path, options); }
+      finally { assertConnection(true); }
+    };
+    const inner = createOperatorProposer({ request,
+      appContextRef: () => { assertConnection(true); return current; },
+      label: 'Gemini 제안 · CLEAR 서버 중계' });
+    proposer = Object.freeze({...inner, async propose(...args) {
+      const result = await inner.propose(...args);
+      assertConnection(true); // Includes conversion's crypto awaits, before panel adoption.
+      return result;
+    }});
     const adapter = createAdapter({ mode: DATA_MODE.ACTUAL, run: null });
     const panel = aiComparePanel({
       adapter, source: '', presets: [], proposer,

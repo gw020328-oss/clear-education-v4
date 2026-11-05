@@ -218,3 +218,45 @@ test('화면 종료 뒤에는 요청을 보내지 않고 상태도 바꾸지 않
     assert.ok(!root.textContent.includes('개 조건을 찾았습니다'));
   } finally { dom.restore(); }
 });
+
+for (const mode of ['silent-logout', 'reader-throws', 'other-course', 'other-session', 'async-reader']) {
+  test(`현재 연결 재검사: ${mode} 뒤에는 이전 패널이 요청하지 않는다`, async () => {
+    const dom=installDom(), w=world(), root=dom.root();let broken=false;
+    const m=mountOperatorConditionPanel(root,{...w.ports,subscribe:null,readConnection:()=>{
+      if(broken){if(mode==='async-reader')return Promise.reject(Error('unavailable'));throw Error('unavailable');}
+      return w.state.connection;
+    }});
+    try {
+      await type(root,PRESETS[0].source);
+      if(mode==='reader-throws'||mode==='async-reader')broken=true;
+      else w.state.connection=mode==='other-course'?connected({courseId:7}):mode==='other-session'?connected({sessionRef:'session-2'}):null;
+      clickOn(byRole(root,'generate'));await settle();
+      assert.deepEqual(w.calls,[]);assert.notEqual(m.phase(),MOUNT_PHASE.SUCCESS);
+      assert.ok(!root.textContent.includes('개 조건을 찾았습니다'));
+    }finally{m.destroy();dom.restore();}
+  });
+}
+test('알림 없는 로그아웃 뒤 늦은 generate 응답은 표시하지 않는다',async()=>{
+  const dom=installDom(),w=world({gateGenerate:true}),root=dom.root();const m=mountOperatorConditionPanel(root,w.ports);
+  try{await type(root,PRESETS[0].source);clickOn(byRole(root,'generate'));await settle();
+    w.state.connection=null;w.release();await settle();
+    assert.equal(m.phase(),MOUNT_PHASE.UNCONNECTED);assert.ok(!root.textContent.includes('개 조건을 찾았습니다'));
+  }finally{m.destroy();dom.restore();}
+});
+test('crypto 변환 중 알림 없는 연결 변경도 결과 채택 전에 폐기한다',async()=>{
+  const dom=installDom(),w=world(),root=dom.root();let converting=false,digests=0;
+  const original=crypto.subtle.digest;
+  crypto.subtle.digest=function(...args){
+    if(converting){digests++;queueMicrotask(()=>{w.state.connection=null;});}
+    return original.apply(this,args);
+  };
+  const m=mountOperatorConditionPanel(root,{...w.ports,previewRequest:async(path,options)=>{
+    const reply=await w.ports.previewRequest(path,options);
+    if(path.endsWith('/generate'))converting=true;
+    return reply;
+  }});
+  try{await type(root,PRESETS[0].source);clickOn(byRole(root,'generate'));await settle();
+    assert.ok(digests>0);assert.equal(m.phase(),MOUNT_PHASE.UNCONNECTED);
+    assert.ok(!root.textContent.includes('개 조건을 찾았습니다'));
+  }finally{crypto.subtle.digest=original;m.destroy();dom.restore();}
+});
