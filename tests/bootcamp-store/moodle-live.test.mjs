@@ -5,13 +5,13 @@ import {createBootcampStore} from '../../src/bootcamp/store.mjs';
 import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {storeFixture,START} from './fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
-async function fixture(t,{afterRead=()=>{},configure=()=>{}}={}){
+async function fixture(t,{afterRead=()=>{},configure=()=>{},observeCurrentness=null}={}){
  const f=await storeFixture(t,{store:{mode:'ISOLATED_LIVE_TEST',producers:{},resolveSource:()=>null}}),state={available:true,authExpiresAt:START+240,rawExpiresAt:START+240,queryExpiresAt:START+240};let calls=0;
  const pin=r=>({environmentRef:'test-owned-moodle',runRef:'test-run',sourceVersion:'moodle-4.5.15-215f4438',apiVersion:'2024100715',fixtureReportHash:p0Hash('TEST','report'),courseId:2,participantMapping:{participantId:r.participantId,applicationId:r.applicationId,moodleUserId:3,accountBindingRef:'test-user3',revision:1},target:{targetLogicalId:'python-intro-activity',cmId:3,instanceId:1,module:'page',selectedPostId:null},completionSetupReceiptHash:p0Hash('TEST','setup')});
  // Explicit fake network used only to test the dedicated consumer and CAS.
  const withReader=async fn=>fn({async call(method){calls++;const completion={state:1,timecompleted:START-1,overrideby:null,hascompletion:true,isautomatic:true,istrackeduser:true,uservisible:true,details:[{rulename:'completionview',rulevalue:{status:1}}]};
   const result={core_webservice_get_site_info:{userid:3,version:'2024100715'},core_course_get_contents:[{id:0,modules:[{id:3,instance:1,modname:'page',completion:2,completiondata:completion}]}],core_completion_get_activities_completion_status:{statuses:[{...completion,cmid:3,instance:1,modname:'page',tracking:2}],warnings:[]}}[method];await afterRead(state,calls);return structuredClone(result);}});
- const consumer=createLiveMoodleConsumer({criterionId:'activity-complete',withReader,resolvePin:pin,resolveLease:()=>state,now:()=>f.time});
+ const consumer=createLiveMoodleConsumer({criterionId:'activity-complete',withReader,resolvePin:pin,resolveLease:()=>state,observeCurrentness,now:()=>f.time});
  f.configuration.producers={'activity-complete':consumer};f.configuration.resolveSource=consumer.resolveSource;await configure(f);f.restart();
  const app=f.create(),issue=()=>f.store.issueBridgeRequest(f.aliceContext,app,{criterionId:'activity-complete',expectedRevision:f.view(app).revision},f.key());
  return {...f,get store(){return f.store;},app,consumer,state,issue,get calls(){return calls;},collect:r=>f.store.collectBridge(f.aliceContext,app,{requestId:r.record.target.requestId,expectedRevision:r.record.applicationRevision},f.key())};
@@ -154,4 +154,11 @@ for (const stage of ['source-read','final-acceptance']) test('activity return lo
  try{assert.equal(db.prepare('SELECT status FROM requests').get().status,'PENDING');}finally{db.close();}
  if(stage==='source-read')assert.equal(f.calls,2);
  else assert.ok(f.calls>=15);
+});
+
+test('currentness diagnostic reports fixed first rejection and cannot change authority outcome',async t=>{
+ const events=[];const f=await fixture(t,{afterRead:(state,count)=>{if(count===1)state.available=false;},observeCurrentness:event=>{events.push(event);throw Error('diagnostic write failed');}});
+ await assert.rejects(f.collect(f.issue()),/BC_PRODUCER_FAILED|BC_REVISION_CONFLICT/);
+ assert.deepEqual(events,[{criterionId:'activity-complete',predicate:'LEASE_AVAILABLE',value:false}]);
+ assert.equal(f.counts().evidence,0);
 });

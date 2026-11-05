@@ -11,7 +11,7 @@ import {criterion,bytesHash} from './model.mjs';
 import {BRIDGE_VERSION,createMemoryLease} from './reclaim-consumer.mjs';
 const registered=new WeakSet();
 export const isLiveMoodleConsumer=p=>registered.has(p);
-export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,resolveLease,reviewReflection,modelVersion,reflectionHost=null,sourceValiditySeconds=null,now=()=>Math.floor(Date.now()/1000)}){
+export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,resolveLease,reviewReflection,modelVersion,reflectionHost=null,sourceValiditySeconds=null,observeCurrentness=null,now=()=>Math.floor(Date.now()/1000)}){
  const c=criterion(criterionId);check(c.source!=='RECLAIM_HACKERRANK'&&[withReader,resolvePin,resolveLease].every(f=>typeof f==='function'),'BC_LIVE_MOODLE_CONFIG');
  check(sourceValiditySeconds===null||sourceValiditySeconds===900,'BC_LIVE_MOODLE_CONFIG');
  const preparations=new Map();
@@ -32,7 +32,16 @@ export function createLiveMoodleConsumer({criterionId,withReader,resolvePin,reso
    check(!closed&&r.version==='clear-bootcamp-bound-request.2'&&r.dataMode==='LOCAL_LMS_RECORD'&&r.producerTrustHash===trustHash,'BC_LIVE_MOODLE_REQUEST');
    const pin=structuredClone(resolvePin(r)),l=resolveLease(r),src=resolveSource(r),expiry=Math.min(r.expiresAt,r.issuedAt+(sourceValiditySeconds??(preparing?240:300)),l.authExpiresAt,l.rawExpiresAt,l.queryExpiresAt),pinHash=p0Hash('PIN',pin);
    const q=createBootcampMoodleRequest({version:sourceValiditySeconds===900?'clear-moodle-bootcamp-read.2-review900':'clear-moodle-bootcamp-read.1',pin,context:{participantId:r.participantId,applicationId:r.applicationId,policyHash:r.policyHash,criterionId,capability:c.capability,evidenceId:r.plannedEvidenceId,evidenceRevision:r.plannedEvidenceRevision,runtimeMappingHash:r.runtimeMappingHash,fixtureReportHash:pin.fixtureReportHash,sourceRunId:r.requestId,sourceGeneration:1,attempt:1,issuedAtMs:r.issuedAt*1000,expiresAtMs:expiry*1000}});
-   const current=()=>{const x=resolveLease(r);return !closed&&!signal?.aborted&&isAuthorized()===true&&x?.available===true&&now()<Math.min(expiry,x.authExpiresAt,x.rawExpiresAt,x.queryExpiresAt)&&p0Hash('PIN',resolvePin(r))===pinHash;};
+   const current=()=>{const x=resolveLease(r);
+    const rejected=predicate=>{try{observeCurrentness?.({criterionId,predicate,value:false});}catch{}return false;};
+    if(closed)return rejected('SOURCE_OPEN');
+    if(signal?.aborted)return rejected('NOT_ABORTED');
+    if(isAuthorized()!==true)return rejected('REQUEST_AUTHORIZED');
+    if(x?.available!==true)return rejected('LEASE_AVAILABLE');
+    if(!(now()<Math.min(expiry,x.authExpiresAt,x.rawExpiresAt,x.queryExpiresAt)))return rejected('LEASE_UNEXPIRED');
+    if(p0Hash('PIN',resolvePin(r))!==pinHash)return rejected('PIN_MATCH');
+    return true;
+   };
    const authority=()=>{check(current(),'BC_LIVE_MOODLE_AUTHORITY');const x=resolveLease(r);return {available:true,requestHash:bootcampMoodleRequestHash(q),pinHash:p0Hash('MOODLE-PIN',pin),sourceEpoch:generation,authExpiresAtMs:x.authExpiresAt*1000,rawExpiresAtMs:x.rawExpiresAt*1000,queryExpiresAtMs:x.queryExpiresAt*1000};};
    let handle,rawLease,review=null,observationContextHash=null;
    try{

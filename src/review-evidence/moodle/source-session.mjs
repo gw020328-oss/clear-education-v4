@@ -31,7 +31,7 @@ export async function openMoodleSourceSession({request,collect,resolveCurrent,si
  async function fetchSource(){
   requireCurrent();let result;
   try{result=await collect(q,{signal:combined});requireCurrent();validateBootcampMoodleResult(result,{request:q,expectedReceiptHash:result.receiptHash,nowMs:now()});}
-  catch(e){dispose();const code=e?.message;throw Error(/^(REVIEW|BCM|MSE)_[A-Z0-9_]+$/.test(code??'')?code:'MSE_SOURCE_UNAVAILABLE');}
+  catch(e){dispose();const code=e?.message;throw Error(/^(REVIEW|BCM|MSE)_[A-Z0-9_]+$/.test(code??'')?code:'MSE_SOURCE_UNAVAILABLE',{cause:e});}
   return result;
  }
  if(subscribeCurrent){try{check(typeof subscribeCurrent==='function','MSE_CONFIG');unwatch=subscribeCurrent(()=>current());check(unwatch===undefined||typeof unwatch==='function','MSE_CONFIG');if(closed)unwatch?.();}catch{dispose();throw Error('MSE_CURRENT_UNAVAILABLE');}}
