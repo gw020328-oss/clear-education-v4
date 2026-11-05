@@ -49,3 +49,17 @@ The normal active-visit test (latest revision 12, exactly 1 refresh) passes befo
 - `git diff --check` clean.
 
 Server auth, Moodle, payment and sealed files were not modified. No real login, Gemini call, deploy, push or merge. This fix is a local candidate commit.
+
+## Follow-up — late final read and current develop integration (2026-11-05)
+
+User authorized remaining P2 fix, latest develop integration, CI confirmation and report to idea chat; no PR merge. Independent worktree `/tmp/clear165-final-fix` preserves the Claude-owned `/tmp/clear165-fix` worktree.
+
+Starting remote PR HEAD: `140fed73e4181efe85fb61c1f12c5362a1e52311`. Integrated `origin/develop` `e4d3c205c43804a02b2360b816e5e7a6dd975a3b` by history merge `1cbb087`, without conflicts or manual edits to incoming changes.
+
+Remaining P2: final stored-verdict read could apply an old result to a newly departed/rechecked visit, marking it UPDATED and suppressing subsequent arrival refresh. A late read error could likewise overwrite the replacement visit. Each check now captures its target visitRefs; both final observe and error handling ignore replaced visits. Independent host observe remains unchanged. A replacement recheck with zero attempts gets the first follow-up interval so it recovers without relying on the stale check incrementing its attempts.
+
+Three new regression cases (late success after depart, late success after five rechecks, late error after five rechecks) all failed before the fix and pass afterward. They assert exact replacement-state preservation and exactly one new send on arrival/next timer. Existing close, refresh-reply replacement, latest revision and cooldown tests remain passing.
+
+Validation: fixed Node24.21.0; focused 47/47; integrated full web tests once 453/453; diff check clean. Full test count includes the latest develop frontend additions. Public history pre-push and final HEAD CI are reported in the task final response. No actual login/Gemini/Moodle runtime/payment/contract or sealed-file changes. PR remains Draft, no merge or ready transition performed.
+
+Recommended GPT-6.1 Sol / High for asynchronous state changes; actual model GPT-6.1 Sol per runtime, reasoning level not independently observable.

@@ -185,7 +185,7 @@ export function createReturnTracker({
     stopTimer();
     if (closed || !isVisible()) return;
     const due = waiting().map((v) => {
-      const base = followUpMs[v.attempts - 1];
+      const base = followUpMs[Math.max(0, v.attempts - 1)];
       // 서버가 "N초 뒤에" 라고 했으면 그보다 빨리 다시 묻지 않는다.
       const retry = Math.max(0, (v.nextAllowedAt ?? 0) - nowMs());
       return Number.isFinite(base) ? Math.max(base, retry) : base;
@@ -201,12 +201,12 @@ export function createReturnTracker({
    * `fromCheck` 가 아니면 '확인 중' 회수를 늘리지 않는다 — 학생이 아직 돌아오지
    * 않은 채 다른 경로로 들어온 결과다.
    */
-  function observe(result, { fromCheck = false } = {}) {
+  function observe(result, { fromCheck = false, visitRefs = null } = {}) {
     if (closed || !result || result.applicationId !== applicationId) return;
     const at = nowMs();
     let changed = false;
     for (const [id, v] of visits) {
-      if (!LIVE.has(v.state)) continue;
+      if (!LIVE.has(v.state) || (visitRefs && visitRefs.get(id) !== v.visitRef)) continue;
       const now = rowFingerprint(result.rows, id);
       // 현재 판정이 아니라는 응답은 반영으로 치지 않는다.
       const differs = now !== null && now !== v.baseline && result.current !== false;
@@ -293,6 +293,7 @@ export function createReturnTracker({
     if (inflight) return inflight;
     const targets = [...visits.entries()].filter(([, v]) => v.state !== RETURN.AWAY && LIVE.has(v.state));
     if (targets.length === 0) return undefined;
+    const visitRefs = new Map(targets.map(([id, v]) => [id, v.visitRef]));
     stopTimer();
     for (const [id, v] of targets) visits.set(id, { ...v, state: RETURN.CHECKING });
     emit();
@@ -300,11 +301,11 @@ export function createReturnTracker({
       try {
         await requestRefresh(targets);
         const result = await read();
-        observe(result, { fromCheck: true });
+        observe(result, { fromCheck: true, visitRefs });
       } catch (error) {
         const at = nowMs();
         for (const [id, v] of visits) {
-          if (v.state !== RETURN.CHECKING) continue;
+          if (closed || v.state !== RETURN.CHECKING || visitRefs.get(id) !== v.visitRef) continue;
           if (isBusy(error)) {
             // 다른 조회가 진행 중이었을 뿐이다. 실패로 적지 않고 '그대로' 와 같이
             // 센다 — 그 조회 결과는 observe() 로 들어온다. 회수를 세야 바쁜 상태가

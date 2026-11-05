@@ -441,3 +441,30 @@ test('정상 활성 방문은 최신 조회의 revision 으로 재확인 1건', 
   assert.equal(g.t.status('activity-complete').refresh.status, REFRESH.QUEUED);
   g.t.close();
 });
+
+for (const mode of ['depart', 'recheck', 'error']) {
+  test(`늦은 최종 조회는 교체된 방문을 덮지 않는다: ${mode}`, async () => {
+    const id = 'activity-complete'; const c = clock();
+    let rows = rowsBefore(); let release; let reject; let reads = 0; let sends = 0;
+    const snapshot = (r) => ({ applicationId: APP, rows: r, decision: { revision: 12 }, current: true });
+    const t = createReturnTracker({
+      applicationId: APP, getRows: () => rows, storage: memoryStore(), ...c,
+      read: () => ++reads === 2 ? new Promise((yes, no) => { release = yes; reject = no; }) : Promise.resolve(snapshot(rows)),
+      refresh: async () => { sends++; return { status: 'QUEUED' }; }, followUpMs: [100, 200, 300],
+    });
+    t.depart(id); const pending = t.arrive(); await flush();
+    assert.equal(reads, 2);
+    rows = rowsAfter();
+    if (mode === 'depart') t.depart(id);
+    else for (let i = 0; i < 5; i++) void t.recheck(id);
+    const before = t.status(id);
+    if (mode === 'error') reject(new Error('OLD_READ_FAILED'));
+    else release(snapshot(rowsBefore()));
+    await pending;
+    assert.deepEqual(t.status(id), before, '이전 조회의 결과·오류가 새 방문을 바꿨다');
+    if (mode === 'depart') await t.arrive();
+    else await c.tick(100);
+    assert.equal(sends, 2, '새 방문 요청은 복귀 또는 다음 타이머에서 정확히 한 번 복구');
+    t.close();
+  });
+}
