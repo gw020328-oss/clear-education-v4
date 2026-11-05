@@ -105,6 +105,27 @@ const ERROR_TEXT = Object.freeze({
   RUN_FAILED: '실행 중 오류가 났습니다.',
 });
 
+// ── 받은 제안의 모양 검사 ───────────────────────────────────────────
+//
+// 화면과 applyOverrides 가 읽는 칸만 본다. 변환기 계약을 새로 정하는 것이 아니라
+// 그리다 깨지는 값(예: { clauses: [null] })을 생성 실패로 돌리려는 것이다.
+const optString = (v) => v === null || v === undefined || typeof v === 'string';
+const optBool = (v) => v === undefined || typeof v === 'boolean';
+const isClause = (c) => c !== null && typeof c === 'object' && !Array.isArray(c)
+  && Number.isSafeInteger(c.index) && typeof c.original === 'string'
+  && optString(c.canonical) && optString(c.capability) && optString(c.note) && optString(c.source)
+  && optBool(c.held) && optBool(c.notOurs)
+  && (c.mentions === undefined || (Array.isArray(c.mentions) && c.mentions.every((m) => typeof m === 'string')))
+  && (c.serverGuard === null || c.serverGuard === undefined
+    || (typeof c.serverGuard === 'object' && Array.isArray(c.serverGuard.kinds)
+      && c.serverGuard.kinds.every((k) => typeof k === 'string') && optString(c.serverGuard.modelCapability)));
+const isProposal = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
+  && Array.isArray(v.clauses) && v.clauses.every(isClause)
+  && Number.isSafeInteger(v.readable) && v.readable >= 0
+  && typeof v.complete === 'boolean' && typeof v.canonicalText === 'string' && Array.isArray(v.duplicates)
+  && (v.serverBinding === undefined || v.serverBinding === null || typeof v.serverBinding === 'object')
+  && (v.provenance === undefined || v.provenance === null || typeof v.provenance === 'object');
+
 const short = (v) => {
   const s = String(v ?? '');
   return s.length > 18 ? `${s.slice(0, 10)}…${s.slice(-6)}` : s;
@@ -155,16 +176,24 @@ export function aiComparePanel({
   // 마지막 생성이 실패했으면 그 표시(failureView 결과). 성공하거나 원문이 바뀌면 지운다.
   let failure = null;
 
-  /** 제안 모양인가. 아니면 실패로 다룬다 — 그리다 깨지거나 빈 제안처럼 보이지 않게 */
-  const isProposal = (v) => v !== null && typeof v === 'object' && Array.isArray(v.clauses);
+  /** 이전 제안·운영자 지정을 내린다. 생성 실패와 명시적 (재)생성 시작이 같이 쓴다 */
+  const dropProposal = () => { base = emptyProposal(); overrides.clear(); recompute(); };
 
   /**
    * 제안 생성 실패. 이전 제안·운영자 지정을 버리고 실행을 잠근다(proposedFor=null).
    * 오류 내용은 들고 있지 않는다 — 화면에는 고정 안내만 나간다.
    */
   const failProposal = () => {
-    failed = true; proposing = false; runWhenReady = null;
-    base = emptyProposal(); proposedFor = null; overrides.clear(); recompute();
+    failed = true; proposing = false; runWhenReady = null; proposedFor = null;
+    dropProposal();
+  };
+
+  /** 받은 값을 채택한다. 모양이 틀리거나 채택 중 깨지면 false — 부른 쪽이 실패로 돌린다 */
+  const adopt = (value, next) => {
+    if (!isProposal(value)) return false;
+    try { base = value; recompute(); } catch { return false; }
+    proposedFor = next; proposing = false;
+    return true;
   };
 
   /** 제안자를 돌린다. 값이든 Promise 든 받고, 늦게 온 답은 버린다 */
@@ -175,27 +204,34 @@ export function aiComparePanel({
     // 동기 예외도 실패다. 던진 값을 화면으로 넘기지 않는다.
     try { got = proposer.propose(next); } catch { failProposal(); return; }
     if (typeof got?.then !== 'function') {
+      // 정식 실패 응답(v2.1 failureView)은 실패로 닫되 실제 호출 여부(null=미확인)만 남긴다
       if (got?.kind === 'GENERATION_FAILURE') { failure = got; failProposal(); return; }
-      if (!isProposal(got)) { failProposal(); return; }
-      base = got; proposedFor = next; proposing = false; recompute(); return;
+      if (!adopt(got, next)) failProposal();
+      return;
     }
     // 명시적 생성(재생성 포함)은 이전 제안을 내린다. 기다리는 동안 이전 결과가
     // 이번 생성의 결과처럼 보이지 않게, 실패하면 그 자리에 실패만 남게.
-    if (explicit) { base = emptyProposal(); overrides.clear(); recompute(); }
+    if (explicit) dropProposal();
     proposing = true; render();
     const settleProposal = (ok, value) => {
       if (stamp !== proposeStamp) return;         // 그새 원문이 바뀌었거나 새로 생성했다
       // 서버가 실패를 정식 응답(v2.1 failureView)으로 돌려준 경우. 실패 처리는 같고,
       // 실제 호출 여부(true/false/**null=전송 여부 미확인**)만 더 남긴다. 오류 본문은 안 남긴다.
       if (ok && value?.kind === 'GENERATION_FAILURE') { failure = value; failProposal(); render(); return; }
-      if (!ok || !isProposal(value)) { failure = null; failProposal(); render(); return; }
+      if (!ok || !adopt(value, next)) { failure = null; failProposal(); render(); return; }
       failure = null;
-      base = value; proposedFor = next; proposing = false; recompute();
       if (runWhenReady !== null && runWhenReady === text) { runWhenReady = null; run(); }
       render();
     };
-    // then 이 스스로 던지는 thenable 도 거절로 받는다.
-    Promise.resolve(got).then((value) => settleProposal(true, value), () => settleProposal(false));
+    // then 이 스스로 던지는 thenable 도 거절로 받는다. 채택·그리기에서 난 오류도
+    // 실패로 닫는다 — 미처리 rejection 으로 남기지 않는다.
+    Promise.resolve(got)
+      .then((value) => settleProposal(true, value), () => settleProposal(false))
+      .catch(() => {
+        if (stamp !== proposeStamp) return;
+        failProposal();
+        try { render(); } catch { /* 빈 제안은 그려진다. 여기서 더 던지지 않는다 */ }
+      });
   };
 
   /** 화면의 원문과 같은 원문으로 만든 제안이 준비됐나. 아니면 실행하지 않는다 */
