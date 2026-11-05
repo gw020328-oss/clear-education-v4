@@ -29,6 +29,7 @@ define([], function() {
         let operation = null;
         let applicationId = null;
         let session, application, registration, source, reflection;
+        let certificateSnapshot = null;
         let displayed = {};
         let cards;
         let cardsQueued = false;
@@ -90,10 +91,13 @@ define([], function() {
             const [target] = targets.targets;
             return target?.criterionId === 'activity-complete' && target.cmId === 3 && target.module === 'page' ? targets : null;
         };
-        const onlyActivity = rows => activityMode
+        const certificateCompleted = () => certificate()?.state === 'VERIFIED'
+            && session.phase === 'CERTIFICATE_ONLY_RECORDED';
+        const onlyActivity = rows => activityMode && !certificateCompleted()
             ? rows?.filter(row => row.criterionId === 'activity-complete') : rows;
-        const activityView = () => application && activityMode
-            ? {...application, criteria: onlyActivity(application.criteria)} : application;
+        const activityView = () => certificateCompleted()
+            ? certificateSnapshot?.session === session ? certificateSnapshot.view : null
+            : application && activityMode ? {...application, criteria: onlyActivity(application.criteria)} : application;
         const revision = () => application?.target.expectedRevision;
         const canVisit = () => activityTargets() && Number.isSafeInteger(revision()) && revision() > 0;
         const hasActivityEvidence = () => {
@@ -177,6 +181,7 @@ define([], function() {
             status.textContent = messages[unknown ? 'unknown' : message];
         };
         const clear = () => {
+            certificateSnapshot = null;
             session = application = registration = source = reflection = null;
             applicationId = null;
             sourceBound = false;
@@ -506,6 +511,9 @@ define([], function() {
             }
             const task = {write: writes.has(action)};
             pending = task;
+            if (['read-session', 'read-application', 'decision-evidence'].includes(action)) {
+                certificateSnapshot = null;
+            }
             if (action === 'start-certificate') {
                 certificateAttempted = true;
             }
@@ -530,6 +538,45 @@ define([], function() {
                     return;
                 }
                 accept(input, result);
+                if (action === 'read-session' && certificateCompleted()) {
+                    const boundSession = session;
+                    const app = applicationId;
+                    const current = () => pending === task && ready && !closed && !walletBusy
+                        && session === boundSession && applicationId === app && certificateCompleted();
+                    const view = await invoke({action: 'read-application', applicationId: app});
+                    if (!current()) { return; }
+                    const decision = view?.decision;
+                    require(view?.version === 'clear-bootcamp-normal-view.1' && view.displayOnly === true
+                        && view.applicationId === app && view.role === 'PARTICIPANT' && view.target
+                        && view.agreedPayment && Array.isArray(view.criteria)
+                        && id(decision?.id) && Number.isSafeInteger(decision.revision) && decision.revision > 0
+                        && typeof decision.hash === 'string' && decision.hash !== '' && decision.current === true);
+                    const evidence = await invoke({action: 'decision-evidence', applicationId: app});
+                    if (!current()) { return; }
+                    const target = evidence?.manifest?.decision;
+                    require(evidence?.version === 'clear-bootcamp-decision-evidence.1'
+                        && evidence.applicationId === app && evidence.role === 'PARTICIPANT'
+                        && evidence.manifest.version === 'clear-bootcamp-evidence-manifest.1'
+                        && evidence.manifest.applicationId === app
+                        && target?.decisionId === decision.id && target.decisionRevision === decision.revision
+                        && target.decisionHash === decision.hash
+                        && evidence.currentDecision?.decisionId === decision.id
+                        && evidence.currentDecision.applicationActive === true
+                        && evidence.currentDecision.matchesRequestedDecision === true
+                        && Array.isArray(evidence.manifest.criteria) && Array.isArray(evidence.availability));
+                    const row = view.criteria.find(item => item.criterionId === 'python-basic-certificate');
+                    const recorded = evidence.manifest.criteria.find(item => item.criterionId === row?.criterionId);
+                    const available = evidence.availability.find(item => item.criterionId === row?.criterionId);
+                    require(row?.state === 'MET' && row.current === true && id(row.evidenceId)
+                        && Number.isSafeInteger(row.evidenceRevision) && row.evidenceRevision > 0
+                        && recorded?.state === row.state && recorded.evidenceId === row.evidenceId
+                        && recorded.evidenceRevision === row.evidenceRevision && recorded.metadataStatus === 'RECORDED'
+                        && available?.evidenceId === row.evidenceId && available.status === 'VALID_AS_RECORDED');
+                    application = view;
+                    displayed.application = view;
+                    displayed.evidence = evidence;
+                    certificateSnapshot = {session: boundSession, view, evidence};
+                }
                 succeeded = true;
                 show('success');
                 return result;
@@ -565,6 +612,10 @@ define([], function() {
             return result;
         };
         const readOnReturn = async () => {
+            if (certificateCompleted()) {
+                await cardRead('read-session');
+                return {view: activityView()};
+            }
             if (activityVisit) {
                 const visit = activityVisit;
                 if (!enabled('refresh-activity')) {
@@ -594,7 +645,10 @@ define([], function() {
                     approval: source,
                 }),
                 read: readOnReturn,
-                loadEvidence: snapshot => cardRead('decision-evidence', snapshot.applicationId),
+                loadEvidence: snapshot => certificateCompleted()
+                    ? certificateSnapshot?.session === session && snapshot.applicationId === applicationId
+                        ? Promise.resolve(certificateSnapshot.evidence) : Promise.reject(new Error('CLEAR_WORKFLOW_UNAVAILABLE'))
+                    : cardRead('decision-evidence', snapshot.applicationId),
                 targets: () => canVisit() ? activityTargets() : null,
                 // The original page stays mounted while a reviewed link opens a new tab.
                 storage: panels.memoryStore(),

@@ -24,6 +24,19 @@ const connected = (role = 'participant') => ({version: 'clear-moodle-wallet-view
 const session = (applicationId = null, role = 'PARTICIPANT') =>
     ({version: 'clear-bootcamp-normal-session.1', applicationId, role});
 const receipt = {record: {applicationId: 'app-one', operationId: 'op-one'}, current: true};
+const certificateView = () => ({version: 'clear-bootcamp-normal-view.1', displayOnly: true,
+    applicationId: 'app-one', role: 'PARTICIPANT', target: {expectedRevision: 2}, agreedPayment: {},
+    decision: {id: 'decision-one', hash: 'hash-one', revision: 2, current: true, evidenceCurrent: false},
+    criteria: ['activity-complete', 'assignment-submitted', 'reflection-topics', 'python-basic-certificate'].map(criterionId =>
+        ({criterionId, state: criterionId === 'python-basic-certificate' ? 'MET' : 'MISSING', current: true,
+            evidenceId: criterionId === 'python-basic-certificate' ? 'evidence-cert' : null, evidenceRevision: 1}))});
+const certificateEvidence = () => ({version: 'clear-bootcamp-decision-evidence.1', applicationId: 'app-one', role: 'PARTICIPANT',
+    currentDecision: {decisionId: 'decision-one', applicationActive: true, matchesRequestedDecision: true},
+    manifest: {version: 'clear-bootcamp-evidence-manifest.1', applicationId: 'app-one',
+        decision: {decisionId: 'decision-one', decisionHash: 'hash-one', decisionRevision: 2},
+        criteria: [{criterionId: 'python-basic-certificate', state: 'MET', evidenceId: 'evidence-cert', evidenceRevision: 1,
+            metadataStatus: 'RECORDED', verification: {integrity: 'VERIFIED'}, checks: {certificateName: 'Python (Basic)'}}]},
+    availability: [{criterionId: 'python-basic-certificate', evidenceId: 'evidence-cert', status: 'VALID_AS_RECORDED'}]});
 const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
     const buttons = Object.fromEntries(actions.map(workflowAction => [workflowAction,
         {dataset: {workflowAction, workflowChoice: 'AGREE'}}]));
@@ -493,6 +506,8 @@ test('certificate completed phase displays only authenticated matching VERIFIED 
     const ui = fixture(({action}) => {
         if (action === 'create-application') { return {...receipt, record: {...receipt.record, applicationRevision: 1}}; }
         if (action === 'read-session') { return current; }
+        if (action === 'read-application') { return certificateView(); }
+        if (action === 'decision-evidence') { return certificateEvidence(); }
         throw Error('unexpected certificate write');
     }, {cardRoot});
     const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -529,11 +544,89 @@ test('certificate completed phase displays only authenticated matching VERIFIED 
                 await ui.click(action);
             }
         }
-        assert.ok(ui.sent.every(command => ['read-session', 'create-application'].includes(command.action)));
+        assert.ok(ui.sent.every(command => ['read-session', 'create-application', 'read-application', 'decision-evidence'].includes(command.action)));
     } finally {
         ui.mounted.destroy();
         delete globalThis.document;
     }
+});
+
+test('certificate completed evidence uses an atomic current pair and discards failures and late session responses', async () => {
+    const {Node} = installCardDom();
+    const cardRoot = new Node('div');
+    const completed = {...session('app-one'), phase: 'CERTIFICATE_ONLY_RECORDED', certificate: {
+        version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+        state: 'VERIFIED', startAllowed: false, signatureReady: false}};
+    let view = certificateView(), evidence = certificateEvidence(), fail = null, release;
+    let currentSession = {...session('app-one'), conditionTargets: {version: 'clear-student-condition-targets.1',
+        applicationId: 'app-one', courseId: 2, moodleOrigin: 'https://127.0.0.1:19474',
+        targets: [{criterionId: 'activity-complete', cmId: 3, module: 'page'}]}};
+    const ui = fixture(async ({action}) => {
+        if (action === 'read-session') { return currentSession; }
+        if (action === 'read-application') {
+            if (fail === 'view') { throw Error('unavailable'); }
+            return view;
+        }
+        if (action === 'decision-evidence') {
+            if (fail === 'evidence') { throw Error('unavailable'); }
+            if (fail === 'late') { return new Promise(resolve => { release = () => resolve(evidence); }); }
+            return evidence;
+        }
+        throw Error('unexpected write');
+    }, {cardRoot});
+    const flush = () => new Promise(resolve => setImmediate(resolve));
+    const text = () => cardRoot.querySelector('[data-criterion="python-basic-certificate"]')?.textContent ?? '';
+    const refresh = async () => { await ui.click('read-session'); await flush(); await flush(); };
+    try {
+        await refresh(); // Activate the earlier activity-only filter before certificate completion.
+        currentSession = completed;
+        await refresh();
+        assert.match(text(), /MET|충족/);
+        assert.match(text(), /Python \(Basic\).*VERIFIED|VERIFIED.*Python \(Basic\)/s);
+        assert.deepEqual(ui.sent.slice(-3).map(row => row.action), ['read-session', 'read-application', 'decision-evidence']);
+        const bad = [
+            e => { e.applicationId = 'other-app'; },
+            e => { e.manifest.applicationId = 'other-app'; },
+            e => { e.manifest.decision.decisionId = 'other-decision'; },
+            e => { e.manifest.decision.decisionHash = 'other-hash'; },
+            e => { e.manifest.decision.decisionRevision++; },
+            e => { e.currentDecision.matchesRequestedDecision = false; },
+            e => { e.availability[0].status = 'EXPIRED'; },
+            e => { e.manifest.criteria[0].evidenceRevision++; },
+        ];
+        for (const mutate of bad) {
+            evidence = certificateEvidence(); mutate(evidence);
+            await refresh();
+            assert.doesNotMatch(text(), /원천 상태|무결성.*VERIFIED|certificateverified/s);
+            assert.equal(ui.status.textContent, 'failure');
+        }
+        for (const failure of ['view', 'evidence']) {
+            evidence = certificateEvidence(); fail = null; await refresh();
+            assert.match(text(), /VERIFIED/);
+            fail = failure; await refresh();
+            assert.doesNotMatch(text(), /VERIFIED/);
+        }
+        for (const mutate of [v => { v.applicationId = 'other-app'; }, v => { v.decision.current = false; },
+            v => { v.criteria[3].current = false; }]) {
+            fail = null; view = certificateView(); mutate(view); await refresh();
+            assert.equal(ui.status.textContent, 'failure');
+            assert.doesNotMatch(text(), /VERIFIED/);
+        }
+        view = certificateView();
+        fail = 'late';
+        const waiting = ui.click('read-session');
+        await flush();
+        const count = ui.sent.length;
+        await ui.click('read-session');
+        assert.equal(ui.sent.length, count); // An in-flight pair cannot duplicate the reads.
+        await ui.walletDispatch({action: 'cancel'});
+        ui.state(connected());
+        currentSession = session('other-app');
+        await refresh();
+        release(); await waiting; await flush();
+        assert.doesNotMatch(text(), /VERIFIED/);
+        assert.ok(ui.sent.every(row => ['read-session', 'read-application', 'decision-evidence'].includes(row.action)));
+    } finally { ui.mounted.destroy(); delete globalThis.document; }
 });
 
 test('certificate readiness mismatches stay closed and a lost start response cannot restart from polling', async () => {
