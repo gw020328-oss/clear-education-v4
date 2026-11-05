@@ -141,6 +141,8 @@ export function aiComparePanel({
   // 마지막으로 모듈에 넘긴 제안. ① 절에서 학원 원문과 정규 문장을 짝짓는 데 쓴다.
   // 그 뒤 원문이 바뀌어도 이 짝은 **보낸 당시** 기준이어야 한다.
   let lastSent = null;
+  // 서버 제안의 만료 시각에 한 번 다시 그린다.
+  let expiryTimer = null;
 
   // 서버(Gemini) 제안은 운영자 지정으로 덮지 않는다 — 서버가 보류한 조항을 프론트가
   // 실행 가능하게 바꾸면 안 된다(오규원 11/5). 규칙 제안만 지정을 얹는다.
@@ -181,6 +183,8 @@ export function aiComparePanel({
     if (explicit) {
       // 입력마다 유료 모델을 부르지 않는다. 이전 제안은 이 원문의 것이 아니니 비우고,
       // 늦게 오는 답도 버린다. 다시 보려면 「제안 생성」 을 눌러야 한다.
+      // 제안자에게도 알린다 — 진행 중 요청을 끊고 채택한 지문(pin)을 버린다.
+      proposer.invalidate?.();
       proposeStamp += 1; proposing = false; runWhenReady = null;
       base = emptyProposal(); proposedFor = null; overrides.clear(); recompute();
     } else {
@@ -225,7 +229,8 @@ export function aiComparePanel({
     const kind = proposer.kind ?? (proposer.id === 'rules' ? 'rules' : 'model');
     if (kind === 'rules') return el('span.fp-mode', { 'data-mode': 'rules', text: proposer.label });
     const prov = proposal.provenance ?? null;
-    if (!prov) return el('span.fp-mode', { 'data-mode': 'model-idle', text: proposer.idleLabel ?? proposer.label });
+    // 실패·승인 대기도 '생성 전' 이 아니다. 제안자 이름만 보이고 결과는 아래 상자가 말한다.
+    if (!prov) return el('span.fp-mode', { 'data-mode': 'model-idle', text: proposal.outcome ? proposer.label : (proposer.idleLabel ?? proposer.label) });
     return prov.actualModelCall === true
       ? el('span.fp-mode', { 'data-mode': 'model', text: 'Gemini 실제 호출 · 서버 검토 거침' })
       : el('span.fp-mode', { 'data-mode': 'model-fixture', text: 'Gemini 오프라인 응답 대역 · 실제 호출 아님' });
@@ -264,6 +269,8 @@ export function aiComparePanel({
   /** 원문이 바뀌었다 — 이전 제안과 진행 중 요청은 이 원문의 것이 아니다 */
   const invalidate = () => {
     runWhenReady = null;
+    // 글자가 바뀌는 순간 제안자의 세대도 올린다. 갱신 타이머(250ms)를 기다리지 않는다.
+    if (explicit) proposer.invalidate?.();
     if (proposedFor === null && !proposing) { lockRun(); return; } // 이미 무효화했다
     proposeStamp += 1;      // 진행 중 비동기 제안의 늦은 답을 버린다
     proposing = false;
@@ -341,6 +348,19 @@ export function aiComparePanel({
       ? { start: prevInput.selectionStart, end: prevInput.selectionEnd, top: prevInput.scrollTop }
       : null;
     clear(box);
+    // 서버 제안에는 원 만료가 있다(중계 문맥과 D 초안 중 이른 쪽). 지나면 이 원문의
+    // 제안으로 쓰지 않는다 — 보이던 조건을 지우고 '만료' 로 바꾼다. 다시 생성해야 한다.
+    if (expiryTimer !== null) { clearTimeout(expiryTimer); expiryTimer = null; }
+    const expiresAt = proposal.serverBinding?.expiresAt ?? null;
+    if (expiresAt !== null && Date.now() >= expiresAt) {
+      base = expiredProposal(expiresAt); recompute();
+    } else if (expiresAt !== null) {
+      expiryTimer = setTimeout(() => { expiryTimer = null; render(); }, Math.min(expiresAt - Date.now() + 5, 2 ** 31 - 1));
+      expiryTimer.unref?.(); // Node 시험에서 프로세스를 붙잡지 않는다. 브라우저에는 없다
+    }
+    const outcome = proposal.outcome ?? null;
+    const outcomeFailed = outcome !== null && outcome.kind !== 'PROPOSED';
+    const idle = explicit && !proposing && !proposal.provenance && !outcome;
     const s = adapter.current;
     const banner = BANNER[s.state] ?? BANNER[STATE.ERROR];
     const draft = s.payload?.draft ?? null;
@@ -415,13 +435,18 @@ export function aiComparePanel({
           //
           // 실제 안내문은 대부분 조건이 아닌 글이다. 문장마다 "못 읽음" 을 붙여
           // 두면 화면이 심문처럼 보인다. 찾은 것만 보이고, 나머지는 접는다.
-          el('p.fp-proposal-ask', {
+          // 서버 중계 결과(승인 필요·만료·실패·미확인)는 제안과 섞지 않고 따로 보인다.
+          outcomeFailed ? outcomeBox(outcome) : null,
+          outcomeFailed || idle || proposing ? null : el('p.fp-proposal-ask', {
             text: found.length > 0
               ? `${found.length}개 조건을 찾았습니다 — 맞나요?`
               : held.length > 0
                 ? '조건 사이의 관계를 확인해야 해서 자동으로 읽지 않았습니다. 아래 보류한 조항을 봐 주세요.'
                 : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
           }),
+          idle ? el('p.fp-proposal-ask', { text: '아직 제안을 만들지 않았습니다. 「제안 생성」 을 눌러야 한 번 보냅니다.' }) : null,
+          // 받은 제안의 출처·호출·만료. 모델 응답과 도구 실행은 다른 사실이다.
+          outcome?.kind === 'PROPOSED' ? proposedFacts(proposal) : null,
           found.length > 0
             ? el('ul.fp-proposal-list', {}, found.map((c) => el('li.fp-proposal-row', {
               'data-read': 'yes', 'data-source': c.source ?? 'none',
@@ -523,7 +548,10 @@ export function aiComparePanel({
             'data-role': 'generate',
             disabled: proposing || typing() || text.trim() === '' ? 'disabled' : null,
             onClick: generate,
-          }, [el('span', { text: proposing ? 'Gemini 에 보내는 중…' : proposal.provenance ? '제안 다시 생성' : '제안 생성 (Gemini)' })])
+          }, [el('span', {
+            text: proposing ? (proposer.busyLabel ?? 'Gemini 에 보내는 중…')
+              : proposal.provenance || outcome ? '제안 다시 생성' : (proposer.generateLabel ?? '제안 생성 (Gemini)'),
+          })])
           : null,
         (runButton = el('button.fp-btn', {
           type: 'button',
@@ -532,7 +560,7 @@ export function aiComparePanel({
           disabled: s.busy || !proposalReady() || proposal.readable === 0 || proposal.serverBinding ? 'disabled' : null,
           onClick: run,
         }, [el('span', {
-          text: proposal.serverBinding ? '표시 전용 · 실행은 서버 중계 연결 뒤'
+          text: proposal.serverBinding ? (proposer.displayOnlyButton ?? '표시 전용 · 실행은 서버 중계 연결 뒤')
             : s.busy ? '구조화 중…'
               : !proposalReady() ? (proposing ? '제안을 만드는 중…' : explicit ? '제안 생성 전' : '원문 반영 중…')
                 : proposal.complete ? '이대로 구조화'
@@ -543,10 +571,10 @@ export function aiComparePanel({
       explicit
         ? el('p.fp-note', {
           text: proposal.serverBinding
-            ? 'Gemini 제안은 표시 전용입니다. 실행은 CLEAR 서버가 중계하는 경로가 붙은 뒤에 됩니다(계약 미확정). '
-              + '서버가 보류한 조항은 직접 지정으로 풀 수 없고, 원문을 고쳐 다시 생성해야 합니다.'
-            : '입력할 때마다 부르지 않습니다. 「제안 생성」 을 누를 때 한 번 호출합니다(실제 연결 시 유료). '
-              + '원문을 고치면 이전 제안은 비워집니다.',
+            ? (proposer.displayOnlyNote ?? 'Gemini 제안은 표시 전용입니다. 실행은 CLEAR 서버가 중계하는 경로가 붙은 뒤에 됩니다(계약 미확정). '
+              + '서버가 보류한 조항은 직접 지정으로 풀 수 없고, 원문을 고쳐 다시 생성해야 합니다.')
+            : (proposer.idleNote ?? '입력할 때마다 부르지 않습니다. 「제안 생성」 을 누를 때 한 번 호출합니다(실제 연결 시 유료). '
+              + '원문을 고치면 이전 제안은 비워집니다.'),
         })
         : null,
 
@@ -744,3 +772,69 @@ const section = (title, children) => [
 const pair = (k, v) => el('div.fp-pair', {}, [
   el('dt', { text: k }), el('dd', { text: String(v) }),
 ]);
+
+const clock = (ms) => {
+  const d = new Date(ms);
+  return [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
+};
+
+/** 서버 제안의 만료. 조건을 지우고 '만료' 결과만 남긴다 — 다시 생성해야 한다 */
+function expiredProposal(expiresAt) {
+  return Object.freeze({
+    ...emptyProposal(),
+    outcome: Object.freeze({
+      kind: 'EXPIRED', phase: 'display', code: 'PROPOSAL_EXPIRED', source: 'CLIENT_CHECK', httpStatus: null,
+      call: '모델 응답은 받았음 · 만료로 표시 중단', text: `제안 유효 시각(${clock(expiresAt)})이 지났습니다. 다시 생성해 주세요.`,
+    }),
+  });
+}
+
+/** 서버 중계 결과의 제목. 넷을 섞지 않는다 — 승인 필요 / 만료 / 실패 / 결과 미확인 */
+const OUTCOME_TITLE = Object.freeze({
+  APPROVAL_REQUIRED: '직접 승인 필요 — 생성 요청을 보내지 않았습니다',
+  EXPIRED: '만료 — 이 원문으로 다시 생성해야 합니다',
+  FAILED: '제안 생성 실패',
+  UNKNOWN: '결과 미확인 — 응답을 받지 못했습니다',
+});
+
+function outcomeBox(o) {
+  const prepared = o.prepared ?? null;
+  const limits = prepared?.limits ?? null;
+  return el('div.fp-proposal-warn', { 'data-role': 'relay-outcome', 'data-outcome': o.kind }, [
+    el('p.fp-proposal-ask', { text: OUTCOME_TITLE[o.kind] ?? '제안 생성 실패' }),
+    el('p.fp-proposal-note', { text: o.text ?? '' }),
+    el('dl.fp-pairs', {}, [
+      pair('모델 호출', o.call),
+      pair('응답 출처', o.source === 'RELAY' ? 'CLEAR 서버 중계' : o.source === 'D_HTTP' ? 'D 서비스 HTTP 오류(중계가 그대로 전달)'
+        : o.source === 'TRANSPORT' ? '브라우저 전송' : '화면 검사'),
+      o.code ? pair('코드', o.httpStatus ? `${o.code} · HTTP ${o.httpStatus}` : o.code) : null,
+      prepared ? pair('승인 대상 bodyHash', prepared.bodyHash) : null,
+      prepared?.model ? pair('모델', prepared.model) : null,
+      limits ? pair('호출 상한', `생성 ${limits.generateContent}회 · 자동 재시도 ${limits.automaticRetries}회 · 출력 ${limits.maxOutputTokens} 토큰`) : null,
+      limits ? pair('비용 상한(검토 시점)', `US$${limits.maximumGenerationCostUsd} · 가격 확인일 ${limits.priceCheckedOn}`) : null,
+    ].filter(Boolean)),
+    o.kind === 'APPROVAL_REQUIRED'
+      ? el('p.fp-note', {
+        text: '운영 담당자가 이 원문 그대로(앞뒤 공백 포함)의 bodyHash 를 직접 승인해 서버에 등록한 뒤, '
+          + '다시 「제안 생성」 을 누르면 그때 한 번 보냅니다. 화면의 클릭이나 이 지문만으로 승인이 생기지 않습니다.',
+      })
+      : null,
+    o.kind === 'UNKNOWN'
+      ? el('p.fp-note', { text: '같은 승인으로 자동 재시도하지 않습니다. 이미 소비됐을 수 있어 다시 생성하려면 새 승인이 필요할 수 있습니다.' })
+      : null,
+  ].filter(Boolean));
+}
+
+/** 받은 제안의 사실 — 모델 호출 · 중계 · 만료 · 실행 계약. 도구 실행 결과가 아니다 */
+function proposedFacts(proposal) {
+  const o = proposal.outcome;
+  const binding = proposal.operatorBinding ?? null;
+  return el('dl.fp-pairs', { 'data-role': 'proposal-facts' }, [
+    pair('모델 호출', o.call),
+    pair('모델 전송', o.modelExecution === 'ACTUAL' ? '실제 Gemini' : '오프라인 시험 전송(실제 Gemini 아님)'),
+    pair('중계', 'CLEAR 서버 · 운영자 로그인·강좌 범위 확인 후 D 로 서버 간 요청'),
+    binding ? pair('유효 시각', `${clock(binding.expiresAt)}까지 (중계 ${clock(binding.outerExpiresAt)} · D 초안 ${clock(binding.dExpiresAt)} 중 이른 쪽)`) : null,
+    pair('실행', '표시 전용(DISPLAY_ONLY) · 도구 실행·Moodle 조회·Reclaim 검증 없음'),
+    proposal.held > 0 ? pair('보류', `${proposal.held}개 조항 — 전체 실행 불가`) : null,
+  ].filter(Boolean));
+}
