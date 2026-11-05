@@ -1,0 +1,36 @@
+{
+  "version": "clear-c-p0-demo-handoff.1",
+  "reportDeadline": "2026-11-06T02:53:54+09:00",
+  "cProductHead": "f0c7ece9d77b9a4a8f5a6a8afa89a3e57db0f00d",
+  "package": {
+    "path": "/private/tmp/clear-c-click-dom-evidence/local_clearbridge-0.1.30.zip",
+    "sha256": "dfa1a344f7d16580f586aa55109a7f62e7fbacbdd7dead3eaeafcb30376ab930",
+    "release": "0.1.30",
+    "version": 2026110518,
+    "existingVerification": "/private/tmp/clear-c-click-dom-evidence/verification.json",
+    "newPackaging": false
+  },
+  "runbook": "P0_DEMO_RUNBOOK.ko.txt",
+  "readiness": {
+    "existingPackageAndEvidence": "AVAILABLE",
+    "currentApprovedRuntimeSurface": "AWAITING_A",
+    "currentInstallObservation": "NOT_PERFORMED",
+    "video": "NOT_CAPTURED",
+    "recordingTool": "QuickTime installed; native recording UI permission/save/playback unverified",
+    "actualFourConditionsConsentPayment": "AWAITING_A_RESULT"
+  },
+  "recordingScope": [
+    "safe card states",
+    "same decision evidence metadata",
+    "actual receipt if completed"
+  ],
+  "excluded": [
+    "login",
+    "wallet signature prompt/message",
+    "raw learner text",
+    "cookies/tokens/session/entire console",
+    "unrelated desktop windows"
+  ],
+  "newTestsRun": false,
+  "p1BundleIncluded": false
+}
