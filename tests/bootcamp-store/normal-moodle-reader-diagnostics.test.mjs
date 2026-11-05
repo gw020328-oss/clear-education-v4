@@ -33,3 +33,11 @@ test('diagnostics cannot replace original error, execute getter, or grow beyond 
  for(let n=0;n<20;n++)await assert.rejects(c.call('private method'),e=>e===error);
  assert.equal(getterRead,false);assert.equal(d.snapshot().length,16);assert(d.snapshot().every(e=>e.method==='UNSUPPORTED_METHOD'&&e.httpStatus===null));
 });
+
+test('owner probe fixed codes and bounded system causes survive without Docker output',async()=>{
+ for(const code of ['NATIVE_OWNER_UNAVAILABLE','NATIVE_OWNER_DOCKER_UNAVAILABLE']){
+  const cause=Object.assign(Error('private docker stderr'),{code:'EAGAIN'});const error=Error(code,{cause});Object.defineProperty(error,'failurePhase',{value:'NATIVE_OWNER_CONTAINER_PROBE'});
+  const d=createNormalMoodleReaderDiagnostics();await assert.rejects(d.wrap({async call(){throw error;}}).call('core_webservice_get_site_info'),e=>e===error);
+  const [event]=d.snapshot();assert.equal(event.code,code);assert.equal(event.failurePhase,'NATIVE_OWNER_CONTAINER_PROBE');assert.equal(event.causes[0].code,'EAGAIN');assert(!JSON.stringify(event).includes('private'));
+ }
+});
