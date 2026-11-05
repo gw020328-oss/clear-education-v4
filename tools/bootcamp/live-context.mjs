@@ -224,7 +224,8 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    }});
   const activityReturn=activityReturnOnly?createNormalActivityReturn({store,mapping,origin:origin.origin,
    startedAt,now,signal:controller.signal,sourceWindows,commandScope,authorize:(c,w)=>ui.authorize(c,w),
-   getBinding:()=>{requireUiRule(moodleLogin?.native===true,'BC_ACTIVITY_MODE');if(app)ui.participant();return {app,user};},
+   getBinding:()=>{requireUiRule(moodleLogin?.native===true,'BC_ACTIVITY_MODE');return {app,user};},
+   validateParticipant:()=>ui.participant(),
    key,observeFailure:error=>{report.activityRefreshFailure=executionErrorSummary(error);write();}}):null;
   const getSession=context=>{const actor=ui.authorize(context,false);if(app&&!failureState)readNormalView(()=>store.getOperationsProjection(context,app));
    // Observe only the real authenticated UI request, never a Moodle poll. Keep

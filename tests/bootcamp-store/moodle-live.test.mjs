@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createLiveMoodleConsumer} from '../../src/bootcamp/moodle-live-consumer.mjs';
 import {createBootcampStore} from '../../src/bootcamp/store.mjs';
+import {createNormalUiSession} from '../../src/bootcamp/ui-session.mjs';
 import {storeFixture,START} from './fixture.mjs';
 import {p0Hash} from '../../specs/bootcamp/p0-contract.mjs';
 async function fixture(t,{afterRead=()=>{},configure=()=>{}}={}){
@@ -35,13 +36,17 @@ test('activity return queues one fresh Moodle read and records only the pinned p
  const f=await fixture(t),controller=new AbortController();
  const commands=await commandFixture({authentication:f.service,
   contexts:{PARTICIPANT:f.aliceContext,COURSE_OPERATOR:f.operatorContext}});
- t.after(()=>{controller.abort();commands.owner.close();});
+ const ui=createNormalUiSession({authentication:f.service,participantWallet:f.aliceContext.wallet.toLowerCase(),
+  operatorWallet:f.operatorContext.wallet.toLowerCase(),getApplication:(context,id)=>f.store.getApplication(context,id),
+  now:()=>f.time,commandScope:commands.scope});
+ ui.bindParticipant(f.aliceContext,f.app,{dataMode:'RECLAIM_SIGNED_RECORD'});
+ t.after(()=>{controller.abort();commands.owner.close();ui.close();});
  const refresh=createNormalActivityReturn({store:f.store,
   mapping:{courseId:2,targets:{activity:{cmId:3,module:'page'}}},origin:'https://127.0.0.1:9477',
   startedAt:START,now:()=>f.time,signal:controller.signal,sourceWindows:new Map(),
   commandScope:commands.scope,authorize:(context,write)=>{
    const actor=f.service.authorizeWorkflow(context,write);commands.scope.assertContext(context);return actor;
-  },getBinding:()=>({app:f.app,user:f.aliceContext}),key:f.key});
+  },getBinding:()=>({app:f.app,user:f.aliceContext}),validateParticipant:()=>ui.participant(),key:f.key});
  const before=f.view(f.app);
  const body={criterionId:'activity-complete',expectedRevision:before.revision};
  const post=async(role,key,data=body)=>{

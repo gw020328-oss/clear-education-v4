@@ -8,7 +8,7 @@ import {readNormalView} from './normal-current-view.mjs';
 const criterionId = 'activity-complete';
 
 export function createNormalActivityReturn({store, mapping, origin, startedAt, now, signal,
-  sourceWindows, commandScope, authorize, getBinding, key, observeFailure}) {
+  sourceWindows, commandScope, authorize, getBinding, validateParticipant=()=>{}, key, observeFailure}) {
   const {courseId, targets: {activity}} = mapping;
   check(courseId === 2 && activity.module === 'page' && activity.cmId === 3,'BC_ACTIVITY_MAPPING');
   const owner = new AsyncResource('CLEAR_MOODLE_ACTIVITY_OWNER');
@@ -18,6 +18,8 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
 
   function binding() {
     check(!signal.aborted && now() < startedAt + 1800,'BC_ACTIVITY_CLOSED');
+    // This snapshot is also read inside SQLite transactions. Keep projection
+    // reads out of it so source authority never reenters the store.
     return getBinding();
   }
 
@@ -37,6 +39,7 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
       const actor = authorize(context,true);
       const {app, user} = binding();
       check(actor.role === 'participant' && app === applicationId && context.token === user.token,'FORBIDDEN');
+      validateParticipant();
       const previous = attempts.get(requestKey);
       if (previous) {
         check(previous.expectedRevision === body.expectedRevision,'BC_IDEMPOTENCY_CONFLICT');
@@ -64,14 +67,13 @@ export function createNormalActivityReturn({store, mapping, origin, startedAt, n
       // changing the authority of the participant's asynchronous source probe.
       setImmediate(() => owner.runInAsyncScope(async () => {
         try {
-          assertIntent();
-          const current = binding();
-          check(current.app === app && current.user.token === user.token,'FORBIDDEN');
           const assertAuthority = () => {
             assertIntent();
             const current = binding();
             check(current.app === app && current.user.token === user.token,'FORBIDDEN');
           };
+          assertAuthority();
+          validateParticipant();
           const deadline = Math.min(startedAt + 1800, now() + 900);
           if ((sourceWindows.get(criterionId) ?? 0) <= now()) sourceWindows.set(criterionId,deadline);
           assertAuthority();
