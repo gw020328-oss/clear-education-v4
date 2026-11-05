@@ -686,7 +686,8 @@ define([], function() {
                 onChange: paintCards,
             });
         };
-        const click = event => {
+        // Capture before the target tracker queues a card replacement between event listeners.
+        const captureVisit = event => {
             const link = event.target.closest?.('a.crc-go');
             if (link && cardRoot?.contains(link) && ready && canVisit() && !unknown) {
                 const target = activityTargets().targets.find(item => link.href === origin
@@ -699,11 +700,14 @@ define([], function() {
                     activityResult = null;
                 }
             }
+        };
+        const click = event => {
             const button = event.target.closest?.('[data-workflow-action]');
             if (buttons.includes(button)) {
                 return run(button.dataset.workflowAction, button.dataset.workflowChoice);
             }
         };
+        root.addEventListener('click', captureVisit, true);
         root.addEventListener('click', click);
         acknowledgment.addEventListener('change', render);
         render();
@@ -728,6 +732,7 @@ define([], function() {
             destroy() {
                 closed = true;
                 disconnect();
+                root.removeEventListener('click', captureVisit, true);
                 root.removeEventListener('click', click);
                 acknowledgment.removeEventListener('change', render);
             },

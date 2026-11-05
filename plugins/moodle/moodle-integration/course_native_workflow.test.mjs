@@ -59,8 +59,8 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
             '[data-native-condition-cards]': cardRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
             '[data-workflow-status]': status, '#clearbridge-application-status': applicationStatus, '[data-workflow-ack]': ack,
         })[selector],
-        addEventListener: (event, fn) => { listeners[event] = fn; },
-        removeEventListener: event => { delete listeners[event]; },
+        addEventListener: (event, fn, capture = false) => { listeners[event + (capture ? 'Capture' : '')] = fn; },
+        removeEventListener: (event, _fn, capture = false) => { delete listeners[event + (capture ? 'Capture' : '')]; },
     };
     let state, walletDispatch;
     const sent = [];
@@ -88,7 +88,11 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
     });
     return {mounted, sent, validated, state, buttons, status, panelStatus, activityStatus, applicationStatus, details, ack, walletDispatch,
         click: action => listeners.click?.({target: {closest: () => buttons[action]}}),
-        clickLink: link => listeners.click?.({target: {closest: selector => selector === 'a.crc-go' ? link : null}})};
+        clickLink: link => {
+            const event = {target: {closest: selector => selector === 'a.crc-go' ? link : null}};
+            listeners.clickCapture?.(event);
+            return listeners.click?.(event);
+        }};
 };
 
 test('explicit workflow follows returned application ID, preserves reviewed objects and verifies canonical receipt', async () => {
