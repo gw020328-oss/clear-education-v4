@@ -73,17 +73,33 @@ export class BootcampError extends Error {
    *   "기대한 내보내기 이름과 실제 받은 이름" 같은 것을 담는다. 코드만으로는
    *   무엇이 어긋났는지 알 수 없어 붙인다. 서버 본문을 그대로 넣지 않는다.
    */
-  constructor(code, { outcome = 'NOT_SENT', status = null, detail = null } = {}) {
+  constructor(code, { outcome = 'NOT_SENT', status = null, detail = null, previewFailure = null } = {}) {
     super(code);
     this.name = 'BootcampError';
     this.code = code;
     this.outcome = outcome;
     this.status = status;
     this.detail = detail;
+    // 운영자 조건 미리보기 중계(/bootcamp/preview/*)의 실패 종류·코드. 그 외 경로는 null
+    this.previewFailure = previewFailure;
   }
 }
 
 const fail = (code, outcome, status) => new BootcampError(code, { outcome, status });
+
+/**
+ * 운영자 조건 미리보기 중계의 실패 envelope 에서 **종류와 코드만** 꺼낸다.
+ * 본문을 그대로 넘기지 않는다. RELAY(중계가 거절)와 D_HTTP(D 가 HTTP 오류로 답함)는
+ * 다른 사실이라 섞지 않는다. D_HTTP 에는 모델 호출 여부 정보가 없다.
+ */
+const PREVIEW_CODE = /^[A-Z][A-Z0-9_]{0,63}$/;
+function previewFailureOf(body) {
+  const f = body?.version === 'clear-operator-preview.1' && body.stage === 'FAILED' ? body.failure : null;
+  if (f?.kind === 'RELAY' && PREVIEW_CODE.test(f.code ?? '')) return Object.freeze({ kind: 'RELAY', code: f.code });
+  if (f?.kind === 'D_HTTP' && Number.isInteger(f.status) && f.error?.version === 'clear-external-preview-error.1'
+    && PREVIEW_CODE.test(f.error.code ?? '')) return Object.freeze({ kind: 'D_HTTP', status: f.status, code: f.error.code });
+  return null;
+}
 
 /** 응답 본문에서 코드를 꺼낸다. 기존 API 는 {code}, 부트캠프는 {error} */
 const codeOf = (body) => {
@@ -166,12 +182,12 @@ export function createBootcampTransport({
 
       if (!response.ok) {
         const code = codeOf(value);
-        throw fail(
-          code ?? 'BC_TRANSPORT_HTTP',
+        throw new BootcampError(code ?? 'BC_TRANSPORT_HTTP', {
           // 5xx 는 처리됐는지 알 수 없다. 쓰기였다면 멱등 키로 확인해야 한다.
-          method === 'GET' || response.status < 500 ? 'HTTP_ERROR' : 'UNKNOWN',
-          response.status,
-        );
+          outcome: method === 'GET' || response.status < 500 ? 'HTTP_ERROR' : 'UNKNOWN',
+          status: response.status,
+          previewFailure: previewFailureOf(value),
+        });
       }
       return value;
     } catch (error) {

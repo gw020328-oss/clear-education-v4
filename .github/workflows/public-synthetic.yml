@@ -91,6 +91,8 @@ jobs:
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs specs/m3/demo.mjs
       - name: Offline Moodle preparation vectors and package checks
         run: ./tools/node --test tests/moodle-preparation/*.test.mjs
+      - name: Offline agent-preview contracts and condition structuring
+        run: ./tools/node --import ./tests/agent-preview/network-block.mjs --test tests/agent-preview/*.test.mjs
       - name: Offline AI policy and document prechecks
         run: |
           ./tools/node --import ./tests/ybm-collector/network-guard.mjs --test tests/ai-policy/*.test.mjs tests/document-precheck/*.test.mjs

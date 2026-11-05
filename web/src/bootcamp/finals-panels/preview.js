@@ -16,10 +16,14 @@ import { linkFixture, saveFixture } from './course-link-fixtures.js';
 import { PRESETS, COMBOS, METRICS_SUMMARY, REAL_NOTICE } from './fixtures.js';
 import { RULES_PROPOSER } from './ai-compare.js';
 import { OFFLINE_GEMINI_PROPOSER } from './gemini-fixture.js';
+import { createReplayOperatorProposer, REPLAY_TEXTS } from './operator-relay-standin.js';
 
 // ④ 는 **실제 공개 안내문**이다. 우리 조건 넷 중 셋만 있고 HackerRank 는
 // 없다 — 그래서 셋만 찾는 것이 맞는 동작이다. 합성 결과는 그 셋의 조합
 // fixture 에서 나온다.
+// 녹화 재생 예문 이름. 순서는 녹화 파일의 순서다.
+const REPLAY_LABEL = ['① 활동+과제', '② +회고', '③ +HackerRank', '또는(보류)', '한 문장 여러 조건(보류)', '④ 실제 안내문', '승인 전', '응답 유실', 'D 오류', '만료'];
+
 const DEMO_PRESETS = [
   ...PRESETS.map(({ id, label, source }) => ({ id, label, source })),
   { id: 'real-notice', label: '④ 메타코드 실제 안내문', source: REAL_NOTICE },
@@ -34,7 +38,9 @@ const DEMO_PRESETS = [
  * @param {HTMLElement} root
  * @param {object} [options]
  * @param {string} [options.mode]      SYNTHETIC | ACTUAL — 주소의 ?mode= 로도 바꾼다
- * @param {string} [options.proposer]  'rules' | 'gemini' — 주소의 ?proposer= 로 바꾼다.
+ * @param {string} [options.proposer]  'rules' | 'gemini' | 'operator' — 주소의 ?proposer= 로 바꾼다.
+ *   'operator' 는 운영자 제안자(서버 중계 계약) + **녹화 재생 대역**이다. 변환·화면 코드는
+ *   실제 것이고, 응답만 별도 환경에서 녹화한 HTTP 응답이다.
  *   'gemini' 는 **오프라인 응답 대역**이다. 실제 Gemini 호출이 아니고, 「제안 생성」 을
  *   눌러야 한 번 돈다. 실제 연결 때는 propose 만 CLEAR 서버 중계 호출로 바뀐다.
  */
@@ -60,11 +66,13 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
   // ① 에서 시작한다. 발표자가 ②③ 을 눌러 조건이 느는 것을 보여준다.
   const first = PRESETS[0].source;
   const useGemini = proposer === 'gemini';
+  const useOperator = proposer === 'operator';
   const aiPanel = aiComparePanel({
     adapter: ai,
     source: first,
-    presets: DEMO_PRESETS,
-    proposer: useGemini ? OFFLINE_GEMINI_PROPOSER : RULES_PROPOSER,
+    // 녹화 재생 대역은 녹화한 원문만 답한다. 예문도 그 원문들이다.
+    presets: useOperator ? REPLAY_TEXTS.map((source, i) => ({ id: `replay-${i}`, label: REPLAY_LABEL[i] ?? source.slice(0, 16), source })) : DEMO_PRESETS,
+    proposer: useOperator ? createReplayOperatorProposer() : useGemini ? OFFLINE_GEMINI_PROPOSER : RULES_PROPOSER,
   });
   const opsPanel = opsMetricsPanel({ adapter: ops });
 
@@ -96,11 +104,15 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
       // 제안자 전환. 같은 확인 화면에 규칙 / Gemini(오프라인 대역) 를 번갈아 끼운다.
       el('div.fp-presets', { role: 'group', 'aria-label': '제안자' }, [
         el('span.fp-label', { text: '제안자' }),
-        ...[['rules', '프론트 규칙 (지금)'], ['gemini', 'Gemini 오프라인 대역 (제안 생성 버튼)']].map(([id, label]) => {
+        ...[['rules', '프론트 규칙 (지금)'], ['gemini', 'Gemini 오프라인 대역 (제안 생성 버튼)'], ['operator', '운영자 서버 중계 (녹화 재생)']].map(([id, label]) => {
           const href = `?mode=${mode === DATA_MODE.ACTUAL ? 'ACTUAL' : 'SYNTHETIC'}&proposer=${id}`;
-          return el('a.fp-chip', { href, 'aria-pressed': (useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
+          return el('a.fp-chip', { href, 'aria-pressed': (useOperator ? 'operator' : useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
         }),
       ]),
+      useOperator
+        ? el('p', { text: '운영자 서버 중계 · 녹화 재생 대역: 기존 운영자 로그인 + B 중계 + D(오프라인 모델 전송)를 별도 환경에서 돌려 녹화한 HTTP 응답을 재생합니다. '
+          + '변환기·화면은 실제 코드입니다. 이 페이지는 로그인·강좌 범위·승인을 확인하지 않고, 녹화에 없는 원문은 답하지 않습니다. 실제 Gemini 호출 아님. 제안은 표시 전용입니다.' })
+        : null,
       useGemini
         ? el('p', { text: 'Gemini 대역: 서버가 Gemini 로 할 분류를 이 페이지 안에서 흉내 냅니다. 실제 호출 아님. 한 조항 = 한 조건이고, 여러 조건이 한 문장에 있으면 서버처럼 보류합니다. 제안은 표시 전용입니다.' })
         : null,
@@ -114,7 +126,8 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
   // 합성 모드에서는 바로 한 번 그려 둔다. 심사위원 앞에서 버튼부터 찾지
   // 않도록. 실제 모드는 사람이 눌러야 돈다.
   if (mode === DATA_MODE.SYNTHETIC) {
-    void ai.request(first);
+    // 운영자 중계 모드는 규칙 합성 결과를 미리 깔지 않는다 — 서버 제안과 섞여 보인다.
+    if (!useOperator) void ai.request(first);
     void ops.request();
     void linkLoad.request('unset');
   }
@@ -126,6 +139,6 @@ if (typeof window !== 'undefined' && document.querySelector('#finals-root')) {
   const params = new URL(window.location.href).searchParams;
   mountFinalsPreview(document.querySelector('#finals-root'), {
     mode: params.get('mode') === 'ACTUAL' ? DATA_MODE.ACTUAL : DATA_MODE.SYNTHETIC,
-    proposer: params.get('proposer') === 'gemini' ? 'gemini' : 'rules',
+    proposer: ['gemini', 'operator'].includes(params.get('proposer')) ? params.get('proposer') : 'rules',
   });
 }

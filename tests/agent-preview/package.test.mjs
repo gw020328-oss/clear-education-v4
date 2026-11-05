@@ -19,13 +19,20 @@ test('tarball installs offline in clean directory and standalone example execute
   const result=JSON.parse(output);assert.equal(result.observations.length,4);assert.equal(result.executionMode,'PUBLIC_SYNTHETIC');assert.equal(result.paymentAllowed,false);
   execFileSync(process.execPath,['--input-type=module','-e',`
    import assert from 'node:assert/strict';
-   import {structureSynthetic,buildPlan,validatePlan,executePublicDemo} from '@clear/preview-core';
+   import {structureSynthetic,buildPlan,validatePlan,executePublicDemo,reviewModelProposal} from '@clear/preview-core';
    const d=structureSynthetic('Moodle 활동 완료'),p=structuredClone(buildPlan(d));
    p.steps.paymentAllowed=true;p.steps[0].dependsOn.external='outside';
    assert.equal(validatePlan(p,d).ok,false);assert.throws(()=>executePublicDemo(p,d),/DTO_JSON/);
    const original=structureSynthetic('Moodle 활동 완료'),valid=buildPlan(original),bad=structuredClone(original);
    bad.conditions[0].url=undefined;assert.equal(validatePlan(valid,bad).ok,false);
+   const source='강의를 안 들어도 됩니다';
+   const rows=[{quote:source,start:0,end:source.length,status:'SUPPORTED',capability:'MOODLE_ACTIVITY_COMPLETION.1',question:null}];
+   const proposed=reviewModelProposal(source,rows);
+   assert.equal(proposed.version,'clear-preview-model-draft.2');
+   assert.deepEqual(proposed.modelRows,rows);
+   assert.throws(()=>buildPlan(reviewModelProposal(source,rows,proposed.proposalHash)),/DRAFT_NOT_READY/);
   `],{cwd:clean,encoding:'utf8'});
   assert.equal(JSON.parse(readFileSync(join(clean,'node_modules/@clear/preview-core/package.json'))).dependencies,undefined);
+  assert.equal(JSON.parse(readFileSync(join(clean,'node_modules/@clear/preview-core/package.json'))).version,'0.1.2');
  } finally {rmSync(dir,{recursive:true,force:true});}
 });
