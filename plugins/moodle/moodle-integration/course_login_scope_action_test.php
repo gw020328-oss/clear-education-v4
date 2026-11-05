@@ -15,7 +15,8 @@ namespace local_clearbridge {
         public static function proofs(...$args) { return ['browserProof' => str_repeat('b',64), 'finishProof' => str_repeat('f',64)]; }
         public function request($operation, $fields = []) {
             $GLOBALS['calls'][] = ['operation' => $operation, 'fields' => $fields];
-            if ($this->diagnostic && isset($GLOBALS['case']['diagnostic'])) {
+            if ($this->diagnostic && isset($GLOBALS['case']['diagnostic'])
+                    && ($GLOBALS['case']['diagnostic']['onlyOperation'] ?? $operation) === $operation) {
                 $case = $GLOBALS['case']['diagnostic'];
                 ($this->diagnostic)($case['phase'], 'HTTP', $case['http']);
                 if (!empty($case['reject'])) {
@@ -246,14 +247,14 @@ try {
         if ($status!==($ok?200:403) || (!$ok && $reply!==['status'=>'UNAVAILABLE'])) {
             throw new RuntimeException('diagnostics changed public response');
         }
-        if (!$events || $events[0]!==['version'=>1,'event'=>'ENTER','phase'=>'INPUT',
+        if (!$events || $events[0]!==['version'=>2,'event'=>'ENTER','phase'=>'INPUT','operation'=>'AUTHORIZE_COMMAND',
                 'origin'=>'LOGIN_ACTION','upstreamHttpStatus'=>null]) { throw new RuntimeException('missing safe entry'); }
         if ($scenario!=='sink-fails') {
             $last=end($events);
             $phase=match($scenario) {'ok'=>'RESPONSE_PROJECTION','fields'=>'INPUT_FIELDS','sesskey'=>'SESSKEY',
                 'permission'=>'MOODLE_AUTHORITY','intent'=>'SESSION_INTENT','upstream'=>'AUTHORITY_TRANSPORT',
                 'unknown-phase'=>'CLIENT_DISPATCH'};
-            if ($last!==['version'=>1,'event'=>$ok?'SUCCEEDED':'REJECTED','phase'=>$phase,
+            if ($last!==['version'=>2,'event'=>$ok?'SUCCEEDED':'REJECTED','phase'=>$phase,'operation'=>'AUTHORIZE_COMMAND',
                     'origin'=>$scenario==='upstream'?'LOGIN_CLIENT':'LOGIN_ACTION',
                     'upstreamHttpStatus'=>$scenario==='upstream'?503:null]) { throw new RuntimeException('wrong failure stage'); }
             if (count(array_filter($events,static fn($row)=>$row['event']==='REJECTED'))!==($ok?0:1)) {
@@ -275,11 +276,54 @@ try {
     }
     echo "PASS actual PHP diagnostic upstream status is only integer 100..599 or null\n";
     $case=['scope'=>$scope,'attempt'=>$old,'user'=>42];
-    foreach (['status','end','finish','start','execute-command'] as $operation) {
+    foreach (['status','end','finish','execute-command'] as $operation) {
         [,,,$events]=$send($case,$operation,['intentTarget'=>$oldtarget]);
         if ($events!==[]) { throw new RuntimeException('non-command diagnostic emitted'); }
     }
     echo "PASS actual PHP diagnostics stay silent for all other operations\n";
+    foreach (['new','replace','sesskey','permission','challenge','end-failure','start-failure','sink-fails'] as $scenario) {
+        $case=['scope'=>$scope,'attempt'=>$scenario==='new'?null:$old,'user'=>42];
+        $extra=['challenge'=>str_repeat('2',64)];
+        if ($scenario==='sesskey') { $case['sesskey']='SYNTHETIC_PRIVATE_SESSKEY'; }
+        if ($scenario==='permission') { $case['permission']=false; }
+        if ($scenario==='challenge') { $extra['challenge']='SYNTHETIC_PRIVATE_CHALLENGE'; }
+        if ($scenario==='sink-fails') { $case['sinkfails']=true; }
+        if ($scenario==='replace') {
+            $case['diagnostic']=['phase'=>'AUTHORITY_TRANSPORT','http'=>200,'onlyOperation'=>'end'];
+        }
+        if (in_array($scenario,['end-failure','start-failure'],true)) {
+            $case['diagnostic']=['phase'=>'AUTHORITY_TRANSPORT','http'=>503,'reject'=>true,
+                'onlyOperation'=>$scenario==='end-failure'?'end':'start'];
+        }
+        [$reply,$state,$status,$events]=$send($case,'start',$extra);
+        $ok=in_array($scenario,['new','replace','sink-fails'],true);
+        if ($status!==($ok?200:403) || (!$ok && $reply!==['status'=>'UNAVAILABLE'])) {
+            throw new RuntimeException('start diagnostic changed response');
+        }
+        $last=end($events);
+        if ($scenario!=='sink-fails') {
+            $phase=match($scenario) {'new','replace'=>'RESPONSE_PROJECTION','sesskey'=>'SESSKEY',
+                'permission'=>'MOODLE_AUTHORITY','challenge'=>'SESSION_INTENT',default=>'AUTHORITY_TRANSPORT'};
+            if ($last['phase']!==$phase || $last['event']!==($ok?'SUCCEEDED':'REJECTED')
+                    || $last['operation']!==($scenario==='end-failure'?'END_BEFORE_START':'START')
+                    || $last['upstreamHttpStatus']!==(str_ends_with($scenario,'failure')?503:null)) {
+                throw new RuntimeException('wrong start failure stage or operation');
+            }
+        }
+        $calls=array_column($state['calls'],'operation');
+        if ($scenario==='end-failure' && $calls!==['end']) { throw new RuntimeException('start after failed end'); }
+        if ($scenario==='replace' && $calls!==['end','start']) { throw new RuntimeException('changed replacement sequence'); }
+        foreach ($events as $event) {
+            if (array_keys($event)!==['version','event','phase','operation','origin','upstreamHttpStatus']
+                    || !in_array($event['operation'],['START','END_BEFORE_START'],true)) {
+                throw new RuntimeException('unsafe start diagnostic fields');
+            }
+        }
+        foreach (['SYNTHETIC_PRIVATE',str_repeat('2',64),str_repeat('1',64),'run-1','student-1','fixture'] as $secret) {
+            if (str_contains(json_encode($events),$secret)) { throw new RuntimeException('start diagnostic leak'); }
+        }
+        echo "PASS actual PHP start diagnostic $scenario distinguishes fixed operation and preserves dispatch\n";
+    }
 } finally {
     proc_terminate($server);
     proc_close($server);

@@ -20,7 +20,7 @@ final class course_login_client {
 
     public function request(string $operation, array $fields = []): array {
         $diagnose = function (?string $phase, string $event = 'ENTER', mixed $http = null) use ($operation): void {
-            if ($operation !== 'authorize-command' || $this->diagnostic === null) {
+            if (!in_array($operation, ['authorize-command', 'start', 'end'], true) || $this->diagnostic === null) {
                 return;
             }
             try {
@@ -147,7 +147,10 @@ final class course_login_client {
         } finally {
             try {
                 $http = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-                $diagnose('AUTHORITY_TRANSPORT', 'HTTP', is_int($http) && $http >= 100 && $http <= 599 ? $http : null);
+                // Fixed libcurl TLS categories only; never log errno/error text or peer details.
+                $tls = in_array(curl_errno($curl), [35, 51, 58, 59, 60, 64, 66, 77, 80, 82, 83, 90, 91], true);
+                $diagnose($tls ? 'TLS_FAILURE' : 'AUTHORITY_TRANSPORT', 'HTTP',
+                    is_int($http) && $http >= 100 && $http <= 599 ? $http : null);
             } catch (\Throwable $ignored) {
                 // Never replace the original transport result with an observation failure.
             }

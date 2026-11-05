@@ -11,12 +11,15 @@ $status = 403;
 $reply = ['status' => 'UNAVAILABLE'];
 // Only fixed stages and a numeric upstream status reach the existing PHP error log.
 // This observer neither consumes request values nor changes the public response.
-$commanddiagnostic = ($_POST['operation'] ?? null) === 'authorize-command';
+$diagnosticoperation = match ($_POST['operation'] ?? null) {
+    'authorize-command' => 'AUTHORIZE_COMMAND', 'start' => 'START', default => null,
+};
+$commanddiagnostic = $diagnosticoperation !== null;
 $commandphase = 'INPUT';
 $commandhttp = null;
 $commandrejected = false;
 $diagnose = static function (?string $phase = null, string $event = 'ENTER', mixed $http = null)
-        use ($commanddiagnostic, &$commandphase, &$commandhttp, &$commandrejected): void {
+        use ($commanddiagnostic, &$diagnosticoperation, &$commandphase, &$commandhttp, &$commandrejected): void {
     if (!$commanddiagnostic || $commandrejected) {
         return;
     }
@@ -24,7 +27,7 @@ $diagnose = static function (?string $phase = null, string $event = 'ENTER', mix
         $actionphases = ['INPUT', 'BOOTSTRAP', 'INPUT_FIELDS', 'SESSKEY', 'CONFIG_SCOPE',
             'MOODLE_AUTHORITY', 'SESSION_INTENT', 'CLIENT_DISPATCH', 'RESPONSE_PROJECTION'];
         $clientphases = ['COMMAND_SHAPE', 'AUTHORITY_CAPTURE', 'REGISTRY_OPEN', 'PUBLICATION',
-            'AUTHORITY_TRANSPORT', 'RESPONSE_DECODE', 'ORIGIN_RECHECK', 'LEASE_RECHECK',
+            'AUTHORITY_TRANSPORT', 'TLS_FAILURE', 'RESPONSE_DECODE', 'ORIGIN_RECHECK', 'LEASE_RECHECK',
             'RESPONSE_SCHEMA', 'CLIENT_ACCEPTED'];
         if (($phase !== null && !in_array($phase, array_merge($actionphases, $clientphases), true))
                 || !in_array($event, ['ENTER', 'HTTP', 'SUCCEEDED', 'REJECTED'], true)) {
@@ -36,7 +39,8 @@ $diagnose = static function (?string $phase = null, string $event = 'ENTER', mix
         }
         $commandrejected = $event === 'REJECTED';
         @error_log('CLEAR_MOODLE_COMMAND_DIAGNOSTIC ' . json_encode([
-            'version' => 1, 'event' => $event, 'phase' => $commandphase,
+            'version' => 2, 'event' => $event, 'phase' => $commandphase,
+            'operation' => $diagnosticoperation,
             'origin' => in_array($commandphase, $actionphases, true) ? 'LOGIN_ACTION' : 'LOGIN_CLIENT',
             'upstreamHttpStatus' => $commandhttp,
         ], JSON_THROW_ON_ERROR));
@@ -106,10 +110,17 @@ try {
         current::require_rule(login::hex($_POST['challenge']));
         if (login::hex($intent)) {
             // Replacing an abandoned original tab requires retiring its owner intent first.
+            $diagnosticoperation = 'END_BEFORE_START';
+            $commandhttp = null;
+            $diagnose('CLIENT_DISPATCH');
             $client->request('end', ['intentRef' => $intent]);
             unset($SESSION->local_clearbridge_login_intent);
         }
+        $diagnosticoperation = 'START';
+        $commandhttp = null;
+        $diagnose('CLIENT_DISPATCH');
         $result = $client->request('start');
+        $diagnose('RESPONSE_PROJECTION');
         $intent = $result['requestRef'];
         $proofs = client::proofs($config['proofKey'], $config['ownerRunId'], $intent, $result['launchCode'], $_POST['challenge']);
         $SESSION->local_clearbridge_login_intent = ['run' => $config['ownerRunId'], 'role' => $role, 'intent' => $intent,

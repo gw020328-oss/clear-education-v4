@@ -73,7 +73,42 @@ foreach (['ok', 'http503', 'status0', 'string-status', 'invalid-json', 'schema',
     });
 }
 
-command_case('diagnostic is silent for non-command operations', function($q,$r,$registry,$config) {
+foreach (['start','end'] as $operation) {
+    foreach (['ok','http503','transport-fail','tls-fail','observer-throws'] as $scenario) {
+        command_case("login diagnostic $operation $scenario keeps wire and cleanup", function($q,$r,$registry,$config,$path)
+                use ($operation,$scenario) {
+            $events=[];
+            $GLOBALS['f']['owner']=static function() use($operation,$scenario,$registry,$config): void {
+                $request=$GLOBALS['f']['lastRequest'];
+                Login::respond($operation,$request,$config,$registry);
+                $GLOBALS['f']['loginreply']=$operation==='start'
+                    ? ['version'=>Login::VERSION,'requestRef'=>$request['requestRef'],'status'=>'WAITING',
+                        'expiresAtExclusive'=>2000000100,'launchCode'=>str_repeat('9',64)]
+                    : ['version'=>Login::VERSION,'requestRef'=>$request['requestRef'],'status'=>'UNAVAILABLE',
+                        'expiresAtExclusive'=>null,'handback'=>null];
+                if ($scenario==='http503') { $GLOBALS['f']['httpstatus']=503; }
+                if ($scenario==='transport-fail') { $GLOBALS['f']['transportfail']=true; $GLOBALS['f']['httpstatus']=0; }
+                if ($scenario==='tls-fail') {
+                    $GLOBALS['f']['transportfail']=true; $GLOBALS['f']['httpstatus']=0; $GLOBALS['f']['curlerrno']=60;
+                }
+            };
+            $client=new Client($config,$r['scope'],42,'PARTICIPANT',static function(...$row) use(&$events,$scenario): void {
+                $events[]=$row;
+                if ($scenario==='observer-throws') { throw new RuntimeException('SYNTHETIC_PRIVATE_ERROR'); }
+            });
+            $call=fn()=>$client->request($operation,$operation==='start'?[]:['intentRef'=>$q['intentRef']]);
+            if (in_array($scenario,['ok','observer-throws'],true)) { $call(); } else { rejected($call); }
+            $http=array_values(array_filter($events,static fn($row)=>$row[1]==='HTTP'));
+            expect(count($http)===1 && $http[0][2]===match($scenario) {'http503'=>503,'transport-fail','tls-fail'=>null,default=>200},'safe HTTP');
+            expect($http[0][0]===($scenario==='tls-fail'?'TLS_FAILURE':'AUTHORITY_TRANSPORT'),'fixed TLS category');
+            expect($events[0][0]==='COMMAND_SHAPE','entry stage');
+            expect(json_decode(file_get_contents($path),true)['leases']===[],'login publication always revoked');
+            expect(!str_contains(json_encode($events),'SYNTHETIC_PRIVATE'),'no exception value');
+        });
+    }
+}
+
+command_case('diagnostic is silent for unrelated login operations', function($q,$r,$registry,$config) {
     $events = [];
     $GLOBALS['f']['owner'] = static function(): void {
         $request = $GLOBALS['f']['lastRequest'];

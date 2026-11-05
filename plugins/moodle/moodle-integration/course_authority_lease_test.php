@@ -57,6 +57,7 @@ namespace local_clearbridge {
         return $option === CURLINFO_RESPONSE_CODE ? ($GLOBALS['f']['httpstatus'] ?? 200) : 'application/json';
     }
     function curl_close($handle) {}
+    function curl_errno($handle) { return $GLOBALS['f']['curlerrno'] ?? 0; }
     class course_refund {
         public static function is_demo_course($id) { return $id === 7; }
         public static function template_data($student, $evidence = null) { return ['hasrecords' => $evidence !== null]; }
