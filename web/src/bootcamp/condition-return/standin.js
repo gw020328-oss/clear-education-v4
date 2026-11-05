@@ -16,18 +16,27 @@ export function mountStandin(root, { criterionId, win = globalThis } = {}) {
 
   function body() {
     switch (criterionId) {
-      case 'activity-complete':
+      case 'activity-complete': {
+        // 이미 완료로 기록됐으면 또 누를 버튼을 두지 않는다 — 기록 사실만 보인다(11/5 점검).
+        const at = server.moodleRecordedAt(criterionId);
         return [
           el('h1', { text: '1주차 · 파이썬 시작하기' }),
           el('p', { text: '(시연용 Moodle 강의 페이지 대역) 변수와 자료형, 출력 함수를 소개합니다.' }),
-          el('div.pill-row', {}, [pill('끝까지 읽음 — 완료로 표시', () => { server.completeActivity(); finish('Moodle 이 이 강의를 완료로 기록했어요.'); })]),
+          at
+            ? el('p.standin-recorded', { text: `Moodle 에 이미 완료로 기록돼 있어요 (${new Date(at).toLocaleTimeString('ko-KR', { hour12: false })}). CLEAR 탭으로 돌아가 「다시 확인」 을 누르면 서버가 다시 읽어요.` })
+            : el('div.pill-row', {}, [pill('끝까지 읽음 — 완료로 표시', () => { server.completeActivity(); finish('Moodle 이 이 강의를 완료로 기록했어요.'); })]),
         ];
-      case 'assignment-submitted':
+      }
+      case 'assignment-submitted': {
+        const at = server.moodleRecordedAt(criterionId);
         return [
           el('h1', { text: '실습 과제 · 반복문 구현' }),
           el('p', { text: '(시연용 Moodle 과제 페이지 대역) 파일 없이 제출 버튼만 둡니다.' }),
-          el('div.pill-row', {}, [pill('과제 제출', () => { server.submitAssignment(); finish('Moodle 이 제출을 기록했어요.'); })]),
+          at
+            ? el('p.standin-recorded', { text: `Moodle 에 이미 제출로 기록돼 있어요 (${new Date(at).toLocaleTimeString('ko-KR', { hour12: false })}). CLEAR 탭으로 돌아가 「다시 확인」 을 누르면 서버가 다시 읽어요.` })
+            : el('div.pill-row', {}, [pill('과제 제출', () => { server.submitAssignment(); finish('Moodle 이 제출을 기록했어요.'); })]),
         ];
+      }
       case 'reflection-topics': {
         // 이미 올린 글이 있으면 그 글을 채워 둔다 — 미충족 뒤 「회고 다시 쓰기」 로 온 경우다.
         const existing = server.reflectionText();

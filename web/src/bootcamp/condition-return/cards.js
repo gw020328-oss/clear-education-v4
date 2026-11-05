@@ -255,6 +255,11 @@ export function conditionCardsSection({
     ]),
 
     demo ? el('p.bcx-warn', { text: '시연 데이터 · 서버·Moodle·HackerRank 는 이 페이지 안의 시연용 대역이에요. 실제 기록이 아니에요.' }) : null,
+    // 넷 다 충족한 뒤 "그래서 이제 뭐?" 가 없었다(11/5 점검). 지급은 이 화면이 하지 않는다 —
+    // 기존 지급 흐름의 서버가 한다. 여기서 약속하는 건 '더 할 일이 없다' 까지다.
+    snapshot && snapshot.current !== false && met === 4
+      ? el('p.bcx-note', { 'data-role': 'all-met', text: '네 조건을 모두 충족했어요. 이 화면에서 더 할 일은 없어요. 100 TEST 지급은 기존 지급 흐름에서 서버가 처리하고, 결과는 기존 CLEAR 화면(수령 확인)에서 보여요.' })
+      : null,
     snapshot?.source === 'OPERATIONS'
       ? el('p.bcx-note', { text: '확인 절차가 준비되기 전이라 수집 단계에 저장된 판정을 보여 드려요. 조건별 현재성은 아직 표시되지 않아요.' })
       : null,

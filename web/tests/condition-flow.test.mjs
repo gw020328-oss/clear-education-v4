@@ -620,3 +620,16 @@ test('떠난 기록 없는 미충족 카드는 「다시 확인」 안내가 있
   assert.equal(returnLine(idle, row('python-basic-certificate', 'UNKNOWN')), null);
   assert.equal(returnLine(null, row('activity-complete', 'NOT_MET'))?.recheck, true);
 });
+
+// ── 8 · 넷 다 충족 뒤 안내 · 대역의 중복 제출 버튼 ──────────────────────────
+
+test('시연 대역: 이미 기록된 강의·과제는 moodleRecordedAt 이 시각을 주고, 전엔 null', () => {
+  let saved = null;
+  const store = { load: () => saved ?? { v: 1, mode: 'ON_REQUEST', lagMs: 1000, moodle: { activityAt: null, assignmentAt: null, reflection: null }, hr: { boundAt: null, messageAt: null, signedAt: null, consentAt: null }, refresh: {} }, save: (s) => { saved = s; }, reset: () => { saved = null; } };
+  const server = createDemoServer({ store, nowMs: () => 5000 });
+  assert.equal(server.moodleRecordedAt('assignment-submitted'), null);
+  server.submitAssignment();
+  assert.equal(server.moodleRecordedAt('assignment-submitted'), 5000);
+  assert.equal(server.moodleRecordedAt('activity-complete'), null);
+  assert.equal(server.moodleRecordedAt('reflection-topics'), null, '회고는 글 고치기가 있어 대상이 아니다');
+});

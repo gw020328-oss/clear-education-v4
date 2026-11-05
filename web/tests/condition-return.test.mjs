@@ -531,3 +531,20 @@ test('서명 뒤 같은 탭으로 다녀와 페이지가 새로 떠도 다시 �
     second.close();
   } finally { restore(); }
 });
+
+test('넷 다 충족이면 "더 할 일 없음 · 지급은 기존 흐름" 안내 한 줄, 셋이면 없다', () => {
+  const restore = installDom();
+  try {
+    const all = baseRows().map((r) => ({ ...r, state: 'MET', evidenceId: r.evidenceId ?? `${r.criterionId}-e` }));
+    const node = conditionCardsSection({ snapshot: conditionRows({ view: view(all) }), links: resolveTargets(targetsRaw(), { applicationId: APP }) });
+    const note = find(node, (n) => n.attributes?.['data-role'] === 'all-met')[0];
+    assert.ok(note, '넷 다 충족인데 안내가 없다');
+    assert.match(note.textContent, /더 할 일은 없어요/);
+    assert.match(note.textContent, /기존 지급 흐름/);
+    assert.ok(!/지급됐|지급되었/.test(note.textContent), '지급됐다고 말하면 안 된다');
+
+    const three = all.map((r, i) => (i === 3 ? { ...r, state: 'UNKNOWN' } : r));
+    const node3 = conditionCardsSection({ snapshot: conditionRows({ view: view(three) }), links: resolveTargets(targetsRaw(), { applicationId: APP }) });
+    assert.equal(find(node3, (n) => n.attributes?.['data-role'] === 'all-met').length, 0);
+  } finally { restore(); }
+});

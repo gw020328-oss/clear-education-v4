@@ -233,6 +233,8 @@ export function createDemoServer({ store, nowMs = () => Date.now() }) {
     // 서명하면 기존 driver 처럼 읽어 둔 메시지를 비운다(state.approval = null)
     approval: () => { const h = store.load().hr; return h.messageAt && !h.signedAt ? { approvalId: 'approval-demo', message: HR_MESSAGE } : null; },
     reflectionText: () => store.load().moodle.reflection?.text ?? null,
+    /** 대역 탭용 — Moodle 기록이 이미 있나(ms). 판정이 아니라 원천 기록이다 */
+    moodleRecordedAt: (criterionId) => { const m = store.load().moodle; return criterionId === 'activity-complete' ? m.activityAt : criterionId === 'assignment-submitted' ? m.assignmentAt : null; },
     settings: () => { const s = store.load(); return { mode: s.mode, lagMs: s.lagMs }; },
     setMode: (mode) => update((s) => { s.mode = DEMO_MODES.includes(mode) ? mode : 'ON_REQUEST'; }),
     /**
