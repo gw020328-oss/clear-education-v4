@@ -204,7 +204,9 @@ export async function loadNormalMoodleReadOwner({directory,sha256}){
  check(typeof module.createMoodleReadOptions==='function','COURSE_READ_OWNER_PORT');
  // Legacy owners omit the export and retain the normal source lifecycle.
  check(module.sourceOrder===undefined||module.sourceOrder==='MOODLE_FIRST','COURSE_READ_OWNER_SOURCE_ORDER');
- return Object.freeze({createMoodleReadOptions:module.createMoodleReadOptions,moodleFirst:module.sourceOrder==='MOODLE_FIRST'});
+ check(module.withActivityReader===undefined||module.sourceOrder==='MOODLE_FIRST'&&typeof module.withActivityReader==='function','COURSE_READ_OWNER_PORT');
+ return Object.freeze({createMoodleReadOptions:module.createMoodleReadOptions,moodleFirst:module.sourceOrder==='MOODLE_FIRST',
+  withActivityReader:module.withActivityReader});
 }
 
 // Startup attaches only an explicitly supplied owner configuration. Application

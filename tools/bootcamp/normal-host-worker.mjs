@@ -30,7 +30,7 @@ try{
  const [mode,name,...extra]=process.argv.slice(2);fail(['registry','run'].includes(mode)&&extra.length===0,'NORMAL_HOST_WORKER_ARGUMENT');
  const {directory,config}=loadHostConfig(name);
  const moodleOwner=mode==='run'?await loadNormalMoodleReadOwner({directory,sha256:config.moodleReadOwnerSha256}):null;
- const {createMoodleReadOptions,moodleFirst=false}=moodleOwner??{};
+ const {createMoodleReadOptions,moodleFirst=false,withActivityReader}=moodleOwner??{};
  const {loadManagedHackerRankTrust}=await import('../../src/hackerrank-evidence/worker-trust.mjs');
  const loadTrust=async()=>{if(config.attestorMode!=='SELF_ATTESTOR_TEST')return loadManagedHackerRankTrust({audience:config.audience,privacyKeyId:config.privacyKeyId,signal});
   selfAttestor=await (await import('../local-attestor-review/host.mjs')).startSelfAttestorTest({signal});
@@ -44,10 +44,13 @@ try{
    trustConfigHash:hash('TRUST',trust),recipeHash:hash('RECIPE',trust.recipe),expiresAt:trust.expiresAt,sourceVerified:false,sourceLeaseIssued:false,applicationCreated:false,browserOpened:false};
   atomicPrivate(join(directory,'registry-check.json'),result);notify(result);
  }else{
-  const readiness=hostReadiness({directory,config});fail(readiness.readyForActivation,'NORMAL_HOST_ACTIVATION_NOT_READY');readPriceReview(directory);
+  const activityOnly=config.activityReturnOnly===true;
+  const readiness=hostReadiness({directory,config});fail(readiness.readyForActivation,'NORMAL_HOST_ACTIVATION_NOT_READY');
+  if(activityOnly)fail(moodleFirst&&typeof withActivityReader==='function','NORMAL_HOST_ACTIVITY_READER_REQUIRED');
+  else readPriceReview(directory);
   fail(!existsSync(join(directory,'prepared-listener.lock')),'NORMAL_HOST_STOP_PREPARED_LISTENER_FIRST');
   atomicPrivate(join(directory,'run.used.json'),{version:'clear-bootcamp-normal-host-one-run.2',hostName:name,runId:'normal-run-'+randomUUID(),startedAt:Date.now(),code:readiness.code},{exclusive:true});
-  const managedRun=openManagedNormalReflectionRun(name);
+  const managedRun=activityOnly?null:openManagedNormalReflectionRun(name);
   diagnostics=createSourceDiagnostics({persist:value=>atomicPrivate(join(directory,'source-diagnostics.json'),value)});
   const trust=await loadTrust();
   const {defaultRoot,clearAbandoned,createSession,removeSession}=await import('../../src/mac-collector/storage.mjs');
@@ -57,8 +60,11 @@ try{
   const {loadTls}=await import('../../src/dev/tls.mjs');const {listenNormalServer}=await import('./normal-host-prepared-server.mjs');
   const {runManagedNormalReflection}=await import('../../tests/ai-review-precheck/first-normal-reflection-entry.mjs');
   fail(sha(readFileSync(config.moodleReader))===config.moodleReaderSha256,'NORMAL_HOST_MOODLE_READER_CHANGED');
-  const {withReader}=await import(pathToFileURL(config.moodleReader));fail(typeof withReader==='function','NORMAL_HOST_MOODLE_READER');
-  const host=reflectionHostOptions(directory,managedRun),reviewReflection=args=>runManagedNormalReflection(managedRun,{...args,approval:host.readApproval(),currentApprovalHash:host.currentApprovalHash});
+  const withReader=activityOnly?withActivityReader:(await import(pathToFileURL(config.moodleReader))).withReader;
+  fail(typeof withReader==='function','NORMAL_HOST_MOODLE_READER');
+  const host=activityOnly?null:reflectionHostOptions(directory,managedRun);
+  const reviewReflection=activityOnly?()=>{throw Error('NORMAL_HOST_ACTIVITY_MODE');}
+   :args=>runManagedNormalReflection(managedRun,{...args,approval:host.readApproval(),currentApprovalHash:host.currentApprovalHash});
   let session,complete,key;const root=defaultRoot();
   try{
    await clearAbandoned(root,stopRecordedBrowser);signal.throwIfAborted();session=await createSession(root,Date.now(),process.pid);key=randomBytes(32);
@@ -67,7 +73,7 @@ try{
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:prepareLiveInput,
      open:async opts=>{
-      const context=await openLiveContext({...opts,withReader,reflectionHost:host.reflectionHost,reviewReflection,diagnostics,moodleFirst,activityReturnOnly:config.activityReturnOnly});
+      const context=await openLiveContext({...opts,withReader,reflectionHost:host?.reflectionHost??null,reviewReflection,diagnostics,moodleFirst,activityReturnOnly:activityOnly});
       if(!createMoodleReadOptions)return context;
       try{const options=await createMoodleReadOptions({directory,report:context.report,signal});
        fail(options&&typeof options==='object','COURSE_READ_OWNER_PORT');
