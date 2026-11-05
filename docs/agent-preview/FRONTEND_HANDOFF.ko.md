@@ -48,3 +48,46 @@ Plan: version, executionMode=PUBLIC_SYNTHETIC, sourceHash,draftHash, steps[{id,t
 `executeReviewedGeminiPreview(packet, reviewedHash)`는 운영자가 확인한 proposalHash가 현재 응답과 일치하고 미결 질문이 없을 때만 허용 manifest에서 계획을 만들고 검증한다. 검토 지문은 내용 결합 수단이며 운영자 인증은 호스트 책임이다. 실행은 기존 Moodle·회고 grounding·Reclaim 합성 모듈로 연결되며 결과의 PUBLIC_SYNTHETIC 범위와 지급 금지를 유지한다.
 
 실제 호출 검토용 공개 입력은 `examples/clear-core/gemini-preview-demo.mjs`의 두 문장이다. 모델 gemini-3.5-flash-lite에 입력마다 generateContent 1회, 재시도 0회, 출력 상한 2048 tokens를 적용한다. 전송 범위는 인공 안내문, 원문 위치, 허용 capability/회고 항목 목록과 고정 프롬프트·스키마다. 두 본문 지문은 `450794af7d0d7284a74c0a3790fa1fec396715b0490c7d011ac09f4c27872a25`, `197c51f2aeb8630594fa1f233d620135dc0e958244f0851545af47789d8beae8`이다. 최신 단가와 비용 검토 및 직접 입력별 승인 이후 실제 결과를 별도로 기록한다.
+
+## 0.4.0 서버 조건 관계 검사와 구조화 DTO (2026-11-05, Claude)
+
+기준 develop `9a626a7`. 프롬프트·응답 schema·모델·`bodyHash` 는 바꾸지 않았다(기존 승인·fixture 지문 유지).
+
+**서버 보류 검사** — `reviewModelProposal` 은 모델의 `SUPPORTED` 를 그대로 믿지 않는다. 정규 문법 문장이 아닌 조항에 아래가 있으면 그 조항을 조건으로 만들지 않고 질문으로 남긴다. 원문 인용·위치는 그대로다. draft 에 `guards[{clauseId,kinds,modelStatus,modelCapability}]` 가 추가된다.
+
+| kind | 예 | 결과 |
+| --- | --- | --- |
+| ALTERNATIVE | 강의 수강 또는 과제 제출 | NEEDS_CLARIFICATION |
+| SUBSTITUTE | 과제 제출 대신 후기 작성 | NEEDS_CLARIFICATION |
+| NEGATION | 과제 제출은 필요 없습니다 | NEEDS_CLARIFICATION |
+| THRESHOLD | 강의 3개 이상 수강 | NEEDS_CLARIFICATION |
+| DEADLINE | 11월 30일까지 과제 제출 | NEEDS_CLARIFICATION |
+| OPTIONAL | (선택) 수료 후기 작성 | NEEDS_CLARIFICATION |
+| MULTIPLE_CONDITIONS | 강의수강 후기적기 과제제출 | NEEDS_CLARIFICATION |
+| CAPABILITY_CONTRADICTION | 실습 과제를 Moodle에 제출하세요 → 모델이 활동 완료 | NEEDS_CLARIFICATION |
+| UNSUPPORTED_MEASURE | 출석률 90% 이상 | UNSUPPORTED |
+
+질문이 하나라도 있으면 draft 는 READY 가 될 수 없어 `buildPlan` 이 `DRAFT_NOT_READY` 로 거부한다. 다른 조항을 읽었어도 마찬가지다.
+
+**프론트 규칙 제안자와의 차이** — 프론트 `normalize.js` 는 한 문장에서 조건 여럿을 뽑고(「강의수강 후기적기 과제제출」 → 셋), 정규 문장 `A; B; C` 로 이어 보낸다. 서버 계약은 `;`·줄바꿈으로 나눈 **한 조항 = 한 조건**이라, 같은 문장을 원문 그대로 Gemini 경로로 보내면 MULTIPLE_CONDITIONS 로 보류한다. 프론트의 대안·대체 보류(held)와 서버 보류는 같은 방향이지만 규칙은 따로 있다.
+
+**`src/agent-preview/condition-structuring.mjs`** — 리스너·네트워크 클라이언트 없음. 호스트 경로가 부른다.
+
+| 함수 | 역할 |
+| --- | --- |
+| `prepareStructuring(sourceText)` | 모델 호출 없는 검토 묶음(model·sourceHash·bodyHash·조항·한도) |
+| `structureWithGemini(sourceText,{approvalRef,claimAndDispatch,signal,transportExecution})` | 기존 `requestGeminiPreview` 를 한 번 부른다. stage `PROPOSED`·`APPROVAL_REQUIRED`·`MODEL_CALL_FAILED`·`MODEL_RESPONSE_REJECTED`. 실패 때 규칙 결과로 대신하지 않는다(`fallback:'NONE'`) |
+| `proposalDto(draft)` | 프론트 DTO `clear-condition-proposal.1` — 조항별 quote·start·end·status·capability·tool·question·serverGuard |
+| `rowsFromDraft(draft)` | 호스트가 원 응답 대신 저장할 행 |
+| `planReviewedProposal` / `executeReviewedProposal` | 운영자 검토 지문으로 재검토 → 등록 manifest 매핑 → `validatePlan` → 기존 PUBLIC_SYNTHETIC 실행. 결과에 `toolSelection:'MODEL_CLASSIFIES_CAPABILITY_CODE_MAPS_TOOL'`, `selectedBy:'CODE_TOOL_MANIFEST'`, `toolSource:'PUBLIC_FIXTURE'`, `actualMoodleQuery:false`, `actualReclaimVerification:false` |
+
+도구 선택: 모델은 조항마다 capability(조건 종류)만 고른다. 도구는 코드가 `TOOL_MANIFEST` 에서 매핑한다. 모델이 도구를 직접 고르는 경로는 없다.
+
+**HTTP** — develop 에는 서버 경로가 없다. 기존 경로는 D 의 Draft 연쇄(`deploy/agent-preview`, PR #154 계열)의 `/v1/preview/prepare`·`/generate`·`/execute` 다. 최소 확장안:
+
+- `generate` 응답에 `proposal`(=`proposalDto(draft)`)과 `modelCall`(stage·attempted·succeeded·errorCode·execution) 추가. 실패는 HTTP 오류와 함께 `stage` 를 그대로 준다.
+- `execute` 는 지금처럼 저장 행·proposalHash 로 재검토하되 결과를 `executeReviewedProposal` 모양(steps·validation·execution 원천 표시)으로 준다. D 의 실제 관측 연결(`ACTUAL_TOOL_NOT_ENABLED`·활동 1단계 제한)은 그대로 둔다.
+
+요청·응답 예시는 워크트리의 `CLAUDE_HANDOFF.md` 에 있다.
+
+**검사** — `./tools/node --import ./tests/agent-preview/network-block.mjs --test tests/agent-preview/condition-structuring.test.mjs` (11). 기존 developerTransport 에 시험용 fetch·키만 주입하고 승인은 bodyHash 단회 소비 대역이다. 실제 Gemini 호출 없음.
