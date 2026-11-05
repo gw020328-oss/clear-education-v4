@@ -15,6 +15,8 @@ class ReaderDBDouble {
     function get_record($table,...$args) {
         global $c;
         if (($c['suspended'] ?? false) || ($c['deleted'] ?? false)) throw new RuntimeException('USER_UNAVAILABLE');
+        if ($table === 'forum_posts') return (object)['id'=>3,'discussion'=>3,'userid'=>($c['authorChanged'] ?? false)?9:3,'created'=>100,'modified'=>($c['metadataChanged'] ?? false)?101:100,'deleted'=>0];
+        if ($table === 'forum_discussions') return (object)['id'=>3,'forum'=>3,'course'=>2];
         return (object)['id'=>3];
     }
     function delete_records($table,$where) {
@@ -26,7 +28,7 @@ class ReaderDBDouble {
 $DB = new ReaderDBDouble();
 class context_course { static function instance($id) { return $id; } }
 class context_module { static function instance($id) { return $id; } }
-function get_coursemodule_from_id(...$args) { return (object)['instance'=>1]; }
+function get_coursemodule_from_id(...$args) { return (object)['instance'=>$args[0]==='forum'?3:1]; }
 function is_enrolled(...$args) { global $c; return !($c['enrolLost'] ?? false); }
-function has_capability(...$args) { global $c; return !($c['roleLost'] ?? false); }
+function has_capability(...$args) { global $c; return !($c['roleLost'] ?? false) && !($args[0]==='mod/forum:viewdiscussion' && ($c['forumDenied'] ?? false)); }
 register_shutdown_function(function() use ($DB) { file_put_contents('/scratch/token-state.json',json_encode($DB->tokens)); file_put_contents('/scratch/result.json', json_encode(['deletes'=>$DB->deletes,'remaining'=>count($DB->tokens)])); });

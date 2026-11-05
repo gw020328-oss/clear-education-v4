@@ -1,3 +1,4 @@
+import {selectNormalMoodleReader} from './normal-moodle-full-reader.mjs';
 import {readReflectionSelection} from './normal-reflection-selection.mjs';
 // Enter only through normal-host-launch's real lockf/ulimit boundary.
 import {createSourceDiagnostics,observeSource} from '../../src/hackerrank-evidence/diagnostics.mjs';
@@ -62,7 +63,8 @@ try{
   const {loadTls}=await import('../../src/dev/tls.mjs');const {listenNormalServer}=await import('./normal-host-prepared-server.mjs');
   const {runManagedNormalReflection}=await import('../../tests/ai-review-precheck/first-normal-reflection-entry.mjs');
   fail(sha(readFileSync(config.moodleReader))===config.moodleReaderSha256,'NORMAL_HOST_MOODLE_READER_CHANGED');
-  const withReader=sourceOnly?withActivityReader:(await import(pathToFileURL(config.moodleReader))).withReader;
+  const withReader=selectNormalMoodleReader({moodleFirst,nativeReader:withActivityReader,
+   legacyReader:moodleFirst?null:(await import(pathToFileURL(config.moodleReader))).withReader});
   fail(typeof withReader==='function','NORMAL_HOST_MOODLE_READER');
   const host=sourceOnly?null:reflectionHostOptions(directory,managedRun);
   const reviewReflection=sourceOnly?()=>{throw Error('NORMAL_HOST_ACTIVITY_MODE');}

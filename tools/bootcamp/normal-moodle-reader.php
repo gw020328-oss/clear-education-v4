@@ -15,6 +15,14 @@ if ($service !== 2 || $scope['userId'] !== $user) {
 }
 $allowed = ['core_webservice_get_site_info', 'core_course_get_contents', 'core_completion_get_activities_completion_status',
     'mod_assign_get_assignments', 'mod_assign_get_submission_status'];
+$selection = $scope['forumSelection'] ?? null;
+if ($selection !== null) {
+    if ($selection['postId'] !== 3 || $selection['discussionId'] !== 3 || $selection['courseId'] !== 2
+        || $selection['forumId'] !== 3 || $selection['authorId'] !== 3 || $selection['cmId'] !== 5) {
+        throw new RuntimeException('ACTIVITY_READER_SCOPE');
+    }
+    $allowed = array_merge($allowed, ['mod_forum_get_forums_by_courses', 'mod_forum_get_forum_discussions', 'mod_forum_get_discussion_post']);
+}
 if (in_array($request['action'], ['prepare', 'issue'], true)) {
 if (!$DB->record_exists('external_services_users', ['externalserviceid' => $service, 'userid' => $user])) {
     throw new RuntimeException('ACTIVITY_READER_ACCOUNT');
@@ -26,6 +34,23 @@ $cm = get_coursemodule_from_id('assign', 4, 2, false, MUST_EXIST);
 if ((int)$cm->instance !== 1 || !is_enrolled(context_course::instance(2), $participant, '', true)
     || !has_capability('mod/assign:submit', context_module::instance(4), $participant)) {
     throw new RuntimeException('ACTIVITY_READER_ACCOUNT');
+}
+if ($selection !== null) {
+    foreach (['createdAt','modifiedAt','observedAt','expiresAtExclusive'] as $field) {
+        if (!is_int($selection[$field] ?? null) || $selection[$field] <= 0) throw new RuntimeException('ACTIVITY_READER_SCOPE');
+    }
+    if ($selection['modifiedAt'] < $selection['createdAt'] || $selection['observedAt'] < $selection['modifiedAt']) throw new RuntimeException('ACTIVITY_READER_SCOPE');
+    $post = $DB->get_record('forum_posts', ['id'=>3], 'id,discussion,userid,created,modified,deleted', MUST_EXIST);
+    $discussion = $DB->get_record('forum_discussions', ['id'=>3], 'id,forum,course', MUST_EXIST);
+    $forumcm = get_coursemodule_from_id('forum', 5, 2, false, MUST_EXIST);
+    if ((int)$forumcm->instance !== 3 || (int)$post->discussion !== 3 || (int)$post->userid !== 3 || $post->deleted
+        || (int)$discussion->forum !== 3 || (int)$discussion->course !== 2
+        || (int)$post->created !== $selection['createdAt'] || (int)$post->modified !== $selection['modifiedAt']
+        || time() < $selection['observedAt'] || time() >= $selection['expiresAtExclusive']
+        || $selection['expiresAtExclusive'] - $selection['observedAt'] > 3600
+        || !has_capability('mod/forum:viewdiscussion', context_module::instance(5), $participant)) {
+        throw new RuntimeException('ACTIVITY_READER_ACCOUNT');
+    }
 }
 }
 if ($request['action'] === 'prepare') {
