@@ -61,3 +61,13 @@ test('long review request is explicit and cannot upgrade an old receipt deadline
  assert.throws(()=>validateBootcampMoodleResult(r,{request:old,expectedReceiptHash:r.receiptHash,nowMs:old.context.expiresAtMs}),/BCM_EXPIRED/);
  assert.throws(()=>createBootcampMoodleRequest({...q,context:{...context,expiresAtMs:context.expiresAtMs+1}}),/BCM_LEASE/);
 });
+
+// No network: reproduce the upper call boundary that historically erased the cause.
+test('source authority rejection keeps safe outward code and the original fixed cause',async()=>{
+ const {executionErrorSummary}=await import('../../src/bootcamp/execution-diagnostics.mjs');
+ const f=setup();const original=Error('BC_LIVE_MOODLE_AUTHORITY');f.setHook(()=>{throw original;});
+ await assert.rejects(f.read(),error=>{
+  assert.equal(error.message,'REVIEW_UNAVAILABLE');assert.equal(error.cause,original);
+  const diagnostic=executionErrorSummary(error);assert.equal(diagnostic.causes[0].code,'BC_LIVE_MOODLE_AUTHORITY');return true;
+ });
+});

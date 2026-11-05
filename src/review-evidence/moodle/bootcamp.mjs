@@ -99,7 +99,7 @@ export async function readBootcampMoodle({client,request,getCurrentRequest,getCu
  const call=async(m,a={})=>{
   cancelled();let v;
   try{v=structuredClone(await client.call(m,a,signal));}
-  catch(e){cancelled();const safe=['REVIEW_AUTH','REVIEW_ACCESS','REVIEW_TIMEOUT','REVIEW_UNAVAILABLE','REVIEW_NOT_FOUND_OR_UNAVAILABLE','REVIEW_CANCELLED','REVIEW_RESPONSE_LIMIT','REVIEW_PARAMETERS','REVIEW_READ_ONLY'];throw Error(safe.includes(e?.message)?e.message:'REVIEW_UNAVAILABLE');}
+  catch(e){cancelled();const safe=['REVIEW_AUTH','REVIEW_ACCESS','REVIEW_TIMEOUT','REVIEW_UNAVAILABLE','REVIEW_NOT_FOUND_OR_UNAVAILABLE','REVIEW_CANCELLED','REVIEW_RESPONSE_LIMIT','REVIEW_PARAMETERS','REVIEW_READ_ONLY'];throw Error(safe.includes(e?.message)?e.message:'REVIEW_UNAVAILABLE',{cause:e});}
   cancelled();return v;
  };
  const identity=await call('core_webservice_get_site_info');check(identity?.userid===q.pin.participantMapping.moodleUserId,'BCM_READER');
