@@ -219,3 +219,7 @@
 .fp-run[data-run="failed"] .fp-run-state, .fp-run[data-run="expired"] .fp-run-state { background: #fee2e2; color: #991b1b; }
 .fp-run[data-run="stale"] .fp-run-state, .fp-run[data-run="blocked"] .fp-run-state { background: #e2e8f0; color: #334155; }
 .fp-run-note { grid-column: 1 / -1; font-size: 0.84rem; color: var(--muted); }
+
+/* 출처 배지 — 규칙 / Gemini 실제 / Gemini 오프라인 대역 / 생성 전 */
+.fp-mode[data-mode="model-fixture"] { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.fp-mode[data-mode="model-idle"] { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
