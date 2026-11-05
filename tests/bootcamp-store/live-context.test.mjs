@@ -27,3 +27,18 @@ test('historical server TEST identities cannot open a reviewed actual source con
  await assert.rejects(openLiveContext({preparationPath:join(directory,'preparation.json'),withReader(){assert.fail('source');},hackerRank:{pins:()=>pins,collectLease(){assert.fail('collector');}},reviewReflection(){assert.fail('AI');}}),/BC_LIVE_EXTERNAL_UI_REQUIRED/);
  assert.deepEqual(readdirSync(directory).sort(),['mapping.json','preparation.json']);
 });
+
+import {certificateWriteAllowed} from '../../tools/bootcamp/live-context.mjs';
+test('certificate trial allows initial source binding while keeping subsequent writes scoped',()=>{
+ const route=(a,r)=>'/bootcamp/v4/applications/'+a+'/'+r;
+ assert.equal(certificateWriteAllowed(route('application-one','source-session'),undefined),true);
+ for(const r of ['certificate-start','source-signature','source-refresh','resume'])
+  assert.equal(certificateWriteAllowed(route('application-one',r),undefined),false);
+ for(const r of ['source-session','certificate-start','source-signature']) {
+  assert.equal(certificateWriteAllowed(route('application-one',r),'application-one'),true);
+  assert.equal(certificateWriteAllowed(route('application-other',r),'application-one'),false);
+ }
+ for(const path of [route('../other','source-session'),route('application-one','source-session')+'?x=1',
+  '/bootcamp/v3/applications/application-one/review-consents',route('application-one','reflection-approval')])
+  assert.equal(certificateWriteAllowed(path,undefined),false);
+});
