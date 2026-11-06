@@ -334,7 +334,52 @@ const TX = Object.freeze({
  * 거래가 블록에 들어갔다고 받은 것이 아니고, INCLUDED 라고 최종 확정도 아니다.
  * 약정·배정은 화면 위쪽에서 이미 그리므로 여기서는 거래와 수령만 본다.
  */
-export function paymentPanel({ view, api = null, blocked = null, quiet = false }) {
+/** 지급이 **끝났다**고 말해도 되는 조건 — student-view.isPaid 와 같다. 서명·전송만으로는 아니다 */
+const paidOut = (pay) => Boolean(pay?.acceptedRight) && pay?.claimState === 'FINALIZED'
+  && pay?.receivedAtoms !== null && pay?.receivedAtoms !== undefined;
+const shortHash = (h) => (typeof h === 'string' && h.length > 18 ? `${h.slice(0, 10)}…${h.slice(-6)}` : h ?? null);
+
+/**
+ * 지급 완료 요약 — 실제 돈의 이동을 한눈에(오규원 11/6 ⑤).
+ * 서버 응답에 있는 값만 쓴다. 잔액이 없으면 숫자를 넣지 않고 '조회 전' 이라고 적는다.
+ *
+ * @param {object} o
+ * @param {object} o.view
+ * @param {string|null} [o.recipient]   등록된 수령 주소(conn.recipient). 호스트가 넘겨 주지 않으면 없음으로 적는다
+ * @param {object|null} [o.receipt]     api.paymentReceipt 결과(claim · balance)
+ */
+export function payoutSummary({ view, recipient = null, receipt = null }) {
+  const pay = view.payment ?? {};
+  if (!paidOut(pay)) return null;
+  const d = view.agreedPayment.decimals;
+  const s = view.agreedPayment.symbol;
+  const amount = (atoms) => (atoms === null || atoms === undefined ? null : `${(Number(atoms) / 10 ** d).toLocaleString('ko-KR')} ${s}`);
+  const balance = receipt?.balance ?? null;
+  const currentAtoms = balance?.currentAtoms ?? balance?.balanceAtoms ?? null;
+  const rows = [
+    ['받은 금액', amount(balance?.receivedAtoms ?? pay.receivedAtoms)],
+    ['수령 계정', recipient ?? null],
+    ['지급 거래 상태', [TX[pay.transactionState] ?? pay.transactionState ?? null, CLAIM[pay.claimState] ?? pay.claimState ?? null].filter(Boolean).join(' · ') || null],
+    ['거래 내역', pay.transactionHash ? `${shortHash(pay.transactionHash)}${pay.blockRef?.number ? ` · 블록 ${pay.blockRef.number}` : ''}` : null],
+    ['조회된 현재 잔액', amount(currentAtoms)],
+    ['가스비', '서비스 부담 · 학생은 온체인 거래를 보내지 않아요'],
+  ];
+  const missing = [];
+  if (!recipient) missing.push('수령 계정 주소(이 조회에 실려 오지 않음 — 「내 수령 계정」 칸에 있음)');
+  if (currentAtoms === null || currentAtoms === undefined) missing.push(receipt ? '현재 잔액(지급 결과 조회에 잔액 값 없음)' : '현재 잔액(「수령 결과 확인」 을 누르면 조회)');
+  if (!pay.transactionHash) missing.push('거래 해시');
+  return el('div.bcx-payout', { 'data-role': 'payout-done' }, [
+    el('p.bcx-payout-kicker', { text: '지급 완료 · 로컬 시연용 TEST 토큰 · 실제 환급금 아님' }),
+    el('p.bcx-payout-amount', {}, [el('strong', { text: `${amount(pay.receivedAtoms)} 지급 완료` })]),
+    el('p.bcx-payout-sub', { text: '네 조건 충족과 양측 확인이 끝나 내 환급 계정으로 보냈고, 거래가 블록체인에서 최종 확정됐어요.' }),
+    el('dl.bcx-payout-rows', {}, rows.map(([k, v]) => el('div', { 'data-missing': v === null ? 'yes' : null }, [
+      el('dt', { text: k }), el('dd', { text: v ?? '서버가 아직 주지 않은 값' }),
+    ]))),
+    missing.length ? el('p.bcx-payout-missing', { text: `아직 못 받은 값 · ${missing.join(' · ')}` }) : null,
+  ].filter(Boolean));
+}
+
+export function paymentPanel({ view, api = null, blocked = null, quiet = false, recipient = null }) {
   const box = el('section.bcx-panel', {});
   let current = null;
   let status = null;
@@ -359,6 +404,8 @@ export function paymentPanel({ view, api = null, blocked = null, quiet = false }
     const exactVerified = balance?.exactExpectedAmountVerified ?? pay?.canonicalTransferVerified ?? null;
 
     box.append(...[
+      // 끝났으면 요약이 먼저. 아래 쌍 목록은 그 근거다.
+      payoutSummary({ view, recipient, receipt: current }),
       ...pairBlock([
         item('수락된 지급권리', pay?.acceptedRight ? '있음' : null),
         item('거래 상태', pay?.transactionState ? (TX[pay.transactionState] ?? pay.transactionState) : null),

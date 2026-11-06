@@ -102,3 +102,25 @@
   margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn-tag-fg, #b45309);
   background: var(--warn-bg, #fef3c7); color: var(--fg); font-size: 0.82rem; line-height: 1.55; border-radius: 0 8px 8px 0;
 }
+
+/* ── 카드 순서 정돈 (11/6) — 해야 할 일 → 충족 여부 → 이유·근거 → 다음 행동 ─────────── */
+.crc-todo { margin: 2px 0 10px; font-size: 0.8rem; line-height: 1.55; color: var(--muted); }
+.crc-verdict {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px;
+  margin: 0 0 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--line-soft); color: var(--fg);
+}
+.crc-verdict strong { font-size: 1.25rem; letter-spacing: -0.02em; line-height: 1.2; }
+.crc-verdict-sub { font-size: 0.74rem; color: var(--muted); }
+.crc-verdict[data-tone="ok"] { background: var(--ok-soft); color: var(--ok); }
+.crc-verdict[data-tone="bad"] { background: var(--warn-bg); color: var(--warn-tag-fg); }
+.crc-verdict[data-tone="wait"] { background: var(--navy-soft); }
+.crc-verdict[data-tone="warn"] { background: var(--warn-bg); color: var(--warn-tag-fg); }
+.crc-why { margin: 0 0 4px; font-size: 0.86rem; line-height: 1.55; font-weight: 600; }
+.crc-source { margin: 0 0 10px; font-size: 0.74rem; color: var(--muted); }
+.crc-more { margin: 8px 0 0; font-size: 0.76rem; }
+.crc-more summary { cursor: pointer; color: var(--muted); }
+.crc-more > :not(summary) { margin-top: 6px; }
+.crc-ai { margin: 8px 0 0; }
+.crc-ai-k { margin: 0; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.crc-fix p:last-child { margin: 4px 0 0; }

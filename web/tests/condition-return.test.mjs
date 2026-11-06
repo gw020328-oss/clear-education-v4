@@ -8,7 +8,7 @@
 //   4  서명 전 메시지를 보여 주지 않는 것 · 서명했다는 이유로 인증서를 검증 완료로 보이는 것
 //   5  회고 원문을 지어내는 것 — 실서버는 원문을 주지 않는다
 //   6  탭이 가려진 동안 계속 묻는 것 · 겹친 복귀 신호로 두 번 읽는 것
-//   7  기존 「자세히」(조건 상세·근거 보기)가 사라지는 것
+//   7  기존 「자세히」(조건 상세·근거 보기)가 사라지는 것 — 11/6 부터 단추 이름은 「근거 보기」, 동작은 같다
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -360,7 +360,7 @@ test('절차 준비 전에는 operations 의 저장된 판정으로 그리고 �
 
 // ── 카드 ────────────────────────────────────────────────────────────────
 
-test('카드는 지정 항목을 새 탭으로 열고, 떠날 때 지문을 남기며, 「자세히」 를 그대로 둔다', () => {
+test('카드는 지정 항목을 새 탭으로 열고, 떠날 때 지문을 남기며, 「근거 보기」(기존 자세히) 를 그대로 둔다', () => {
   const restore = installDom();
   try {
     const snapshot = conditionRows({ view: view(baseRows()) });
@@ -376,7 +376,7 @@ test('카드는 지정 항목을 새 탭으로 열고, 떠날 때 지문을 남�
     assert.match(go.attributes.rel, /noopener/);
     go.click();
     assert.deepEqual(departed, ['activity-complete']);
-    const more = find(node, (n) => n.tagName === 'BUTTON' && n.textContent.trim() === '자세히');
+    const more = find(node, (n) => n.tagName === 'BUTTON' && n.textContent.trim() === '근거 보기');
     assert.equal(more.length, 4);
     more[2].click();
     assert.deepEqual(opened, ['reflection-topics']);
@@ -392,7 +392,7 @@ test('이동 주소가 없으면 버튼을 잠그고 이유를 적는다', () =>
     assert.equal(go.tagName, 'BUTTON');
     assert.equal(go.attributes.disabled, '');
     assert.match(card(node, 'assignment-submitted').textContent, /주소를 서버가 아직 주지 않았습니다/);
-    assert.match(card(node, 'activity-complete').textContent, /판정 없음/);
+    assert.match(card(node, 'activity-complete').textContent, /판정 전/);
   } finally { restore(); }
 });
 

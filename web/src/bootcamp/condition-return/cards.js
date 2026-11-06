@@ -23,6 +23,51 @@ import { CRITERION_IDS, evidenceFor, EVIDENCE_LOAD } from './evidence.js';
 import {
   STATE_TEXT, returnLine, moodleFacts, reflectionReview, certificateStatus, REVIEW, CERT,
 } from './status.js';
+import { stageStrip, conditionsLine, STAGE } from './stage-strip.js';
+
+// 카드가 말하는 순서 — 해야 하는 일 → 지금 충족 여부 → 판단 이유와 근거 → 다음 행동
+// (오규원 11/6). 기술 이름보다 학생이 할 행동과 결과를 크게, 원문·시각·이력은 접는다.
+export const TASK = Object.freeze({
+  'activity-complete': {
+    title: '지정 강의 수강',
+    todo: '지정된 강의 페이지를 끝까지 보면 Moodle 에 완료 기록이 남아요.',
+    verb: '강의 보기',
+    met: '지정한 강의의 완료 기록을 확인했어요.',
+    unmet: '지정한 강의의 완료 기록이 아직 없어요.',
+  },
+  'assignment-submitted': {
+    title: '지정 과제 제출',
+    todo: '지정된 과제를 Moodle 에 제출하면 제출 기록이 남아요.',
+    verb: '과제 보기',
+    met: '지정한 과제의 제출 기록을 확인했어요.',
+    unmet: '지정한 과제의 제출 기록이 아직 없어요.',
+  },
+  'reflection-topics': {
+    title: '회고 작성',
+    todo: '회고 게시판에 수행 내용 · 문제 해결 과정 · 배운 점이 담긴 글을 올려요. AI 가 세 항목이 있는지만 봐요.',
+    verb: '회고 쓰기',
+  },
+  'python-basic-certificate': {
+    title: 'HackerRank Python (Basic) 인증',
+    todo: 'HackerRank 에서 받은 인증서를 Reclaim 증명으로 확인해요. 로그인과 동의만 하면 돼요.',
+    verb: null,
+  },
+});
+
+/**
+ * 카드 맨 위에 크게 쓰는 한 단어. **서버 판정과 읽기 상태를 섞지 않는다.**
+ * 다시 읽는 중이면 '확인 중', 판정을 못 읽었으면 '조회 실패' — 둘 다 미충족이 아니다.
+ */
+export function verdictOf({ row, shown, ret }) {
+  if ([RETURN.CHECKING, RETURN.PENDING].includes(ret.state)) return { key: 'CHECKING', label: '확인 중', tone: 'wait' };
+  if (ret.state === RETURN.READ_FAILED) return { key: 'FETCH_FAILED', label: '조회 실패', tone: 'warn' };
+  if (!row) return { key: 'NONE', label: '판정 전', tone: 'muted' };
+  const key = shown.state;
+  return {
+    key, label: STATE_TEXT[key] ?? key,
+    tone: key === 'MET' ? 'ok' : key === 'UNMET' ? 'bad' : key === 'UNAVAILABLE' ? 'warn' : 'muted',
+  };
+}
 
 const CARD_ICON = Object.freeze({
   'activity-complete': 'layers',
@@ -62,36 +107,56 @@ function moodleBlock(criterionId, ev, evidenceState, row) {
 }
 
 function reflectionBlock(review, link) {
-  return el('div.crc-block', { 'data-review': review.state }, [
-    el('p.crc-title', { text: review.title }),
+  const reviewed = review.state === REVIEW.REVIEWED;
+  const lacking = review.topics.filter((t) => t.state !== 'PRESENT');
+  const present = review.topics.filter((t) => t.state === 'PRESENT');
+  const where = link?.status === LINK.LINKED ? (link.name ?? '회고 게시판') : '회고 게시판 (주소 미제공)';
+  // 머리말 — 검토가 끝났고 지금 글의 결과면 "무엇이 부족한가" 를 바로. 그 밖엔 단계 문구.
+  const headline = reviewed && !review.previous
+    ? (lacking.length ? `${lacking.map((t) => t.label).join(' · ')} 내용이 부족해요.` : '세 항목을 모두 확인했어요.')
+    : review.title;
+  const topicLine = (t) => el('li', { 'data-met': t.state === 'PRESENT' ? 'yes' : 'no' }, [
+    el('span.crc-topic', { text: t.label }),
+    el('span.crc-topic-state', { text: t.stateText }),
+    t.quote
+      ? el('q.crc-quote', { text: t.quote })
+      : el('span.crc-loc', {
+        text: t.location ? `원문 ${t.location.start}–${t.location.end} (UTF-16)`
+          : t.state === 'PRESENT' ? '원문 위치 미제공' : '근거 문장을 찾지 못했어요',
+      }),
+  ]);
+  return el('div.crc-block.crc-review', { 'data-review': review.state }, [
+    el('p.crc-title', { text: headline }),
     review.note ? el('p.crc-muted', { text: review.note }) : null,
-    review.reason ? el('p.crc-reason', { text: `판정 사유 · ${review.reason}` }) : null,
-    // 미충족이면 어디를 고쳐 다시 써야 하는지 바로. 버튼도 「회고 다시 쓰기」 가 된다.
+    review.previous ? el('p.crc-muted', { text: '아래는 지난 글의 검토 결과예요. 새 검토가 끝나면 바뀌어요.' }) : null,
+    // AI 가 본 것 — 서버가 준 항목·위치·인용만. 프론트가 판단을 만들지 않는다.
+    present.length ? el('div.crc-ai', {}, [
+      el('p.crc-ai-k', { text: '확인한 문장' }),
+      el('ul.crc-topics', {}, present.map(topicLine)),
+    ]) : null,
+    reviewed && lacking.length ? el('div.crc-ai', {}, [
+      el('p.crc-ai-k', { text: '부족한 내용' }),
+      el('ul.crc-topics', {}, lacking.map(topicLine)),
+    ]) : null,
+    review.reason ? el('p.crc-reason', { text: `서버 판정 사유 · ${review.reason}` }) : null,
+    // 보완 방법 — 어떤 항목을 어디에 더해 올릴지. 글 내용을 대신 써 주지 않는다.
     review.needsRewrite
-      ? el('p.crc-fix', {
-        text: `다시 쓸 곳 · ${link?.status === LINK.LINKED ? (link.name ?? '회고 게시판') : '회고 게시판 (주소 미제공)'}`
-          + (review.lackingLabels.length ? ` — 보충할 항목: ${review.lackingLabels.join(' · ')}` : '')
-          + '. 글을 고치거나 새로 올린 뒤 이 탭으로 돌아오면 다시 검토를 요청해요.',
-      })
-      : null,
-    review.topics.length
-      ? el('div', {}, [
-        review.previous ? el('p.crc-muted', { text: '아래는 지난 검토 결과예요. 새 검토가 끝나면 바뀌어요.' }) : null,
-        el('ul.crc-topics', {}, review.topics.map((t) => el('li', { 'data-met': t.state === 'PRESENT' ? 'yes' : 'no' }, [
-          el('span.crc-topic', { text: t.label }),
-          el('span.crc-topic-state', { text: t.stateText }),
-          t.quote
-            ? el('q.crc-quote', { text: t.quote })
-            : el('span.crc-loc', {
-              text: t.location ? `원문 ${t.location.start}–${t.location.end} (UTF-16)`
-                : t.state === 'PRESENT' ? '원문 위치 미제공' : '근거 문장을 찾지 못했어요',
-            }),
-        ]))),
-        review.originalNote ? el('p.crc-muted', { text: review.originalNote }) : null,
+      ? el('div.crc-fix', {}, [
+        el('p.crc-ai-k', { text: '보완 방법' }),
+        el('p', {
+          text: (review.lackingLabels.length
+            ? `회고에 ${review.lackingLabels.join(' · ')} 내용을 더해 `
+            : '회고를 고쳐 ')
+            + `${where}에 다시 올려 주세요. 이 탭으로 돌아오면 다시 검토를 요청해요.`,
+        }),
       ])
       : null,
-    pairs(review.meta),
-  ]);
+    el('details.crc-more', {}, [
+      el('summary', { text: '검토 상세' }),
+      review.originalNote ? el('p.crc-muted', { text: review.originalNote }) : null,
+      pairs(review.meta),
+    ].filter(Boolean)),
+  ].filter(Boolean));
 }
 
 function certificateBlock(cert) {
@@ -158,6 +223,7 @@ function conditionCard(criterionId, ctx) {
   const { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs,
     certificate, busy, onOpen, sourceText, demo = false } = ctx;
   const meta = CRITERIA[criterionId];
+  const task = TASK[criterionId] ?? { title: meta?.label ?? criterionId, todo: '', verb: null };
   const row = snapshot?.rows.find((r) => r.criterionId === criterionId) ?? null;
   const shown = row ? displayState(row) : { state: null, note: null };
   const met = shown.state === 'MET';
@@ -166,19 +232,21 @@ function conditionCard(criterionId, ctx) {
   const link = links?.[criterionId] ?? null;
   const ret = tracker ? tracker.status(criterionId) : { state: RETURN.IDLE };
   const line = returnLine(ret, row, { where: link?.where ?? '원래 화면' });
+  const verdict = verdictOf({ row, shown, ret });
 
-  let extra = null;
+  let detail = null;   // 조건별 덧붙임(회고 검토 · 인증 단계 · Moodle 기록)
   let cert = null;
-  let verb = null;
+  let verb = task.verb;
+  let why = null;      // 판단 이유 한 줄
+  let folded = [];     // '자세히 보기' 에 접어 둘 기록(Moodle 완료·제출 시각 등)
   if (criterionId === 'reflection-topics') {
     const review = reflectionReview({
       row, evRow: ev.row, limitations: ev.limitations, phase: session?.phase ?? null,
       aiApproval: session?.aiApproval ?? null, sourceText,
-      // 고치러 갔다 돌아와 아직 새 판정이 안 온 동안은 지난 글의 결과다
       // 떠나지 않고 「다시 확인」 만 누른 경우(departed=false)는 고친 글이 아니다.
       returned: ret.departed !== false && [RETURN.CHECKING, RETURN.PENDING, RETURN.STALLED, RETURN.READ_FAILED, RETURN.CANNOT_CHECK].includes(ret.state),
     });
-    extra = el('div', {}, [
+    detail = el('div', {}, [
       reflectionBlock(review, link),
       // 회고 재검증은 강의·과제의 원천 재확인 경로와 별개다(오규원 11/6). 실제 연결 전까지
       // 시연은 '합성 검증 범위', 실제 모드는 '경로 연결 전' 이라고 말한다.
@@ -186,36 +254,53 @@ function conditionCard(criterionId, ctx) {
         ? '회고 재검증은 합성 검증 범위예요 — 강의·과제 재확인 경로와 별개이고, 실제 연결 전이라 이 페이지의 대역이 흉내 내요.'
         : '회고 재검증 경로는 아직 연결 전이에요. 돌아오면 서버에 저장된 판정만 다시 읽어요.' }),
     ]);
-    if (review.needsRewrite) verb = '회고 다시 쓰기';
+    if (review.needsRewrite) verb = '회고 보완하기';
   } else if (criterionId === 'python-basic-certificate') {
     cert = certificateStatus({ row, evRow: ev.row, availability: ev.availability, session, approval, signedAtMs });
-    extra = certificateBlock(cert);
+    why = cert.title;
+    detail = certificateBlock(cert);
   } else {
-    extra = moodleBlock(criterionId, ev, evidenceState, row);
+    const facts = moodleFacts(criterionId, ev.row);
+    why = met ? task.met : row ? (shown.note ?? task.unmet) : null;
+    const more = [
+      facts.length ? pairs(facts) : null,
+      !facts.length && row?.evidenceId && evidenceState === EVIDENCE_LOAD.LOADING ? el('p.crc-muted', { text: 'Moodle 기록을 읽는 중이에요.' }) : null,
+      !facts.length && row?.evidenceId && evidenceState === EVIDENCE_LOAD.FAILED
+        ? el('p.crc-muted', { text: '근거 기록을 가져오지 못했어요. 판정은 서버 값 그대로이고, 「근거 보기」 에서 다시 볼 수 있어요.' })
+        : null,
+    ].filter(Boolean);
+    // 완료·제출 기록 시각 같은 이력은 '자세히 보기' 로 접는다. 위에는 이유 한 줄만.
+    folded = more.length ? more : [];
   }
 
   return el('li.cc.crc-card', {
     'data-state': met ? 'met' : 'open',
     'data-criterion': criterionId,
     'data-return': ret.state,
+    'data-verdict': verdict.key,
   }, [
+    // 1. 해야 하는 일
     el('span.cc-chip', { 'aria-hidden': 'true' }, [icon(CARD_ICON[criterionId] ?? 'check')]),
-    el('h3.bcx-task-name', { text: meta?.label ?? criterionId }),
-    el('p.cc-sub', { text: meta?.value ?? '' }),
+    el('h3.bcx-task-name', { text: task.title }),
+    el('p.cc-sub.crc-todo', { text: task.todo }),
 
-    el('ul.cc-rows', {}, [
-      cardRow('서버 판정', row ? STATE_TEXT[shown.state] ?? shown.state : '판정 없음', { strong: met }),
-      cardRow('원천', c?.shortLabel ?? SOURCE_SHORT[criterionId] ?? '미확인'),
-      cardRow('근거', c?.collected ? '확보' : '없음'),
-    ]),
-
+    // 2. 지금 충족 여부 — 크게 한 단어. 확인 중·조회 실패는 미충족과 다르다.
+    el('p.crc-verdict', { 'data-tone': verdict.tone }, [
+      el('strong', { text: verdict.label }),
+      verdict.key === 'CHECKING' || verdict.key === 'FETCH_FAILED'
+        ? el('span.crc-verdict-sub', { text: `서버 판정 ${row ? (STATE_TEXT[shown.state] ?? shown.state) : '없음'}` })
+        : null,
+    ].filter(Boolean)),
     line ? el('p.crc-status', { role: 'status', 'data-tone': line.tone, text: line.text }) : null,
-    extra,
-    shown.note ? el('p.cc-note', { text: shown.note }) : null,
-    targetLine(criterionId, link),
 
+    // 3. 판단 이유와 확인 근거
+    why ? el('p.crc-why', { text: why }) : null,
+    criterionId !== 'reflection-topics' && shown.note && !met && why !== shown.note ? el('p.cc-note', { text: shown.note }) : null,
+    el('p.crc-source', { text: `확인 출처 · ${c?.shortLabel ?? SOURCE_SHORT[criterionId] ?? '미확인'} · 근거 ${c?.collected ? '확보' : '없음'}` }),
+    detail,
+
+    // 4. 다음 행동
     el('div.crc-actions', {}, [
-      // 이미 충족이면 다시 갈 이유가 적다. 그래도 길은 남긴다 — 기록을 볼 수 있다.
       goControl(criterionId, link, { tracker, cert, certificate, busy, verb }),
       line?.recheck
         ? el('button.crc-sub-btn', {
@@ -223,8 +308,16 @@ function conditionCard(criterionId, ctx) {
           onClick: () => { void tracker?.recheck(criterionId); },
         }, [el('span', { text: '다시 확인' })])
         : null,
-      el('button.crc-sub-btn', { type: 'button', onClick: () => onOpen(criterionId) }, [el('span', { text: '자세히' })]),
+      el('button.crc-sub-btn', { type: 'button', onClick: () => onOpen(criterionId) }, [el('span', { text: '근거 보기' })]),
     ]),
+    // 상세 원문·열 항목·조회 시각은 접어 둔다.
+    el('details.crc-more', {}, [
+      el('summary', { text: '자세히 보기' }),
+      ...folded,
+      targetLine(criterionId, link),
+      meta?.value ? el('p.crc-muted', { text: `조건 종류 · ${meta.label} (${meta.value})` }) : null,
+      row?.evidenceId ? el('p.crc-muted', { text: `근거 ${row.evidenceId} · 개정 ${row.evidenceRevision ?? '-'}` }) : null,
+    ].filter(Boolean)),
   ].filter(Boolean));
 }
 
@@ -246,10 +339,31 @@ export function conditionCardsSection({
   onOpen = () => {}, sourceText = null, demo = false,
 } = {}) {
   const ctx = { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs, certificate, busy, onOpen, sourceText, demo };
-  const met = (snapshot?.rows ?? []).filter((r) => r.state === 'MET' && r.current !== false).length;
+  const rows = snapshot?.rows ?? [];
+  const met = rows.filter((r) => r.state === 'MET' && r.current !== false).length;
   const anyLinked = CRITERION_IDS.some((id) => links?.[id]?.status === LINK.LINKED);
+  // 상단 띠 — 지금 단계와 다음 행동. 카드 상태(서버 판정 + 재확인 상태)에서만 만든다.
+  const returns = CRITERION_IDS.map((id) => (tracker ? tracker.status(id) : { state: RETURN.IDLE }));
+  const notMet = CRITERION_IDS.filter((id) => rows.find((r) => r.criterionId === id)?.state !== 'MET');
+  const stripLine = conditionsLine({
+    met: snapshot ? met : null,
+    lacking: notMet.map((id) => TASK[id]?.title ?? id),
+    checking: returns.some((r) => [RETURN.CHECKING, RETURN.PENDING].includes(r.state)),
+    fetchFailed: returns.some((r) => r.state === RETURN.READ_FAILED),
+  });
+  const firstLacking = notMet[0] ?? null;
+  const stripAction = snapshot && met < 4 && firstLacking
+    ? {
+      label: `${TASK[firstLacking]?.title ?? firstLacking} 보러 가기`,
+      onClick: () => {
+        const target = typeof document !== 'undefined' ? document.querySelector(`[data-criterion="${firstLacking}"]`) : null;
+        target?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      },
+    }
+    : null;
 
   return el('section.cc-section.crc', { 'data-demo': demo ? 'yes' : null }, [
+    stageStrip({ stage: STAGE.CONDITIONS, line: stripLine, action: stripAction, demo }),
     el('div.sec-head', {}, [
       el('div', {}, [
         el('h2.sec-title', { text: '환급 조건' }),
