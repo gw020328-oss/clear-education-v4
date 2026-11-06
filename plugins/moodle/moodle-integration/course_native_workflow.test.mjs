@@ -1460,6 +1460,56 @@ test('guide: certificate start shows "preparing" (sign first), and a lost login 
     delete globalThis.document;
 });
 
+test('guide cert-wait offers a local "HackerRank login done" signal window and sends nothing to the server', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const waiting = {...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+        certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+            state: 'SIGNATURE_ACCEPTED', startAllowed: false, signatureReady: false}};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return waiting; }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    await press(guideRoot);
+    const wait = guideOf(guideRoot);
+    assert.equal(wait.key, 'cert-wait');
+    assert.match(wait.body, /「HackerRank 로그인을 마쳤어요」를 눌러 주세요/);
+    const nodes = [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)];
+    const signal = nodes.find(node => node.className === 'clear-guide-go clear-guide-signal');
+    assert.ok(signal, 'login-done button shown');
+    assert.equal(signal.textContent, 'HackerRank 로그인을 마쳤어요');
+    assert.ok(nodes.indexOf(signal) < nodes.indexOf(wait.go), 'login-done comes before the re-read button');
+    assert.equal(wait.go.textContent, '확인됐는지 보기');
+    const opened = [];
+    const original = globalThis.open;
+    globalThis.open = (...args) => { opened.push(args); return null; };
+    try {
+        const before = ui.sent.length;
+        signal.handlers.click();
+        for (let i = 0; i < 4; i++) { await tick(); }
+        assert.deepEqual(opened, [['http://127.0.0.1:9481/hr-ready', 'clear-hr-ready', 'popup,width=460,height=320']]);
+        assert.equal(ui.sent.length, before, 'no Moodle or CLEAR request from the signal');
+    } finally {
+        globalThis.open = original;
+    }
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('operator guide never shows the HackerRank login-done signal', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return session(null, 'COURSE_OPERATOR'); }
+        throw Error('unexpected ' + action);
+    }, {role: 'operator', guideRoot});
+    await press(guideRoot);
+    const nodes = [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)];
+    assert.equal(nodes.some(node => node.className === 'clear-guide-go clear-guide-signal'), false);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
 test('operator guide walks connect → AI approval (checkbox) → consent after the student → paid, one button per step', async () => {
     const {Node} = installCardDom();
     const guideRoot = new Node('div');

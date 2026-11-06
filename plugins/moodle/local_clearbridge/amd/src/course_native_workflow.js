@@ -6,6 +6,8 @@ define([], function() {
         'approve-registration', 'approve-reflection', 'consent', 'refresh-activity', 'start-certificate']);
     const id = value => typeof value === 'string' && /^[a-z][a-z0-9.-]{0,63}$/.test(value);
 
+    // TEST demo only: a local helper next to the run host turns this into the host's READY (HackerRank login done).
+    const HR_READY_URL = 'http://127.0.0.1:9481/hr-ready';
     const create = ({root, role, invoke, newKey, panels, courseId, origin}) => {
         const buttons = [...root.querySelectorAll('[data-workflow-action]')];
         const status = root.querySelector('[data-workflow-status]');
@@ -588,8 +590,8 @@ define([], function() {
             'cert-sign': ['확인했으면 서명해요', '서명은 확인 도장을 찍는 것과 같아요. 돈이 나가지 않아요.', '서명하기'],
             'cert-prep': ['서명할 내용을 준비하고 있어요', 'HackerRank 인증을 시작했어요. 곧 확인용 서명 단계가 나와요. '
                 + '자동으로 확인하고 있으니 잠시만 기다려 주세요.', '확인하기'],
-            'cert-wait': ['새 창에서 HackerRank에 로그인해 주세요', '로그인하면 CLEAR가 인증서를 가져와 확인해요. 보통 1~2분 '
-                + '걸려요. 끝났으면 아래 버튼을 눌러 보세요.', '확인됐는지 보기'],
+            'cert-wait': ['새 창에서 HackerRank에 로그인해 주세요', '로그인을 마쳤으면 아래 「HackerRank 로그인을 마쳤어요」를 '
+                + '눌러 주세요. 그러면 CLEAR가 인증서를 가져와 확인해요. 보통 1~2분 걸려요.', '확인됐는지 보기'],
             'register-read': ['네 가지 조건을 모두 마쳤어요', '이제 환급금 100 TEST를 받을 내 지갑을 확인할 차례예요.',
                 '받을 지갑 확인하기'],
             'register-confirm': ['받을 지갑 서명을 마쳤어요', '동의 단계로 넘어가기 전에 서명이 잘 기록됐는지 확인할게요.',
@@ -749,7 +751,8 @@ define([], function() {
                 }
             }
             return {kicker: '지금 할 일', title, body, hint: null, button, facts, raw, help, track: null,
-                spin: waiting.has(step.key), steps, ack: step.key === 'op-ai'};
+                spin: waiting.has(step.key), steps, ack: step.key === 'op-ai',
+                signal: participant && step.key === 'cert-wait' ? 'HackerRank 로그인을 마쳤어요' : null};
         };
         const runGuide = async step => {
             const go = async actions => {
@@ -874,6 +877,16 @@ define([], function() {
                     });
                     label.append(guideAck, node('span', 'clear-guide-ack-text', '검토할 글·AI 모델·비용을 확인했고, 이 1회 검토를 승인해요'));
                     box.append(label);
+                }
+                if (content.signal) {
+                    // Opens one small local window that tells the run host the login is done, then closes.
+                    // No Moodle or CLEAR server request and nothing about payment.
+                    const signal = node('button', 'clear-guide-go clear-guide-signal', content.signal);
+                    signal.type = 'button';
+                    signal.addEventListener('click', () => {
+                        globalThis.open?.(HR_READY_URL, 'clear-hr-ready', 'popup,width=460,height=320');
+                    });
+                    box.append(signal);
                 }
                 guideButton = null;
                 if (content.button && step.actions.length) {

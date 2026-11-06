@@ -331,3 +331,7 @@
 }
 [data-native-lock-notice] .clear-lock-link:hover { filter: brightness(1.06); color: var(--accent-ink); text-decoration: none; }
 [data-native-lock-notice] .clear-lock-link:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+/* 0.1.43: on the HackerRank wait card the login-done signal is the main button; the re-read button steps back. */
+[data-native-guide] .clear-guide-signal + .clear-guide-go {
+    min-height: 3rem; background: transparent; color: var(--accent); border: 2px solid var(--accent); font-size: 1.1rem;
+}
