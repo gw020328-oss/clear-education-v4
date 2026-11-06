@@ -81,3 +81,10 @@ test('host preview config is exact; owner approvals come from a private file and
   assert.equal(approvals.take(hex('1'), hex('2')), null, 'consumed once');
   assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')).approvals, [], 'removed from the owner file');
 });
+
+test('relay accepts a remote D expiry a little ahead of this host clock, still rejects stale or far-future ones', () => {
+  const src = readFileSync(new URL('../../src/agent-preview/operator-relay.mjs', import.meta.url), 'utf8');
+  assert.match(src, /const D_CLOCK_SKEW_MS = 30000;/);
+  assert.match(src, /b\.expiresAt>time\(\)\.wall&&b\.expiresAt<=time\(\)\.wall\+900000\+D_CLOCK_SKEW_MS/);
+  assert.match(src, /time\(\)\.wall<input\.expiresAt&&input\.expiresAt<=time\(\)\.wall\+3600000\+D_CLOCK_SKEW_MS/);
+});

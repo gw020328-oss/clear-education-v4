@@ -17,6 +17,9 @@ const opaque = v => typeof v==='string' && /^[A-Za-z0-9_.:-]{1,128}$/.test(v);
 const positive = v => Number.isSafeInteger(v) && v>0;
 const sync = fn => {const v=fn();if(v && typeof v.then==='function'){Promise.resolve(v).catch(()=>{});fail('PREVIEW_UNAVAILABLE');}return v;};
 const gates = Object.freeze({scope:'PRECONFIGURATION_ONLY',automaticEligibility:false,paymentAllowed:false});
+// A remote D stamps expiries with its own clock. Allow only a small forward skew on the upper
+// bound; the lower bound (not yet expired by this host's clock) is unchanged.
+const D_CLOCK_SKEW_MS = 30000;
 const paths = Object.freeze({prepare:'/v1/preview/prepare',generate:'/v1/preview/generate',execute:'/v1/preview/execute'});
 const dGates = ['scope','automaticEligibility','paymentAllowed','actualReclaimCall','actualPayout','dataMode'];
 const dErrors = new Set(['AUTH_REQUIRED','HOST_REJECTED','SERVER_TO_SERVER_ONLY','REQUEST_REPLAY','INVALID_FIELDS','ACTOR_SCOPE',
@@ -190,7 +193,7 @@ export function createOperatorPreviewRelay({authentication,resolveOperatorPrevie
       check(r.phase==='PREPARED'&&!r.approval,'PREVIEW_ALREADY_USED');
       check(input.bodyHash===r.prepared.bodyHash&&input.bindingHash===r.deployment.bindingHash
         &&typeof input.approvalRef==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(input.approvalRef)
-        &&positive(input.expiresAt)&&time().wall<input.expiresAt&&input.expiresAt<=time().wall+3600000,'APPROVAL_REQUIRED');
+        &&positive(input.expiresAt)&&time().wall<input.expiresAt&&input.expiresAt<=time().wall+3600000+D_CLOCK_SKEW_MS,'APPROVAL_REQUIRED');
       r.approval={ref:input.approvalRef,expires:input.expiresAt,key:hash({ref:input.approvalRef,binding:input.bindingHash})};
       shorten(r,input.expiresAt);const result=preparedView(r);assertCurrent();return result;
     },
@@ -204,7 +207,7 @@ export function createOperatorPreviewRelay({authentication,resolveOperatorPrevie
       try{const {reply:response,assertCurrent}=await dispatch(r,context,options,'generate',{approvalRef:ref});assertCurrent();if(response.status!==200)return dFailure(r,response);
         const b=response.body;commonD(b,['version','draftId','expiresAt','draft','proposal','modelCall','model','bodyHash','actualModelCall','modelProvenance']);
         check(b.version==='clear-external-preview-draft.1'&&typeof b.draftId==='string'&&/^[a-f0-9-]{36}$/.test(b.draftId)
-          &&positive(b.expiresAt)&&b.expiresAt>time().wall&&b.expiresAt<=time().wall+900000
+          &&positive(b.expiresAt)&&b.expiresAt>time().wall&&b.expiresAt<=time().wall+900000+D_CLOCK_SKEW_MS
           &&b.bodyHash===r.prepared.bodyHash&&b.model===r.prepared.model,'D_RESPONSE_INVALID');
         const draft=reviewModelProposal(r.sourceText,b.draft.modelRows);
         check(hash(draft)===hash(b.draft)&&hash(proposalDto(draft))===hash(b.proposal),'D_RESPONSE_INVALID');
