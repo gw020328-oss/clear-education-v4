@@ -291,5 +291,5 @@ scope 예시는 DEPLOY_LOCAL 1절 JSON에서 `deploymentEpoch`와 `bindingHash`�
 
 1. Gemini 키를 D 서버에 넣을지(6절). D 전용 새 키를 권한다.
 2. 입력 1건·1회 호출 승인(7절). 승인 전에는 원장에 아무것도 등록하지 않는다.
-3. 메인이 A 설정을 이 D로 바꿀 시점. 지금 A는 로컬 D를 가리킬 수 있으며, A는 한 번에 하나의 D만 쓴다.
+3. (결정됨) 사용자가 r34에 이 Lightsail D를 쓰기로 했다. 로컬 D는 종료했다. 메인이 A 설정(`~/Library/Application Support/CLEAR/a-operator-preview-lightsail/`)으로 실제 HTTPS prepare 왕복을 확인했다(모델 0회). r34가 끝날 때까지 VM 실행환경(compose.env, 컨테이너, 승인 원장)은 메인만 다룬다. 메인이 VM에 `config/source-notice.txt`(환급 안내문, 비밀 아님)를 추가했다.
 4. 행사 뒤 삭제 시점(8절). 삭제 전까지 월 USD 7이 일할 계산으로 과금된다.
