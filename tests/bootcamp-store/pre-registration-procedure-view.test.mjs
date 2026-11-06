@@ -9,7 +9,7 @@ import {once} from 'node:events';
 import {mkdirSync,readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {compileFunction} from 'node:vm';
-import {procedureFixture} from './procedure-fixture.mjs';
+import {procedureFixture,START} from './procedure-fixture.mjs';
 import {createCertificates,loadTls} from '../../src/dev/tls.mjs';
 import {createBootcampFrontendServer} from '../../tools/bootcamp/frontend-server.mjs';
 import {createNormalBootcampClient} from '../../src/bootcamp/normal-client.mjs';
@@ -23,13 +23,13 @@ const compileReadMode=vars=>compileFunction(live.slice(start,end)+"'SOURCE_ONLY'
  ['store','failureState','activityReturnOnly','certificateCardOnly','app','report'])(vars.store,vars.failureState??null,
  vars.activityReturnOnly??false,vars.certificateCardOnly??false,vars.app,vars.report);
 
-async function fixture(t){
+async function fixture(t,{withReadMode=true}={}){
  const f=await procedureFixture(t),a=f.create(),report={};let registered=false,refreshes=0;
  await f.complete(a);
  // Registered chain/funding ports throw until the application has a chain binding.
  f.setHook(()=>{if(!registered)throw Error('BC_E3_REGISTERED_BINDING');});
  const procedureReadMode=compileReadMode({store:f.store,app:a,report});
- const normalUi={getSession(){return null;},procedureReadMode,
+ const normalUi={getSession(){return null;},...(withReadMode?{procedureReadMode}:{}),
   async refreshProcedure(c,id){f.store.getOperationsProjection(c,id);refreshes++;requireRule(id===a&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');}};
  const dir=join(f.directory,'ui-tls');mkdirSync(dir,{mode:0o700});const fingerprint=createCertificates(dir);
  const mounted=createBootcampFrontendServer({authentication:f.service,store:f.store,tls:loadTls(dir,fingerprint),sourceMode:'REGISTERED_TEST_SOURCE',chainId:f.config.chainId,normalUi});
@@ -84,4 +84,16 @@ test('read mode is source-only only for the bound application before registratio
  for(const flag of [{failureState:{}},{activityReturnOnly:true},{certificateCardOnly:true}])assert.equal(mode(flag)(f.aliceContext,a),'CANONICAL');
  assert.equal(mode({})(f.bobContext,b),'CANONICAL');
  assert.throws(()=>mode({})(f.bobContext,a),/BC_|FORBIDDEN|403/,'authorization runs before any mode decision');
+});
+
+test('reproduction: without the read mode the same pre-registration view is the old HTTP 409',async t=>{
+ const x=await fixture(t,{withReadMode:false}),r=await x.raw(`/bootcamp/v3/applications/${x.a}/procedure`);
+ assert.deepEqual([r.status,r.body.error],[409,'BC_NORMAL_PROCEDURE_NOT_READY']);
+});
+
+test('expired evidence is never shown as current MET before registration',async t=>{
+ const x=await fixture(t);x.f.setTime(START+600);
+ const view=await x.client(x.f.aliceContext).view(x.a);
+ assert.equal(view.decision.conditionsStatus,'UNKNOWN');assert.equal(view.decision.evidenceCurrent,false);
+ assert(view.criteria.every(r=>r.current===false));assert.equal(view.procedure.status,'SOURCE_REVERIFICATION_REQUIRED');
 });
