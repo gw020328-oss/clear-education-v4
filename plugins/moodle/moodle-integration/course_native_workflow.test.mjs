@@ -1459,3 +1459,85 @@ test('guide: certificate start shows "preparing" (sign first), and a lost login 
     ui.mounted.destroy();
     delete globalThis.document;
 });
+
+test('operator guide walks connect → AI approval (checkbox) → consent after the student → paid, one button per step', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let stage = 'start';
+    const approval = {version: 'clear-normal-exact-ai-approval-display.1', applicationId: 'app-one', permitted: true,
+        approvalWindowEndsAtMs: Date.now() + 300000, bodySha256: 'input-hash', model: 'gemini-test', scenarioUsd: '0.00346',
+        runBindingHash: 'run-binding'};
+    const viewAt = () => {
+        const view = {...realView('app-one', stage === 'agreed-both' || stage === 'paid' ? 'CLAIMED' : null), role: 'COURSE_OPERATOR'};
+        if (['applied', 'ai'].includes(stage)) {
+            view.criteria = view.criteria.map(row => row.criterionId === 'reflection-topics' ? {...row, state: 'MISSING'} : row);
+            view.decision = {...view.decision, conditionsStatus: 'NOT_MET'};
+        }
+        const roles = {'student-agreed': ['PARTICIPANT'], 'agreed-both': ['PARTICIPANT', 'COURSE_OPERATOR'],
+            paid: ['PARTICIPANT', 'COURSE_OPERATOR']}[stage] ?? [];
+        view.consent = {...view.consent, bothCurrent: roles.length === 2, records: roles.map(actorRole => ({actorRole, value: 'AGREE'}))};
+        return view;
+    };
+    const procedure = {...receipt, version: 'clear-bootcamp-procedure-operation.1', usableForPayment: false};
+    const ui = fixture(({action}) => {
+        switch (action) {
+            case 'read-session': return {...session(stage === 'start' ? null : 'app-one', 'OPERATOR'),
+                ...(stage === 'ai' ? {aiApproval: approval} : {})};
+            case 'read-application': return viewAt();
+            case 'approve-reflection': stage = 'met'; return {version: 'clear-normal-ai-approval-receipt.1', applicationId: 'app-one',
+                runBindingHash: approval.runBindingHash, status: 'RECORDED', paymentConsentIncluded: false};
+            case 'consent': stage = 'agreed-both'; return procedure;
+            case 'payment-receipt': stage = 'paid'; return {...realReceipt(), role: 'OPERATOR'};
+            default: throw Error('unexpected ' + action);
+        }
+    }, {role: 'operator', guideRoot});
+    const stepsText = () => [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)]
+        .filter(node => node.className === 'clear-guide-step').map(node => node.attributes['data-state']).join(',');
+    assert.equal(guideOf(guideRoot).key, 'load');
+    assert.equal(stepsText(), 'done,now,todo,todo,todo', 'the teacher sees five steps');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'op-wait-apply');
+    stage = 'applied';
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'refresh');
+    await press(guideRoot);
+    const conditions = guideOf(guideRoot);
+    assert.equal(conditions.key, 'op-conditions');
+    assert.match(conditions.title, /학생 조건을 확인하고 있어요 \(3\/4\)/);
+    stage = 'ai';
+    await press(guideRoot);
+    const ai = guideOf(guideRoot);
+    assert.equal(ai.key, 'op-ai');
+    assert.match(ai.facts, /비용 상한\(예상\)\s*0\.00346 USD/);
+    assert.match(ai.facts, /AI 모델\s*gemini-test/);
+    assert.equal(ai.go.disabled, true, 'approval needs the explicit check first');
+    const box = [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)]
+        .find(node => node.className === 'clear-guide-ack-box');
+    box.checked = true;
+    box.handlers.change();
+    assert.equal(guideOf(guideRoot).go.disabled, false);
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'refresh', 'the recorded approval is not offered again');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'op-wait-student', 'all MET, but the teacher waits for the student first');
+    stage = 'student-agreed';
+    await press(guideRoot);
+    const consent = guideOf(guideRoot);
+    assert.equal(consent.key, 'op-consent');
+    assert.match(consent.facts, /지급 금액\s*100 TEST/);
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'refresh');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'receipt');
+    await press(guideRoot);
+    const paid = guideOf(guideRoot);
+    assert.equal(paid.key, 'paid');
+    assert.equal(paid.title, '학생에게 100 TEST를 보냈어요');
+    assert.equal(stepsText(), 'done,done,done,done,done');
+    assert.deepEqual(ui.sent.map(input => input.action + (input.action === 'consent' ? ':' + input.value : '')), [
+        'read-session', 'read-session', 'read-session', 'read-application', 'read-session', 'read-application',
+        'approve-reflection', 'read-session', 'read-application', 'read-session', 'read-application', 'consent:AGREE',
+        'read-session', 'read-application', 'payment-receipt', 'read-application']);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});

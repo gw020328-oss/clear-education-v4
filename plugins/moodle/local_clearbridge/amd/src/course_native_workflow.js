@@ -406,11 +406,13 @@ define([], function() {
         // Student "one thing to do now" guide. Display and routing only: every guide button runs the same
         // run(action) path as the existing controls, is disabled exactly when enabled(action) is false, and
         // never offers an action the page would refuse. Technical sections stay in the page behind a toggle.
-        let simple = participant;
+        let simple = true;
+        let aiApprovedFor = null;
         let boundOnce = null;
         let signedRegistrationFor = null;
         let guideSignature = null;
         let guideButton = null;
+        let guideAck = null;
         let guideStepNow = null;
         const metAll = view => view?.decision?.conditionsStatus === 'MET' || (Array.isArray(view?.criteria)
             && view.criteria.length >= 4 && view.criteria.every(row => row.state === 'MET'));
@@ -483,6 +485,84 @@ define([], function() {
             }
             return {key: registration ? 'register-check' : 'register-read', actions: ['read-registration']};
         };
+        // Operator (teacher) guide: connect → student application → reflection AI approval → consent → payment check.
+        // Same rules as the student guide: every button runs the existing run(action) and is disabled when enabled() is false.
+        const receiptIncluded = role => receipt?.applicationId === applicationId && receipt.role === role
+            && receipt.claim?.state === 'INCLUDED' && receipt.claim.canonical === true
+            && receipt.claim.transferAmountAtoms === '100000000' && receipt.balance?.receivedAtoms === '100000000'
+            && receipt.balance.exactExpectedAmountVerified === true;
+        const operatorStep = () => {
+            if (!ready) {
+                return {key: 'connect', actions: []};
+            }
+            if (pending || walletBusy) {
+                return {key: 'busy', busy: pending?.action ?? 'wallet', actions: []};
+            }
+            if (unknown) {
+                return {key: 'unknown', actions: ['read-session']};
+            }
+            if (lastStatus === 'notaccepted' || lastStatus === 'failure') {
+                return {key: lastStatus, actions: ['read-session']};
+            }
+            if (!session) {
+                return {key: 'load', actions: ['read-session']};
+            }
+            if (reflection?.permitted === true && aiApprovedFor !== applicationId) {
+                return Number(reflection.approvalWindowEndsAtMs) > Date.now()
+                    ? {key: 'op-ai', actions: ['approve-reflection']} : {key: 'op-ai-late', actions: ['read-session']};
+            }
+            if (!applicationId) {
+                return {key: 'op-wait-apply', actions: ['read-session']};
+            }
+            const both = ['read-session', 'read-application'];
+            const view = application;
+            if (!view || view.applicationId !== applicationId) {
+                return {key: 'refresh', actions: both};
+            }
+            if (!metAll(view)) {
+                return {key: 'op-conditions', actions: both};
+            }
+            if (view.payment?.acceptedRight || (agreedBy(view, 'PARTICIPANT') && agreedBy(view, 'COURSE_OPERATOR'))) {
+                return {key: receiptIncluded('OPERATOR') ? 'paid' : receipt ? 'receipt-wait' : 'receipt',
+                    actions: ['payment-receipt', 'read-application']};
+            }
+            // Offer the teacher's consent only after the student's (the student registers first; earlier is a 409).
+            if (agreedBy(view, 'COURSE_OPERATOR') || !agreedBy(view, 'PARTICIPANT')) {
+                return {key: 'op-wait-student', actions: both};
+            }
+            return {key: 'op-consent', actions: ['consent'], choice: 'AGREE'};
+        };
+        const operatorSteps = () => {
+            const view = application?.applicationId === applicationId ? application : null;
+            const reflectionMet = !!view?.criteria?.some(row => row.criterionId === 'reflection-topics' && row.state === 'MET');
+            const done = [ready, ready && !!applicationId, ready && (reflectionMet || aiApprovedFor === applicationId && !!applicationId),
+                ready && !!view && (!!view.payment?.acceptedRight || agreedBy(view, 'PARTICIPANT') && agreedBy(view, 'COURSE_OPERATOR')),
+                ready && receiptIncluded('OPERATOR')];
+            const now = done.indexOf(false);
+            return ['지갑 연결', '학생 신청', '회고 AI 승인', '양측 동의', '지급 확인']
+                .map((name, i) => [name, done[i] ? 'done' : i === now ? 'now' : 'todo']);
+        };
+        const operatorText = {
+            connect: ['MetaMask로 시작해요', '아래 버튼을 위에서부터 하나씩 누르세요. MetaMask 창이 뜨면 「네트워크 추가」, 「연결」, '
+                + '「서명」을 차례로 승인해 주세요. 진행하는 동안에는 MetaMask 설정을 바꾸지 마세요.', null],
+            load: ['학생 진행 상황을 불러올게요', '버튼을 누르면 지금 선생님이 할 일을 알려 드려요.', '불러오기'],
+            'op-wait-apply': ['학생의 환급 신청을 기다리고 있어요', '학생이 신청하면 조건 확인이 시작돼요. 학생이 신청했다고 하면 '
+                + '아래 버튼을 눌러 주세요.', '최신 상태 확인하기'],
+            refresh: ['최신 상태를 불러올게요', '학생 신청과 조건 판정을 새로 가져와요.', '불러오기'],
+            'op-ai': ['회고 AI 검토를 승인해 주세요', '학생 회고 글 1개를 AI가 세 항목(수행 내용·문제 해결 과정·배운 점)이 있는지 '
+                + '확인해요. 아래 내용을 보고 체크한 뒤 서명해 주세요. 승인 창이 열린 뒤 5분 안에 해야 해요.', '승인하고 서명하기'],
+            'op-ai-late': ['승인 가능 시간이 지났어요', '회고 AI 검토 승인 시간이 지났어요. 같은 버튼을 다시 누르지 말고 진행 담당자에게 '
+                + '알려 주세요.', '최신 상태 불러오기'],
+            'op-wait-student': ['학생의 확인을 기다리고 있어요', '네 가지 조건이 모두 충족됐어요. 학생이 받을 지갑을 확인하고 동의하면 '
+                + '선생님 동의 차례가 와요. 학생이 마쳤다고 하면 아래 버튼을 눌러 주세요.', '최신 상태 확인하기'],
+            'op-consent': ['결과를 확인하고 동의해 주세요', '학생이 동의했어요. 선생님이 동의하면 금고에 묶여 있던 100 TEST가 '
+                + '학생 지갑으로 지급돼요.', '동의하고 서명하기'],
+            receipt: ['지급을 확인해요', '학생과 선생님 모두 동의했어요. 학생 지갑에 100 TEST가 들어갔는지 블록체인 기록으로 '
+                + '확인해 볼게요.', '지급 확인하기'],
+            'receipt-wait': ['지급을 처리하고 있어요', '조금 뒤에 다시 확인해 주세요.', '다시 확인하기'],
+            paid: ['학생에게 100 TEST를 보냈어요', '금고에서 학생 지갑으로 100 TEST가 간 것을 블록체인 기록으로 확인했어요. '
+                + '기록이 완전히 확정되기까지는 조금 더 걸릴 수 있어요.', '다시 확인하기'],
+        };
         const guideText = {
             connect: ['Google 계정으로 시작해요', '아래 버튼을 위에서부터 하나씩 누르세요. 환급금을 받을 내 지갑이 자동으로 '
                 + '만들어져요. 따로 설치할 것은 없어요.', null],
@@ -530,6 +610,19 @@ define([], function() {
         const reading = ['내 진행 상황을 불러오는 중이에요', 'Moodle과 CLEAR 서버에서 최신 기록을 가져오고 있어요. 보통 몇 초면 끝나요.', null];
         const signing = (what) => ['서명 창을 확인해 주세요', '화면에 뜬 서명 창에서 내용을 보고 「서명」을 눌러 주세요. ' + what,
             '돈은 나가지 않아요. 확인 도장만 찍는 거예요.'];
+        const operatorReading = ['학생 진행 상황을 불러오는 중이에요', 'Moodle과 CLEAR 서버에서 최신 기록을 가져오고 있어요. '
+            + '보통 몇 초면 끝나요.', null];
+        const operatorBusy = {
+            'read-session': operatorReading, 'read-application': operatorReading, 'decision-evidence': operatorReading,
+            'read-operation': operatorReading,
+            'approve-reflection': ['MetaMask 서명 창을 확인해 주세요', 'MetaMask 창에서 내용을 보고 「서명」을 눌러 주세요. "학생 회고 글 '
+                + '1개를 AI로 검토하는 비용을 승인해요"라는 확인이에요.', 'TEST 지급과는 별개예요. 승인하면 AI 검토가 1회 실행돼요.'],
+            consent: ['MetaMask 서명 창을 확인해 주세요', 'MetaMask 창에서 「서명」을 눌러 주세요. "이 결과대로 지급하는 데 동의해요"라는 '
+                + '확인이에요.', '이 동의가 마지막 단계예요. 동의하면 금고에 묶인 100 TEST가 학생 지갑으로 지급돼요.'],
+            'payment-receipt': ['블록체인에서 지급을 확인하는 중이에요', '공용 기록장(블록체인)에서 100 TEST가 금고에서 학생 지갑으로 '
+                + '갔는지 직접 확인하고 있어요.', null],
+            wallet: ['지갑을 준비하는 중이에요', 'MetaMask 연결을 처리하고 있어요. MetaMask 창이 뜨면 안내를 따라 승인해 주세요.', null],
+        };
         const busyText = {
             'read-session': reading, 'read-application': reading, 'decision-evidence': reading, 'read-operation': reading,
             'create-application': ['환급 신청서를 만드는 중이에요', '신청 기록을 안전하게 남기고 있어요. 잠시만 기다려 주세요.', null],
@@ -564,19 +657,48 @@ define([], function() {
             conditions: ['CLEAR는 무엇을 확인하나요?', '강의 수강, 과제 제출, 회고 작성, HackerRank Python 인증 네 가지예요. '
                 + 'Moodle과 HackerRank 기록으로 확인해서 따로 올릴 서류는 없어요.'],
         };
+        Object.assign(glossary, {
+            metamask: ['MetaMask는 뭔가요?', '선생님(운영자)용 지갑 앱이에요. 이 강좌의 시연용 네트워크를 추가하고, 확인이 필요할 때 '
+                + '서명 창을 띄워요.'],
+            aiOp: ['회고 AI는 무엇을 하나요?', '학생 회고 글에 수행 내용·문제 해결 과정·배운 점이 있는지만 확인해요. 점수를 매기거나 '
+                + '지급을 결정하지 않고, 지급 키도 없어요.'],
+            aiCost: ['왜 선생님이 승인하나요?', '학생 글을 외부 AI로 보내고 비용이 드는 일이라, 정확한 입력·모델·비용을 선생님이 '
+                + '확인하고 1회만 승인해요.'],
+            signatureOp: ['서명은 뭔가요?', 'MetaMask로 "제가 확인했어요"라고 도장을 찍는 거예요. 무엇에 동의하는지는 서명 창과 '
+                + '원본 기록에서 확인할 수 있어요.'],
+            escrow: ['금고(에스크로)는 뭔가요?', '교육기관이 미리 넣어 둔 환급금이 잠겨 있는 곳이에요. 시연 컨트랙트에서는 조건을 채운 '
+                + '학생에게 지급하는 것 말고는 꺼낼 수 없어요.'],
+        });
+        const operatorHelp = {connect: ['metamask'], load: ['metamask'], 'op-wait-apply': ['conditions'],
+            'op-conditions': ['aiOp', 'conditions'], 'op-ai': ['aiCost', 'aiOp'], 'op-wait-student': ['consent'],
+            'op-consent': ['consent', 'escrow', 'signatureOp'], receipt: ['blockchain', 'escrow'], 'receipt-wait': ['blockchain'],
+            paid: ['blockchain', 'test']};
         const helpFor = {connect: ['wallet'], apply: ['conditions', 'test'], bind: ['conditions'], conditions: ['ai', 'conditions'],
             'cert-start': ['hackerrank', 'signature'], 'cert-read': ['signature'], 'cert-sign': ['signature'],
             'cert-prep': ['hackerrank'], 'cert-wait': ['hackerrank'], 'register-confirm': ['signature'], 'register-read': ['wallet', 'test'], 'register-sign': ['wallet', 'address', 'signature', 'test'],
             consent: ['consent', 'signature'], 'wait-operator': ['consent'], receipt: ['blockchain'], 'receipt-wait': ['blockchain'],
             paid: ['blockchain', 'final', 'test']};
-        const waiting = new Set(['busy', 'cert-prep', 'cert-wait', 'wait-operator', 'receipt-wait']);
+        const waiting = new Set(['busy', 'cert-prep', 'cert-wait', 'wait-operator', 'receipt-wait', 'op-wait-apply',
+            'op-wait-student']);
         const tail = value => typeof value === 'string' && /^0x[0-9a-fA-F]{40}$/.test(value) ? value.slice(-4) : null;
         const guideContent = step => {
-            const help = (helpFor[step.key] ?? []).map(key => glossary[key]);
+            const steps = participant ? null : operatorSteps();
+            const help = ((participant ? helpFor : operatorHelp)[step.key] ?? []).map(key => glossary[key]);
             if (step.key === 'busy') {
-                const [title, body, hint] = busyText[step.busy] ?? reading;
+                const [title, body, hint] = (participant ? busyText : {...busyText, ...operatorBusy})[step.busy]
+                    ?? (participant ? reading : operatorReading);
                 return {kicker: hint ? '지금 할 일' : '진행 중', title, body, hint, button: null, facts: [], raw: null,
-                    help: [], track: null, spin: true};
+                    help: [], track: null, spin: true, steps, ack: false};
+            }
+            if (step.key === 'op-conditions') {
+                const rows = application.criteria;
+                const left = rows.filter(row => row.state !== 'MET');
+                const names = left.map(row => criterionLabels[row.criterionId] ?? row.criterionId).join(', ');
+                return {kicker: '지금 할 일', title: '학생 조건을 확인하고 있어요 (' + (rows.length - left.length) + '/' + rows.length + ')',
+                    body: '남은 조건: ' + names + '. 학생이 HackerRank 확인까지 마치면 선생님의 회고 AI 검토 승인 차례가 와요. '
+                        + '학생이 마쳤다고 하면 아래 버튼을 눌러 주세요.',
+                    hint: null, button: '최신 상태 확인하기', facts: [], raw: null, help, spin: false, steps, ack: false,
+                    track: rows.map(row => [criterionLabels[row.criterionId] ?? row.criterionId, row.state === 'MET'])};
             }
             if (step.key === 'conditions') {
                 const rows = application.criteria;
@@ -586,12 +708,26 @@ define([], function() {
                 return {kicker: '지금 할 일', title: '조건을 확인하고 있어요 (' + (rows.length - left.length) + '/' + rows.length + ')',
                     body: '남은 조건: ' + names + '. 아래 목록에서 할 일을 확인하세요.'
                         + (reflectionLeft ? ' 회고는 선생님이 AI 확인을 승인하면 검토돼요.' : ''),
-                    hint: null, button: '최신 상태 확인하기', facts: [], raw: null, help, spin: false,
+                    hint: null, button: '최신 상태 확인하기', facts: [], raw: null, help, spin: false, steps, ack: false,
                     track: rows.map(row => [criterionLabels[row.criterionId] ?? row.criterionId, row.state === 'MET'])};
             }
-            const [title, body, button] = guideText[step.key];
+            const [title, body, button] = (participant ? guideText : {...guideText, ...operatorText})[step.key];
             const facts = [];
             let raw = null;
+            if (step.key === 'op-ai') {
+                const ends = new Date(Number(reflection.approvalWindowEndsAtMs));
+                facts.push(['검토할 글', '학생 회고 글 1개']);
+                facts.push(['AI 모델', String(reflection.model ?? label('unconfirmed'))]);
+                facts.push(['비용 상한(예상)', reflection.scenarioUsd == null ? label('unconfirmed') : reflection.scenarioUsd + ' USD']);
+                facts.push(['승인 마감', Number.isNaN(ends.getTime()) ? label('unconfirmed') : ends.toLocaleTimeString('ko-KR')]);
+                raw = format('reflection', reflection);
+            }
+            if (step.key === 'op-consent') {
+                facts.push(['조건', '네 가지 모두 충족']);
+                facts.push(['지급 금액', amount(application?.agreedPayment) + ' (시연용 포인트)']);
+                facts.push(['받는 곳', '학생이 직접 서명해 등록한 지갑']);
+                raw = displayed.application ? format('application', displayed.application) : null;
+            }
             if (step.key === 'register-sign') {
                 const end = tail(registration?.payload?.message?.recipient);
                 facts.push(['받는 곳', '내 CLEAR 지갑 (Google 로그인으로 만든 지갑)']);
@@ -604,14 +740,15 @@ define([], function() {
             }
             if (step.key === 'paid') {
                 const end = tail(receipt?.expectedPayment?.recipient);
-                facts.push(['받은 곳', '내 CLEAR 지갑' + (end ? ' (번호 끝자리 ' + end + ')' : '')]);
+                facts.push([participant ? '받은 곳' : '보낸 곳', (participant ? '내 CLEAR 지갑' : '학생 지갑')
+                    + (end ? ' (번호 끝자리 ' + end + ')' : '')]);
                 facts.push(['받은 금액', amount(receipt?.expectedPayment)]);
                 if (typeof receipt?.claim?.transactionHash === 'string') {
                     raw = '블록체인 기록 번호(거래 해시): ' + receipt.claim.transactionHash;
                 }
             }
             return {kicker: '지금 할 일', title, body, hint: null, button, facts, raw, help, track: null,
-                spin: waiting.has(step.key)};
+                spin: waiting.has(step.key), steps, ack: step.key === 'op-ai'};
         };
         const runGuide = async step => {
             const go = async actions => {
@@ -635,10 +772,10 @@ define([], function() {
             await go(step.actions[0] === 'read-session' ? step.actions : ['read-session', ...step.actions]);
         };
         const paintGuide = () => {
-            if (!participant || !guideRoot) {
+            if (!guideRoot) {
                 return;
             }
-            const step = guideStep();
+            const step = participant ? guideStep() : operatorStep();
             guideStepNow = step;
             root.classList?.toggle('clear-simple', simple);
             if (root.dataset) {
@@ -668,6 +805,19 @@ define([], function() {
                 const heading = node('div', 'clear-guide-heading');
                 heading.append(node('p', 'clear-guide-kicker', content.kicker), node('h2', 'clear-guide-title', content.title));
                 head.append(heading);
+                if (content.steps) {
+                    const steps = node('ol', 'clear-guide-steps');
+                    steps.setAttribute('aria-label', '선생님 진행 단계');
+                    steps.append(...content.steps.map(([name, state]) => {
+                        const item = node('li', 'clear-guide-step', name);
+                        item.setAttribute('data-state', state);
+                        if (state === 'now') {
+                            item.setAttribute('aria-current', 'step');
+                        }
+                        return item;
+                    }));
+                    box.append(steps);
+                }
                 box.append(head, node('p', 'clear-guide-body', content.body));
                 if (content.hint) {
                     box.append(node('p', 'clear-guide-hint', content.hint));
@@ -710,6 +860,20 @@ define([], function() {
                         node('pre', 'clear-guide-raw-text', content.raw));
                     box.append(more);
                 }
+                guideAck = null;
+                if (content.ack) {
+                    // Mirrors the page's own reviewed-cost acknowledgment checkbox (the only input approve-reflection needs).
+                    const label = node('label', 'clear-guide-ack');
+                    guideAck = node('input', 'clear-guide-ack-box');
+                    guideAck.type = 'checkbox';
+                    guideAck.checked = acknowledgment.checked === true;
+                    guideAck.addEventListener('change', () => {
+                        acknowledgment.checked = guideAck.checked === true;
+                        render();
+                    });
+                    label.append(guideAck, node('span', 'clear-guide-ack-text', '검토할 글·AI 모델·비용을 확인했고, 이 1회 검토를 승인해요'));
+                    box.append(label);
+                }
                 guideButton = null;
                 if (content.button && step.actions.length) {
                     guideButton = node('button', 'clear-guide-go', content.button);
@@ -732,6 +896,10 @@ define([], function() {
                 });
                 box.append(toggle);
                 guideRoot.replaceChildren(box);
+            }
+            if (guideAck) {
+                guideAck.checked = acknowledgment.checked === true;
+                guideAck.disabled = closed || !ready || walletBusy || !!pending || unknown || reflection?.permitted !== true;
             }
             if (guideButton) {
                 guideButton.disabled = !step.actions.length || !enabled(step.actions[0]);
@@ -908,6 +1076,7 @@ define([], function() {
                         && result.runBindingHash === input.reviewed.runBindingHash && result.status === 'RECORDED'
                         && result.paymentConsentIncluded === false);
                     displayed.reflection = result;
+                    aiApprovedFor = applicationId;
                     break;
                 case 'payment-receipt':
                     exactApp(result);

@@ -297,3 +297,23 @@
 [data-clear-workflow].clear-simple [data-native-condition-cards] .crc-actions:not(:has(.crc-go:not(:disabled))) { display: none; }
 [data-native-guide] .clear-guide[data-guide-key="lost"] { border-top-color: var(--warn-line); background: var(--warn-bg); }
 [data-wallet-restart-box] { margin-top: .75rem; }
+
+/* ── 선생님(운영자) 안내: 5단계 진행 표시와 AI 승인 확인 체크 (0.1.41) ─────────────────── */
+[data-native-guide] .clear-guide-steps {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0 0 14px; padding: 0; list-style: none;
+    counter-reset: clear-op-step;
+}
+[data-native-guide] .clear-guide-step {
+    counter-increment: clear-op-step; padding: 7px 4px; border-radius: 8px; text-align: center; font-size: .88rem; font-weight: 700;
+    background: var(--line-soft); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+[data-native-guide] .clear-guide-step::before { content: counter(clear-op-step) ". "; }
+[data-native-guide] .clear-guide-step[data-state="done"] { background: var(--ok-soft); color: var(--ok); }
+[data-native-guide] .clear-guide-step[data-state="done"]::before { content: "✓ "; }
+[data-native-guide] .clear-guide-step[data-state="now"] { background: var(--navy); color: #fff; }
+@media (max-width: 640px) { [data-native-guide] .clear-guide-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+[data-native-guide] .clear-guide-ack {
+    display: flex; gap: 12px; align-items: flex-start; margin: 0 0 12px; padding: 12px 14px; border: 2px solid var(--accent);
+    border-radius: 10px; background: var(--accent-soft); font-size: 1.05rem; font-weight: 700; cursor: pointer;
+}
+[data-native-guide] .clear-guide-ack-box { flex: none; width: 22px; height: 22px; margin-top: 2px; accent-color: var(--accent); }
