@@ -28,6 +28,9 @@ export function createConditionCards({
   loadEvidence = null,
   targets = () => null,
   refresh = null,
+  // 어느 조건에 재확인을 보내나. 기본(tracker.defaultRefreshFor)은 강의·과제뿐 — 회고 재검증은
+  // 별개 경로라 실제 연결 전엔 안 보낸다. 시연 페이지는 대역이 회고도 받아 따로 넘긴다.
+  refreshFor = undefined,
   certificate = null,
   onOpen = () => {},
   onChange = () => {},
@@ -94,6 +97,7 @@ export function createConditionCards({
       },
       isBusy, storage, nowMs, setTimer, clearTimer, isVisible, onChange: notify,
       refresh,
+      ...(typeof refreshFor === 'function' ? { refreshFor } : {}),
       // 재확인 명령의 기준 번호 = 지금 화면이 가진 **신청(판정) 개정 번호**
       getRevision: () => snapshotOf(getState())?.decision?.revision ?? null,
       ...(followUpMs ? { followUpMs } : {}),

@@ -48,8 +48,13 @@ export const REFRESH = Object.freeze({
   UNAVAILABLE: 'UNAVAILABLE', REQUEST_FAILED: 'REQUEST_FAILED',
 });
 
-/** HackerRank 는 Reclaim 흐름이라 Moodle 원천 재확인 대상이 아니다 */
-export const defaultRefreshFor = (criterionId) => criterionId !== 'python-basic-certificate';
+/**
+ * 기본 재확인 대상 — 강의·과제뿐이다.
+ * HackerRank 는 Reclaim 흐름이라 Moodle 원천 재확인 대상이 아니고, 회고 재검증은 A 의
+ * source-refresh(강의·과제) 와 **별개 경로**라 실제 연결 전까지 보내지 않는다(오규원 11/6).
+ * 시연 페이지는 대역이 회고도 받으므로 refreshFor 를 따로 넘긴다(합성 검증 범위).
+ */
+export const defaultRefreshFor = (criterionId) => criterionId === 'activity-complete' || criterionId === 'assignment-submitted';
 
 /** 돌아온 뒤 다시 읽는 간격. 합쳐서 2분이 안 된다 */
 export const FOLLOW_UP_MS = Object.freeze([3000, 7000, 15000, 30000, 60000]);
@@ -354,13 +359,20 @@ export function createReturnTracker({
         const result = await read();
         observe(result, { fromCheck: true, visitRefs });
         // 보류한 변화가 있으면 다음 간격을 기다리지 않고 지금 한 번 더 묻는다. 서버가
-        // RECORDED 라고 하면 같은 조회 결과로 바로 확정한다(정상 경로는 늦어지지 않는다).
+        // RECORDED 라고 하면 **최신 판정을 다시 읽어** 그걸로 확정한다 — 아까 읽어 둔 결과를
+        // 재사용하지 않는다(오규원 11/6: 그 사이 판정이 또 바뀌었을 수 있다). 다시 읽는 동안
+        // 닫혔거나 신청이 바뀌었거나 방문이 교체됐으면 observe 가 그 결과를 버린다.
         // 제한에 걸리면 다음 간격에 다시 묻는다. 요청 수는 바뀐 조건당 한 번 더다.
         const held = [...visits.entries()].filter(([id, v]) => v.held != null && v.needsRefresh
           && visitRefs.get(id) === v.visitRef && nowMs() >= (v.nextAllowedAt ?? 0));
         if (held.length > 0) {
           await requestRefresh(held);
-          observe(result, { fromCheck: false, visitRefs });
+          const recorded = [...visits.entries()].some(([id, v]) => v.held != null && !unconfirmed(v)
+            && visitRefs.get(id) === v.visitRef);
+          if (recorded && !closed) {
+            const latest = await read();
+            observe(latest, { fromCheck: false, visitRefs });
+          }
         }
       } catch (error) {
         const at = nowMs();

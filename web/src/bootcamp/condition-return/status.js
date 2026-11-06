@@ -47,7 +47,10 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
   // HackerRank 는 Moodle 재확인 대상이 아니라 제외.
   if (!ret || ret.state === RETURN.IDLE || ret.state === undefined) {
     if (row && row.state !== 'MET' && row.criterionId !== 'python-basic-certificate') {
-      return { tone: 'wait', text: 'Moodle 에서 직접 마치셨다면 「다시 확인」 을 눌러 주세요. 서버에 원천 재확인을 요청하고 판정을 다시 읽어요.', recheck: true };
+      // 회고 재검증은 강의·과제 재확인 경로와 별개다(실제 연결 전). 요청한다고 말하지 않는다.
+      return row.criterionId === 'reflection-topics'
+        ? { tone: 'wait', text: '글을 고쳐 올렸다면 「다시 확인」 을 눌러 주세요. 서버 판정을 다시 읽어요.', recheck: true }
+        : { tone: 'wait', text: 'Moodle 에서 직접 마치셨다면 「다시 확인」 을 눌러 주세요. 서버에 원천 재확인을 요청하고 판정을 다시 읽어요.', recheck: true };
     }
     return null;
   }

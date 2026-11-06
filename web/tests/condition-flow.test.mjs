@@ -561,7 +561,7 @@ test('근거 없는 줄로 바뀐 것(회고 승인 대기·검토 중)은 새 �
   const { t, c } = tracker({
     rows: () => [row('reflection-topics', 'NOT_MET', 1)],
     refresh: () => ({ status: 'RECORDED', operationId: 'op-r' }),
-    read: async () => (reads++ < 3 ? interim() : reviewed()), // 요청 전 조회 1 + 복귀 읽기 1 + 재조회 1 은 중간 단계
+    read: async () => (reads++ < 2 ? interim() : reviewed()), // 복귀 읽기 1 + 재조회 1 은 중간 단계(회고는 기본 재확인 대상이 아니라 요청 전 조회가 없다)
   });
   t.depart('reflection-topics');
   await t.arrive(); await flush();
@@ -632,4 +632,64 @@ test('시연 대역: 이미 기록된 강의·과제는 moodleRecordedAt 이 시
   assert.equal(server.moodleRecordedAt('assignment-submitted'), 5000);
   assert.equal(server.moodleRecordedAt('activity-complete'), null);
   assert.equal(server.moodleRecordedAt('reflection-topics'), null, '회고는 글 고치기가 있어 대상이 아니다');
+});
+
+// ── 9 · RECORDED 뒤에는 최신 판정을 다시 읽어 확정한다 (오규원 11/6) ──────────
+
+test('보류 중 옛 조회는 미충족, RECORDED 뒤 다시 읽으니 충족 — 최신 읽기로 확정하고 옛 결과를 재사용하지 않는다', async () => {
+  let n = 0; let reads = 0;
+  const unmet2 = () => [row('activity-complete', 'NOT_MET', 2), row('python-basic-certificate', 'UNKNOWN')];
+  const seq = [rowsBefore(), rowsBefore(), unmet2(), rowsAfter()]; // 요청 전 조회 · 복귀 읽기 · 재조회(옛 판정 미충족·근거2) · RECORDED 뒤 재읽기(충족)
+  const { t, c, calls } = tracker({
+    refresh: () => (n++ === 0 ? { status: 'QUEUED', operationId: 'op-rr' } : { status: 'RECORDED', operationId: 'op-rr' }),
+    read: async () => seq[Math.min(reads++, seq.length - 1)],
+  });
+  t.depart('activity-complete');
+  await t.arrive(); await flush();
+  assert.equal(t.status('activity-complete').state, RETURN.PENDING);
+  await c.tick(100);
+  const s = t.status('activity-complete');
+  assert.equal(s.state, RETURN.UPDATED);
+  assert.equal(s.sameState, false, '최신 읽기(충족)로 확정해야 한다 — 옛 조회(미충족·근거2)로 확정하면 sameState 가 true 다');
+  // 요청 전 조회 · 복귀 읽기 · 재조회 · (재요청의 revision 조회) · RECORDED 뒤 재읽기
+  assert.equal(calls.filter((x) => x === 'read').length, 5, 'RECORDED 뒤 한 번 더 읽어야 한다');
+});
+
+test('RECORDED 뒤 다시 읽는 동안 같은 조건을 다시 떠나면 그 결과는 새 방문을 덮지 않는다', async () => {
+  let n = 0; let reads = 0; let release;
+  const { t, c } = tracker({
+    refresh: () => (n++ === 0 ? { status: 'QUEUED', operationId: 'op-x' } : { status: 'RECORDED', operationId: 'op-x' }),
+    read: () => { reads += 1; return reads === 4 ? new Promise((r) => { release = r; }) : Promise.resolve(reads <= 2 ? rowsBefore() : rowsAfter()); },
+  });
+  t.depart('activity-complete');
+  await t.arrive(); await flush();
+  const ticking = c.tick(100); await flush();
+  assert.ok(release, '재읽기가 걸려 있어야 한다');
+  t.depart('activity-complete');
+  const before = t.status('activity-complete');
+  release(rowsAfter()); await ticking; await flush();
+  assert.deepEqual(t.status('activity-complete'), before, '늦은 재읽기가 새 방문을 바꿨다');
+});
+
+test('RECORDED 뒤 다시 읽는 동안 닫히면(로그아웃·신청 전환) 아무것도 바꾸지 않는다', async () => {
+  let n = 0; let reads = 0; let release;
+  const { t, c } = tracker({
+    refresh: () => (n++ === 0 ? { status: 'QUEUED', operationId: 'op-y' } : { status: 'RECORDED', operationId: 'op-y' }),
+    read: () => { reads += 1; return reads === 4 ? new Promise((r) => { release = r; }) : Promise.resolve(reads <= 2 ? rowsBefore() : rowsAfter()); },
+  });
+  t.depart('activity-complete');
+  await t.arrive(); await flush();
+  const ticking = c.tick(100); await flush();
+  t.close();
+  release(rowsAfter()); await ticking; await flush();
+  assert.notEqual(t.status('activity-complete').state, RETURN.UPDATED);
+});
+
+test('기본 재확인 대상은 강의·과제뿐 — 회고·HackerRank 에는 source-refresh 를 보내지 않는다', async () => {
+  assert.equal(defaultRefreshFor('reflection-topics'), false);
+  assert.equal(defaultRefreshFor('assignment-submitted'), true);
+  const { t, calls } = tracker({ refresh: () => ({ status: 'QUEUED', operationId: 'no' }), read: async () => [row('reflection-topics', 'NOT_MET')] });
+  t.depart('reflection-topics');
+  await t.arrive(); await flush();
+  assert.equal(calls.filter((x) => Array.isArray(x)).length, 0);
 });

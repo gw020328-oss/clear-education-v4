@@ -156,7 +156,7 @@ function targetLine(criterionId, link) {
 
 function conditionCard(criterionId, ctx) {
   const { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs,
-    certificate, busy, onOpen, sourceText } = ctx;
+    certificate, busy, onOpen, sourceText, demo = false } = ctx;
   const meta = CRITERIA[criterionId];
   const row = snapshot?.rows.find((r) => r.criterionId === criterionId) ?? null;
   const shown = row ? displayState(row) : { state: null, note: null };
@@ -178,7 +178,14 @@ function conditionCard(criterionId, ctx) {
       // 떠나지 않고 「다시 확인」 만 누른 경우(departed=false)는 고친 글이 아니다.
       returned: ret.departed !== false && [RETURN.CHECKING, RETURN.PENDING, RETURN.STALLED, RETURN.READ_FAILED, RETURN.CANNOT_CHECK].includes(ret.state),
     });
-    extra = reflectionBlock(review, link);
+    extra = el('div', {}, [
+      reflectionBlock(review, link),
+      // 회고 재검증은 강의·과제의 원천 재확인 경로와 별개다(오규원 11/6). 실제 연결 전까지
+      // 시연은 '합성 검증 범위', 실제 모드는 '경로 연결 전' 이라고 말한다.
+      el('p.crc-muted', { 'data-role': 'reflection-scope', text: demo
+        ? '회고 재검증은 합성 검증 범위예요 — 강의·과제 재확인 경로와 별개이고, 실제 연결 전이라 이 페이지의 대역이 흉내 내요.'
+        : '회고 재검증 경로는 아직 연결 전이에요. 돌아오면 서버에 저장된 판정만 다시 읽어요.' }),
+    ]);
     if (review.needsRewrite) verb = '회고 다시 쓰기';
   } else if (criterionId === 'python-basic-certificate') {
     cert = certificateStatus({ row, evRow: ev.row, availability: ev.availability, session, approval, signedAtMs });
@@ -238,7 +245,7 @@ export function conditionCardsSection({
   session = null, approval = null, signedAtMs = null, certificate = null, busy = false,
   onOpen = () => {}, sourceText = null, demo = false,
 } = {}) {
-  const ctx = { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs, certificate, busy, onOpen, sourceText };
+  const ctx = { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs, certificate, busy, onOpen, sourceText, demo };
   const met = (snapshot?.rows ?? []).filter((r) => r.state === 'MET' && r.current !== false).length;
   const anyLinked = CRITERION_IDS.some((id) => links?.[id]?.status === LINK.LINKED);
 

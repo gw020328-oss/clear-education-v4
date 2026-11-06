@@ -66,6 +66,8 @@ export function mountConditionCardsPreview(root, { mode = null, win = globalThis
     }),
     // 원천 재확인 요청의 대역. 실제라면 A 의 source-refresh 를 부르는 자리다.
     // 응답은 기록만 하고(접수·제한·기록·불가), 판정이 바뀌었는지는 그 뒤 read 가 정한다.
+    // 시연 대역은 회고 재검증도 흉내 낸다 — **합성 검증 범위**다. 실제 연결의 기본은 강의·과제뿐.
+    ...(actual ? {} : { refreshFor: (id) => id !== 'python-basic-certificate' }),
     refresh: actual ? null : async ({ criterionId, expectedRevision }) => {
       await sleep(200);
       const r = server.refresh(criterionId, expectedRevision);
