@@ -118,5 +118,11 @@ test('회고 블록은 없음(ABSENT)과 불확실(UNCERTAIN)을 나누고, 실�
     assert.doesNotMatch(uncertain, /보완 방법/, '불확실뿐이면 다시 쓰라고 단정하지 않는다');
     assert.match(uncertain, /판단하기 어려운 내용/);
     assert.match(uncertain, /없다는 뜻은 아니에요/);
+    // 오규원 11/6 보완: 불확실 안내도 실제 모드에선 "다시 검토" 를 약속하지 않고 저장된 판정을 다시 확인한다고 말한다
+    assert.doesNotMatch(uncertain, /다시 검토/, '실제 모드 UNCERTAIN 안내에 "다시 검토해요" 가 남지 않는다');
+    assert.match(uncertain, /재검증 경로가 연결되기 전/);
+    assert.match(uncertain, /저장된 판정을 다시 확인해요/);
+    const uncertainDemo = reflectionBlock(reflectionReview({ row, evRow: ev(['UNCERTAIN', 'PRESENT']) }), link, { demo: true }).textContent;
+    assert.match(uncertainDemo, /다시 올리시면 다시 검토를 요청해요/, '시연에서는 재검토 요청이라고 말한다');
   } finally { delete globalThis.document; }
 });

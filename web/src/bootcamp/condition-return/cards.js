@@ -131,6 +131,10 @@ export function reflectionBlock(review, link, { demo = false } = {}) {
   ]);
   // 돌아온 뒤 무엇이 일어나는지 — 실제 회고 재검증 경로는 아직 없다. 시연에서만 "다시 검토를 요청" 이라고 쓴다.
   const afterReturn = demo ? '이 탭으로 돌아오면 다시 검토를 요청해요.' : '돌아오면 저장된 판정을 다시 읽어요.';
+  // 불확실(UNCERTAIN)만 있을 때의 안내도 같다 — 실제 모드에서 "다시 검토해요" 라고 약속하지 않는다(오규원 11/6 보완).
+  const uncertainHint = (topics) => (demo
+    ? `${labels(topics)} 부분을 더 분명하게 적어 ${where}에 다시 올리시면 다시 검토를 요청해요. ${afterReturn}`
+    : `${labels(topics)} 부분을 더 분명하게 적어 ${where}에 다시 올릴 수 있어요. 재검증 경로가 연결되기 전이라, 돌아오면 저장된 판정을 다시 확인해요.`);
   return el('div.crc-block.crc-review', { 'data-review': review.state }, [
     el('p.crc-title', { text: headline }),
     review.note ? el('p.crc-muted', { text: review.note }) : null,
@@ -160,7 +164,7 @@ export function reflectionBlock(review, link, { demo = false } = {}) {
       : review.needsRewrite && uncertain.length
         ? el('div.crc-fix', { 'data-kind': 'uncertain' }, [
           el('p.crc-ai-k', { text: '참고' }),
-          el('p', { text: `${labels(uncertain)} 부분을 더 분명하게 적어 ${where}에 다시 올리시면 다시 검토해요. ${afterReturn}` }),
+          el('p', { text: uncertainHint(uncertain) }),
         ])
         : review.needsRewrite
           ? el('div.crc-fix', {}, [
