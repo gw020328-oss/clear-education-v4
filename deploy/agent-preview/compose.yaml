@@ -10,7 +10,9 @@ services:
     restart: unless-stopped
     environment:
       CLEAR_PREVIEW_CONFIG: /run/secrets/profile.json
-      GEMINI_API_KEY: ${GEMINI_API_KEY:?existing key required}
+      # Leave empty for the keyless first boot (HTTPS/auth/restart checks). Set it only after the
+      # user approves model use. A recorded approval used without a key fails closed and stays spent.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - ${CLEAR_PREVIEW_CONFIG_DIR:?private configuration directory}:/run/secrets:ro
       - ${CLEAR_PREVIEW_STATE_DIR:?isolated persistent directory}:/var/lib/clear-preview
