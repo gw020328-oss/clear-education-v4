@@ -24,6 +24,10 @@ function fixture(role, dispatch) {
         replaceChildren(...options) { this.options = options; },
     }]));
     const listeners = new Map();
+    const restartListeners = new Map();
+    const restart = {hidden: true, reloads: 0,
+        addEventListener(name, listener) { restartListeners.set(name, listener); },
+        removeEventListener(name) { restartListeners.delete(name); }};
     const elements = {
         '[data-wallet-message]': messages,
         '[data-wallet-stage]': stages,
@@ -33,13 +37,14 @@ function fixture(role, dispatch) {
     };
     const element = {
         querySelectorAll(selector) { return elements[selector]; },
-        querySelector() { return summary; },
+        querySelector(selector) { return selector === '[data-wallet-restart]' ? restart : summary; },
+        ownerDocument: {defaultView: {location: {reload() { restart.reloads++; }}}},
         contains(node) { return Object.values(buttons).includes(node); },
         addEventListener(name, listener) { listeners.set(name, listener); },
         removeEventListener(name) { listeners.delete(name); },
     };
     const renderer = create({element, role, dispatch});
-    return {...renderer, buttons, selects, summary,
+    return {...renderer, buttons, selects, summary, restart, restartClick: () => restartListeners.get('click')?.(),
         click(action) { return listeners.get('click')?.({target: {closest: () => buttons[action]}}); },
         choose(kind, id) { selects[kind].value = id; listeners.get('change')(); },
     };
@@ -122,4 +127,21 @@ test('operator provider stays unselected, revoked options and repeated clicks ca
     assert.equal(ui.selects.provider.value, '');
     ui.destroy();
     assert.equal(ui.buttons['connect-metamask'].hidden, true);
+});
+
+test('a screen with no allowed wallet action shows only "start over", which reloads and sends nothing', async () => {
+    const commands = [];
+    const ui = fixture('COURSE_OPERATOR', async command => commands.push(command));
+    ui.render({...base('COURSE_OPERATOR'), phase: 'ERROR', error: {code: 'UNAVAILABLE', outcome: 'UNKNOWN'},
+        choices: [{choiceId: 'wallet-one', address}], selectedChoiceId: 'wallet-one'}, []);
+    assert.equal(ui.restart.hidden, false, 'dead end offers a way forward');
+    assert.ok(Object.values(ui.buttons).every(button => button.hidden), 'no wallet command is offered');
+    ui.restartClick();
+    assert.equal(ui.restart.reloads, 1);
+    assert.deepEqual(commands, [], 'start over dispatches nothing');
+    ui.render({...base('COURSE_OPERATOR'), phase: 'IDLE', providers: [{providerId: 'p1'}]}, ['connect-metamask']);
+    assert.equal(ui.restart.hidden, true, 'hidden whenever a normal action exists');
+    ui.render({...base('COURSE_OPERATOR'), busy: true, phase: 'CHECKING_NETWORK'}, ['cancel']);
+    assert.equal(ui.restart.hidden, true, 'hidden while busy');
+    ui.destroy();
 });

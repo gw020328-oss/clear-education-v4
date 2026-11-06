@@ -23,6 +23,10 @@ define([], function() {
             node => [node.dataset.walletOptions, node]));
         const selects = Object.fromEntries(Array.from(element.querySelectorAll('[data-wallet-select]'),
             node => [node.dataset.walletSelect, node]));
+        // "Start over" only reloads this page (same as F5). It is not a wallet command, never resends a
+        // request, and shows only when the adapter offers no action at all (e.g. the A safety latch after an
+        // unconfirmed Moodle end), so a person is never left on a screen without a way forward.
+        const restart = element.querySelector('[data-wallet-restart]');
         const pending = new Set();
         let state = null;
         let allowed = new Set();
@@ -81,6 +85,9 @@ define([], function() {
             const waiting = state?.busy === true || pending.size > 0;
             summary.textContent = failed || state?.error ? messages.error
                 : waiting ? messages.busy : state && allowed.size ? messages.idle : defaultSummary;
+            if (restart) {
+                restart.hidden = !state || state.busy === true || pending.size > 0 || allowed.size > 0;
+            }
             stages.wallet.textContent = hasWallet() ? messages.walletselected : defaultText.wallet;
             stages.network.textContent = state?.networkReady === true ? messages.networkready : defaultText.network;
             stages.login.textContent = state?.phase === 'CONNECTED' && state.authenticated === true ? messages.connected
@@ -169,8 +176,12 @@ define([], function() {
             }
         };
 
+        const reload = () => {
+            element.ownerDocument?.defaultView?.location?.reload();
+        };
         element.addEventListener('click', click);
         element.addEventListener('change', renderControls);
+        restart?.addEventListener('click', reload);
         return {
             render,
             destroy() {
@@ -180,6 +191,7 @@ define([], function() {
                 pending.clear();
                 element.removeEventListener('click', click);
                 element.removeEventListener('change', renderControls);
+                restart?.removeEventListener('click', reload);
                 fillSelect(selects.provider, []);
                 fillSelect(selects.wallet, []);
                 repaint();

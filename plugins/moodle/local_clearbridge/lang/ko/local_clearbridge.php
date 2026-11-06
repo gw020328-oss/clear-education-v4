@@ -234,3 +234,6 @@ $string['nativecertificateread'] = '인증서 서명 메시지 읽기';
 $string['nativecertificatesign'] = '표시한 인증서 메시지에 서명';
 $string['nativecertificatewait'] = '서버의 다음 단계 대기';
 $string['nativecertificatestartreceipt'] = '인증서 시작 요청이 접수되었습니다. 서명 메시지를 기다리고 있습니다.';
+$string['brandsubstudent'] = '환급 확인';
+$string['brandsubteacher'] = '환급 운영';
+$string['nativewalletrestart'] = '처음부터 다시 시작하기 (페이지를 새로 불러와요. 보낸 요청을 다시 보내지 않아요)';
