@@ -10,7 +10,8 @@
 //
 // Nothing here changes the fixed four-condition payment policy. D holds the model
 // key; this process only holds D's HMAC secret. No key reaches the browser.
-import {readFileSync, writeFileSync, statSync, existsSync, renameSync} from 'node:fs';
+import {readFileSync, writeFileSync, statSync, existsSync, renameSync, openSync, closeSync, fsyncSync, unlinkSync} from 'node:fs';
+import {randomBytes} from 'node:crypto';
 import {isAbsolute, dirname, join} from 'node:path';
 import {createOperatorDPort, createOperatorPreviewRelay} from '../../src/agent-preview/operator-relay.mjs';
 import {createOperatorPreviewHandler} from '../../src/agent-preview/operator-http.mjs';
@@ -40,39 +41,84 @@ export function validateOperatorPreviewConfig(c) {
   return Object.freeze({...c});
 }
 
+const APPROVALS_VERSION = 'clear-normal-operator-preview-approvals.1';
+const LOCK_WAIT_MS = 2000, LOCK_STEP_MS = 10;
+const pause = ms => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+const sameGrant = (a, b) => a?.bodyHash === b.bodyHash && a?.bindingHash === b.bindingHash && a?.approvalRef === b.approvalRef;
+
 /**
  * Owner approvals recorded by the person running the host (the D administration
- * path registered the same ref in D's single-use store first). Entries are read
- * from a 0600 JSON file {version, approvals:[{bodyHash,bindingHash,approvalRef,expiresAt}]}
+ * path registered the same ref in D's single-use store first). Entries live in a
+ * 0600 JSON file {version, approvals:[{bodyHash,bindingHash,approvalRef,expiresAt}]}
  * and each is consumed once: a taken entry is removed from the file and never restored.
+ *
+ * The file is the only authority. Every record/take holds one exclusive lock file
+ * (`<file>.lock`, shared by every instance and process), re-reads the file, and writes
+ * through a unique temporary file + rename. Nothing is cached in memory, so an entry
+ * another instance consumed or the owner removed is never returned. A take returns a
+ * grant only after its removal reached the file; a failed write returns nothing and
+ * leaves the entry in place. A lock left by a crashed writer is not removed
+ * automatically (OWNER_APPROVAL_LOCKED); the owner checks and removes it by hand.
+ * Owners add entries with record() so that additions take the same lock.
  */
 export function createFileOwnerApprovals({path, clock = Date.now}) {
   check(typeof path === 'string' && isAbsolute(path));
-  const registry = createOwnerApprovalRegistry({clock}), seen = new Set();
+  const lockPath = path + '.lock';
   const load = () => {
     if (!existsSync(path)) return [];
     const raw = JSON.parse(privateFile(path));
-    check(raw?.version === 'clear-normal-operator-preview-approvals.1' && Array.isArray(raw.approvals), 'OWNER_APPROVAL_FILE');
+    check(raw?.version === APPROVALS_VERSION && Array.isArray(raw.approvals), 'OWNER_APPROVAL_FILE');
     return raw.approvals;
   };
+  const valid = list => {
+    const registry = createOwnerApprovalRegistry({clock});
+    for (const g of list) { try { registry.record(g); } catch { /* invalid, expired or duplicate entries are ignored, never widened */ } }
+    return registry;
+  };
   const save = list => {
-    const tmp = join(dirname(path), '.approvals.tmp');
-    writeFileSync(tmp, JSON.stringify({version: 'clear-normal-operator-preview-approvals.1', approvals: list}) + '\n', {mode: 0o600});
-    renameSync(tmp, path);
+    const tmp = join(dirname(path), `.approvals.${process.pid}.${randomBytes(8).toString('hex')}.tmp`);
+    try {
+      const fd = openSync(tmp, 'wx', 0o600);
+      try { writeFileSync(fd, JSON.stringify({version: APPROVALS_VERSION, approvals: list}) + '\n'); fsyncSync(fd); }
+      finally { closeSync(fd); }
+      renameSync(tmp, path);
+    } catch {
+      try { unlinkSync(tmp); } catch { /* never created, or already renamed */ }
+      fail('OWNER_APPROVAL_STORE');
+    }
+  };
+  const locked = work => {
+    let fd;
+    for (const deadline = Date.now() + LOCK_WAIT_MS; fd === undefined;) {
+      try { fd = openSync(lockPath, 'wx', 0o600); }
+      catch (error) {
+        if (error?.code !== 'EEXIST') fail('OWNER_APPROVAL_STORE');
+        if (Date.now() >= deadline) fail('OWNER_APPROVAL_LOCKED');
+        pause(LOCK_STEP_MS);
+      }
+    }
+    try { closeSync(fd); return work(); }
+    finally { try { unlinkSync(lockPath); } catch { /* fail closed: a left lock blocks later takes */ } }
   };
   return Object.freeze({
-    take(bodyHash, bindingHash) {
-      const list = load();
-      for (const g of list) {
-        const key = g?.bodyHash + ':' + g?.bindingHash + ':' + g?.approvalRef;
-        if (seen.has(key)) continue; seen.add(key);
-        try { registry.record(g); } catch { /* invalid or expired entries are ignored, never widened */ }
-      }
-      const grant = registry.take(bodyHash, bindingHash);
-      if (grant) save(list.filter(g => !(g.bodyHash === grant.bodyHash && g.bindingHash === grant.bindingHash && g.approvalRef === grant.approvalRef)));
-      return grant;
+    /** Owner process only (never an HTTP route). */
+    record(approval) {
+      locked(() => {
+        const list = load();
+        valid(list).record(approval);
+        const {bodyHash, bindingHash, approvalRef, expiresAt} = approval;
+        save([...list, {bodyHash, bindingHash, approvalRef, expiresAt}]);
+      });
     },
-    size: () => registry.size(),
+    take(bodyHash, bindingHash) {
+      return locked(() => {
+        const list = load(), grant = valid(list).take(bodyHash, bindingHash);
+        if (!grant) return null;
+        save(list.filter(g => !sameGrant(g, grant)));
+        return grant;
+      });
+    },
+    size: () => valid(load()).size(),
   });
 }
 
