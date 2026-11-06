@@ -1,5 +1,15 @@
 # 개발 현황
 
+## 2026-11-06 조건 구조화와 운영자 제안 연결
+
+아래 구현과 병합 상태는 develop 기준이다. 원격 확인 **2026-11-06 11:44 KST** 기준 [main 348fad3](https://github.com/gw020328-oss/clear-education-v4/commit/348fad3f7b0df5988be10492cbc1e587a096660c), [develop e4d3c20](https://github.com/gw020328-oss/clear-education-v4/commit/e4d3c205c43804a02b2360b816e5e7a6dd975a3b).
+
+- **병합 완료**. [#163](https://github.com/gw020328-oss/clear-education-v4/pull/163)의 학생 조건 카드와 [#164](https://github.com/gw020328-oss/clear-education-v4/pull/164)의 입력 보완에 이어 [#166](https://github.com/gw020328-oss/clear-education-v4/pull/166)은 조건 구조화 DTO와 서버의 보수적 보류 검사를 추가했다. 원본 모델 행 보존과 nullable 호출 표시를 소비자가 인수해야 한다. [고정 커밋의 인계 문서](https://github.com/gw020328-oss/clear-education-v4/blob/e4d3c205c43804a02b2360b816e5e7a6dd975a3b/docs/agent-preview/FRONTEND_HANDOFF.ko.md).
+- **제안자와 별도 환경 연결**. [#167](https://github.com/gw020328-oss/clear-education-v4/pull/167)은 명시적 제안 생성과 출처·서버 보류 표시를 연결했고, [#168](https://github.com/gw020328-oss/clear-education-v4/pull/168)은 기존 운영자 인증·강좌 범위에서 B 중계와 D를 거쳐 제안자에 연결하는 별도 환경 코드를 추가했다. [연결 보고서](https://github.com/gw020328-oss/clear-education-v4/blob/e4d3c205c43804a02b2360b816e5e7a6dd975a3b/docs/agent-preview/OPERATOR_CONNECTION.ko.md)는 운영 마운트, 실제 Gemini 호출, Moodle/Reclaim 조회와 지급을 포함하지 않는다. 저장된 오프라인 검증과 실제 운영 실행을 구분한다.
+- **CI 근거**. #166 head 93c849b의 [검사 4개](https://github.com/gw020328-oss/clear-education-v4/actions/runs/41978340940), #167 head b68b094의 [검사 4개](https://github.com/gw020328-oss/clear-education-v4/actions/runs/42035913405), #168 head e0d7cf6의 [검사 4개](https://github.com/gw020328-oss/clear-education-v4/actions/runs/42037513455)가 모두 성공했다. 이는 실제 유료 호출·사용자 지급·배포 완료 근거로 확대하지 않는다.
+- **진행 중**. 학생의 원천 재확인 요청 [#165](https://github.com/gw020328-oss/clear-education-v4/pull/165)와 Moodle 운영자 패널 마운트 [#169](https://github.com/gw020328-oss/clear-education-v4/pull/169)는 열린 개발 PR이다. 이전 등록형 미리보기 통합 [#159](https://github.com/gw020328-oss/clear-education-v4/pull/159)도 열린 상태다. 이번 자동화에서 새 실제 사용자 시험은 수행하지 않았다.
+
+
 ## 2026-11-05 운영자 강좌 연결과 미리보기
 
 아래 병합 상태는 develop 기준이다. 원격 확인 **2026-11-05 11:01 KST** 기준 [main de01557](https://github.com/gw020328-oss/clear-education-v4/commit/de01557f64fb6772a9ddfd145cd3c7b0788f292d), [develop 2977883](https://github.com/gw020328-oss/clear-education-v4/commit/2977883df06a408bfcd01102595e4fa66811b4ee).
