@@ -260,7 +260,8 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       // Consent target changed before sending (fresh pre-consent view) or the server CAS rejected it:
       // nothing was recorded, so keep this login and let the person re-read and decide again.
       const consentNotSent=command.action==='consent'&&cause?.message==='CONSENT_REVIEW_CHANGED';
-      const consentChanged=consentNotSent||command.action==='consent'&&cause?.status===409&&cause?.code==='BC_VIEW_STALE';
+      const consentChanged=consentNotSent||command.action==='consent'&&cause?.status===409
+        &&['BC_VIEW_STALE','BC_NORMAL_PROCEDURE_NOT_READY'].includes(cause?.code);
       if(consentChanged&&stamp===epoch&&!closed&&authenticated&&phase==='CONNECTED'
         &&session===captured&&wallet===capturedWallet)throw Object.assign(Error('MOODLE_CONSENT_REVIEW_CHANGED'),
           {code:'MOODLE_CONSENT_REVIEW_CHANGED',outcome:consentNotSent?'NOT_SENT':'HTTP_ERROR',serverEffect:'NOT_ACCEPTED'});

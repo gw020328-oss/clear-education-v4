@@ -163,7 +163,12 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
         const consentTargetStale=method==='POST'&&response.status===409
           && /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/review-consents$/.test(url.pathname)
           && value?.error==='BC_VIEW_STALE';
-        const code = (certificateRevisionConflict?'BC_REVISION_CONFLICT':null) ?? (consentTargetStale?'BC_VIEW_STALE':null) ?? registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
+        // Consent before chain registration is refused before any write (no record): also a definite rejection.
+        const consentNotReady=method==='POST'&&response.status===409
+          && /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/review-consents$/.test(url.pathname)
+          && value?.error==='BC_NORMAL_PROCEDURE_NOT_READY';
+        const code = (certificateRevisionConflict?'BC_REVISION_CONFLICT':null) ?? (consentTargetStale?'BC_VIEW_STALE':null)
+          ?? (consentNotReady?'BC_NORMAL_PROCEDURE_NOT_READY':null) ?? registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
           : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
         throw failure(code, { method, status: response.status, requestId: uuid(value?.requestId) ? value.requestId : null,
           outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true,

@@ -343,6 +343,19 @@ test('consent whose reviewed target changed before sending keeps the login and r
  assert.equal(current.target.expectedLedgerSequence,71,'a fresh review shows the new target');
  await f.controller.destroy();
 });
+test('consent pressed before chain registration (exact 409 NOT_READY) keeps the login and records nothing',async()=>{
+ const early=Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_NORMAL_PROCEDURE_NOT_READY',status:409,outcome:'HTTP_ERROR'});
+ const v=consentViews(),f=fixture({requestFor:v.requestFor,commandError:early});await connectedDiagnostic(f);
+ const reviewed=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ await assert.rejects(f.controller.runWorkflow({action:'consent',reviewed,value:'AGREE',idempotencyKey:'consent-early'}),
+  error=>error.code==='MOODLE_CONSENT_REVIEW_CHANGED'&&error.serverEffect==='NOT_ACCEPTED');
+ assert.equal(f.view().authenticated,true);assert(!f.stages.includes('revoke'));assert.equal(f.diagnosticWrites.length,0);
+ await f.controller.destroy();
+ const x=fixture({requestFor:consentViews().requestFor,commandError:Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_NORMAL_PROCEDURE_NOT_READY',status:503})});
+ await connectedDiagnostic(x);const r=await x.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ await assert.rejects(x.controller.runWorkflow({action:'consent',reviewed:r,value:'AGREE',idempotencyKey:'consent-x'}),e=>e.code==='MOODLE_WORKFLOW_UNAVAILABLE');
+ assert.equal(x.view().authenticated,false,'a non-409 status is still not a definite rejection');await x.controller.destroy();
+});
 test('exact server consent CAS rejection keeps the login; unknown or auth consent failures still cancel',async()=>{
  const stale=Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_VIEW_STALE',status:409});
  const v=consentViews(),f=fixture({requestFor:v.requestFor,commandError:stale});await connectedDiagnostic(f);

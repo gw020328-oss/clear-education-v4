@@ -208,7 +208,10 @@ test('only the exact certificate-start POST CAS rejection keeps its fixed code',
 test('only the exact review-consents POST CAS rejection keeps BC_VIEW_STALE',async()=>{
  const path='/bootcamp/v3/applications/application-one/review-consents';
  for(const [method,target,status,error,expected]of [['POST',path,409,'BC_VIEW_STALE','BC_VIEW_STALE'],['POST',path,409,'BC_E3_PORT_CHANGED','API_REQUEST_FAILED'],
-  ['POST',path,403,'BC_VIEW_STALE','API_REQUEST_FAILED'],['POST','/bootcamp/v3/applications/application-one/publish',409,'BC_VIEW_STALE','API_REQUEST_FAILED']]){
+  ['POST',path,403,'BC_VIEW_STALE','API_REQUEST_FAILED'],['POST','/bootcamp/v3/applications/application-one/publish',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+  // Consent before chain registration: refused before any write.
+  ['POST',path,409,'BC_NORMAL_PROCEDURE_NOT_READY','BC_NORMAL_PROCEDURE_NOT_READY'],['POST',path,503,'BC_NORMAL_PROCEDURE_NOT_READY','API_REQUEST_FAILED'],
+  ['POST','/bootcamp/v3/applications/application-one/publish',409,'BC_NORMAL_PROCEDURE_NOT_READY','API_REQUEST_FAILED']]){
   const api=apiFor(()=>Response.json({error,message:'private'},{status}));
   const e=await errorOf(api(target,{method,body:{expectedRevision:1},idempotencyKey:'synthetic-one'}));
   assert.equal(e.code,expected);assert(!JSON.stringify(e).includes('private'));assert.equal(e.retryable,false);
