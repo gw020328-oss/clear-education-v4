@@ -996,7 +996,8 @@ test('a consent rejected because the decision changed shows what changed and wai
 // right as CLAIMED/UNCLAIMED with receivedAtoms null; the separate receipt from src/bootcamp/normal-receipt.mjs
 // reports the claim transfer as INCLUDED with finalized=false. Neither contract has a FINALIZED value.
 const hex = (c, n = 64) => '0x' + c.repeat(n);
-const realView = (applicationId = 'app-one', claimState = 'CLAIMED') => ({version: 'clear-bootcamp-normal-view.1',
+const realView = (applicationId = 'app-one', claimState = 'CLAIMED', {terminationReason = null} = {}) => ({
+    version: 'clear-bootcamp-normal-view.1',
     displayOnly: true, applicationId, policyHash: hex('1'), runtimeMappingHash: hex('2'), role: 'PARTICIPANT',
     target: {expectedRevision: 9, expectedLedgerSequence: 71, targetDecisionId: 'decision-one', targetDecisionRevision: 3,
         targetDecisionHash: hex('3')},
@@ -1008,13 +1009,20 @@ const realView = (applicationId = 'app-one', claimState = 'CLAIMED') => ({versio
             source: {kind, hostMode: 'REGISTERED_TEST_SOURCE', actualSourceVerification: null},
             originalEvidence: {authorized: true, httpAvailable: false}})),
     agreedPayment: {amountAtoms: '100000000', symbol: 'TEST', decimals: 6},
-    procedure: {publishedDecisionId: 'decision-one', publishedAt: 1793000000, terminationReason: null, invalidationReason: null},
+    // procedure.mjs view(): status follows ACCEPTED first, but terminationReason is time-only (review cap).
+    procedure: {id: 'procedure-one', status: claimState ? 'ACCEPTED_RIGHT_PRESERVED' : 'NOT_STARTED',
+        firstStartedAt: 1793000000, reviewCapAt: 1793000600, publishedDecisionId: 'decision-one', publishedAt: 1793000100, confirmAt: 1793000220, deadlineRouteAvailable: true,
+        revalidationCount: 0, revalidationLimit: 1, terminationReason, invalidationReason: null, reservationReleased: false,
+        epochInvalidated: false},
     consent: {bothCurrent: true, requiredRoles: ['PARTICIPANT', 'COURSE_OPERATOR'], onchainWalletSignaturesVerified: false,
         records: [{actorRole: 'PARTICIPANT', value: 'AGREE'}, {actorRole: 'COURSE_OPERATOR', value: 'AGREE'}]},
     objection: {blocked: false},
-    payment: {acceptedRight: {state: 'FIXED_RIGHT_PRESERVED', claimState, recipientRef: 'recipient-one', amountAtoms: '100000000',
-        claimExpiresAt: null, requiresCurrentSource: false, requiresCurrentSigner: false, requiresNewSignature: false},
-    transactionState: 'INCLUDED', transactionHash: null, blockRef: 'block-635', claimState, receivedAtoms: null,
+    // Not accepted yet: acceptedRight/claimState/transactionState are null (procedure-ports chain()).
+    payment: {acceptedRight: claimState ? {state: 'FIXED_RIGHT_PRESERVED', claimState, recipientRef: 'recipient-one',
+        amountAtoms: '100000000', claimExpiresAt: null, requiresCurrentSource: false, requiresCurrentSigner: false,
+        requiresNewSignature: false} : null,
+    transactionState: claimState ? 'INCLUDED' : null, transactionHash: null, blockRef: claimState ? 'block-635' : null,
+    claimState, receivedAtoms: null,
     canonicalTransferVerified: null, receiptHttpAvailable: true},
     sourceMode: 'REGISTERED_TEST_SOURCE'});
 const realReceipt = (applicationId = 'app-one', {finalized = false} = {}) => ({version: 'clear-bootcamp-normal-payment-receipt.1',
@@ -1027,7 +1035,7 @@ const realReceipt = (applicationId = 'app-one', {finalized = false} = {}) => ({v
         canonical: true, finalized, transferAmountAtoms: '100000000'},
     balance: {receivedAtoms: '100000000', exactExpectedAmountVerified: true, measurement: 'CANONICAL_TRANSFER_EVENT'},
     source: {mode: 'REGISTERED_TEST_SOURCE', actualSourceVerification: false}, productionEnabled: false});
-const includedText = '처리 중 · 100 TEST 전송이 블록에 포함됐습니다. 최종 확정은 이 환경에서 제공하지 않아 지급 완료로 표시하지 않습니다.';
+const includedText = '지급 거래를 보냈습니다. 블록체인에서 완료를 확인하고 있습니다.';
 const stageOf = root => root.children[0]?.attributes['data-stage'];
 const stageLine = root => root.querySelector('.crc-stage-line')?.textContent ?? '';
 const uxRoots = () => {
@@ -1073,14 +1081,14 @@ test('#173 contradicting or out-of-contract receipts are not combined and real D
     await ui.click('read-application');
     await ui.click('payment-receipt');
     // An UNCLAIMED view contradicts an INCLUDED claim receipt: hold instead of combining.
-    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
     assert.notEqual(stageOf(stageRoot), 'PAID');
     // INCLUDED requires finalized=false in the receipt contract; any other value is not promoted.
     view = realView();
     reply = realReceipt('app-one', {finalized: true});
     await ui.click('read-application');
     await ui.click('payment-receipt');
-    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
     assert.notEqual(stageOf(stageRoot), 'PAID');
     assert.doesNotMatch(stageRoot.textContent, /받았습니다/);
     assert.equal(payoutRoot.children.length, 0);
@@ -1098,10 +1106,10 @@ test('#173 a receipt for another application is discarded and never bound to the
     await ui.click('read-application');
     await ui.click('payment-receipt');
     assert.equal(ui.status.textContent, 'failure');
-    assert.doesNotMatch(stageRoot.textContent, /처리 중/);
+    assert.doesNotMatch(stageRoot.textContent, /지급 거래를 보냈습니다/);
     await ui.click('read-session');
     await ui.click('read-application');
-    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
     assert.deepEqual(ui.sent.map(input => input.action),
         ['read-session', 'read-application', 'payment-receipt', 'read-session', 'read-application']);
     ui.mounted.destroy();
@@ -1123,18 +1131,18 @@ test('#173 receipt binding is dropped on disconnect, application replacement and
     // Disconnect clears the binding; reconnecting and re-reading the view does not restore it.
     await ui.walletDispatch({action: 'cancel'});
     assert.equal(stageOf(stageRoot), 'CONNECT');
-    assert.doesNotMatch(stageRoot.textContent, /처리 중/);
+    assert.doesNotMatch(stageRoot.textContent, /지급 거래를 보냈습니다/);
     ui.state(connected());
     await ui.click('read-session');
     await ui.click('read-application');
-    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
     // Replacing the application drops the previous application's receipt.
     await ui.click('payment-receipt');
     assert.equal(stageLine(stageRoot), includedText);
     app = 'app-two';
     await ui.click('read-session');
     await ui.click('read-application');
-    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
     // A valid receipt that arrives after a disconnect is discarded.
     hold = true;
     const late = ui.click('payment-receipt');
@@ -1144,9 +1152,66 @@ test('#173 receipt binding is dropped on disconnect, application replacement and
     await ui.click('read-application');
     release(realReceipt('app-two'));
     await late;
-    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
     assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'payment-receipt',
         'read-session', 'read-application', 'payment-receipt', 'read-session', 'read-application', 'payment-receipt',
         'read-session', 'read-application'], 'no extra server calls');
     ui.mounted.destroy();
+});
+
+test('#173 after the review cap an accepted right still shows the processing sentence once the INCLUDED receipt is bound', async () => {
+    const roots = uxRoots();
+    const {stageRoot, payoutRoot} = roots;
+    const ui = fixture(({action}) => ({'read-session': session('app-one'),
+        'read-application': realView('app-one', 'CLAIMED', {terminationReason: 'REVIEW_CAP_UNRESOLVED'}),
+        'payment-receipt': realReceipt()})[action], roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    // Unchanged pinned behaviour without a receipt: the time-only termination reason is shown first.
+    assert.match(stageLine(stageRoot), /확인 절차가 종료되었습니다/);
+    await ui.click('payment-receipt');
+    assert.equal(stageOf(stageRoot), 'CONFIRM');
+    assert.equal(stageLine(stageRoot), includedText);
+    assert.equal(payoutRoot.children.length, 0);
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'payment-receipt']);
+    ui.mounted.destroy();
+});
+
+test('#173 real-mode reflection card keeps the ABSENT/UNCERTAIN wording and the stored-decision rule', async () => {
+    const {Node} = installCardDom();
+    const base = realView('app-one', null);
+    const view = {...base, decision: {...base.decision, conditionsStatus: 'NOT_MET'},
+        criteria: base.criteria.map(row => row.criterionId === 'reflection-topics' ? {...row, state: 'NOT_MET'} : row)};
+    const render = async topics => {
+        const evidence = {version: 'clear-bootcamp-decision-evidence.1', applicationId: 'app-one', role: 'PARTICIPANT',
+            manifest: {version: 'clear-bootcamp-evidence-manifest.1', applicationId: 'app-one',
+                decision: {decisionId: 'decision-one', decisionRevision: 3, decisionHash: hex('3')},
+                criteria: [{criterionId: 'reflection-topics', state: 'NOT_MET', evidenceId: 'evidence-reflection-topics',
+                    evidenceRevision: 1, metadataStatus: 'RECORDED', checks: {topics}}]},
+            availability: [{criterionId: 'reflection-topics', evidenceId: 'evidence-reflection-topics', status: 'VALID_AS_RECORDED'}],
+            limitations: {originalTextHttpAvailable: false}};
+        const cards = nativePanels.createConditionCards({getState: () => ({view,
+            session: {applicationId: 'app-one', boundApplicationId: 'app-one'}}),
+        read: async () => ({view}), loadEvidence: async () => evidence, storage: nativePanels.memoryStore()});
+        cards.render();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const root = new Node('div');
+        root.append(cards.render());
+        cards.close();
+        return root.textContent;
+    };
+    const absent = await render([{topicId: 'work-performed', state: 'PRESENT'},
+        {topicId: 'problem-solving-process', state: 'ABSENT'}, {topicId: 'learning-takeaway', state: 'UNCERTAIN'}]);
+    assert.match(absent, /문제 해결 과정 내용이 부족해요\./);
+    assert.match(absent, /부족한 내용/);
+    assert.match(absent, /판단하기 어려운 내용/);
+    assert.match(absent, /AI 가 이 항목이 글에 있는지 확신하지 못했어요\. 없다는 뜻은 아니에요\./);
+    assert.match(absent, /문제 해결 과정 내용을 더해 .*에 다시 올려 주세요\. 돌아오면 저장된 판정을 다시 읽어요\./);
+    assert.match(absent, /회고 재검증 경로는 아직 연결 전이에요\. 돌아오면 서버에 저장된 판정만 다시 읽어요\./);
+    assert.doesNotMatch(absent, /다시 검토를 요청해요/);
+    const uncertain = await render([{topicId: 'work-performed', state: 'PRESENT'},
+        {topicId: 'problem-solving-process', state: 'PRESENT'}, {topicId: 'learning-takeaway', state: 'UNCERTAIN'}]);
+    assert.match(uncertain, /배운 점 항목은 판단하기 어려워요\./);
+    assert.match(uncertain, /배운 점 부분을 더 분명하게 적어 .*에 다시 올릴 수 있어요\. 재검증 경로가 연결되기 전이라, 돌아오면 저장된 판정을 다시 확인해요\./);
+    assert.doesNotMatch(uncertain, /부족한 내용|다시 검토를 요청해요/);
 });
