@@ -44,13 +44,13 @@ async function fixture(t){
 }
 // Same derivation the server validates in src/bootcamp/execution-e4-ports.mjs:30.
 function derived(x){const {B,R,O,A:avail,U,S}=x;return B>=R&&O>=R&&avail===B-R&&U===O-R&&S===(U>avail?U-avail:0n);}
-async function prepared(f,{fundAmount=A}={}){
- const r=await f.registration();await f.register(r);await f.fund(fundAmount);
- const allocationId=f.op(),procedureId=f.op(),signerKeyId=f.op();
+async function prepared(f,{fundAmount=A,wallet,signerKeyId}={}){
+ const r=await f.registration(wallet);await f.register(r);await f.fund(fundAmount);
+ const allocationId=f.op(),procedureId=f.op(),newKey=!signerKeyId;signerKeyId??=f.op();
  await sent(f.vault.allocate(f.op(),r.appId,allocationId,1));
  await sent(f.vault.startReview(f.op(),r.appId,procedureId,START,2));
  const consentSetHash=f.op();await sent(f.vault.bindConsents(f.op(),r.appId,consentSetHash,true,3));
- await sent(f.vault.connect(f.accounts[1]).registerKey(f.op(),signerKeyId,f.signer.address));
+ if(newKey)await sent(f.vault.connect(f.accounts[1]).registerKey(f.op(),signerKeyId,f.signer.address));
  const m={applicationId:r.appId,policyHash:f.config.policyHash,runtimeMappingHash:f.config.runtimeMappingHash,
   decisionId:r.target.decisionId,decisionRevision:1,decisionHash:r.target.decisionHash,recipient:r.wallet.address,
   token:await f.token.getAddress(),amountAtoms:100000000,allocationId,consentSetHash,deadlinePolicyHash:f.op(),
@@ -152,6 +152,27 @@ test('chain balance view reads review -> accepted (claim pending) -> settled wit
  const report=await independentClaim({provider:f.provider,vaultAbi:f.b.contract.abi,vaultAddress,tokenAddress,applicationId:p.appId,caller:f.accounts[5]});
  const settled=await view();assert.equal(settled.state,'SETTLED');assert.equal(settled.recipientAtoms,String(A));assert.equal(settled.vaultAtoms,'0');
  assert.equal(settled.payoutTxHash,report.claim.txHash);
+});
+
+test('chain balance view ties the payout tx to its own application when one wallet has several',async t=>{
+ const f=await fixture(t),wallet=Wallet.createRandom(),vaultAddress=await f.vault.getAddress(),tokenAddress=await f.token.getAddress();
+ const first=await prepared(f,{wallet}),second=await prepared(f,{wallet,signerKeyId:first.m.signerKeyId});
+ assert.notEqual(first.appId,second.appId);
+ for(const p of [first,second])await sent(f.vault.connect(f.accounts[2]).accept(f.op(),p.m,p.signature,5));
+ const view=applicationId=>readChainView({provider:f.provider,vaultAbi:f.b.contract.abi,vaultAddress,tokenAddress,applicationId});
+ const claim=p=>independentClaim({provider:f.provider,vaultAbi:f.b.contract.abi,vaultAddress,tokenAddress,applicationId:p.appId,caller:f.accounts[5]});
+ const a=await claim(first);
+ const settled=await view(first.appId),pending=await view(second.appId),newest=await view(null);
+ assert.equal(settled.state,'SETTLED');assert.equal(settled.payoutTxHash,a.claim.txHash);
+ assert.equal(pending.state,'ACCEPTED');assert.equal(pending.recipient,wallet.address.toLowerCase());
+ assert.equal(pending.payoutTxHash,null,'B is unclaimed: A\'s transfer to the same wallet is not B\'s payout');
+ assert.equal(pending.recipientAtoms,String(A),'the student balance stays the whole wallet balance');
+ assert.equal(newest.applicationId,second.appId);assert.equal(newest.payoutTxHash,null);
+ const b=await claim(second);
+ const both=[await view(first.appId),await view(second.appId)];
+ assert.equal(both[0].payoutTxHash,a.claim.txHash,'A keeps its own tx after a later transfer to the same wallet');
+ assert.equal(both[1].payoutTxHash,b.claim.txHash);assert.notEqual(a.claim.txHash,b.claim.txHash);
+ assert.equal(both[1].state,'SETTLED');assert.equal(both[1].recipientAtoms,String(2n*A));
 });
 
 test('chain balance view HTTP serves only GET page/state on loopback; read failure is 503 without detail',async t=>{

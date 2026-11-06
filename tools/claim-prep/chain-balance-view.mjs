@@ -32,9 +32,13 @@ export async function readChainView({provider,vaultAbi,vaultAddress,tokenAddress
  const recipient=a.recipient&&a.recipient!==ZERO?a.recipient.toLowerCase():null;
  let recipientAtoms=null,payoutTxHash=null;
  if(recipient){
+  // Whole wallet balance, as before. The payout tx is this application's own settlement only:
+  // RightSettled(applicationId indexed, allocationId indexed, recipient indexed) from the vault,
+  // never another application's Transfer to the same wallet. The vault settles an application once.
   recipientAtoms=(await token.balanceOf(recipient,at)).toString();
-  const logs=await token.queryFilter(token.filters.Transfer(vaultAddress,recipient),0,blockNumber);
-  payoutTxHash=logs.length?logs[logs.length-1].transactionHash:null;
+  const logs=await vault.queryFilter(vault.filters.RightSettled(app,null,recipient),0,blockNumber);
+  ensure(logs.length<=1,'CHAIN_VIEW_SETTLEMENT_DUPLICATE');
+  payoutTxHash=logs.length?logs[0].transactionHash:null;
  }
  return Object.freeze({version:CHAIN_VIEW_VERSION,blockNumber,applicationId:app,state,recipient,recipientAtoms,vaultAtoms:vaultAtoms.toString(),payoutTxHash});
 }
