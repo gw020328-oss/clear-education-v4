@@ -1,8 +1,11 @@
 // Operator condition preview on the Moodle-native host: native command fence,
 // command route, host config and owner-approval file. Synthetic only.
-import test from 'node:test';
+import test, {mock} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, writeFileSync, readFileSync, chmodSync} from 'node:fs';
+import fs, {mkdtempSync, writeFileSync, readFileSync, chmodSync, readdirSync, unlinkSync} from 'node:fs';
+import {syncBuiltinESMExports} from 'node:module';
+import {execFile} from 'node:child_process';
+import {createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createNativePreviewCommand, NATIVE_PREVIEW_COMMAND_FENCE} from '../../src/agent-preview/operator-native-command.mjs';
@@ -87,4 +90,78 @@ test('relay accepts a remote D expiry a little ahead of this host clock, still r
   assert.match(src, /const D_CLOCK_SKEW_MS = 30000;/);
   assert.match(src, /b\.expiresAt>time\(\)\.wall&&b\.expiresAt<=time\(\)\.wall\+900000\+D_CLOCK_SKEW_MS/);
   assert.match(src, /time\(\)\.wall<input\.expiresAt&&input\.expiresAt<=time\(\)\.wall\+3600000\+D_CLOCK_SKEW_MS/);
+});
+
+// Owner approval file: the file is the only authority, under one lock shared by every writer.
+const approvalDir = () => mkdtempSync(join(tmpdir(), 'clear-preview-approvals-'));
+const ownerGrant = (i, expiresAt) => ({bodyHash: createHash('sha256').update('body-' + i).digest('hex'), bindingHash: hex('2'), approvalRef: 'approval-ref-' + i, expiresAt});
+const writeApprovals = (file, approvals) => writeFileSync(file, JSON.stringify({version: 'clear-normal-operator-preview-approvals.1', approvals}), {mode: 0o600});
+const fileApprovals = file => JSON.parse(readFileSync(file, 'utf8')).approvals;
+
+test('two instances consume in turn: an entry the other instance took or the owner removed is never returned', () => {
+  const dir = approvalDir(), file = join(dir, 'approvals.json'), now = 1_800_000_000_000;
+  const [g1, g2, g3, g4] = [1, 2, 3, 4].map(i => ownerGrant(i, now + 60000));
+  writeApprovals(file, [g1, g2]);
+  const a = createFileOwnerApprovals({path: file, clock: () => now}), b = createFileOwnerApprovals({path: file, clock: () => now});
+  assert.deepEqual(a.take(g2.bodyHash, g2.bindingHash), g2, 'instance A reads g1 and g2 from the file');
+  assert.deepEqual(b.take(g1.bodyHash, g1.bindingHash), g1, 'instance B consumes g1 from the file');
+  assert.equal(a.take(g1.bodyHash, g1.bindingHash), null, 'A has no memory copy of g1');
+  assert.equal(b.take(g2.bodyHash, g2.bindingHash), null);
+  a.record(g3); a.record(g4);
+  assert.equal(b.size(), 2);
+  writeApprovals(file, [g4]);
+  assert.equal(a.take(g3.bodyHash, g3.bindingHash), null, 'an entry the owner removed is gone for every instance');
+  assert.deepEqual(b.take(g4.bodyHash, g4.bindingHash), g4);
+  assert.deepEqual(fileApprovals(file), []);
+  assert.deepEqual(readdirSync(dir), ['approvals.json'], 'no temporary or lock file is left');
+});
+
+test('owner additions racing with takes in other processes are neither lost nor consumed twice', async () => {
+  const dir = approvalDir(), file = join(dir, 'approvals.json'), expiresAt = Date.now() + 600000;
+  const existing = [1, 2, 3, 4, 5, 6].map(i => ownerGrant(i, expiresAt)), added = [7, 8, 9, 10, 11, 12].map(i => ownerGrant(i, expiresAt));
+  writeApprovals(file, existing);
+  // A writer that still uses the old fixed temporary name must not collide with these writers.
+  writeFileSync(join(dir, '.approvals.tmp'), 'foreign', {mode: 0o600});
+  const code = `const job = JSON.parse(process.env.CLEAR_APPROVAL_JOB);
+    const {createFileOwnerApprovals} = await import(job.module);
+    const store = createFileOwnerApprovals({path: job.file});
+    while (Date.now() < job.startAt) {}
+    let out = null;
+    if (job.mode === 'record') { store.record(job.grant); out = 'RECORDED'; }
+    else { const end = Date.now() + 5000; while (!out && Date.now() < end) out = store.take(job.grant.bodyHash, job.grant.bindingHash); }
+    process.stdout.write(JSON.stringify(out));`;
+  const startAt = Date.now() + 1500, module = new URL('../../tools/bootcamp/normal-operator-preview.mjs', import.meta.url).href;
+  const run = (mode, grant) => new Promise((resolve, reject) => execFile(process.execPath, ['--input-type=module', '-e', code],
+    {env: {...process.env, CLEAR_APPROVAL_JOB: JSON.stringify({module, file, mode, grant, startAt})}, timeout: 20000},
+    (error, stdout, stderr) => error ? reject(Object.assign(error, {stderr})) : resolve(JSON.parse(stdout))));
+  const results = await Promise.all([...existing.map(g => run('take', g)), ...added.map(g => run('record', g))]);
+  assert.deepEqual(results.slice(0, 6), existing, 'every concurrent take got exactly its own grant');
+  assert.deepEqual(results.slice(6), added.map(() => 'RECORDED'));
+  const left = fileApprovals(file);
+  assert.deepEqual(left.map(g => g.approvalRef).sort(), added.map(g => g.approvalRef).sort(), 'no addition lost, no taken entry restored');
+  const store = createFileOwnerApprovals({path: file});
+  for (const g of existing) assert.equal(store.take(g.bodyHash, g.bindingHash), null, 'a consumed entry never returns');
+  for (const g of added) { assert.deepEqual(store.take(g.bodyHash, g.bindingHash), g); assert.equal(store.take(g.bodyHash, g.bindingHash), null); }
+  assert.equal(readFileSync(join(dir, '.approvals.tmp'), 'utf8'), 'foreign');
+  assert.deepEqual(readdirSync(dir).sort(), ['.approvals.tmp', 'approvals.json']);
+});
+
+test('a failed approval write returns no grant and keeps the entry; a held lock fails closed', () => {
+  const dir = approvalDir(), file = join(dir, 'approvals.json'), now = 1_800_000_000_000;
+  const g = ownerGrant(1, now + 60000), extra = ownerGrant(2, now + 60000);
+  writeApprovals(file, [g]);
+  const store = createFileOwnerApprovals({path: file, clock: () => now});
+  mock.method(fs, 'renameSync', () => { throw Object.assign(Error('synthetic'), {code: 'EIO'}); }); syncBuiltinESMExports();
+  try {
+    assert.throws(() => store.take(g.bodyHash, g.bindingHash), /OWNER_APPROVAL_STORE/, 'no grant without the removal on file');
+    assert.throws(() => store.record(extra), /OWNER_APPROVAL_STORE/);
+  } finally { mock.restoreAll(); syncBuiltinESMExports(); }
+  assert.deepEqual(fileApprovals(file), [g], 'the entry stays for a later take');
+  assert.deepEqual(readdirSync(dir), ['approvals.json'], 'temporary file removed and lock released');
+  writeFileSync(file + '.lock', '', {mode: 0o600});
+  assert.throws(() => store.take(g.bodyHash, g.bindingHash), /OWNER_APPROVAL_LOCKED/, 'a lock held elsewhere is never bypassed');
+  assert.deepEqual(fileApprovals(file), [g]);
+  unlinkSync(file + '.lock');
+  assert.deepEqual(store.take(g.bodyHash, g.bindingHash), g);
+  assert.equal(store.take(g.bodyHash, g.bindingHash), null);
 });
