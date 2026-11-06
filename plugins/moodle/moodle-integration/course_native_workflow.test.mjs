@@ -1295,7 +1295,7 @@ test('guide walks a student from load to paid with one button per step and no ex
     await press(guideRoot);
     assert.equal(at().key, 'refresh', 'a write clears the reviewed view');
     await press(guideRoot);
-    assert.equal(at().key, 'register-read');
+    assert.equal(at().key, 'register-confirm', 'after signing, the card says it is done and only checks the record');
     await press(guideRoot);
     assert.equal(at().key, 'consent');
     await press(guideRoot);
@@ -1395,6 +1395,67 @@ test('guide shows a situation-specific loading card while a step runs, and a sig
     assert.equal(signing.key, 'busy');
     assert.equal(signing.title, '서명 창을 확인해 주세요');
     assert.match(guideRoot.textContent, /돈은 나가지 않아요/);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide retries a failed read step once from read-session, never a write, and stops after the second failure', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let failures = 1;
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') {
+            if (failures-- > 0) { throw Object.assign(Error('HTTP_503'), {status: 503}); }
+            return session(null);
+        }
+        throw Object.assign(Error('HTTP_500'), {status: 500});
+    }, {guideRoot});
+    guideOf(guideRoot).go.handlers.click();
+    await new Promise(resolve => setTimeout(resolve, 1700));
+    for (let i = 0; i < 6; i++) { await tick(); }
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-session'], 'one automatic retry');
+    assert.equal(guideOf(guideRoot).key, 'apply', 'the transient failure never reached the student');
+    // A write that fails is never retried.
+    guideOf(guideRoot).go.handlers.click();
+    await new Promise(resolve => setTimeout(resolve, 1700));
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-session', 'create-application']);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide stops after a second consecutive read failure', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const ui = fixture(() => { throw Object.assign(Error('HTTP_503'), {status: 503}); }, {guideRoot});
+    guideOf(guideRoot).go.handlers.click();
+    await new Promise(resolve => setTimeout(resolve, 1700));
+    for (let i = 0; i < 6; i++) { await tick(); }
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-session']);
+    assert.equal(guideOf(guideRoot).key, 'failure');
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide: certificate start shows "preparing" (sign first), and a lost login after binding never invites a re-login', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const started = {...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+        certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+            state: 'START_ACCEPTED', startAllowed: false, signatureReady: false}};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return started; }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    await press(guideRoot);
+    const prep = guideOf(guideRoot);
+    assert.equal(prep.key, 'cert-prep');
+    assert.match(prep.body, /서명 단계가 나와요/);
+    assert.doesNotMatch(prep.title, /로그인/);
+    ui.state({...connected(), phase: 'IDLE', authenticated: false});
+    const lost = guideOf(guideRoot);
+    assert.equal(lost.key, 'lost');
+    assert.match(lost.body, /다시 로그인하거나 새로고침하지/);
+    assert.equal(lost.go, undefined, 'no button that could start a new login');
     ui.mounted.destroy();
     delete globalThis.document;
 });

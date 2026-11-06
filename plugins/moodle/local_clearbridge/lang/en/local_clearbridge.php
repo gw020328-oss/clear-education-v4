@@ -236,3 +236,4 @@ $string['nativecertificatewait'] = 'Waiting for the next server step';
 $string['nativecertificatestartreceipt'] = 'Certificate start request accepted. Waiting for the signing message.';
 $string['brandsubstudent'] = 'Refund check';
 $string['brandsubteacher'] = 'Refund operations';
+$string['nativewalletrestart'] = 'Start over (reloads this page; nothing is sent again)';

@@ -295,3 +295,5 @@
 [data-clear-workflow].clear-simple [data-native-condition-cards] .crc-quote,
 [data-clear-workflow].clear-simple [data-native-condition-cards] .crc-loc { display: none !important; }
 [data-clear-workflow].clear-simple [data-native-condition-cards] .crc-actions:not(:has(.crc-go:not(:disabled))) { display: none; }
+[data-native-guide] .clear-guide[data-guide-key="lost"] { border-top-color: var(--warn-line); background: var(--warn-bg); }
+[data-wallet-restart-box] { margin-top: .75rem; }

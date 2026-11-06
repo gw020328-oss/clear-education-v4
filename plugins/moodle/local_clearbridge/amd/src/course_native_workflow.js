@@ -83,7 +83,8 @@ define([], function() {
                 }
                 certificatePolls++;
                 const result = await run('read-session');
-                if (result && ['START_ACCEPTED', 'SIGNATURE_ACCEPTED'].includes(certificate()?.state)) {
+                // A failed read (e.g. a transient 5xx) keeps polling within the same 6-poll limit; no writes here.
+                if (!result || ['START_ACCEPTED', 'SIGNATURE_ACCEPTED'].includes(certificate()?.state)) {
                     scheduleCertificateRead();
                 }
             }, 1000);
@@ -406,6 +407,8 @@ define([], function() {
         // run(action) path as the existing controls, is disabled exactly when enabled(action) is false, and
         // never offers an action the page would refuse. Technical sections stay in the page behind a toggle.
         let simple = participant;
+        let boundOnce = null;
+        let signedRegistrationFor = null;
         let guideSignature = null;
         let guideButton = null;
         let guideStepNow = null;
@@ -414,8 +417,12 @@ define([], function() {
         const agreedBy = (view, role) => !!view?.consent?.records?.some(row => row.actorRole === role);
         const refreshActions = () => pairedMode() ? ['read-session'] : ['read-session', 'read-application'];
         const guideStep = () => {
+            if (sourceBound && applicationId) {
+                boundOnce = applicationId;
+            }
             if (!ready) {
-                return {key: 'connect', actions: []};
+                // After the application is bound, only the original login can continue it (A pins the session).
+                return boundOnce ? {key: 'lost', actions: []} : {key: 'connect', actions: []};
             }
             if (pending || walletBusy) {
                 return {key: 'busy', busy: pending?.action ?? 'wallet', actions: []};
@@ -445,7 +452,10 @@ define([], function() {
                 return source ? {key: 'cert-sign', actions: ['approve-source-signature']}
                     : {key: 'cert-read', actions: ['read-source-signature']};
             }
-            if (cert && ['START_ACCEPTED', 'SIGNATURE_ACCEPTED'].includes(cert.state)) {
+            if (cert?.state === 'START_ACCEPTED') {
+                return {key: 'cert-prep', actions: ['read-session']};
+            }
+            if (cert?.state === 'SIGNATURE_ACCEPTED') {
                 return {key: 'cert-wait', actions: ['read-session']};
             }
             const view = application;
@@ -468,13 +478,18 @@ define([], function() {
             if (registration?.status === 'SIGNED') {
                 return {key: 'consent', actions: ['consent'], choice: 'AGREE'};
             }
+            if (!registration && signedRegistrationFor === applicationId) {
+                return {key: 'register-confirm', actions: ['read-registration']};
+            }
             return {key: registration ? 'register-check' : 'register-read', actions: ['read-registration']};
         };
         const guideText = {
             connect: ['Google 계정으로 시작해요', '아래 버튼을 위에서부터 하나씩 누르세요. 환급금을 받을 내 지갑이 자동으로 '
                 + '만들어져요. 따로 설치할 것은 없어요.', null],
-            unknown: ['결과를 확인하지 못했어요',
-                '요청이 처리됐는지 알 수 없어요. 같은 버튼을 다시 누르지 말고 진행 담당자에게 알려 주세요.', '최신 상태 불러오기'],
+            unknown: ['결과를 확인하지 못했어요', '방금 요청이 처리됐는지 알 수 없어요. 같은 버튼을 다시 누르지 말고 진행 담당자에게 '
+                + '알려 주세요. 지금 상태는 아래 버튼으로 볼 수 있어요.', '최신 상태 불러오기'],
+            lost: ['연결이 끊겼어요', '이 환급 신청은 처음 연결한 화면에서만 이어 갈 수 있어요. 다시 로그인하거나 새로고침하지 '
+                + '말고 진행 담당자에게 알려 주세요.', null],
             notaccepted: ['다시 확인이 필요해요',
                 '방금 요청은 기록되지 않았어요. 최신 상태를 불러온 뒤 다시 진행해 주세요.', '최신 상태 불러오기'],
             failure: ['잠깐 문제가 있었어요', '최신 상태를 다시 불러와 주세요.', '최신 상태 불러오기'],
@@ -490,10 +505,14 @@ define([], function() {
             'cert-read': ['서명할 내용을 확인해요', '이 서명은 "인증서 확인에 동의해요"라는 표시예요. 돈이 나가지 않아요.',
                 '서명할 내용 보기'],
             'cert-sign': ['확인했으면 서명해요', '서명은 확인 도장을 찍는 것과 같아요. 돈이 나가지 않아요.', '서명하기'],
+            'cert-prep': ['서명할 내용을 준비하고 있어요', 'HackerRank 인증을 시작했어요. 곧 확인용 서명 단계가 나와요. '
+                + '자동으로 확인하고 있으니 잠시만 기다려 주세요.', '확인하기'],
             'cert-wait': ['새 창에서 HackerRank에 로그인해 주세요', '로그인하면 CLEAR가 인증서를 가져와 확인해요. 보통 1~2분 '
                 + '걸려요. 끝났으면 아래 버튼을 눌러 보세요.', '확인됐는지 보기'],
             'register-read': ['네 가지 조건을 모두 마쳤어요', '이제 환급금 100 TEST를 받을 내 지갑을 확인할 차례예요.',
                 '받을 지갑 확인하기'],
+            'register-confirm': ['받을 지갑 서명을 마쳤어요', '동의 단계로 넘어가기 전에 서명이 잘 기록됐는지 확인할게요.',
+                '서명 기록 확인하기'],
             'register-check': ['받을 지갑을 다시 확인해요', '지갑 확인 상태를 새로 불러와요.', '받을 지갑 확인하기'],
             'register-sign': ['환급금을 받을 곳을 확인해요', '아래 내용이 맞으면 서명하세요. 서명은 "이 지갑으로 받을게요"라는 '
                 + '확인 도장이에요. 돈이 나가지 않아요.', '확인하고 서명하기'],
@@ -547,10 +566,10 @@ define([], function() {
         };
         const helpFor = {connect: ['wallet'], apply: ['conditions', 'test'], bind: ['conditions'], conditions: ['ai', 'conditions'],
             'cert-start': ['hackerrank', 'signature'], 'cert-read': ['signature'], 'cert-sign': ['signature'],
-            'cert-wait': ['hackerrank'], 'register-read': ['wallet', 'test'], 'register-sign': ['wallet', 'address', 'signature', 'test'],
+            'cert-prep': ['hackerrank'], 'cert-wait': ['hackerrank'], 'register-confirm': ['signature'], 'register-read': ['wallet', 'test'], 'register-sign': ['wallet', 'address', 'signature', 'test'],
             consent: ['consent', 'signature'], 'wait-operator': ['consent'], receipt: ['blockchain'], 'receipt-wait': ['blockchain'],
             paid: ['blockchain', 'final', 'test']};
-        const waiting = new Set(['busy', 'cert-wait', 'wait-operator', 'receipt-wait']);
+        const waiting = new Set(['busy', 'cert-prep', 'cert-wait', 'wait-operator', 'receipt-wait']);
         const tail = value => typeof value === 'string' && /^0x[0-9a-fA-F]{40}$/.test(value) ? value.slice(-4) : null;
         const guideContent = step => {
             const help = (helpFor[step.key] ?? []).map(key => glossary[key]);
@@ -595,12 +614,25 @@ define([], function() {
                 spin: waiting.has(step.key)};
         };
         const runGuide = async step => {
-            for (const action of step.actions) {
-                const result = await run(action, step.choice);
-                if (!result) {
-                    return;
+            const go = async actions => {
+                for (const action of actions) {
+                    if (!await run(action, step.choice)) {
+                        return false;
+                    }
                 }
+                return true;
+            };
+            if (await go(step.actions) || step.actions.some(action => writes.has(action))) {
+                return;
             }
+            // Read-only steps get ONE automatic retry after a short pause (never writes). A failed read
+            // clears the page state, so the retry starts again from read-session. A disconnect (401/403)
+            // leaves ready=false and stops here.
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            if (closed || !ready || unknown || pending || walletBusy || lastStatus !== 'failure') {
+                return;
+            }
+            await go(step.actions[0] === 'read-session' ? step.actions : ['read-session', ...step.actions]);
         };
         const paintGuide = () => {
             if (!participant || !guideRoot) {
@@ -866,6 +898,9 @@ define([], function() {
                 case 'consent':
                     require(result?.version === 'clear-bootcamp-procedure-operation.1' && result.usableForPayment === false);
                     displayed.operation = record(result, 'procedure');
+                    if (input.action === 'approve-registration') {
+                        signedRegistrationFor = applicationId;
+                    }
                     break;
                 case 'approve-reflection':
                     exactApp(result);

@@ -60,6 +60,11 @@
         <button type="button" class="btn btn-secondary" data-wallet-action="sign-out" hidden>
             {{#str}} nativewalletsignout, local_clearbridge {{/str}}
         </button>
+        <div data-wallet-restart-box>
+            <button type="button" class="btn btn-primary" data-wallet-restart hidden>
+                {{#str}} nativewalletrestart, local_clearbridge {{/str}}
+            </button>
+        </div>
     </div>
     <div hidden>
         <span data-wallet-message="choose">{{#str}} nativechooseoption, local_clearbridge {{/str}}</span>
