@@ -1251,8 +1251,10 @@ test('guide walks a student from load to paid with one button per step and no ex
         registrationTargetId: 'register-one', payload: {message: {recipient: '0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1'}}});
     const ui = fixture(({action}) => {
         switch (action) {
-            case 'read-session': return session(stage === 'start' ? null : 'app-one');
-            case 'create-application': stage = 'partial'; return receipt;
+            case 'read-session': return session(['start', 'created'].includes(stage) ? null : 'app-one');
+            case 'create-application': stage = 'created'; return receipt;
+            case 'bind-source-session': stage = 'partial';
+                return {applicationId: 'app-one', status: 'AUTHENTICATED_SOURCE_SESSION_BOUND', paymentAuthorization: false};
             case 'read-application': return viewAt();
             case 'read-registration': return packet(stage === 'signed' ? 'SIGNED' : 'AWAITING_SIGNATURE');
             case 'approve-registration': stage = 'signed'; return procedure;
@@ -1267,6 +1269,10 @@ test('guide walks a student from load to paid with one button per step and no ex
     assert.equal(guideOf(guideRoot).toggle.textContent, '모든 단계와 기술 정보 보기');
     await press(guideRoot);
     assert.equal(at().key, 'apply');
+    await press(guideRoot);
+    const bind = at();
+    assert.equal(bind.key, 'bind', 'a created but unbound application asks to start the condition check (r45)');
+    assert.equal(bind.go.attributes['data-guide-action'], 'bind-source-session');
     await press(guideRoot);
     assert.equal(at().key, 'refresh');
     await press(guideRoot);
@@ -1304,7 +1310,7 @@ test('guide walks a student from load to paid with one button per step and no ex
     assert.equal(stageLine(roots.stageRoot), includedText, 'strip binds the same receipt');
     assert.equal(roots.payoutRoot.children.length, 0, 'still no paid summary without FINALIZED');
     const sent = ui.sent.map(input => input.action + (input.action === 'consent' ? ':' + input.value : ''));
-    assert.deepEqual(sent, ['read-session', 'create-application', 'read-session', 'read-application',
+    assert.deepEqual(sent, ['read-session', 'create-application', 'bind-source-session', 'read-session', 'read-application',
         'read-session', 'read-application', 'read-registration', 'approve-registration', 'read-session', 'read-application',
         'read-registration', 'consent:AGREE', 'read-session', 'read-application', 'read-session', 'read-application',
         'payment-receipt', 'read-application']);

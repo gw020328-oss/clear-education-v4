@@ -435,6 +435,10 @@ define([], function() {
                 return enabled('create-application') ? {key: 'apply', actions: ['create-application']}
                     : {key: 'load', actions: ['read-session']};
             }
+            // A created application is not yet bound to the evidence session (r45): bind it first.
+            if (!sourceBound && enabled('bind-source-session')) {
+                return {key: 'bind', actions: ['bind-source-session']};
+            }
             const cert = certificate();
             if (cert?.state === 'READY_TO_START' && enabled('start-certificate')) {
                 return {key: 'cert-start', actions: ['start-certificate']};
@@ -480,6 +484,9 @@ define([], function() {
             load: ['내 진행 상황을 불러올게요', '버튼을 누르면 지금 해야 할 일을 알려 드려요.', '불러오기'],
             apply: ['환급을 신청해요',
                 '신청하면 CLEAR가 Moodle과 HackerRank 기록으로 네 가지 조건을 확인해요.', '환급 신청하기'],
+            bind: ['조건 확인을 시작해요',
+                '버튼을 누르면 CLEAR가 Moodle과 HackerRank 기록을 읽기 시작해요. 이 단계에서는 돈이 나가지 않아요.',
+                '조건 확인 시작하기'],
             refresh: ['최신 상태를 불러올게요', '방금 한 일이 반영됐는지 확인해요.', '불러오기'],
             'cert-start': ['HackerRank 인증서를 가져와요',
                 '버튼을 누르고 안내에 따라 서명하면, 새 창에서 HackerRank에 로그인하게 돼요.', 'HackerRank 인증 시작하기'],
