@@ -162,6 +162,12 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
         } else if (command.action === 'connect-metamask') {
           const provider = providers.find(p => p.selector === command.providerId); check(provider, 'STALE_SELECTION');
           await release(); current(stamp,signal); selected = null; candidates = []; phase = 'CONNECTING'; emit();
+          // Each local TEST run adds a new chain. A site permission left from an earlier run makes MetaMask
+          // refuse the next personal_sign (4100), so drop it first and ask for accounts afresh. Best effort:
+          // a wallet without wallet_revokePermissions keeps the old behaviour.
+          try { await bounded(() => provider.provider.request({method: 'wallet_revokePermissions', params: [{eth_accounts: {}}]}),
+            {signal, timeoutMs: 10000}); } catch { signal?.throwIfAborted(); }
+          current(stamp,signal);
           const address = await requestMetaMaskAddress(provider.provider, signal); current(stamp,signal);
           candidates = [{...provider, address, selector: selector('choice')}]; phase = 'CHOOSING';
         } else if (command.action === 'select-wallet') {

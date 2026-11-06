@@ -11,7 +11,7 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor, commandResult} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor, commandResult, revokeError} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   target.document = document;
   const provider = new EventEmitter(), calls = [], stages = [], views = [], commandInputs = [];
@@ -24,6 +24,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
     if (method === 'eth_accounts') return [currentAddress];
     if (method === 'eth_chainId') return '0x3039';
     if (method === 'wallet_switchEthereumChain') return null;
+    if (method === 'wallet_revokePermissions') { if (revokeError) throw revokeError; return null; }
     throw Error('UNEXPECTED_WALLET_REQUEST');
   };
   target.addEventListener('eip6963:requestProvider', () => {
@@ -398,4 +399,14 @@ test('participant pages have no preview request',async()=>{
  const c=createCourseWalletController({config:{...config,role:'participant'},target,onState(){},fetch:async()=>({ok:true,json:async()=>({})}),
   sdk:{login:async()=>{},logout:async()=>{}},loginFactory:()=>({end:async()=>{}}),sessionFactory:()=>({})});
  await assert.rejects(c.previewRequest('/bootcamp/preview/prepare',{method:'POST',body:{a:1}}),/MOODLE_PREVIEW_REQUEST/);await c.destroy();
+});
+
+test('operator connect drops an earlier site permission before asking for accounts, and tolerates wallets without it',async()=>{
+ const f=fixture();await f.ready();
+ const i=f.calls.indexOf('wallet_revokePermissions'),j=f.calls.indexOf('eth_requestAccounts');
+ assert(i>=0&&j>i,'revoke precedes the account request');assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,1);
+ await f.controller.destroy();
+ const x=fixture({revokeError:Object.assign(Error('unsupported'),{code:4200})});await x.ready();
+ assert(x.calls.includes('eth_requestAccounts'),'unsupported revoke falls back to the old request');assert(x.calls.includes('wallet_switchEthereumChain'),'the flow continues to the network check');
+ await x.controller.destroy();
 });
