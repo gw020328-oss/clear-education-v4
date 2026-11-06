@@ -14,6 +14,8 @@ define([], function() {
         const panelStatus = root.querySelector('[data-native-panel-status]');
         const activityStatus = root.querySelector('[data-native-activity-status]');
         const cardRoot = root.querySelector('[data-native-condition-cards]');
+        const stageRoot = root.querySelector('[data-native-stage-strip]');
+        const payoutRoot = root.querySelector('[data-native-payout-summary]');
         const acknowledgment = root.querySelector('[data-workflow-ack]');
         const messages = Object.fromEntries([...root.querySelectorAll('[data-workflow-message]')]
             .map(node => [node.dataset.workflowMessage, node.textContent]));
@@ -28,6 +30,7 @@ define([], function() {
         let sourceBound = false;
         let operation = null;
         let applicationId = null;
+        let receipt = null;
         let session, application, registration, source, reflection;
         let decisionSnapshot = null;
         let displayed = {};
@@ -155,6 +158,35 @@ define([], function() {
                 : panels.toOperatorCourseLink(reply).connection.status === 'CONNECTED';
             panelStatus.textContent = messages[visible ? 'panelconnected' : 'panelunknown'];
         };
+        // #173 participant UX: stage strip and payout summary. Read-only views of values this page
+        // already holds (current application view, signed registration, payment receipt). The
+        // stage strip says "paid" only for a FINALIZED claim with a received amount (#173 rule).
+        const criterionLabels = {'activity-complete': '지정 활동', 'assignment-submitted': '과제 제출',
+            'reflection-topics': '회고', 'python-basic-certificate': 'HackerRank 인증서'};
+        const paintUx = () => {
+            if (!participant || !panels) {
+                return;
+            }
+            const view = ready && application ? {...application, criteria: (application.criteria || [])
+                .map(row => ({...row, label: row.label ?? criterionLabels[row.criterionId] ?? row.criterionId}))} : null;
+            if (stageRoot && typeof panels.stageStrip === 'function') {
+                try {
+                    stageRoot.replaceChildren(panels.stageStrip(panels.participantStage({view,
+                        conn: {state: ready ? 'LIVE' : 'NOT_CONNECTED'}})));
+                } catch {
+                    stageRoot.replaceChildren();
+                }
+            }
+            if (payoutRoot && typeof panels.payoutSummary === 'function') {
+                try {
+                    const recipient = registration?.payload?.message?.recipient ?? null;
+                    const node = view ? panels.payoutSummary({view, recipient, receipt}) : null;
+                    payoutRoot.replaceChildren(...(node ? [node] : []));
+                } catch {
+                    payoutRoot.replaceChildren();
+                }
+            }
+        };
         const paintCards = () => {
             if (!cards || cardsQueued) {
                 return;
@@ -216,7 +248,7 @@ define([], function() {
         };
         const clear = () => {
             decisionSnapshot = null;
-            session = application = registration = source = reflection = null;
+            session = application = registration = source = reflection = receipt = null;
             applicationId = null;
             sourceBound = false;
             acknowledgment.checked = false;
@@ -366,6 +398,7 @@ define([], function() {
                 region.hidden = !visible;
                 region.textContent = visible;
             }
+            paintUx();
             paintCards();
         };
         const disconnect = () => {
@@ -519,6 +552,7 @@ define([], function() {
                     require(result.version === 'clear-bootcamp-normal-payment-receipt.1'
                         && result.role === (participant ? 'PARTICIPANT' : 'OPERATOR'));
                     displayed.receipt = {state: result.claim?.state, finalized: result.claim?.finalized};
+                    receipt = result;
                     if (result.claim?.state === 'INCLUDED' && result.claim.canonical === true
                             && result.claim.transferAmountAtoms === '100000000'
                             && result.balance?.receivedAtoms === '100000000'
@@ -591,7 +625,7 @@ define([], function() {
                     certificateRevision = null;
                 }
                 // A write can invalidate every earlier review packet and receipt observation.
-                application = registration = source = reflection = null;
+                application = registration = source = reflection = receipt = null;
                 acknowledgment.checked = false;
                 displayed = {};
             }

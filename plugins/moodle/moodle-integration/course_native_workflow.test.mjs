@@ -37,7 +37,7 @@ const certificateEvidence = () => ({version: 'clear-bootcamp-decision-evidence.1
         criteria: [{criterionId: 'python-basic-certificate', state: 'MET', evidenceId: 'evidence-cert', evidenceRevision: 1,
             metadataStatus: 'RECORDED', verification: {integrity: 'VERIFIED'}, checks: {certificateName: 'Python (Basic)'}}]},
     availability: [{criterionId: 'python-basic-certificate', evidenceId: 'evidence-cert', status: 'VALID_AS_RECORDED'}]});
-const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
+const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot, payoutRoot} = {}) => {
     const buttons = Object.fromEntries(actions.map(workflowAction => [workflowAction,
         {dataset: {workflowAction, workflowChoice: 'AGREE'}}]));
     const listeners = {};
@@ -56,7 +56,7 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
             '[data-workflow-details]': [details],
         })[selector],
         querySelector: selector => ({
-            '[data-native-condition-cards]': cardRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
+            '[data-native-condition-cards]': cardRoot, '[data-native-stage-strip]': stageRoot, '[data-native-payout-summary]': payoutRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
             '[data-workflow-status]': status, '#clearbridge-application-status': applicationStatus, '[data-workflow-ack]': ack,
         })[selector],
         addEventListener: (event, fn, capture = false) => { listeners[event + (capture ? 'Capture' : '')] = fn; },
@@ -990,4 +990,35 @@ test('a consent rejected because the decision changed shows what changed and wai
         assert.equal(consents, 2);
         assert.equal(ui.sent.filter(i => i.action === 'consent').at(-1).reviewed.target.expectedLedgerSequence, 71);
     } finally { ui.mounted.destroy(); }
+});
+
+test('#173 stage strip and payout summary read only current values; paid wording needs a FINALIZED claim', async () => {
+    const {Node} = installCardDom();
+    const stageRoot = new Node('div');
+    const payoutRoot = new Node('div');
+    let claimState = 'INCLUDED';
+    const view = () => ({version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: 'app-one', role: 'PARTICIPANT',
+        target: {targetDecisionId: 'decision-one'}, agreedPayment: {amountAtoms: '100000000', decimals: 6, symbol: 'TEST'},
+        decision: {id: 'decision-one', current: true, evidenceCurrent: true, conditionsStatus: 'MET'},
+        procedure: {publishedAt: 1},
+        consent: {requiredRoles: ['PARTICIPANT', 'COURSE_OPERATOR'],
+            records: [{actorRole: 'PARTICIPANT', value: 'AGREE'}, {actorRole: 'COURSE_OPERATOR', value: 'AGREE'}]},
+        payment: {acceptedRight: true, transactionState: 'INCLUDED', claimState, receivedAtoms: '100000000',
+            transactionHash: '0x' + 'b'.repeat(64), blockRef: {number: 635}},
+        criteria: ['activity-complete', 'assignment-submitted', 'reflection-topics', 'python-basic-certificate']
+            .map(criterionId => ({criterionId, state: 'MET', current: true}))});
+    const ui = fixture(({action}) => action === 'read-session' ? session('app-one') : view(), {stageRoot, payoutRoot});
+    assert.match(stageRoot.textContent, /환급 계정 연결|조건 확인/, 'connected but nothing read yet');
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.match(stageRoot.textContent, /지급 거래를 보냈습니다/, 'INCLUDED is processing, not paid');
+    assert.doesNotMatch(stageRoot.textContent, /받았습니다/);
+    assert.equal(payoutRoot.children.length, 0, 'no payout summary before FINALIZED');
+    claimState = 'FINALIZED';
+    await ui.click('read-application');
+    assert.match(stageRoot.textContent, /내 환급 계정으로 100 TEST를 받았습니다/);
+    assert.match(payoutRoot.textContent, /100 TEST 지급 완료/);
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'read-application'], 'no extra server calls');
+    await ui.walletDispatch({action: 'cancel'});
+    assert.doesNotMatch(stageRoot.textContent, /받았습니다/, 'disconnect clears the paid stage');
 });

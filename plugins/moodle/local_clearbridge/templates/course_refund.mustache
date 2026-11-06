@@ -7,6 +7,9 @@
 }}
 <div data-clear-workflow>
 {{#showconnection}}
+{{#student}}
+<div data-native-stage-strip aria-live="polite"></div>
+{{/student}}
 <section aria-labelledby="clearbridge-connection-heading" class="card mb-3">
     <div class="card-body">
         {{#student}}
@@ -259,6 +262,7 @@
         <h2 id="clearbridge-receipt-heading">{{#str}} nativereceiptheading, local_clearbridge {{/str}}</h2>
         {{#showconnection}}
         <pre class="mt-3 text-wrap" hidden data-workflow-details="receipt" tabindex="0"></pre>
+        {{#student}}<div data-native-payout-summary></div>{{/student}}
         <button type="button" class="btn btn-secondary mb-2" data-workflow-action="payment-receipt" disabled>
             {{#str}} nativeworkflowreadreceipt, local_clearbridge {{/str}}
         </button>
