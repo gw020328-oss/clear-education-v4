@@ -34,6 +34,53 @@ test('조건을 못 채운 채 종료되면 조건 확인 단계에서 종료를
   assert.match(s.line.text, /3\/4/);
 });
 
+test('지급 권리가 수락된 뒤 검토 상한이 지나 REVIEW_CAP_UNRESOLVED 가 남아도 종료가 아니라 지급 단계를 말한다 (오규원 11/6 밤)', () => {
+  const base = bootcampView('paid', 'participant');
+  // 로컬 체인: CLAIMED + 영수증 INCLUDED, 최종 확정 전. A 는 procedure.terminationReason 을 남긴다.
+  const view = {
+    ...base,
+    payment: { ...base.payment, claimState: 'INCLUDED', receivedAtoms: null },
+    procedure: { ...base.procedure, status: 'ACCEPTED_RIGHT_PRESERVED', terminationReason: 'REVIEW_CAP_UNRESOLVED' },
+  };
+  const s = participantStage({ view, conn: LIVE });
+  assert.equal(s.stage, STAGE.CONFIRM);
+  assert.match(s.line.text, /지급 거래를 보냈습니다. 블록체인에서 완료를 확인하고 있습니다/);
+  assert.doesNotMatch(s.line.text, /종료|운영자에게 문의/);
+  // 같은 사유라도 지급 권리가 없으면 종료를 말하고, 사유 문구가 사전에 있다
+  const noRight = { ...view, payment: { ...view.payment, acceptedRight: null, claimState: null, transactionState: null } };
+  const e = participantStage({ view: noRight, conn: LIVE });
+  assert.match(e.line.text, /확인 절차가 종료되었습니다 · 검토 기한 안에 결론이 나지 않았습니다/);
+  // 지급 완료는 여전히 FINALIZED + 수령액일 때만
+  const fin = { ...view, payment: { ...base.payment } };
+  assert.equal(participantStage({ view: fin, conn: LIVE }).stage, STAGE.PAID);
+});
+
+test('예외는 REVIEW_CAP_UNRESOLVED + 권리 보존에 한정 — 다른 종료·이의·연결 오류는 지급 권리가 있어도 먼저 보인다', () => {
+  const base = bootcampView('paid', 'participant');
+  const inFlight = { ...base.payment, claimState: 'INCLUDED', receivedAtoms: null };   // acceptedRight 는 그대로
+  const withProc = (status, terminationReason, extra = {}) => ({
+    ...base, ...extra, payment: inFlight, procedure: { ...base.procedure, status, terminationReason },
+  });
+  // 1) 같은 사유라도 절차 상태가 권리 보존이 아니면 종료
+  assert.match(participantStage({ view: withProc('CONTRACT_TERMINATED', 'REVIEW_CAP_UNRESOLVED'), conn: LIVE }).line.text, /확인 절차가 종료되었습니다 · 검토 기한 안에/);
+  // 2) 권리 보존 상태라도 다른 종료 사유는 종료
+  for (const [reason, text] of [['UNRESOLVED_OBJECTION', /오류 신고가 정해진 시간 안에/], ['REVALIDATION_EXHAUSTED', /재검증 횟수를 다 썼는데/], ['EVIDENCE_INVALIDATED', /근거가 무효가/]]) {
+    const s = participantStage({ view: withProc('ACCEPTED_RIGHT_PRESERVED', reason), conn: LIVE });
+    assert.match(s.line.text, /확인 절차가 종료되었습니다/, reason);
+    assert.match(s.line.text, text, reason);
+    assert.doesNotMatch(s.line.text, /지급 거래를 보냈습니다/, reason);
+  }
+  // 3) 이의가 걸려 있으면 지급 권리가 있어도 이의가 먼저
+  const obj = withProc('ACCEPTED_RIGHT_PRESERVED', 'REVIEW_CAP_UNRESOLVED', { objection: { blocked: true, phase: 'RECEIVED' } });
+  assert.match(participantStage({ view: obj, conn: LIVE }).line.text, /오류 신고를 접수했습니다/);
+  // 4) 연결이 끊겼으면 무엇보다 먼저 연결 단계
+  const out = participantStage({ view: withProc('ACCEPTED_RIGHT_PRESERVED', 'REVIEW_CAP_UNRESOLVED'), conn: { state: 'SIGNED_OUT' }, onSignIn: () => {} });
+  assert.equal(out.stage, STAGE.CONNECT);
+  // 5) 지금 판정이 아니면 그것이 먼저
+  const stale = { ...withProc('ACCEPTED_RIGHT_PRESERVED', 'REVIEW_CAP_UNRESOLVED'), decision: { ...base.decision, current: false } };
+  assert.match(participantStage({ view: stale, conn: LIVE }).line.text, /지금 판정이 아닙니다/);
+});
+
 test('오류 신고가 걸려 있으면 양측 확인보다 먼저 말하고, 지급이 진행되지 않는다고 적는다', () => {
   const base = bootcampView('paid', 'participant');
   const view = { ...base, payment: { ...base.payment, claimState: null, receivedAtoms: null }, objection: { blocked: true, phase: 'RECEIVED' } };
@@ -124,5 +171,29 @@ test('회고 블록은 없음(ABSENT)과 불확실(UNCERTAIN)을 나누고, 실�
     assert.match(uncertain, /저장된 판정을 다시 확인해요/);
     const uncertainDemo = reflectionBlock(reflectionReview({ row, evRow: ev(['UNCERTAIN', 'PRESENT']) }), link, { demo: true }).textContent;
     assert.match(uncertainDemo, /다시 올리시면 다시 검토를 요청해요/, '시연에서는 재검토 요청이라고 말한다');
+  } finally { delete globalThis.document; }
+});
+
+// ── 4 · 지급 완료 합성 화면 표시 (오규원 11/6 밤) ───────────────────────────
+
+test('지급 요약은 합성 원천이면 "합성 예시 · 실제 실행 결과 아님" 을 머리글에 적고, 실제 원천이면 적지 않는다', async () => {
+  class Node { constructor(t) { this.tagName = String(t).toUpperCase(); this.children = []; this.attributes = {}; this.className = ''; this._text = ''; }
+    set textContent(v) { this._text = String(v); this.children = []; }
+    get textContent() { return this._text + this.children.map((c) => c.textContent ?? '').join(' '); }
+    setAttribute(k, v) { this.attributes[k] = String(v); } addEventListener() {} append(...n) { this.children.push(...n); } }
+  globalThis.document = { createElement: (t) => new Node(t), createElementNS: (_, t) => new Node(t), createTextNode: (t) => ({ textContent: String(t), children: [] }) };
+  try {
+    const { payoutSummary } = await import('../src/bootcamp/panels.js');
+    const paid = bootcampView('paid', 'participant');
+    const syn = payoutSummary({ view: paid, recipient: '0xabc' });
+    assert.equal(syn.attributes['data-synthetic'], 'yes');
+    assert.match(syn.textContent, /합성 예시 · 실제 실행 결과 아님/);
+    const realRows = paid.criteria.map((r) => ({ ...r, source: { ...r.source, hostMode: 'MOODLE_NATIVE' } }));
+    const real = payoutSummary({ view: { ...paid, sourceMode: 'MOODLE_NATIVE', criteria: realRows }, recipient: '0xabc' });
+    assert.equal(real.attributes['data-synthetic'], undefined);
+    assert.doesNotMatch(real.textContent, /합성 예시/);
+    assert.match(real.textContent, /지급 완료 · 로컬 시연용 TEST 토큰/);
+    // 처리 중(INCLUDED)에서는 합성이든 아니든 그리지 않는다
+    assert.equal(payoutSummary({ view: { ...paid, payment: { ...paid.payment, claimState: 'INCLUDED', receivedAtoms: null } } }), null);
   } finally { delete globalThis.document; }
 });

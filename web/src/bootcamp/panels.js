@@ -368,8 +368,11 @@ export function payoutSummary({ view, recipient = null, receipt = null }) {
   if (!recipient) missing.push('수령 계정 주소(이 조회에 실려 오지 않음 — 「내 수령 계정」 칸에 있음)');
   if (currentAtoms === null || currentAtoms === undefined) missing.push(receipt ? '현재 잔액(지급 결과 조회에 잔액 값 없음)' : '현재 잔액(「수령 결과 확인」 을 누르면 조회)');
   if (!pay.transactionHash) missing.push('거래 해시');
-  return el('div.bcx-payout', { 'data-role': 'payout-done' }, [
-    el('p.bcx-payout-kicker', { text: '지급 완료 · 로컬 시연용 TEST 토큰 · 실제 환급금 아님' }),
+  // 합성 원천(fixture)이면 그렇게 적는다 — 로컬 체인은 FINALIZED 까지 가지 않아 이 화면은 합성에서만 나온다 (오규원 11/6 밤).
+  const synthetic = view.sourceMode === 'SYNTHETIC_TEST_SOURCE'
+    || (view.criteria ?? []).some((r) => r?.source?.hostMode === 'SYNTHETIC_TEST_SOURCE');
+  return el('div.bcx-payout', { 'data-role': 'payout-done', 'data-synthetic': synthetic ? 'yes' : null }, [
+    el('p.bcx-payout-kicker', { text: synthetic ? '합성 예시 · 실제 실행 결과 아님 · 로컬 시연용 TEST 토큰' : '지급 완료 · 로컬 시연용 TEST 토큰 · 실제 환급금 아님' }),
     el('p.bcx-payout-amount', {}, [el('strong', { text: `${amount(pay.receivedAtoms)} 지급 완료` })]),
     el('p.bcx-payout-sub', { text: '네 조건 충족과 양측 확인이 끝나 내 환급 계정으로 보냈고, 거래가 블록체인에서 최종 확정되었습니다.' }),
     el('dl.bcx-payout-rows', {}, rows.map(([k, v]) => el('div', { 'data-missing': v === null ? 'yes' : null }, [

@@ -33,6 +33,8 @@ const TERMINATION = Object.freeze({
   UNRESOLVED_OBJECTION: '오류 신고가 정해진 시간 안에 해결되지 않았습니다',
   REVALIDATION_EXHAUSTED: '재검증 횟수를 다 썼는데 결론이 나지 않았습니다',
   EVIDENCE_INVALIDATED: '근거가 무효가 되었습니다',
+  // 검토 상한(600초)이 지났을 때 A 가 남기는 사유. 지급 권리가 이미 수락됐으면 아래에서 지급 단계가 먼저다.
+  REVIEW_CAP_UNRESOLVED: '검토 기한 안에 결론이 나지 않았습니다',
 });
 
 /**
@@ -96,8 +98,14 @@ export function participantStage({ view, conn = null, onSignIn = null, demo = fa
   }
   // 1. 확인 절차가 끝났다 — 기다리면 지급될 것처럼 말하지 않는다.
   //    미해결 종료(조건은 채웠는데 절차가 결론을 못 냄)와 조건 미충족을 구분한다.
+  //    예외는 딱 하나 — 검토 상한이 지나 A 가 REVIEW_CAP_UNRESOLVED 를 남겼지만 절차 상태가 권리 보존
+  //    (ACCEPTED_RIGHT_PRESERVED · 봉인 화면의 "지급권리 보존 · 청구 가능")이고 지급 권리가 수락된 경우.
+  //    이때만 종료 대신 지급 단계를 말한다. 다른 종료 사유·이의·연결 오류는 그대로 먼저 보인다 (오규원 11/6 밤, 범위 한정 요청).
   const ended = view?.procedure?.terminationReason ?? null;
-  if (ended && !paid) {
+  const rightPreserved = ended === 'REVIEW_CAP_UNRESOLVED'
+    && view?.procedure?.status === 'ACCEPTED_RIGHT_PRESERVED'
+    && Boolean(pay.acceptedRight);
+  if (ended && !paid && !rightPreserved) {
     const why = TERMINATION[ended] ?? '확인 절차가 종료되었습니다';
     return metAll
       ? out(STAGE.CONFIRM, `확인 절차가 종료되었습니다 · ${why}. 조건은 모두 충족했고 미충족으로 확정된 것은 아닙니다. 후속 확인은 운영자에게 문의해 주세요.`, 'warn')
