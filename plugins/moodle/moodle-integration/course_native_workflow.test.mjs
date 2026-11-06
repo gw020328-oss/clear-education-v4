@@ -895,3 +895,99 @@ test('certificate revision comes only from current matching operation receipts a
         delete globalThis.document;
     }
 });
+
+// r33: a definite server rejection (nothing recorded) must not lock the page; unknown results still do.
+const notAccepted = code => Object.assign(Error(code), {code, outcome: 'HTTP_ERROR', serverEffect: 'NOT_ACCEPTED'});
+const certificateSession = () => ({...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+    certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+        state: 'READY_TO_START', startAllowed: true, signatureReady: false}});
+const settle = () => new Promise(resolve => setImmediate(resolve));
+
+test('a definitely rejected certificate start unlocks a manual re-read and retry without resending', async () => {
+    let revision = 4, starts = 0;
+    const ui = fixture(input => {
+        if (input.action === 'read-session') { return certificateSession(); }
+        if (input.action === 'read-application') { return {...certificateView(), criteria: [], target: {expectedRevision: revision}}; }
+        if (input.action === 'start-certificate') {
+            starts++;
+            if (starts === 1) { throw notAccepted('MOODLE_CERTIFICATE_REVIEW_CHANGED'); }
+            return {version: 'clear-certificate-start-receipt.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+                status: 'START_ACCEPTED', paymentAuthorization: false};
+        }
+        throw Error('unexpected');
+    });
+    try {
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        revision = 5; // the server moved on after this review
+        await ui.click('start-certificate'); await settle();
+        assert.equal(ui.status.textContent, 'notaccepted');
+        assert.notEqual(ui.applicationStatus.textContent, 'unknown');
+        await ui.click('start-certificate'); await settle();
+        assert.equal(starts, 1, 'no automatic or blind resend before a fresh review');
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        await ui.click('start-certificate'); await settle();
+        assert.equal(starts, 2);
+        assert.equal(ui.sent.filter(i => i.action === 'start-certificate').at(-1).expectedRevision, 5);
+        assert.equal(ui.status.textContent, 'success');
+    } finally { ui.mounted.destroy(); }
+});
+
+test('unknown or mismatched rejections keep the existing write lock', async () => {
+    for (const failure of [Object.assign(Error('MOODLE_WORKFLOW_UNAVAILABLE'), {code: 'MOODLE_WORKFLOW_UNAVAILABLE', outcome: 'UNKNOWN'}),
+        Object.assign(Error('MOODLE_CERTIFICATE_REVIEW_CHANGED'), {code: 'MOODLE_CERTIFICATE_REVIEW_CHANGED', outcome: 'HTTP_ERROR'}),
+        notAccepted('MOODLE_CONSENT_REVIEW_CHANGED')]) {
+        let starts = 0;
+        const ui = fixture(input => {
+            if (input.action === 'read-session') { return certificateSession(); }
+            if (input.action === 'read-application') { return {...certificateView(), criteria: [], target: {expectedRevision: 5}}; }
+            if (input.action === 'start-certificate') { starts++; throw failure; }
+            throw Error('unexpected');
+        });
+        try {
+            await ui.click('read-session'); await ui.click('read-application'); await settle();
+            await ui.click('start-certificate'); await settle();
+            assert.equal(ui.status.textContent, 'unknown');
+            await ui.click('read-session'); await ui.click('read-application'); await settle();
+            await ui.click('start-certificate'); await settle();
+            assert.equal(starts, 1, failure.code + ' must stay locked');
+        } finally { ui.mounted.destroy(); }
+    }
+});
+
+test('a consent rejected because the decision changed shows what changed and waits for a new explicit consent', async () => {
+    let ledger = 70, operatorAgreed = false, consents = 0;
+    const view = () => ({version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: 'app-one', role: 'PARTICIPANT',
+        target: {expectedRevision: 8, expectedLedgerSequence: ledger, targetDecisionId: 'decision-one', targetDecisionRevision: 5,
+            targetDecisionHash: 'hash-one'},
+        agreedPayment: {amountAtoms: '100000000', symbol: 'TEST', decimals: 6},
+        decision: {id: 'decision-one', hash: 'hash-one', revision: 5, current: true, evidenceCurrent: true, conditionsStatus: 'MET'},
+        consent: {records: operatorAgreed ? [{actorRole: 'COURSE_OPERATOR', value: 'AGREE'}] : []},
+        criteria: ['activity-complete', 'assignment-submitted', 'reflection-topics', 'python-basic-certificate'].map(criterionId =>
+            ({criterionId, state: 'MET', current: true, evidenceId: 'evidence-' + criterionId, evidenceRevision: 1}))});
+    const ui = fixture(input => {
+        if (input.action === 'read-session') { return session('app-one'); }
+        if (input.action === 'read-application') { return view(); }
+        if (input.action === 'consent') {
+            consents++;
+            if (consents === 1) { throw notAccepted('MOODLE_CONSENT_REVIEW_CHANGED'); }
+            return {record: {applicationId: 'app-one', operationId: 'op-consent'}, current: true};
+        }
+        throw Error('unexpected');
+    });
+    ui.details.dataset.workflowDetails = 'changes ' + ui.details.dataset.workflowDetails;
+    try {
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        ledger = 71; operatorAgreed = true; // the operator consented in between
+        await ui.click('consent'); await settle();
+        assert.equal(ui.status.textContent, 'notaccepted');
+        assert.notEqual(ui.applicationStatus.textContent, 'unknown');
+        await ui.click('consent'); await settle();
+        assert.equal(consents, 1, 'no consent without a fresh review');
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        assert.match(ui.details.textContent, /^changes\nledgersequence: 70 → 71\noperatorconsent: UNKNOWN → AGREE/m);
+        assert.equal(consents, 1, 'reading never consents');
+        await ui.click('consent'); await settle();
+        assert.equal(consents, 2);
+        assert.equal(ui.sent.filter(i => i.action === 'consent').at(-1).reviewed.target.expectedLedgerSequence, 71);
+    } finally { ui.mounted.destroy(); }
+});

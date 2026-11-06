@@ -53,6 +53,8 @@ define([], function() {
             certificateRevisionFloor = certificateRevision;
         };
         let certificateAttempted = false;
+        // The reviewed decision of a consent the server definitely did not accept; compared with the next fresh view.
+        let consentChangedFrom = null;
         let certificateAccepted = false;
         let certificateTimer = null;
         let certificatePolls = 0;
@@ -267,8 +269,37 @@ define([], function() {
                     (row.originalEvidence?.httpAvailable === true ? 'AVAILABLE' : 'UNAVAILABLE')))
             );
         }).join('\n\n');
+        const consentLabel = (view, role) => label(view?.consent?.records?.some(row => row.actorRole === role) ? 'AGREE' : 'UNKNOWN');
+        // Shows what changed between the decision a rejected consent reviewed and the fresh view. Display only.
+        const noteConsentChanges = view => {
+            const before = consentChangedFrom;
+            consentChangedFrom = null;
+            if (!before || before.applicationId !== view?.applicationId) {
+                return;
+            }
+            const changes = [];
+            const pair = (key, from, to) => {
+                if (JSON.stringify(from ?? null) !== JSON.stringify(to ?? null)) {
+                    changes.push(label(key) + ': ' + (from ?? label('unconfirmed')) + ' → ' + (to ?? label('unconfirmed')));
+                }
+            };
+            pair('decisiontarget', before.target?.targetDecisionId, view.target?.targetDecisionId);
+            pair('revision', before.target?.targetDecisionRevision, view.target?.targetDecisionRevision);
+            pair('fingerprint', before.target?.targetDecisionHash, view.target?.targetDecisionHash);
+            pair('ledgersequence', before.target?.expectedLedgerSequence, view.target?.expectedLedgerSequence);
+            pair('amount', amount(before.agreedPayment), amount(view.agreedPayment));
+            pair('participantconsent', consentLabel(before, 'PARTICIPANT'), consentLabel(view, 'PARTICIPANT'));
+            pair('operatorconsent', consentLabel(before, 'COURSE_OPERATOR'), consentLabel(view, 'COURSE_OPERATOR'));
+            for (const row of view.criteria ?? []) {
+                const old = (before.criteria ?? []).find(item => item.criterionId === row.criterionId);
+                pair(row.criterionId, old ? label(old.state) : null, label(row.state));
+            }
+            displayed.changes = changes.length ? changes : [label('changesnone')];
+        };
         const format = (key, value) => {
             switch (key) {
+                case 'changes':
+                    return lines(label('changes'), ...value);
                 case 'session':
                     return label(value.sourceBound ? 'sourcebound' : 'sourcenotbound');
                 case 'operation':
@@ -338,6 +369,7 @@ define([], function() {
             paintCards();
         };
         const disconnect = () => {
+            consentChangedFrom = null;
             if (pending?.write) {
                 unknown = true;
             }
@@ -574,6 +606,7 @@ define([], function() {
                 accept(input, result);
                 if (action === 'read-application') {
                     retainViewRevision(result, task.session);
+                    noteConsentChanges(result);
                 }
                 if (action === 'read-session' && pairedMode()) {
                     const boundSession = session;
@@ -621,6 +654,7 @@ define([], function() {
                     }
                     application = view;
                     displayed.application = view;
+                    noteConsentChanges(view);
                     displayed.evidence = evidence;
                     decisionSnapshot = {session: boundSession, view, evidence};
                     retainViewRevision(view, boundSession);
@@ -634,10 +668,20 @@ define([], function() {
                 }
                 const reviewChanged = input.action === 'approve-reflection'
                     && error?.code === 'MOODLE_AI_REVIEW_CHANGED' && error?.outcome === 'NOT_SENT';
+                // Only a definite server rejection (nothing recorded) unlocks a manual re-read and retry.
+                const notAccepted = error?.serverEffect === 'NOT_ACCEPTED'
+                    && (input.action === 'start-certificate' && error?.code === 'MOODLE_CERTIFICATE_REVIEW_CHANGED'
+                        || input.action === 'consent' && error?.code === 'MOODLE_CONSENT_REVIEW_CHANGED');
                 clear();
                 certificateRevision = null;
-                unknown ||= task.write && !reviewChanged;
-                show('failure');
+                unknown ||= task.write && !reviewChanged && !notAccepted;
+                if (notAccepted && input.action === 'start-certificate') {
+                    certificateAttempted = false;
+                }
+                if (notAccepted && input.action === 'consent') {
+                    consentChangedFrom = input.reviewed;
+                }
+                show(notAccepted ? 'notaccepted' : 'failure');
             } finally {
                 if (pending === task) {
                     pending = null;
