@@ -17,6 +17,7 @@ define([], function() {
         const stageRoot = root.querySelector('[data-native-stage-strip]');
         const payoutRoot = root.querySelector('[data-native-payout-summary]');
         const guideRoot = root.querySelector('[data-native-guide]');
+        const lockRoot = root.querySelector('[data-native-lock-notice]');
         const acknowledgment = root.querySelector('[data-workflow-ack]');
         const messages = Object.fromEntries([...root.querySelectorAll('[data-workflow-message]')]
             .map(node => [node.dataset.workflowMessage, node.textContent]));
@@ -905,6 +906,47 @@ define([], function() {
                 guideButton.disabled = !step.actions.length || !enabled(step.actions[0]);
             }
         };
+        // Operator-only notice: once the right is accepted on chain (or both sides agreed, which makes the
+        // server ACCEPT), amount, recipient and decision are fixed. Display only: no server or chain calls.
+        let lockSignature = null;
+        const paintLockNotice = () => {
+            if (!lockRoot || participant) {
+                return;
+            }
+            const view = application?.applicationId === applicationId ? application : null;
+            const agreed = role => !!view?.consent?.records?.some(row => row.actorRole === role && row.value === 'AGREE');
+            const locked = !closed && ready && !unknown && !!applicationId && !!view
+                && (!!view.payment?.acceptedRight || agreed('PARTICIPANT') && agreed('COURSE_OPERATOR'));
+            lockRoot.hidden = !locked;
+            const text = locked ? amount(view.agreedPayment) : null;
+            if (text === lockSignature) {
+                return;
+            }
+            lockSignature = text;
+            if (!locked) {
+                lockRoot.replaceChildren();
+                return;
+            }
+            const doc = lockRoot.ownerDocument;
+            const node = (tag, className, value) => {
+                const element = doc.createElement(tag);
+                element.className = className;
+                if (value != null) {
+                    element.textContent = value;
+                }
+                return element;
+            };
+            const box = node('div', 'clear-lock');
+            const link = node('a', 'clear-lock-link', '블록체인에서 직접 확인');
+            link.setAttribute('href', 'http://127.0.0.1:9480/#attempts');
+            link.setAttribute('target', '_blank');
+            link.setAttribute('rel', 'noopener noreferrer');
+            box.append(node('p', 'clear-lock-title', '🔒 이 환급은 블록체인에 확정됐어요'),
+                node('p', 'clear-lock-body', '학생과 선생님이 모두 동의해 지급 권리가 블록체인에 기록됐어요. 금액(' + text
+                    + ')·받는 사람(학생이 서명한 지갑)·판정은 이제 누구도 바꿀 수 없어요. 이 화면에서 고치는 조건은 다음 개설용 초안이에요.'),
+                link);
+            lockRoot.replaceChildren(box);
+        };
         const render = () => {
             for (const button of buttons) {
                 button.disabled = !enabled(button.dataset.workflowAction);
@@ -926,6 +968,7 @@ define([], function() {
             }
             paintUx();
             paintGuide();
+            paintLockNotice();
             paintCards();
         };
         const disconnect = () => {

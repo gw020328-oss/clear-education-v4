@@ -27,6 +27,9 @@
 <div data-native-stage-strip aria-live="polite"></div>
 {{/student}}
 <div data-native-guide aria-live="polite"></div>
+{{^student}}
+<div data-native-lock-notice hidden></div>
+{{/student}}
 <section aria-labelledby="clearbridge-connection-heading" class="card mb-3" data-simple="connect">
     <div class="card-body">
         {{#student}}

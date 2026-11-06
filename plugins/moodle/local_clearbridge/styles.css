@@ -317,3 +317,17 @@
     border-radius: 10px; background: var(--accent-soft); font-size: 1.05rem; font-weight: 700; cursor: pointer;
 }
 [data-native-guide] .clear-guide-ack-box { flex: none; width: 22px; height: 22px; margin-top: 2px; accent-color: var(--accent); }
+
+/* ── 선생님(운영자) 화면: 블록체인 확정 안내와 체인 창 링크 (0.1.42, 표시 전용) ─────────────── */
+[data-native-lock-notice] .clear-lock {
+    margin: 0 0 18px; padding: 18px 20px 16px; border: 1px solid var(--line); border-left: 6px solid var(--accent);
+    border-radius: var(--radius); background: var(--navy-soft); color: var(--fg); box-shadow: var(--shadow);
+}
+[data-native-lock-notice] .clear-lock-title { margin: 0 0 6px; font-size: 1.35rem; font-weight: 800; line-height: 1.35; color: var(--fg); }
+[data-native-lock-notice] .clear-lock-body { margin: 0 0 12px; font-size: 1.05rem; line-height: 1.6; }
+[data-native-lock-notice] .clear-lock-link {
+    display: inline-block; padding: .55rem 1.1rem; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+    font-size: 1rem; font-weight: 800; text-decoration: none;
+}
+[data-native-lock-notice] .clear-lock-link:hover { filter: brightness(1.06); color: var(--accent-ink); text-decoration: none; }
+[data-native-lock-notice] .clear-lock-link:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }

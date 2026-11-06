@@ -37,7 +37,7 @@ const certificateEvidence = () => ({version: 'clear-bootcamp-decision-evidence.1
         criteria: [{criterionId: 'python-basic-certificate', state: 'MET', evidenceId: 'evidence-cert', evidenceRevision: 1,
             metadataStatus: 'RECORDED', verification: {integrity: 'VERIFIED'}, checks: {certificateName: 'Python (Basic)'}}]},
     availability: [{criterionId: 'python-basic-certificate', evidenceId: 'evidence-cert', status: 'VALID_AS_RECORDED'}]});
-const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot, payoutRoot, guideRoot} = {}) => {
+const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot, payoutRoot, guideRoot, lockRoot} = {}) => {
     const buttons = Object.fromEntries(actions.map(workflowAction => [workflowAction,
         {dataset: {workflowAction, workflowChoice: 'AGREE'}}]));
     const listeners = {};
@@ -56,7 +56,7 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot,
             '[data-workflow-details]': [details],
         })[selector],
         querySelector: selector => ({
-            '[data-native-condition-cards]': cardRoot, '[data-native-stage-strip]': stageRoot, '[data-native-guide]': guideRoot, '[data-native-payout-summary]': payoutRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
+            '[data-native-condition-cards]': cardRoot, '[data-native-stage-strip]': stageRoot, '[data-native-guide]': guideRoot, '[data-native-lock-notice]': lockRoot, '[data-native-payout-summary]': payoutRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
             '[data-workflow-status]': status, '#clearbridge-application-status': applicationStatus, '[data-workflow-ack]': ack,
         })[selector],
         addEventListener: (event, fn, capture = false) => { listeners[event + (capture ? 'Capture' : '')] = fn; },
@@ -1539,5 +1539,62 @@ test('operator guide walks connect → AI approval (checkbox) → consent after 
         'approve-reflection', 'read-session', 'read-application', 'read-session', 'read-application', 'consent:AGREE',
         'read-session', 'read-application', 'payment-receipt', 'read-application']);
     ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('operator lock notice shows only for an accepted right or both AGREE consents, links the chain window, and leaves students alone', async () => {
+    const {Node} = installCardDom();
+    const lockRoot = new Node('div');
+    let shape = 'accepted';
+    const viewAt = () => {
+        const view = {...realView('app-one', shape === 'accepted' ? 'CLAIMED' : null), role: 'COURSE_OPERATOR'};
+        if (shape === 'open') {
+            view.consent = {...view.consent, bothCurrent: false, records: []};
+        }
+        return view;
+    };
+    const ui = fixture(({action}) => ({'read-session': session('app-one', 'OPERATOR'), 'read-application': viewAt()})[action],
+        {role: 'operator', lockRoot});
+    assert.equal(lockRoot.hidden, true, 'hidden before any view is read');
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, false, 'an accepted right shows the notice');
+    const title = lockRoot.querySelector('.clear-lock-title');
+    assert.equal(title.textContent, '🔒 이 환급은 블록체인에 확정됐어요');
+    assert.equal(lockRoot.querySelector('.clear-lock-body').textContent, '학생과 선생님이 모두 동의해 지급 권리가 블록체인에 기록됐어요. '
+        + '금액(100 TEST)·받는 사람(학생이 서명한 지갑)·판정은 이제 누구도 바꿀 수 없어요. 이 화면에서 고치는 조건은 다음 개설용 초안이에요.');
+    const link = lockRoot.querySelector('.clear-lock-link');
+    assert.equal(link.tag, 'a');
+    assert.equal(link.textContent, '블록체인에서 직접 확인');
+    assert.equal(link.href, 'http://127.0.0.1:9480/#attempts');
+    assert.equal(link.attributes.target, '_blank');
+    assert.equal(link.attributes.rel, 'noopener noreferrer');
+
+    shape = 'agreed';
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, false, 'both AGREE consents without an accepted right still show the notice');
+
+    shape = 'open';
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, true, 'no accepted right and no consent hides the notice');
+    assert.equal(lockRoot.children.length, 0);
+
+    shape = 'accepted';
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, false);
+    ui.state({...connected('operator'), authenticated: false});
+    assert.equal(lockRoot.hidden, true, 'a disconnect hides the notice');
+    assert.deepEqual(ui.sent.map(input => input.action),
+        ['read-session', 'read-application', 'read-application', 'read-application', 'read-application'], 'no extra server calls');
+    ui.mounted.destroy();
+
+    const studentRoot = new Node('div');
+    const student = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': realView()})[action],
+        {lockRoot: studentRoot});
+    await student.click('read-session');
+    await student.click('read-application');
+    assert.equal(Object.hasOwn(studentRoot, 'hidden'), false, 'the student view never touches the notice');
+    assert.equal(studentRoot.children.length, 0);
+    student.mounted.destroy();
     delete globalThis.document;
 });
