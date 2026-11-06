@@ -60,8 +60,9 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
     case RETURN.CHECKING:
       return {
         tone: 'wait',
+        // 접수 번호는 카드의 '자세히 보기' 에 있다. 여기는 한 줄만.
         text: req?.status === REFRESH.QUEUED
-          ? `확인 중 · 원천 재확인 요청이 접수됐어요${opId}. 서버 판정을 다시 읽고 있어요.`
+          ? '확인 중 · 재확인 요청 접수 · 서버 판정을 다시 읽고 있어요.'
           : '확인 중 · 서버 판정을 다시 읽고 있어요.',
         recheck: false,
       };
@@ -77,7 +78,7 @@ export function returnLine(ret, row, { where = '원래 화면' } = {}) {
       if (req?.status === REFRESH.QUEUED) {
         return {
           tone: 'wait',
-          text: `확인 중 · 서버가 원천 재확인 요청을 접수했어요${opId}. 새 판정은 아직 확정되지 않았어요. 잠시 뒤 자동으로 한 번 더 읽어요.`,
+          text: '확인 중 · 재확인 요청 접수 · 새 판정은 아직 확정되지 않았어요. 잠시 뒤 다시 읽어요.',
           recheck: true,
         };
       }

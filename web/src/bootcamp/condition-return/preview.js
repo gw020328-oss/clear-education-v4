@@ -116,6 +116,20 @@ export function mountConditionCardsPreview(root, { mode = null, win = globalThis
     render();
   });
 
+  let demoOpen = false;
+  function demoDetails() {
+    const d = el('details.crc-demo-details', demoOpen ? { open: '' } : {}, [
+      el('summary', { text: '시연 조작 · 이 페이지 설명' }),
+      el('p', {
+        text: '돌아오면 카드가 서버에 원천 재확인을 요청하고(접수), 서버가 다시 읽어 새 판정을 확정해야 충족으로 바뀝니다. '
+          + '접수와 확정은 다른 상태로 보입니다. 재확인 경로가 없는 지금 develop 은 「저장된 판정만 읽음」 입니다.',
+      }),
+      controls(),
+    ]);
+    d.addEventListener?.('toggle', () => { demoOpen = Boolean(d.open); });
+    return d;
+  }
+
   function controls() {
     if (actual) return null;
     const s = server.settings();
@@ -162,20 +176,14 @@ export function mountConditionCardsPreview(root, { mode = null, win = globalThis
   function render() {
     clear(root);
     root.append(el('div.crc-preview', {}, [
+      // 처음 보는 사람이 먼저 봐야 할 것은 단계 띠와 카드다. 긴 설명과 시연 조작은 접어 둔다.
       el('header.crc-preview-top', {}, [
-        el('h1', { text: actual ? '환급 조건 카드 — 실제 모드(미연결)' : '환급 조건 카드 미리보기 (시연 데이터)' }),
-        el('p', {
-          text: '카드의 버튼으로 원래 화면(Moodle 강의·과제·회고, HackerRank 인증)에 가서 마치고 이 탭으로 돌아오면, '
-            + '카드가 서버 판정을 다시 읽습니다. 돌아왔다는 사실만으로 충족이 되지 않습니다.',
-        }),
-        actual
-          ? el('p', { text: '실서버에 연결하지 않았습니다. 판정·이동 주소·인증 단계가 없다는 표시만 나와야 합니다.' })
-          : el('p', {
-            text: '돌아오면 카드가 서버에 원천 재확인을 요청하고(접수), 서버가 다시 읽어 새 판정을 확정해야 충족으로 바뀝니다. '
-              + '접수와 확정은 다른 상태로 보입니다. 재확인 경로가 없는 지금 develop 은 「저장된 판정만 읽음」 입니다.',
-          }),
-        controls(),
-      ]),
+        el('h1', { text: actual ? '환급 조건 카드 — 실제 모드(미연결)' : '환급 조건 카드' }),
+        el('p', { text: actual
+          ? '실서버에 연결하지 않았습니다. 판정·이동 주소·인증 단계가 없다는 표시만 나와야 합니다.'
+          : '카드 버튼으로 Moodle·HackerRank 에서 마치고 돌아오면 CLEAR 가 서버 판정을 다시 읽어요. 돌아왔다는 사실만으로 충족이 되지 않아요.' }),
+        actual ? null : demoDetails(),
+      ].filter(Boolean)),
       cards.render(),
       detail(),
       !actual && log.length ? el('pre.crc-demo-log', { text: log.join('\n') }) : null,

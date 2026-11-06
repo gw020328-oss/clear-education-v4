@@ -106,25 +106,31 @@ function moodleBlock(criterionId, ev, evidenceState, row) {
   return text ? el('p.crc-muted', { text }) : null;
 }
 
-function reflectionBlock(review, link) {
+export function reflectionBlock(review, link, { demo = false } = {}) {
   const reviewed = review.state === REVIEW.REVIEWED;
-  const lacking = review.topics.filter((t) => t.state !== 'PRESENT');
+  const absent = review.topics.filter((t) => t.state === 'ABSENT' || t.state === 'MISSING');
+  const uncertain = review.topics.filter((t) => t.state === 'UNCERTAIN');
   const present = review.topics.filter((t) => t.state === 'PRESENT');
   const where = link?.status === LINK.LINKED ? (link.name ?? '회고 게시판') : '회고 게시판 (주소 미제공)';
-  // 머리말 — 검토가 끝났고 지금 글의 결과면 "무엇이 부족한가" 를 바로. 그 밖엔 단계 문구.
+  const labels = (list) => list.map((t) => t.label).join(' · ');
+  // 머리말 — 지금 글의 검토가 끝났으면 무엇이 문제인지 바로. '없음' 과 '불확실' 은 다른 말이다.
   const headline = reviewed && !review.previous
-    ? (lacking.length ? `${lacking.map((t) => t.label).join(' · ')} 내용이 부족해요.` : '세 항목을 모두 확인했어요.')
+    ? (absent.length ? `${labels(absent)} 내용이 부족해요.`
+      : uncertain.length ? `${labels(uncertain)} 항목은 판단하기 어려워요.`
+        : '세 항목을 모두 확인했어요.')
     : review.title;
-  const topicLine = (t) => el('li', { 'data-met': t.state === 'PRESENT' ? 'yes' : 'no' }, [
+  const topicLine = (t) => el('li', { 'data-met': t.state === 'PRESENT' ? 'yes' : t.state === 'UNCERTAIN' ? 'maybe' : 'no' }, [
     el('span.crc-topic', { text: t.label }),
     el('span.crc-topic-state', { text: t.stateText }),
     t.quote
       ? el('q.crc-quote', { text: t.quote })
       : el('span.crc-loc', {
         text: t.location ? `원문 ${t.location.start}–${t.location.end} (UTF-16)`
-          : t.state === 'PRESENT' ? '원문 위치 미제공' : '근거 문장을 찾지 못했어요',
+          : t.state === 'PRESENT' ? '원문 위치 미제공' : t.state === 'UNCERTAIN' ? '어느 문장인지 확정하지 못했어요' : '근거 문장을 찾지 못했어요',
       }),
   ]);
+  // 돌아온 뒤 무엇이 일어나는지 — 실제 회고 재검증 경로는 아직 없다. 시연에서만 "다시 검토를 요청" 이라고 쓴다.
+  const afterReturn = demo ? '이 탭으로 돌아오면 다시 검토를 요청해요.' : '돌아오면 저장된 판정을 다시 읽어요.';
   return el('div.crc-block.crc-review', { 'data-review': review.state }, [
     el('p.crc-title', { text: headline }),
     review.note ? el('p.crc-muted', { text: review.note }) : null,
@@ -134,23 +140,34 @@ function reflectionBlock(review, link) {
       el('p.crc-ai-k', { text: '확인한 문장' }),
       el('ul.crc-topics', {}, present.map(topicLine)),
     ]) : null,
-    reviewed && lacking.length ? el('div.crc-ai', {}, [
+    reviewed && absent.length ? el('div.crc-ai', {}, [
       el('p.crc-ai-k', { text: '부족한 내용' }),
-      el('ul.crc-topics', {}, lacking.map(topicLine)),
+      el('ul.crc-topics', {}, absent.map(topicLine)),
+    ]) : null,
+    reviewed && uncertain.length ? el('div.crc-ai', {}, [
+      el('p.crc-ai-k', { text: '판단하기 어려운 내용' }),
+      el('ul.crc-topics', {}, uncertain.map(topicLine)),
+      el('p.crc-muted', { text: 'AI 가 이 항목이 글에 있는지 확신하지 못했어요. 없다는 뜻은 아니에요.' }),
     ]) : null,
     review.reason ? el('p.crc-reason', { text: `서버 판정 사유 · ${review.reason}` }) : null,
     // 보완 방법 — 어떤 항목을 어디에 더해 올릴지. 글 내용을 대신 써 주지 않는다.
-    review.needsRewrite
+    // 불확실뿐이면 무조건 다시 쓰라고 하지 않는다 — 더 분명하게 적으면 다시 검토한다고만 말한다.
+    review.needsRewrite && absent.length
       ? el('div.crc-fix', {}, [
         el('p.crc-ai-k', { text: '보완 방법' }),
-        el('p', {
-          text: (review.lackingLabels.length
-            ? `회고에 ${review.lackingLabels.join(' · ')} 내용을 더해 `
-            : '회고를 고쳐 ')
-            + `${where}에 다시 올려 주세요. 이 탭으로 돌아오면 다시 검토를 요청해요.`,
-        }),
+        el('p', { text: `회고에 ${labels(absent)} 내용을 더해 ${where}에 다시 올려 주세요. ${afterReturn}` }),
       ])
-      : null,
+      : review.needsRewrite && uncertain.length
+        ? el('div.crc-fix', { 'data-kind': 'uncertain' }, [
+          el('p.crc-ai-k', { text: '참고' }),
+          el('p', { text: `${labels(uncertain)} 부분을 더 분명하게 적어 ${where}에 다시 올리시면 다시 검토해요. ${afterReturn}` }),
+        ])
+        : review.needsRewrite
+          ? el('div.crc-fix', {}, [
+            el('p.crc-ai-k', { text: '보완 방법' }),
+            el('p', { text: `회고를 고쳐 ${where}에 다시 올려 주세요. ${afterReturn}` }),
+          ])
+          : null,
     el('details.crc-more', {}, [
       el('summary', { text: '검토 상세' }),
       review.originalNote ? el('p.crc-muted', { text: review.originalNote }) : null,
@@ -247,14 +264,15 @@ function conditionCard(criterionId, ctx) {
       returned: ret.departed !== false && [RETURN.CHECKING, RETURN.PENDING, RETURN.STALLED, RETURN.READ_FAILED, RETURN.CANNOT_CHECK].includes(ret.state),
     });
     detail = el('div', {}, [
-      reflectionBlock(review, link),
+      reflectionBlock(review, link, { demo }),
       // 회고 재검증은 강의·과제의 원천 재확인 경로와 별개다(오규원 11/6). 실제 연결 전까지
       // 시연은 '합성 검증 범위', 실제 모드는 '경로 연결 전' 이라고 말한다.
       el('p.crc-muted', { 'data-role': 'reflection-scope', text: demo
         ? '회고 재검증은 합성 검증 범위예요 — 강의·과제 재확인 경로와 별개이고, 실제 연결 전이라 이 페이지의 대역이 흉내 내요.'
         : '회고 재검증 경로는 아직 연결 전이에요. 돌아오면 서버에 저장된 판정만 다시 읽어요.' }),
     ]);
-    if (review.needsRewrite) verb = '회고 보완하기';
+    // 없는 항목이 있을 때만 '보완하기'. 불확실뿐이면 열어 보는 동작으로 둔다.
+    if (review.needsRewrite) verb = review.topics.some((t) => t.state === 'ABSENT' || t.state === 'MISSING') ? '회고 보완하기' : '회고 열기';
   } else if (criterionId === 'python-basic-certificate') {
     cert = certificateStatus({ row, evRow: ev.row, availability: ev.availability, session, approval, signedAtMs });
     why = cert.title;
@@ -317,6 +335,7 @@ function conditionCard(criterionId, ctx) {
       targetLine(criterionId, link),
       meta?.value ? el('p.crc-muted', { text: `조건 종류 · ${meta.label} (${meta.value})` }) : null,
       row?.evidenceId ? el('p.crc-muted', { text: `근거 ${row.evidenceId} · 개정 ${row.evidenceRevision ?? '-'}` }) : null,
+      ret.refresh?.operationId ? el('p.crc-muted', { text: `재확인 접수 번호 ${ret.refresh.operationId}` }) : null,
     ].filter(Boolean)),
   ].filter(Boolean));
 }
@@ -345,16 +364,26 @@ export function conditionCardsSection({
   // 상단 띠 — 지금 단계와 다음 행동. 카드 상태(서버 판정 + 재확인 상태)에서만 만든다.
   const returns = CRITERION_IDS.map((id) => (tracker ? tracker.status(id) : { state: RETURN.IDLE }));
   const notMet = CRITERION_IDS.filter((id) => rows.find((r) => r.criterionId === id)?.state !== 'MET');
+  // '조회 중' 과 '접수' 를 섞지 않는다 — tracker 가 가진 실제 재확인 응답으로 센다.
+  const live = returns.filter((r) => [RETURN.CHECKING, RETURN.PENDING].includes(r.state));
+  const byStatus = (status) => live.filter((r) => r.refresh?.status === status).length;
   const stripLine = conditionsLine({
     met: snapshot ? met : null,
     lacking: notMet.map((id) => TASK[id]?.title ?? id),
-    checking: returns.some((r) => [RETURN.CHECKING, RETURN.PENDING].includes(r.state)),
+    refresh: {
+      queued: byStatus('QUEUED'),
+      rateLimited: byStatus('RATE_LIMITED'),
+      failed: byStatus('REQUEST_FAILED'),
+      unavailable: returns.filter((r) => r.state === RETURN.CANNOT_CHECK).length,
+      reading: live.filter((r) => !r.refresh || !['QUEUED', 'RATE_LIMITED', 'REQUEST_FAILED'].includes(r.refresh.status)).length,
+    },
     fetchFailed: returns.some((r) => r.state === RETURN.READ_FAILED),
   });
   const firstLacking = notMet[0] ?? null;
   const stripAction = snapshot && met < 4 && firstLacking
     ? {
-      label: `${TASK[firstLacking]?.title ?? firstLacking} 보러 가기`,
+      // 순서 없음 — 남은 조건 중 화면에서 첫 카드로 데려갈 뿐이다.
+      label: notMet.length > 1 ? '남은 조건 보러 가기' : `${TASK[firstLacking]?.title ?? firstLacking} 보러 가기`,
       onClick: () => {
         const target = typeof document !== 'undefined' ? document.querySelector(`[data-criterion="${firstLacking}"]`) : null;
         target?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });

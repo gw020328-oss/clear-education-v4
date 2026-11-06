@@ -127,3 +127,9 @@
 
 /* 손가락 크기(최소 24px) — 접기 손잡이 */
 .crc-more summary, .crc-message summary { display: inline-flex; align-items: center; min-height: 28px; padding: 2px 4px; }
+
+/* 접힌 시연 조작 — 제품 화면이 먼저 보이게 */
+.crc-demo-details { margin: 10px 0 0; }
+.crc-demo-details > summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 28px; font-size: 0.82rem; color: var(--muted); }
+.crc-demo-details > p { margin: 8px 0 0; color: var(--muted); font-size: 0.84rem; line-height: 1.6; }
+.crc-preview-top h1 { margin: 0 0 4px; }

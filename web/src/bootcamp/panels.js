@@ -362,7 +362,7 @@ export function payoutSummary({ view, recipient = null, receipt = null }) {
     ['지급 거래 상태', [TX[pay.transactionState] ?? pay.transactionState ?? null, CLAIM[pay.claimState] ?? pay.claimState ?? null].filter(Boolean).join(' · ') || null],
     ['거래 내역', pay.transactionHash ? `${shortHash(pay.transactionHash)}${pay.blockRef?.number ? ` · 블록 ${pay.blockRef.number}` : ''}` : null],
     ['조회된 현재 잔액', amount(currentAtoms)],
-    ['가스비', '서비스 부담 · 학생은 온체인 거래를 보내지 않아요'],
+    ['가스비', '서비스 부담 · 학생은 온체인 거래를 보내지 않습니다'],
   ];
   const missing = [];
   if (!recipient) missing.push('수령 계정 주소(이 조회에 실려 오지 않음 — 「내 수령 계정」 칸에 있음)');
@@ -371,7 +371,7 @@ export function payoutSummary({ view, recipient = null, receipt = null }) {
   return el('div.bcx-payout', { 'data-role': 'payout-done' }, [
     el('p.bcx-payout-kicker', { text: '지급 완료 · 로컬 시연용 TEST 토큰 · 실제 환급금 아님' }),
     el('p.bcx-payout-amount', {}, [el('strong', { text: `${amount(pay.receivedAtoms)} 지급 완료` })]),
-    el('p.bcx-payout-sub', { text: '네 조건 충족과 양측 확인이 끝나 내 환급 계정으로 보냈고, 거래가 블록체인에서 최종 확정됐어요.' }),
+    el('p.bcx-payout-sub', { text: '네 조건 충족과 양측 확인이 끝나 내 환급 계정으로 보냈고, 거래가 블록체인에서 최종 확정되었습니다.' }),
     el('dl.bcx-payout-rows', {}, rows.map(([k, v]) => el('div', { 'data-missing': v === null ? 'yes' : null }, [
       el('dt', { text: k }), el('dd', { text: v ?? '서버가 아직 주지 않은 값' }),
     ]))),
