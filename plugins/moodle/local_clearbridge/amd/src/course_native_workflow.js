@@ -163,16 +163,38 @@ define([], function() {
         // stage strip says "paid" only for a FINALIZED claim with a received amount (#173 rule).
         const criterionLabels = {'activity-complete': '지정 활동', 'assignment-submitted': '과제 제출',
             'reflection-topics': '회고', 'python-basic-certificate': 'HackerRank 인증서'};
+        const includedLine = '처리 중 · 100 TEST 전송이 블록에 포함됐습니다. '
+            + '최종 확정은 이 환경에서 제공하지 않아 지급 완료로 표시하지 않습니다.';
+        // The real view reports the accepted right only as CLAIMED/UNCLAIMED. The claim transfer's
+        // INCLUDED state (finalized=false) comes from the receipt already read for this same application.
+        const sameReceipt = view => ready && view?.applicationId === applicationId
+            && receipt?.applicationId === applicationId ? receipt : null;
+        const includedClaim = view => {
+            const held = sameReceipt(view);
+            const claim = held?.claim;
+            return !!held && held.version === 'clear-bootcamp-normal-payment-receipt.1' && held.role === 'PARTICIPANT'
+                && !!view.payment?.acceptedRight && view.payment.claimState === 'CLAIMED'
+                && claim?.state === 'INCLUDED' && claim.canonical === true && claim.finalized === false
+                && claim.transferAmountAtoms === '100000000' && held.balance?.receivedAtoms === '100000000'
+                && held.balance.exactExpectedAmountVerified === true;
+        };
         const paintUx = () => {
             if (!participant || !panels) {
                 return;
             }
-            const view = ready && application ? {...application, criteria: (application.criteria || [])
+            const current = ready && application ? {...application, criteria: (application.criteria || [])
                 .map(row => ({...row, label: row.label ?? criterionLabels[row.criterionId] ?? row.criterionId}))} : null;
+            const included = includedClaim(current);
+            // Only this display copy carries INCLUDED; nothing here produces FINALIZED, so "paid" stays closed.
+            const view = included ? {...current, payment: {...current.payment, claimState: 'INCLUDED'}} : current;
             if (stageRoot && typeof panels.stageStrip === 'function') {
                 try {
-                    stageRoot.replaceChildren(panels.stageStrip(panels.participantStage({view,
-                        conn: {state: ready ? 'LIVE' : 'NOT_CONNECTED'}})));
+                    const stage = panels.participantStage({view, conn: {state: ready ? 'LIVE' : 'NOT_CONNECTED'}});
+                    // The pinned strip checks termination, objection and a stale decision before INCLUDED.
+                    const processing = included && !view.procedure?.terminationReason && !view.objection?.blocked
+                        && view.decision?.current !== false;
+                    stageRoot.replaceChildren(panels.stageStrip(processing
+                        ? {...stage, line: {text: includedLine, tone: 'wait'}} : stage));
                 } catch {
                     stageRoot.replaceChildren();
                 }
@@ -180,7 +202,7 @@ define([], function() {
             if (payoutRoot && typeof panels.payoutSummary === 'function') {
                 try {
                     const recipient = registration?.payload?.message?.recipient ?? null;
-                    const node = view ? panels.payoutSummary({view, recipient, receipt}) : null;
+                    const node = view ? panels.payoutSummary({view, recipient, receipt: sameReceipt(view)}) : null;
                     payoutRoot.replaceChildren(...(node ? [node] : []));
                 } catch {
                     payoutRoot.replaceChildren();

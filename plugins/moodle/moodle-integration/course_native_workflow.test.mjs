@@ -992,33 +992,161 @@ test('a consent rejected because the decision changed shows what changed and wai
     } finally { ui.mounted.destroy(); }
 });
 
-test('#173 stage strip and payout summary read only current values; paid wording needs a FINALIZED claim', async () => {
+// Real DTO shapes (A 15ff2ee): normalView() in src/bootcamp/normal-client.mjs reports the accepted
+// right as CLAIMED/UNCLAIMED with receivedAtoms null; the separate receipt from src/bootcamp/normal-receipt.mjs
+// reports the claim transfer as INCLUDED with finalized=false. Neither contract has a FINALIZED value.
+const hex = (c, n = 64) => '0x' + c.repeat(n);
+const realView = (applicationId = 'app-one', claimState = 'CLAIMED') => ({version: 'clear-bootcamp-normal-view.1',
+    displayOnly: true, applicationId, policyHash: hex('1'), runtimeMappingHash: hex('2'), role: 'PARTICIPANT',
+    target: {expectedRevision: 9, expectedLedgerSequence: 71, targetDecisionId: 'decision-one', targetDecisionRevision: 3,
+        targetDecisionHash: hex('3')},
+    decision: {id: 'decision-one', revision: 3, hash: hex('3'), current: true, evidenceCurrent: true, conditionsStatus: 'MET'},
+    criteria: [['activity-complete', 'MOODLE_ACTIVITY_COMPLETION'], ['assignment-submitted', 'MOODLE_ASSIGNMENT_SUBMISSION'],
+        ['reflection-topics', 'MOODLE_REFLECTION_AI'], ['python-basic-certificate', 'RECLAIM_HACKERRANK']]
+        .map(([criterionId, kind]) => ({criterionId, state: 'MET', current: true, evidenceId: 'evidence-' + criterionId,
+            evidenceRevision: 1, reasonCode: null, expiresAt: null,
+            source: {kind, hostMode: 'REGISTERED_TEST_SOURCE', actualSourceVerification: null},
+            originalEvidence: {authorized: true, httpAvailable: false}})),
+    agreedPayment: {amountAtoms: '100000000', symbol: 'TEST', decimals: 6},
+    procedure: {publishedDecisionId: 'decision-one', publishedAt: 1793000000, terminationReason: null, invalidationReason: null},
+    consent: {bothCurrent: true, requiredRoles: ['PARTICIPANT', 'COURSE_OPERATOR'], onchainWalletSignaturesVerified: false,
+        records: [{actorRole: 'PARTICIPANT', value: 'AGREE'}, {actorRole: 'COURSE_OPERATOR', value: 'AGREE'}]},
+    objection: {blocked: false},
+    payment: {acceptedRight: {state: 'FIXED_RIGHT_PRESERVED', claimState, recipientRef: 'recipient-one', amountAtoms: '100000000',
+        claimExpiresAt: null, requiresCurrentSource: false, requiresCurrentSigner: false, requiresNewSignature: false},
+    transactionState: 'INCLUDED', transactionHash: null, blockRef: 'block-635', claimState, receivedAtoms: null,
+    canonicalTransferVerified: null, receiptHttpAvailable: true},
+    sourceMode: 'REGISTERED_TEST_SOURCE'});
+const realReceipt = (applicationId = 'app-one', {finalized = false} = {}) => ({version: 'clear-bootcamp-normal-payment-receipt.1',
+    applicationId, policyHash: hex('1'), runtimeMappingHash: hex('2'), role: 'PARTICIPANT',
+    currentDecision: {decisionId: 'decision-one', decisionRevision: 3, decisionHash: hex('3')},
+    acceptedTarget: {decisionId: 'decision-one', decisionRevision: 3, decisionHash: hex('3'), allocationId: 'allocation-one'},
+    expectedPayment: {recipient: hex('c', 40), token: hex('d', 40), amountAtoms: '100000000', symbol: 'TEST', decimals: 6},
+    accept: {state: 'RECORDED_INCLUDED', transactionHash: hex('e'), recordedCheckpoint: null, canonicalNow: null},
+    claim: {state: 'INCLUDED', transactionHash: hex('f'), checkpoint: {number: '635', hash: hex('9'), time: '1793000000'},
+        canonical: true, finalized, transferAmountAtoms: '100000000'},
+    balance: {receivedAtoms: '100000000', exactExpectedAmountVerified: true, measurement: 'CANONICAL_TRANSFER_EVENT'},
+    source: {mode: 'REGISTERED_TEST_SOURCE', actualSourceVerification: false}, productionEnabled: false});
+const includedText = '처리 중 · 100 TEST 전송이 블록에 포함됐습니다. 최종 확정은 이 환경에서 제공하지 않아 지급 완료로 표시하지 않습니다.';
+const stageOf = root => root.children[0]?.attributes['data-stage'];
+const stageLine = root => root.querySelector('.crc-stage-line')?.textContent ?? '';
+const uxRoots = () => {
     const {Node} = installCardDom();
-    const stageRoot = new Node('div');
-    const payoutRoot = new Node('div');
-    let claimState = 'INCLUDED';
-    const view = () => ({version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: 'app-one', role: 'PARTICIPANT',
-        target: {targetDecisionId: 'decision-one'}, agreedPayment: {amountAtoms: '100000000', decimals: 6, symbol: 'TEST'},
-        decision: {id: 'decision-one', current: true, evidenceCurrent: true, conditionsStatus: 'MET'},
-        procedure: {publishedAt: 1},
-        consent: {requiredRoles: ['PARTICIPANT', 'COURSE_OPERATOR'],
-            records: [{actorRole: 'PARTICIPANT', value: 'AGREE'}, {actorRole: 'COURSE_OPERATOR', value: 'AGREE'}]},
-        payment: {acceptedRight: true, transactionState: 'INCLUDED', claimState, receivedAtoms: '100000000',
-            transactionHash: '0x' + 'b'.repeat(64), blockRef: {number: 635}},
-        criteria: ['activity-complete', 'assignment-submitted', 'reflection-topics', 'python-basic-certificate']
-            .map(criterionId => ({criterionId, state: 'MET', current: true}))});
-    const ui = fixture(({action}) => action === 'read-session' ? session('app-one') : view(), {stageRoot, payoutRoot});
-    assert.match(stageRoot.textContent, /환급 계정 연결|조건 확인/, 'connected but nothing read yet');
+    return {stageRoot: new Node('div'), payoutRoot: new Node('div')};
+};
+
+test('#173 a real CLAIMED view plus the same application\'s INCLUDED receipt shows processing, never paid, with no extra calls', async () => {
+    const roots = uxRoots();
+    const {stageRoot, payoutRoot} = roots;
+    const ui = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': realView(),
+        'payment-receipt': realReceipt()})[action], roots);
     await ui.click('read-session');
     await ui.click('read-application');
-    assert.match(stageRoot.textContent, /지급 거래를 보냈습니다/, 'INCLUDED is processing, not paid');
+    // The real view alone carries no claim inclusion, so the strip still waits for payment processing.
+    assert.equal(stageOf(stageRoot), 'CONFIRM');
+    assert.match(stageLine(stageRoot), /양측 확인 완료 · 지급 처리를 기다립니다/);
+    await ui.click('payment-receipt');
+    assert.match(ui.details.textContent, /^received/m);
+    assert.match(ui.details.textContent, /notfinalized/);
+    assert.equal(stageOf(stageRoot), 'CONFIRM', 'INCLUDED is not the paid stage');
+    assert.match(stageRoot.querySelector('[aria-current="step"]').textContent, /양측 확인/);
+    assert.equal(stageLine(stageRoot), includedText);
     assert.doesNotMatch(stageRoot.textContent, /받았습니다/);
-    assert.equal(payoutRoot.children.length, 0, 'no payout summary before FINALIZED');
-    claimState = 'FINALIZED';
+    assert.equal(payoutRoot.children.length, 0, 'no paid summary without FINALIZED');
+    // A later view read keeps the binding to the receipt of the same application.
     await ui.click('read-application');
-    assert.match(stageRoot.textContent, /내 환급 계정으로 100 TEST를 받았습니다/);
-    assert.match(payoutRoot.textContent, /100 TEST 지급 완료/);
-    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'read-application'], 'no extra server calls');
+    assert.equal(stageLine(stageRoot), includedText);
+    assert.equal(payoutRoot.children.length, 0);
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'payment-receipt', 'read-application'],
+        'no extra server calls');
+    ui.mounted.destroy();
+});
+
+test('#173 contradicting or out-of-contract receipts are not combined and real DTOs never reach the paid stage', async () => {
+    const roots = uxRoots();
+    const {stageRoot, payoutRoot} = roots;
+    let view = realView('app-one', 'UNCLAIMED');
+    let reply = realReceipt();
+    const ui = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': view,
+        'payment-receipt': reply})[action], roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    // An UNCLAIMED view contradicts an INCLUDED claim receipt: hold instead of combining.
+    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.notEqual(stageOf(stageRoot), 'PAID');
+    // INCLUDED requires finalized=false in the receipt contract; any other value is not promoted.
+    view = realView();
+    reply = realReceipt('app-one', {finalized: true});
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.notEqual(stageOf(stageRoot), 'PAID');
+    assert.doesNotMatch(stageRoot.textContent, /받았습니다/);
+    assert.equal(payoutRoot.children.length, 0);
+    assert.deepEqual(ui.sent.map(input => input.action),
+        ['read-session', 'read-application', 'payment-receipt', 'read-application', 'payment-receipt']);
+    ui.mounted.destroy();
+});
+
+test('#173 a receipt for another application is discarded and never bound to the current view', async () => {
+    const roots = uxRoots();
+    const {stageRoot} = roots;
+    const ui = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': realView(),
+        'payment-receipt': realReceipt('app-two')})[action], roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    assert.equal(ui.status.textContent, 'failure');
+    assert.doesNotMatch(stageRoot.textContent, /처리 중/);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.deepEqual(ui.sent.map(input => input.action),
+        ['read-session', 'read-application', 'payment-receipt', 'read-session', 'read-application']);
+    ui.mounted.destroy();
+});
+
+test('#173 receipt binding is dropped on disconnect, application replacement and late responses', async () => {
+    const roots = uxRoots();
+    const {stageRoot} = roots;
+    let app = 'app-one';
+    let hold = false;
+    let release;
+    const ui = fixture(({action}) => action === 'read-session' ? session(app)
+        : action === 'read-application' ? realView(app)
+        : hold ? new Promise(resolve => { release = resolve; }) : realReceipt(app), roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    assert.equal(stageLine(stageRoot), includedText);
+    // Disconnect clears the binding; reconnecting and re-reading the view does not restore it.
     await ui.walletDispatch({action: 'cancel'});
-    assert.doesNotMatch(stageRoot.textContent, /받았습니다/, 'disconnect clears the paid stage');
+    assert.equal(stageOf(stageRoot), 'CONNECT');
+    assert.doesNotMatch(stageRoot.textContent, /처리 중/);
+    ui.state(connected());
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    // Replacing the application drops the previous application's receipt.
+    await ui.click('payment-receipt');
+    assert.equal(stageLine(stageRoot), includedText);
+    app = 'app-two';
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    // A valid receipt that arrives after a disconnect is discarded.
+    hold = true;
+    const late = ui.click('payment-receipt');
+    await ui.walletDispatch({action: 'cancel'});
+    ui.state(connected());
+    await ui.click('read-session');
+    await ui.click('read-application');
+    release(realReceipt('app-two'));
+    await late;
+    assert.doesNotMatch(stageLine(stageRoot), /처리 중/);
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'payment-receipt',
+        'read-session', 'read-application', 'payment-receipt', 'read-session', 'read-application', 'payment-receipt',
+        'read-session', 'read-application'], 'no extra server calls');
+    ui.mounted.destroy();
 });
