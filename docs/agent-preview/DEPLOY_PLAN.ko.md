@@ -89,6 +89,8 @@ Railway에서는 이 CLI를 그대로 쓸 수 없다. 프로필 파일이 없고
 
 ## 7. 배포 플랫폼 선택지와 사용자 결정
 
+**2026-11-06 사용자 선택: AWS Lightsail.** 실행 절차와 남은 결정(비용 승인·도메인·Gemini 키)은 [DEPLOY_LIGHTSAIL](DEPLOY_LIGHTSAIL.ko.md)에 있다. 아래 표는 선택 전 비교 기록이다.
+
 2026-11-04에 D 담당이 정리한 비교([RAILWAY.ko.md](../../deploy/agent-preview/RAILWAY.ko.md))를 이어받는다. 가격은 그날 확인한 값이며 가입 시 다시 확인해야 한다.
 
 | 기준 | A. AWS Lightsail VM (권장) | B. Railway | C. 로컬 D(대체안, [절차](DEPLOY_LOCAL.ko.md)) |
@@ -182,7 +184,7 @@ CLEAR_SMOKE_REPLAY_NONCE="$(openssl rand -hex 16)" \
 | `deploy/agent-preview/approval.mjs` | `scopeValues`(publicOrigin, dActor, deployment 5값)와 `approvalExpiresAt` 출력 추가. 산출물 검증 뒤 같은 프로필에서 계산한다 |
 | `deploy/agent-preview/tests/approval-cli.test.mjs` | 승인 CLI 출력과 B 검증기 호환 시험(신규, 패키지 제외) |
 | `deploy/agent-preview/tests/remote-smoke.mjs` | 모델 호출 없는 원격·컨테이너 점검 클라이언트(신규, 패키지 제외) |
-| `docs/agent-preview/DEPLOY*.md` | 이 문서, 계약값, 로컬 D 절차, execute 결정안 |
+| `docs/agent-preview/DEPLOY*.md` | 이 문서, 계약값, 로컬 D 절차, Lightsail 절차, execute 결정안 |
 
 `src/**`, C 플러그인, A 작업본, 실행 중인 환경, 지급·체인 코드는 건드리지 않았다.
 
