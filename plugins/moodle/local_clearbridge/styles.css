@@ -22,3 +22,316 @@
     width: 1rem;
     height: 1rem;
 }
+
+/* Operator condition draft panel (web/finals-panels, scoped). */
+[data-clear-operator-conditions] .fp { border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; padding: 1rem; }
+[data-clear-operator-conditions] .fp-sub, [data-clear-operator-conditions] .fp-note { margin: .5rem 0; color: var(--bs-secondary-color, #6c757d); }
+[data-clear-operator-conditions] .fp-note--warn, [data-clear-operator-conditions] .fp-proposal-warn .fp-proposal-ask { color: #9a3412; }
+[data-clear-operator-conditions] .fp-note--ok { color: #166534; }
+[data-clear-operator-conditions] [data-role="operator-conditions-phase"] { font-weight: 600; color: var(--bs-body-color, #212529); }
+[data-clear-operator-conditions] .fp-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; }
+[data-clear-operator-conditions] .fp-head h2 { font-size: 1.1rem; margin: 0; }
+[data-clear-operator-conditions] .fp-field { display: grid; gap: .25rem; margin: .75rem 0; }
+[data-clear-operator-conditions] .fp-input { width: 100%; min-height: 6rem; font: inherit; }
+[data-clear-operator-conditions] .fp-mode { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; padding: .1rem .6rem; font-size: .8rem; }
+[data-clear-operator-conditions] .fp-mode[data-mode="model"] { border-color: #2563eb; color: #1d4ed8; background: #eff6ff; }
+[data-clear-operator-conditions] .fp-mode[data-mode="model-fixture"] { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+[data-clear-operator-conditions] .fp-mode[data-mode="failed"] { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+[data-clear-operator-conditions] .fp-proposal { margin-top: .75rem; padding: .75rem; border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; }
+[data-clear-operator-conditions] .fp-proposal-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+[data-clear-operator-conditions] .fp-proposal-list { list-style: none; padding: 0; margin: .5rem 0; display: grid; gap: .35rem; }
+[data-clear-operator-conditions] .fp-proposal-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
+[data-clear-operator-conditions] .fp-proposal-warn { margin-top: .75rem; padding-top: .5rem; border-top: 1px dashed var(--bs-border-color, #ced4da); }
+[data-clear-operator-conditions] .fp-pairs { display: grid; grid-template-columns: max-content 1fr; gap: .25rem .75rem; margin: .5rem 0; }
+[data-clear-operator-conditions] .fp-pairs dt { color: var(--bs-secondary-color, #6c757d); font-weight: normal; }
+[data-clear-operator-conditions] .fp-pairs dd { margin: 0; overflow-wrap: anywhere; }
+[data-clear-operator-conditions] .fp-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+[data-clear-operator-conditions] .fp-btn { border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; padding: .375rem .75rem; background: #fff; }
+[data-clear-operator-conditions] .fp-btn--primary { background: var(--bs-primary, #0f6cbf); color: #fff; border-color: transparent; }
+[data-clear-operator-conditions] .fp-btn[disabled] { opacity: .6; }
+[data-clear-operator-conditions] .fp-label { font-weight: 600; }
+[data-clear-operator-conditions] .fp-proposal-tag { margin-left: .4rem; padding: 0 .4rem; border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; font-size: .75rem; color: var(--bs-secondary-color, #6c757d); }
+[data-clear-operator-conditions] .fp-proposal-dst { font-weight: 600; }
+[data-clear-operator-conditions] .fp-proposal-note { display: block; color: var(--bs-secondary-color, #6c757d); font-size: .9rem; }
+
+/* #173 participant UX (stage strip, condition cards, payout summary), ported from web/src/bootcamp/ux.css and
+ * condition-return/cards.css at 9bda108. Team colour tokens are defined only inside the CLEAR workflow region
+ * and map to Moodle/Bootstrap values. No inline styles (CSP). */
+/* CLEAR brand palette = team web/styles.css (9bda108) tokens, taken from the logo:
+ * ink #17343E (outline, wordmark) and brand green #008D77 (check, arrow). Scoped to CLEAR regions only. */
+[data-clear-workflow], [data-clear-operator-conditions], .clear-brand {
+    --fg: #17343e; --bg: #fafafa; --card: #ffffff; --muted: #5f6b70; --line: #e3e8ea; --line-soft: #f4f6f6;
+    --navy: #17343e; --navy-soft: #eef4f3; --accent: #008d77; --accent-soft: #e6f4f1; --accent-ink: #ffffff;
+    --ok: #008d77; --ok-soft: #e6f4f1; --warn-bg: #fff8e8; --warn-line: #b4820f; --warn-tag-bg: #ffeec2; --warn-tag-fg: #7a5505;
+    --err: #b4332a; --err-bg: #fdeeeb; --radius: 12px;
+    --shadow: 0 2px 4px rgba(23, 52, 62, .025), 0 8px 16px -4px rgba(23, 52, 62, .045);
+}
+
+/* ── 상단 단계 띠 ─────────────────────────────────────────────────────── */
+.crc-stage { margin: 0 0 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.crc-stage-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.crc-stage-track li { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 8px; border-radius: 8px; font-size: 0.78rem; color: var(--muted); }
+.crc-stage-track li[data-state="done"] { color: var(--ok); }
+.crc-stage-track li[data-state="now"] { background: var(--navy-soft); color: var(--fg); font-weight: 700; }
+.crc-stage-dot {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center;
+  font-size: 0.72rem; font-weight: 700; border: 1px solid currentColor;
+}
+.crc-stage-track li[data-state="now"] .crc-stage-dot { background: var(--fg); color: var(--card); border-color: var(--fg); }
+.crc-stage-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crc-stage-now { display: grid; gap: 4px; }
+.crc-stage-kicker { margin: 0; font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); font-weight: 700; }
+.crc-stage-line { margin: 0; font-size: 1.02rem; font-weight: 700; line-height: 1.45; letter-spacing: -0.01em; }
+.crc-stage-line[data-tone="ok"] { color: var(--ok); }
+.crc-stage-line[data-tone="warn"] { color: var(--warn-tag-fg); }
+.crc-stage-why { margin: 0; font-size: 0.8rem; line-height: 1.55; color: var(--muted); }
+.crc-stage-btn { justify-self: start; margin-top: 6px; text-decoration: none; }
+@media (max-width: 640px) {
+  .crc-stage-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crc-verdict strong { font-size: 1.1rem; }
+}
+
+/* ── 지급 완료 요약 ─────────────────────────────────────────────────────── */
+.bcx-payout { margin: 0 0 16px; padding: 16px 18px; border-radius: 14px; background: var(--ok-soft); color: var(--fg); }
+.bcx-payout-kicker { margin: 0 0 4px; font-size: 0.72rem; letter-spacing: 0.04em; font-weight: 700; color: var(--ok); }
+.bcx-payout-amount { margin: 0; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; color: var(--ok); }
+.bcx-payout-sub { margin: 6px 0 10px; font-size: 0.86rem; line-height: 1.55; }
+.bcx-payout-rows { margin: 0; font-size: 0.8rem; }
+.bcx-payout-rows div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid rgba(0,0,0,0.06); }
+.bcx-payout-rows dt { color: var(--muted); flex: none; }
+.bcx-payout-rows dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-weight: 600; }
+.bcx-payout-rows div[data-missing=yes] dd { font-weight: 400; color: var(--muted); }
+.bcx-payout-missing { margin: 8px 0 0; font-size: 0.74rem; line-height: 1.55; color: var(--muted); }
+
+/* ── 키보드 포커스 — 새 버튼·접기 손잡이 (B7) ──────────────────────────── */
+.crc-stage-btn:focus-visible, .crc-sub-btn:focus-visible, .crc-go:focus-visible, .crc-more > summary:focus-visible,
+.crc-message > summary:focus-visible, .crc-demo-details > summary:focus-visible, .fp-chip:focus-visible, .fp-btn:focus-visible {
+  outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 8px;
+}
+
+/* condition cards (#173 additions) */
+/* 어두운 모드: 봉인 styles.css 의 .cc[data-state="open"] .cc-btn 이 바탕 var(--fg)(밝음) + 글자 #fff 라
+ * 글자가 안 보인다. 우리 버튼만 글자색을 바탕색으로 뒤집는다 (B6). 봉인 쪽 같은 문제는 오규원에게 전달. */
+
+/* 미충족 회고 — 어디를 고쳐 다시 써야 하는지 */
+.crc-fix {
+  margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn-tag-fg, #b45309);
+  background: var(--warn-bg, #fef3c7); color: var(--fg); font-size: 0.82rem; line-height: 1.55; border-radius: 0 8px 8px 0;
+}
+
+/* ── 카드 순서 정돈 (11/6) — 해야 할 일 → 충족 여부 → 이유·근거 → 다음 행동 ─────────── */
+.crc-todo { margin: 2px 0 10px; font-size: 0.8rem; line-height: 1.55; color: var(--muted); }
+.crc-verdict {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px;
+  margin: 0 0 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--line-soft); color: var(--fg);
+}
+.crc-verdict strong { font-size: 1.25rem; letter-spacing: -0.02em; line-height: 1.2; }
+.crc-verdict-sub { font-size: 0.74rem; color: var(--muted); }
+.crc-verdict[data-tone="ok"] { background: var(--ok-soft); color: var(--ok); }
+.crc-verdict[data-tone="bad"] { background: var(--warn-bg); color: var(--warn-tag-fg); }
+.crc-verdict[data-tone="wait"] { background: var(--navy-soft); }
+.crc-verdict[data-tone="warn"] { background: var(--warn-bg); color: var(--warn-tag-fg); }
+.crc-why { margin: 0 0 4px; font-size: 0.86rem; line-height: 1.55; font-weight: 600; }
+.crc-source { margin: 0 0 10px; font-size: 0.74rem; color: var(--muted); }
+.crc-more { margin: 8px 0 0; font-size: 0.76rem; }
+.crc-more summary { cursor: pointer; color: var(--muted); }
+.crc-more > :not(summary) { margin-top: 6px; }
+.crc-ai { margin: 8px 0 0; }
+.crc-ai-k { margin: 0; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.crc-fix p:last-child { margin: 4px 0 0; }
+
+/* 손가락 크기(최소 24px) — 접기 손잡이 */
+.crc-more summary, .crc-message summary { display: inline-flex; align-items: center; min-height: 28px; padding: 2px 4px; }
+
+/* 접힌 시연 조작 — 제품 화면이 먼저 보이게 */
+.crc-demo-details { margin: 10px 0 0; }
+.crc-demo-details > summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 28px; font-size: 0.82rem; color: var(--muted); }
+.crc-demo-details > p { margin: 8px 0 0; color: var(--muted); font-size: 0.84rem; line-height: 1.6; }
+
+/* 네 카드의 충족 칸이 같은 높이에서 시작하게 — 제목 두 줄("HackerRank Python (Basic) 인증" 이 꺾인다)
+ * + 할 일 세 줄까지 자리를 고정한다 (B3). 좁은 화면(한 줄 배치)에서는 해제한다. */
+.crc-card .bcx-task-name { min-height: 3em; }
+.crc-todo { min-height: calc(1.55em * 3); }
+@media (max-width: 560px) { .crc-card .bcx-task-name { min-height: 0; } .crc-todo { min-height: 0; } }
+
+/* Moodle shows the overall stage strip at the top; keep only the card section's one-line status. */
+[data-native-condition-cards] .crc-stage-track { display: none; }
+
+/* ── 학생 "지금 할 일" 안내와 간단히 보기 (C 소유, 표시 전용) ─────────────────────────────
+ * Simple mode hides technical sections; they stay in the page and return with the toggle.
+ * The connection card shows only while the student still has to connect. */
+[data-clear-workflow].clear-simple [data-simple="advanced"],
+[data-clear-workflow].clear-simple [data-simple-hide],
+[data-clear-workflow].clear-simple[data-guide-step]:not([data-guide-step="connect"]) [data-simple="connect"],
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-stage { display: none !important; }
+[data-native-guide] .clear-guide {
+    margin: 0 0 18px; padding: 20px 20px 16px; border: 1px solid var(--line); border-top: 6px solid var(--accent);
+    border-radius: var(--radius); background: var(--card); color: var(--fg); box-shadow: var(--shadow);
+}
+[data-native-guide] .clear-guide-kicker { margin: 0 0 4px; font-size: .85rem; font-weight: 800; color: var(--accent); letter-spacing: .04em; }
+[data-native-guide] .clear-guide-title { margin: 0 0 8px; font-size: 1.6rem; font-weight: 800; line-height: 1.3; letter-spacing: -.01em; }
+[data-native-guide] .clear-guide-body { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.6; }
+[data-native-guide] .clear-guide-facts { margin: 0 0 12px; padding: 12px 14px; list-style: none; border-radius: 10px; background: var(--navy-soft); }
+[data-native-guide] .clear-guide-fact { font-size: 1.15rem; font-weight: 700; line-height: 1.7; }
+[data-native-guide] .clear-guide-raw { margin: 0 0 12px; }
+[data-native-guide] .clear-guide-raw-title { cursor: pointer; color: var(--muted); font-size: .95rem; }
+[data-native-guide] .clear-guide-raw-text { margin: 8px 0 0; padding: 10px; max-height: 16rem; overflow: auto; font-size: .8rem;
+    white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: 8px; }
+[data-native-guide] .clear-guide-go {
+    display: block; width: 100%; min-height: 3.5rem; margin: 4px 0 10px; padding: .75rem 1rem; border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink); font-size: 1.25rem; font-weight: 800;
+}
+[data-native-guide] .clear-guide-go:hover:not([disabled]) { filter: brightness(1.06); }
+[data-native-guide] .clear-guide-go:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+[data-native-guide] .clear-guide-go[disabled] { opacity: .55; cursor: not-allowed; }
+[data-native-guide] .clear-guide-toggle { padding: 0; border: 0; background: none; color: var(--muted); font-size: .9rem; text-decoration: underline; }
+[data-native-guide] .clear-guide[data-guide-key="paid"] { background: var(--ok-soft); }
+[data-native-guide] .clear-guide[data-guide-key="paid"] .clear-guide-title { color: var(--ok); }
+[data-native-guide] .clear-guide[data-guide-key="unknown"],
+[data-native-guide] .clear-guide[data-guide-key="notaccepted"],
+[data-native-guide] .clear-guide[data-guide-key="failure"] { border-top-color: var(--warn-line); background: var(--warn-bg); }
+
+/* ── CLEAR 브랜드 화면 (학생·운영자 공통, 표시 전용) ─────────────────────────────
+ * Team design language inside the CLEAR region: logo header, white cards with a soft shadow on a
+ * slightly lower background, ink headings, brand-green primary actions, quiet outline secondaries.
+ * Moodle chrome outside the region is untouched. */
+.clear-brand { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--fg); }
+.clear-brand svg { display: block; width: auto; height: 40px; }
+.clear-brand-sub { margin: 0; padding-left: 12px; border-left: 1px solid var(--line); font-size: .95rem; font-weight: 700; color: var(--muted); }
+[data-clear-workflow] { color: var(--fg); font-family: "Pretendard Std", "Pretendard", "Apple SD Gothic Neo", "Inter var", system-ui, sans-serif; }
+[data-clear-workflow] > .card, [data-clear-workflow] > section.card {
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow);
+}
+[data-clear-workflow] .card h2 { font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; color: var(--fg); }
+[data-clear-workflow] .btn { border-radius: 8px; font-weight: 700; }
+[data-clear-workflow] .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+[data-clear-workflow] .btn-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.06); }
+[data-clear-workflow] .btn-secondary { background: var(--card); border: 1px solid var(--line); color: var(--fg); }
+[data-clear-workflow] .btn-secondary:hover:not(:disabled) { border-color: var(--fg); background: var(--navy-soft); color: var(--fg); }
+[data-clear-workflow] .btn:disabled { opacity: .45; }
+[data-clear-workflow] pre { border-radius: 8px; background: var(--line-soft); color: var(--fg); padding: 10px 12px; }
+[data-clear-workflow] .crc-stage { border-color: var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+[data-native-condition-cards] .crc-card { border-color: var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); }
+[data-clear-operator-conditions] .fp-btn--primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+[data-clear-operator-conditions] .fp-mode[data-mode="model"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+/* Simple view: the guide already says what to do, so the cards keep only their own facts
+ * (state, evidence, reason). Long intro, "nothing left to do" note, missing-link notes and
+ * disabled link buttons are hidden; the full text returns with the toggle. */
+[data-clear-workflow].clear-simple [data-native-condition-cards] .sec-sub,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .cc-section > .bcx-note,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-target,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-go:disabled { display: none !important; }
+[data-clear-workflow] [data-native-condition-cards] .sec-count { font-size: 1.05rem; font-weight: 800; color: var(--ok); }
+[data-native-condition-cards] .crc-card button:not(.crc-go), [data-native-condition-cards] .cc-btn:not(.crc-go) {
+    padding: .3rem .75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); font-weight: 600;
+}
+[data-native-condition-cards] .crc-card button:not(.crc-go):hover:not(:disabled) { border-color: var(--fg); background: var(--navy-soft); }
+
+/* ── 친절한 안내: 로딩·쉬운 설명·진행 표시 (0.1.39) ─────────────────────────────────────── */
+[data-native-guide] .clear-guide-head { display: flex; align-items: center; gap: 14px; }
+[data-native-guide] .clear-guide-heading { min-width: 0; }
+[data-native-guide] .clear-guide-spinner {
+    flex: none; width: 34px; height: 34px; border-radius: 50%;
+    border: 4px solid var(--accent-soft); border-top-color: var(--accent); animation: clear-guide-spin 1s linear infinite;
+}
+@keyframes clear-guide-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { [data-native-guide] .clear-guide-spinner { animation-duration: 3s; } }
+[data-native-guide] .clear-guide[data-guide-key="busy"] { border-top-color: var(--navy); }
+[data-native-guide] .clear-guide-hint {
+    margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--fg);
+    font-size: 1.05rem; font-weight: 700;
+}
+[data-native-guide] .clear-guide-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+[data-native-guide] .clear-guide-track-item {
+    padding: 8px 6px; border-radius: 8px; text-align: center; font-size: .95rem; font-weight: 700;
+    background: var(--line-soft); color: var(--muted);
+}
+[data-native-guide] .clear-guide-track-item[data-done="yes"] { background: var(--ok-soft); color: var(--ok); }
+@media (max-width: 560px) { [data-native-guide] .clear-guide-track { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+[data-native-guide] .clear-guide-facts { display: grid; gap: 2px; margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--navy-soft); }
+[data-native-guide] .clear-guide-fact { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 6px 0; }
+[data-native-guide] .clear-guide-fact + .clear-guide-fact { border-top: 1px solid var(--line); }
+[data-native-guide] .clear-guide-fact-name { margin: 0; font-weight: 600; color: var(--muted); }
+[data-native-guide] .clear-guide-fact-value { margin: 0; font-size: 1.1rem; font-weight: 800; text-align: right; }
+[data-native-guide] .clear-guide-tip { margin: 0 0 10px; padding: 12px 14px; border-left: 4px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--line-soft); }
+[data-native-guide] .clear-guide-tip-q { margin: 0 0 2px; font-weight: 800; }
+[data-native-guide] .clear-guide-tip-a { margin: 0 0 6px; line-height: 1.6; }
+[data-native-guide] .clear-guide-help { margin: 0 0 12px; padding: 0 14px; }
+[data-native-guide] .clear-guide-help-title { cursor: pointer; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+
+/* 조건 카드를 1 → 2 → 3 → 4 단계 목록처럼 (간단히 보기). 카드 내용은 팀 번들 그대로, 배치와 꾸밈만 바꾼다. */
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-grid { grid-template-columns: 1fr; gap: 0; counter-reset: clear-step; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card {
+    position: relative; counter-increment: clear-step; margin: 0 0 14px 52px; padding: 14px 16px;
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card::before {
+    content: counter(clear-step); position: absolute; left: -52px; top: 12px; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 800; font-size: 1.05rem;
+    background: var(--card); color: var(--muted); border: 2px solid var(--line);
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card::after {
+    content: ""; position: absolute; left: -35px; top: 50px; bottom: -14px; width: 2px; background: var(--line);
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card:last-child::after { display: none; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card[data-state="met"]::before {
+    content: "✓"; background: var(--ok); color: #fff; border-color: var(--ok);
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card[data-state="met"]::after { background: var(--ok); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card:not([data-state="met"]) { border: 2px solid var(--accent); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card:not([data-state="met"])::before { color: var(--accent); border-color: var(--accent); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card .bcx-task-name { min-height: 0; margin: 0 0 4px; font-size: 1.2rem; font-weight: 800; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card .crc-todo { min-height: 0; margin: 0 0 8px; font-size: 1rem; color: var(--muted); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-verdict {
+    display: inline-block; margin: 0 0 4px; padding: 2px 12px; border-radius: 999px; font-size: .95rem;
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-verdict[data-tone="ok"] { background: var(--ok-soft); color: var(--ok); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-verdict:not([data-tone="ok"]) { background: var(--warn-bg); color: var(--warn-tag-fg); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-why { margin: 0; font-size: 1rem; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .cc-chip,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-source,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-sub-btn,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-more,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-quote,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-loc { display: none !important; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-actions:not(:has(.crc-go:not(:disabled))) { display: none; }
+[data-native-guide] .clear-guide[data-guide-key="lost"] { border-top-color: var(--warn-line); background: var(--warn-bg); }
+[data-wallet-restart-box] { margin-top: .75rem; }
+
+/* ── 선생님(운영자) 안내: 5단계 진행 표시와 AI 승인 확인 체크 (0.1.41) ─────────────────── */
+[data-native-guide] .clear-guide-steps {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0 0 14px; padding: 0; list-style: none;
+    counter-reset: clear-op-step;
+}
+[data-native-guide] .clear-guide-step {
+    counter-increment: clear-op-step; padding: 7px 4px; border-radius: 8px; text-align: center; font-size: .88rem; font-weight: 700;
+    background: var(--line-soft); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+[data-native-guide] .clear-guide-step::before { content: counter(clear-op-step) ". "; }
+[data-native-guide] .clear-guide-step[data-state="done"] { background: var(--ok-soft); color: var(--ok); }
+[data-native-guide] .clear-guide-step[data-state="done"]::before { content: "✓ "; }
+[data-native-guide] .clear-guide-step[data-state="now"] { background: var(--navy); color: #fff; }
+@media (max-width: 640px) { [data-native-guide] .clear-guide-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+[data-native-guide] .clear-guide-ack {
+    display: flex; gap: 12px; align-items: flex-start; margin: 0 0 12px; padding: 12px 14px; border: 2px solid var(--accent);
+    border-radius: 10px; background: var(--accent-soft); font-size: 1.05rem; font-weight: 700; cursor: pointer;
+}
+[data-native-guide] .clear-guide-ack-box { flex: none; width: 22px; height: 22px; margin-top: 2px; accent-color: var(--accent); }
+
+/* ── 선생님(운영자) 화면: 블록체인 확정 안내와 체인 창 링크 (0.1.42, 표시 전용) ─────────────── */
+[data-native-lock-notice] .clear-lock {
+    margin: 0 0 18px; padding: 18px 20px 16px; border: 1px solid var(--line); border-left: 6px solid var(--accent);
+    border-radius: var(--radius); background: var(--navy-soft); color: var(--fg); box-shadow: var(--shadow);
+}
+[data-native-lock-notice] .clear-lock-title { margin: 0 0 6px; font-size: 1.35rem; font-weight: 800; line-height: 1.35; color: var(--fg); }
+[data-native-lock-notice] .clear-lock-body { margin: 0 0 12px; font-size: 1.05rem; line-height: 1.6; }
+[data-native-lock-notice] .clear-lock-link {
+    display: inline-block; padding: .55rem 1.1rem; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+    font-size: 1rem; font-weight: 800; text-decoration: none;
+}
+[data-native-lock-notice] .clear-lock-link:hover { filter: brightness(1.06); color: var(--accent-ink); text-decoration: none; }
+[data-native-lock-notice] .clear-lock-link:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+/* 0.1.43: on the HackerRank wait card the login-done signal is the main button; the re-read button steps back. */
+[data-native-guide] .clear-guide-signal + .clear-guide-go {
+    min-height: 3rem; background: transparent; color: var(--accent); border: 2px solid var(--accent); font-size: 1.1rem;
+}

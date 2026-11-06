@@ -12,6 +12,31 @@ function(contract, view, workflowView, panels) {
         let handle = null;
         let closed = false;
         let currentState;
+        // Operator condition draft panel (display only). The CLEAR operator connection is the
+        // validated wallet view, not the Moodle login. sessionRef changes on sign-out / wallet change.
+        const conditionsRoot = role === 'operator'
+            ? element.ownerDocument?.querySelector?.('[data-clear-operator-conditions]') ?? null : null;
+        const conditionListeners = new Set();
+        let conditions = null;
+        let sessionEpoch = 0;
+        let sessionKey = null;
+        const conditionConnection = () => {
+            const s = currentState;
+            if (!s || s.phase !== 'CONNECTED' || s.authenticated !== true || s.role !== 'operator') {
+                return null;
+            }
+            return {status: 'CONNECTED', authenticated: true, role: 'operator', courseId: config.courseId,
+                sessionRef: 'operator-' + sessionEpoch};
+        };
+        const notifyConditions = () => {
+            const s = currentState;
+            const key = s && s.phase === 'CONNECTED' && s.authenticated === true ? String(s.selectedChoiceId) : null;
+            if (key !== sessionKey) {
+                sessionKey = key;
+                sessionEpoch += 1;
+            }
+            conditionListeners.forEach(listener => listener());
+        };
         const workflowRoot = element.closest?.('[data-clear-workflow]');
         const workflow = workflowRoot && workflowView.create({
             root: workflowRoot,
@@ -53,6 +78,8 @@ function(contract, view, workflowView, panels) {
                 return;
             }
             closed = true;
+            conditions?.destroy();
+            conditionListeners.clear();
             workflow?.destroy();
             renderer.destroy();
             void Promise.resolve().then(() => handle?.destroy()).catch(() => {});
@@ -68,6 +95,7 @@ function(contract, view, workflowView, panels) {
                 }
                 currentState = state;
                 updateWorkflow();
+                notifyConditions();
                 renderer.render({...state, role: role === 'participant' ? 'PARTICIPANT' : 'COURSE_OPERATOR'}, state.allowedActions);
             } catch {
                 destroy();
@@ -79,6 +107,22 @@ function(contract, view, workflowView, panels) {
                 throw new Error('CLEAR_NATIVE_HANDLE');
             }
             updateWorkflow();
+            if (conditionsRoot && typeof panels.mountOperatorConditionPanel === 'function'
+                    && Number(conditionsRoot.dataset.courseId) === config.courseId) {
+                conditionsRoot.replaceChildren();
+                // previewRequest is A's port: CLEAR operator session + CSRF + course scope + native
+                // command fence for /bootcamp/preview/{prepare,generate}. Absent -> 'unconnected'.
+                conditions = panels.mountOperatorConditionPanel(conditionsRoot, {
+                    courseId: config.courseId,
+                    readConnection: conditionConnection,
+                    subscribe: listener => {
+                        conditionListeners.add(listener);
+                        return () => conditionListeners.delete(listener);
+                    },
+                    previewRequest: typeof handle.previewRequest === 'function'
+                        ? (path, options) => handle.previewRequest(path, options) : null,
+                });
+            }
         } catch {
             destroy();
         }

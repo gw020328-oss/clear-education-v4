@@ -37,7 +37,7 @@ const certificateEvidence = () => ({version: 'clear-bootcamp-decision-evidence.1
         criteria: [{criterionId: 'python-basic-certificate', state: 'MET', evidenceId: 'evidence-cert', evidenceRevision: 1,
             metadataStatus: 'RECORDED', verification: {integrity: 'VERIFIED'}, checks: {certificateName: 'Python (Basic)'}}]},
     availability: [{criterionId: 'python-basic-certificate', evidenceId: 'evidence-cert', status: 'VALID_AS_RECORDED'}]});
-const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
+const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot, payoutRoot, guideRoot, lockRoot} = {}) => {
     const buttons = Object.fromEntries(actions.map(workflowAction => [workflowAction,
         {dataset: {workflowAction, workflowChoice: 'AGREE'}}]));
     const listeners = {};
@@ -56,7 +56,7 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot} = {}) => {
             '[data-workflow-details]': [details],
         })[selector],
         querySelector: selector => ({
-            '[data-native-condition-cards]': cardRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
+            '[data-native-condition-cards]': cardRoot, '[data-native-stage-strip]': stageRoot, '[data-native-guide]': guideRoot, '[data-native-lock-notice]': lockRoot, '[data-native-payout-summary]': payoutRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
             '[data-workflow-status]': status, '#clearbridge-application-status': applicationStatus, '[data-workflow-ack]': ack,
         })[selector],
         addEventListener: (event, fn, capture = false) => { listeners[event + (capture ? 'Capture' : '')] = fn; },
@@ -894,4 +894,757 @@ test('certificate revision comes only from current matching operation receipts a
         ui.mounted.destroy();
         delete globalThis.document;
     }
+});
+
+// r33: a definite server rejection (nothing recorded) must not lock the page; unknown results still do.
+const notAccepted = code => Object.assign(Error(code), {code, outcome: 'HTTP_ERROR', serverEffect: 'NOT_ACCEPTED'});
+const certificateSession = () => ({...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+    certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+        state: 'READY_TO_START', startAllowed: true, signatureReady: false}});
+const settle = () => new Promise(resolve => setImmediate(resolve));
+
+test('a definitely rejected certificate start unlocks a manual re-read and retry without resending', async () => {
+    let revision = 4, starts = 0;
+    const ui = fixture(input => {
+        if (input.action === 'read-session') { return certificateSession(); }
+        if (input.action === 'read-application') { return {...certificateView(), criteria: [], target: {expectedRevision: revision}}; }
+        if (input.action === 'start-certificate') {
+            starts++;
+            if (starts === 1) { throw notAccepted('MOODLE_CERTIFICATE_REVIEW_CHANGED'); }
+            return {version: 'clear-certificate-start-receipt.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+                status: 'START_ACCEPTED', paymentAuthorization: false};
+        }
+        throw Error('unexpected');
+    });
+    try {
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        revision = 5; // the server moved on after this review
+        await ui.click('start-certificate'); await settle();
+        assert.equal(ui.status.textContent, 'notaccepted');
+        assert.notEqual(ui.applicationStatus.textContent, 'unknown');
+        await ui.click('start-certificate'); await settle();
+        assert.equal(starts, 1, 'no automatic or blind resend before a fresh review');
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        await ui.click('start-certificate'); await settle();
+        assert.equal(starts, 2);
+        assert.equal(ui.sent.filter(i => i.action === 'start-certificate').at(-1).expectedRevision, 5);
+        assert.equal(ui.status.textContent, 'success');
+    } finally { ui.mounted.destroy(); }
+});
+
+test('unknown or mismatched rejections keep the existing write lock', async () => {
+    for (const failure of [Object.assign(Error('MOODLE_WORKFLOW_UNAVAILABLE'), {code: 'MOODLE_WORKFLOW_UNAVAILABLE', outcome: 'UNKNOWN'}),
+        Object.assign(Error('MOODLE_CERTIFICATE_REVIEW_CHANGED'), {code: 'MOODLE_CERTIFICATE_REVIEW_CHANGED', outcome: 'HTTP_ERROR'}),
+        notAccepted('MOODLE_CONSENT_REVIEW_CHANGED')]) {
+        let starts = 0;
+        const ui = fixture(input => {
+            if (input.action === 'read-session') { return certificateSession(); }
+            if (input.action === 'read-application') { return {...certificateView(), criteria: [], target: {expectedRevision: 5}}; }
+            if (input.action === 'start-certificate') { starts++; throw failure; }
+            throw Error('unexpected');
+        });
+        try {
+            await ui.click('read-session'); await ui.click('read-application'); await settle();
+            await ui.click('start-certificate'); await settle();
+            assert.equal(ui.status.textContent, 'unknown');
+            await ui.click('read-session'); await ui.click('read-application'); await settle();
+            await ui.click('start-certificate'); await settle();
+            assert.equal(starts, 1, failure.code + ' must stay locked');
+        } finally { ui.mounted.destroy(); }
+    }
+});
+
+test('a consent rejected because the decision changed shows what changed and waits for a new explicit consent', async () => {
+    let ledger = 70, operatorAgreed = false, consents = 0;
+    const view = () => ({version: 'clear-bootcamp-normal-view.1', displayOnly: true, applicationId: 'app-one', role: 'PARTICIPANT',
+        target: {expectedRevision: 8, expectedLedgerSequence: ledger, targetDecisionId: 'decision-one', targetDecisionRevision: 5,
+            targetDecisionHash: 'hash-one'},
+        agreedPayment: {amountAtoms: '100000000', symbol: 'TEST', decimals: 6},
+        decision: {id: 'decision-one', hash: 'hash-one', revision: 5, current: true, evidenceCurrent: true, conditionsStatus: 'MET'},
+        consent: {records: operatorAgreed ? [{actorRole: 'COURSE_OPERATOR', value: 'AGREE'}] : []},
+        criteria: ['activity-complete', 'assignment-submitted', 'reflection-topics', 'python-basic-certificate'].map(criterionId =>
+            ({criterionId, state: 'MET', current: true, evidenceId: 'evidence-' + criterionId, evidenceRevision: 1}))});
+    const ui = fixture(input => {
+        if (input.action === 'read-session') { return session('app-one'); }
+        if (input.action === 'read-application') { return view(); }
+        if (input.action === 'consent') {
+            consents++;
+            if (consents === 1) { throw notAccepted('MOODLE_CONSENT_REVIEW_CHANGED'); }
+            return {record: {applicationId: 'app-one', operationId: 'op-consent'}, current: true};
+        }
+        throw Error('unexpected');
+    });
+    ui.details.dataset.workflowDetails = 'changes ' + ui.details.dataset.workflowDetails;
+    try {
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        ledger = 71; operatorAgreed = true; // the operator consented in between
+        await ui.click('consent'); await settle();
+        assert.equal(ui.status.textContent, 'notaccepted');
+        assert.notEqual(ui.applicationStatus.textContent, 'unknown');
+        await ui.click('consent'); await settle();
+        assert.equal(consents, 1, 'no consent without a fresh review');
+        await ui.click('read-session'); await ui.click('read-application'); await settle();
+        assert.match(ui.details.textContent, /^changes\nledgersequence: 70 → 71\noperatorconsent: UNKNOWN → AGREE/m);
+        assert.equal(consents, 1, 'reading never consents');
+        await ui.click('consent'); await settle();
+        assert.equal(consents, 2);
+        assert.equal(ui.sent.filter(i => i.action === 'consent').at(-1).reviewed.target.expectedLedgerSequence, 71);
+    } finally { ui.mounted.destroy(); }
+});
+
+// Real DTO shapes (A 15ff2ee): normalView() in src/bootcamp/normal-client.mjs reports the accepted
+// right as CLAIMED/UNCLAIMED with receivedAtoms null; the separate receipt from src/bootcamp/normal-receipt.mjs
+// reports the claim transfer as INCLUDED with finalized=false. Neither contract has a FINALIZED value.
+const hex = (c, n = 64) => '0x' + c.repeat(n);
+const realView = (applicationId = 'app-one', claimState = 'CLAIMED', {terminationReason = null} = {}) => ({
+    version: 'clear-bootcamp-normal-view.1',
+    displayOnly: true, applicationId, policyHash: hex('1'), runtimeMappingHash: hex('2'), role: 'PARTICIPANT',
+    target: {expectedRevision: 9, expectedLedgerSequence: 71, targetDecisionId: 'decision-one', targetDecisionRevision: 3,
+        targetDecisionHash: hex('3')},
+    decision: {id: 'decision-one', revision: 3, hash: hex('3'), current: true, evidenceCurrent: true, conditionsStatus: 'MET'},
+    criteria: [['activity-complete', 'MOODLE_ACTIVITY_COMPLETION'], ['assignment-submitted', 'MOODLE_ASSIGNMENT_SUBMISSION'],
+        ['reflection-topics', 'MOODLE_REFLECTION_AI'], ['python-basic-certificate', 'RECLAIM_HACKERRANK']]
+        .map(([criterionId, kind]) => ({criterionId, state: 'MET', current: true, evidenceId: 'evidence-' + criterionId,
+            evidenceRevision: 1, reasonCode: null, expiresAt: null,
+            source: {kind, hostMode: 'REGISTERED_TEST_SOURCE', actualSourceVerification: null},
+            originalEvidence: {authorized: true, httpAvailable: false}})),
+    agreedPayment: {amountAtoms: '100000000', symbol: 'TEST', decimals: 6},
+    // procedure.mjs view(): status follows ACCEPTED first, but terminationReason is time-only (review cap).
+    procedure: {id: 'procedure-one', status: claimState ? 'ACCEPTED_RIGHT_PRESERVED' : 'NOT_STARTED',
+        firstStartedAt: 1793000000, reviewCapAt: 1793000600, publishedDecisionId: 'decision-one', publishedAt: 1793000100, confirmAt: 1793000220, deadlineRouteAvailable: true,
+        revalidationCount: 0, revalidationLimit: 1, terminationReason, invalidationReason: null, reservationReleased: false,
+        epochInvalidated: false},
+    consent: {bothCurrent: true, requiredRoles: ['PARTICIPANT', 'COURSE_OPERATOR'], onchainWalletSignaturesVerified: false,
+        records: [{actorRole: 'PARTICIPANT', value: 'AGREE'}, {actorRole: 'COURSE_OPERATOR', value: 'AGREE'}]},
+    objection: {blocked: false},
+    // Not accepted yet: acceptedRight/claimState/transactionState are null (procedure-ports chain()).
+    payment: {acceptedRight: claimState ? {state: 'FIXED_RIGHT_PRESERVED', claimState, recipientRef: 'recipient-one',
+        amountAtoms: '100000000', claimExpiresAt: null, requiresCurrentSource: false, requiresCurrentSigner: false,
+        requiresNewSignature: false} : null,
+    transactionState: claimState ? 'INCLUDED' : null, transactionHash: null, blockRef: claimState ? 'block-635' : null,
+    claimState, receivedAtoms: null,
+    canonicalTransferVerified: null, receiptHttpAvailable: true},
+    sourceMode: 'REGISTERED_TEST_SOURCE'});
+const realReceipt = (applicationId = 'app-one', {finalized = false} = {}) => ({version: 'clear-bootcamp-normal-payment-receipt.1',
+    applicationId, policyHash: hex('1'), runtimeMappingHash: hex('2'), role: 'PARTICIPANT',
+    currentDecision: {decisionId: 'decision-one', decisionRevision: 3, decisionHash: hex('3')},
+    acceptedTarget: {decisionId: 'decision-one', decisionRevision: 3, decisionHash: hex('3'), allocationId: 'allocation-one'},
+    expectedPayment: {recipient: hex('c', 40), token: hex('d', 40), amountAtoms: '100000000', symbol: 'TEST', decimals: 6},
+    accept: {state: 'RECORDED_INCLUDED', transactionHash: hex('e'), recordedCheckpoint: null, canonicalNow: null},
+    claim: {state: 'INCLUDED', transactionHash: hex('f'), checkpoint: {number: '635', hash: hex('9'), time: '1793000000'},
+        canonical: true, finalized, transferAmountAtoms: '100000000'},
+    balance: {receivedAtoms: '100000000', exactExpectedAmountVerified: true, measurement: 'CANONICAL_TRANSFER_EVENT'},
+    source: {mode: 'REGISTERED_TEST_SOURCE', actualSourceVerification: false}, productionEnabled: false});
+const includedText = '지급 거래를 보냈습니다. 블록체인에서 완료를 확인하고 있습니다.';
+const stageOf = root => root.children[0]?.attributes['data-stage'];
+const stageLine = root => root.querySelector('.crc-stage-line')?.textContent ?? '';
+const uxRoots = () => {
+    const {Node} = installCardDom();
+    return {stageRoot: new Node('div'), payoutRoot: new Node('div')};
+};
+
+test('#173 a real CLAIMED view plus the same application\'s INCLUDED receipt shows processing, never paid, with no extra calls', async () => {
+    const roots = uxRoots();
+    const {stageRoot, payoutRoot} = roots;
+    const ui = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': realView(),
+        'payment-receipt': realReceipt()})[action], roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    // The real view alone carries no claim inclusion, so the strip still waits for payment processing.
+    assert.equal(stageOf(stageRoot), 'CONFIRM');
+    assert.match(stageLine(stageRoot), /양측 확인 완료 · 지급 처리를 기다립니다/);
+    await ui.click('payment-receipt');
+    assert.match(ui.details.textContent, /^received/m);
+    assert.match(ui.details.textContent, /notfinalized/);
+    assert.equal(stageOf(stageRoot), 'CONFIRM', 'INCLUDED is not the paid stage');
+    assert.match(stageRoot.querySelector('[aria-current="step"]').textContent, /양측 확인/);
+    assert.equal(stageLine(stageRoot), includedText);
+    assert.doesNotMatch(stageRoot.textContent, /받았습니다/);
+    assert.equal(payoutRoot.children.length, 0, 'no paid summary without FINALIZED');
+    // A later view read keeps the binding to the receipt of the same application.
+    await ui.click('read-application');
+    assert.equal(stageLine(stageRoot), includedText);
+    assert.equal(payoutRoot.children.length, 0);
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'payment-receipt', 'read-application'],
+        'no extra server calls');
+    ui.mounted.destroy();
+});
+
+test('#173 contradicting or out-of-contract receipts are not combined and real DTOs never reach the paid stage', async () => {
+    const roots = uxRoots();
+    const {stageRoot, payoutRoot} = roots;
+    let view = realView('app-one', 'UNCLAIMED');
+    let reply = realReceipt();
+    const ui = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': view,
+        'payment-receipt': reply})[action], roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    // An UNCLAIMED view contradicts an INCLUDED claim receipt: hold instead of combining.
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
+    assert.notEqual(stageOf(stageRoot), 'PAID');
+    // INCLUDED requires finalized=false in the receipt contract; any other value is not promoted.
+    view = realView();
+    reply = realReceipt('app-one', {finalized: true});
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
+    assert.notEqual(stageOf(stageRoot), 'PAID');
+    assert.doesNotMatch(stageRoot.textContent, /받았습니다/);
+    assert.equal(payoutRoot.children.length, 0);
+    assert.deepEqual(ui.sent.map(input => input.action),
+        ['read-session', 'read-application', 'payment-receipt', 'read-application', 'payment-receipt']);
+    ui.mounted.destroy();
+});
+
+test('#173 a receipt for another application is discarded and never bound to the current view', async () => {
+    const roots = uxRoots();
+    const {stageRoot} = roots;
+    const ui = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': realView(),
+        'payment-receipt': realReceipt('app-two')})[action], roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    assert.equal(ui.status.textContent, 'failure');
+    assert.doesNotMatch(stageRoot.textContent, /지급 거래를 보냈습니다/);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
+    assert.deepEqual(ui.sent.map(input => input.action),
+        ['read-session', 'read-application', 'payment-receipt', 'read-session', 'read-application']);
+    ui.mounted.destroy();
+});
+
+test('#173 receipt binding is dropped on disconnect, application replacement and late responses', async () => {
+    const roots = uxRoots();
+    const {stageRoot} = roots;
+    let app = 'app-one';
+    let hold = false;
+    let release;
+    const ui = fixture(({action}) => action === 'read-session' ? session(app)
+        : action === 'read-application' ? realView(app)
+        : hold ? new Promise(resolve => { release = resolve; }) : realReceipt(app), roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    await ui.click('payment-receipt');
+    assert.equal(stageLine(stageRoot), includedText);
+    // Disconnect clears the binding; reconnecting and re-reading the view does not restore it.
+    await ui.walletDispatch({action: 'cancel'});
+    assert.equal(stageOf(stageRoot), 'CONNECT');
+    assert.doesNotMatch(stageRoot.textContent, /지급 거래를 보냈습니다/);
+    ui.state(connected());
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
+    // Replacing the application drops the previous application's receipt.
+    await ui.click('payment-receipt');
+    assert.equal(stageLine(stageRoot), includedText);
+    app = 'app-two';
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
+    // A valid receipt that arrives after a disconnect is discarded.
+    hold = true;
+    const late = ui.click('payment-receipt');
+    await ui.walletDispatch({action: 'cancel'});
+    ui.state(connected());
+    await ui.click('read-session');
+    await ui.click('read-application');
+    release(realReceipt('app-two'));
+    await late;
+    assert.doesNotMatch(stageLine(stageRoot), /지급 거래를 보냈습니다/);
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'payment-receipt',
+        'read-session', 'read-application', 'payment-receipt', 'read-session', 'read-application', 'payment-receipt',
+        'read-session', 'read-application'], 'no extra server calls');
+    ui.mounted.destroy();
+});
+
+test('#173 after the review cap an accepted right still shows the processing sentence once the INCLUDED receipt is bound', async () => {
+    const roots = uxRoots();
+    const {stageRoot, payoutRoot} = roots;
+    const ui = fixture(({action}) => ({'read-session': session('app-one'),
+        'read-application': realView('app-one', 'CLAIMED', {terminationReason: 'REVIEW_CAP_UNRESOLVED'}),
+        'payment-receipt': realReceipt()})[action], roots);
+    await ui.click('read-session');
+    await ui.click('read-application');
+    // Unchanged pinned behaviour without a receipt: the time-only termination reason is shown first.
+    assert.match(stageLine(stageRoot), /확인 절차가 종료되었습니다/);
+    await ui.click('payment-receipt');
+    assert.equal(stageOf(stageRoot), 'CONFIRM');
+    assert.equal(stageLine(stageRoot), includedText);
+    assert.equal(payoutRoot.children.length, 0);
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-application', 'payment-receipt']);
+    ui.mounted.destroy();
+});
+
+test('#173 real-mode reflection card keeps the ABSENT/UNCERTAIN wording and the stored-decision rule', async () => {
+    const {Node} = installCardDom();
+    const base = realView('app-one', null);
+    const view = {...base, decision: {...base.decision, conditionsStatus: 'NOT_MET'},
+        criteria: base.criteria.map(row => row.criterionId === 'reflection-topics' ? {...row, state: 'NOT_MET'} : row)};
+    const render = async topics => {
+        const evidence = {version: 'clear-bootcamp-decision-evidence.1', applicationId: 'app-one', role: 'PARTICIPANT',
+            manifest: {version: 'clear-bootcamp-evidence-manifest.1', applicationId: 'app-one',
+                decision: {decisionId: 'decision-one', decisionRevision: 3, decisionHash: hex('3')},
+                criteria: [{criterionId: 'reflection-topics', state: 'NOT_MET', evidenceId: 'evidence-reflection-topics',
+                    evidenceRevision: 1, metadataStatus: 'RECORDED', checks: {topics}}]},
+            availability: [{criterionId: 'reflection-topics', evidenceId: 'evidence-reflection-topics', status: 'VALID_AS_RECORDED'}],
+            limitations: {originalTextHttpAvailable: false}};
+        const cards = nativePanels.createConditionCards({getState: () => ({view,
+            session: {applicationId: 'app-one', boundApplicationId: 'app-one'}}),
+        read: async () => ({view}), loadEvidence: async () => evidence, storage: nativePanels.memoryStore()});
+        cards.render();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const root = new Node('div');
+        root.append(cards.render());
+        cards.close();
+        return root.textContent;
+    };
+    const absent = await render([{topicId: 'work-performed', state: 'PRESENT'},
+        {topicId: 'problem-solving-process', state: 'ABSENT'}, {topicId: 'learning-takeaway', state: 'UNCERTAIN'}]);
+    assert.match(absent, /문제 해결 과정 내용이 부족해요\./);
+    assert.match(absent, /부족한 내용/);
+    assert.match(absent, /판단하기 어려운 내용/);
+    assert.match(absent, /AI 가 이 항목이 글에 있는지 확신하지 못했어요\. 없다는 뜻은 아니에요\./);
+    assert.match(absent, /문제 해결 과정 내용을 더해 .*에 다시 올려 주세요\. 돌아오면 저장된 판정을 다시 읽어요\./);
+    assert.match(absent, /회고 재검증 경로는 아직 연결 전이에요\. 돌아오면 서버에 저장된 판정만 다시 읽어요\./);
+    assert.doesNotMatch(absent, /다시 검토를 요청해요/);
+    const uncertain = await render([{topicId: 'work-performed', state: 'PRESENT'},
+        {topicId: 'problem-solving-process', state: 'PRESENT'}, {topicId: 'learning-takeaway', state: 'UNCERTAIN'}]);
+    assert.match(uncertain, /배운 점 항목은 판단하기 어려워요\./);
+    assert.match(uncertain, /배운 점 부분을 더 분명하게 적어 .*에 다시 올릴 수 있어요\. 재검증 경로가 연결되기 전이라, 돌아오면 저장된 판정을 다시 확인해요\./);
+    assert.doesNotMatch(uncertain, /부족한 내용|다시 검토를 요청해요/);
+});
+
+// Student "지금 할 일" guide (C display only). The guide button runs the same actions as the
+// existing controls, in the same order, and never offers consent before the registration is SIGNED.
+const guideOf = root => {
+    const box = root.children[0];
+    const find = cls => [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(box)]
+        .find(node => node.className === cls);
+    return {key: box?.attributes['data-guide-key'], title: find('clear-guide-title')?.textContent ?? '',
+        body: find('clear-guide-body')?.textContent ?? '', go: find('clear-guide-go'), toggle: find('clear-guide-toggle'),
+        facts: find('clear-guide-facts')?.textContent ?? '', raw: find('clear-guide-raw-text')?.textContent ?? ''};
+};
+const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+const press = async root => { const {go} = guideOf(root); assert.ok(go && !go.disabled, 'guide button enabled'); go.handlers.click(); for (let i = 0; i < 6; i++) { await tick(); } };
+
+test('guide walks a student from load to paid with one button per step and no extra or early writes', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const roots = {...uxRoots(), guideRoot};
+    let stage = 'start';
+    const viewAt = () => {
+        const view = realView('app-one', ['agreed-both', 'paid'].includes(stage) ? 'CLAIMED' : null);
+        if (stage === 'partial') {
+            view.criteria = view.criteria.map(row => row.criterionId === 'reflection-topics' ? {...row, state: 'MISSING'} : row);
+            view.decision = {...view.decision, conditionsStatus: 'NOT_MET'};
+        }
+        const roles = {'agreed-participant': ['PARTICIPANT'], 'agreed-both': ['PARTICIPANT', 'COURSE_OPERATOR'],
+            paid: ['PARTICIPANT', 'COURSE_OPERATOR']}[stage] ?? [];
+        view.consent = {...view.consent, bothCurrent: roles.length === 2, records: roles.map(actorRole => ({actorRole, value: 'AGREE'}))};
+        return view;
+    };
+    const procedure = {...receipt, version: 'clear-bootcamp-procedure-operation.1', usableForPayment: false};
+    const packet = status => ({version: 'clear-bootcamp-recipient-registration.1', applicationId: 'app-one', role: 'PARTICIPANT',
+        purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status, decisionId: 'decision-one',
+        registrationTargetId: 'register-one', payload: {message: {recipient: '0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1'}}});
+    const ui = fixture(({action}) => {
+        switch (action) {
+            case 'read-session': return session(['start', 'created'].includes(stage) ? null : 'app-one');
+            case 'create-application': stage = 'created'; return receipt;
+            case 'bind-source-session': stage = 'partial';
+                return {applicationId: 'app-one', status: 'AUTHENTICATED_SOURCE_SESSION_BOUND', paymentAuthorization: false};
+            case 'read-application': return viewAt();
+            case 'read-registration': return packet(stage === 'signed' ? 'SIGNED' : 'AWAITING_SIGNATURE');
+            case 'approve-registration': stage = 'signed'; return procedure;
+            case 'consent': stage = 'agreed-participant'; return procedure;
+            case 'payment-receipt': stage = 'paid'; return realReceipt();
+            default: throw Error('unexpected ' + action);
+        }
+    }, roots);
+    const steps = [];
+    const at = () => { const g = guideOf(guideRoot); steps.push(g.key); return g; };
+    assert.equal(at().key, 'load');
+    assert.equal(guideOf(guideRoot).toggle.textContent, '모든 단계와 기술 정보 보기');
+    await press(guideRoot);
+    assert.equal(at().key, 'apply');
+    await press(guideRoot);
+    const bind = at();
+    assert.equal(bind.key, 'bind', 'a created but unbound application asks to start the condition check (r45)');
+    assert.equal(bind.go.attributes['data-guide-action'], 'bind-source-session');
+    await press(guideRoot);
+    assert.equal(at().key, 'refresh');
+    await press(guideRoot);
+    const partial = at();
+    assert.equal(partial.key, 'conditions');
+    assert.match(partial.title, /\(3\/4\)/);
+    assert.match(partial.body, /남은 조건: 회고/);
+    stage = 'met';
+    await press(guideRoot);
+    assert.equal(at().key, 'register-read', 'all MET: check the receiving wallet first, never consent');
+    await press(guideRoot);
+    const signStep = at();
+    assert.equal(signStep.key, 'register-sign');
+    assert.match(signStep.facts, /받는 곳\s*내 CLEAR 지갑/);
+    assert.match(signStep.facts, /지갑 번호 끝자리\s*baB1/, 'plain words, not the full 0x address');
+    assert.doesNotMatch(signStep.facts, /0x0EA0/);
+    assert.match(signStep.facts, /받는 금액\s*100 TEST \(시연용 포인트, 실제 돈 아님\)/);
+    assert.match(guideRoot.textContent, /지갑이 뭔가요\?/, 'a plain explanation sits next to the wallet');
+    assert.match(signStep.raw, /0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1/, 'exact signing payload stays viewable');
+    await press(guideRoot);
+    assert.equal(at().key, 'refresh', 'a write clears the reviewed view');
+    await press(guideRoot);
+    assert.equal(at().key, 'register-confirm', 'after signing, the card says it is done and only checks the record');
+    await press(guideRoot);
+    assert.equal(at().key, 'consent');
+    await press(guideRoot);
+    assert.equal(at().key, 'refresh');
+    await press(guideRoot);
+    assert.equal(at().key, 'wait-operator');
+    stage = 'agreed-both';
+    await press(guideRoot);
+    assert.equal(at().key, 'receipt');
+    await press(guideRoot);
+    const paid = at();
+    assert.equal(paid.key, 'paid');
+    assert.equal(paid.title, '100 TEST를 보냈어요');
+    assert.match(paid.facts, /받은 곳\s*내 CLEAR 지갑 \(번호 끝자리/);
+    assert.match(paid.body, /확정되기까지는 조금 더/);
+    assert.equal(stageLine(roots.stageRoot), includedText, 'strip binds the same receipt');
+    assert.equal(roots.payoutRoot.children.length, 0, 'still no paid summary without FINALIZED');
+    const sent = ui.sent.map(input => input.action + (input.action === 'consent' ? ':' + input.value : ''));
+    assert.deepEqual(sent, ['read-session', 'create-application', 'bind-source-session', 'read-session', 'read-application',
+        'read-session', 'read-application', 'read-registration', 'approve-registration', 'read-session', 'read-application',
+        'read-registration', 'consent:AGREE', 'read-session', 'read-application', 'read-session', 'read-application',
+        'payment-receipt', 'read-application']);
+    assert.ok(sent.indexOf('consent:AGREE') > sent.indexOf('approve-registration'), 'consent only after the signed registration');
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide shows a definite 409 rejection as a manual re-read, and the toggle restores every technical section', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let reject = true;
+    const view = realView('app-one', null);
+    view.consent = {...view.consent, bothCurrent: false, records: []};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return session('app-one'); }
+        if (action === 'read-application') { return view; }
+        if (action === 'read-registration') {
+            return {version: 'clear-bootcamp-recipient-registration.1', applicationId: 'app-one', role: 'PARTICIPANT',
+                purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status: 'SIGNED', payload: null};
+        }
+        if (action === 'consent' && reject) { reject = false; throw notAccepted('MOODLE_CONSENT_REVIEW_CHANGED'); }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    await press(guideRoot);
+    await press(guideRoot);
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'consent');
+    const before = ui.sent.length;
+    await press(guideRoot);
+    const rejected = guideOf(guideRoot);
+    assert.equal(rejected.key, 'notaccepted');
+    assert.match(rejected.body, /기록되지 않았어요/);
+    assert.equal(rejected.go.attributes['data-guide-action'], 'read-session', 'only a manual re-read is offered');
+    assert.deepEqual(ui.sent.slice(before).map(input => input.action), ['consent'], 'no automatic resend');
+    assert.equal(ui.state && ui.mounted ? 'mounted' : 'gone', 'mounted', 'login kept');
+    guideOf(guideRoot).toggle.handlers.click();
+    assert.equal(guideOf(guideRoot).toggle.textContent, '간단히 보기');
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide shows a situation-specific loading card while a step runs, and a sign prompt while a signature waits', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let release;
+    const view = realView('app-one', null);
+    view.consent = {...view.consent, bothCurrent: false, records: []};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') {
+            return release === undefined ? new Promise(resolve => { release = () => resolve(session('app-one')); }) : session('app-one');
+        }
+        if (action === 'read-application') { return view; }
+        if (action === 'read-registration') {
+            return {version: 'clear-bootcamp-recipient-registration.1', applicationId: 'app-one', role: 'PARTICIPANT',
+                purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status: 'AWAITING_SIGNATURE',
+                payload: {message: {recipient: '0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1'}}};
+        }
+        if (action === 'approve-registration') { return new Promise(() => {}); }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    guideOf(guideRoot).go.handlers.click();
+    await tick();
+    const loading = guideOf(guideRoot);
+    assert.equal(loading.key, 'busy');
+    assert.equal(loading.title, '내 진행 상황을 불러오는 중이에요');
+    assert.match(loading.body, /몇 초면/);
+    assert.equal(loading.go, undefined, 'no button while it runs');
+    release();
+    for (let i = 0; i < 6; i++) { await tick(); }
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'register-read');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'register-sign');
+    guideOf(guideRoot).go.handlers.click();
+    await tick();
+    const signing = guideOf(guideRoot);
+    assert.equal(signing.key, 'busy');
+    assert.equal(signing.title, '서명 창을 확인해 주세요');
+    assert.match(guideRoot.textContent, /돈은 나가지 않아요/);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide retries a failed read step once from read-session, never a write, and stops after the second failure', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let failures = 1;
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') {
+            if (failures-- > 0) { throw Object.assign(Error('HTTP_503'), {status: 503}); }
+            return session(null);
+        }
+        throw Object.assign(Error('HTTP_500'), {status: 500});
+    }, {guideRoot});
+    guideOf(guideRoot).go.handlers.click();
+    await new Promise(resolve => setTimeout(resolve, 1700));
+    for (let i = 0; i < 6; i++) { await tick(); }
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-session'], 'one automatic retry');
+    assert.equal(guideOf(guideRoot).key, 'apply', 'the transient failure never reached the student');
+    // A write that fails is never retried.
+    guideOf(guideRoot).go.handlers.click();
+    await new Promise(resolve => setTimeout(resolve, 1700));
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-session', 'create-application']);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide stops after a second consecutive read failure', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const ui = fixture(() => { throw Object.assign(Error('HTTP_503'), {status: 503}); }, {guideRoot});
+    guideOf(guideRoot).go.handlers.click();
+    await new Promise(resolve => setTimeout(resolve, 1700));
+    for (let i = 0; i < 6; i++) { await tick(); }
+    assert.deepEqual(ui.sent.map(input => input.action), ['read-session', 'read-session']);
+    assert.equal(guideOf(guideRoot).key, 'failure');
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide: certificate start shows "preparing" (sign first), and a lost login after binding never invites a re-login', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const started = {...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+        certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+            state: 'START_ACCEPTED', startAllowed: false, signatureReady: false}};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return started; }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    await press(guideRoot);
+    const prep = guideOf(guideRoot);
+    assert.equal(prep.key, 'cert-prep');
+    assert.match(prep.body, /서명 단계가 나와요/);
+    assert.doesNotMatch(prep.title, /로그인/);
+    ui.state({...connected(), phase: 'IDLE', authenticated: false});
+    const lost = guideOf(guideRoot);
+    assert.equal(lost.key, 'lost');
+    assert.match(lost.body, /다시 로그인하거나 새로고침하지/);
+    assert.equal(lost.go, undefined, 'no button that could start a new login');
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide cert-wait offers a local "HackerRank login done" signal window and sends nothing to the server', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const waiting = {...session('app-one'), phase: 'SOURCE_python-basic-certificate',
+        certificate: {version: 'clear-certificate-start.1', applicationId: 'app-one', criterionId: 'python-basic-certificate',
+            state: 'SIGNATURE_ACCEPTED', startAllowed: false, signatureReady: false}};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return waiting; }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    await press(guideRoot);
+    const wait = guideOf(guideRoot);
+    assert.equal(wait.key, 'cert-wait');
+    assert.match(wait.body, /「HackerRank 로그인을 마쳤어요」를 눌러 주세요/);
+    const nodes = [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)];
+    const signal = nodes.find(node => node.className === 'clear-guide-go clear-guide-signal');
+    assert.ok(signal, 'login-done button shown');
+    assert.equal(signal.textContent, 'HackerRank 로그인을 마쳤어요');
+    assert.ok(nodes.indexOf(signal) < nodes.indexOf(wait.go), 'login-done comes before the re-read button');
+    assert.equal(wait.go.textContent, '확인됐는지 보기');
+    const opened = [];
+    const original = globalThis.open;
+    globalThis.open = (...args) => { opened.push(args); return null; };
+    try {
+        const before = ui.sent.length;
+        signal.handlers.click();
+        for (let i = 0; i < 4; i++) { await tick(); }
+        assert.deepEqual(opened, [['http://127.0.0.1:9481/hr-ready', 'clear-hr-ready', 'popup,width=460,height=320']]);
+        assert.equal(ui.sent.length, before, 'no Moodle or CLEAR request from the signal');
+    } finally {
+        globalThis.open = original;
+    }
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('operator guide never shows the HackerRank login-done signal', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return session(null, 'COURSE_OPERATOR'); }
+        throw Error('unexpected ' + action);
+    }, {role: 'operator', guideRoot});
+    await press(guideRoot);
+    const nodes = [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)];
+    assert.equal(nodes.some(node => node.className === 'clear-guide-go clear-guide-signal'), false);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('operator guide walks connect → AI approval (checkbox) → consent after the student → paid, one button per step', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let stage = 'start';
+    const approval = {version: 'clear-normal-exact-ai-approval-display.1', applicationId: 'app-one', permitted: true,
+        approvalWindowEndsAtMs: Date.now() + 300000, bodySha256: 'input-hash', model: 'gemini-test', scenarioUsd: '0.00346',
+        runBindingHash: 'run-binding'};
+    const viewAt = () => {
+        const view = {...realView('app-one', stage === 'agreed-both' || stage === 'paid' ? 'CLAIMED' : null), role: 'COURSE_OPERATOR'};
+        if (['applied', 'ai'].includes(stage)) {
+            view.criteria = view.criteria.map(row => row.criterionId === 'reflection-topics' ? {...row, state: 'MISSING'} : row);
+            view.decision = {...view.decision, conditionsStatus: 'NOT_MET'};
+        }
+        const roles = {'student-agreed': ['PARTICIPANT'], 'agreed-both': ['PARTICIPANT', 'COURSE_OPERATOR'],
+            paid: ['PARTICIPANT', 'COURSE_OPERATOR']}[stage] ?? [];
+        view.consent = {...view.consent, bothCurrent: roles.length === 2, records: roles.map(actorRole => ({actorRole, value: 'AGREE'}))};
+        return view;
+    };
+    const procedure = {...receipt, version: 'clear-bootcamp-procedure-operation.1', usableForPayment: false};
+    const ui = fixture(({action}) => {
+        switch (action) {
+            case 'read-session': return {...session(stage === 'start' ? null : 'app-one', 'OPERATOR'),
+                ...(stage === 'ai' ? {aiApproval: approval} : {})};
+            case 'read-application': return viewAt();
+            case 'approve-reflection': stage = 'met'; return {version: 'clear-normal-ai-approval-receipt.1', applicationId: 'app-one',
+                runBindingHash: approval.runBindingHash, status: 'RECORDED', paymentConsentIncluded: false};
+            case 'consent': stage = 'agreed-both'; return procedure;
+            case 'payment-receipt': stage = 'paid'; return {...realReceipt(), role: 'OPERATOR'};
+            default: throw Error('unexpected ' + action);
+        }
+    }, {role: 'operator', guideRoot});
+    const stepsText = () => [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)]
+        .filter(node => node.className === 'clear-guide-step').map(node => node.attributes['data-state']).join(',');
+    assert.equal(guideOf(guideRoot).key, 'load');
+    assert.equal(stepsText(), 'done,now,todo,todo,todo', 'the teacher sees five steps');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'op-wait-apply');
+    stage = 'applied';
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'refresh');
+    await press(guideRoot);
+    const conditions = guideOf(guideRoot);
+    assert.equal(conditions.key, 'op-conditions');
+    assert.match(conditions.title, /학생 조건을 확인하고 있어요 \(3\/4\)/);
+    stage = 'ai';
+    await press(guideRoot);
+    const ai = guideOf(guideRoot);
+    assert.equal(ai.key, 'op-ai');
+    assert.match(ai.facts, /비용 상한\(예상\)\s*0\.00346 USD/);
+    assert.match(ai.facts, /AI 모델\s*gemini-test/);
+    assert.equal(ai.go.disabled, true, 'approval needs the explicit check first');
+    const box = [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(guideRoot)]
+        .find(node => node.className === 'clear-guide-ack-box');
+    box.checked = true;
+    box.handlers.change();
+    assert.equal(guideOf(guideRoot).go.disabled, false);
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'refresh', 'the recorded approval is not offered again');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'op-wait-student', 'all MET, but the teacher waits for the student first');
+    stage = 'student-agreed';
+    await press(guideRoot);
+    const consent = guideOf(guideRoot);
+    assert.equal(consent.key, 'op-consent');
+    assert.match(consent.facts, /지급 금액\s*100 TEST/);
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'refresh');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'receipt');
+    await press(guideRoot);
+    const paid = guideOf(guideRoot);
+    assert.equal(paid.key, 'paid');
+    assert.equal(paid.title, '학생에게 100 TEST를 보냈어요');
+    assert.equal(stepsText(), 'done,done,done,done,done');
+    assert.deepEqual(ui.sent.map(input => input.action + (input.action === 'consent' ? ':' + input.value : '')), [
+        'read-session', 'read-session', 'read-session', 'read-application', 'read-session', 'read-application',
+        'approve-reflection', 'read-session', 'read-application', 'read-session', 'read-application', 'consent:AGREE',
+        'read-session', 'read-application', 'payment-receipt', 'read-application']);
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('operator lock notice shows only for an accepted right or both AGREE consents, links the chain window, and leaves students alone', async () => {
+    const {Node} = installCardDom();
+    const lockRoot = new Node('div');
+    let shape = 'accepted';
+    const viewAt = () => {
+        const view = {...realView('app-one', shape === 'accepted' ? 'CLAIMED' : null), role: 'COURSE_OPERATOR'};
+        if (shape === 'open') {
+            view.consent = {...view.consent, bothCurrent: false, records: []};
+        }
+        return view;
+    };
+    const ui = fixture(({action}) => ({'read-session': session('app-one', 'OPERATOR'), 'read-application': viewAt()})[action],
+        {role: 'operator', lockRoot});
+    assert.equal(lockRoot.hidden, true, 'hidden before any view is read');
+    await ui.click('read-session');
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, false, 'an accepted right shows the notice');
+    const title = lockRoot.querySelector('.clear-lock-title');
+    assert.equal(title.textContent, '🔒 이 환급은 블록체인에 확정됐어요');
+    assert.equal(lockRoot.querySelector('.clear-lock-body').textContent, '학생과 선생님이 모두 동의해 지급 권리가 블록체인에 기록됐어요. '
+        + '금액(100 TEST)·받는 사람(학생이 서명한 지갑)·판정은 이제 누구도 바꿀 수 없어요. 이 화면에서 고치는 조건은 다음 개설용 초안이에요.');
+    const link = lockRoot.querySelector('.clear-lock-link');
+    assert.equal(link.tag, 'a');
+    assert.equal(link.textContent, '블록체인에서 직접 확인');
+    assert.equal(link.href, 'http://127.0.0.1:9480/#attempts');
+    assert.equal(link.attributes.target, '_blank');
+    assert.equal(link.attributes.rel, 'noopener noreferrer');
+
+    shape = 'agreed';
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, false, 'both AGREE consents without an accepted right still show the notice');
+
+    shape = 'open';
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, true, 'no accepted right and no consent hides the notice');
+    assert.equal(lockRoot.children.length, 0);
+
+    shape = 'accepted';
+    await ui.click('read-application');
+    assert.equal(lockRoot.hidden, false);
+    ui.state({...connected('operator'), authenticated: false});
+    assert.equal(lockRoot.hidden, true, 'a disconnect hides the notice');
+    assert.deepEqual(ui.sent.map(input => input.action),
+        ['read-session', 'read-application', 'read-application', 'read-application', 'read-application'], 'no extra server calls');
+    ui.mounted.destroy();
+
+    const studentRoot = new Node('div');
+    const student = fixture(({action}) => ({'read-session': session('app-one'), 'read-application': realView()})[action],
+        {lockRoot: studentRoot});
+    await student.click('read-session');
+    await student.click('read-application');
+    assert.equal(Object.hasOwn(studentRoot, 'hidden'), false, 'the student view never touches the notice');
+    assert.equal(studentRoot.children.length, 0);
+    student.mounted.destroy();
+    delete globalThis.document;
 });
