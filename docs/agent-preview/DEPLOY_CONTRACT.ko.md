@@ -13,22 +13,22 @@
 | artifactHash | 후보 `6d0696c2b4c1881c0125ec6c11095035fce29f616a43bb0e35fc4649f73ee564` (sourceHead `2a1f392`, 462파일) | 배포 시 확정. 패키징한 커밋이 바뀌면 값도 바뀐다 |
 | deploymentEpoch | 배포할 때 새로 만드는 UUIDv4(비밀 아님) | 배포 시 확정. 로컬 시험값은 실제 배포에 재사용하지 않는다 |
 | bindingHash | origin·actor·dataMode·artifactHash·epoch·model·methods·limits의 core hash | 배포 시 확정. `approval.mjs prepare` 출력 `scopeValues.deployment.bindingHash` |
-| dActor | 제안 `{"institutionId":"clear-demo","courseId":"2","operatorId":"2"}` | **메인 확인 필요**: Moodle 강좌 id 2(`clearbridge/index.php?id=2`)와 운영자 Moodle 사용자 id가 맞는지. 바꾸면 bindingHash가 바뀐다 |
+| dActor | `{"institutionId":"clear-demo","courseId":"2","operatorId":"6"}` | 메인 확인(Moodle DB 읽기): 강좌 2의 editingteacher이자 실제 운영자 로그인 기록이 사용자 6. 사용자 2는 사이트 관리자다. 바꾸면 bindingHash가 바뀐다 |
 | execute | `503 OBSERVATION_ADAPTER_NOT_ACCEPTED` 유지 | [결정안](DEPLOY_EXECUTE_DECISION.ko.md) |
 | 외부 모델 호출 | 미실행(0회) | 배포·키·입력 승인 전 |
 | 도구 실행 | 미연결 | execute 결정 전 |
 
 ### 계산 확인용 로컬 시험값(실제 설정에 쓰지 말 것)
 
-컨테이너 시험에서 쓴 값과 그 결과다. 메인이 계산 방식을 맞춰 보는 용도로만 쓴다.
+메인이 계산 방식을 맞춰 보는 용도로만 쓴다. 입력은 컨테이너 시험값에서 operatorId만 6으로 바꿨다. bindingHash는 승인 CLI `prepare`로 계산했다(컨테이너 시험 자체는 operatorId 2로 했다).
 
 | 입력 | 값 |
 |---|---|
 | publicOrigin | `https://preview.example.invalid` |
-| dActor | `clear-demo` / `2` / `2` |
+| dActor | `clear-demo` / `2` / `6` |
 | artifactHash | `6d0696c2b4c1881c0125ec6c11095035fce29f616a43bb0e35fc4649f73ee564` |
 | deploymentEpoch | `806cfa0b-0569-4547-9370-af79507f5658` |
-| → bindingHash | `9de225697224aaa7d200ed24ecd11769e4ce637c5563fa6ca1b3453c243c761c` |
+| → bindingHash | `c50eb4a4f7437721e61b74e9df51017285873414c74131c2cb8ffebbc3021329` |
 | 원문 `Python 기초 강의 완료` → bodyHash | `ac7ed3efc93f48f855f2ae66e8a63997be54d04feea790261593892c9f17643c` |
 
 ## 2. 값을 얻는 방법
@@ -44,7 +44,7 @@ docker compose -f deploy/agent-preview/compose.yaml exec preview \
 
 ```json
 {"publicOrigin":"https://<D origin>",
- "dActor":{"institutionId":"clear-demo","courseId":"2","operatorId":"2"},
+ "dActor":{"institutionId":"clear-demo","courseId":"2","operatorId":"6"},
  "deployment":{"artifactHash":"<64hex>","deploymentEpoch":"<uuid v4>","bindingHash":"<64hex>",
    "model":"gemini-3.5-flash-lite","limitsHash":"d428e64cf3e7183e8ecc3a99f14c4be5b53d0f002c33c8fcbca92bfadbf28ae0"}}
 ```
@@ -59,7 +59,7 @@ docker compose -f deploy/agent-preview/compose.yaml exec preview \
   "scopeRef":"course-operator-demo:preview",
   "authorityRevision":1,
   "expiresAtMs":1794063599000,
-  "dActor":{"institutionId":"clear-demo","courseId":"2","operatorId":"2"},
+  "dActor":{"institutionId":"clear-demo","courseId":"2","operatorId":"6"},
   "deployment":{
     "artifactHash":"<scopeValues.deployment.artifactHash>",
     "deploymentEpoch":"<scopeValues.deployment.deploymentEpoch>",
@@ -92,8 +92,10 @@ docker compose -f deploy/agent-preview/compose.yaml exec preview \
 
 ## 6. 대체안: 외부 배포 없이 로컬 D
 
+전체 절차와 확정 값(origin·epoch·bindingHash·scope 예시)은 [DEPLOY_LOCAL](DEPLOY_LOCAL.ko.md)에 있다. 요약:
+
 외부 배포가 늦어지면 같은 패키지를 Mac에서 띄울 수 있다. publicOrigin은 고정 가상 origin(예: `https://d-preview.clear.invalid`)으로 두고, A는 `connectOrigin: 'http://127.0.0.1:<port>'`로 연결한다. 이 loopback 형식은 `createDPreviewRequest`가 허용한다.
 
 - Docker Desktop(Mac)은 host networking이 기본이 아니다. 그래서 컨테이너 안 `127.0.0.1` listener에 Mac에서 닿지 않는다.
-- 이 경우 staged 폴더의 `deploy/agent-preview/server.mjs`를 `./tools/node`로 직접 실행한다. staged 폴더에는 `node_modules` 링크가 필요하다.
+- 이 경우 staged 폴더의 `deploy/agent-preview/server.mjs`를 toolchain Node로 직접 실행한다. staged 폴더에는 `node_modules`가 필요하다. DEPLOY_LOCAL에서는 `npm --prefix <빌드 폴더> ci --ignore-scripts`로 설치한다.
 - 화면과 보고에는 "로컬 AI 구조화"로 쓰고 "외부 서버"라고 하지 않는다.

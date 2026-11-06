@@ -4,7 +4,7 @@
 D 원본: 로컬 D 서비스 `caa3291`(#154 head `bf5f41c` 위 5커밋)의 `deploy/agent-preview/**`.
 
 이 문서는 **준비 기록**이다. 계정 가입, 공개 배포, 실제 Gemini 호출, 푸시·PR은 하지 않았다.
-메인에 넘길 값은 [DEPLOY_CONTRACT](DEPLOY_CONTRACT.ko.md)에, execute 결정안은 [DEPLOY_EXECUTE_DECISION](DEPLOY_EXECUTE_DECISION.ko.md)에 있다.
+메인에 넘길 값은 [DEPLOY_CONTRACT](DEPLOY_CONTRACT.ko.md)에 있다. 같은 PC에서 D를 별도 프로세스로 띄우는 절차는 [DEPLOY_LOCAL](DEPLOY_LOCAL.ko.md)에, execute 결정안은 [DEPLOY_EXECUTE_DECISION](DEPLOY_EXECUTE_DECISION.ko.md)에 있다.
 
 ## 1. 결과 요약
 
@@ -91,7 +91,7 @@ Railway에서는 이 CLI를 그대로 쓸 수 없다. 프로필 파일이 없고
 
 2026-11-04에 D 담당이 정리한 비교([RAILWAY.ko.md](../../deploy/agent-preview/RAILWAY.ko.md))를 이어받는다. 가격은 그날 확인한 값이며 가입 시 다시 확인해야 한다.
 
-| 기준 | A. AWS Lightsail VM (권장) | B. Railway | C. 로컬 D(대체안) |
+| 기준 | A. AWS Lightsail VM (권장) | B. Railway | C. 로컬 D(대체안, [절차](DEPLOY_LOCAL.ko.md)) |
 |---|---|---|---|
 | 위치 | 서울 리전, Linux 1GB/40GB, 고정 IPv4 | Singapore, 단일 서비스 + 볼륨 | 사용자 Mac, 127.0.0.1 |
 | 비용 | 기본 월 USD 7(도메인·세금·Gemini 별도, 정지해도 과금) | Hobby 최소 월 USD 5 + 사용량, 예산 상한 제안 USD 10 | 0 |
@@ -164,7 +164,7 @@ Railway에서는 이 CLI를 그대로 쓸 수 없다. 프로필 파일이 없고
 CLEAR_SMOKE_ROOT="$PWD" \
 CLEAR_SMOKE_PUBLIC_ORIGIN=https://<D origin> \
 CLEAR_SMOKE_SECRET_FILE=<A 쪽 0600 HMAC 파일> \
-CLEAR_SMOKE_ACTOR='{"institutionId":"clear-demo","courseId":"2","operatorId":"2"}' \
+CLEAR_SMOKE_ACTOR='{"institutionId":"clear-demo","courseId":"2","operatorId":"6"}' \
 CLEAR_SMOKE_EXPECT='{"bindingHash":"<prepare 출력>","limitsHash":"d428e64cf3e7183e8ecc3a99f14c4be5b53d0f002c33c8fcbca92bfadbf28ae0"}' \
 CLEAR_SMOKE_REPLAY_NONCE="$(openssl rand -hex 16)" \
 ./tools/node deploy/agent-preview/tests/remote-smoke.mjs
@@ -182,7 +182,7 @@ CLEAR_SMOKE_REPLAY_NONCE="$(openssl rand -hex 16)" \
 | `deploy/agent-preview/approval.mjs` | `scopeValues`(publicOrigin, dActor, deployment 5값)와 `approvalExpiresAt` 출력 추가. 산출물 검증 뒤 같은 프로필에서 계산한다 |
 | `deploy/agent-preview/tests/approval-cli.test.mjs` | 승인 CLI 출력과 B 검증기 호환 시험(신규, 패키지 제외) |
 | `deploy/agent-preview/tests/remote-smoke.mjs` | 모델 호출 없는 원격·컨테이너 점검 클라이언트(신규, 패키지 제외) |
-| `docs/agent-preview/DEPLOY*.md` | 이 문서, 계약값, execute 결정안 |
+| `docs/agent-preview/DEPLOY*.md` | 이 문서, 계약값, 로컬 D 절차, execute 결정안 |
 
 `src/**`, C 플러그인, A 작업본, 실행 중인 환경, 지급·체인 코드는 건드리지 않았다.
 
