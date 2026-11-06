@@ -10,6 +10,7 @@ import {buildExecutionV2} from '../../tests/hackathon-test-vault/execution-v2-bu
 import {recipientRegistration} from '../../src/bootcamp/recipient-registration.mjs';
 import {TYPES as PAYMENT_TYPES,PROFILE_HASH} from '../../src/bootcamp-authorization/test-schema-v3.mjs';
 import {independentClaim} from './independent-claim.mjs';
+import {readChainView,createChainViewServer} from './chain-balance-view.mjs';
 
 const START=1900000000,A=100000000n;
 const sent=async promise=>(await promise).wait();
@@ -138,4 +139,28 @@ test('terminator cannot revoke an ACCEPTED right after the review cap; reservati
  await f.provider.send('evm_increaseTime',[700]);await f.provider.send('evm_mine',[]);
  await assert.rejects(()=>f.vault.connect(f.accounts[4]).terminate.staticCall(f.op(),p.appId,1,f.op(),6),/UNACCEPTED_STATE/);
  assert.deepEqual(await f.accounting(),{B:A,R:A,O:A,A:0n,U:0n,S:0n,surplus:0n});
+});
+
+test('chain balance view reads review -> accepted (claim pending) -> settled with the payout tx, from chain only',async t=>{
+ const f=await fixture(t),p=await prepared(f),vaultAddress=await f.vault.getAddress(),tokenAddress=await f.token.getAddress();
+ const view=()=>readChainView({provider:f.provider,vaultAbi:f.b.contract.abi,vaultAddress,tokenAddress});
+ const review=await view();
+ assert.equal(review.applicationId,p.appId,'newest application without an explicit id');assert.equal(review.state,'REVIEW');
+ assert.equal(review.recipient,p.r.wallet.address.toLowerCase());assert.equal(review.recipientAtoms,'0');assert.equal(review.vaultAtoms,String(A));assert.equal(review.payoutTxHash,null);
+ await sent(f.vault.connect(f.accounts[2]).accept(f.op(),p.m,p.signature,5));
+ const accepted=await view();assert.equal(accepted.state,'ACCEPTED');assert.equal(accepted.recipientAtoms,'0');assert.equal(accepted.payoutTxHash,null);
+ const report=await independentClaim({provider:f.provider,vaultAbi:f.b.contract.abi,vaultAddress,tokenAddress,applicationId:p.appId,caller:f.accounts[5]});
+ const settled=await view();assert.equal(settled.state,'SETTLED');assert.equal(settled.recipientAtoms,String(A));assert.equal(settled.vaultAtoms,'0');
+ assert.equal(settled.payoutTxHash,report.claim.txHash);
+});
+
+test('chain balance view HTTP serves only GET page/state on loopback; read failure is 503 without detail',async t=>{
+ let fail=false;const server=createChainViewServer({read:async()=>{if(fail)throw Error('secret detail');return {state:'ACCEPTED'};}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+ const base='http://127.0.0.1:'+server.address().port;
+ const page=await fetch(base+'/');assert.equal(page.status,200);assert.match(await page.text(),/체인 잔액 확인/);
+ assert.match(page.headers.get('content-security-policy'),/connect-src 'self'/);
+ assert.deepEqual(await (await fetch(base+'/state.json')).json(),{state:'ACCEPTED'});
+ assert.equal((await fetch(base+'/state.json',{method:'POST'})).status,405);assert.equal((await fetch(base+'/x')).status,404);
+ fail=true;const r=await fetch(base+'/state.json');assert.equal(r.status,503);assert.doesNotMatch(await r.text(),/secret/);
 });

@@ -81,10 +81,25 @@ export async function independentClaim({provider,vaultAbi,vaultAddress,tokenAddr
   before:s(before),after:s(after),duplicate:{staticCall:'REJECTED:'+duplicateStatic,transaction:duplicateTx},production:false});
 }
 
+const test=v=>(Number(BigInt(v)/10000n)/100).toLocaleString('ko-KR')+' TEST';
+const short=v=>v.slice(0,6)+'…'+v.slice(-4);
+/** Human summary for a demo terminal. Same facts as the JSON report, nothing secret. */
+export function summaryKo(r){
+ return ['[독립 청구 · CLEAR 서버 없이 체인 RPC만 사용]',
+  '청구한 주소: '+short(r.caller)+' (역할 없음, 수령인과 '+(r.callerIsRecipient?'같음':'다름')+')',
+  '받는 학생 지갑: '+short(r.recipient)+' (ACCEPT 때 체인에 저장된 주소)',
+  '지급 거래: '+r.claim.txHash+' (블록 '+r.claim.blockNumber+', 성공)',
+  '학생 잔액: '+test(r.before.recipientAtoms)+' → '+test(r.after.recipientAtoms),
+  '금고 잔액: '+test(r.before.vaultAtoms)+' → '+test(r.after.vaultAtoms),
+  '권리 상태: '+(r.before.state==='5'?'수락됨(청구 대기)':r.before.state)+' → '+(r.after.state==='6'?'지급 완료':r.after.state),
+  '중복 청구: '+(r.duplicate.staticCall.startsWith('REJECTED')?'거부됨':'확인 필요')+(r.duplicate.transaction?' · 실제 중복 거래도 실패, 잔액 변화 없음':'')].join('\n');
+}
+
 function args(argv){
  const out={duplicateTransaction:false};
  for(let i=0;i<argv.length;i++){const k=argv[i];
   if(k==='--duplicate-transaction')out.duplicateTransaction=true;
+  else if(k==='--summary-ko')out.summaryKo=true;
   else if(['--checkout','--environment','--application'].includes(k)&&argv[i+1])out[k.slice(2)]=argv[++i];
   else throw Error('CLAIM_PREP_USAGE');}
  ensure(out.environment&&/^e5-[0-9a-f-]{36}$/.test(out.environment)&&b32(out.application??''),'CLAIM_PREP_USAGE');return out;
@@ -103,7 +118,7 @@ async function main(){
   // No-role key created by the environment; the vault never checks msg.sender in claim().
   const caller=new Wallet(env.ownedTestWallet(a.environment,'anycaller').privateKey,provider);
   const report=await independentClaim({provider,vaultAbi:buildExecutionV2().contract.abi,vaultAddress:m.vaultAddress,tokenAddress:m.tokenAddress,applicationId:a.application,caller,duplicateTransaction:a.duplicateTransaction});
-  process.stdout.write(JSON.stringify({...report,environmentId:a.environment,callerRole:'anycaller'},null,1)+'\n');
+  process.stdout.write(a.summaryKo?summaryKo(report)+'\n':JSON.stringify({...report,environmentId:a.environment,callerRole:'anycaller'},null,1)+'\n');
  }finally{provider.destroy();}
 }
 if(import.meta.url===pathToFileURL(process.argv[1]??'').href)main().catch(error=>{process.stderr.write((/^(CLAIM_PREP|E5)_[A-Z0-9_]+$/.test(error.message)?error.message:'CLAIM_PREP_FAILED')+'\n');process.exitCode=1;});
