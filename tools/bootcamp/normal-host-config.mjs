@@ -29,6 +29,7 @@ export function validateHostConfig(c){
  fail(c.activityReturnOnly===undefined||c.activityReturnOnly===true&&c.attestorMode===SELF_MODE&&typeof c.moodleReadOwnerSha256==='string','NORMAL_HOST_ACTIVITY_MODE');
  fail(c.certificateCardOnly===undefined||c.certificateCardOnly===true&&!c.activityReturnOnly&&c.attestorMode===SELF_MODE&&typeof c.moodleReadOwnerSha256==='string','NORMAL_HOST_CERTIFICATE_MODE');
  fail(c.attestorMode===undefined||['OFFICIAL',SELF_MODE].includes(c.attestorMode),'NORMAL_HOST_ATTESTOR_MODE');
+ fail(c.claimMode===undefined||c.claimMode==='DEFERRED_INDEPENDENT'&&!c.activityReturnOnly&&!c.certificateCardOnly,'NORMAL_HOST_CLAIM_MODE');
  fail(c?.version===HOST_CONFIG_VERSION&&c.apiRoot===API_ROOT&&c.keySourceId===KEY_SOURCE&&c.moodleReader===MOODLE_READER&&c.moodleOwnerHead===MOODLE_OWNER_HEAD,'NORMAL_HOST_CONFIG');
  const u=new URL(c.origin);fail(u.origin===c.origin&&u.protocol==='https:'&&u.hostname==='127.0.0.1'&&Number(u.port)>=1024&&Number(u.port)<=65535,'NORMAL_HOST_ORIGIN');
  fail(c.audience==='clear-python-normal-local'&&/^hr-run\.[0-9a-f-]{36}$/.test(c.privacyKeyId??'')&&/^[0-9a-f]{64}$/.test(c.moodleReaderSha256??''),'NORMAL_HOST_CONFIG');
@@ -58,11 +59,12 @@ export function initializeHost({name,origin='https://127.0.0.1:9445',webRoot=nul
  atomicPrivate(join(directory,'public-input-template.json'),{participantWallet:null,operatorWallet:null,selectedCertificateId:null,frontendAccepted:false,webRoot:c.webRoot},{exclusive:true});
  return {directory,origin,sourceMode:'REGISTERED_TEST_SOURCE',phase:'PREPARED_NOT_ACTIVATED',chainId:null,rpcUrl:null,applicationId:null};
 }
-export function configureHost({name,participantWallet,operatorWallet,webRoot,frontendAccepted=false,selectedCertificateId,aiApprovalAuthorityPath}){
+export function configureHost({name,participantWallet,operatorWallet,webRoot,frontendAccepted=false,selectedCertificateId,aiApprovalAuthorityPath,claimMode}){
  const {directory,config:c}=loadHostConfig(name);fail(!existsSync(join(directory,'run.used.json')),'NORMAL_HOST_ALREADY_USED');
  if(participantWallet!==undefined||operatorWallet!==undefined){c.participantWallet=participantWallet?.toLowerCase();c.operatorWallet=operatorWallet?.toLowerCase();}
  if(webRoot!==undefined){c.webRoot=resolve(webRoot);c.frontendAccepted=false;c.frontendAssetSha256=null;}
  if(selectedCertificateId!==undefined)c.selectedCertificateId=selectedCertificateId;
+ if(claimMode!==undefined)c.claimMode=claimMode;
  if(frontendAccepted){c.frontendAssetSha256=assetSnapshot(c.webRoot);fail(c.frontendAssetSha256,'NORMAL_HOST_FRONTEND_MISSING');c.frontendAccepted=true;}
  if(aiApprovalAuthorityPath!==undefined){validateHostConfig(c);const code=codeState();fail(code.clean,'NORMAL_HOST_CLEAN_CODE_REQUIRED_FOR_AI_AUTHORITY');const authority=configureNormalAiAuthority({directory,config:c,sourcePath:aiApprovalAuthorityPath,codeHead:code.head});c.aiApprovalWallet=authority.wallet;c.aiApprovalAuthoritySha256=authority.sha256;}
  validateHostConfig(c);atomicPrivate(join(directory,'host.json'),c);return {origin:c.origin,walletsConfigured:c.participantWallet!==null,frontendAccepted:c.frontendAccepted,chainId:null,applicationId:null};

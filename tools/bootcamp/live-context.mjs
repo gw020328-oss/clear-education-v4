@@ -141,7 +141,7 @@ export function createNormalMoodleReadBoundary({databasePath,authentication,getD
   close(){if(!closed){closed=true;contexts.clear();snapshots?.close();snapshots=null;}}
  });
 }
-export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics,moodleFirst=false,activityReturnOnly=false,certificateCardOnly=false}){
+export async function openLiveContext({preparationPath,withReader,hackerRank,attestorMode='OFFICIAL',reviewReflection,reflectionHost=null,diagnostics,moodleFirst=false,activityReturnOnly=false,certificateCardOnly=false,claimMode='API_WORKER'}){
  ensure(!activityReturnOnly||moodleFirst,'BC_ACTIVITY_MODE');
  ensure(!certificateCardOnly||moodleFirst&&!activityReturnOnly,'BC_CERTIFICATE_MODE');
  ensure(typeof moodleFirst==='boolean','BC_NORMAL_SOURCE_ORDER');
@@ -165,7 +165,10 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
  const stage=name=>{report.stage=name;write();};
- const close=()=>{if(closed)return;closed=true;preview?.close();certificateStart?.close();resumeControl?.cancel();controller.abort();moodleLogin?.close();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
+ const close=()=>{if(closed)return;closed=true;preview?.close();certificateStart?.close();resumeControl?.cancel();controller.abort();moodleLogin?.close();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();
+  // Deferred claim: stop CLEAR web/API only. The owned chain container and RPC stay up for the independent claim.
+  if(started&&claimMode==='DEFERRED_INDEPENDENT'&&report.acceptedClaimPending===true){report.chainLeftRunning={environmentId:prepared.environmentId,endpoint:m.endpoint};try{write();}catch{}}
+  else if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
  try{
   await startEnvironment(prepared.environmentId);started=true;
   const reader=new ExecutionReader(m);ensure((await reader.call('applicationIds',[],await reader.block()))[0].length===0,'BC_LIVE_REQUIRES_UNUSED_TEST_REALM');
@@ -303,7 +306,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
      assertRecipientWaitCurrent:paymentAuthority,
      onRecipientWaitFailure:async(error,checkpoint)=>{paymentCheckpoint=checkpoint;try{return await onRecipientWaitFailure?.(error)===true;}finally{paymentCheckpoint=null;}},
      waitForRecipientRegistration:({deadlineMs})=>waitForNormalRecipientRegistration({participant:()=>ui.participant(),registration:()=>store.getRecipientRegistration(user,app),deadlineMs,signal:controller.signal}),
-     waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage});}
+     waitForConsents:options=>waitForExplicitConsents({...options,stopMarginSeconds:REVIEW_WINDOW.settlementReserveSeconds}),signal:controller.signal,recipient:prepared.participantWallet,provider,key,report,write,stage,claimMode});}
     catch(error){try{report.executionDiagnostics=connection.diagnostics().slice(0,16);write();}catch{}throw error;}
    },
    enterFailureWait(error){

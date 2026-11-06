@@ -77,7 +77,7 @@ try{
     waitForReady:async({signal})=>{notify({event:'HR_LOGIN_WINDOW_OPEN_READY_ONLY_AFTER_SELF_LOGIN',command:'READY'});await waitForCommand('READY',{signal});},
     useSource:(source,{signal})=>composeNormalFlow({source,config,directory,signal,ports:{prepare:opts=>prepareLiveInput({...opts,reflectionSelection}),
      open:async opts=>{
-      const context=await openLiveContext({...opts,withReader,reflectionHost:host?.reflectionHost??null,reviewReflection,diagnostics,moodleFirst,activityReturnOnly:activityOnly,certificateCardOnly:certificateOnly});
+      const context=await openLiveContext({...opts,withReader,reflectionHost:host?.reflectionHost??null,reviewReflection,diagnostics,moodleFirst,activityReturnOnly:activityOnly,certificateCardOnly:certificateOnly,claimMode:config.claimMode??'API_WORKER'});
       if(!createMoodleReadOptions)return context;
       try{const options=await createMoodleReadOptions({directory,report:context.report,signal});
        fail(options&&typeof options==='object','COURSE_READ_OWNER_PORT');
