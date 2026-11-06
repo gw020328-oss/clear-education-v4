@@ -32,8 +32,15 @@ export function pinnedWallet({provider, identity, readIdentity, onInvalidate = (
     // Notification errors must never undo cancellation or leak from SDK events.
     try { Promise.resolve(onInvalidate()).catch(() => {}); } catch {}
   };
-  const events = ['accountsChanged', 'chainChanged', 'disconnect'];
-  for (const event of events) provider.on(event, invalidate);
+  // Providers may announce an unchanged pinned value (e.g. a late chainChanged after
+  // our own switch). Only an actual change, or a disconnect, cancels the pin; every
+  // guard() still re-reads accounts and chain before authority is used.
+  const pinnedAccounts = value => { try { return Array.isArray(value) && value.length === 1 && getAddress(value[0]) === pin.address; } catch { return false; } };
+  const pinnedChain = value => { try { return typeof value === 'string' && /^0x[0-9a-f]+$/i.test(value) && BigInt(value) === BigInt(pin.chainId); } catch { return false; } };
+  const handlers = {accountsChanged: value => { if (!pinnedAccounts(value)) invalidate(); },
+    chainChanged: value => { if (!pinnedChain(value)) invalidate(); }, disconnect: () => invalidate()};
+  const events = Object.keys(handlers);
+  for (const event of events) provider.on(event, handlers[event]);
   async function guard(signal = lifetime.signal) {
     signal = signal === lifetime.signal ? signal : AbortSignal.any([signal, lifetime.signal]);
     try {
@@ -90,6 +97,6 @@ export function pinnedWallet({provider, identity, readIdentity, onInvalidate = (
       return sign('eth_signTypedData_v4', [pin.address, JSON.stringify(TypedDataEncoder.getPayload(p.domain, p.types, p.message))],
         s => verifyTypedData(p.domain, p.types, p.message, s), options);
     },
-    dispose() { invalidate(); for (const event of events) provider.removeListener(event, invalidate); },
+    dispose() { invalidate(); for (const event of events) provider.removeListener(event, handlers[event]); },
   });
 }
