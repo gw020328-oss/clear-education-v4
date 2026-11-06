@@ -145,7 +145,11 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
         const certificateRevisionConflict=method==='POST'&&response.status===409
           && /^\/bootcamp\/v4\/applications\/[a-z][a-z0-9.-]{0,63}\/certificate-start$/.test(url.pathname)
           && value?.error==='BC_REVISION_CONFLICT';
-        const code = (certificateRevisionConflict?'BC_REVISION_CONFLICT':null) ?? registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
+        // A consent rejected by the server CAS (stale revision/ledger sequence) was not recorded.
+        const consentTargetStale=method==='POST'&&response.status===409
+          && /^\/bootcamp\/v3\/applications\/[a-z][a-z0-9.-]{0,63}\/review-consents$/.test(url.pathname)
+          && value?.error==='BC_VIEW_STALE';
+        const code = (certificateRevisionConflict?'BC_REVISION_CONFLICT':null) ?? (consentTargetStale?'BC_VIEW_STALE':null) ?? registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
           : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
         throw failure(code, { method, status: response.status, requestId: uuid(value?.requestId) ? value.requestId : null,
           outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true });

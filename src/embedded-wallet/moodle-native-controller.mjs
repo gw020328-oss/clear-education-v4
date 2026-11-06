@@ -257,6 +257,13 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       if(certificateChanged&&stamp===epoch&&!closed&&authenticated&&phase==='CONNECTED'
         &&session===captured&&wallet===capturedWallet)throw Object.assign(Error('MOODLE_CERTIFICATE_REVIEW_CHANGED'),
           {code:'MOODLE_CERTIFICATE_REVIEW_CHANGED',outcome:'HTTP_ERROR',serverEffect:'NOT_ACCEPTED'});
+      // Consent target changed before sending (fresh pre-consent view) or the server CAS rejected it:
+      // nothing was recorded, so keep this login and let the person re-read and decide again.
+      const consentNotSent=command.action==='consent'&&cause?.message==='CONSENT_REVIEW_CHANGED';
+      const consentChanged=consentNotSent||command.action==='consent'&&cause?.status===409&&cause?.code==='BC_VIEW_STALE';
+      if(consentChanged&&stamp===epoch&&!closed&&authenticated&&phase==='CONNECTED'
+        &&session===captured&&wallet===capturedWallet)throw Object.assign(Error('MOODLE_CONSENT_REVIEW_CHANGED'),
+          {code:'MOODLE_CONSENT_REVIEW_CHANGED',outcome:consentNotSent?'NOT_SENT':'HTTP_ERROR',serverEffect:'NOT_ACCEPTED'});
       if(stamp===epoch&&!closed&&(!nativeWorkflowIsRead(command)||cause?.status===401||cause?.status===403
         ||['AUTH_REQUIRED','ROLE_CHANGED','PRODUCT_ROLE_CHANGED','FORBIDDEN','SESSION_CHANGED','SESSION_CONTEXT',
           'CANCELLED','WALLET_CONTEXT_CANCELLED'].includes(cause?.message)))await cancel('CANCELLED',{origin:'workflow-failure',action:command.action,cause});

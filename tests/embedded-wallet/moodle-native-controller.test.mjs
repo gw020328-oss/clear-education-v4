@@ -11,7 +11,7 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   target.document = document;
   const provider = new EventEmitter(), calls = [], stages = [], views = [];
@@ -39,7 +39,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
       async authenticate() { stages.push('authenticate'); return {role: serverRole}; },
       async assertSession(signal) { stages.push('assert-session'); await wallet.guard(signal);
         return {wallet: address, role: serverRole, expiresAt: Math.floor(Date.now()/1000)+60}; },
-      async request(path){stages.push(path);await workflowGate;if(requestError)throw requestError;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
+      async request(path){stages.push(path);await workflowGate;if(requestError)throw requestError;const custom=requestFor?.(path);if(custom!==undefined)return custom;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
       async dispose() { stages.push('revoke'); if (rejectedRevoke) throw Error('synthetic'); },
     }),
     loginFactory: () => Object.fromEntries(['begin','complete','finish','end','command'].map(method => [method, async () => {
@@ -316,5 +316,44 @@ test('certificate exception does not cover auth status, other writes or unknown 
   const f=fixture(action==='create-application'?{commandError:cause}:{requestError:cause});await connectedDiagnostic(f);
   await assert.rejects(f.controller.runWorkflow(action==='start-certificate'?{action,applicationId:'application-one',expectedRevision:1,idempotencyKey:'start-one'}:{action,idempotencyKey:'create-one'}));
   assert.equal(f.view().authenticated,false);assert.equal(f.diagnosticWrites.length,1);assert(f.stages.includes('revoke'));await f.controller.destroy();
+ }
+});
+
+// Operator consent: a stale reviewed target (fresh pre-consent view) or an exact server CAS 409 was not recorded.
+function consentViews(){
+ const h=n=>'0x'+String(n).repeat(64).slice(0,64);
+ const evidence={conditionsStatus:'MET',current:true,validUntilExclusive:null,criteria:['activity-complete','assignment-submitted','reflection-topics','python-basic-certificate'].map(criterionId=>({criterionId,state:'MET',current:true,evidenceId:'evidence-'+criterionId,originalEvidenceAccessible:false}))};
+ const procedure={version:'clear-bootcamp-review-procedure.1',applicationId:'application-one',role:'COURSE_OPERATOR',policyHash:h(1),runtimeMappingHash:h(2),applicationRevision:8,ledgerSequence:70,decisionId:'decision-one',decisionRevision:5,decisionHash:h(3),asOf:1,evidence,funding:{},procedure:{},consent:{records:[]},objection:{blocked:false},chain:{acceptedRight:null,transactionState:null,transactionHash:null,blockRef:null}};
+ const operations={...procedure,version:'clear-bootcamp-operations-projection.2',role:'OPERATOR',current:true};
+ const requestFor=path=>path==='/__dev/config'?{version:'clear-bootcamp-frontend-host.1',sourceMode:'REGISTERED_TEST_SOURCE',policyHash:h(1),procedureHttpVersion:procedure.version,operationsHttpVersion:operations.version}
+  :path.endsWith('/procedure')?structuredClone(procedure):path.endsWith('/operations')?structuredClone(operations):undefined;
+ return {procedure,operations,requestFor};
+}
+test('consent whose reviewed target changed before sending keeps the login and reports NOT_ACCEPTED',async()=>{
+ const v=consentViews(),f=fixture({requestFor:v.requestFor});await connectedDiagnostic(f);
+ const reviewed=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ v.procedure.ledgerSequence++;v.operations.ledgerSequence++; // the other role consented meanwhile
+ await assert.rejects(f.controller.runWorkflow({action:'consent',reviewed,value:'AGREE',idempotencyKey:'consent-old'}),
+  error=>error.code==='MOODLE_CONSENT_REVIEW_CHANGED'&&error.outcome==='NOT_SENT'&&error.serverEffect==='NOT_ACCEPTED');
+ assert(!f.stages.includes('command'),'nothing was sent');assert.equal(f.view().authenticated,true);assert.equal(f.view().phase,'CONNECTED');
+ assert(!f.stages.includes('revoke'));assert.equal(f.diagnosticWrites.length,0);
+ const current=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ assert.equal(current.target.expectedLedgerSequence,71,'a fresh review shows the new target');
+ await f.controller.destroy();
+});
+test('exact server consent CAS rejection keeps the login; unknown or auth consent failures still cancel',async()=>{
+ const stale=Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_VIEW_STALE',status:409});
+ const v=consentViews(),f=fixture({requestFor:v.requestFor,commandError:stale});await connectedDiagnostic(f);
+ const reviewed=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ await assert.rejects(f.controller.runWorkflow({action:'consent',reviewed,value:'AGREE',idempotencyKey:'consent-one'}),
+  error=>error.code==='MOODLE_CONSENT_REVIEW_CHANGED'&&error.outcome==='HTTP_ERROR'&&error.serverEffect==='NOT_ACCEPTED');
+ assert.equal(f.view().authenticated,true);assert(!f.stages.includes('revoke'));assert.equal(f.diagnosticWrites.length,0);
+ await f.controller.destroy();
+ for(const cause of [Object.assign(Error('API_REQUEST_FAILED'),{code:'API_REQUEST_FAILED',status:409}),
+  Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_VIEW_STALE',status:403}),Object.assign(Error('API_NETWORK'),{code:'API_NETWORK',outcome:'UNKNOWN'})]){
+  const w=consentViews(),x=fixture({requestFor:w.requestFor,commandError:cause});await connectedDiagnostic(x);
+  const r=await x.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+  await assert.rejects(x.controller.runWorkflow({action:'consent',reviewed:r,value:'AGREE',idempotencyKey:'consent-x'}),error=>error.code==='MOODLE_WORKFLOW_UNAVAILABLE');
+  assert.equal(x.view().authenticated,false);assert(x.stages.includes('revoke'));await x.controller.destroy();
  }
 });

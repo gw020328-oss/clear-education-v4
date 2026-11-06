@@ -185,7 +185,8 @@ for(const [path,status,body,expected] of [
 for(const [method,path,status,code,expected]of [
  ['GET','/bootcamp/v2/applications/application-one/operations',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
  ['GET','/bootcamp/v3/applications/application-one/procedure',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
- ['POST','/bootcamp/v3/applications/application-one/review-consents',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+ // A consent POST CAS rejection keeps its fixed code (not recorded; covered by the review-consents test below).
+ ['POST','/bootcamp/v3/applications/application-one/review-consents',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
  ['GET','/bootcamp/v2/applications/application-one/procedure',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
  ['GET','/bootcamp/v3/applications/application-one/operations',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
  ['GET','/bootcamp/v3/applications/application-one/procedure',403,'BC_VIEW_STALE','API_REQUEST_FAILED'],
@@ -200,6 +201,16 @@ test('only the exact certificate-start POST CAS rejection keeps its fixed code',
  for(const [method,target,status,expected]of [['POST',path,409,'BC_REVISION_CONFLICT'],['GET',path,409,'API_REQUEST_FAILED'],['POST','/applications',409,'API_REQUEST_FAILED'],['POST',path,403,'API_REQUEST_FAILED']]){
   const api=apiFor(()=>Response.json({error:'BC_REVISION_CONFLICT',message:'private'},{status}));
   const e=await errorOf(api(target,{method,...(method==='POST'?{body:{expectedRevision:1},idempotencyKey:'synthetic-one'}:{})}));
+  assert.equal(e.code,expected);assert(!JSON.stringify(e).includes('private'));assert.equal(e.retryable,false);
+ }
+});
+
+test('only the exact review-consents POST CAS rejection keeps BC_VIEW_STALE',async()=>{
+ const path='/bootcamp/v3/applications/application-one/review-consents';
+ for(const [method,target,status,error,expected]of [['POST',path,409,'BC_VIEW_STALE','BC_VIEW_STALE'],['POST',path,409,'BC_E3_PORT_CHANGED','API_REQUEST_FAILED'],
+  ['POST',path,403,'BC_VIEW_STALE','API_REQUEST_FAILED'],['POST','/bootcamp/v3/applications/application-one/publish',409,'BC_VIEW_STALE','API_REQUEST_FAILED']]){
+  const api=apiFor(()=>Response.json({error,message:'private'},{status}));
+  const e=await errorOf(api(target,{method,body:{expectedRevision:1},idempotencyKey:'synthetic-one'}));
   assert.equal(e.code,expected);assert(!JSON.stringify(e).includes('private'));assert.equal(e.retryable,false);
  }
 });
