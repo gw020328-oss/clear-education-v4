@@ -214,3 +214,19 @@ test('only the exact review-consents POST CAS rejection keeps BC_VIEW_STALE',asy
   assert.equal(e.code,expected);assert(!JSON.stringify(e).includes('private'));assert.equal(e.retryable,false);
  }
 });
+
+test('operator preview POST failures keep only the failure kind and fixed code, never the body',async()=>{
+ const gates={version:'clear-operator-preview.1',automaticEligibility:false,paymentAllowed:false,stage:'FAILED'};
+ const d={...gates,contextRef:'ctx-private',failure:{kind:'D_HTTP',status:503,error:{version:'clear-external-preview-error.1',code:'OBSERVATION_ADAPTER_NOT_ACCEPTED',detail:'private'}}};
+ const relay={...gates,failure:{kind:'RELAY',code:'PREVIEW_FORBIDDEN'}};
+ for(const [path,method,status,body,expected]of [
+  ['/bootcamp/preview/execute','POST',503,d,{kind:'D_HTTP',status:503,code:'OBSERVATION_ADAPTER_NOT_ACCEPTED'}],
+  ['/bootcamp/preview/prepare','POST',403,relay,{kind:'RELAY',code:'PREVIEW_FORBIDDEN'}],
+  ['/bootcamp/preview/generate','POST',409,{...gates,failure:{kind:'RELAY',code:'not fixed'}},null],
+  ['/bootcamp/preview/publish','POST',403,relay,null],
+  ['/bootcamp/v3/applications/application-one/review-consents','POST',503,d,null]]){
+  const e=await errorOf(apiFor(()=>Response.json(body,{status}))(path,{method,body:{a:1},idempotencyKey:'preview-synthetic'}));
+  assert.deepEqual(e.previewFailure,expected,path);assert(!JSON.stringify(e).includes('private'));
+  assert.equal(e.outcome,status>=500?'UNKNOWN':'HTTP_ERROR','a D 5xx is never read as a definite rejection');
+ }
+});

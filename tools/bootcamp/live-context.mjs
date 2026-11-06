@@ -42,6 +42,7 @@ import {createNormalReviewReaders,requireNormalConsentAction,REVIEW_WINDOW} from
 import {waitUntil} from './normal-host-flow.mjs';
 import {createNormalActivityReturn} from './normal-activity-return.mjs';
 import {executionErrorSummary} from '../../src/bootcamp/execution-diagnostics.mjs';
+import {createNormalOperatorPreview} from './normal-operator-preview.mjs';
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(ok,code)=>{if(!ok)throw Error(code);};
 // Certificate-only runs never register a payment application. Keep the existing
@@ -159,12 +160,12 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
  const participant={address:prepared.participantWallet},operator={address:prepared.operatorWallet};
  const m=loadRuntime(prepared.environmentId);ensure(sha(m)===prepared.runtimeHash&&m.version===(prepared.runtimeVersion??'clear-e5-test-runtime.1')&&m.runtimeMappingHash===runtimeMappingHash&&m.policyHash===mapping.policyHash,'BC_LIVE_CHAIN_MAPPING');
  const runId='run-'+randomUUID(),directory=join(base,runId);mkdirSync(directory,{mode:0o700});const startedAt=now(),instanceId='normal-'+runId;
- let auth,store,connection,provider,ui,resumeControl,mounted,moodleRead,moodleLogin,user,app,participantId,sourceTarget,sourceSequence=null,certificateStart=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
+ let preview=null,auth,store,connection,provider,ui,resumeControl,mounted,moodleRead,moodleLogin,user,app,participantId,sourceTarget,sourceSequence=null,certificateStart=null,paymentStarted=false,paymentCheckpoint=null,failureState=null,closed=false,started=false,serial=0;const key=()=> 'normal-'+(++serial);
  const sourceWindows=new Map(),controller=new AbortController();
  const report={version:'clear-bootcamp-normal-live-run.1',runId,environmentId:prepared.environmentId,runtimeMappingHash,sourceMode:'REGISTERED_TEST_SOURCE',...(mapping.selfAttestor?{selfAttestor:mapping.selfAttestor}:{}),realSourceVerified:false,startedAt,stages:[],completed:false,production:false};
  const write=()=>atomicPrivate(join(directory,'report.json'),report);
  const stage=name=>{report.stage=name;write();};
- const close=()=>{if(closed)return;closed=true;certificateStart?.close();resumeControl?.cancel();controller.abort();moodleLogin?.close();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
+ const close=()=>{if(closed)return;closed=true;preview?.close();certificateStart?.close();resumeControl?.cancel();controller.abort();moodleLogin?.close();moodleRead?.close();mounted?.server.closeAllConnections();mounted?.server.close();ui?.close();store?.close();auth?.close();connection?.close();provider?.destroy();if(started){stopEnvironment(prepared.environmentId);parkEnvironment(prepared.environmentId);}};
  try{
   await startEnvironment(prepared.environmentId);started=true;
   const reader=new ExecutionReader(m);ensure((await reader.call('applicationIds',[],await reader.block()))[0].length===0,'BC_LIVE_REQUIRES_UNUSED_TEST_REALM');
@@ -274,7 +275,12 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
      now,expiresAt:startedAt+1800,signal:controller.signal,getStage:()=>report.stage});
     return moodleLogin.owner;
    },
-   createFrontend({tls,webRoot,moodleNative=null}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,moodleNative,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint}});return mounted;},
+   createFrontend({tls,webRoot,moodleNative=null,operatorPreview=null}){ensure(!closed&&!mounted,'BC_LIVE_FRONTEND_ONCE');
+    // Opt-in, Moodle-native only: operator condition preview (DISPLAY_ONLY), fenced by the native command scope.
+    if(operatorPreview!==null){ensure(moodleLogin?.native===true&&!activityReturnOnly&&!certificateCardOnly,'BC_LIVE_OPERATOR_PREVIEW');
+     preview=createNormalOperatorPreview({origin:prepared.origin,authentication:uiAuthentication,commandScope,
+      operatorBindings:()=>[{wallet:operator.address,courseOperatorRef:'course-operator-demo'}],config:operatorPreview});}
+    mounted=createBootcampFrontendServer({authentication:auth,store,tls,sourceMode:'REGISTERED_TEST_SOURCE',chainId:Number(m.chainId),webRoot,normalUi,moodleLogin:moodleLogin?.browser,moodleNative,network:{chainId:Number(m.chainId),rpcUrl:m.endpoint},operatorPreview:preview?.handler??null});return mounted;},
    async collectCertificate(){
     ui.participant();ensure(certificateCardOnly&&certificateStart&&!closed&&!failureState&&!sourceSequence,'BC_CERTIFICATE_MODE');
     sourceSequence=createNormalSourceSequence({store,getContext:()=>{ui.participant();return user;},applicationId:app,

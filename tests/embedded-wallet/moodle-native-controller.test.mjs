@@ -11,10 +11,10 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor, commandResult} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   target.document = document;
-  const provider = new EventEmitter(), calls = [], stages = [], views = [];
+  const provider = new EventEmitter(), calls = [], stages = [], views = [], commandInputs = [];
   const values=new Map(),diagnosticWrites=[];
   target.localStorage={getItem:k=>values.get(k)??null,setItem(k,v){if(storageFailure)throw Error('denied');values.set(k,v);diagnosticWrites.push(JSON.parse(v));stages.push('diagnostic');}};
   let currentAddress = address;
@@ -42,9 +42,11 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
       async request(path){stages.push(path);await workflowGate;if(requestError)throw requestError;const custom=requestFor?.(path);if(custom!==undefined)return custom;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
       async dispose() { stages.push('revoke'); if (rejectedRevoke) throw Error('synthetic'); },
     }),
-    loginFactory: () => Object.fromEntries(['begin','complete','finish','end','command'].map(method => [method, async () => {
+    loginFactory: () => Object.fromEntries(['begin','complete','finish','end','command'].map(method => [method, async (...args) => {
       stages.push(method);
+      if(method==='command')commandInputs.push(args[1]);
       if(method==='command'&&commandError)throw commandError;
+      if(method==='command'&&commandResult!==undefined)return commandResult;
       if (method === 'finish' && changeAccountsOnFinish) currentAddress = '0x'+'34'.repeat(20);
       if (method === 'end') { await endGate; if (rejectedEnd) throw Error('synthetic lost end response'); }
     }]))});
@@ -54,7 +56,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
     await controller.dispatch({action: 'select-wallet', choiceId: view().choices[0].choiceId});
     await controller.dispatch({action: 'check-network'});
   }
-  return {controller, view, views, calls, stages, provider, ready,diagnosticWrites,storage:target.localStorage};
+  return {controller, view, views, calls, stages, provider, ready,diagnosticWrites,storage:target.localStorage,commandInputs};
 }
 
 test('Moodle mount/discovery do not request accounts, switch chain or sign; every stage is explicit', async () => {
@@ -356,4 +358,31 @@ test('exact server consent CAS rejection keeps the login; unknown or auth consen
   await assert.rejects(x.controller.runWorkflow({action:'consent',reviewed:r,value:'AGREE',idempotencyKey:'consent-x'}),error=>error.code==='MOODLE_WORKFLOW_UNAVAILABLE');
   assert.equal(x.view().authenticated,false);assert(x.stages.includes('revoke'));await x.controller.destroy();
  }
+});
+
+test('operator preview request uses one fresh Moodle command grant per call and never cancels the login on failure',async()=>{
+ const body={version:'clear-operator-preview.1',sourceText:'synthetic notice'};
+ const f=fixture({commandResult:{version:'clear-operator-preview.1',stage:'PREPARED'}});await connectedDiagnostic(f);
+ assert.deepEqual(await f.controller.previewRequest('/bootcamp/preview/prepare',{method:'POST',body}),{version:'clear-operator-preview.1',stage:'PREPARED'});
+ await f.controller.previewRequest('/bootcamp/preview/prepare',{method:'POST',body});
+ const [a,b]=f.commandInputs;
+ assert.deepEqual([a.method,a.path,a.body],['POST','/bootcamp/preview/prepare',body]);assert.notEqual(a.body,body,'body is copied');
+ assert.match(a.idempotencyKey,/^preview-[0-9a-f]{24}$/);assert.notEqual(a.idempotencyKey,b.idempotencyKey,'no key reuse');
+ for(const [path,options] of [['/bootcamp/preview/publish',{method:'POST',body}],['/bootcamp/preview/prepare',{method:'GET',body}],
+  ['/bootcamp/preview/prepare',{method:'POST',body:null}],['/bootcamp/v3/applications',{method:'POST',body}]])
+  await assert.rejects(f.controller.previewRequest(path,options),/MOODLE_PREVIEW_REQUEST/);
+ assert.equal(f.commandInputs.length,2,'refused shapes never reach Moodle');
+ await f.controller.destroy();
+ const failed=Object.assign(Error('API_REQUEST_FAILED'),{code:'API_REQUEST_FAILED',status:503,outcome:'UNKNOWN'});
+ const x=fixture({commandError:failed});await connectedDiagnostic(x);
+ await assert.rejects(x.controller.previewRequest('/bootcamp/preview/execute',{method:'POST',body}),e=>e===failed,'the API error reaches the panel unchanged');
+ assert.equal(x.view().authenticated,true);assert(!x.stages.includes('revoke'));assert.equal(x.diagnosticWrites.length,0,'a preview failure is not a payment workflow failure');
+ await x.controller.destroy();
+ const n=fixture();await assert.rejects(n.controller.previewRequest('/bootcamp/preview/prepare',{method:'POST',body}),/MOODLE_PREVIEW_NOT_READY/);await n.controller.destroy();
+});
+test('participant pages have no preview request',async()=>{
+ const target=new EventTarget();target.navigator={locks:{request:(_n,_o,run)=>run()}};
+ const c=createCourseWalletController({config:{...config,role:'participant'},target,onState(){},fetch:async()=>({ok:true,json:async()=>({})}),
+  sdk:{login:async()=>{},logout:async()=>{}},loginFactory:()=>({end:async()=>{}}),sessionFactory:()=>({})});
+ await assert.rejects(c.previewRequest('/bootcamp/preview/prepare',{method:'POST',body:{a:1}}),/MOODLE_PREVIEW_REQUEST/);await c.destroy();
 });

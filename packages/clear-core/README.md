@@ -7,6 +7,17 @@ This is a closed Korean grammar and public synthetic verifier demonstration, not
 
 Use `npm pack /path/to/packages/clear-core --ignore-scripts` and install the resulting tarball with `npm install --offline --ignore-scripts --no-audit --no-fund /path/to/tarball`. Import from `@clear/preview-core`. No build step required. The repository example is `examples/clear-core/demo.mjs`; copy it into the clean install directory and run `node demo.mjs`.
 
+The core-only candidate is **0.1.2**; do not replace the 0.1.1 artifact. Model
+proposals use `clear-preview-model-draft.2` and preserve original `modelRows`
+before server guards. `proposalHash` still binds `{sourceText, rows}`; `draftHash`
+and dependent plan hashes change. Persist original rows and re-review them under
+the current core. Older drafts cannot reconstruct all model rows from effective
+conditions/questions; recover the original response or obtain a new proposal.
+Guards are conservative checks for known expressions, not a general language
+parser. Operator review and the public synthetic execution boundary still apply.
+The full demonstration bundle below is a separate historical version stream;
+this candidate does not rebuild or republish that bundle.
+
 ## Full offline demonstration package
 
 From the repository with its pinned Node and npm on PATH, run

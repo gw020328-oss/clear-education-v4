@@ -59,6 +59,10 @@ export function mountCourseWallet({element, config, onState}) {
       if (closed || !controller) throw Error('MOODLE_WALLET_NOT_READY');
       return controller.runWorkflow(command);
     },
+    async previewRequest(path, options) {
+      if (closed || !controller) throw Error('MOODLE_WALLET_NOT_READY');
+      return controller.previewRequest(path, options);
+    },
     async destroy() {
       if (closed) return; closed = true;
       try { await controller?.destroy(); } finally { react?.unmount(); container?.remove(); }

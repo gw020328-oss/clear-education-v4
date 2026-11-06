@@ -22,7 +22,21 @@ for (const [status, names] of [
 ]) for (const name of names) codes.set(name, status);
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 
-function failure(code, { method, status = null, requestId = null, outcome, http = false }) {
+// Operator condition preview relay (/bootcamp/preview/*): keep only the failure
+// kind and fixed code, never the body. RELAY (the relay refused) and D_HTTP (D
+// answered with an HTTP error) are different facts; D_HTTP says nothing about
+// whether the model was called. Same rule as web/src/bootcamp/transport.js.
+const previewRoute = /^\/bootcamp\/preview\/(prepare|generate|execute)$/;
+const PREVIEW_CODE = /^[A-Z][A-Z0-9_]{0,63}$/;
+function previewFailureOf(body) {
+  const f = body?.version === 'clear-operator-preview.1' && body.stage === 'FAILED' ? body.failure : null;
+  if (f?.kind === 'RELAY' && PREVIEW_CODE.test(f.code ?? '')) return Object.freeze({ kind: 'RELAY', code: f.code });
+  if (f?.kind === 'D_HTTP' && Number.isInteger(f.status) && f.error?.version === 'clear-external-preview-error.1'
+    && PREVIEW_CODE.test(f.error.code ?? '')) return Object.freeze({ kind: 'D_HTTP', status: f.status, code: f.error.code });
+  return null;
+}
+
+function failure(code, { method, status = null, requestId = null, outcome, http = false, previewFailure = null }) {
   // Keep existing HTTP .message consumers working; .code adds safe detail.
   const error = new Error(http ? status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED' : code);
   error.name = 'ApiRequestError';
@@ -38,7 +52,7 @@ function failure(code, { method, status = null, requestId = null, outcome, http 
   else if (['FUNDING_UNCONFIRMED', 'FUNDING_RECOVERY_REQUIRED', 'PRODUCT_RESULT_CONFLICT', 'PROOF_NONCE_CONSUMED'].includes(code)) nextAction = 'CHECK_RESULT';
   else if (status === 409 || status === 410 || ['PROOF_BROWSER_SESSION', 'RUNTIME_CHANGED', 'FINAL_CONSENT_EXPIRED'].includes(code)) nextAction = 'REFRESH_STATE';
   else if (code === 'API_ABORTED') nextAction = 'NONE';
-  return Object.assign(error, { code, status, requestId, outcome, retryable, nextAction });
+  return Object.assign(error, { code, status, requestId, outcome, retryable, nextAction, previewFailure });
 }
 
 // Race even a test/custom fetch that ignores AbortSignal. Late responses are
@@ -152,7 +166,8 @@ export function createSameOriginApi({ origin, fetch: fetchImpl = globalThis.fetc
         const code = (certificateRevisionConflict?'BC_REVISION_CONFLICT':null) ?? (consentTargetStale?'BC_VIEW_STALE':null) ?? registrationCode ?? (bootcampReadConflict ? 'BC_VIEW_STALE' : normalProcedureWaiting ? 'BC_NORMAL_PROCEDURE_NOT_READY'
           : codes.get(value?.code) === response.status ? value.code : response.status === 401 ? 'AUTH_REQUIRED' : 'API_REQUEST_FAILED');
         throw failure(code, { method, status: response.status, requestId: uuid(value?.requestId) ? value.requestId : null,
-          outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true });
+          outcome: response.status >= 500 ? 'UNKNOWN' : 'HTTP_ERROR', http: true,
+          previewFailure: method === 'POST' && previewRoute.test(url.pathname) ? previewFailureOf(value) : null });
       }
       try {
         const value = await readJson(response, scope);

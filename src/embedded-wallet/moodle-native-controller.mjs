@@ -270,6 +270,28 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       throw Object.assign(Error('MOODLE_WORKFLOW_UNAVAILABLE'),{code:'MOODLE_WORKFLOW_UNAVAILABLE',
         outcome:nativeWorkflowIsRead(command)?'NOT_SENT':'UNKNOWN'});
     }finally{if(busy===controller)busy=null;emit();}
+  },
+  // Operator condition preview only: DISPLAY_ONLY relay, sent through the same Moodle
+  // command grant as any write. A failure is returned to the panel as is (relay/D codes
+  // only) and does not end the wallet login; nothing is retried here.
+  async previewRequest(path, options = {}) {
+    check(role === 'operator' && typeof path === 'string' && /^\/bootcamp\/preview\/(prepare|generate|execute)$/.test(path)
+      && options?.method === 'POST' && options.body && Object.getPrototypeOf(options.body) === Object.prototype, 'MOODLE_PREVIEW_REQUEST');
+    const command = {method:'POST',path,body:structuredClone(options.body),
+      idempotencyKey:'preview-'+[...globalThis.crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join('')};
+    moodleCommandDigest(command);
+    check(!closed && !busy && !cancellation && !revokeUnknown && !moodleEndUnknown
+      && phase === 'CONNECTED' && authenticated && session && wallet, 'MOODLE_PREVIEW_NOT_READY');
+    const captured = session, capturedWallet = wallet, controller = new AbortController(), stamp = epoch;
+    const outer = options.signal instanceof AbortSignal ? options.signal : null, abort = () => controller.abort();
+    outer?.addEventListener('abort', abort, {once:true}); if (outer?.aborted) abort();
+    busy = controller; emit();
+    try {
+      await capturedWallet.guard(controller.signal); current(stamp,controller.signal);
+      const result = await bounded(()=>moodle.command(captured,command,controller.signal),{signal:controller.signal,timeoutMs:60000});
+      current(stamp,controller.signal); check(session === captured && wallet === capturedWallet && authenticated,'AUTH_REQUIRED');
+      return result;
+    } finally { outer?.removeEventListener('abort', abort); if(busy === controller) busy = null; emit(); }
   }, async submitCommand(input) {
     const command = structuredClone(input); moodleCommandDigest(command);
     check(!closed && !busy && !cancellation && !revokeUnknown && !moodleEndUnknown
