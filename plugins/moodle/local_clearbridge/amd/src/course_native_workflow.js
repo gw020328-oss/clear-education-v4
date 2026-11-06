@@ -16,6 +16,7 @@ define([], function() {
         const cardRoot = root.querySelector('[data-native-condition-cards]');
         const stageRoot = root.querySelector('[data-native-stage-strip]');
         const payoutRoot = root.querySelector('[data-native-payout-summary]');
+        const guideRoot = root.querySelector('[data-native-guide]');
         const acknowledgment = root.querySelector('[data-workflow-ack]');
         const messages = Object.fromEntries([...root.querySelectorAll('[data-workflow-message]')]
             .map(node => [node.dataset.workflowMessage, node.textContent]));
@@ -263,8 +264,10 @@ define([], function() {
             cardRoot?.replaceChildren();
         };
 
+        let lastStatus = null;
         const show = message => {
-            status.textContent = messages[unknown ? 'unknown' : message];
+            lastStatus = unknown ? 'unknown' : message;
+            status.textContent = messages[lastStatus];
         };
         const clear = () => {
             decisionSnapshot = null;
@@ -399,6 +402,204 @@ define([], function() {
                     return '';
             }
         };
+        // Student "one thing to do now" guide. Display and routing only: every guide button runs the same
+        // run(action) path as the existing controls, is disabled exactly when enabled(action) is false, and
+        // never offers an action the page would refuse. Technical sections stay in the page behind a toggle.
+        let simple = participant;
+        let guideSignature = null;
+        let guideButton = null;
+        let guideStepNow = null;
+        const metAll = view => view?.decision?.conditionsStatus === 'MET' || (Array.isArray(view?.criteria)
+            && view.criteria.length >= 4 && view.criteria.every(row => row.state === 'MET'));
+        const agreedBy = (view, role) => !!view?.consent?.records?.some(row => row.actorRole === role);
+        const shortAddress = value => typeof value === 'string' && /^0x[0-9a-fA-F]{40}$/.test(value)
+            ? value.slice(0, 6) + '…' + value.slice(-4) : null;
+        const refreshActions = () => pairedMode() ? ['read-session'] : ['read-session', 'read-application'];
+        const guideStep = () => {
+            if (!ready) {
+                return {key: 'connect', actions: []};
+            }
+            if (pending || walletBusy) {
+                return {key: 'busy', actions: []};
+            }
+            if (unknown) {
+                return {key: 'unknown', actions: ['read-session']};
+            }
+            if (lastStatus === 'notaccepted' || lastStatus === 'failure') {
+                return {key: lastStatus, actions: ['read-session']};
+            }
+            if (!session) {
+                return {key: 'load', actions: ['read-session']};
+            }
+            if (!applicationId) {
+                return enabled('create-application') ? {key: 'apply', actions: ['create-application']}
+                    : {key: 'load', actions: ['read-session']};
+            }
+            const cert = certificate();
+            if (cert?.state === 'READY_TO_START' && enabled('start-certificate')) {
+                return {key: 'cert-start', actions: ['start-certificate']};
+            }
+            if (cert?.state === 'AWAITING_SIGNATURE') {
+                return source ? {key: 'cert-sign', actions: ['approve-source-signature']}
+                    : {key: 'cert-read', actions: ['read-source-signature']};
+            }
+            if (cert && ['START_ACCEPTED', 'SIGNATURE_ACCEPTED'].includes(cert.state)) {
+                return {key: 'cert-wait', actions: ['read-session']};
+            }
+            const view = application;
+            if (!view || view.applicationId !== applicationId) {
+                return {key: 'refresh', actions: refreshActions()};
+            }
+            if (!metAll(view)) {
+                return {key: 'conditions', actions: refreshActions()};
+            }
+            if (view.payment?.acceptedRight || (agreedBy(view, 'PARTICIPANT') && agreedBy(view, 'COURSE_OPERATOR'))) {
+                return {key: includedClaim(view) ? 'paid' : receipt ? 'receipt-wait' : 'receipt',
+                    actions: ['payment-receipt', 'read-application']};
+            }
+            if (agreedBy(view, 'PARTICIPANT')) {
+                return {key: 'wait-operator', actions: refreshActions()};
+            }
+            if (registration?.status === 'AWAITING_SIGNATURE') {
+                return {key: 'register-sign', actions: ['approve-registration']};
+            }
+            if (registration?.status === 'SIGNED') {
+                return {key: 'consent', actions: ['consent'], choice: 'AGREE'};
+            }
+            return {key: registration ? 'register-check' : 'register-read', actions: ['read-registration']};
+        };
+        const guideText = {
+            connect: ['Google 계정으로 시작해요',
+                '아래 버튼을 위에서부터 하나씩 누르세요. 환급금을 받을 지갑이 자동으로 만들어져요.', null],
+            busy: ['처리하고 있어요', '잠시만 기다려 주세요.', null],
+            unknown: ['결과를 확인하지 못했어요',
+                '요청이 처리됐는지 알 수 없어요. 같은 버튼을 다시 누르지 말고 진행 담당자에게 알려 주세요.', '최신 상태 불러오기'],
+            notaccepted: ['다시 확인이 필요해요',
+                '방금 요청은 기록되지 않았어요. 최신 상태를 불러온 뒤 다시 진행해 주세요.', '최신 상태 불러오기'],
+            failure: ['잠깐 문제가 있었어요', '최신 상태를 다시 불러와 주세요.', '최신 상태 불러오기'],
+            load: ['내 진행 상황을 불러올게요', '버튼을 누르면 지금 해야 할 일을 알려 드려요.', '불러오기'],
+            apply: ['환급을 신청해요',
+                '신청하면 CLEAR가 Moodle과 HackerRank 기록으로 네 가지 조건을 확인해요.', '환급 신청하기'],
+            refresh: ['최신 상태를 불러올게요', '방금 한 일이 반영됐는지 확인해요.', '불러오기'],
+            'cert-start': ['HackerRank 인증서를 가져와요',
+                '버튼을 누르고 안내에 따라 서명하면, 새 창에서 HackerRank에 로그인하게 돼요.', 'HackerRank 인증 시작하기'],
+            'cert-read': ['서명할 내용을 확인해요', '이 서명은 인증서를 확인하는 데만 쓰여요. 돈이 나가지 않아요.',
+                '서명할 내용 보기'],
+            'cert-sign': ['확인했으면 서명해요', '아래 내용이 맞으면 서명하세요. 돈이 나가지 않아요.', '서명하기'],
+            'cert-wait': ['새 창에서 HackerRank에 로그인해 주세요',
+                '로그인을 마치면 CLEAR가 인증서를 자동으로 확인해요. 끝났으면 아래 버튼을 눌러 보세요.', '확인됐는지 보기'],
+            'register-read': ['네 가지 조건을 모두 마쳤어요!', '이제 100 TEST를 받을 지갑을 확인할 차례예요.', '받을 지갑 확인하기'],
+            'register-check': ['받을 지갑을 다시 확인해요', '지갑 확인 상태를 새로 불러와요.', '받을 지갑 확인하기'],
+            'register-sign': ['이 지갑으로 받을게요',
+                '아래 지갑과 금액이 맞으면 서명하세요. 이 서명은 "이 지갑으로 받겠다"는 확인이에요.', '확인하고 서명하기'],
+            consent: ['결과에 동의해요',
+                '네 가지 조건을 모두 충족했어요. 동의하면 선생님 확인 뒤 100 TEST가 지급돼요.', '동의하기'],
+            'wait-operator': ['선생님 확인을 기다리고 있어요', '선생님이 동의하면 지급이 시작돼요.', '최신 상태 확인하기'],
+            receipt: ['지급을 확인해요', '양쪽 모두 동의했어요. 지급 기록을 확인해 볼게요.', '지급 확인하기'],
+            'receipt-wait': ['지급을 처리하고 있어요', '조금 뒤에 다시 확인해 주세요.', '다시 확인하기'],
+            paid: ['100 TEST를 보냈어요!',
+                '블록체인에 지급 기록이 남았어요. 최종 확정까지는 조금 더 걸릴 수 있어요.', '다시 확인하기'],
+        };
+        const guideContent = step => {
+            if (step.key === 'conditions') {
+                const rows = application.criteria;
+                const left = rows.filter(row => row.state !== 'MET');
+                const names = left.map(row => criterionLabels[row.criterionId] ?? row.criterionId).join(', ');
+                const reflectionLeft = left.some(row => row.criterionId === 'reflection-topics');
+                return {title: '조건을 확인하고 있어요 (' + (rows.length - left.length) + '/' + rows.length + ')',
+                    body: '남은 조건: ' + names + '. 아래 카드에서 할 일을 확인하세요.'
+                        + (reflectionLeft ? ' 회고는 선생님이 AI 검토를 승인하면 확인돼요.' : ''),
+                    button: '최신 상태 확인하기', facts: [], raw: null};
+            }
+            const [title, body, button] = guideText[step.key];
+            const facts = [];
+            let raw = null;
+            if (step.key === 'register-sign') {
+                facts.push('받는 지갑: ' + (shortAddress(registration?.payload?.message?.recipient) ?? label('unconfirmed')));
+                facts.push('받는 금액: ' + amount(application?.agreedPayment));
+                raw = displayed.registration ? format('registration', displayed.registration) : null;
+            }
+            if (step.key === 'cert-sign') {
+                raw = typeof source?.message === 'string' ? source.message : null;
+            }
+            if (step.key === 'paid' && typeof receipt?.claim?.transactionHash === 'string') {
+                raw = '지급 거래 번호: ' + receipt.claim.transactionHash;
+            }
+            return {title, body, button, facts, raw};
+        };
+        const runGuide = async step => {
+            for (const action of step.actions) {
+                const result = await run(action, step.choice);
+                if (!result) {
+                    return;
+                }
+            }
+        };
+        const paintGuide = () => {
+            if (!participant || !guideRoot) {
+                return;
+            }
+            const step = guideStep();
+            guideStepNow = step;
+            root.classList?.toggle('clear-simple', simple);
+            if (root.dataset) {
+                root.dataset.guideStep = step.key;
+            }
+            const content = guideContent(step);
+            const signature = JSON.stringify([step.key, step.actions, content, simple]);
+            if (signature !== guideSignature) {
+                guideSignature = signature;
+                const doc = guideRoot.ownerDocument;
+                const node = (tag, className, text) => {
+                    const element = doc.createElement(tag);
+                    element.className = className;
+                    if (text != null) {
+                        element.textContent = text;
+                    }
+                    return element;
+                };
+                const box = node('div', 'clear-guide');
+                box.setAttribute('data-guide-key', step.key);
+                box.append(node('p', 'clear-guide-kicker', '지금 할 일'), node('h2', 'clear-guide-title', content.title),
+                    node('p', 'clear-guide-body', content.body));
+                if (content.facts.length) {
+                    const list = node('ul', 'clear-guide-facts');
+                    list.append(...content.facts.map(fact => node('li', 'clear-guide-fact', fact)));
+                    box.append(list);
+                }
+                if (content.raw) {
+                    const more = node('details', 'clear-guide-raw');
+                    more.append(node('summary', 'clear-guide-raw-title', '서명·기록 원본 내용 보기'),
+                        node('pre', 'clear-guide-raw-text', content.raw));
+                    box.append(more);
+                }
+                guideButton = null;
+                if (content.button && step.actions.length) {
+                    guideButton = node('button', 'clear-guide-go', content.button);
+                    guideButton.type = 'button';
+                    guideButton.setAttribute('data-guide-action', step.actions[0]);
+                    guideButton.addEventListener('click', () => {
+                        const current = guideStepNow;
+                        if (current?.key === step.key && current.actions.length && enabled(current.actions[0])) {
+                            void runGuide(current);
+                        }
+                    });
+                    box.append(guideButton);
+                }
+                const toggle = node('button', 'clear-guide-toggle', simple ? '모든 단계와 기술 정보 보기' : '간단히 보기');
+                toggle.type = 'button';
+                toggle.setAttribute('aria-pressed', simple ? 'false' : 'true');
+                toggle.addEventListener('click', () => {
+                    simple = !simple;
+                    render();
+                });
+                box.append(toggle);
+                guideRoot.replaceChildren(box);
+            }
+            if (guideButton) {
+                guideButton.disabled = !step.actions.length || !enabled(step.actions[0]);
+            }
+        };
         const render = () => {
             for (const button of buttons) {
                 button.disabled = !enabled(button.dataset.workflowAction);
@@ -419,6 +620,7 @@ define([], function() {
                 region.textContent = visible;
             }
             paintUx();
+            paintGuide();
             paintCards();
         };
         const disconnect = () => {

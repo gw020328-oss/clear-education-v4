@@ -37,7 +37,7 @@ const certificateEvidence = () => ({version: 'clear-bootcamp-decision-evidence.1
         criteria: [{criterionId: 'python-basic-certificate', state: 'MET', evidenceId: 'evidence-cert', evidenceRevision: 1,
             metadataStatus: 'RECORDED', verification: {integrity: 'VERIFIED'}, checks: {certificateName: 'Python (Basic)'}}]},
     availability: [{criterionId: 'python-basic-certificate', evidenceId: 'evidence-cert', status: 'VALID_AS_RECORDED'}]});
-const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot, payoutRoot} = {}) => {
+const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot, payoutRoot, guideRoot} = {}) => {
     const buttons = Object.fromEntries(actions.map(workflowAction => [workflowAction,
         {dataset: {workflowAction, workflowChoice: 'AGREE'}}]));
     const listeners = {};
@@ -56,7 +56,7 @@ const fixture = (reply, {role = 'participant', port = true, cardRoot, stageRoot,
             '[data-workflow-details]': [details],
         })[selector],
         querySelector: selector => ({
-            '[data-native-condition-cards]': cardRoot, '[data-native-stage-strip]': stageRoot, '[data-native-payout-summary]': payoutRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
+            '[data-native-condition-cards]': cardRoot, '[data-native-stage-strip]': stageRoot, '[data-native-guide]': guideRoot, '[data-native-payout-summary]': payoutRoot, '[data-native-activity-status]': activityStatus, '[data-native-panel-status]': panelStatus,
             '[data-workflow-status]': status, '#clearbridge-application-status': applicationStatus, '[data-workflow-ack]': ack,
         })[selector],
         addEventListener: (event, fn, capture = false) => { listeners[event + (capture ? 'Capture' : '')] = fn; },
@@ -1214,4 +1214,135 @@ test('#173 real-mode reflection card keeps the ABSENT/UNCERTAIN wording and the 
     assert.match(uncertain, /배운 점 항목은 판단하기 어려워요\./);
     assert.match(uncertain, /배운 점 부분을 더 분명하게 적어 .*에 다시 올릴 수 있어요\. 재검증 경로가 연결되기 전이라, 돌아오면 저장된 판정을 다시 확인해요\./);
     assert.doesNotMatch(uncertain, /부족한 내용|다시 검토를 요청해요/);
+});
+
+// Student "지금 할 일" guide (C display only). The guide button runs the same actions as the
+// existing controls, in the same order, and never offers consent before the registration is SIGNED.
+const guideOf = root => {
+    const box = root.children[0];
+    const find = cls => [...(function* walk(node) { yield node; for (const c of node.children ?? []) { yield* walk(c); } })(box)]
+        .find(node => node.className === cls);
+    return {key: box?.attributes['data-guide-key'], title: find('clear-guide-title')?.textContent ?? '',
+        body: find('clear-guide-body')?.textContent ?? '', go: find('clear-guide-go'), toggle: find('clear-guide-toggle'),
+        facts: find('clear-guide-facts')?.textContent ?? '', raw: find('clear-guide-raw-text')?.textContent ?? ''};
+};
+const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+const press = async root => { const {go} = guideOf(root); assert.ok(go && !go.disabled, 'guide button enabled'); go.handlers.click(); for (let i = 0; i < 6; i++) { await tick(); } };
+
+test('guide walks a student from load to paid with one button per step and no extra or early writes', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    const roots = {...uxRoots(), guideRoot};
+    let stage = 'start';
+    const viewAt = () => {
+        const view = realView('app-one', ['agreed-both', 'paid'].includes(stage) ? 'CLAIMED' : null);
+        if (stage === 'partial') {
+            view.criteria = view.criteria.map(row => row.criterionId === 'reflection-topics' ? {...row, state: 'MISSING'} : row);
+            view.decision = {...view.decision, conditionsStatus: 'NOT_MET'};
+        }
+        const roles = {'agreed-participant': ['PARTICIPANT'], 'agreed-both': ['PARTICIPANT', 'COURSE_OPERATOR'],
+            paid: ['PARTICIPANT', 'COURSE_OPERATOR']}[stage] ?? [];
+        view.consent = {...view.consent, bothCurrent: roles.length === 2, records: roles.map(actorRole => ({actorRole, value: 'AGREE'}))};
+        return view;
+    };
+    const procedure = {...receipt, version: 'clear-bootcamp-procedure-operation.1', usableForPayment: false};
+    const packet = status => ({version: 'clear-bootcamp-recipient-registration.1', applicationId: 'app-one', role: 'PARTICIPANT',
+        purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status, decisionId: 'decision-one',
+        registrationTargetId: 'register-one', payload: {message: {recipient: '0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1'}}});
+    const ui = fixture(({action}) => {
+        switch (action) {
+            case 'read-session': return session(stage === 'start' ? null : 'app-one');
+            case 'create-application': stage = 'partial'; return receipt;
+            case 'read-application': return viewAt();
+            case 'read-registration': return packet(stage === 'signed' ? 'SIGNED' : 'AWAITING_SIGNATURE');
+            case 'approve-registration': stage = 'signed'; return procedure;
+            case 'consent': stage = 'agreed-participant'; return procedure;
+            case 'payment-receipt': stage = 'paid'; return realReceipt();
+            default: throw Error('unexpected ' + action);
+        }
+    }, roots);
+    const steps = [];
+    const at = () => { const g = guideOf(guideRoot); steps.push(g.key); return g; };
+    assert.equal(at().key, 'load');
+    assert.equal(guideOf(guideRoot).toggle.textContent, '모든 단계와 기술 정보 보기');
+    await press(guideRoot);
+    assert.equal(at().key, 'apply');
+    await press(guideRoot);
+    assert.equal(at().key, 'refresh');
+    await press(guideRoot);
+    const partial = at();
+    assert.equal(partial.key, 'conditions');
+    assert.match(partial.title, /\(3\/4\)/);
+    assert.match(partial.body, /남은 조건: 회고/);
+    stage = 'met';
+    await press(guideRoot);
+    assert.equal(at().key, 'register-read', 'all MET: check the receiving wallet first, never consent');
+    await press(guideRoot);
+    const signStep = at();
+    assert.equal(signStep.key, 'register-sign');
+    assert.match(signStep.facts, /받는 지갑: 0x0EA0…baB1/);
+    assert.match(signStep.facts, /받는 금액: 100 TEST/);
+    assert.match(signStep.raw, /0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1/, 'exact signing payload stays viewable');
+    await press(guideRoot);
+    assert.equal(at().key, 'refresh', 'a write clears the reviewed view');
+    await press(guideRoot);
+    assert.equal(at().key, 'register-read');
+    await press(guideRoot);
+    assert.equal(at().key, 'consent');
+    await press(guideRoot);
+    assert.equal(at().key, 'refresh');
+    await press(guideRoot);
+    assert.equal(at().key, 'wait-operator');
+    stage = 'agreed-both';
+    await press(guideRoot);
+    assert.equal(at().key, 'receipt');
+    await press(guideRoot);
+    const paid = at();
+    assert.equal(paid.key, 'paid');
+    assert.equal(paid.title, '100 TEST를 보냈어요!');
+    assert.match(paid.body, /최종 확정까지는/);
+    assert.equal(stageLine(roots.stageRoot), includedText, 'strip binds the same receipt');
+    assert.equal(roots.payoutRoot.children.length, 0, 'still no paid summary without FINALIZED');
+    const sent = ui.sent.map(input => input.action + (input.action === 'consent' ? ':' + input.value : ''));
+    assert.deepEqual(sent, ['read-session', 'create-application', 'read-session', 'read-application',
+        'read-session', 'read-application', 'read-registration', 'approve-registration', 'read-session', 'read-application',
+        'read-registration', 'consent:AGREE', 'read-session', 'read-application', 'read-session', 'read-application',
+        'payment-receipt', 'read-application']);
+    assert.ok(sent.indexOf('consent:AGREE') > sent.indexOf('approve-registration'), 'consent only after the signed registration');
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide shows a definite 409 rejection as a manual re-read, and the toggle restores every technical section', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let reject = true;
+    const view = realView('app-one', null);
+    view.consent = {...view.consent, bothCurrent: false, records: []};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') { return session('app-one'); }
+        if (action === 'read-application') { return view; }
+        if (action === 'read-registration') {
+            return {version: 'clear-bootcamp-recipient-registration.1', applicationId: 'app-one', role: 'PARTICIPANT',
+                purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status: 'SIGNED', payload: null};
+        }
+        if (action === 'consent' && reject) { reject = false; throw notAccepted('MOODLE_CONSENT_REVIEW_CHANGED'); }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    await press(guideRoot);
+    await press(guideRoot);
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'consent');
+    const before = ui.sent.length;
+    await press(guideRoot);
+    const rejected = guideOf(guideRoot);
+    assert.equal(rejected.key, 'notaccepted');
+    assert.match(rejected.body, /기록되지 않았어요/);
+    assert.equal(rejected.go.attributes['data-guide-action'], 'read-session', 'only a manual re-read is offered');
+    assert.deepEqual(ui.sent.slice(before).map(input => input.action), ['consent'], 'no automatic resend');
+    assert.equal(ui.state && ui.mounted ? 'mounted' : 'gone', 'mounted', 'login kept');
+    guideOf(guideRoot).toggle.handlers.click();
+    assert.equal(guideOf(guideRoot).toggle.textContent, '간단히 보기');
+    ui.mounted.destroy();
+    delete globalThis.document;
 });
