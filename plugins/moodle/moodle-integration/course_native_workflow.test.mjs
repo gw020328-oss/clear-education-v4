@@ -1286,8 +1286,11 @@ test('guide walks a student from load to paid with one button per step and no ex
     await press(guideRoot);
     const signStep = at();
     assert.equal(signStep.key, 'register-sign');
-    assert.match(signStep.facts, /받는 지갑: 0x0EA0…baB1/);
-    assert.match(signStep.facts, /받는 금액: 100 TEST/);
+    assert.match(signStep.facts, /받는 곳\s*내 CLEAR 지갑/);
+    assert.match(signStep.facts, /지갑 번호 끝자리\s*baB1/, 'plain words, not the full 0x address');
+    assert.doesNotMatch(signStep.facts, /0x0EA0/);
+    assert.match(signStep.facts, /받는 금액\s*100 TEST \(시연용 포인트, 실제 돈 아님\)/);
+    assert.match(guideRoot.textContent, /지갑이 뭔가요\?/, 'a plain explanation sits next to the wallet');
     assert.match(signStep.raw, /0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1/, 'exact signing payload stays viewable');
     await press(guideRoot);
     assert.equal(at().key, 'refresh', 'a write clears the reviewed view');
@@ -1306,7 +1309,8 @@ test('guide walks a student from load to paid with one button per step and no ex
     const paid = at();
     assert.equal(paid.key, 'paid');
     assert.equal(paid.title, '100 TEST를 보냈어요');
-    assert.match(paid.body, /최종 확정까지는/);
+    assert.match(paid.facts, /받은 곳\s*내 CLEAR 지갑 \(번호 끝자리/);
+    assert.match(paid.body, /확정되기까지는 조금 더/);
     assert.equal(stageLine(roots.stageRoot), includedText, 'strip binds the same receipt');
     assert.equal(roots.payoutRoot.children.length, 0, 'still no paid summary without FINALIZED');
     const sent = ui.sent.map(input => input.action + (input.action === 'consent' ? ':' + input.value : ''));
@@ -1349,6 +1353,48 @@ test('guide shows a definite 409 rejection as a manual re-read, and the toggle r
     assert.equal(ui.state && ui.mounted ? 'mounted' : 'gone', 'mounted', 'login kept');
     guideOf(guideRoot).toggle.handlers.click();
     assert.equal(guideOf(guideRoot).toggle.textContent, '간단히 보기');
+    ui.mounted.destroy();
+    delete globalThis.document;
+});
+
+test('guide shows a situation-specific loading card while a step runs, and a sign prompt while a signature waits', async () => {
+    const {Node} = installCardDom();
+    const guideRoot = new Node('div');
+    let release;
+    const view = realView('app-one', null);
+    view.consent = {...view.consent, bothCurrent: false, records: []};
+    const ui = fixture(({action}) => {
+        if (action === 'read-session') {
+            return release === undefined ? new Promise(resolve => { release = () => resolve(session('app-one')); }) : session('app-one');
+        }
+        if (action === 'read-application') { return view; }
+        if (action === 'read-registration') {
+            return {version: 'clear-bootcamp-recipient-registration.1', applicationId: 'app-one', role: 'PARTICIPANT',
+                purpose: 'REGISTER_FIXED_RECIPIENT', calldataPublic: true, status: 'AWAITING_SIGNATURE',
+                payload: {message: {recipient: '0x0EA0675b3Ae1e92d21Ca286e5cd050F64f0BbaB1'}}};
+        }
+        if (action === 'approve-registration') { return new Promise(() => {}); }
+        throw Error('unexpected ' + action);
+    }, {guideRoot});
+    guideOf(guideRoot).go.handlers.click();
+    await tick();
+    const loading = guideOf(guideRoot);
+    assert.equal(loading.key, 'busy');
+    assert.equal(loading.title, '내 진행 상황을 불러오는 중이에요');
+    assert.match(loading.body, /몇 초면/);
+    assert.equal(loading.go, undefined, 'no button while it runs');
+    release();
+    for (let i = 0; i < 6; i++) { await tick(); }
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'register-read');
+    await press(guideRoot);
+    assert.equal(guideOf(guideRoot).key, 'register-sign');
+    guideOf(guideRoot).go.handlers.click();
+    await tick();
+    const signing = guideOf(guideRoot);
+    assert.equal(signing.key, 'busy');
+    assert.equal(signing.title, '서명 창을 확인해 주세요');
+    assert.match(guideRoot.textContent, /돈은 나가지 않아요/);
     ui.mounted.destroy();
     delete globalThis.document;
 });

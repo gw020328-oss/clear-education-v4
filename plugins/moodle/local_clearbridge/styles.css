@@ -227,3 +227,71 @@
     padding: .3rem .75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); font-weight: 600;
 }
 [data-native-condition-cards] .crc-card button:not(.crc-go):hover:not(:disabled) { border-color: var(--fg); background: var(--navy-soft); }
+
+/* ── 친절한 안내: 로딩·쉬운 설명·진행 표시 (0.1.39) ─────────────────────────────────────── */
+[data-native-guide] .clear-guide-head { display: flex; align-items: center; gap: 14px; }
+[data-native-guide] .clear-guide-heading { min-width: 0; }
+[data-native-guide] .clear-guide-spinner {
+    flex: none; width: 34px; height: 34px; border-radius: 50%;
+    border: 4px solid var(--accent-soft); border-top-color: var(--accent); animation: clear-guide-spin 1s linear infinite;
+}
+@keyframes clear-guide-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { [data-native-guide] .clear-guide-spinner { animation-duration: 3s; } }
+[data-native-guide] .clear-guide[data-guide-key="busy"] { border-top-color: var(--navy); }
+[data-native-guide] .clear-guide-hint {
+    margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--fg);
+    font-size: 1.05rem; font-weight: 700;
+}
+[data-native-guide] .clear-guide-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+[data-native-guide] .clear-guide-track-item {
+    padding: 8px 6px; border-radius: 8px; text-align: center; font-size: .95rem; font-weight: 700;
+    background: var(--line-soft); color: var(--muted);
+}
+[data-native-guide] .clear-guide-track-item[data-done="yes"] { background: var(--ok-soft); color: var(--ok); }
+@media (max-width: 560px) { [data-native-guide] .clear-guide-track { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+[data-native-guide] .clear-guide-facts { display: grid; gap: 2px; margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: var(--navy-soft); }
+[data-native-guide] .clear-guide-fact { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 6px 0; }
+[data-native-guide] .clear-guide-fact + .clear-guide-fact { border-top: 1px solid var(--line); }
+[data-native-guide] .clear-guide-fact-name { margin: 0; font-weight: 600; color: var(--muted); }
+[data-native-guide] .clear-guide-fact-value { margin: 0; font-size: 1.1rem; font-weight: 800; text-align: right; }
+[data-native-guide] .clear-guide-tip { margin: 0 0 10px; padding: 12px 14px; border-left: 4px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--line-soft); }
+[data-native-guide] .clear-guide-tip-q { margin: 0 0 2px; font-weight: 800; }
+[data-native-guide] .clear-guide-tip-a { margin: 0 0 6px; line-height: 1.6; }
+[data-native-guide] .clear-guide-help { margin: 0 0 12px; padding: 0 14px; }
+[data-native-guide] .clear-guide-help-title { cursor: pointer; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+
+/* 조건 카드를 1 → 2 → 3 → 4 단계 목록처럼 (간단히 보기). 카드 내용은 팀 번들 그대로, 배치와 꾸밈만 바꾼다. */
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-grid { grid-template-columns: 1fr; gap: 0; counter-reset: clear-step; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card {
+    position: relative; counter-increment: clear-step; margin: 0 0 14px 52px; padding: 14px 16px;
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card::before {
+    content: counter(clear-step); position: absolute; left: -52px; top: 12px; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 800; font-size: 1.05rem;
+    background: var(--card); color: var(--muted); border: 2px solid var(--line);
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card::after {
+    content: ""; position: absolute; left: -35px; top: 50px; bottom: -14px; width: 2px; background: var(--line);
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card:last-child::after { display: none; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card[data-state="met"]::before {
+    content: "✓"; background: var(--ok); color: #fff; border-color: var(--ok);
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card[data-state="met"]::after { background: var(--ok); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card:not([data-state="met"]) { border: 2px solid var(--accent); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card:not([data-state="met"])::before { color: var(--accent); border-color: var(--accent); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card .bcx-task-name { min-height: 0; margin: 0 0 4px; font-size: 1.2rem; font-weight: 800; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-card .crc-todo { min-height: 0; margin: 0 0 8px; font-size: 1rem; color: var(--muted); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-verdict {
+    display: inline-block; margin: 0 0 4px; padding: 2px 12px; border-radius: 999px; font-size: .95rem;
+}
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-verdict[data-tone="ok"] { background: var(--ok-soft); color: var(--ok); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-verdict:not([data-tone="ok"]) { background: var(--warn-bg); color: var(--warn-tag-fg); }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-why { margin: 0; font-size: 1rem; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .cc-chip,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-source,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-sub-btn,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-more,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-quote,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-loc { display: none !important; }
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-actions:not(:has(.crc-go:not(:disabled))) { display: none; }

@@ -412,15 +412,13 @@ define([], function() {
         const metAll = view => view?.decision?.conditionsStatus === 'MET' || (Array.isArray(view?.criteria)
             && view.criteria.length >= 4 && view.criteria.every(row => row.state === 'MET'));
         const agreedBy = (view, role) => !!view?.consent?.records?.some(row => row.actorRole === role);
-        const shortAddress = value => typeof value === 'string' && /^0x[0-9a-fA-F]{40}$/.test(value)
-            ? value.slice(0, 6) + '…' + value.slice(-4) : null;
         const refreshActions = () => pairedMode() ? ['read-session'] : ['read-session', 'read-application'];
         const guideStep = () => {
             if (!ready) {
                 return {key: 'connect', actions: []};
             }
             if (pending || walletBusy) {
-                return {key: 'busy', actions: []};
+                return {key: 'busy', busy: pending?.action ?? 'wallet', actions: []};
             }
             if (unknown) {
                 return {key: 'unknown', actions: ['read-session']};
@@ -473,66 +471,128 @@ define([], function() {
             return {key: registration ? 'register-check' : 'register-read', actions: ['read-registration']};
         };
         const guideText = {
-            connect: ['Google 계정으로 시작해요',
-                '아래 버튼을 위에서부터 하나씩 누르세요. 환급금을 받을 지갑이 자동으로 만들어져요.', null],
-            busy: ['처리하고 있어요', '잠시만 기다려 주세요.', null],
+            connect: ['Google 계정으로 시작해요', '아래 버튼을 위에서부터 하나씩 누르세요. 환급금을 받을 내 지갑이 자동으로 '
+                + '만들어져요. 따로 설치할 것은 없어요.', null],
             unknown: ['결과를 확인하지 못했어요',
                 '요청이 처리됐는지 알 수 없어요. 같은 버튼을 다시 누르지 말고 진행 담당자에게 알려 주세요.', '최신 상태 불러오기'],
             notaccepted: ['다시 확인이 필요해요',
                 '방금 요청은 기록되지 않았어요. 최신 상태를 불러온 뒤 다시 진행해 주세요.', '최신 상태 불러오기'],
             failure: ['잠깐 문제가 있었어요', '최신 상태를 다시 불러와 주세요.', '최신 상태 불러오기'],
             load: ['내 진행 상황을 불러올게요', '버튼을 누르면 지금 해야 할 일을 알려 드려요.', '불러오기'],
-            apply: ['환급을 신청해요',
-                '신청하면 CLEAR가 Moodle과 HackerRank 기록으로 네 가지 조건을 확인해요.', '환급 신청하기'],
+            apply: ['환급을 신청해요', '신청하면 CLEAR가 Moodle과 HackerRank 기록을 보고 네 가지 조건을 대신 확인해요. '
+                + '신청한다고 돈이 나가지는 않아요.', '환급 신청하기'],
             bind: ['조건 확인을 시작해요',
                 '버튼을 누르면 CLEAR가 Moodle과 HackerRank 기록을 읽기 시작해요. 이 단계에서는 돈이 나가지 않아요.',
                 '조건 확인 시작하기'],
             refresh: ['최신 상태를 불러올게요', '방금 한 일이 반영됐는지 확인해요.', '불러오기'],
-            'cert-start': ['HackerRank 인증서를 가져와요',
-                '버튼을 누르고 안내에 따라 서명하면, 새 창에서 HackerRank에 로그인하게 돼요.', 'HackerRank 인증 시작하기'],
-            'cert-read': ['서명할 내용을 확인해요', '이 서명은 인증서를 확인하는 데만 쓰여요. 돈이 나가지 않아요.',
+            'cert-start': ['HackerRank 인증서를 확인해요', 'Python 인증서를 받은 내 HackerRank 계정을 CLEAR가 확인해요. '
+                + '버튼을 누르면 확인용 서명 → HackerRank 로그인 순서로 진행돼요.', 'HackerRank 인증 시작하기'],
+            'cert-read': ['서명할 내용을 확인해요', '이 서명은 "인증서 확인에 동의해요"라는 표시예요. 돈이 나가지 않아요.',
                 '서명할 내용 보기'],
-            'cert-sign': ['확인했으면 서명해요', '아래 내용이 맞으면 서명하세요. 돈이 나가지 않아요.', '서명하기'],
-            'cert-wait': ['새 창에서 HackerRank에 로그인해 주세요',
-                '로그인을 마치면 CLEAR가 인증서를 자동으로 확인해요. 끝났으면 아래 버튼을 눌러 보세요.', '확인됐는지 보기'],
-            'register-read': ['네 가지 조건을 모두 마쳤어요', '이제 100 TEST를 받을 지갑을 확인할 차례예요.', '받을 지갑 확인하기'],
+            'cert-sign': ['확인했으면 서명해요', '서명은 확인 도장을 찍는 것과 같아요. 돈이 나가지 않아요.', '서명하기'],
+            'cert-wait': ['새 창에서 HackerRank에 로그인해 주세요', '로그인하면 CLEAR가 인증서를 가져와 확인해요. 보통 1~2분 '
+                + '걸려요. 끝났으면 아래 버튼을 눌러 보세요.', '확인됐는지 보기'],
+            'register-read': ['네 가지 조건을 모두 마쳤어요', '이제 환급금 100 TEST를 받을 내 지갑을 확인할 차례예요.',
+                '받을 지갑 확인하기'],
             'register-check': ['받을 지갑을 다시 확인해요', '지갑 확인 상태를 새로 불러와요.', '받을 지갑 확인하기'],
-            'register-sign': ['이 지갑으로 받을게요',
-                '아래 지갑과 금액이 맞으면 서명하세요. 이 서명은 "이 지갑으로 받겠다"는 확인이에요.', '확인하고 서명하기'],
-            consent: ['결과에 동의해요',
-                '네 가지 조건을 모두 충족했어요. 동의하면 선생님 확인 뒤 100 TEST가 지급돼요.', '동의하기'],
-            'wait-operator': ['선생님 확인을 기다리고 있어요', '선생님이 동의하면 지급이 시작돼요.', '최신 상태 확인하기'],
-            receipt: ['지급을 확인해요', '양쪽 모두 동의했어요. 지급 기록을 확인해 볼게요.', '지급 확인하기'],
+            'register-sign': ['환급금을 받을 곳을 확인해요', '아래 내용이 맞으면 서명하세요. 서명은 "이 지갑으로 받을게요"라는 '
+                + '확인 도장이에요. 돈이 나가지 않아요.', '확인하고 서명하기'],
+            consent: ['결과에 동의해요', '네 가지 조건을 모두 충족했어요. 학생과 선생님이 둘 다 동의하면 100 TEST가 지급돼요.',
+                '동의하기'],
+            'wait-operator': ['선생님 확인을 기다리고 있어요', '학생 동의는 끝났어요. 선생님이 동의하면 바로 지급이 시작돼요.',
+                '최신 상태 확인하기'],
+            receipt: ['지급을 확인해요', '학생과 선생님 모두 동의했어요. 내 지갑에 100 TEST가 들어왔는지 확인해 볼게요.',
+                '지급 확인하기'],
             'receipt-wait': ['지급을 처리하고 있어요', '조금 뒤에 다시 확인해 주세요.', '다시 확인하기'],
-            paid: ['100 TEST를 보냈어요',
-                '블록체인에 지급 기록이 남았어요. 최종 확정까지는 조금 더 걸릴 수 있어요.', '다시 확인하기'],
+            paid: ['100 TEST를 보냈어요', '내 지갑에 100 TEST가 들어온 것을 블록체인 기록으로 확인했어요. 기록이 완전히 '
+                + '확정되기까지는 조금 더 걸릴 수 있어요.', '다시 확인하기'],
         };
+        // Loading cards: what is happening right now, how long, and whether the student must act.
+        const reading = ['내 진행 상황을 불러오는 중이에요', 'Moodle과 CLEAR 서버에서 최신 기록을 가져오고 있어요. 보통 몇 초면 끝나요.', null];
+        const signing = (what) => ['서명 창을 확인해 주세요', '화면에 뜬 서명 창에서 내용을 보고 「서명」을 눌러 주세요. ' + what,
+            '돈은 나가지 않아요. 확인 도장만 찍는 거예요.'];
+        const busyText = {
+            'read-session': reading, 'read-application': reading, 'decision-evidence': reading, 'read-operation': reading,
+            'create-application': ['환급 신청서를 만드는 중이에요', '신청 기록을 안전하게 남기고 있어요. 잠시만 기다려 주세요.', null],
+            'bind-source-session': ['조건 확인을 준비하는 중이에요', '내 신청과 Moodle 기록을 연결하고 있어요.', null],
+            'start-certificate': ['HackerRank 인증을 준비하는 중이에요', '잠시 뒤 확인용 서명 단계가 나와요.', null],
+            'read-source-signature': ['서명할 내용을 불러오는 중이에요', '곧 서명할 내용을 보여 드릴게요.', null],
+            'read-registration': ['받을 지갑 정보를 불러오는 중이에요', '환급금을 받을 내 지갑 정보를 확인하고 있어요.', null],
+            'approve-source-signature': signing('"인증서 확인에 동의해요"라는 표시예요.'),
+            'approve-registration': signing('"이 지갑으로 받을게요"라는 확인이에요.'),
+            consent: signing('"결과에 동의해요"라는 확인이에요.'),
+            'payment-receipt': ['블록체인에서 지급을 확인하는 중이에요',
+                '누구도 고칠 수 없는 공용 기록장(블록체인)에서 100 TEST가 내 지갑에 들어왔는지 직접 확인하고 있어요.', null],
+            wallet: ['지갑을 준비하는 중이에요', '로그인과 지갑 연결을 처리하고 있어요. 새 창이 열리면 안내를 따라 주세요.', null],
+        };
+        const glossary = {
+            wallet: ['지갑이 뭔가요?', '디지털 돈을 받는 내 계좌 같은 거예요. Google로 로그인할 때 자동으로 만들어져서 '
+                + '따로 설치하거나 외울 것이 없어요.'],
+            address: ['0x로 시작하는 긴 글자는 뭔가요?', '지갑마다 붙는 계좌번호 같은 번호예요. 너무 길어서 끝 네 자리만 '
+                + '보여 드려요. 끝자리가 같으면 내 지갑이 맞아요.'],
+            signature: ['서명은 뭔가요?', '"제가 확인했어요"라고 도장을 찍는 것과 같아요. 서명한다고 돈이 빠져나가지 않아요.'],
+            test: ['TEST는 뭔가요?', '이 시연에서 쓰는 디지털 포인트예요. 실제 돈이 아니에요.'],
+            blockchain: ['블록체인은 뭔가요?', '누구도 몰래 고칠 수 없는 공용 기록장이에요. 지급했다는 기록이 여기에 남아서 '
+                + '나중에도 누구나 확인할 수 있어요.'],
+            final: ['"확정까지 조금 더"는 무슨 뜻인가요?', '기록이 완전히 굳어지는 데 시간이 조금 더 걸린다는 뜻이에요. '
+                + '금액은 이미 내 지갑에 들어와 있어요.'],
+            consent: ['왜 둘 다 동의해야 하나요?', '학생과 선생님이 같은 결과를 보고 둘 다 "맞아요"라고 해야 지급돼요. '
+                + '한쪽이 마음대로 지급하거나 막을 수 없어요.'],
+            hackerrank: ['HackerRank 인증은 어떻게 확인하나요?', 'HackerRank 사이트에 직접 로그인하면 CLEAR가 그곳의 '
+                + '인증서 정보를 가져와 확인해요. 사진이나 파일을 올릴 필요가 없어요.'],
+            ai: ['회고는 누가 확인하나요?', 'AI가 회고 글에 수행 내용·문제 해결 과정·배운 점이 있는지만 확인해요. '
+                + '선생님이 승인해야 AI 확인이 시작돼요.'],
+            conditions: ['CLEAR는 무엇을 확인하나요?', '강의 수강, 과제 제출, 회고 작성, HackerRank Python 인증 네 가지예요. '
+                + 'Moodle과 HackerRank 기록으로 확인해서 따로 올릴 서류는 없어요.'],
+        };
+        const helpFor = {connect: ['wallet'], apply: ['conditions', 'test'], bind: ['conditions'], conditions: ['ai', 'conditions'],
+            'cert-start': ['hackerrank', 'signature'], 'cert-read': ['signature'], 'cert-sign': ['signature'],
+            'cert-wait': ['hackerrank'], 'register-read': ['wallet', 'test'], 'register-sign': ['wallet', 'address', 'signature', 'test'],
+            consent: ['consent', 'signature'], 'wait-operator': ['consent'], receipt: ['blockchain'], 'receipt-wait': ['blockchain'],
+            paid: ['blockchain', 'final', 'test']};
+        const waiting = new Set(['busy', 'cert-wait', 'wait-operator', 'receipt-wait']);
+        const tail = value => typeof value === 'string' && /^0x[0-9a-fA-F]{40}$/.test(value) ? value.slice(-4) : null;
         const guideContent = step => {
+            const help = (helpFor[step.key] ?? []).map(key => glossary[key]);
+            if (step.key === 'busy') {
+                const [title, body, hint] = busyText[step.busy] ?? reading;
+                return {kicker: hint ? '지금 할 일' : '진행 중', title, body, hint, button: null, facts: [], raw: null,
+                    help: [], track: null, spin: true};
+            }
             if (step.key === 'conditions') {
                 const rows = application.criteria;
                 const left = rows.filter(row => row.state !== 'MET');
                 const names = left.map(row => criterionLabels[row.criterionId] ?? row.criterionId).join(', ');
                 const reflectionLeft = left.some(row => row.criterionId === 'reflection-topics');
-                return {title: '조건을 확인하고 있어요 (' + (rows.length - left.length) + '/' + rows.length + ')',
-                    body: '남은 조건: ' + names + '. 아래 카드에서 할 일을 확인하세요.'
-                        + (reflectionLeft ? ' 회고는 선생님이 AI 검토를 승인하면 확인돼요.' : ''),
-                    button: '최신 상태 확인하기', facts: [], raw: null};
+                return {kicker: '지금 할 일', title: '조건을 확인하고 있어요 (' + (rows.length - left.length) + '/' + rows.length + ')',
+                    body: '남은 조건: ' + names + '. 아래 목록에서 할 일을 확인하세요.'
+                        + (reflectionLeft ? ' 회고는 선생님이 AI 확인을 승인하면 검토돼요.' : ''),
+                    hint: null, button: '최신 상태 확인하기', facts: [], raw: null, help, spin: false,
+                    track: rows.map(row => [criterionLabels[row.criterionId] ?? row.criterionId, row.state === 'MET'])};
             }
             const [title, body, button] = guideText[step.key];
             const facts = [];
             let raw = null;
             if (step.key === 'register-sign') {
-                facts.push('받는 지갑: ' + (shortAddress(registration?.payload?.message?.recipient) ?? label('unconfirmed')));
-                facts.push('받는 금액: ' + amount(application?.agreedPayment));
+                const end = tail(registration?.payload?.message?.recipient);
+                facts.push(['받는 곳', '내 CLEAR 지갑 (Google 로그인으로 만든 지갑)']);
+                facts.push(['지갑 번호 끝자리', end ?? label('unconfirmed')]);
+                facts.push(['받는 금액', amount(application?.agreedPayment) + ' (시연용 포인트, 실제 돈 아님)']);
                 raw = displayed.registration ? format('registration', displayed.registration) : null;
             }
             if (step.key === 'cert-sign') {
                 raw = typeof source?.message === 'string' ? source.message : null;
             }
-            if (step.key === 'paid' && typeof receipt?.claim?.transactionHash === 'string') {
-                raw = '지급 거래 번호: ' + receipt.claim.transactionHash;
+            if (step.key === 'paid') {
+                const end = tail(receipt?.expectedPayment?.recipient);
+                facts.push(['받은 곳', '내 CLEAR 지갑' + (end ? ' (번호 끝자리 ' + end + ')' : '')]);
+                facts.push(['받은 금액', amount(receipt?.expectedPayment)]);
+                if (typeof receipt?.claim?.transactionHash === 'string') {
+                    raw = '블록체인 기록 번호(거래 해시): ' + receipt.claim.transactionHash;
+                }
             }
-            return {title, body, button, facts, raw};
+            return {kicker: '지금 할 일', title, body, hint: null, button, facts, raw, help, track: null,
+                spin: waiting.has(step.key)};
         };
         const runGuide = async step => {
             for (const action of step.actions) {
@@ -567,16 +627,54 @@ define([], function() {
                 };
                 const box = node('div', 'clear-guide');
                 box.setAttribute('data-guide-key', step.key);
-                box.append(node('p', 'clear-guide-kicker', '지금 할 일'), node('h2', 'clear-guide-title', content.title),
-                    node('p', 'clear-guide-body', content.body));
+                const head = node('div', 'clear-guide-head');
+                if (content.spin) {
+                    const spinner = node('span', 'clear-guide-spinner');
+                    spinner.setAttribute('aria-hidden', 'true');
+                    head.append(spinner);
+                }
+                const heading = node('div', 'clear-guide-heading');
+                heading.append(node('p', 'clear-guide-kicker', content.kicker), node('h2', 'clear-guide-title', content.title));
+                head.append(heading);
+                box.append(head, node('p', 'clear-guide-body', content.body));
+                if (content.hint) {
+                    box.append(node('p', 'clear-guide-hint', content.hint));
+                }
+                if (content.track) {
+                    const track = node('ol', 'clear-guide-track');
+                    track.append(...content.track.map(([name, done]) => {
+                        const item = node('li', 'clear-guide-track-item', (done ? '✓ ' : '') + name);
+                        item.setAttribute('data-done', done ? 'yes' : 'no');
+                        return item;
+                    }));
+                    box.append(track);
+                }
                 if (content.facts.length) {
-                    const list = node('ul', 'clear-guide-facts');
-                    list.append(...content.facts.map(fact => node('li', 'clear-guide-fact', fact)));
+                    const list = node('dl', 'clear-guide-facts');
+                    for (const [name, value] of content.facts) {
+                        const row = node('div', 'clear-guide-fact');
+                        row.append(node('dt', 'clear-guide-fact-name', name), node('dd', 'clear-guide-fact-value', value));
+                        list.append(row);
+                    }
                     box.append(list);
+                }
+                if (content.help.length) {
+                    const [first, ...rest] = content.help;
+                    const tip = node('div', 'clear-guide-tip');
+                    tip.append(node('p', 'clear-guide-tip-q', first[0]), node('p', 'clear-guide-tip-a', first[1]));
+                    box.append(tip);
+                    if (rest.length) {
+                        const more = node('details', 'clear-guide-help');
+                        more.append(node('summary', 'clear-guide-help-title', '쉬운 설명 더 보기'));
+                        for (const [question, answer] of rest) {
+                            more.append(node('p', 'clear-guide-tip-q', question), node('p', 'clear-guide-tip-a', answer));
+                        }
+                        box.append(more);
+                    }
                 }
                 if (content.raw) {
                     const more = node('details', 'clear-guide-raw');
-                    more.append(node('summary', 'clear-guide-raw-title', '서명·기록 원본 내용 보기'),
+                    more.append(node('summary', 'clear-guide-raw-title', '원본 기록 보기 (전문가용)'),
                         node('pre', 'clear-guide-raw-text', content.raw));
                     box.append(more);
                 }
@@ -837,7 +935,7 @@ define([], function() {
                 show('failure');
                 return;
             }
-            const task = {write: writes.has(action), session};
+            const task = {write: writes.has(action), session, action};
             pending = task;
             if (['read-session', 'read-application', 'decision-evidence'].includes(action)) {
                 decisionSnapshot = null;
