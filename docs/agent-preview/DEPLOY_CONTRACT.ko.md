@@ -7,7 +7,7 @@
 
 | 항목 | 값 | 상태 |
 |---|---|---|
-| D origin | 미정. 예) `https://<서비스>.up.railway.app` 또는 `https://<이름>.<사용자 도메인>` | 사용자의 플랫폼·도메인 결정 뒤 확정 |
+| D origin | Lightsail `https://52-79-238-13.sslip.io` (epoch `d1239e85-…`, bindingHash `33f79e81…`), 로컬 D `https://d-preview.clear.invalid` | 2026-11-06 배포(키 없음). 값 전체는 [DEPLOY_LIGHTSAIL 11절](DEPLOY_LIGHTSAIL.ko.md)·[DEPLOY_LOCAL](DEPLOY_LOCAL.ko.md) |
 | model | `gemini-3.5-flash-lite` | 고정(`limits.mjs`, B `operator-scope.mjs` 모두 이 값만 받음) |
 | limitsHash | `d428e64cf3e7183e8ecc3a99f14c4be5b53d0f002c33c8fcbca92bfadbf28ae0` | 고정. `limits.mjs`가 바뀌지 않는 한 같다. B가 `hash(prepare.limits)`와 비교한다 |
 | artifactHash | 후보 `6d0696c2b4c1881c0125ec6c11095035fce29f616a43bb0e35fc4649f73ee564` (sourceHead `2a1f392`, 462파일) | 배포 시 확정. 패키징한 커밋이 바뀌면 값도 바뀐다 |

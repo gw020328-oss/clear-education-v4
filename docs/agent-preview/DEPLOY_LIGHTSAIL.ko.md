@@ -2,8 +2,8 @@
 
 작성: 2026-11-06. 사용자가 배포 플랫폼으로 **AWS Lightsail**을 골랐다.
 
-- 이 문서는 실행 직전까지의 준비다. 인스턴스 생성, 비용 발생, 도메인 연결, 공개 배포, Gemini 호출은 하지 않았다.
-- 이 Mac에는 AWS CLI와 `~/.aws` 설정이 없다. 그래서 콘솔 단계(1절)는 사용자가 직접 한다.
+- 1~10절은 절차다. **11절은 2026-11-06 실제 배포 기록**이다(비용·sslip.io 사용자 승인 후, Gemini 키 없이 1차 기동). Gemini 호출은 하지 않았다.
+- 이 Mac에는 AWS CLI와 `~/.aws` 설정이 없다. 이번에는 사용자가 앱 브라우저 창에서 AWS에 로그인한 뒤 Claude가 콘솔 단계를 진행했다.
 - 공통 배경(키·Host·nonce·승인)은 [DEPLOY_PLAN](DEPLOY_PLAN.ko.md)에 있다. 같은 패키지를 로컬에서 쓰는 절차는 [DEPLOY_LOCAL](DEPLOY_LOCAL.ko.md)에 있다.
 
 ## 0. 아직 필요한 사용자 결정
@@ -52,7 +52,7 @@
 REPO=/Users/ohgyuwon/Documents/ChatGPT/블록체인/workspaces/clear-claude-student-cards
 NODE="$REPO/.toolchain/node-v24.21.0-darwin-arm64/bin/node"
 D_HOME="$HOME/Library/Application Support/CLEAR/d-preview-local"
-LS="$D_HOME/lightsail"; mkdir -p -m 700 "$LS"
+LS="$HOME/Library/Application Support/CLEAR/d-preview-lightsail"; mkdir -p -m 700 "$LS"   # 로컬 D 폴더와 분리
 
 # 1) node_modules 없는 패키지(VM에서 linux/amd64로 다시 설치하므로 Mac 의존성은 보내지 않는다)
 git -C "$REPO" worktree add --detach /private/tmp/clear-d-src-2a1f392 2a1f392
@@ -80,7 +80,7 @@ uuidgen | tr A-Z a-z > "$LS/epoch.txt"              # 비밀 아님
  "deploymentEpoch":"<epoch.txt 값>"}
 ```
 
-전송(키 파일은 scp로만 옮기고 출력하지 않는다):
+전송(키 파일은 scp로만 옮기고 출력하지 않는다). `scp -r`이 중간에 끊기면 원격 `build`를 지운 뒤 다시 보낸다. 대상 폴더가 이미 있으면 `build/build`로 겹쳐 복사된다:
 
 ```sh
 ssh ubuntu@<고정 IP> 'sudo mkdir -p /srv/clear-preview && sudo chown ubuntu:ubuntu /srv/clear-preview'
@@ -233,3 +233,63 @@ $DC exec -e CLEAR_APPROVED_BODY_HASH=<bodyHash> -e CLEAR_APPROVED_BINDING_HASH=<
 | 점검(4절) | 약 5분 |
 
 인증서 발급이나 DNS 전파가 늦으면 더 걸린다.
+
+## 11. 2026-11-06 실제 배포 기록 (키 없는 1차 기동)
+
+사용자 승인: Lightsail 월 USD 7, 도메인 sslip.io. AWS 로그인은 사용자가 Claude 앱 브라우저 창에서 직접 했다. 콘솔 단계와 VM 설정은 Claude가 진행했다.
+
+### 만든 자원
+
+| 항목 | 값 |
+|---|---|
+| 인스턴스 | `clear-preview-1`, 서울 `ap-northeast-2a`, Ubuntu 24.04.4 LTS, x86_64, General purpose Dual-stack 1GB/2vCPU/40GB(`micro_3_0`, 월 USD 7) |
+| 고정 IP | `clear-preview-ip` = `52.79.238.13` (인스턴스에 연결됨) |
+| 공개 origin | `https://52-79-238-13.sslip.io` (Let's Encrypt YE2 인증서, 만료 2027-02-04, Caddy 자동 갱신) |
+| 방화벽 | HTTP 80 모든 주소(인증서 발급·HTTPS 전환), HTTPS 443 모든 IPv4, SSH 22는 `115.95.185.185/32`(작업 Mac)와 Lightsail 브라우저 SSH만. 18991은 열지 않음 |
+| SSH | 전용 키 `~/.ssh/clear-preview-lightsail`(ed25519). 공개키는 생성 시 launch script로 `ubuntu` 계정에 넣었다. 콘솔이 지역 기본 키 쌍을 함께 만들었지만 내려받거나 쓰지 않았다 |
+| VM 소프트웨어 | apt 보안 업데이트 후 재부팅(커널 7.0.0-1012-aws), Docker 29.9.3, compose 5.7.0(공식 apt 저장소) |
+| D | `/srv/clear-preview/build`(커밋 2a1f392 패키지, 462파일 바이트 일치), VM에서 native 빌드한 `agent-preview-preview`, `127.0.0.1:18991`, `GEMINI_API_KEY` 비어 있음 |
+| Caddy | `caddy@sha256:b060aafbec4f8f5404c80273c8d8758248f157920d0a0cdd5cb5656a527f6ec5`, host network, cap은 NET_BIND_SERVICE만 |
+| Mac 비공개 폴더 | `~/Library/Application Support/CLEAR/d-preview-lightsail/` (패키지, 0600 HMAC 키·프로필·원문, epoch, Caddyfile). 로컬 D 폴더와 별개 |
+
+### 계약값 (메인 전달용, 비밀 없음)
+
+| 항목 | 값 |
+|---|---|
+| dPublicOrigin / dConnectOrigin | `https://52-79-238-13.sslip.io` |
+| dExecution | `ACTUAL` |
+| sharedSecretFile | `~/Library/Application Support/CLEAR/d-preview-lightsail/clear-preview-hmac` (0600, 로컬 D 키와 다름) |
+| artifactHash | `6d0696c2b4c1881c0125ec6c11095035fce29f616a43bb0e35fc4649f73ee564` |
+| deploymentEpoch | `d1239e85-28cb-45dc-b9b3-503d67d9dd50` |
+| bindingHash | `33f79e81ba37597531077b358879b9e8723f21cea9d2e218e34ebd5f4b2fe5e6` (VM의 `approval.mjs prepare` 출력) |
+| limitsHash / model | `d428e64cf3e7183e8ecc3a99f14c4be5b53d0f002c33c8fcbca92bfadbf28ae0` / `gemini-3.5-flash-lite` |
+| dActor | `clear-demo` / `2` / `6` |
+| bodyHash(`Python 기초 강의 완료`) | `ac7ed3efc93f48f855f2ae66e8a63997be54d04feea790261593892c9f17643c` |
+| execute | 503 유지 |
+
+scope 예시는 DEPLOY_LOCAL 1절 JSON에서 `deploymentEpoch`와 `bindingHash`만 위 값으로 바꾼 것이다. develop `validateOperatorScopeConfig` 통과를 확인했다.
+
+### 검증 결과
+
+| 확인 | 결과 |
+|---|---|
+| `http://…/` | 308 → HTTPS |
+| `https://…/` | D의 404 `ROUTE_NOT_FOUND` JSON. Host가 보존되어 D까지 전달됨 |
+| Mac `remote-smoke.mjs`(실제 HTTPS) | `ok:true`. 무인증 403 `AUTH_REQUIRED`, Origin 헤더 403 `SERVER_TO_SERVER_ONLY`, `GET /` 404, 서명 prepare 200(bindingHash·limitsHash 일치, `actualModelCall=false`), 미등록 승인 generate 422, 없는 draft execute 422, 같은 nonce 200 → 422 `REQUEST_REPLAY` |
+| 다른 Host | Caddy가 어떤 사이트와도 맞지 않아 D로 넘기지 않고 빈 200 응답(`PROXY_NOT_FORWARDED`). D 자체의 `HOST_REJECTED`는 컨테이너 시험에서 확인 |
+| D 컨테이너 재시작 | 17초 뒤 같은 nonce 422 `REQUEST_REPLAY`(SQLite 지속) |
+| VM 재부팅 | 약 30초 뒤 D·Caddy 자동 기동, HTTPS 응답 |
+| 외부에서 18991 | 닫힘(VM 안에서도 127.0.0.1만 listen) |
+| 모델 호출 | 0회(키 없음, 승인 없음) |
+
+### 진행 중 확인된 점
+
+- `apt-get upgrade` 중 openssh가 갱신되어 SSH 22가 약 45초 거부되었다. 그 사이 `scp -r`이 끊겨 `build/build` 중첩이 생겼고, 원격 build를 지우고 다시 보냈다.
+- 점검 클라이언트의 "다른 Host" 시험은 HTTPS에서 SNI가 Host 헤더를 따라가 TLS 단계에서 실패했다. SNI를 접속 호스트로 고정하고, 프록시 미전달도 통과로 보도록 고쳤다(`tests/remote-smoke.mjs`, 패키지 밖이라 artifactHash 변화 없음).
+
+### 남은 것 (사용자 결정)
+
+1. Gemini 키를 D 서버에 넣을지(6절). D 전용 새 키를 권한다.
+2. 입력 1건·1회 호출 승인(7절). 승인 전에는 원장에 아무것도 등록하지 않는다.
+3. 메인이 A 설정을 이 D로 바꿀 시점. 지금 A는 로컬 D를 가리킬 수 있으며, A는 한 번에 하나의 D만 쓴다.
+4. 행사 뒤 삭제 시점(8절). 삭제 전까지 월 USD 7이 일할 계산으로 과금된다.

@@ -31,7 +31,9 @@ const signed=createDPreviewRequest({publicOrigin,connectOrigin:connect.origin,se
 function raw(path,{body='{}',headers={},method='POST'}={}) {
   const client=connect.protocol==='https:'?https:http;
   return new Promise((resolve,reject)=>{
+    // Pin TLS SNI to the connect host. Otherwise Node derives SNI from a test Host header.
     const req=client.request({protocol:connect.protocol,hostname:connect.hostname,port:connect.port,path,method,agent:false,
+      ...(connect.protocol==='https:'?{servername:connect.hostname}:{}),
       headers:{host:new URL(publicOrigin).host,'content-type':'application/json',...headers}},res=>{
       const chunks=[];res.on('data',c=>chunks.push(c));
       res.on('end',()=>{let parsed=null;try{parsed=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{}
@@ -66,10 +68,15 @@ if(env.CLEAR_SMOKE_REPLAY_NONCE) {
   results.fixedNonceSecond=await raw('/v1/preview/prepare',{body:prepareBody,headers});
   for(const k of ['fixedNonceFirst','fixedNonceSecond'])results[k]={status:results[k].status,code:results[k].code};
 }
+// Behind an HTTPS proxy (Caddy) a foreign Host matches no site and is never forwarded to D:
+// no D JSON envelope comes back. Directly (loopback/container) D itself answers HOST_REJECTED.
+const wrongHostVia=results.wrongHost.code==='HOST_REJECTED'?'D_HOST_REJECTED'
+  :(connect.protocol==='https:'&&results.wrongHost.body===null?'PROXY_NOT_FORWARDED':'UNEXPECTED');
 for(const k of ['unauthenticated','wrongHost','browserOrigin','unknownRoute'])results[k]={status:results[k].status,code:results[k].code};
+results.wrongHost.via=wrongHostVia;
 const checks={
   unauthenticated:results.unauthenticated.status===403&&results.unauthenticated.code==='AUTH_REQUIRED',
-  wrongHost:results.wrongHost.status===403&&results.wrongHost.code==='HOST_REJECTED',
+  wrongHost:(wrongHostVia==='D_HOST_REJECTED'&&results.wrongHost.status===403)||wrongHostVia==='PROXY_NOT_FORWARDED',
   browserOrigin:results.browserOrigin.status===403&&results.browserOrigin.code==='SERVER_TO_SERVER_ONLY',
   unknownRoute:results.unknownRoute.status===404,
   prepare:results.prepare.status===200&&results.prepare.version==='clear-external-preview-preparation.1'

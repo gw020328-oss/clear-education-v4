@@ -12,7 +12,7 @@ D 원본: 로컬 D 서비스 `caa3291`(#154 head `bf5f41c` 위 5커밋)의 `depl
 |---|---|
 | 외부 모델 호출 | **미실행**. 실제 Gemini 0회. 모든 시험은 오프라인 전송기 또는 네트워크 없는 컨테이너에서 했다 |
 | 도구 실행 | **미연결**. execute는 `503 OBSERVATION_ADAPTER_NOT_ACCEPTED` 그대로다. B 중계도 `DISPLAY_ONLY`다 |
-| 외부 배포 | **미실행**. 계정·요금·도메인·공개 범위는 사용자 결정 전이다 |
+| 외부 배포 | **2026-11-06 실행(키 없는 1차 기동)**: AWS Lightsail 서울, `https://52-79-238-13.sslip.io`. Gemini 키·승인 없음. 기록은 [DEPLOY_LIGHTSAIL 11절](DEPLOY_LIGHTSAIL.ko.md) |
 | 로컬 이미지 | `clear-agent-preview:deploy-prep-2a1f392` (linux/arm64, image id `4ce3e36926f1…`), `…-amd64` (linux/amd64, `bdb48cdae668…`, 에뮬레이션 빌드). 두 이미지 모두 안에서 artifactHash 검증을 통과했다. 지문은 [계약값 문서](DEPLOY_CONTRACT.ko.md) |
 | 오프라인 시험 | D 단위 45/45(+변환기 1/1), B↔D 루프백 9/9, 컨테이너 무네트워크 점검 통과(9절) |
 
