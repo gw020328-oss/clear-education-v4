@@ -91,7 +91,12 @@ export async function composeNormalFlow({source,config,directory,signal,ports}){
    if(signal?.aborted||!context.enterFailureWait(error)||!context.report().failure?.resumeAllowed)return false;
    ports.notify({event:'NORMAL_HOST_MANUAL_RESUME_AVAILABLE',failure:context.report().failure});
    return await (ports.awaitResume?ports.awaitResume({context,signal}):context.waitForResume({signal}));
-  }});fail(result.completed===true,'NORMAL_HOST_PAYMENT_INCOMPLETE');
+  }});
+  if(config.claimMode==='DEFERRED_INDEPENDENT'&&result.acceptedClaimPending===true&&result.completed===false){
+   ports.notify({event:'ACCEPTED_CLAIM_DEFERRED_FINISH_STOPS_API_KEEPS_CHAIN',applicationId:result.applicationId,claimDeferred:result.claimDeferred,command:'FINISH'});
+   await ports.finish({signal});return {applicationId:result.applicationId,completed:false,acceptedClaimPending:true};
+  }
+  fail(result.completed===true,'NORMAL_HOST_PAYMENT_INCOMPLETE');
   ports.notify({event:'PAYMENT_RECORDED_READ_RECEIPT_IN_BOTH_ROLE_SCREENS',applicationId:result.applicationId,origin:config.origin});
   await ports.finish({signal});return {applicationId:result.applicationId,completed:true};
  }catch(error){

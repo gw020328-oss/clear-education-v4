@@ -44,13 +44,13 @@ test('frontend acceptance digest changes with public bytes',t=>{
  writeFileSync(join(d,'index.html'),'<p>one</p>');const first=assetSnapshot(d);writeFileSync(join(d,'index.html'),'<p>two</p>');assert.notEqual(assetSnapshot(d),first);
  assert.equal(assetSnapshot(null),null);
 });
-function flowFixture({approvalFailure=false,abortAt=null}={}){
+function flowFixture({approvalFailure=false,abortAt=null,payResult=null}={}){
  const events=[],controller=new AbortController();let bound=false,closed=0,resumed=0,paid=0;
  const prepared={packet:{planHash:'offline'},isCurrent:()=>true};
  const context={report:()=>({applicationId:bound?'offline-app':null,startedAt:Date.now()/1000}),close(){closed++;events.push('close');},
   createFrontend(){events.push('frontend');return {server:{},config:{chainId:123,network:{chainId:'0x7b'}},async drain(){events.push('drain');}};},
   async collectSources(options){events.push(options?.prepareReflection?'prepare-reflection':'resume-exact');if(options?.prepareReflection)return prepared;resumed++;},
-  async pay(){events.push('pay');paid++;return {completed:true,applicationId:'offline-app'};}};
+  async pay(){events.push('pay');paid++;return payResult??{completed:true,applicationId:'offline-app'};}};
  const ports={tls:{},async prepare(){events.push('prepare-realm');return {directory:'/offline'};},async open(){events.push('open-context');return context;},
   async listen(){events.push('listen');bound=true;},notify(x){events.push(x.event);if(x.event===abortAt)controller.abort();},
   async awaitApproval(args){events.push('approval');assert.equal(args.prepared,prepared);args.onPrepared();if(approvalFailure)throw Error('OFFLINE_APPROVAL_REJECTED');},
@@ -166,4 +166,17 @@ test('certificate-only host stops after certificate and never prepares AI or pay
  assert.equal(result.certificateCardOnly,true);assert.equal(result.completed,false);
  assert(f.events.indexOf('certificate-only')<f.events.indexOf('finish-certificate'));
  assert.equal(f.paid,0);assert.equal(f.resumed,0);assert(!f.events.includes('approval'));assert(!f.events.includes('prepare-reflection'));
+});
+
+test('deferred claim is opt-in: ACCEPT without claim finishes the API only when configured, never otherwise',async()=>{
+ const deferred={completed:false,acceptedClaimPending:true,applicationId:'offline-app',claimDeferred:{chainApplicationId:'0x'+'ab'.repeat(32)}};
+ assert.equal(validateHostConfig({...config(),claimMode:'DEFERRED_INDEPENDENT'}).claimMode,'DEFERRED_INDEPENDENT');
+ for(const bad of [{claimMode:'API_WORKER'},{claimMode:'deferred'},{claimMode:'DEFERRED_INDEPENDENT',activityReturnOnly:true}])assert.throws(()=>validateHostConfig({...config(),...bad}));
+ const f=flowFixture({payResult:deferred});
+ const r=await composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:{...config(),claimMode:'DEFERRED_INDEPENDENT'},directory:'/offline',signal:f.controller.signal,ports:f.ports});
+ assert.deepEqual(r,{applicationId:'offline-app',completed:false,acceptedClaimPending:true});
+ assert(f.events.includes('ACCEPTED_CLAIM_DEFERRED_FINISH_STOPS_API_KEEPS_CHAIN')&&!f.events.includes('PAYMENT_RECORDED_READ_RECEIPT_IN_BOTH_ROLE_SCREENS'));
+ assert(f.events.indexOf('finish')<f.events.indexOf('close'),'API closes only after explicit FINISH');
+ const g=flowFixture({payResult:deferred});
+ await assert.rejects(composeNormalFlow({source:{pins:()=>({dataMode:'RECLAIM_SIGNED_RECORD'})},config:config(),directory:'/offline',signal:g.controller.signal,ports:g.ports}),/NORMAL_HOST_PAYMENT_INCOMPLETE/,'without the opt-in an unclaimed result is still incomplete');
 });

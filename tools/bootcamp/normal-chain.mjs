@@ -22,9 +22,10 @@ import {P0_POLICY} from '../../specs/bootcamp/p0-contract.mjs';
 const hash=()=> '0x'+randomBytes(32).toString('hex');
 const now=()=>Math.floor(Date.now()/1000);
 const ensure=(condition,code)=>{if(!condition)throw Error(code);};
-export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,waitForRecipientRegistration,signal,sourceTarget,requireReviewReaders,onRecipientWaitFailure,assertRecipientWaitCurrent}){
+export async function executeNormalPayment({store,connection,serviceContext,user,op,app,recipient,provider,key,report,write,stage,waitForConsents,waitForRecipientRegistration,signal,sourceTarget,requireReviewReaders,onRecipientWaitFailure,assertRecipientWaitCurrent,claimMode='API_WORKER'}){
  const started=performance.now();let step='VALIDATE',operation='SETUP';
  try{
+ ensure(['API_WORKER','DEFERRED_INDEPENDENT'].includes(claimMode),'BC_NORMAL_CLAIM_MODE');
  const automatic=connection.configuration.sourceMode==='SYNTHETIC_TEST_SOURCE'&&waitForConsents===undefined;
  ensure(automatic||typeof waitForConsents==='function','BC_NORMAL_EXPLICIT_CONSENTS_REQUIRED');
  ensure(connection.configuration.sourceMode!=='REGISTERED_TEST_SOURCE'||sourceTarget,'BC_NORMAL_SOURCE_TARGET_REQUIRED');
@@ -107,6 +108,13 @@ export async function executeNormalPayment({store,connection,serviceContext,user
   await synchronizeReview();
   await execute('BIND_CONSENTS');step='PREPARE_AUTHORIZATION';await connection.refresh(app);const preparation=store.prepareReviewAuthorization(user,app,body(),key()).record.target.preparationId;
   await execute('PREPARE',preparation);const accepted=await execute('ACCEPT',preparation);ensure(accepted.claimJob,'BC_NORMAL_CLAIM_JOB_REQUIRED');
+  if(claimMode==='DEFERRED_INDEPENDENT'){
+   // ACCEPT and full allocation are on chain. claim() is left to an independent caller
+   // (tools/claim-prep/independent-claim.mjs) after the CLEAR API stops. No new right, signature or nonce.
+   report.claimDeferred={environmentId:id,chainApplicationId:chainApp,claimJobId:accepted.claimJob.jobId,acceptedTxHash:accepted.claimJob.acceptedTxHash,
+    vaultAddress:m.vaultAddress,tokenAddress:m.tokenAddress,recipient:recipient.toLowerCase(),amountAtoms:'100000000'};
+   report.acceptedClaimPending=true;stage('ACCEPTED_CLAIM_DEFERRED');return report;
+  }
   operation='CLAIM';stage('SEPARATE_CLAIM');step='BALANCE_BEFORE';const before=await token.balanceOf(recipient);step='CLAIM_SEND';const claim=await vault.connect(ownedTestWallet(id,'anycaller').connect(provider)).claim(chainApp);report.claim={txHash:claim.hash,status:'SUBMITTED_UNKNOWN'};write();step='CLAIM_RECEIPT_WAIT';await waitSetupReceipt(provider,claim.hash);
   step='CLAIM_CANONICAL';const settlement=await bridge.directClaimReceipt(g,accepted.claimJob.jobId,claim.hash);ensure(settlement.status==='SETTLED','BC_NORMAL_CLAIM_PENDING');
   step='BALANCE_AFTER';const after=await token.balanceOf(recipient);ensure(after-before===100000000n,'BC_NORMAL_BALANCE');
