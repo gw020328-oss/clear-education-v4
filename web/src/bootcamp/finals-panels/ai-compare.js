@@ -561,27 +561,39 @@ export function aiComparePanel({
                         ? '조건 사이의 관계를 확인해야 해서 자동으로 읽지 않았습니다. 아래 보류한 조항을 봐 주세요.'
                         : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
                 }),
+          // "맞나요?" 의 '아니요' 는 버튼이 아니라 원문 수정이다 — 판독 근거가 늘 원문에 남게 한다.
+          // 찾은 조건에는 빼기 손잡이를 두지 않는다(운영자가 판독을 손으로 덮지 않도록).
+          found.length > 0 && !idle && !outcomeFailed
+            ? el('p.fp-proposal-hint', {
+              text: '다르게 읽었으면 위 원문을 고치세요. 빼려면 그 문장을 지우고, 더하려면 써 넣으면 됩니다. '
+                + (explicit ? '고친 뒤 「제안 다시 생성」 을 누르면 다시 읽습니다.' : '제안이 다시 만들어집니다.'),
+            })
+            : null,
           // 받은 제안의 출처·호출·만료. 모델 응답과 도구 실행은 다른 사실이다.
           outcome?.kind === 'PROPOSED' ? proposedFacts(proposal) : null,
+          // 원문 | 해석 | 확인 방법 — 한 줄에서 대조한다(오규원 11/6 예시). 실행 결과는 아래 ④ 가 따로 말한다.
           found.length > 0
-            ? el('ul.fp-proposal-list', {}, found.map((c) => el('li.fp-proposal-row', {
-              'data-read': 'yes', 'data-source': c.source ?? 'none',
-            }, [
-              el('span.fp-proposal-dst', {}, [
-                el('span', { text: CAPABILITY_LABEL[c.capability] ?? c.capability }),
-                el('span.fp-proposal-tag', {
-                  'data-source': c.source,
-                  text: c.source === 'operator' ? '운영자 지정' : c.source === 'rules' ? '규칙' : c.source,
-                }),
+            ? el('div.fp-proposal-table', {}, [
+              el('div.fp-proposal-cols', { 'aria-hidden': 'true' }, [
+                el('span', { text: '원문' }), el('span', { text: '해석' }), el('span', { text: '확인 방법' }),
               ]),
-              el('span.fp-proposal-arrow', { 'aria-hidden': 'true', text: '←' }),
-              el('span.fp-proposal-src', { text: `"${c.original}"` }),
-              // 확인 방법 — 해석(조건 종류)에 대응하는 읽기 전용 도구. 실행 결과는 아래 ④ 가 따로 말한다.
-              el('span.fp-proposal-how', { text: `확인 방법 · ${CAPABILITY_HOW[c.capability] ?? '등록된 읽기 전용 도구'}` }),
-              c.note ? el('span.fp-proposal-note', { text: c.note }) : null,
-              // 운영자가 붙인 것은 되돌릴 수 있어야 한다
-              c.source === 'operator' ? pickBox(c) : null,
-            ].filter(Boolean))))
+              el('ul.fp-proposal-list', {}, found.map((c) => el('li.fp-proposal-row.fp-proposal-row--3', {
+                'data-read': 'yes', 'data-source': c.source ?? 'none',
+              }, [
+                el('span.fp-proposal-src', { text: `"${c.original}"` }),
+                el('span.fp-proposal-dst', {}, [
+                  el('span', { text: CAPABILITY_LABEL[c.capability] ?? c.capability }),
+                  el('span.fp-proposal-tag', {
+                    'data-source': c.source,
+                    text: c.source === 'operator' ? '운영자 지정' : c.source === 'rules' ? '규칙' : c.source,
+                  }),
+                ]),
+                el('span.fp-proposal-how', { text: CAPABILITY_HOW[c.capability] ?? '등록된 읽기 전용 도구' }),
+                c.note ? el('span.fp-proposal-note', { text: c.note }) : null,
+                // 운영자가 붙인 것은 되돌릴 수 있어야 한다
+                c.source === 'operator' ? pickBox(c) : null,
+              ].filter(Boolean)))),
+            ])
             : null,
 
           // ── 조건 관계(또는·대신) 때문에 보류한 것 — 숨기지 않는다 ──────

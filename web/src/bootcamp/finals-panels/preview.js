@@ -126,28 +126,32 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
           : '실제 모드입니다. 아직 연결된 경로가 없어 미연결로 표시됩니다. '
             + '합성 자료로 자동 전환하지 않습니다.',
       }),
-      // 제안자 전환. 같은 확인 화면에 규칙 / Gemini(오프라인 대역) 를 번갈아 끼운다.
-      el('div.fp-presets', { role: 'group', 'aria-label': '제안자' }, [
-        el('span.fp-label', { text: '제안자' }),
-        ...[
-          ['rules', '프론트 규칙 (지금)'],
-          ['gemini', actual ? 'Gemini (실제 모드 · 중계 미연결)' : 'Gemini 오프라인 대역 (제안 생성 버튼)'],
-          ['operator', actual ? '운영자 서버 중계 (실제 모드 · 미연결)' : '운영자 서버 중계 (녹화 재생)'],
-        ].map(([id, label]) => {
-          const href = `?mode=${mode === DATA_MODE.ACTUAL ? 'ACTUAL' : 'SYNTHETIC'}&proposer=${id}`;
-          return el('a.fp-chip', { href, 'aria-pressed': (useOperator ? 'operator' : useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
-        }),
-      ]),
-      actual && (useGemini || useOperator)
-        ? el('p', { text: '실제 모드에서는 Gemini 오프라인 대역과 녹화 재생을 끼우지 않습니다. 둘 다 합성 자료입니다. 「제안 생성」 을 눌러도 보내지 않고 미연결 결과만 보입니다.' })
-        : null,
-      useOperator && !actual
-        ? el('p', { text: '운영자 서버 중계 · 녹화 재생 대역: 기존 운영자 로그인 + B 중계 + D(오프라인 모델 전송)를 별도 환경에서 돌려 녹화한 HTTP 응답을 재생합니다. '
-          + '변환기·화면은 실제 코드입니다. 이 페이지는 로그인·강좌 범위·승인을 확인하지 않고, 녹화에 없는 원문은 답하지 않습니다. 실제 Gemini 호출 아님. 제안은 표시 전용입니다.' })
-        : null,
-      useGemini && !actual
-        ? el('p', { text: 'Gemini 대역: 서버가 Gemini 로 할 분류를 이 페이지 안에서 흉내 냅니다. 실제 호출 아님. 한 조항 = 한 조건이고, 여러 조건이 한 문장에 있으면 서버처럼 보류합니다. 제안은 표시 전용입니다.' })
-        : null,
+      // 시연 설정 — 제안자 전환과 그 설명은 발표 중 자주 안 건드리므로 접어 둔다 (B4).
+      // 같은 확인 화면에 규칙 / Gemini(오프라인 대역) / 녹화 재생을 번갈아 끼운다.
+      el('details.fp-demo', {}, [
+        el('summary', { text: `시연 설정 · 제안자: ${useOperator ? '운영자 서버 중계' : useGemini ? 'Gemini 오프라인 대역' : '프론트 규칙'}` }),
+        el('div.fp-presets', { role: 'group', 'aria-label': '제안자' }, [
+          el('span.fp-label', { text: '제안자' }),
+          ...[
+            ['rules', '프론트 규칙 (지금)'],
+            ['gemini', actual ? 'Gemini (실제 모드 · 중계 미연결)' : 'Gemini 오프라인 대역 (제안 생성 버튼)'],
+            ['operator', actual ? '운영자 서버 중계 (실제 모드 · 미연결)' : '운영자 서버 중계 (녹화 재생)'],
+          ].map(([id, label]) => {
+            const href = `?mode=${mode === DATA_MODE.ACTUAL ? 'ACTUAL' : 'SYNTHETIC'}&proposer=${id}`;
+            return el('a.fp-chip', { href, 'aria-pressed': (useOperator ? 'operator' : useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
+          }),
+        ]),
+        actual && (useGemini || useOperator)
+          ? el('p', { text: '실제 모드에서는 Gemini 오프라인 대역과 녹화 재생을 끼우지 않습니다. 둘 다 합성 자료입니다. 「제안 생성」 을 눌러도 보내지 않고 미연결 결과만 보입니다.' })
+          : null,
+        useOperator && !actual
+          ? el('p', { text: '운영자 서버 중계 · 녹화 재생 대역: 기존 운영자 로그인 + B 중계 + D(오프라인 모델 전송)를 별도 환경에서 돌려 녹화한 HTTP 응답을 재생합니다. '
+            + '변환기·화면은 실제 코드입니다. 이 페이지는 로그인·강좌 범위·승인을 확인하지 않고, 녹화에 없는 원문은 답하지 않습니다. 실제 Gemini 호출 아님. 제안은 표시 전용입니다.' })
+          : null,
+        useGemini && !actual
+          ? el('p', { text: 'Gemini 대역: 서버가 Gemini 로 할 분류를 이 페이지 안에서 흉내 냅니다. 실제 호출 아님. 한 조항 = 한 조건이고, 여러 조건이 한 문장에 있으면 서버처럼 보류합니다. 제안은 표시 전용입니다.' })
+          : null,
+      ].filter(Boolean)),
     ].filter(Boolean)),
     aiPanel.node,
     el('p.fp-flow', { text: '↓ 조건이 정해지면, 조건마다 Moodle 의 어느 항목을 읽을지 운영자가 지정합니다.' }),

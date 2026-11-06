@@ -149,6 +149,7 @@
 
 /* 읽기 제안 — "N개 찾았습니다, 맞나요?" 가 본문. 나머지는 접힌다 */
 .fp-proposal-ask { margin: 4px 0 8px; font-weight: 700; }
+.fp-proposal-hint { margin: -4px 0 10px; font-size: 0.82rem; line-height: 1.6; color: var(--muted); }
 .fp-proposal-warn { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .fp-proposal-warn .fp-proposal-ask { color: #9a3412; }
 .fp-proposal-rest { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
@@ -237,3 +238,23 @@
 .fp-proposal-how { display: block; grid-column: 1 / -1; font-size: 0.76rem; color: var(--muted); }
 @media (max-width: 640px) { .fp-flow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .fp-flow-dot { font-size: 0.75rem; }
+
+/* 원문 | 해석 | 확인 방법 세 칸 (B5) */
+.fp-proposal-cols, .fp-proposal-row--3 { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; align-items: baseline; }
+.fp-proposal-cols { font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted); font-weight: 700; padding: 0 0 4px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.fp-proposal-row--3 .fp-proposal-how { display: block; grid-column: auto; font-size: 0.82rem; color: var(--fg); }
+.fp-proposal-row--3 .fp-proposal-src { color: var(--fg); }
+.fp-proposal-row--3 .fp-proposal-note, .fp-proposal-row--3 .fp-pick { grid-column: 1 / -1; }
+@media (max-width: 720px) {
+  .fp-proposal-cols { display: none; }
+  .fp-proposal-row--3 { grid-template-columns: minmax(0, 1fr); }
+  .fp-proposal-row--3 .fp-proposal-how::before { content: '확인 방법 · '; color: var(--muted); }
+}
+
+/* 접힌 시연 설정 · 예문 (B4) */
+.fp-demo { margin: 0 0 12px; }
+.fp-demo > summary { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 28px; font-size: 0.82rem; color: var(--muted); }
+.fp-demo > summary:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 6px; }
+.fp-demo[open] > summary { margin-bottom: 8px; }
+.fp-demo .fp-presets { margin: 0 0 8px; }
+.fp-demo > p { margin: 0 0 8px; color: var(--muted); font-size: 0.84rem; line-height: 1.6; }

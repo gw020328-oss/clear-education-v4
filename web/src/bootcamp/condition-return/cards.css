@@ -64,6 +64,9 @@
 .crc-actions .cc-btn { margin: 0; text-decoration: none; }
 .crc-actions .cc-btn[disabled] { cursor: not-allowed; opacity: 0.55; }
 .crc-card[data-state="met"] .crc-go { background: var(--card); color: var(--fg); border-color: var(--line); }
+/* 어두운 모드: 봉인 styles.css 의 .cc[data-state="open"] .cc-btn 이 바탕 var(--fg)(밝음) + 글자 #fff 라
+ * 글자가 안 보인다. 우리 버튼만 글자색을 바탕색으로 뒤집는다 (B6). 봉인 쪽 같은 문제는 오규원에게 전달. */
+:root[data-theme="dark"] .crc-card[data-state="open"] .crc-go { color: var(--bg); }
 
 .crc-sub-btn {
   padding: 8px 12px;
@@ -133,3 +136,9 @@
 .crc-demo-details > summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 28px; font-size: 0.82rem; color: var(--muted); }
 .crc-demo-details > p { margin: 8px 0 0; color: var(--muted); font-size: 0.84rem; line-height: 1.6; }
 .crc-preview-top h1 { margin: 0 0 4px; }
+
+/* 네 카드의 충족 칸이 같은 높이에서 시작하게 — 제목 두 줄("HackerRank Python (Basic) 인증" 이 꺾인다)
+ * + 할 일 세 줄까지 자리를 고정한다 (B3). 좁은 화면(한 줄 배치)에서는 해제한다. */
+.crc-card .bcx-task-name { min-height: 3em; }
+.crc-todo { min-height: calc(1.55em * 3); }
+@media (max-width: 560px) { .crc-card .bcx-task-name { min-height: 0; } .crc-todo { min-height: 0; } }
