@@ -12,18 +12,21 @@ const role=s=>s.role==='participant'?'PARTICIPANT':'COURSE_OPERATOR';
 const targetKeys=['expectedRevision','expectedLedgerSequence','targetDecisionId','targetDecisionRevision','targetDecisionHash'];
 export function createProcedure({db,transaction,ledger,access,heads,source,replay,command,operatorBindings,mode,ports:configuration,fault}){
  const l=procedureLedger(db,ledger),ports=createProcedurePorts(configuration,mode);
+ // Before chain registration the registered chain/funding ports have no binding yet.
+ // Display reads use unavailable placeholders instead; every write keeps `ports`.
+ const sourceOnlyPorts=createProcedurePorts(null,mode);
  const decision=a=>JSON.parse(db.prepare('SELECT record FROM decisions WHERE id=?').get(a.decision_id).record);
  const acceptance=d=>db.prepare('SELECT sequence FROM r2_decisions WHERE decision_id=?').get(d.decisionId).sequence;
  const records=(a,kind)=>l.rows(a.id,kind).map(r=>r.record);
  const publication=a=>l.publications(a.id).at(-1)??null;
  const actorCommitment=(a,s)=>p0Hash('E3-APP-ACTOR',{applicationId:a.id,role:role(s),wallet:s.wallet});
  function observe(observers,read){const value=read();observers.push(()=>check(sameSnapshot(value,read()),'BC_E3_PORT_CHANGED'));return value;}
- function state(a,time,observers){
-  const d=decision(a),p=l.getProcedure(a.id),pub=publication(a),chain=observe(observers,()=>ports.chain(a));
+ function state(a,time,observers,read=ports){
+  const d=decision(a),p=l.getProcedure(a.id),pub=publication(a),chain=observe(observers,()=>read.chain(a));
   const accepted=chain.status==='ACCEPTED';
   if(accepted){const historical=l.publications(a.id).find(x=>x.allocationId===chain.allocationId&&x.decisionId===chain.decisionId);
    check(historical&&historical.recipient===chain.recipient&&historical.token===chain.token,'BC_E3_UNREGISTERED_RIGHT');}
-  const funding=accepted?{implementation:'NOT_IMPLEMENTED',snapshotId:null}:observe(observers,()=>ports.funding(a,d,acceptance(d)));
+  const funding=accepted?{implementation:'NOT_IMPLEMENTED',snapshotId:null}:observe(observers,()=>read.funding(a,d,acceptance(d)));
   const checkpoint=records(a,'E4_CHECKPOINT').at(-1);
   if(funding.status==='FULLY_ALLOCATED'&&checkpoint){
    check(funding.allocationId===checkpoint.allocationId&&funding.obligationId===checkpoint.obligationId
@@ -239,6 +242,11 @@ export function createProcedure({db,transaction,ledger,access,heads,source,repla
   getProcedure(context,a){const observers=[];return access(context,a,false,(app,s,time)=>{
    // Rebuild time-dependent status from fresh ports after one clock-only rollback.
    observers.length=0;return view(state(app,time,observers),s,time);
+  },()=>observers.forEach(f=>f()),{retryClockBoundary:true});},
+  // Display-only view before any procedure/publication exists. Consent, publish and payment never use it.
+  getSourceProcedure(context,a){const observers=[];return access(context,a,false,(app,s,time)=>{
+   observers.length=0;const st=state(app,time,observers,sourceOnlyPorts);
+   check(!st.p&&!st.pub&&st.chain.implementation==='NOT_IMPLEMENTED','BC_NORMAL_PROCEDURE_NOT_READY');return view(st,s,time);
   },()=>observers.forEach(f=>f()),{retryClockBoundary:true});},
   publishReview(context,a,body,key){return run(context,a,body,key,'publish',[],(st,s,time,observers)=>{
    check(st.met&&st.fullCurrent&&st.chain.status==='UNACCEPTED','BC_E3_FULL_ALLOCATION_REQUIRED');const src=sourceObservation(st,time,observers);

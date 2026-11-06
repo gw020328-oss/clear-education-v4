@@ -71,7 +71,7 @@ export function createBootcampHandler(store,{allowLoopbackHttpForTests=false,nor
           if(resource==='decision-evidence')result=store.getDecisionEvidence(context,a,target);
           else if(!target&&resource==='recipient-registration'){result=normalUi?.getRecipientRegistration?await normalUi.getRecipientRegistration(context,a,registrationCheckpoint):store.getRecipientRegistration(context,a);}
           else if(!target&&resource==='review-chain')result=await store.execution.reviewChain(context,a);
-          else if(!target&&resource==='procedure'){if(normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=store.getProcedure(context,a);}
+          else if(!target&&resource==='procedure'){const sourceOnly=normalUi?.procedureReadMode?.(context,a)==='SOURCE_ONLY';if(!sourceOnly&&normalUi?.refreshProcedure)await normalUi.refreshProcedure(context,a);check(!controller.signal.aborted,'BC_HTTP_CANCELLED');result=sourceOnly?store.getSourceProcedure(context,a):store.getProcedure(context,a);}
           else if(target&&resource==='procedure-operations')result=store.getProcedureOperation(context,a,target);
           else check(false,'BC_NOT_FOUND');
         }else if(!target){

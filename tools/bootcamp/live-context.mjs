@@ -210,6 +210,10 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
    store.getOperationsProjection(c,a);if(failureState||activityReturnOnly||certificateCardOnly)return;requireUiRule(a===app&&!!report.chainApplicationId,'BC_NORMAL_PROCEDURE_NOT_READY');
    await connection.refresh(a);store.getOperationsProjection(c,a);
   };
+  // GET procedure only: before chain registration, show the same authenticated application's current
+  // conditions/evidence as a display-only view. Consent keeps refreshProcedure and stays blocked.
+  const procedureReadMode=(c,a)=>{store.getOperationsProjection(c,a);
+   return !failureState&&!activityReturnOnly&&!certificateCardOnly&&a===app&&!report.chainApplicationId?'SOURCE_ONLY':'CANONICAL';};
   const readers=createNormalReviewReaders({now});
   const waitForReaders=async()=>{stage('AWAITING_BOTH_REVIEW_SCREENS');
    await waitUntil(()=>readers.ready(),{signal:controller.signal,timeoutMs:Math.max(1,(startedAt+1800-now())*1000)});};
@@ -253,7 +257,7 @@ export async function openLiveContext({preparationPath,withReader,hackerRank,att
   const normalUi=Object.freeze({commandScope,
    startCertificate(c,a,b,k){requireUiRule(certificateStart,'BC_CERTIFICATE_UNAVAILABLE');return certificateStart.start(c,a,b,k);},walletRuntime:Object.freeze({instanceId:m.instanceId}),...(activityReturn?{activityPageId:activityReturn.pageId,refreshActivity:activityReturn.queue}:{}),
    assertWritable(path){if(certificateCardOnly)requireUiRule(certificateWriteAllowed(path,app),'BC_CERTIFICATE_MODE');if(activityReturn)requireUiRule(activityWriteAllowed(path,app),'BC_ACTIVITY_MODE');requireUiRule(!failureState||path==='/bootcamp/v4/applications/'+app+'/resume','BC_NORMAL_FAILED_WAITING');},resume:(c,a,b)=>resumeControl.request(c,a,b),getRecipientRegistration:recipientView,
-   beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,getPaymentReceipt:paymentReceipt,bindParticipant,
+   beforeRecipientRegistration(c,a){ui.participant();ui.authorize(c,true);requireUiRule(a===app&&c.token===user.token,'BC_RECIPIENT_REGISTRATION_SESSION');},getSession,refreshProcedure,procedureReadMode,getPaymentReceipt:paymentReceipt,bindParticipant,
    beforeReviewConsent(c,a,b,view){ui.authorize(c,true);requireUiRule(a===app,'BC_LIVE_CONTEXT');
     requireNormalConsentAction({view,body:b,phase:report.stage,sourceTarget,reviewTarget:report.reviewTarget});},
    approveReflection(c,a,b,k){requireUiRule(a===app&&reflectionApproval,'BC_NORMAL_AI_APPROVAL_TARGET');return reflectionApproval.approve(c,a,b,k);},
