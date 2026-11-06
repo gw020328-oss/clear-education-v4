@@ -122,16 +122,37 @@ const RELATIONS = Object.freeze([
   ['SUBSTITUTE', /대신|대체|갈음|\binstead\b/i],
 ]);
 
+// 조건 하나에도 붙는 수식 — '선택' 과 '면제·부정'. 이런 문장을 필수 조건으로 읽으면
+// 안내문이 요구하지 않은 것을 요구하게 된다(11/5 화면 점검: "해커랭크 인증서는 선택입니다"
+// 가 HackerRank 필수로 읽혔다). 서버 검토의 OPTIONAL·NEGATION 보류와 같은 결이다.
+const MODIFIERS = Object.freeze([
+  ['OPTIONAL', /선택\s*(?:입니다|사항|이며|이에요|임\b|적으로|적\s)|(?:필수|의무)(?:가|는|은)?\s*아(?:니|닙|님)|권장\s*(?:사항|합니다|해요)|\boptional\b/i],
+  ['NEGATION', /면제|(?:하|쓰|내|올리|제출하|받)지\s*않아도|안\s*(?:해|써|내)도\s*(?:됩니다|돼요|된다|무방)|없어도\s*(?:됩니다|돼요|된다|무방)|불필요|요구하지\s*않/i],
+]);
+
 const RELATION_NOTE = Object.freeze({
+  OPTIONAL: '선택 사항이라고 쓴 문장으로 보입니다. 필수 조건으로 자동 변환하지 않았습니다. '
+    + '환급 조건에 넣을지 운영자가 정해 원문을 고쳐 주세요(넣는다면 "선택" 을 빼고, 아니면 문장을 빼세요)',
+  NEGATION: '면제·불필요를 말하는 문장으로 보입니다. 조건으로 자동 변환하지 않았습니다. '
+    + '요구하지 않는 조건이면 원문에서 빼 주세요',
   ALTERNATIVE: '조건 중 하나만 채우면 되는 문장(또는)으로 보입니다. 지금 형식은 "모두 필요" 만 '
     + '표현할 수 있어 자동으로 바꾸지 않았습니다. 어떤 조건을 요구할지 운영자가 정해 원문을 고쳐 주세요',
   SUBSTITUTE: '한 조건을 다른 조건으로 바꾸는 문장(대신)으로 보입니다. 지금 형식은 대체 관계를 '
     + '표현할 수 없어 자동으로 바꾸지 않았습니다. 최종 조건을 운영자가 정해 원문을 고쳐 주세요',
 });
 
-/** 이 문장이 조건 사이의 대안·대체 관계를 말하나. 조건이 둘 이상일 때만 본다 */
+/** 이 문장이 선택·면제 수식이거나 조건 사이의 대안·대체 관계를 말하나. 대안·대체는 조건이 둘 이상일 때만 본다 */
 function relationOf(sentence) {
-  if (distinctHits(sentence) < 2) return null;
+  const hits = distinctHits(sentence);
+  if (hits < 1) return null;
+  // 선택·면제는 **우리 조건** 하나에도 붙는다. 그 문장은 필수 조건으로 읽지 않는다.
+  // 우리가 확인하지 않는 말(정답률·인터뷰 등)이 섞인 문장은 그쪽 표식이 먼저다 —
+  // "정답률 90% (미달 시 1회 면제)" 는 면제 보류가 아니라 '자동 검증 미지원' 이다.
+  if (ourHits(sentence) >= 1 && !NOT_OURS.some(([re]) => re.test(sentence))) {
+    const modifier = MODIFIERS.find(([, re]) => re.test(sentence));
+    if (modifier) return modifier[0];
+  }
+  if (hits < 2) return null;
   // 바꿔치기가 대안보다 구체적이다. 둘 다 있으면 대체로 본다.
   const found = RELATIONS.filter(([, re]) => re.test(sentence)).map(([kind]) => kind);
   return found.includes('SUBSTITUTE') ? 'SUBSTITUTE' : found[0] ?? null;
@@ -141,12 +162,13 @@ function relationOf(sentence) {
 // 한 문장에 서로 다른 조항이 몇 개 섞였나. **우리가 확인하지 않는 것도 한
 // 조항으로 센다** — "출석률 90%, 해커랭크 보유" 를 통째로 '확인 안 함' 으로
 // 묶으면 해커랭크가 그 안에 삼켜진다. 둘 이상이면 쉼표에서 나눈다.
+const ourHits = (sentence) => RULES.filter((r) =>
+  (r.any ? r.any.some((re) => re.test(sentence)) : true)
+  && (r.all ? r.all.every((re) => re.test(sentence)) : true)).length;
+
 function distinctHits(sentence) {
-  const ours = RULES.filter((r) =>
-    (r.any ? r.any.some((re) => re.test(sentence)) : true)
-    && (r.all ? r.all.every((re) => re.test(sentence)) : true)).length;
   const notOurs = NOT_OURS.filter(([re]) => re.test(sentence)).length;
-  return ours + notOurs;
+  return ourHits(sentence) + notOurs;
 }
 
 /**

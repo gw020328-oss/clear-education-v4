@@ -142,8 +142,13 @@ const short = (v) => {
  */
 export function aiComparePanel({
   adapter, source = '', onSource = () => {}, presets = [], proposer = RULES_PROPOSER,
+  // 찾은 조건의 종류(capability) 목록이 바뀔 때 부른다. A 강좌 연결 칸이 이걸 따라간다 —
+  // 실행 결과가 아니라 **제안**을 따라가야 표시 전용(Gemini·서버 중계) 모드에서도 칸이 선다.
+  onProposal = () => {},
 }) {
   const box = el('section.fp', {});
+  let notify = onProposal;
+  let notifiedCaps = null;
   let text = source;
   // 제안자가 읽은 원본. 운영자 지정을 얹기 전이다.
   let base = emptyProposal();
@@ -451,6 +456,11 @@ export function aiComparePanel({
     const found = proposal.clauses.filter((c) => c.canonical);
     const held = proposal.clauses.filter((c) => c.held);
     const notOurs = proposal.clauses.filter((c) => c.notOurs && c.source !== 'operator');
+    // 종류 목록이 실제로 바뀔 때만 알린다 — 글자마다 다시 그리는데, 그때마다 알리면
+    // 아래 A 칸의 운영자 선택이 지워진다. 생성 전·실패·만료는 빈 목록이다.
+    const caps = failed ? [] : [...new Set(found.map((c) => c.capability))];
+    const capsKey = caps.join('|');
+    if (capsKey !== notifiedCaps) { notifiedCaps = capsKey; notify(caps); }
     const unread = proposal.clauses.filter((c) => !c.canonical && !c.held && !(c.notOurs && c.source !== 'operator'));
 
     box.append(...[
@@ -827,7 +837,14 @@ export function aiComparePanel({
   // 명시적 제안자는 첫 화면에서도 부르지 않는다 — 버튼을 눌러야 한다.
   if (text.trim() !== '' && !explicit) propose(text);
   render();
-  return { node: box, render, generate };
+  /** 찾은 조건 종류 목록을 받을 곳을 나중에 끼운다(A 칸은 B 다음에 만들어진다). 바로 한 번 알린다 */
+  const setOnProposal = (fn) => {
+    notify = typeof fn === 'function' ? fn : () => {};
+    const caps = failed ? [] : [...new Set(proposal.clauses.filter((c) => c.canonical).map((c) => c.capability))];
+    notifiedCaps = caps.join('|');
+    notify(caps);
+  };
+  return { node: box, render, generate, setOnProposal };
 }
 
 /**

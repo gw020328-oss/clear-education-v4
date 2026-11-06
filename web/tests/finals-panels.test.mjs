@@ -934,3 +934,92 @@ test('서버가 보류한 조항은 사유를 보이고 직접 지정 상자가 
     assert.equal(proposeReading('강의수강 후기적기 과제제출').kept.length, 3);
   } finally { restore(); }
 });
+
+// ── A 칸은 실행 결과가 아니라 **제안**을 따라간다 ─────────────────────────────
+//
+// Gemini·서버 중계 모드는 표시 전용이라 실행이 없다. 그래도 운영자는 찾은 조건마다
+// Moodle 항목을 지정해 봐야 하므로, 강좌 연결 칸은 B 가 찾은 조건 종류를 따라간다.
+// 글자마다 다시 그려도 종류 목록이 같으면 다시 알리지 않는다(운영자 선택이 지워지니까).
+
+test('onProposal: 찾은 조건 종류가 바뀔 때만 알리고, 나중에 끼워도(setOnProposal) 바로 한 번 알린다', async () => {
+  const restore = installDom();
+  try {
+    const seen = [];
+    const adapter = createAdapter({ mode: DATA_MODE.SYNTHETIC, fixture: (input) => COMBOS[input]?.payload ?? null, run: null });
+    const panel = aiComparePanel({ adapter, source: PRESETS[0].source, presets: [], onProposal: (caps) => seen.push(caps) });
+    await settle();
+    assert.ok(seen.length >= 1, '처음 그릴 때 한 번 알려야 한다');
+    assert.deepEqual(seen.at(-1), ['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1'], '① 예문은 활동+과제');
+    const n = seen.length;
+    panel.render(); panel.render();
+    assert.equal(seen.length, n, '같은 목록이면 다시 알리지 않는다');
+
+    const late = [];
+    panel.setOnProposal((caps) => late.push(caps));
+    assert.deepEqual(late, [['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1']], '나중에 끼우면 지금 목록을 바로 한 번');
+
+    // Gemini 대역(표시 전용)에서도 제안 생성 뒤 알린다 — 실행이 없어도 A 칸이 선다
+    const gem = [];
+    const g = aiComparePanel({ adapter, source: PRESETS[0].source, presets: [], proposer: OFFLINE_GEMINI_PROPOSER, onProposal: (caps) => gem.push(caps) });
+    await settle();
+    assert.deepEqual(gem.at(-1), [], '생성 전엔 빈 목록');
+    g.generate();
+    await settle();
+    assert.deepEqual(gem.at(-1), ['MOODLE_ACTIVITY_COMPLETION.1', 'MOODLE_ASSIGNMENT_SUBMISSION.1'], '생성 뒤 찾은 종류');
+  } finally { restore(); }
+});
+
+// ── 실제 모드에는 대역을 끼우지 않는다 ───────────────────────────────────────
+//
+// ?mode=ACTUAL&proposer=gemini 에서 오프라인 대역이 "2개 조건을 찾았습니다" 를 내면
+// 실제 모드가 합성으로 떨어진 것이다(11/5 화면 재현). 자리만 같고 누르면 미연결이다.
+
+import { mountFinalsPreview, UNCONNECTED_MODEL_PROPOSER } from '../src/bootcamp/finals-panels/preview.js';
+
+test('실제 모드 + Gemini/운영자 중계 자리: 「제안 생성」 을 눌러도 보내지 않고 미연결 결과 상자만 보인다', async () => {
+  const restore = installDom();
+  try {
+    for (const proposer of ['gemini', 'operator']) {
+      const root = document.createElement('div');
+      mountFinalsPreview(root, { mode: DATA_MODE.ACTUAL, proposer });
+      await settle();
+      const gen = [...walk(root)].find((n) => n.attributes?.['data-role'] === 'generate');
+      assert.ok(gen, proposer + ': 「제안 생성」 자리가 있어야 한다');
+      for (const f of gen.handlers.click ?? []) f({ preventDefault() {} });
+      await settle();
+      const box = [...walk(root)].find((n) => n.attributes?.['data-role'] === 'relay-outcome');
+      assert.ok(box, proposer + ': 미연결 결과 상자가 없다');
+      assert.equal(box.attributes['data-outcome'], 'FAILED');
+      const text = root.textContent;
+      assert.ok(!/개 조건을 찾았습니다/.test(text), proposer + ': 실제 모드에서 대역 결과가 나왔다');
+      assert.ok(/보내지 않/.test(text), proposer + ': 보내지 않았다는 말이 없다');
+      assert.ok(!/오프라인 응답 대역/.test(text), proposer + ': 실제 모드에 대역 배지가 보인다');
+    }
+    assert.equal(UNCONNECTED_MODEL_PROPOSER.explicit, true);
+  } finally { restore(); }
+});
+
+// ── 선택·면제 문장은 필수 조건으로 읽지 않는다 ───────────────────────────────
+
+test('규칙 제안기: "선택입니다"·"필수가 아닙니다"·"않아도 됩니다" 는 보류하고 필수로 읽지 않는다', () => {
+  const opt = proposeReading('해커랭크 인증서는 선택입니다');
+  assert.equal(opt.held, 1); assert.equal(opt.kept.length, 0);
+  assert.equal(opt.clauses[0].relation, 'OPTIONAL');
+  assert.deepEqual(opt.clauses[0].mentions, ['HACKERRANK_CERTIFICATE_HOLDING.1']);
+  assert.match(opt.clauses[0].note, /선택 사항/);
+
+  const notRequired = proposeReading('수료 후기 작성은 필수가 아닙니다');
+  assert.equal(notRequired.clauses[0].relation, 'OPTIONAL');
+
+  const neg = proposeReading('회고는 쓰지 않아도 됩니다');
+  assert.equal(neg.clauses[0].relation, 'NEGATION');
+  assert.equal(neg.kept.length, 0);
+
+  // 같은 단어라도 조건 요구 문장이면 그대로 읽는다
+  const plain = proposeReading('과제를 제출하고 선택 과제도 제출해 주세요');
+  assert.equal(plain.held, 0);
+  assert.ok(plain.kept.some((c) => c.capability === 'MOODLE_ASSIGNMENT_SUBMISSION.1'));
+  // 우리 조건이 안 섞인 문장은 수식이 있어도 보류가 아니라 그냥 안 읽는다
+  const none = proposeReading('주차 등록은 선택입니다');
+  assert.equal(none.held, 0);
+});
