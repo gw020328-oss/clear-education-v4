@@ -10,7 +10,7 @@ import {buildExecutionV2} from '../../tests/hackathon-test-vault/execution-v2-bu
 import {recipientRegistration} from '../../src/bootcamp/recipient-registration.mjs';
 import {TYPES as PAYMENT_TYPES,PROFILE_HASH} from '../../src/bootcamp-authorization/test-schema-v3.mjs';
 import {independentClaim} from './independent-claim.mjs';
-import {readChainView,createChainViewServer} from './chain-balance-view.mjs';
+import {readChainView,readAttempts,createChainViewServer} from './chain-balance-view.mjs';
 
 const START=1900000000,A=100000000n;
 const sent=async promise=>(await promise).wait();
@@ -184,4 +184,49 @@ test('chain balance view HTTP serves only GET page/state on loopback; read failu
  assert.deepEqual(await (await fetch(base+'/state.json')).json(),{state:'ACCEPTED'});
  assert.equal((await fetch(base+'/state.json',{method:'POST'})).status,405);assert.equal((await fetch(base+'/x')).status,404);
  fail=true;const r=await fetch(base+'/state.json');assert.equal(r.status,503);assert.doesNotMatch(await r.text(),/secret/);
+});
+
+test('confirmed-right attempts: registrar replaceTarget and terminator terminate are rejected UNACCEPTED_STATE by eth_call only; amount/recipient have no change path',async t=>{
+ const f=await fixture(t),p=await prepared(f),vaultAddress=await f.vault.getAddress(),tokenAddress=await f.token.getAddress();
+ const attempts=applicationId=>readAttempts({provider:f.provider,vaultAbi:f.b.contract.abi,vaultAddress,applicationId});
+ // Before ACCEPT: nothing is attempted.
+ const review=await attempts(null);
+ assert.deepEqual(review,{version:'clear-chain-view-attempts.1',blockNumber:review.blockNumber,applicationId:p.appId,available:false,state:'REVIEW',note:'확정 전에는 정해진 절차(이의·재검증)로만 바뀔 수 있어요'});
+ assert(Object.isFrozen(review));
+ await sent(f.vault.connect(f.accounts[2]).accept(f.op(),p.m,p.signature,5));
+ const snapshot=async()=>{const a=await f.vault.application(p.appId);
+  return {block:await f.provider.getBlockNumber(),version:a.version,state:a.state,epoch:a.epoch,target:a.target.toArray(),
+   recipient:await f.balanceOf(p.r.wallet.address),vault:await f.balanceOf(vaultAddress),accounting:await f.accounting()};};
+ const expected=state=>({version:'clear-chain-view-attempts.1',blockNumber:String(state.block),applicationId:p.appId,available:true,state:state.name,
+  // UNACCEPTED_STATE comes after the only(role) modifier, so it also proves the eth_call ran with the role's from.
+  attempts:[{action:'REPLACE_DECISION',by:'운영 측 등록자 권한',rejected:true,reason:'UNACCEPTED_STATE'},{action:'TERMINATE_PAYOUT',by:'운영 측 종료 권한',rejected:true,reason:'UNACCEPTED_STATE'}],
+  fixed:{action:'CHANGE_AMOUNT_OR_RECIPIENT',claimInputs:['bytes32'],claimHasRecipientOrAmountInput:false,amountAtoms:'100000000',changeFunctions:[],changeFunctionExists:false}});
+ for(const name of ['ACCEPTED','SETTLED']){
+  if(name==='SETTLED')await independentClaim({provider:f.provider,vaultAbi:f.b.contract.abi,vaultAddress,tokenAddress,applicationId:p.appId,caller:f.accounts[5]});
+  const before=await snapshot(),r=await attempts(name==='ACCEPTED'?p.appId:null),after=await snapshot();
+  assert.deepEqual(after,before,'no transaction: block, application version/state/epoch/target, balances and accounting unchanged');
+  assert.deepEqual(r,expected({block:before.block,name}));
+  assert(Object.isFrozen(r)&&Object.isFrozen(r.attempts)&&Object.isFrozen(r.attempts[0])&&Object.isFrozen(r.fixed)&&Object.isFrozen(r.fixed.claimInputs));
+  assert.deepEqual(JSON.parse(JSON.stringify(r)),r,'JSON-safe (no BigInt)');
+ }
+ assert.equal(await f.balanceOf(p.r.wallet.address),A);
+});
+
+test('chain balance view HTTP serves GET /attempts.json only when configured; other methods 405; failure is 503 without detail',async t=>{
+ let fail=false;
+ const withAttempts=createChainViewServer({read:async()=>({state:'ACCEPTED'}),attempts:async()=>{if(fail)throw Error('secret detail');return {available:true};}});
+ const without=createChainViewServer({read:async()=>({state:'ACCEPTED'})});
+ for(const s of [withAttempts,without]){await new Promise(r=>s.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>s.close(r)));}
+ const base=s=>'http://127.0.0.1:'+s.address().port;
+ const ok=await fetch(base(withAttempts)+'/attempts.json');assert.equal(ok.status,200);assert.equal(ok.headers.get('content-type'),'application/json');
+ assert.deepEqual(await ok.json(),{available:true});
+ for(const method of ['POST','PUT','DELETE'])assert.equal((await fetch(base(withAttempts)+'/attempts.json',{method})).status,405);
+ assert.equal((await fetch(base(without)+'/attempts.json')).status,404);
+ assert.deepEqual(await (await fetch(base(withAttempts)+'/state.json')).json(),{state:'ACCEPTED'});
+ const page=await fetch(base(withAttempts)+'/'),html=await page.text();
+ assert.match(page.headers.get('content-security-policy'),/connect-src 'self'/);
+ for(const text of ['확정된 환급 바꿔 보기','운영 측 권한으로 바꿔 보기',"fetch('attempts.json'","location.hash==='#attempts'",'이미 확정된 환급'])assert(html.includes(text),text);
+ assert.doesNotMatch(html,/innerHTML/);
+ fail=true;const r=await fetch(base(withAttempts)+'/attempts.json');assert.equal(r.status,503);assert.equal(await r.text(),'{"error":"CHAIN_UNAVAILABLE"}');
+ assert.throws(()=>createChainViewServer({read:async()=>({}),attempts:'x'}),/CHAIN_VIEW_CONFIG/);
 });
