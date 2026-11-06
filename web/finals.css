@@ -236,3 +236,4 @@
 .fp-flow-steps li span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fp-proposal-how { display: block; grid-column: 1 / -1; font-size: 0.76rem; color: var(--muted); }
 @media (max-width: 640px) { .fp-flow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fp-flow-dot { font-size: 0.75rem; }

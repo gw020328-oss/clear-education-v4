@@ -124,3 +124,6 @@
 .crc-ai { margin: 8px 0 0; }
 .crc-ai-k { margin: 0; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .crc-fix p:last-child { margin: 4px 0 0; }
+
+/* 손가락 크기(최소 24px) — 접기 손잡이 */
+.crc-more summary, .crc-message summary { display: inline-flex; align-items: center; min-height: 28px; padding: 2px 4px; }
