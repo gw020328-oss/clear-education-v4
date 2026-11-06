@@ -185,7 +185,8 @@ for(const [path,status,body,expected] of [
 for(const [method,path,status,code,expected]of [
  ['GET','/bootcamp/v2/applications/application-one/operations',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
  ['GET','/bootcamp/v3/applications/application-one/procedure',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
- ['POST','/bootcamp/v3/applications/application-one/review-consents',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+ // A consent POST CAS rejection keeps its fixed code (not recorded; covered by the review-consents test below).
+ ['POST','/bootcamp/v3/applications/application-one/review-consents',409,'BC_VIEW_STALE','BC_VIEW_STALE'],
  ['GET','/bootcamp/v2/applications/application-one/procedure',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
  ['GET','/bootcamp/v3/applications/application-one/operations',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
  ['GET','/bootcamp/v3/applications/application-one/procedure',403,'BC_VIEW_STALE','API_REQUEST_FAILED'],
@@ -201,5 +202,34 @@ test('only the exact certificate-start POST CAS rejection keeps its fixed code',
   const api=apiFor(()=>Response.json({error:'BC_REVISION_CONFLICT',message:'private'},{status}));
   const e=await errorOf(api(target,{method,...(method==='POST'?{body:{expectedRevision:1},idempotencyKey:'synthetic-one'}:{})}));
   assert.equal(e.code,expected);assert(!JSON.stringify(e).includes('private'));assert.equal(e.retryable,false);
+ }
+});
+
+test('only the exact review-consents POST CAS rejection keeps BC_VIEW_STALE',async()=>{
+ const path='/bootcamp/v3/applications/application-one/review-consents';
+ for(const [method,target,status,error,expected]of [['POST',path,409,'BC_VIEW_STALE','BC_VIEW_STALE'],['POST',path,409,'BC_E3_PORT_CHANGED','API_REQUEST_FAILED'],
+  ['POST',path,403,'BC_VIEW_STALE','API_REQUEST_FAILED'],['POST','/bootcamp/v3/applications/application-one/publish',409,'BC_VIEW_STALE','API_REQUEST_FAILED'],
+  // Consent before chain registration: refused before any write.
+  ['POST',path,409,'BC_NORMAL_PROCEDURE_NOT_READY','BC_NORMAL_PROCEDURE_NOT_READY'],['POST',path,503,'BC_NORMAL_PROCEDURE_NOT_READY','API_REQUEST_FAILED'],
+  ['POST','/bootcamp/v3/applications/application-one/publish',409,'BC_NORMAL_PROCEDURE_NOT_READY','API_REQUEST_FAILED']]){
+  const api=apiFor(()=>Response.json({error,message:'private'},{status}));
+  const e=await errorOf(api(target,{method,body:{expectedRevision:1},idempotencyKey:'synthetic-one'}));
+  assert.equal(e.code,expected);assert(!JSON.stringify(e).includes('private'));assert.equal(e.retryable,false);
+ }
+});
+
+test('operator preview POST failures keep only the failure kind and fixed code, never the body',async()=>{
+ const gates={version:'clear-operator-preview.1',automaticEligibility:false,paymentAllowed:false,stage:'FAILED'};
+ const d={...gates,contextRef:'ctx-private',failure:{kind:'D_HTTP',status:503,error:{version:'clear-external-preview-error.1',code:'OBSERVATION_ADAPTER_NOT_ACCEPTED',detail:'private'}}};
+ const relay={...gates,failure:{kind:'RELAY',code:'PREVIEW_FORBIDDEN'}};
+ for(const [path,method,status,body,expected]of [
+  ['/bootcamp/preview/execute','POST',503,d,{kind:'D_HTTP',status:503,code:'OBSERVATION_ADAPTER_NOT_ACCEPTED'}],
+  ['/bootcamp/preview/prepare','POST',403,relay,{kind:'RELAY',code:'PREVIEW_FORBIDDEN'}],
+  ['/bootcamp/preview/generate','POST',409,{...gates,failure:{kind:'RELAY',code:'not fixed'}},null],
+  ['/bootcamp/preview/publish','POST',403,relay,null],
+  ['/bootcamp/v3/applications/application-one/review-consents','POST',503,d,null]]){
+  const e=await errorOf(apiFor(()=>Response.json(body,{status}))(path,{method,body:{a:1},idempotencyKey:'preview-synthetic'}));
+  assert.deepEqual(e.previewFailure,expected,path);assert(!JSON.stringify(e).includes('private'));
+  assert.equal(e.outcome,status>=500?'UNKNOWN':'HTTP_ERROR','a D 5xx is never read as a definite rejection');
  }
 });

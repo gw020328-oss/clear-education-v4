@@ -12,7 +12,8 @@ import {P0_POLICY,p0PolicyHash} from '../../specs/bootcamp/p0-contract.mjs';
 import {NORMAL_HOST_VERSION} from '../../src/bootcamp/normal-client.mjs';
 
 // Mount the existing two handlers on one existing HTTPS server; no RPC, collector or signer is installed.
-export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot,normalUi=null,network=null,moodleLogin=null,moodleNative=null}){
+export function createBootcampFrontendServer({authentication,store,tls,sourceMode,chainId,webRoot,normalUi=null,network=null,moodleLogin=null,moodleNative=null,operatorPreview=null}){
+ if(operatorPreview!==null&&(typeof operatorPreview!=='function'||!normalUi||moodleLogin?.native!==true))throw Error('BC_FRONTEND_CONFIG');
  if(normalUi&&sourceMode!=='REGISTERED_TEST_SOURCE')throw Error('BC_FRONTEND_CONFIG');
  if(moodleLogin&&!normalUi)throw Error('MOODLE_LOGIN_WALLET_MOUNT');
  if(authentication.origin!==store.origin||authentication.chainId!==chainId||!tls||!['SYNTHETIC_TEST_SOURCE','REGISTERED_TEST_SOURCE'].includes(sourceMode))throw Error('BC_FRONTEND_CONFIG');
@@ -30,7 +31,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
  }
  const wallets=productWalletMount({assets,origin:store.origin,chainId,network:walletNetwork,runtime:normalUi?.walletRuntime,moodleLogin:!!moodleLogin});
  if(moodleLogin&&!wallets)throw Error('MOODLE_LOGIN_WALLET_MOUNT');
- const native=prepareNative({options:moodleNative,assets,wallets,moodleLogin,origin:store.origin,activityPageId:normalUi?.activityPageId});
+ const native=prepareNative({options:moodleNative,assets,wallets,moodleLogin,origin:store.origin,activityPageId:normalUi?.activityPageId,preview:operatorPreview!==null});
  const config=Object.freeze({version:NORMAL_HOST_VERSION,origin:store.origin,chainId,sourceMode,network:walletNetwork,phase:normalUi?'ACTIVE_LOCAL_TEST':'DISPLAY_ONLY',policyHash:p0PolicyHash(P0_POLICY),
   procedureHttpVersion:'clear-bootcamp-review-procedure.1',operationsHttpVersion:'clear-bootcamp-operations-projection.2',
   reviewConsentHttpImplemented:true,originalEvidenceHttpImplemented:false,executionReceiptHttpImplemented:typeof normalUi?.getPaymentReceipt==='function',
@@ -38,6 +39,8 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
  server.removeListener('request',auth);const pending=new Set();
  const handle=async(req,res)=>{
   if(moodleLogin?.matches(req.url))return moodleLogin.handle(req,res);
+  // Opt-in operator condition preview (B relay, DISPLAY_ONLY). Exact three POST routes only.
+  if(operatorPreview&&/^\/bootcamp\/preview\/(prepare|generate|execute)$/.test(req.url))return operatorPreview(req,res);
   if(/^\/bootcamp(?:\/|\?|$)/.test(req.url)){
    const allowed=req.method==='GET'&&(/^\/bootcamp\/v[23]\/applications\/[a-z][a-z0-9.-]{0,63}\/(operations|procedure)$/.test(req.url)
     ||/^\/bootcamp\/v1\/applications\/[a-z][a-z0-9.-]{0,63}\/operations\/[a-z][a-z0-9.-]{0,63}$/.test(req.url)
@@ -92,7 +95,7 @@ export function createBootcampFrontendServer({authentication,store,tls,sourceMod
 
 // The hash-pinned owner supplies only C's reviewed inventory/handler and fixed
 // course. A routes, public assets and OAuth return cannot be supplied by C or a request.
-function prepareNative({options,assets,wallets,moodleLogin,origin,activityPageId}){
+function prepareNative({options,assets,wallets,moodleLogin,origin,activityPageId,preview=false}){
  const marker=assets.get('/clear-moodle-native.html');
  const fail=ok=>{if(!ok)throw Error('MOODLE_NATIVE_FRONTEND_CONFIG');};
  if(options===null){fail(!marker&&!assets.has('/clear-moodle-native-assets.html')&&moodleLogin?.native!==true);return null;}
@@ -129,6 +132,7 @@ function prepareNative({options,assets,wallets,moodleLogin,origin,activityPageId
   {owner:'A',path:'/clear-assets',methods:['GET'],query:[],slashArguments:true},
   ...moodleNativeApplicationRoutes,
   ...(activityPageId===undefined?[]:[moodleActivityRefreshRoute,...moodleLearningViewRoutes]),
+  ...(preview?['prepare','generate','execute'].map(name=>({owner:'A',path:'/bootcamp/preview/'+name,methods:['POST'],query:[]})):[]),
  ];
  return {config,assets:publicAssets,policy:createMoodleFrontDoorPolicy({origin,activityPageId,routes:[...options.routes,...fixed]}),
   oauthReturn:createMoodleOAuthReturn({config,courseId:options.courseId})};

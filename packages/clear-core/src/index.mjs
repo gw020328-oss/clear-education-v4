@@ -64,12 +64,70 @@ export function structureSynthetic(sourceText) {
  return signed({version:'clear-preview-draft.1',executionMode:'SYNTHETIC_RULES',actualModelCall:false,sourceText,sourceHash:hash(sourceText),clauses,conditions,questions,
   status:questions.some(q=>q.reason==='UNSUPPORTED')?'UNSUPPORTED':questions.length?'NEEDS_CLARIFICATION':'READY'});
 }
+// Server-side relation guard for model proposals. The model is instructed to flag
+// these, but its SUPPORTED label is not trusted: one clause may carry only one
+// positive required condition. Alternatives, substitutions, negation, thresholds,
+// deadlines, optional items, several conditions or unsupported measures cannot be
+// expressed by that contract, so they are held for review and never become
+// required conditions. Canonical grammar sentences are exempt (closed grammar).
+const CONDITION_WORD = '(?:과제|숙제|강의|수업|활동|영상|회고|후기|성찰|리플렉션|해커|헤커|hackerrank|assignment|lecture|reflection)';
+const CAPABILITY_HINTS = [
+ ['HACKERRANK_CERTIFICATE_HOLDING.1', [/hackerrank|해커\s*랭크|헤커\s*랭크/iu]],
+ ['REFLECTION_REQUIRED_TOPICS.1', [/회고|성찰|리플렉션|reflection|후기.*(?:작성|쓰|적|남기|기록|게시|올리|블로그)/iu]],
+ ['MOODLE_ASSIGNMENT_SUBMISSION.1', [/과제|숙제|assignment/iu, /제출|내고|내서|내야|내기|냅니다|내면|낸다|냈|올리|업로드|submit/iu]],
+ ['MOODLE_ACTIVITY_COMPLETION.1', [/강의|수업|활동|영상|lecture|activity/iu, /완료|이수|수강|듣|들어|마치|완주|끝|complete/iu]]
+];
+const GUARDS = [
+ ['UNSUPPORTED_MEASURE', /출석|출결|참석률|참여율|수강률|시청률|시청\s*시간|정답률|점수|점\s*이상|등급|만점|취업|면접/u],
+ ['OPTIONAL', /\(\s*선택\s*\)|선택\s*사항|선택적|선택(?:입니다|이다|임)|optional/iu],
+ ['ALTERNATIVE', new RegExp(`또는|혹은|거나|택\\s*1|택일|중\\s*(?:하나|한\\s*가지|1\\s*개)|\\bor\\b|(?:이)?나\\s+(?=${CONDITION_WORD})`, 'iu')],
+ ['SUBSTITUTE', /대신|대체|갈음|\binstead\b/iu],
+ ['NEGATION', /않|(?<!빠짐)없이|없어도|(?:^|\s)안\s+(?:들|듣|하|해|내|보|받|제출|수강|완료|이수|작성)|필요\s*(?:하지\s*)?없|제외|불필요|면제|아니|금지|생략|미(?:제출|수강|완료|이수)|\bnot\b|\bwithout\b|\bexcept\b/iu],
+ // A count must start outside another word (포함한/상세 are not counts).
+ // Once a numeral + unit prefix exists, hold regardless of the suffix. This
+ // detects possible lost quantities, not Korean morphology; ambiguous noun
+ // prefixes after a genuine numeral are held too. No particle allowlist.
+ ['THRESHOLD', /\d+(?:\.\d+)?\s*(?:%|퍼센트|회|번|개|건|편|시간|분)|(?<![\p{L}\p{N}])(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*(?:회|번|개|건|편|시간|분)|이상|이하|미만|초과|최소|최대|at\s+least|more\s+than|less\s+than/iu],
+ // '끝까지'·'마지막까지' 는 기한이 아니다. 날짜·시각·이름 붙은 시점 뒤의 '까지' 만 본다.
+ ['DEADLINE', /\d+\s*월\s*\d+\s*일|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d+\s*(?:일|시)\s*까지|(?:[월화수목금토일]요일|오늘|내일|이번\s*주|다음\s*주|주말|월말|수료\s*전|종강\s*전)\s*까지|기한|마감|deadline/iu]
+];
+const GUARD_QUESTION = freeze({
+ UNSUPPORTED_MEASURE: '출석률·점수 같은 기준은 자동 검증을 지원하지 않습니다. 정책 확정 전 운영자 처리가 필요합니다.',
+ OPTIONAL: '선택 사항으로 보입니다. 필수 조건으로 바꾸지 않았습니다. 환급 조건인지 확인해 주세요.',
+ ALTERNATIVE: '조건 중 하나만 채우면 되는 문장(또는)으로 보입니다. 한 조항에 필수 조건 하나만 표현할 수 있어 확정하지 않았습니다. 요구할 조건을 정해 원문을 고쳐 주세요.',
+ SUBSTITUTE: '한 조건을 다른 조건으로 바꾸는 문장(대신)으로 보입니다. 대체 관계는 표현할 수 없어 확정하지 않았습니다. 최종 조건을 정해 원문을 고쳐 주세요.',
+ NEGATION: '부정·제외 표현이 있습니다. 필수 조건으로 바꾸지 않았습니다. 원문의 뜻을 확인해 주세요.',
+ THRESHOLD: '수치·횟수 기준이 있습니다. 지원 조건은 지정 항목의 완료·제출 여부만 봐서 기준을 옮길 수 없습니다. 기준을 확인해 주세요.',
+ DEADLINE: '기한 표현이 있습니다. 지원 조건은 기한을 검사하지 않아 그대로 옮길 수 없습니다. 기한 처리를 확인해 주세요.',
+ MULTIPLE_CONDITIONS: '한 조항에 조건이 여럿 있습니다. 조항마다 조건 하나가 되도록 줄이나 세미콜론으로 나눠 주세요.',
+ CAPABILITY_CONTRADICTION: '모델이 고른 조건 종류가 문장 표현과 맞지 않습니다. 조건 종류를 확인해 주세요.'
+});
+export function capabilityHints(text) {
+ return CAPABILITY_HINTS.filter(([, patterns]) => patterns.every(re => re.test(text))).map(([capability]) => capability);
+}
+// Kinds that stop a model-SUPPORTED clause from becoming an executable condition.
+export function clauseGuardKinds(text, capability) {
+ if (grammar.some(re => re.test(text))) return [];
+ const kinds = GUARDS.filter(([, re]) => re.test(text)).map(([kind]) => kind);
+ // A lecture-review noun phrase names the review's subject, not a second
+ // completion obligation. Separate verbs such as 수강하고 remain visible.
+ const obligations = text.replace(/(?:강의|수업|활동|영상)\s+(?:(?:수강|시청)\s+)?(?=후기)/gu, '');
+ const hints = capabilityHints(obligations);
+ // In this narrow relation modifier the first noun describes the target. Keep
+ // any subsequent targets visible, e.g. 관련된 활동 A와 활동 B still counts two.
+ const targets = obligations.replace(/(?:강의|수업|활동|영상)(?:와|과)\s+관련된\s+/gu, '');
+ const repeated = /(?:와|과)\s|및|그리고|,|하고/u.test(targets) && CAPABILITY_HINTS.some(([cap, [noun]]) =>
+  hints.includes(cap) && [...targets.matchAll(new RegExp(noun.source, `${noun.flags}g`))].length > 1);
+ if (hints.length >= 2 || repeated) kinds.push('MULTIPLE_CONDITIONS');
+ else if (hints.length === 1 && capability && hints[0] !== capability) kinds.push('CAPABILITY_CONTRADICTION');
+ return kinds;
+}
 const reviewedDrafts = new WeakSet();
 export function reviewModelProposal(sourceText, rows, reviewedHash) {
  plainJson(rows);
  const clauses = sourceClauses(sourceText);
  check(Array.isArray(rows) && rows.length === clauses.length, 'MODEL_CLAUSE_COVERAGE');
- const conditions = [], questions = [];
+ const conditions = [], questions = [], guards = [];
  rows.forEach((row, index) => {
   exact(row, ['quote','start','end','status','capability','question'], 'MODEL_CLAUSE_FIELDS');
   const clause = clauses[index];
@@ -84,6 +142,14 @@ export function reviewModelProposal(sourceText, rows, reviewedHash) {
   check(tool && row.question === null, 'MODEL_CAPABILITY');
   const known = grammar.findIndex(pattern => pattern.test(clause.text));
   check(known < 0 || TOOL_MANIFEST[known] === tool, 'MODEL_CAPABILITY_MISMATCH');
+  // The model said SUPPORTED. Hold it if the clause cannot be one required condition.
+  const kinds = clauseGuardKinds(clause.text, tool.capability);
+  if (kinds.length) {
+   guards.push({clauseId: clause.id, kinds, modelStatus: 'SUPPORTED', modelCapability: tool.capability});
+   questions.push({clauseId: clause.id, reason: kinds.includes('UNSUPPORTED_MEASURE') ? 'UNSUPPORTED' : 'NEEDS_CLARIFICATION',
+    question: GUARD_QUESTION[kinds[0]]});
+   return;
+  }
   if (conditions.some(condition => condition.capability === tool.capability)) {
    questions.push({clauseId: clause.id, reason: 'NEEDS_CLARIFICATION', question: '중복 조건의 적용 범위를 확인해 주세요.'});
    return;
@@ -93,8 +159,10 @@ export function reviewModelProposal(sourceText, rows, reviewedHash) {
  const proposalHash = hash({sourceText, rows});
  const status = questions.some(question => question.reason === 'UNSUPPORTED') ? 'UNSUPPORTED'
   : questions.length ? 'NEEDS_CLARIFICATION' : reviewedHash === proposalHash ? 'READY' : 'OPERATOR_REVIEW_REQUIRED';
- const draft = signed({version: 'clear-preview-model-draft.1', executionMode: 'MODEL_PROPOSAL',
-  sourceText, sourceHash: hash(sourceText), proposalHash, clauses, conditions, questions, status});
+ // Preserve the proposal before server holds, without freezing caller-owned rows.
+ const modelRows = rows.map(row => ({...row}));
+ const draft = signed({version: 'clear-preview-model-draft.2', executionMode: 'MODEL_PROPOSAL',
+  sourceText, sourceHash: hash(sourceText), proposalHash, modelRows, clauses, conditions, questions, guards, status});
  reviewedDrafts.add(draft);
  return draft;
 }

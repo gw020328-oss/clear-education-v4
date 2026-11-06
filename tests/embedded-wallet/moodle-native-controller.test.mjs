@@ -11,10 +11,10 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor, commandResult, revokeError, revokeGate} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   target.document = document;
-  const provider = new EventEmitter(), calls = [], stages = [], views = [];
+  const provider = new EventEmitter(), calls = [], stages = [], views = [], commandInputs = [];
   const values=new Map(),diagnosticWrites=[];
   target.localStorage={getItem:k=>values.get(k)??null,setItem(k,v){if(storageFailure)throw Error('denied');values.set(k,v);diagnosticWrites.push(JSON.parse(v));stages.push('diagnostic');}};
   let currentAddress = address;
@@ -24,6 +24,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
     if (method === 'eth_accounts') return [currentAddress];
     if (method === 'eth_chainId') return '0x3039';
     if (method === 'wallet_switchEthereumChain') return null;
+    if (method === 'wallet_revokePermissions') { await revokeGate; if (revokeError) throw revokeError; return null; }
     throw Error('UNEXPECTED_WALLET_REQUEST');
   };
   target.addEventListener('eip6963:requestProvider', () => {
@@ -39,12 +40,14 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
       async authenticate() { stages.push('authenticate'); return {role: serverRole}; },
       async assertSession(signal) { stages.push('assert-session'); await wallet.guard(signal);
         return {wallet: address, role: serverRole, expiresAt: Math.floor(Date.now()/1000)+60}; },
-      async request(path){stages.push(path);await workflowGate;if(requestError)throw requestError;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
+      async request(path){stages.push(path);await workflowGate;if(requestError)throw requestError;const custom=requestFor?.(path);if(custom!==undefined)return custom;return {version:'clear-bootcamp-normal-session.1',role:'OPERATOR',applicationId:null,policyHash:'0x'+'11'.repeat(32),runtimeMappingHash:'0x'+'22'.repeat(32),sourceMode:'REGISTERED_TEST_SOURCE',receiptRequired:true};},
       async dispose() { stages.push('revoke'); if (rejectedRevoke) throw Error('synthetic'); },
     }),
-    loginFactory: () => Object.fromEntries(['begin','complete','finish','end','command'].map(method => [method, async () => {
+    loginFactory: () => Object.fromEntries(['begin','complete','finish','end','command'].map(method => [method, async (...args) => {
       stages.push(method);
+      if(method==='command')commandInputs.push(args[1]);
       if(method==='command'&&commandError)throw commandError;
+      if(method==='command'&&commandResult!==undefined)return commandResult;
       if (method === 'finish' && changeAccountsOnFinish) currentAddress = '0x'+'34'.repeat(20);
       if (method === 'end') { await endGate; if (rejectedEnd) throw Error('synthetic lost end response'); }
     }]))});
@@ -54,7 +57,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
     await controller.dispatch({action: 'select-wallet', choiceId: view().choices[0].choiceId});
     await controller.dispatch({action: 'check-network'});
   }
-  return {controller, view, views, calls, stages, provider, ready,diagnosticWrites,storage:target.localStorage};
+  return {controller, view, views, calls, stages, provider, ready,diagnosticWrites,storage:target.localStorage,commandInputs};
 }
 
 test('Moodle mount/discovery do not request accounts, switch chain or sign; every stage is explicit', async () => {
@@ -317,4 +320,139 @@ test('certificate exception does not cover auth status, other writes or unknown 
   await assert.rejects(f.controller.runWorkflow(action==='start-certificate'?{action,applicationId:'application-one',expectedRevision:1,idempotencyKey:'start-one'}:{action,idempotencyKey:'create-one'}));
   assert.equal(f.view().authenticated,false);assert.equal(f.diagnosticWrites.length,1);assert(f.stages.includes('revoke'));await f.controller.destroy();
  }
+});
+
+// Operator consent: a stale reviewed target (fresh pre-consent view) or an exact server CAS 409 was not recorded.
+function consentViews(){
+ const h=n=>'0x'+String(n).repeat(64).slice(0,64);
+ const evidence={conditionsStatus:'MET',current:true,validUntilExclusive:null,criteria:['activity-complete','assignment-submitted','reflection-topics','python-basic-certificate'].map(criterionId=>({criterionId,state:'MET',current:true,evidenceId:'evidence-'+criterionId,originalEvidenceAccessible:false}))};
+ const procedure={version:'clear-bootcamp-review-procedure.1',applicationId:'application-one',role:'COURSE_OPERATOR',policyHash:h(1),runtimeMappingHash:h(2),applicationRevision:8,ledgerSequence:70,decisionId:'decision-one',decisionRevision:5,decisionHash:h(3),asOf:1,evidence,funding:{},procedure:{},consent:{records:[]},objection:{blocked:false},chain:{acceptedRight:null,transactionState:null,transactionHash:null,blockRef:null}};
+ const operations={...procedure,version:'clear-bootcamp-operations-projection.2',role:'OPERATOR',current:true};
+ const requestFor=path=>path==='/__dev/config'?{version:'clear-bootcamp-frontend-host.1',sourceMode:'REGISTERED_TEST_SOURCE',policyHash:h(1),procedureHttpVersion:procedure.version,operationsHttpVersion:operations.version}
+  :path.endsWith('/procedure')?structuredClone(procedure):path.endsWith('/operations')?structuredClone(operations):undefined;
+ return {procedure,operations,requestFor};
+}
+test('consent whose reviewed target changed before sending keeps the login and reports NOT_ACCEPTED',async()=>{
+ const v=consentViews(),f=fixture({requestFor:v.requestFor});await connectedDiagnostic(f);
+ const reviewed=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ v.procedure.ledgerSequence++;v.operations.ledgerSequence++; // the other role consented meanwhile
+ await assert.rejects(f.controller.runWorkflow({action:'consent',reviewed,value:'AGREE',idempotencyKey:'consent-old'}),
+  error=>error.code==='MOODLE_CONSENT_REVIEW_CHANGED'&&error.outcome==='NOT_SENT'&&error.serverEffect==='NOT_ACCEPTED');
+ assert(!f.stages.includes('command'),'nothing was sent');assert.equal(f.view().authenticated,true);assert.equal(f.view().phase,'CONNECTED');
+ assert(!f.stages.includes('revoke'));assert.equal(f.diagnosticWrites.length,0);
+ const current=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ assert.equal(current.target.expectedLedgerSequence,71,'a fresh review shows the new target');
+ await f.controller.destroy();
+});
+test('consent pressed before chain registration (exact 409 NOT_READY) keeps the login and records nothing',async()=>{
+ const early=Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_NORMAL_PROCEDURE_NOT_READY',status:409,outcome:'HTTP_ERROR'});
+ const v=consentViews(),f=fixture({requestFor:v.requestFor,commandError:early});await connectedDiagnostic(f);
+ const reviewed=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ await assert.rejects(f.controller.runWorkflow({action:'consent',reviewed,value:'AGREE',idempotencyKey:'consent-early'}),
+  error=>error.code==='MOODLE_CONSENT_REVIEW_CHANGED'&&error.serverEffect==='NOT_ACCEPTED');
+ assert.equal(f.view().authenticated,true);assert(!f.stages.includes('revoke'));assert.equal(f.diagnosticWrites.length,0);
+ await f.controller.destroy();
+ const x=fixture({requestFor:consentViews().requestFor,commandError:Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_NORMAL_PROCEDURE_NOT_READY',status:503})});
+ await connectedDiagnostic(x);const r=await x.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ await assert.rejects(x.controller.runWorkflow({action:'consent',reviewed:r,value:'AGREE',idempotencyKey:'consent-x'}),e=>e.code==='MOODLE_WORKFLOW_UNAVAILABLE');
+ assert.equal(x.view().authenticated,false,'a non-409 status is still not a definite rejection');await x.controller.destroy();
+});
+test('exact server consent CAS rejection keeps the login; unknown or auth consent failures still cancel',async()=>{
+ const stale=Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_VIEW_STALE',status:409});
+ const v=consentViews(),f=fixture({requestFor:v.requestFor,commandError:stale});await connectedDiagnostic(f);
+ const reviewed=await f.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+ await assert.rejects(f.controller.runWorkflow({action:'consent',reviewed,value:'AGREE',idempotencyKey:'consent-one'}),
+  error=>error.code==='MOODLE_CONSENT_REVIEW_CHANGED'&&error.outcome==='HTTP_ERROR'&&error.serverEffect==='NOT_ACCEPTED');
+ assert.equal(f.view().authenticated,true);assert(!f.stages.includes('revoke'));assert.equal(f.diagnosticWrites.length,0);
+ await f.controller.destroy();
+ for(const cause of [Object.assign(Error('API_REQUEST_FAILED'),{code:'API_REQUEST_FAILED',status:409}),
+  Object.assign(Error('API_REQUEST_FAILED'),{code:'BC_VIEW_STALE',status:403}),Object.assign(Error('API_NETWORK'),{code:'API_NETWORK',outcome:'UNKNOWN'})]){
+  const w=consentViews(),x=fixture({requestFor:w.requestFor,commandError:cause});await connectedDiagnostic(x);
+  const r=await x.controller.runWorkflow({action:'read-application',applicationId:'application-one'});
+  await assert.rejects(x.controller.runWorkflow({action:'consent',reviewed:r,value:'AGREE',idempotencyKey:'consent-x'}),error=>error.code==='MOODLE_WORKFLOW_UNAVAILABLE');
+  assert.equal(x.view().authenticated,false);assert(x.stages.includes('revoke'));await x.controller.destroy();
+ }
+});
+
+test('operator preview request uses one fresh Moodle command grant per call and never cancels the login on failure',async()=>{
+ const body={version:'clear-operator-preview.1',sourceText:'synthetic notice'};
+ const f=fixture({commandResult:{version:'clear-operator-preview.1',stage:'PREPARED'}});await connectedDiagnostic(f);
+ assert.deepEqual(await f.controller.previewRequest('/bootcamp/preview/prepare',{method:'POST',body}),{version:'clear-operator-preview.1',stage:'PREPARED'});
+ await f.controller.previewRequest('/bootcamp/preview/prepare',{method:'POST',body});
+ const [a,b]=f.commandInputs;
+ assert.deepEqual([a.method,a.path,a.body],['POST','/bootcamp/preview/prepare',body]);assert.notEqual(a.body,body,'body is copied');
+ assert.match(a.idempotencyKey,/^preview-[0-9a-f]{24}$/);assert.notEqual(a.idempotencyKey,b.idempotencyKey,'no key reuse');
+ for(const [path,options] of [['/bootcamp/preview/publish',{method:'POST',body}],['/bootcamp/preview/prepare',{method:'GET',body}],
+  ['/bootcamp/preview/prepare',{method:'POST',body:null}],['/bootcamp/v3/applications',{method:'POST',body}]])
+  await assert.rejects(f.controller.previewRequest(path,options),/MOODLE_PREVIEW_REQUEST/);
+ assert.equal(f.commandInputs.length,2,'refused shapes never reach Moodle');
+ await f.controller.destroy();
+ const failed=Object.assign(Error('API_REQUEST_FAILED'),{code:'API_REQUEST_FAILED',status:503,outcome:'UNKNOWN'});
+ const x=fixture({commandError:failed});await connectedDiagnostic(x);
+ await assert.rejects(x.controller.previewRequest('/bootcamp/preview/execute',{method:'POST',body}),e=>e===failed,'the API error reaches the panel unchanged');
+ assert.equal(x.view().authenticated,true);assert(!x.stages.includes('revoke'));assert.equal(x.diagnosticWrites.length,0,'a preview failure is not a payment workflow failure');
+ await x.controller.destroy();
+ const n=fixture();await assert.rejects(n.controller.previewRequest('/bootcamp/preview/prepare',{method:'POST',body}),/MOODLE_PREVIEW_NOT_READY/);await n.controller.destroy();
+});
+test('participant pages have no preview request',async()=>{
+ const target=new EventTarget();target.navigator={locks:{request:(_n,_o,run)=>run()}};
+ const c=createCourseWalletController({config:{...config,role:'participant'},target,onState(){},fetch:async()=>({ok:true,json:async()=>({})}),
+  sdk:{login:async()=>{},logout:async()=>{}},loginFactory:()=>({end:async()=>{}}),sessionFactory:()=>({})});
+ await assert.rejects(c.previewRequest('/bootcamp/preview/prepare',{method:'POST',body:{a:1}}),/MOODLE_PREVIEW_REQUEST/);await c.destroy();
+});
+
+test('operator connect drops an earlier site permission before asking for accounts, and tolerates wallets without it',async()=>{
+ const f=fixture();await f.ready();
+ const i=f.calls.indexOf('wallet_revokePermissions'),j=f.calls.indexOf('eth_requestAccounts');
+ assert(i>=0&&j>i,'revoke precedes the account request');assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,1);
+ await f.controller.destroy();
+ const x=fixture({revokeError:Object.assign(Error('unsupported'),{code:4200})});await x.ready();
+ assert(x.calls.includes('eth_requestAccounts'),'unsupported revoke falls back to the old request');assert(x.calls.includes('wallet_switchEthereumChain'),'the flow continues to the network check');
+ await x.controller.destroy();
+});
+
+test('operator connect proceeds past revoke only when the wallet clearly lacks it; refusal or other failure stops before accounts',async()=>{
+ const connect=f=>f.controller.dispatch({action:'connect-metamask',providerId:f.view().providers[0].providerId});
+ const u=fixture({revokeError:Object.assign(Error('Method not found'),{code:-32601})});await u.ready();
+ assert(u.calls.includes('eth_requestAccounts'),'JSON-RPC -32601 is unsupported');assert.equal(u.view().phase,'NETWORK_READY');await u.controller.destroy();
+ for(const [revokeError,code] of [[Object.assign(Error('User rejected'),{code:4001}),'WALLET_REJECTED'],
+  [Object.assign(Error('Internal error'),{code:-32603}),'UNAVAILABLE'],[Error('no code'),'UNAVAILABLE'],[Object.assign(Error('Disconnected'),{code:4900}),'UNAVAILABLE']]){
+  const f=fixture({revokeError});await connect(f);
+  assert(!f.calls.includes('eth_requestAccounts'),'no account request after '+revokeError.message);
+  assert.equal(f.view().phase,'ERROR');assert.equal(f.view().error.code,code);assert.deepEqual(f.view().choices,[]);
+  assert(f.view().allowedActions.includes('connect-metamask'),'the operator can try again');
+  await f.controller.destroy();
+ }
+});
+
+test('a timed out revoke stops before accounts, and a new connect never overlaps the late revoke',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const flush=()=>new Promise(r=>setImmediate(r));
+ let finish;const f=fixture({revokeGate:new Promise(r=>{finish=r;})});
+ const connect=()=>f.controller.dispatch({action:'connect-metamask',providerId:f.view().providers[0].providerId});
+ const first=connect();while(!f.calls.includes('wallet_revokePermissions'))await flush();
+ t.mock.timers.tick(10000);await first;
+ assert(!f.calls.includes('eth_requestAccounts'));assert.equal(f.view().phase,'ERROR');assert.equal(f.view().error.code,'UNAVAILABLE');
+ await connect();
+ assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,1,'no second revoke while the first is unsettled');
+ assert(!f.calls.includes('eth_requestAccounts'),'no account request while the late revoke can still land');
+ finish();await flush();
+ await connect();
+ assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,2);assert(f.calls.indexOf('eth_requestAccounts')>f.calls.lastIndexOf('wallet_revokePermissions'),'accounts only after the fresh revoke');
+ assert.equal(f.view().phase,'CHOOSING');assert.equal(f.view().choices.length,1);
+ await f.controller.destroy();
+});
+
+test('cancel during revoke stops before accounts; the late revoke still blocks the next connect until it settles',async()=>{
+ const flush=()=>new Promise(r=>setImmediate(r));
+ let finish;const f=fixture({revokeGate:new Promise(r=>{finish=r;})});
+ const connect=()=>f.controller.dispatch({action:'connect-metamask',providerId:f.view().providers[0].providerId});
+ const first=connect();while(!f.calls.includes('wallet_revokePermissions'))await flush();
+ await f.controller.dispatch({action:'cancel'});await first;
+ assert(!f.calls.includes('eth_requestAccounts'));assert.equal(f.view().phase,'CANCELLED');
+ await connect();
+ assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,1);assert(!f.calls.includes('eth_requestAccounts'));
+ finish();await flush();
+ await connect();assert(f.calls.includes('eth_requestAccounts'));assert.equal(f.view().phase,'CHOOSING');
+ await f.controller.destroy();
 });

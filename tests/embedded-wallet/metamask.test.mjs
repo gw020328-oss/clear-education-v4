@@ -85,3 +85,16 @@ test('cancellation during network prompt cannot publish a connected boundary',as
   await begun;controller.abort();resolveSwitch(null);await assert.rejects(pending,/CANCELLED/);
   assert.equal(a.provider.listenerCount('accountsChanged'),0);
 });
+test('a late notice of the unchanged pinned chain/account keeps the connection; a real change still cancels',async t=>{
+  // MetaMask can announce chainChanged after our own wallet_switchEthereumChain resolves.
+  const a=actor(t),boundary=await a.connect(),pinned='0x'+config.chainId.toString(16);
+  a.provider.emit('chainChanged',pinned);a.provider.emit('chainChanged',pinned.toUpperCase().replace('0X','0x'));
+  a.provider.emit('accountsChanged',[a.signer.address.toLowerCase()]);
+  assert.equal(a.invalidated,0);await boundary.guard();
+  a.provider.emit('chainChanged','0x1');assert.equal(a.invalidated,1);await assert.rejects(boundary.guard(),/CANCELLED/);
+  for(const value of [[],[Wallet.createRandom().address],[a.signer.address,Wallet.createRandom().address],undefined,'x']){
+    const b=actor(t),c=await b.connect();b.provider.emit('accountsChanged',value);assert.equal(b.invalidated,1);await assert.rejects(c.guard(),/CANCELLED/);
+  }
+  const d=actor(t),e=await d.connect();d.provider.emit('disconnect');assert.equal(d.invalidated,1);
+  e.dispose();for(const name of ['accountsChanged','chainChanged','disconnect'])assert.equal(d.provider.listenerCount(name),0);
+});

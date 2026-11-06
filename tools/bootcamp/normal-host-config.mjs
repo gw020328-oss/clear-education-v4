@@ -38,7 +38,8 @@ export function validateHostConfig(c){
  fail(typeof c.frontendAccepted==='boolean'&&(c.frontendAssetSha256===null||/^[0-9a-f]{64}$/.test(c.frontendAssetSha256)),'NORMAL_HOST_FRONTEND');
  const aiWallet=c.aiApprovalWallet??null,aiAuthority=c.aiApprovalAuthoritySha256??null;
  fail(aiWallet===null&&aiAuthority===null||[c.participantWallet,c.operatorWallet].includes(aiWallet)&&a(aiWallet)&&/^[a-f0-9]{64}$/.test(aiAuthority),'NORMAL_HOST_AI_APPROVAL_AUTHORITY');
- fail(c.selectedCertificateId===null||/^[A-Za-z0-9_-]{1,80}$/.test(c.selectedCertificateId??''),'NORMAL_HOST_SELECTION');return c;
+ fail(c.selectedCertificateId===null||/^[A-Za-z0-9_-]{1,80}$/.test(c.selectedCertificateId??''),'NORMAL_HOST_SELECTION');
+ fail(c.operatorPreview===undefined||c.operatorPreview?.version==='clear-normal-operator-preview.1'&&c.activityReturnOnly===undefined&&c.certificateCardOnly===undefined,'NORMAL_HOST_OPERATOR_PREVIEW');return c;
 }
 export function assetSnapshot(webRoot){
  if(!webRoot||!existsSync(webRoot))return null;

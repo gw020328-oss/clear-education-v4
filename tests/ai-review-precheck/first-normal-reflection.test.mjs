@@ -24,7 +24,9 @@ function fixture(options={}){
  const store={async claim(){assert.equal(spent,false);spent=true;},async checkpoint(x){snapshots.push(structuredClone(x));}};
  const output=()=>reflectionMock(f).observe();
  const transportOptions={keyReader:()=>{keys++;return 'offline-normal-test-only';},fetchImpl:async(url,opts)=>{
-  fetches++;assert.ok(snapshots.some(x=>x.status==='DISPATCH_RESERVED'));assert.equal(opts.method,'POST');assert.ok(url.endsWith('/gemini-3.5-flash-lite:generateContent'));
+  fetches++;assert.ok(snapshots.some(x=>x.status==='DISPATCH_RESERVED'));
+  {const sent=JSON.parse(opts.body),src=JSON.parse(sent.contents[0].parts[0].text).source;
+   assert.deepEqual(sent.generationConfig.responseSchema.properties.topics.items.properties.evidence.properties.sourceId.enum,[src.sourceId]);}assert.equal(opts.method,'POST');assert.ok(url.endsWith('/gemini-3.5-flash-lite:generateContent'));
   return new Response(JSON.stringify({modelVersion:NORMAL_REFLECTION_MODEL,usageMetadata:{promptTokenCount:300,candidatesTokenCount:200,totalTokenCount:500,serviceTier:'standard'},
    candidates:[{finishReason:'STOP',content:{role:'model',parts:[{text:JSON.stringify(await output())}]}}]}));}};
  const args={packet,approval,codeState,day,currentCodeState:()=>codeState,currentDay:()=>day,currentApprovalHash:()=>hash(approval),
@@ -32,7 +34,12 @@ function fixture(options={}){
  return {f,state,args,packet,approval,store,snapshots,lease,output,counts:()=>({reads,releases,fetches,keys})};
 }
 test('same schema/profile, async original lease, one simulated ACTUAL path and v1 observation with original spans',async()=>{
- const x=fixture();assert.deepEqual(NORMAL_REFLECTION_SCHEMA,E6_QUALITY_SCHEMA);
+ const x=fixture();
+ // The reviewed E6 schema plus only the grounding limits: exactly 3 topics, the supplied sourceId, a verbatim quote of 1-240 chars.
+ const expected=structuredClone(E6_QUALITY_SCHEMA);Object.assign(expected.properties.topics,{minItems:3,maxItems:3});
+ const ev=expected.properties.topics.items.properties.evidence.properties;ev.sourceId.enum=['SOURCE_ID'];
+ Object.assign(ev.quote,{minLength:1,maxLength:240,description:'One contiguous span copied character-for-character from source.text (same spaces, punctuation and line breaks), at most 240 characters, that appears exactly once in source.text.'});
+ assert.deepEqual(NORMAL_REFLECTION_SCHEMA,expected);
  const r=await runFirstNormalReflection(x.args);assert.equal(r.view.observation.version,'clear-bootcamp-reflection-observation.1');
  assert.equal(r.view.observation.execution,'ACTUAL');assert.equal(r.view.observation.contentStatus,'CHECKED');assert.equal(r.view.observation.verifiedEvidenceCondition,'UNKNOWN');
  assert.ok(r.view.observation.topics.every(t=>t.originalEvidenceLocator?.quoteHash));assert.deepEqual(x.counts(),{reads:1,releases:1,fetches:1,keys:1});

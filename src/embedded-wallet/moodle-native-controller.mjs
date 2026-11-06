@@ -23,7 +23,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   let epoch = 0, sequence = 0, closed = false, revoking = false, revokeUnknown = false;
   let phase = 'IDLE', error = null, busy = null, selected = null, network = false, authenticated = false;
   let wallet = null, session = null, workflow = null, closing = null, candidates = [], providers = [];
-  let cancellation = null, moodleEndUnknown = false, endingMoodle = null;
+  let cancellation = null, moodleEndUnknown = false, endingMoodle = null, pendingRevoke = null;
   let authExpiry = 0, expiryTimer;
   let reviewTimer, reviewRead;
   let snapshot = {ready: false, authenticated: false, user: null, wallets: [], walletsReady: false, externalWalletsDisabled: true};
@@ -162,6 +162,24 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
         } else if (command.action === 'connect-metamask') {
           const provider = providers.find(p => p.selector === command.providerId); check(provider, 'STALE_SELECTION');
           await release(); current(stamp,signal); selected = null; candidates = []; phase = 'CONNECTING'; emit();
+          // Each local TEST run adds a new chain. A site permission left from an earlier run makes MetaMask
+          // refuse the next personal_sign (4100), so drop it first and ask for accounts afresh. Only a wallet
+          // that clearly lacks the method (EIP-1193 4200, JSON-RPC -32601) keeps the old behaviour; a refusal,
+          // timeout or any other failure stops before the account request. A revoke still unsettled from an
+          // earlier attempt blocks the next one, so a late revoke cannot drop a permission granted after it.
+          check(!pendingRevoke, 'WALLET_REVOKE_PENDING');
+          try {
+            await bounded(() => {
+              const pending = (async () => provider.provider.request({method: 'wallet_revokePermissions', params: [{eth_accounts: {}}]}))();
+              const settle = () => { if (pendingRevoke === pending) pendingRevoke = null; };
+              pendingRevoke = pending; pending.then(settle, settle);
+              return pending;
+            }, {signal, timeoutMs: 10000});
+          } catch (cause) {
+            signal?.throwIfAborted();
+            if (cause?.code !== 4200 && cause?.code !== -32601) throw cause;
+          }
+          current(stamp,signal);
           const address = await requestMetaMaskAddress(provider.provider, signal); current(stamp,signal);
           candidates = [{...provider, address, selector: selector('choice')}]; phase = 'CHOOSING';
         } else if (command.action === 'select-wallet') {
@@ -257,12 +275,42 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
       if(certificateChanged&&stamp===epoch&&!closed&&authenticated&&phase==='CONNECTED'
         &&session===captured&&wallet===capturedWallet)throw Object.assign(Error('MOODLE_CERTIFICATE_REVIEW_CHANGED'),
           {code:'MOODLE_CERTIFICATE_REVIEW_CHANGED',outcome:'HTTP_ERROR',serverEffect:'NOT_ACCEPTED'});
+      // Consent target changed before sending (fresh pre-consent view) or the server CAS rejected it:
+      // nothing was recorded, so keep this login and let the person re-read and decide again.
+      const consentNotSent=command.action==='consent'&&cause?.message==='CONSENT_REVIEW_CHANGED';
+      const consentChanged=consentNotSent||command.action==='consent'&&cause?.status===409
+        &&['BC_VIEW_STALE','BC_NORMAL_PROCEDURE_NOT_READY'].includes(cause?.code);
+      if(consentChanged&&stamp===epoch&&!closed&&authenticated&&phase==='CONNECTED'
+        &&session===captured&&wallet===capturedWallet)throw Object.assign(Error('MOODLE_CONSENT_REVIEW_CHANGED'),
+          {code:'MOODLE_CONSENT_REVIEW_CHANGED',outcome:consentNotSent?'NOT_SENT':'HTTP_ERROR',serverEffect:'NOT_ACCEPTED'});
       if(stamp===epoch&&!closed&&(!nativeWorkflowIsRead(command)||cause?.status===401||cause?.status===403
         ||['AUTH_REQUIRED','ROLE_CHANGED','PRODUCT_ROLE_CHANGED','FORBIDDEN','SESSION_CHANGED','SESSION_CONTEXT',
           'CANCELLED','WALLET_CONTEXT_CANCELLED'].includes(cause?.message)))await cancel('CANCELLED',{origin:'workflow-failure',action:command.action,cause});
       throw Object.assign(Error('MOODLE_WORKFLOW_UNAVAILABLE'),{code:'MOODLE_WORKFLOW_UNAVAILABLE',
         outcome:nativeWorkflowIsRead(command)?'NOT_SENT':'UNKNOWN'});
     }finally{if(busy===controller)busy=null;emit();}
+  },
+  // Operator condition preview only: DISPLAY_ONLY relay, sent through the same Moodle
+  // command grant as any write. A failure is returned to the panel as is (relay/D codes
+  // only) and does not end the wallet login; nothing is retried here.
+  async previewRequest(path, options = {}) {
+    check(role === 'operator' && typeof path === 'string' && /^\/bootcamp\/preview\/(prepare|generate|execute)$/.test(path)
+      && options?.method === 'POST' && options.body && Object.getPrototypeOf(options.body) === Object.prototype, 'MOODLE_PREVIEW_REQUEST');
+    const command = {method:'POST',path,body:structuredClone(options.body),
+      idempotencyKey:'preview-'+[...globalThis.crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,'0')).join('')};
+    moodleCommandDigest(command);
+    check(!closed && !busy && !cancellation && !revokeUnknown && !moodleEndUnknown
+      && phase === 'CONNECTED' && authenticated && session && wallet, 'MOODLE_PREVIEW_NOT_READY');
+    const captured = session, capturedWallet = wallet, controller = new AbortController(), stamp = epoch;
+    const outer = options.signal instanceof AbortSignal ? options.signal : null, abort = () => controller.abort();
+    outer?.addEventListener('abort', abort, {once:true}); if (outer?.aborted) abort();
+    busy = controller; emit();
+    try {
+      await capturedWallet.guard(controller.signal); current(stamp,controller.signal);
+      const result = await bounded(()=>moodle.command(captured,command,controller.signal),{signal:controller.signal,timeoutMs:60000});
+      current(stamp,controller.signal); check(session === captured && wallet === capturedWallet && authenticated,'AUTH_REQUIRED');
+      return result;
+    } finally { outer?.removeEventListener('abort', abort); if(busy === controller) busy = null; emit(); }
   }, async submitCommand(input) {
     const command = structuredClone(input); moodleCommandDigest(command);
     check(!closed && !busy && !cancellation && !revokeUnknown && !moodleEndUnknown
