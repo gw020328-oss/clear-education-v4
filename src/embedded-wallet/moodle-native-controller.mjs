@@ -23,7 +23,7 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
   let epoch = 0, sequence = 0, closed = false, revoking = false, revokeUnknown = false;
   let phase = 'IDLE', error = null, busy = null, selected = null, network = false, authenticated = false;
   let wallet = null, session = null, workflow = null, closing = null, candidates = [], providers = [];
-  let cancellation = null, moodleEndUnknown = false, endingMoodle = null;
+  let cancellation = null, moodleEndUnknown = false, endingMoodle = null, pendingRevoke = null;
   let authExpiry = 0, expiryTimer;
   let reviewTimer, reviewRead;
   let snapshot = {ready: false, authenticated: false, user: null, wallets: [], walletsReady: false, externalWalletsDisabled: true};
@@ -163,10 +163,22 @@ export function createCourseWalletController({config, sdk, target, onState, fetc
           const provider = providers.find(p => p.selector === command.providerId); check(provider, 'STALE_SELECTION');
           await release(); current(stamp,signal); selected = null; candidates = []; phase = 'CONNECTING'; emit();
           // Each local TEST run adds a new chain. A site permission left from an earlier run makes MetaMask
-          // refuse the next personal_sign (4100), so drop it first and ask for accounts afresh. Best effort:
-          // a wallet without wallet_revokePermissions keeps the old behaviour.
-          try { await bounded(() => provider.provider.request({method: 'wallet_revokePermissions', params: [{eth_accounts: {}}]}),
-            {signal, timeoutMs: 10000}); } catch { signal?.throwIfAborted(); }
+          // refuse the next personal_sign (4100), so drop it first and ask for accounts afresh. Only a wallet
+          // that clearly lacks the method (EIP-1193 4200, JSON-RPC -32601) keeps the old behaviour; a refusal,
+          // timeout or any other failure stops before the account request. A revoke still unsettled from an
+          // earlier attempt blocks the next one, so a late revoke cannot drop a permission granted after it.
+          check(!pendingRevoke, 'WALLET_REVOKE_PENDING');
+          try {
+            await bounded(() => {
+              const pending = (async () => provider.provider.request({method: 'wallet_revokePermissions', params: [{eth_accounts: {}}]}))();
+              const settle = () => { if (pendingRevoke === pending) pendingRevoke = null; };
+              pendingRevoke = pending; pending.then(settle, settle);
+              return pending;
+            }, {signal, timeoutMs: 10000});
+          } catch (cause) {
+            signal?.throwIfAborted();
+            if (cause?.code !== 4200 && cause?.code !== -32601) throw cause;
+          }
           current(stamp,signal);
           const address = await requestMetaMaskAddress(provider.provider, signal); current(stamp,signal);
           candidates = [{...provider, address, selector: selector('choice')}]; phase = 'CHOOSING';

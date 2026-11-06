@@ -11,7 +11,7 @@ const config = {origin, appId: 'syntheticapp00001', redirectUri: origin + '/loca
   instanceId: '0x'+'11'.repeat(32), role: 'operator', courseId: 2, sesskey: 'synthetic01'};
 const address = '0x'+'12'.repeat(20);
 function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFinish = false,
-  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor, commandResult, revokeError} = {}) {
+  rejectedRevoke = false, serverRole = 'operator', workflowGate, document, requestError, commandError, storageFailure=false, requestFor, commandResult, revokeError, revokeGate} = {}) {
   const target = new EventTarget(); target.navigator = {locks: {request: (_name, _options, run) => run()}};
   target.document = document;
   const provider = new EventEmitter(), calls = [], stages = [], views = [], commandInputs = [];
@@ -24,7 +24,7 @@ function fixture({accountGate, endGate, rejectedEnd = false, changeAccountsOnFin
     if (method === 'eth_accounts') return [currentAddress];
     if (method === 'eth_chainId') return '0x3039';
     if (method === 'wallet_switchEthereumChain') return null;
-    if (method === 'wallet_revokePermissions') { if (revokeError) throw revokeError; return null; }
+    if (method === 'wallet_revokePermissions') { await revokeGate; if (revokeError) throw revokeError; return null; }
     throw Error('UNEXPECTED_WALLET_REQUEST');
   };
   target.addEventListener('eip6963:requestProvider', () => {
@@ -409,4 +409,50 @@ test('operator connect drops an earlier site permission before asking for accoun
  const x=fixture({revokeError:Object.assign(Error('unsupported'),{code:4200})});await x.ready();
  assert(x.calls.includes('eth_requestAccounts'),'unsupported revoke falls back to the old request');assert(x.calls.includes('wallet_switchEthereumChain'),'the flow continues to the network check');
  await x.controller.destroy();
+});
+
+test('operator connect proceeds past revoke only when the wallet clearly lacks it; refusal or other failure stops before accounts',async()=>{
+ const connect=f=>f.controller.dispatch({action:'connect-metamask',providerId:f.view().providers[0].providerId});
+ const u=fixture({revokeError:Object.assign(Error('Method not found'),{code:-32601})});await u.ready();
+ assert(u.calls.includes('eth_requestAccounts'),'JSON-RPC -32601 is unsupported');assert.equal(u.view().phase,'NETWORK_READY');await u.controller.destroy();
+ for(const [revokeError,code] of [[Object.assign(Error('User rejected'),{code:4001}),'WALLET_REJECTED'],
+  [Object.assign(Error('Internal error'),{code:-32603}),'UNAVAILABLE'],[Error('no code'),'UNAVAILABLE'],[Object.assign(Error('Disconnected'),{code:4900}),'UNAVAILABLE']]){
+  const f=fixture({revokeError});await connect(f);
+  assert(!f.calls.includes('eth_requestAccounts'),'no account request after '+revokeError.message);
+  assert.equal(f.view().phase,'ERROR');assert.equal(f.view().error.code,code);assert.deepEqual(f.view().choices,[]);
+  assert(f.view().allowedActions.includes('connect-metamask'),'the operator can try again');
+  await f.controller.destroy();
+ }
+});
+
+test('a timed out revoke stops before accounts, and a new connect never overlaps the late revoke',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});
+ const flush=()=>new Promise(r=>setImmediate(r));
+ let finish;const f=fixture({revokeGate:new Promise(r=>{finish=r;})});
+ const connect=()=>f.controller.dispatch({action:'connect-metamask',providerId:f.view().providers[0].providerId});
+ const first=connect();while(!f.calls.includes('wallet_revokePermissions'))await flush();
+ t.mock.timers.tick(10000);await first;
+ assert(!f.calls.includes('eth_requestAccounts'));assert.equal(f.view().phase,'ERROR');assert.equal(f.view().error.code,'UNAVAILABLE');
+ await connect();
+ assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,1,'no second revoke while the first is unsettled');
+ assert(!f.calls.includes('eth_requestAccounts'),'no account request while the late revoke can still land');
+ finish();await flush();
+ await connect();
+ assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,2);assert(f.calls.indexOf('eth_requestAccounts')>f.calls.lastIndexOf('wallet_revokePermissions'),'accounts only after the fresh revoke');
+ assert.equal(f.view().phase,'CHOOSING');assert.equal(f.view().choices.length,1);
+ await f.controller.destroy();
+});
+
+test('cancel during revoke stops before accounts; the late revoke still blocks the next connect until it settles',async()=>{
+ const flush=()=>new Promise(r=>setImmediate(r));
+ let finish;const f=fixture({revokeGate:new Promise(r=>{finish=r;})});
+ const connect=()=>f.controller.dispatch({action:'connect-metamask',providerId:f.view().providers[0].providerId});
+ const first=connect();while(!f.calls.includes('wallet_revokePermissions'))await flush();
+ await f.controller.dispatch({action:'cancel'});await first;
+ assert(!f.calls.includes('eth_requestAccounts'));assert.equal(f.view().phase,'CANCELLED');
+ await connect();
+ assert.equal(f.calls.filter(c=>c==='wallet_revokePermissions').length,1);assert(!f.calls.includes('eth_requestAccounts'));
+ finish();await flush();
+ await connect();assert(f.calls.includes('eth_requestAccounts'));assert.equal(f.view().phase,'CHOOSING');
+ await f.controller.destroy();
 });
