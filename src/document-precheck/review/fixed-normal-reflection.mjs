@@ -9,10 +9,16 @@ export const NORMAL_REFLECTION_MODEL='gemini-3.5-flash-lite';
 export const NORMAL_REFLECTION_WIRE_POLICY_HASH='0xc7aa9411a5241b533ab79b338736ca798a7b59a0e95ccb25a99cd06234d47902';
 const PROMPT_HASH='383d3d642e8fdd4c0bac482806439f324cb263f5d02d5b2a2f3d11f4b7c09081';
 const TOPICS=P0_POLICY.criteria.find(c=>c.capability==='REFLECTION_REQUIRED_TOPICS.1').predicate.topics;
-export const NORMAL_REFLECTION_SCHEMA=freeze({type:'OBJECT',properties:{topics:{type:'ARRAY',items:{type:'OBJECT',properties:{
+// The grounding check accepts only the supplied sourceId and a unique, verbatim span of at most 240 characters.
+// The schema states the same limits so a PRESENT answer is not lost to an over-long or re-typed quote.
+const QUOTE_DESCRIPTION='One contiguous span copied character-for-character from source.text (same spaces, punctuation and line breaks), at most 240 characters, that appears exactly once in source.text.';
+const schemaFor=sourceId=>freeze({type:'OBJECT',properties:{topics:{type:'ARRAY',minItems:3,maxItems:3,items:{type:'OBJECT',properties:{
  topicId:{type:'STRING',enum:TOPICS},state:{type:'STRING',enum:['PRESENT','MISSING','UNCERTAIN','CONFLICT']},
- evidence:{type:'OBJECT',nullable:true,properties:{sourceId:{type:'STRING'},quote:{type:'STRING'}},required:['sourceId','quote']},
+ evidence:{type:'OBJECT',nullable:true,properties:{sourceId:{type:'STRING',enum:[sourceId]},
+  quote:{type:'STRING',minLength:1,maxLength:240,description:QUOTE_DESCRIPTION}},required:['sourceId','quote']},
 },required:['topicId','state','evidence']}}},required:['topics']});
+// Template identity for the approval packet; the sent body (bodySha256) binds the exact per-source schema.
+export const NORMAL_REFLECTION_SCHEMA=schemaFor('SOURCE_ID');
 export const NORMAL_REFLECTION_COST_ACK='ESTIMATE_ONLY_NO_PROVIDER_HARD_CASH_CAP_IN_FLIGHT_MAY_EXCEED_USD_0_05';
 const PRICING='https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite';
 const adapters=new WeakMap();
@@ -26,7 +32,7 @@ function providerBody(request,messageFormat){
   caseId:request.contextHash,topicIds:TOPICS,source:{sourceId:source.sourceId,kind:'TEXT',messageFormat,
    locationBasis:'ORIGINAL_REFLECTION_BODY_UTF16',normalizationApplied:false,text:source.text}})}]}],
  generationConfig:{maxOutputTokens:1024,thinkingConfig:{thinkingLevel:'MINIMAL',includeThoughts:false},
- responseMimeType:'application/json',responseSchema:NORMAL_REFLECTION_SCHEMA}};
+ responseMimeType:'application/json',responseSchema:schemaFor(source.sourceId)}};
 }
 // Call only on an authorized owner read. Returns hashes/limits, never body/quotes.
 export function prepareNormalReflectionPacket({request,decisionRef=null,messageFormat,leaseExpiresAtMs}){
