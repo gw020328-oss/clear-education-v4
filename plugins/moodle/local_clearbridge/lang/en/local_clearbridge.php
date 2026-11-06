@@ -234,3 +234,5 @@ $string['nativecertificateread'] = 'Read the certificate signing message';
 $string['nativecertificatesign'] = 'Sign the displayed certificate message';
 $string['nativecertificatewait'] = 'Waiting for the next server step';
 $string['nativecertificatestartreceipt'] = 'Certificate start request accepted. Waiting for the signing message.';
+$string['brandsubstudent'] = 'Refund check';
+$string['brandsubteacher'] = 'Refund operations';

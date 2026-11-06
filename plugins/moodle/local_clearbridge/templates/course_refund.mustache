@@ -6,6 +6,22 @@
     {"student": true, "conditions": [{"name": "Lecture completion", "source": "Moodle activity"}]}
 }}
 <div data-clear-workflow>
+<div class="clear-brand">
+    <svg viewBox="0 0 545 164" role="img" aria-label="CLEAR" focusable="false">
+        <path d="M113 34H68C45 34 28 51 28 74V91C28 114 45 131 68 131H113" fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round"/>
+        <path d="M60 64V71M88 64V71" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+        <path d="M61 96L77 108L111 80H137" fill="none" stroke="#008D77" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M126 68L140 80L126 92" fill="none" stroke="#008D77" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        <g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M232 55C225 47 217 44 209 44C194 44 186 59 186 79C186 100 194 114 209 114C218 114 226 111 232 104"/>
+            <path d="M259 45V113H294"/>
+            <path d="M358 45H321V113H358M321 79H351"/>
+            <path d="M380 113L404 45L428 113M389 90H419"/>
+            <path d="M451 113V45H473C489 45 496 51 496 62C496 73 489 80 473 80H451M473 80L499 113"/>
+        </g>
+    </svg>
+    <p class="clear-brand-sub">{{#student}}{{#str}} brandsubstudent, local_clearbridge {{/str}}{{/student}}{{^student}}{{#str}} brandsubteacher, local_clearbridge {{/str}}{{/student}}</p>
+</div>
 {{#showconnection}}
 {{#student}}
 <div data-native-stage-strip aria-live="polite"></div>

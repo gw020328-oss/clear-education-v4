@@ -1299,7 +1299,7 @@ test('guide walks a student from load to paid with one button per step and no ex
     await press(guideRoot);
     const paid = at();
     assert.equal(paid.key, 'paid');
-    assert.equal(paid.title, '100 TEST를 보냈어요!');
+    assert.equal(paid.title, '100 TEST를 보냈어요');
     assert.match(paid.body, /최종 확정까지는/);
     assert.equal(stageLine(roots.stageRoot), includedText, 'strip binds the same receipt');
     assert.equal(roots.payoutRoot.children.length, 0, 'still no paid summary without FINALIZED');

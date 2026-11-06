@@ -57,10 +57,14 @@
 /* #173 participant UX (stage strip, condition cards, payout summary), ported from web/src/bootcamp/ux.css and
  * condition-return/cards.css at 9bda108. Team colour tokens are defined only inside the CLEAR workflow region
  * and map to Moodle/Bootstrap values. No inline styles (CSP). */
-[data-clear-workflow] {
-    --fg: var(--bs-body-color, #212529); --bg: var(--bs-body-bg, #fff); --card: var(--bs-body-bg, #fff);
-    --muted: var(--bs-secondary-color, #6c757d); --line: var(--bs-border-color, #dee2e6); --line-soft: #f1f3f5;
-    --ok: #166534; --ok-soft: #ecfdf3; --navy-soft: #eef2ff; --warn-bg: #fef3c7; --warn-tag-fg: #9a3412;
+/* CLEAR brand palette = team web/styles.css (9bda108) tokens, taken from the logo:
+ * ink #17343E (outline, wordmark) and brand green #008D77 (check, arrow). Scoped to CLEAR regions only. */
+[data-clear-workflow], [data-clear-operator-conditions], .clear-brand {
+    --fg: #17343e; --bg: #fafafa; --card: #ffffff; --muted: #5f6b70; --line: #e3e8ea; --line-soft: #f4f6f6;
+    --navy: #17343e; --navy-soft: #eef4f3; --accent: #008d77; --accent-soft: #e6f4f1; --accent-ink: #ffffff;
+    --ok: #008d77; --ok-soft: #e6f4f1; --warn-bg: #fff8e8; --warn-line: #b4820f; --warn-tag-bg: #ffeec2; --warn-tag-fg: #7a5505;
+    --err: #b4332a; --err-bg: #fdeeeb; --radius: 12px;
+    --shadow: 0 2px 4px rgba(23, 52, 62, .025), 0 8px 16px -4px rgba(23, 52, 62, .045);
 }
 
 /* ── 상단 단계 띠 ─────────────────────────────────────────────────────── */
@@ -162,9 +166,10 @@
 [data-clear-workflow].clear-simple[data-guide-step]:not([data-guide-step="connect"]) [data-simple="connect"],
 [data-clear-workflow].clear-simple [data-native-condition-cards] .crc-stage { display: none !important; }
 [data-native-guide] .clear-guide {
-    margin: 0 0 18px; padding: 20px 20px 16px; border: 2px solid var(--fg); border-radius: 16px; background: var(--card);
+    margin: 0 0 18px; padding: 20px 20px 16px; border: 1px solid var(--line); border-top: 6px solid var(--accent);
+    border-radius: var(--radius); background: var(--card); color: var(--fg); box-shadow: var(--shadow);
 }
-[data-native-guide] .clear-guide-kicker { margin: 0 0 4px; font-size: .85rem; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+[data-native-guide] .clear-guide-kicker { margin: 0 0 4px; font-size: .85rem; font-weight: 800; color: var(--accent); letter-spacing: .04em; }
 [data-native-guide] .clear-guide-title { margin: 0 0 8px; font-size: 1.6rem; font-weight: 800; line-height: 1.3; letter-spacing: -.01em; }
 [data-native-guide] .clear-guide-body { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.6; }
 [data-native-guide] .clear-guide-facts { margin: 0 0 12px; padding: 12px 14px; list-style: none; border-radius: 10px; background: var(--navy-soft); }
@@ -175,13 +180,50 @@
     white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: 8px; }
 [data-native-guide] .clear-guide-go {
     display: block; width: 100%; min-height: 3.5rem; margin: 4px 0 10px; padding: .75rem 1rem; border: 0; border-radius: 12px;
-    background: var(--bs-primary, #0f6cbf); color: #fff; font-size: 1.25rem; font-weight: 800;
+    background: var(--accent); color: var(--accent-ink); font-size: 1.25rem; font-weight: 800;
 }
+[data-native-guide] .clear-guide-go:hover:not([disabled]) { filter: brightness(1.06); }
 [data-native-guide] .clear-guide-go:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
 [data-native-guide] .clear-guide-go[disabled] { opacity: .55; cursor: not-allowed; }
 [data-native-guide] .clear-guide-toggle { padding: 0; border: 0; background: none; color: var(--muted); font-size: .9rem; text-decoration: underline; }
-[data-native-guide] .clear-guide[data-guide-key="paid"] { border-color: var(--ok); background: var(--ok-soft); }
+[data-native-guide] .clear-guide[data-guide-key="paid"] { background: var(--ok-soft); }
 [data-native-guide] .clear-guide[data-guide-key="paid"] .clear-guide-title { color: var(--ok); }
 [data-native-guide] .clear-guide[data-guide-key="unknown"],
 [data-native-guide] .clear-guide[data-guide-key="notaccepted"],
-[data-native-guide] .clear-guide[data-guide-key="failure"] { border-color: var(--warn-tag-fg); background: var(--warn-bg); }
+[data-native-guide] .clear-guide[data-guide-key="failure"] { border-top-color: var(--warn-line); background: var(--warn-bg); }
+
+/* ── CLEAR 브랜드 화면 (학생·운영자 공통, 표시 전용) ─────────────────────────────
+ * Team design language inside the CLEAR region: logo header, white cards with a soft shadow on a
+ * slightly lower background, ink headings, brand-green primary actions, quiet outline secondaries.
+ * Moodle chrome outside the region is untouched. */
+.clear-brand { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--fg); }
+.clear-brand svg { display: block; width: auto; height: 40px; }
+.clear-brand-sub { margin: 0; padding-left: 12px; border-left: 1px solid var(--line); font-size: .95rem; font-weight: 700; color: var(--muted); }
+[data-clear-workflow] { color: var(--fg); font-family: "Pretendard Std", "Pretendard", "Apple SD Gothic Neo", "Inter var", system-ui, sans-serif; }
+[data-clear-workflow] > .card, [data-clear-workflow] > section.card {
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow);
+}
+[data-clear-workflow] .card h2 { font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; color: var(--fg); }
+[data-clear-workflow] .btn { border-radius: 8px; font-weight: 700; }
+[data-clear-workflow] .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+[data-clear-workflow] .btn-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.06); }
+[data-clear-workflow] .btn-secondary { background: var(--card); border: 1px solid var(--line); color: var(--fg); }
+[data-clear-workflow] .btn-secondary:hover:not(:disabled) { border-color: var(--fg); background: var(--navy-soft); color: var(--fg); }
+[data-clear-workflow] .btn:disabled { opacity: .45; }
+[data-clear-workflow] pre { border-radius: 8px; background: var(--line-soft); color: var(--fg); padding: 10px 12px; }
+[data-clear-workflow] .crc-stage { border-color: var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+[data-native-condition-cards] .crc-card { border-color: var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); }
+[data-clear-operator-conditions] .fp-btn--primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+[data-clear-operator-conditions] .fp-mode[data-mode="model"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+/* Simple view: the guide already says what to do, so the cards keep only their own facts
+ * (state, evidence, reason). Long intro, "nothing left to do" note, missing-link notes and
+ * disabled link buttons are hidden; the full text returns with the toggle. */
+[data-clear-workflow].clear-simple [data-native-condition-cards] .sec-sub,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .cc-section > .bcx-note,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-target,
+[data-clear-workflow].clear-simple [data-native-condition-cards] .crc-go:disabled { display: none !important; }
+[data-clear-workflow] [data-native-condition-cards] .sec-count { font-size: 1.05rem; font-weight: 800; color: var(--ok); }
+[data-native-condition-cards] .crc-card button:not(.crc-go), [data-native-condition-cards] .cc-btn:not(.crc-go) {
+    padding: .3rem .75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); font-weight: 600;
+}
+[data-native-condition-cards] .crc-card button:not(.crc-go):hover:not(:disabled) { border-color: var(--fg); background: var(--navy-soft); }
