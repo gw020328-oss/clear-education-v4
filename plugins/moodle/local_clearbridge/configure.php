@@ -64,6 +64,12 @@ echo html_writer::tag('p', get_string('mappingnotice', 'local_clearbridge'));
 $form->display();
 if ($isdemocourse) {
     echo $OUTPUT->heading(get_string('previewheading', 'local_clearbridge'), 2);
-    echo html_writer::tag('p', get_string('previewunavailable', 'local_clearbridge'));
+    // Operator condition draft panel (display only). course_native_wallet.js mounts it only when
+    // the CLEAR operator wallet UI is on this page; otherwise the server-rendered notice stays.
+    echo html_writer::div(
+        html_writer::tag('p', get_string('previewunavailable', 'local_clearbridge')),
+        '',
+        ['data-clear-operator-conditions' => '', 'data-course-id' => (string)$course->id]
+    );
 }
 echo $OUTPUT->footer();
