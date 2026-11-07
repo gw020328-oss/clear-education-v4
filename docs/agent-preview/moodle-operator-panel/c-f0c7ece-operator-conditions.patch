@@ -1,0 +1,152 @@
+diff --git a/plugins/moodle/local_clearbridge/amd/src/course_native_wallet.js b/plugins/moodle/local_clearbridge/amd/src/course_native_wallet.js
+index 78aacb1..78006bc 100644
+--- a/plugins/moodle/local_clearbridge/amd/src/course_native_wallet.js
++++ b/plugins/moodle/local_clearbridge/amd/src/course_native_wallet.js
+@@ -12,6 +12,31 @@ function(contract, view, workflowView, panels) {
+         let handle = null;
+         let closed = false;
+         let currentState;
++        // Operator condition draft panel (display only). The CLEAR operator connection is the
++        // validated wallet view, not the Moodle login. sessionRef changes on sign-out / wallet change.
++        const conditionsRoot = role === 'operator'
++            ? element.ownerDocument.querySelector('[data-clear-operator-conditions]') : null;
++        const conditionListeners = new Set();
++        let conditions = null;
++        let sessionEpoch = 0;
++        let sessionKey = null;
++        const conditionConnection = () => {
++            const s = currentState;
++            if (!s || s.phase !== 'CONNECTED' || s.authenticated !== true || s.role !== 'operator') {
++                return null;
++            }
++            return {status: 'CONNECTED', authenticated: true, role: 'operator', courseId: config.courseId,
++                sessionRef: 'operator-' + sessionEpoch};
++        };
++        const notifyConditions = () => {
++            const s = currentState;
++            const key = s && s.phase === 'CONNECTED' && s.authenticated === true ? String(s.selectedChoiceId) : null;
++            if (key !== sessionKey) {
++                sessionKey = key;
++                sessionEpoch += 1;
++            }
++            conditionListeners.forEach(listener => listener());
++        };
+         const workflowRoot = element.closest?.('[data-clear-workflow]');
+         const workflow = workflowRoot && workflowView.create({
+             root: workflowRoot,
+@@ -53,6 +78,8 @@ function(contract, view, workflowView, panels) {
+                 return;
+             }
+             closed = true;
++            conditions?.destroy();
++            conditionListeners.clear();
+             workflow?.destroy();
+             renderer.destroy();
+             void Promise.resolve().then(() => handle?.destroy()).catch(() => {});
+@@ -68,6 +95,7 @@ function(contract, view, workflowView, panels) {
+                 }
+                 currentState = state;
+                 updateWorkflow();
++                notifyConditions();
+                 renderer.render({...state, role: role === 'participant' ? 'PARTICIPANT' : 'COURSE_OPERATOR'}, state.allowedActions);
+             } catch {
+                 destroy();
+@@ -79,6 +107,22 @@ function(contract, view, workflowView, panels) {
+                 throw new Error('CLEAR_NATIVE_HANDLE');
+             }
+             updateWorkflow();
++            if (conditionsRoot && typeof panels.mountOperatorConditionPanel === 'function'
++                    && Number(conditionsRoot.dataset.courseId) === config.courseId) {
++                conditionsRoot.replaceChildren();
++                // previewRequest is A's port: CLEAR operator session + CSRF + course scope + native
++                // command fence for /bootcamp/preview/{prepare,generate}. Absent -> 'unconnected'.
++                conditions = panels.mountOperatorConditionPanel(conditionsRoot, {
++                    courseId: config.courseId,
++                    readConnection: conditionConnection,
++                    subscribe: listener => {
++                        conditionListeners.add(listener);
++                        return () => conditionListeners.delete(listener);
++                    },
++                    previewRequest: typeof handle.previewRequest === 'function'
++                        ? (path, options) => handle.previewRequest(path, options) : null,
++                });
++            }
+         } catch {
+             destroy();
+         }
+diff --git a/plugins/moodle/local_clearbridge/configure.php b/plugins/moodle/local_clearbridge/configure.php
+index aefd47b..00cf3e3 100644
+--- a/plugins/moodle/local_clearbridge/configure.php
++++ b/plugins/moodle/local_clearbridge/configure.php
+@@ -64,6 +64,12 @@ echo html_writer::tag('p', get_string('mappingnotice', 'local_clearbridge'));
+ $form->display();
+ if ($isdemocourse) {
+     echo $OUTPUT->heading(get_string('previewheading', 'local_clearbridge'), 2);
+-    echo html_writer::tag('p', get_string('previewunavailable', 'local_clearbridge'));
++    // Operator condition draft panel (display only). course_native_wallet.js mounts it only when
++    // the CLEAR operator wallet UI is on this page; otherwise the server-rendered notice stays.
++    echo html_writer::div(
++        html_writer::tag('p', get_string('previewunavailable', 'local_clearbridge')),
++        '',
++        ['data-clear-operator-conditions' => '', 'data-course-id' => (string)$course->id]
++    );
+ }
+ echo $OUTPUT->footer();
+diff --git a/plugins/moodle/local_clearbridge/styles.css b/plugins/moodle/local_clearbridge/styles.css
+index 9b5be12..5707f40 100644
+--- a/plugins/moodle/local_clearbridge/styles.css
++++ b/plugins/moodle/local_clearbridge/styles.css
+@@ -22,3 +22,34 @@
+     width: 1rem;
+     height: 1rem;
+ }
++
++/* Operator condition draft panel (web/finals-panels, scoped). */
++[data-clear-operator-conditions] .fp { border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; padding: 1rem; }
++[data-clear-operator-conditions] .fp-sub, [data-clear-operator-conditions] .fp-note { margin: .5rem 0; color: var(--bs-secondary-color, #6c757d); }
++[data-clear-operator-conditions] .fp-note--warn, [data-clear-operator-conditions] .fp-proposal-warn .fp-proposal-ask { color: #9a3412; }
++[data-clear-operator-conditions] .fp-note--ok { color: #166534; }
++[data-clear-operator-conditions] [data-role="operator-conditions-phase"] { font-weight: 600; color: var(--bs-body-color, #212529); }
++[data-clear-operator-conditions] .fp-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; }
++[data-clear-operator-conditions] .fp-head h2 { font-size: 1.1rem; margin: 0; }
++[data-clear-operator-conditions] .fp-field { display: grid; gap: .25rem; margin: .75rem 0; }
++[data-clear-operator-conditions] .fp-input { width: 100%; min-height: 6rem; font: inherit; }
++[data-clear-operator-conditions] .fp-mode { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; padding: .1rem .6rem; font-size: .8rem; }
++[data-clear-operator-conditions] .fp-mode[data-mode="model"] { border-color: #2563eb; color: #1d4ed8; background: #eff6ff; }
++[data-clear-operator-conditions] .fp-mode[data-mode="model-fixture"] { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
++[data-clear-operator-conditions] .fp-mode[data-mode="failed"] { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
++[data-clear-operator-conditions] .fp-proposal { margin-top: .75rem; padding: .75rem; border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; }
++[data-clear-operator-conditions] .fp-proposal-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
++[data-clear-operator-conditions] .fp-proposal-list { list-style: none; padding: 0; margin: .5rem 0; display: grid; gap: .35rem; }
++[data-clear-operator-conditions] .fp-proposal-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
++[data-clear-operator-conditions] .fp-proposal-warn { margin-top: .75rem; padding-top: .5rem; border-top: 1px dashed var(--bs-border-color, #ced4da); }
++[data-clear-operator-conditions] .fp-pairs { display: grid; grid-template-columns: max-content 1fr; gap: .25rem .75rem; margin: .5rem 0; }
++[data-clear-operator-conditions] .fp-pairs dt { color: var(--bs-secondary-color, #6c757d); font-weight: normal; }
++[data-clear-operator-conditions] .fp-pairs dd { margin: 0; overflow-wrap: anywhere; }
++[data-clear-operator-conditions] .fp-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
++[data-clear-operator-conditions] .fp-btn { border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; padding: .375rem .75rem; background: #fff; }
++[data-clear-operator-conditions] .fp-btn--primary { background: var(--bs-primary, #0f6cbf); color: #fff; border-color: transparent; }
++[data-clear-operator-conditions] .fp-btn[disabled] { opacity: .6; }
++[data-clear-operator-conditions] .fp-label { font-weight: 600; }
++[data-clear-operator-conditions] .fp-proposal-tag { margin-left: .4rem; padding: 0 .4rem; border: 1px solid var(--bs-border-color, #ced4da); border-radius: .25rem; font-size: .75rem; color: var(--bs-secondary-color, #6c757d); }
++[data-clear-operator-conditions] .fp-proposal-dst { font-weight: 600; }
++[data-clear-operator-conditions] .fp-proposal-note { display: block; color: var(--bs-secondary-color, #6c757d); font-size: .9rem; }
+diff --git a/plugins/moodle/moodle-integration/build_condition_panels.sh b/plugins/moodle/moodle-integration/build_condition_panels.sh
+index 17916c3..172d1b4 100644
+--- a/plugins/moodle/moodle-integration/build_condition_panels.sh
++++ b/plugins/moodle/moodle-integration/build_condition_panels.sh
+@@ -6,10 +6,14 @@ scratch="$(mktemp -d)"
+ trap 'rm -rf "$scratch"' EXIT
+ git -C "$1" archive 34f2f3bc0b6dc38dd8bfd1d06298341c14902039 web/src/bootcamp/finals-panels/moodle-response.js | tar -x -C "$scratch"
+ git -C "$2" archive 05918d9bdf864360b3b2e149c4ab1aab0e78eac8 web/src | tar -x -C "$scratch"
++# Operator condition draft panel (display only): mount + ai-compare + operator-proposer + v2.1 converter.
++mkdir -p "$scratch/operator"
++git -C "$2" archive "${OPERATOR_PANEL_COMMIT:?pin the reviewed operator panel commit}" web/src | tar -x -C "$scratch/operator"
+ cat > "$scratch/panels.js" <<'ENTRY'
+ export {toParticipantEntry, toOperatorCourseLink} from './web/src/bootcamp/finals-panels/moodle-response.js';
+ export {createConditionCards} from './web/src/bootcamp/condition-return/controller.js';
+ export {memoryStore} from './web/src/bootcamp/condition-return/tracker.js';
++export {mountOperatorConditionPanel} from './operator/web/src/bootcamp/finals-panels/operator-condition-mount.js';
+ ENTRY
+ npm exec --yes --package=esbuild@0.25.12 -- esbuild "$scratch/panels.js" \
+     --bundle --format=iife --global-name=panels --minify --legal-comments=none \
