@@ -61,11 +61,19 @@ function moodleBlock(criterionId, ev, evidenceState, row) {
   return text ? el('p.crc-muted', { text }) : null;
 }
 
-function reflectionBlock(review) {
+function reflectionBlock(review, link) {
   return el('div.crc-block', { 'data-review': review.state }, [
     el('p.crc-title', { text: review.title }),
     review.note ? el('p.crc-muted', { text: review.note }) : null,
     review.reason ? el('p.crc-reason', { text: `판정 사유 · ${review.reason}` }) : null,
+    // 미충족이면 어디를 고쳐 다시 써야 하는지 바로. 버튼도 「회고 다시 쓰기」 가 된다.
+    review.needsRewrite
+      ? el('p.crc-fix', {
+        text: `다시 쓸 곳 · ${link?.status === LINK.LINKED ? (link.name ?? '회고 게시판') : '회고 게시판 (주소 미제공)'}`
+          + (review.lackingLabels.length ? ` — 보충할 항목: ${review.lackingLabels.join(' · ')}` : '')
+          + '. 글을 고치거나 새로 올린 뒤 이 탭으로 돌아오면 다시 검토를 요청해요.',
+      })
+      : null,
     review.topics.length
       ? el('div', {}, [
         review.previous ? el('p.crc-muted', { text: '아래는 지난 검토 결과예요. 새 검토가 끝나면 바뀌어요.' }) : null,
@@ -103,20 +111,25 @@ function certificateBlock(cert) {
 
 // ── 버튼 ────────────────────────────────────────────────────────────────
 
-function goControl(criterionId, link, { tracker, cert, certificate, busy }) {
+function goControl(criterionId, link, { tracker, cert, certificate, busy, verb = null }) {
   if (criterionId === 'python-basic-certificate') {
     const act = cert?.action;
     if (!act) return null;
     const run = certificate?.[act.kind];
+    // 「다시 진행」 은 호스트가 로그인 창을 다시 여는 동작(resume)이 있어야 한다.
+    // 없으면 잠근 채 그 사실을 적는다 — 다시 서명하게 돌리지 않는다.
+    const missing = typeof run !== 'function';
     return el('button.cc-btn.crc-go', {
       type: 'button',
-      disabled: busy || typeof run !== 'function',
+      disabled: busy || missing,
+      'aria-disabled': missing ? 'true' : null,
+      title: missing && act.kind === 'resume' ? '로그인 창을 다시 여는 동작을 호스트가 아직 제공하지 않아요' : null,
       onClick: () => {
-        // 서명하면 학생은 HackerRank 로그인 창으로 간다. 돌아오면 다시 읽는다.
-        if (act.kind === 'sign') tracker?.depart(criterionId);
+        // 서명하거나 다시 진행하면 학생은 HackerRank 창으로 간다. 돌아오면 다시 읽는다.
+        if (act.kind === 'sign' || act.kind === 'resume') tracker?.depart(criterionId);
         void run?.();
       },
-    }, [el('span', { text: act.label }), icon('arrowUpRight')]);
+    }, [el('span', { text: missing && act.kind === 'resume' ? `${act.label} · 호스트 동작 미제공` : act.label }), icon('arrowUpRight')]);
   }
   if (link?.status === LINK.LINKED) {
     return el('a.cc-btn.crc-go', {
@@ -124,7 +137,7 @@ function goControl(criterionId, link, { tracker, cert, certificate, busy }) {
       target: '_blank',
       rel: 'noopener noreferrer',
       onClick: () => tracker?.depart(criterionId),
-    }, [el('span', { text: link.verb }), icon('arrowUpRight')]);
+    }, [el('span', { text: verb ?? link.verb }), icon('arrowUpRight')]);
   }
   return el('button.cc-btn.crc-go', { type: 'button', disabled: true, 'aria-disabled': 'true' }, [
     el('span', { text: `${verbFor(criterionId)} · 주소 미제공` }),
@@ -143,7 +156,7 @@ function targetLine(criterionId, link) {
 
 function conditionCard(criterionId, ctx) {
   const { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs,
-    certificate, busy, onOpen, sourceText } = ctx;
+    certificate, busy, onOpen, sourceText, demo = false } = ctx;
   const meta = CRITERIA[criterionId];
   const row = snapshot?.rows.find((r) => r.criterionId === criterionId) ?? null;
   const shown = row ? displayState(row) : { state: null, note: null };
@@ -156,11 +169,24 @@ function conditionCard(criterionId, ctx) {
 
   let extra = null;
   let cert = null;
+  let verb = null;
   if (criterionId === 'reflection-topics') {
-    extra = reflectionBlock(reflectionReview({
+    const review = reflectionReview({
       row, evRow: ev.row, limitations: ev.limitations, phase: session?.phase ?? null,
       aiApproval: session?.aiApproval ?? null, sourceText,
-    }));
+      // 고치러 갔다 돌아와 아직 새 판정이 안 온 동안은 지난 글의 결과다
+      // 떠나지 않고 「다시 확인」 만 누른 경우(departed=false)는 고친 글이 아니다.
+      returned: ret.departed !== false && [RETURN.CHECKING, RETURN.PENDING, RETURN.STALLED, RETURN.READ_FAILED, RETURN.CANNOT_CHECK].includes(ret.state),
+    });
+    extra = el('div', {}, [
+      reflectionBlock(review, link),
+      // 회고 재검증은 강의·과제의 원천 재확인 경로와 별개다(오규원 11/6). 실제 연결 전까지
+      // 시연은 '합성 검증 범위', 실제 모드는 '경로 연결 전' 이라고 말한다.
+      el('p.crc-muted', { 'data-role': 'reflection-scope', text: demo
+        ? '회고 재검증은 합성 검증 범위예요 — 강의·과제 재확인 경로와 별개이고, 실제 연결 전이라 이 페이지의 대역이 흉내 내요.'
+        : '회고 재검증 경로는 아직 연결 전이에요. 돌아오면 서버에 저장된 판정만 다시 읽어요.' }),
+    ]);
+    if (review.needsRewrite) verb = '회고 다시 쓰기';
   } else if (criterionId === 'python-basic-certificate') {
     cert = certificateStatus({ row, evRow: ev.row, availability: ev.availability, session, approval, signedAtMs });
     extra = certificateBlock(cert);
@@ -190,7 +216,7 @@ function conditionCard(criterionId, ctx) {
 
     el('div.crc-actions', {}, [
       // 이미 충족이면 다시 갈 이유가 적다. 그래도 길은 남긴다 — 기록을 볼 수 있다.
-      goControl(criterionId, link, { tracker, cert, certificate, busy }),
+      goControl(criterionId, link, { tracker, cert, certificate, busy, verb }),
       line?.recheck
         ? el('button.crc-sub-btn', {
           type: 'button', disabled: busy || ret.state === RETURN.CHECKING,
@@ -219,7 +245,7 @@ export function conditionCardsSection({
   session = null, approval = null, signedAtMs = null, certificate = null, busy = false,
   onOpen = () => {}, sourceText = null, demo = false,
 } = {}) {
-  const ctx = { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs, certificate, busy, onOpen, sourceText };
+  const ctx = { snapshot, links, tracker, evidence, evidenceState, session, approval, signedAtMs, certificate, busy, onOpen, sourceText, demo };
   const met = (snapshot?.rows ?? []).filter((r) => r.state === 'MET' && r.current !== false).length;
   const anyLinked = CRITERION_IDS.some((id) => links?.[id]?.status === LINK.LINKED);
 
@@ -236,6 +262,11 @@ export function conditionCardsSection({
     ]),
 
     demo ? el('p.bcx-warn', { text: '시연 데이터 · 서버·Moodle·HackerRank 는 이 페이지 안의 시연용 대역이에요. 실제 기록이 아니에요.' }) : null,
+    // 넷 다 충족한 뒤 "그래서 이제 뭐?" 가 없었다(11/5 점검). 지급은 이 화면이 하지 않는다 —
+    // 기존 지급 흐름의 서버가 한다. 여기서 약속하는 건 '더 할 일이 없다' 까지다.
+    snapshot && snapshot.current !== false && met === 4
+      ? el('p.bcx-note', { 'data-role': 'all-met', text: '네 조건을 모두 충족했어요. 이 화면에서 더 할 일은 없어요. 100 TEST 지급은 기존 지급 흐름에서 서버가 처리하고, 결과는 기존 CLEAR 화면(수령 확인)에서 보여요.' })
+      : null,
     snapshot?.source === 'OPERATIONS'
       ? el('p.bcx-note', { text: '확인 절차가 준비되기 전이라 수집 단계에 저장된 판정을 보여 드려요. 조건별 현재성은 아직 표시되지 않아요.' })
       : null,
