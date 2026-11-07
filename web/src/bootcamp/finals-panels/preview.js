@@ -44,6 +44,30 @@ const DEMO_PRESETS = [
  *   'gemini' 는 **오프라인 응답 대역**이다. 실제 Gemini 호출이 아니고, 「제안 생성」 을
  *   눌러야 한 번 돈다. 실제 연결 때는 propose 만 CLEAR 서버 중계 호출로 바뀐다.
  */
+/**
+ * 실제 모드에서 Gemini 대역·녹화 재생 자리에 끼우는 제안자. **보내지 않는다.**
+ * 실제 모드는 합성으로 떨어지지 않는다 — 오프라인 대역과 녹화 응답은 합성 자료라서
+ * 실제 모드에 보이면 안 된다. 「제안 생성」 을 눌러도 미연결 결과 상자만 나온다.
+ */
+export const UNCONNECTED_MODEL_PROPOSER = Object.freeze({
+  id: 'model-unconnected',
+  kind: 'model',
+  explicit: true,
+  label: 'Gemini · CLEAR 서버 중계 미연결',
+  idleLabel: 'Gemini · CLEAR 서버 중계 미연결 (보내지 않음)',
+  generateLabel: '제안 생성 (미연결 · 보내지 않음)',
+  propose: () => Object.freeze({
+    clauses: [], kept: [], readable: 0, unreadable: 0, held: 0, duplicates: [],
+    canonicalText: '', complete: false,
+    outcome: Object.freeze({
+      kind: 'FAILED', phase: 'prepare', code: 'RELAY_NOT_CONNECTED', source: 'CLIENT_CHECK', httpStatus: null,
+      call: '생성 요청을 보내지 않음 · 실제 모드에 연결된 중계 경로가 없음',
+      text: '실제 모드입니다. 이 페이지에는 CLEAR 서버 중계가 연결되어 있지 않아 Gemini 로 보내지 않았습니다. '
+        + 'Gemini 오프라인 대역과 녹화 재생은 합성 자료라 합성 모드(?mode=SYNTHETIC)에서만 씁니다. 합성으로 자동 전환하지 않습니다.',
+    }),
+  }),
+});
+
 export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer = 'rules' } = {}) {
   clear(root);
 
@@ -67,12 +91,15 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
   const first = PRESETS[0].source;
   const useGemini = proposer === 'gemini';
   const useOperator = proposer === 'operator';
+  // 실제 모드에서는 대역·녹화를 끼우지 않는다. 자리만 같고, 누르면 '미연결' 이 나온다.
+  const actual = mode === DATA_MODE.ACTUAL;
+  const modelStandIn = (make) => (actual ? UNCONNECTED_MODEL_PROPOSER : make());
   const aiPanel = aiComparePanel({
     adapter: ai,
     source: first,
     // 녹화 재생 대역은 녹화한 원문만 답한다. 예문도 그 원문들이다.
-    presets: useOperator ? REPLAY_TEXTS.map((source, i) => ({ id: `replay-${i}`, label: REPLAY_LABEL[i] ?? source.slice(0, 16), source })) : DEMO_PRESETS,
-    proposer: useOperator ? createReplayOperatorProposer() : useGemini ? OFFLINE_GEMINI_PROPOSER : RULES_PROPOSER,
+    presets: useOperator && !actual ? REPLAY_TEXTS.map((source, i) => ({ id: `replay-${i}`, label: REPLAY_LABEL[i] ?? source.slice(0, 16), source })) : DEMO_PRESETS,
+    proposer: useOperator ? modelStandIn(() => createReplayOperatorProposer()) : useGemini ? modelStandIn(() => OFFLINE_GEMINI_PROPOSER) : RULES_PROPOSER,
   });
   const opsPanel = opsMetricsPanel({ adapter: ops });
 
@@ -85,11 +112,9 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
   const linkLoad = createAdapter({ mode, fixture: linkFixture, run: null });
   const linkSave = createAdapter({ mode, fixture: saveFixture, run: null });
   const linkPanel = courseLinkPanel({ load: linkLoad, save: linkSave, scenario: 'unset', conditions: [] });
-  const followConditions = (snap) => {
-    if (snap.state !== 'success' || !snap.payload?.draft?.conditions) return;
-    linkPanel.setConditions(snap.payload.draft.conditions.map((c) => c.capability));
-  };
-  ai.subscribe(followConditions);
+  // 실행 결과(payload)가 아니라 B 의 **제안**을 따라간다. Gemini·서버 중계 모드는 표시
+  // 전용이라 실행이 없는데, 그래도 운영자는 찾은 조건마다 항목을 지정해 봐야 한다.
+  aiPanel.setOnProposal((caps) => linkPanel.setConditions(caps));
 
   root.append(
     el('header.fp-top', {}, [
@@ -101,21 +126,32 @@ export function mountFinalsPreview(root, { mode = DATA_MODE.SYNTHETIC, proposer 
           : '실제 모드입니다. 아직 연결된 경로가 없어 미연결로 표시됩니다. '
             + '합성 자료로 자동 전환하지 않습니다.',
       }),
-      // 제안자 전환. 같은 확인 화면에 규칙 / Gemini(오프라인 대역) 를 번갈아 끼운다.
-      el('div.fp-presets', { role: 'group', 'aria-label': '제안자' }, [
-        el('span.fp-label', { text: '제안자' }),
-        ...[['rules', '프론트 규칙 (지금)'], ['gemini', 'Gemini 오프라인 대역 (제안 생성 버튼)'], ['operator', '운영자 서버 중계 (녹화 재생)']].map(([id, label]) => {
-          const href = `?mode=${mode === DATA_MODE.ACTUAL ? 'ACTUAL' : 'SYNTHETIC'}&proposer=${id}`;
-          return el('a.fp-chip', { href, 'aria-pressed': (useOperator ? 'operator' : useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
-        }),
-      ]),
-      useOperator
-        ? el('p', { text: '운영자 서버 중계 · 녹화 재생 대역: 기존 운영자 로그인 + B 중계 + D(오프라인 모델 전송)를 별도 환경에서 돌려 녹화한 HTTP 응답을 재생합니다. '
-          + '변환기·화면은 실제 코드입니다. 이 페이지는 로그인·강좌 범위·승인을 확인하지 않고, 녹화에 없는 원문은 답하지 않습니다. 실제 Gemini 호출 아님. 제안은 표시 전용입니다.' })
-        : null,
-      useGemini
-        ? el('p', { text: 'Gemini 대역: 서버가 Gemini 로 할 분류를 이 페이지 안에서 흉내 냅니다. 실제 호출 아님. 한 조항 = 한 조건이고, 여러 조건이 한 문장에 있으면 서버처럼 보류합니다. 제안은 표시 전용입니다.' })
-        : null,
+      // 시연 설정 — 제안자 전환과 그 설명은 발표 중 자주 안 건드리므로 접어 둔다 (B4).
+      // 같은 확인 화면에 규칙 / Gemini(오프라인 대역) / 녹화 재생을 번갈아 끼운다.
+      el('details.fp-demo', {}, [
+        el('summary', { text: `시연 설정 · 제안자: ${useOperator ? '운영자 서버 중계' : useGemini ? 'Gemini 오프라인 대역' : '프론트 규칙'}` }),
+        el('div.fp-presets', { role: 'group', 'aria-label': '제안자' }, [
+          el('span.fp-label', { text: '제안자' }),
+          ...[
+            ['rules', '프론트 규칙 (지금)'],
+            ['gemini', actual ? 'Gemini (실제 모드 · 중계 미연결)' : 'Gemini 오프라인 대역 (제안 생성 버튼)'],
+            ['operator', actual ? '운영자 서버 중계 (실제 모드 · 미연결)' : '운영자 서버 중계 (녹화 재생)'],
+          ].map(([id, label]) => {
+            const href = `?mode=${mode === DATA_MODE.ACTUAL ? 'ACTUAL' : 'SYNTHETIC'}&proposer=${id}`;
+            return el('a.fp-chip', { href, 'aria-pressed': (useOperator ? 'operator' : useGemini ? 'gemini' : 'rules') === id ? 'true' : 'false' }, [el('span', { text: label })]);
+          }),
+        ]),
+        actual && (useGemini || useOperator)
+          ? el('p', { text: '실제 모드에서는 Gemini 오프라인 대역과 녹화 재생을 끼우지 않습니다. 둘 다 합성 자료입니다. 「제안 생성」 을 눌러도 보내지 않고 미연결 결과만 보입니다.' })
+          : null,
+        useOperator && !actual
+          ? el('p', { text: '운영자 서버 중계 · 녹화 재생 대역: 기존 운영자 로그인 + B 중계 + D(오프라인 모델 전송)를 별도 환경에서 돌려 녹화한 HTTP 응답을 재생합니다. '
+            + '변환기·화면은 실제 코드입니다. 이 페이지는 로그인·강좌 범위·승인을 확인하지 않고, 녹화에 없는 원문은 답하지 않습니다. 실제 Gemini 호출 아님. 제안은 표시 전용입니다.' })
+          : null,
+        useGemini && !actual
+          ? el('p', { text: 'Gemini 대역: 서버가 Gemini 로 할 분류를 이 페이지 안에서 흉내 냅니다. 실제 호출 아님. 한 조항 = 한 조건이고, 여러 조건이 한 문장에 있으면 서버처럼 보류합니다. 제안은 표시 전용입니다.' })
+          : null,
+      ].filter(Boolean)),
     ].filter(Boolean)),
     aiPanel.node,
     el('p.fp-flow', { text: '↓ 조건이 정해지면, 조건마다 Moodle 의 어느 항목을 읽을지 운영자가 지정합니다.' }),

@@ -140,10 +140,31 @@ const short = (v) => {
  *   누르면 원문 칸에 들어가고 바로 구조화한다. 원문 칸은 그대로 고칠 수 있다 —
  *   심사위원이 "그럼 이건요?" 하고 바꿔도 같은 길로 간다.
  */
+/** 조건 종류 → 확인 방법(읽기 전용 도구). 원문 ↔ 해석 ↔ 확인 방법을 한 줄에서 대조하려고 둔다 */
+export const CAPABILITY_HOW = Object.freeze({
+  'MOODLE_ACTIVITY_COMPLETION.1': 'Moodle 학습 활동 완료 기록 조회',
+  'MOODLE_ASSIGNMENT_SUBMISSION.1': 'Moodle 과제 제출 기록 조회',
+  'REFLECTION_REQUIRED_TOPICS.1': 'Moodle 회고 글 읽기 + AI 세 항목 검토',
+  'HACKERRANK_CERTIFICATE_HOLDING.1': 'Reclaim 증명으로 HackerRank 인증서 확인',
+});
+
+// 운영자가 보는 순서 — 안내문 입력 → AI 가 읽은 조건 → 연결할 검증 도구 → 운영자 확인 (오규원 11/6).
+const FLOW_STEPS = Object.freeze(['안내문 입력', 'AI 가 읽은 조건', '연결할 검증 도구', '운영자 확인']);
+function flowSteps(now) {
+  return el('ol.fp-flow-steps', { 'aria-label': '진행 순서' }, FLOW_STEPS.map((label, i) => el('li', {
+    'data-state': i < now ? 'done' : i === now ? 'now' : 'next', 'aria-current': i === now ? 'step' : null,
+  }, [el('span.fp-flow-dot', { text: String(i + 1) }), el('span', { text: label })])));
+}
+
 export function aiComparePanel({
   adapter, source = '', onSource = () => {}, presets = [], proposer = RULES_PROPOSER,
+  // 찾은 조건의 종류(capability) 목록이 바뀔 때 부른다. A 강좌 연결 칸이 이걸 따라간다 —
+  // 실행 결과가 아니라 **제안**을 따라가야 표시 전용(Gemini·서버 중계) 모드에서도 칸이 선다.
+  onProposal = () => {},
 }) {
   const box = el('section.fp', {});
+  let notify = onProposal;
+  let notifiedCaps = null;
   let text = source;
   // 제안자가 읽은 원본. 운영자 지정을 얹기 전이다.
   let base = emptyProposal();
@@ -451,18 +472,27 @@ export function aiComparePanel({
     const found = proposal.clauses.filter((c) => c.canonical);
     const held = proposal.clauses.filter((c) => c.held);
     const notOurs = proposal.clauses.filter((c) => c.notOurs && c.source !== 'operator');
+    // 종류 목록이 실제로 바뀔 때만 알린다 — 글자마다 다시 그리는데, 그때마다 알리면
+    // 아래 A 칸의 운영자 선택이 지워진다. 생성 전·실패·만료는 빈 목록이다.
+    const caps = failed ? [] : [...new Set(found.map((c) => c.capability))];
+    const capsKey = caps.join('|');
+    if (capsKey !== notifiedCaps) { notifiedCaps = capsKey; notify(caps); }
     const unread = proposal.clauses.filter((c) => !c.canonical && !c.held && !(c.notOurs && c.source !== 'operator'));
 
     box.append(...[
       el('header.fp-head', {}, [
         el('h2', { text: 'AI 조건 구조화 · 근거 대조' }),
         modeChip(s),
+        // 이 화면에서 정한 조건은 아직 개설 전 미리보기다. 진행 중인 학생의 정책·지급 조건을 바꾸지 않는다.
+        el('span.fp-mode.fp-preview-tag', { 'data-mode': 'preview', text: '개설 전 조건 미리보기' }),
       ]),
 
       el('p.fp-sub', {
         text: '학원 안내문을 조건으로 쪼개고, 각 조건을 어떤 도구로 확인하는지 보여줍니다. '
           + '이 화면은 자격을 판정하거나 지급을 허용하지 않습니다.',
       }),
+      // 지금 어느 순서에 있는지. 원문이 비면 ①, 제안이 보이면 ②, 실행 중이면 ③, 결과가 오면 ④.
+      flowSteps(text.trim() === '' ? 0 : s.payload !== null ? 3 : s.busy ? 2 : 1),
 
       // ── 조건 변화 시연 ────────────────────────────────────────────
       //
@@ -531,25 +561,39 @@ export function aiComparePanel({
                         ? '조건 사이의 관계를 확인해야 해서 자동으로 읽지 않았습니다. 아래 보류한 조항을 봐 주세요.'
                         : '조건을 찾지 못했습니다. 아래 "읽지 않은 문장" 에서 직접 지정하실 수 있습니다.',
                 }),
+          // "맞나요?" 의 '아니요' 는 버튼이 아니라 원문 수정이다 — 판독 근거가 늘 원문에 남게 한다.
+          // 찾은 조건에는 빼기 손잡이를 두지 않는다(운영자가 판독을 손으로 덮지 않도록).
+          found.length > 0 && !idle && !outcomeFailed
+            ? el('p.fp-proposal-hint', {
+              text: '다르게 읽었으면 위 원문을 고치세요. 빼려면 그 문장을 지우고, 더하려면 써 넣으면 됩니다. '
+                + (explicit ? '고친 뒤 「제안 다시 생성」 을 누르면 다시 읽습니다.' : '제안이 다시 만들어집니다.'),
+            })
+            : null,
           // 받은 제안의 출처·호출·만료. 모델 응답과 도구 실행은 다른 사실이다.
           outcome?.kind === 'PROPOSED' ? proposedFacts(proposal) : null,
+          // 원문 | 해석 | 확인 방법 — 한 줄에서 대조한다(오규원 11/6 예시). 실행 결과는 아래 ④ 가 따로 말한다.
           found.length > 0
-            ? el('ul.fp-proposal-list', {}, found.map((c) => el('li.fp-proposal-row', {
-              'data-read': 'yes', 'data-source': c.source ?? 'none',
-            }, [
-              el('span.fp-proposal-dst', {}, [
-                el('span', { text: CAPABILITY_LABEL[c.capability] ?? c.capability }),
-                el('span.fp-proposal-tag', {
-                  'data-source': c.source,
-                  text: c.source === 'operator' ? '운영자 지정' : c.source === 'rules' ? '규칙' : c.source,
-                }),
+            ? el('div.fp-proposal-table', {}, [
+              el('div.fp-proposal-cols', { 'aria-hidden': 'true' }, [
+                el('span', { text: '원문' }), el('span', { text: '해석' }), el('span', { text: '확인 방법' }),
               ]),
-              el('span.fp-proposal-arrow', { 'aria-hidden': 'true', text: '←' }),
-              el('span.fp-proposal-src', { text: `"${c.original}"` }),
-              c.note ? el('span.fp-proposal-note', { text: c.note }) : null,
-              // 운영자가 붙인 것은 되돌릴 수 있어야 한다
-              c.source === 'operator' ? pickBox(c) : null,
-            ].filter(Boolean))))
+              el('ul.fp-proposal-list', {}, found.map((c) => el('li.fp-proposal-row.fp-proposal-row--3', {
+                'data-read': 'yes', 'data-source': c.source ?? 'none',
+              }, [
+                el('span.fp-proposal-src', { text: `"${c.original}"` }),
+                el('span.fp-proposal-dst', {}, [
+                  el('span', { text: CAPABILITY_LABEL[c.capability] ?? c.capability }),
+                  el('span.fp-proposal-tag', {
+                    'data-source': c.source,
+                    text: c.source === 'operator' ? '운영자 지정' : c.source === 'rules' ? '규칙' : c.source,
+                  }),
+                ]),
+                el('span.fp-proposal-how', { text: CAPABILITY_HOW[c.capability] ?? '등록된 읽기 전용 도구' }),
+                c.note ? el('span.fp-proposal-note', { text: c.note }) : null,
+                // 운영자가 붙인 것은 되돌릴 수 있어야 한다
+                c.source === 'operator' ? pickBox(c) : null,
+              ].filter(Boolean)))),
+            ])
             : null,
 
           // ── 조건 관계(또는·대신) 때문에 보류한 것 — 숨기지 않는다 ──────
@@ -694,7 +738,7 @@ export function aiComparePanel({
       s.error ? el('p.fp-note.fp-note--warn', { text: ERROR_TEXT[s.error.code] ?? s.error.code }) : null,
 
       // ── ① 조항과 ② 조건 ─────────────────────────────────────────
-      ...(draft ? section('① 쪼갠 조항과 ② 매핑한 조건', [
+      ...(draft ? section('② AI 가 읽은 조건 — 서버가 확인한 조항과 매핑', [
         stale ? el('p.fp-note.fp-note--wait', { text: '아래는 바뀌기 전 원문 기준입니다.' }) : null,
         el('ul.fp-list', {}, (draft.conditions ?? []).map((c, i) => {
           const clause = (draft.clauses ?? []).find((x) => x.id === c.clauseId) ?? null;
@@ -738,7 +782,7 @@ export function aiComparePanel({
       ]) : []),
 
       // ── ③ 계획 ────────────────────────────────────────────────────
-      ...(plan ? section('③ 선택한 도구와 계획 검사', [
+      ...(plan ? section('③ 연결할 검증 도구 — 선택과 계획 검사', [
         el('ul.fp-list', {}, (plan.steps ?? []).map((st) => {
           const cond = (draft?.conditions ?? []).find((c) => c.id === st.conditionId) ?? null;
           return el('li.fp-row', {}, [
@@ -786,7 +830,7 @@ export function aiComparePanel({
       ]) : []),
 
       // ── ④ 근거 대조 ──────────────────────────────────────────────
-      ...(result ? section('④ 도구가 본 것', [
+      ...(result ? section('④ 운영자 확인 — 도구가 본 것', [
         el('ul.fp-list', {}, (result.observations ?? []).map((o) => el('li.fp-row', {}, [
           el('p.fp-row-title', { text: TOOL_LABEL[o.tool] ?? o.tool }),
           el('dl.fp-pairs', {}, [
@@ -827,7 +871,14 @@ export function aiComparePanel({
   // 명시적 제안자는 첫 화면에서도 부르지 않는다 — 버튼을 눌러야 한다.
   if (text.trim() !== '' && !explicit) propose(text);
   render();
-  return { node: box, render, generate };
+  /** 찾은 조건 종류 목록을 받을 곳을 나중에 끼운다(A 칸은 B 다음에 만들어진다). 바로 한 번 알린다 */
+  const setOnProposal = (fn) => {
+    notify = typeof fn === 'function' ? fn : () => {};
+    const caps = failed ? [] : [...new Set(proposal.clauses.filter((c) => c.canonical).map((c) => c.capability))];
+    notifiedCaps = caps.join('|');
+    notify(caps);
+  };
+  return { node: box, render, generate, setOnProposal };
 }
 
 /**

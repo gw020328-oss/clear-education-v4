@@ -7,6 +7,9 @@
 //                     (team-entry 라면 driver.readLive() 후 driver.snapshot())
 //   loadEvidence(s)   기존 decisionEvidence(applicationId, { decisionId })
 //   targets()         이동 정보(targets.js 의 제안 계약). 아직 없으면 null
+//   refresh(req)      원천 재확인 요청(A 의 source-refresh). 없으면 저장된 판정만 읽는다.
+//                     { criterionId, expectedRevision } → { status: QUEUED|RATE_LIMITED|RECORDED|UNAVAILABLE,
+//                     operationId?, retryAfterSeconds? } · null 이면 "이 빌드엔 없음"
 //   certificate       기존 driver 의 { start: bind, read: approval, sign: sign }
 //   onOpen(id)        기존 「자세히」 (조건 상세·근거 보기)
 //   onChange()        다시 그려 달라는 요청
@@ -24,6 +27,10 @@ export function createConditionCards({
   isBusy = (e) => (e?.code ?? e?.message) === 'TEST_BUSY_OR_ENDED',
   loadEvidence = null,
   targets = () => null,
+  refresh = null,
+  // 어느 조건에 재확인을 보내나. 기본(tracker.defaultRefreshFor)은 강의·과제뿐 — 회고 재검증은
+  // 별개 경로라 실제 연결 전엔 안 보낸다. 시연 페이지는 대역이 회고도 받아 따로 넘긴다.
+  refreshFor = undefined,
   certificate = null,
   onOpen = () => {},
   onChange = () => {},
@@ -89,6 +96,10 @@ export function createConditionCards({
         return fresh;
       },
       isBusy, storage, nowMs, setTimer, clearTimer, isVisible, onChange: notify,
+      refresh,
+      ...(typeof refreshFor === 'function' ? { refreshFor } : {}),
+      // 재확인 명령의 기준 번호 = 지금 화면이 가진 **신청(판정) 개정 번호**
+      getRevision: () => snapshotOf(getState())?.decision?.revision ?? null,
       ...(followUpMs ? { followUpMs } : {}),
     });
     tracker.attach({ doc, win });

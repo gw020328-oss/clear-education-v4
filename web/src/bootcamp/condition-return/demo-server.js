@@ -4,10 +4,15 @@
 // 같은 localStorage 를 나눠 쓴다. 대역 탭에서 '완료' 를 누르면 Moodle 기록만 바뀌고,
 // CLEAR 판정은 **서버 대역이 원천을 다시 읽어야** 바뀐다. 그게 이 시연의 요점이다.
 //
-//   재수집 모드 DELAYED  기록이 생기고 lag 초 뒤 서버가 다시 읽었다고 친다.
-//                        A 에게 요청한 '원천 재조회' 가 생기면 이렇게 보인다
-//   재수집 모드 NEVER    지금 develop 과 같다. 조회는 저장된 판정만 읽고 아무것도
-//                        바뀌지 않는다 → 카드는 '확인 중' 뒤 '아직 반영되지 않았어요'
+//   재수집 모드 ON_REQUEST  (기본) 학생이 돌아와 카드가 원천 재확인을 **요청**하면 접수
+//                           (QUEUED)하고, lag 초 뒤 다시 읽은 것으로 친다. A 의
+//                           source-refresh 가 붙었을 때의 모양이다. 요청 없이는 안 바뀐다
+//   재수집 모드 DELAYED     기록이 생기면 요청 없이도 lag 초 뒤 서버가 다시 읽었다고 친다
+//                           (Moodle 이벤트로 서버가 스스로 다시 읽는 경우)
+//   재수집 모드 NEVER       지금 develop 과 같다. 재확인 경로가 없고 조회는 저장된 판정만
+//                           읽는다 → 카드는 '확인 중' 뒤 '아직 반영되지 않았어요'
+//   재수집 모드 UNAVAILABLE 재확인 경로는 있는데 이 조건은 지원하지 않는다고 답한다
+//                           → 카드는 '아직 확인할 수 없어요'
 //
 // 회고 판정은 AI 가 아니다. 시연 판정기가 예문 문장(specs/bootcamp/reflection-example.json
 // 과 같은 세 문장)이 글에 그대로 있는지만 본다. 화면에도 시연이라고 적는다.
@@ -27,12 +32,19 @@ const HR_MESSAGE = 'CLEAR HackerRank evidence observation approval; not a paymen
   + 'application: application-demo-cards\npurpose: HACKERRANK_EVIDENCE_OBSERVATION_NOT_PAYMENT_AUTHORIZATION\n'
   + '(시연 메시지 · 실제 서명 아님)';
 
+export const DEMO_MODES = Object.freeze(['ON_REQUEST', 'DELAYED', 'NEVER', 'UNAVAILABLE']);
+
+/** 같은 조건에 다시 요청할 수 있을 때까지(검증표: 5초) */
+export const REFRESH_RATE_LIMIT_MS = 5000;
+
 const fresh = () => ({
   v: 1,
-  mode: 'DELAYED',
+  mode: 'ON_REQUEST',
   lagMs: 5000,
   moodle: { activityAt: null, assignmentAt: null, reflection: null },
   hr: { boundAt: null, messageAt: null, signedAt: null, consentAt: null },
+  // 조건별 원천 재확인 요청 기록 { requestedAt, operationId, count }
+  refresh: {},
 });
 
 /** localStorage 를 감싼다. 막혀 있으면 메모리만 쓴다(그러면 대역 탭과 공유되지 않는다) */
@@ -71,13 +83,40 @@ function fnv(text) {
 export function createDemoServer({ store, nowMs = () => Date.now() }) {
   const update = (fn) => { const s = store.load(); fn(s); store.save(s); return s; };
 
-  /** 서버가 '다시 읽었다' 고 볼 시점이 지났나 */
-  const seen = (s, at) => at !== null && at !== undefined && s.mode === 'DELAYED' && nowMs() >= at + s.lagMs;
+  const SLOT = Object.freeze({
+    'activity-complete': 'activityAt', 'assignment-submitted': 'assignmentAt', 'reflection-topics': 'reflection',
+  });
+
+  /**
+   * 서버가 '다시 읽었다' 고 볼 시점이 지났나.
+   *
+   *   DELAYED     기록 시각 + lag
+   *   ON_REQUEST  기록이 있고, **재확인 요청이 접수된 뒤** lag 가 지났을 때
+   *   NEVER · UNAVAILABLE  절대 아니다 — 저장된 판정만 있다
+   */
+  const readAt = (s, criterionId, at) => {
+    if (at === null || at === undefined) return null;
+    if (s.mode === 'DELAYED') return at + s.lagMs;
+    if (s.mode === 'ON_REQUEST') {
+      const req = s.refresh?.[criterionId];
+      // 요청은 **그 시점까지의 기록**만 읽는다. 요청 뒤에 생긴 기록(고쳐 올린 회고 등)은
+      // 다시 요청해야 읽는다 — 그래야 "고치기만 하고 돌아오지 않았는데 바뀌는" 일이 없다.
+      if (!req?.requestedAt || req.requestedAt < at) return null;
+      return req.requestedAt + s.lagMs;
+    }
+    return null;
+  };
+  const seen = (s, criterionId, at) => { const t = readAt(s, criterionId, at); return t !== null && nowMs() >= t; };
 
   function reflectionStage(s) {
-    const r = s.moodle.reflection;
-    if (!r || !seen(s, r.at)) return { stage: 'NONE' };
-    const t = nowMs() - r.at - s.lagMs;
+    const cur = s.moodle.reflection;
+    // 고쳐 올린 글을 아직 안 읽었으면 **지난 판정**이 그대로다. 실서버도 그렇다 —
+    // 새 글이 있다고 판정이 사라지지 않고, 다시 읽어야 바뀐다.
+    const r = cur && seen(s, 'reflection-topics', cur.at) ? cur
+      : s.moodle.reflectionPrev && seen(s, 'reflection-topics', s.moodle.reflectionPrev.at) ? s.moodle.reflectionPrev
+        : null;
+    if (!r) return { stage: 'NONE' };
+    const t = nowMs() - readAt(s, 'reflection-topics', r.at);
     if (t < s.lagMs) return { stage: 'APPROVAL' };
     if (t < s.lagMs * 2) return { stage: 'REVIEWING' };
     const topics = Object.entries(DEMO_REFLECTION).map(([topicId, quote]) => {
@@ -86,14 +125,17 @@ export function createDemoServer({ store, nowMs = () => Date.now() }) {
         ? { topicId, state: 'PRESENT', location: { start, end: start + quote.length } }
         : { topicId, state: 'ABSENT', location: null };
     });
-    return { stage: 'REVIEWED', topics, at: r.at + s.lagMs * 3 };
+    return { stage: 'REVIEWED', topics, at: readAt(s, 'reflection-topics', r.at) + s.lagMs * 2 };
   }
 
+  // HackerRank 는 Reclaim 흐름이라 재확인 요청과 무관하다. 동의 뒤 lag 지나면 서버가 검증한 것으로 친다.
+  const hrSeen = (s) => s.hr.consentAt !== null && s.mode !== 'NEVER' && nowMs() >= s.hr.consentAt + s.lagMs;
+
   function rows(s) {
-    const activity = seen(s, s.moodle.activityAt);
-    const assignment = seen(s, s.moodle.assignmentAt);
+    const activity = seen(s, 'activity-complete', s.moodle.activityAt);
+    const assignment = seen(s, 'assignment-submitted', s.moodle.assignmentAt);
     const refl = reflectionStage(s);
-    const hrDone = seen(s, s.hr.consentAt);
+    const hrDone = hrSeen(s);
     const met = refl.stage === 'REVIEWED' && refl.topics.every((t) => t.state === 'PRESENT');
     return [
       { criterionId: 'activity-complete', state: activity ? 'MET' : 'NOT_MET', current: true,
@@ -135,7 +177,7 @@ export function createDemoServer({ store, nowMs = () => Date.now() }) {
   function session() {
     const s = store.load();
     const refl = reflectionStage(s);
-    const hrInProgress = s.hr.boundAt && !seen(s, s.hr.consentAt);
+    const hrInProgress = s.hr.boundAt && !hrSeen(s);
     return {
       applicationId: DEMO_APPLICATION,
       boundApplicationId: s.hr.boundAt ? DEMO_APPLICATION : null,
@@ -191,8 +233,40 @@ export function createDemoServer({ store, nowMs = () => Date.now() }) {
     // 서명하면 기존 driver 처럼 읽어 둔 메시지를 비운다(state.approval = null)
     approval: () => { const h = store.load().hr; return h.messageAt && !h.signedAt ? { approvalId: 'approval-demo', message: HR_MESSAGE } : null; },
     reflectionText: () => store.load().moodle.reflection?.text ?? null,
+    /** 대역 탭용 — Moodle 기록이 이미 있나(ms). 판정이 아니라 원천 기록이다 */
+    moodleRecordedAt: (criterionId) => { const m = store.load().moodle; return criterionId === 'activity-complete' ? m.activityAt : criterionId === 'assignment-submitted' ? m.assignmentAt : null; },
     settings: () => { const s = store.load(); return { mode: s.mode, lagMs: s.lagMs }; },
-    setMode: (mode) => update((s) => { s.mode = mode === 'NEVER' ? 'NEVER' : 'DELAYED'; }),
+    setMode: (mode) => update((s) => { s.mode = DEMO_MODES.includes(mode) ? mode : 'ON_REQUEST'; }),
+    /**
+     * 원천 재확인 요청의 대역 — A 의 `POST .../source-refresh` 응답 모양(검증표 11/5).
+     * 실서버가 아니다. 프리뷰의 `refresh` 포트가 이걸 부른다.
+     *
+     *   NEVER        null — 이 빌드엔 그 경로가 없다(지금 develop)
+     *   UNAVAILABLE  { status: 'UNAVAILABLE' }
+     *   그 밖        이미 읽었으면 RECORDED, 5초 안 재요청이면 RATE_LIMITED, 아니면 QUEUED
+     */
+    refresh: (criterionId, expectedRevision = null) => {
+      const s0 = store.load();
+      if (s0.mode === 'NEVER') return null;
+      if (s0.mode === 'UNAVAILABLE' || !SLOT[criterionId]) return { status: 'UNAVAILABLE', criterionId };
+      const at = criterionId === 'reflection-topics' ? s0.moodle.reflection?.at ?? null : s0.moodle[SLOT[criterionId]];
+      const prev = s0.refresh?.[criterionId] ?? null;
+      if (prev?.requestedAt && seen(s0, criterionId, at)) {
+        return { status: 'RECORDED', operationId: prev.operationId, criterionId, expectedRevision };
+      }
+      if (prev?.requestedAt && nowMs() - prev.requestedAt < REFRESH_RATE_LIMIT_MS) {
+        return {
+          status: 'RATE_LIMITED', operationId: prev.operationId, criterionId,
+          retryAfterSeconds: Math.ceil((REFRESH_RATE_LIMIT_MS - (nowMs() - prev.requestedAt)) / 1000),
+        };
+      }
+      const s = update((st) => {
+        st.refresh ??= {};
+        const count = (st.refresh[criterionId]?.count ?? 0) + 1;
+        st.refresh[criterionId] = { requestedAt: nowMs(), operationId: `op-demo-${criterionId}-${count}`, count };
+      });
+      return { status: 'QUEUED', operationId: s.refresh[criterionId].operationId, criterionId, expectedRevision, retryAfterSeconds: null };
+    },
     setLag: (ms) => update((s) => { s.lagMs = Math.max(1000, Math.min(20000, Number(ms) || 5000)); }),
     // 기존 driver 동작의 대역 — bind · approval · sign
     startHr: () => update((s) => { s.hr.boundAt ??= nowMs(); }),
@@ -201,7 +275,11 @@ export function createDemoServer({ store, nowMs = () => Date.now() }) {
     // Moodle·HackerRank 대역 탭이 부른다
     completeActivity: () => update((s) => { s.moodle.activityAt ??= nowMs(); }),
     submitAssignment: () => update((s) => { s.moodle.assignmentAt ??= nowMs(); }),
-    submitReflection: (text) => update((s) => { s.moodle.reflection = { text: String(text).slice(0, 4000), at: nowMs() }; }),
+    submitReflection: (text) => update((s) => {
+      // 이미 읽힌 글이 있으면 지난 판정의 근거로 남긴다
+      if (s.moodle.reflection && seen(s, 'reflection-topics', s.moodle.reflection.at)) s.moodle.reflectionPrev = s.moodle.reflection;
+      s.moodle.reflection = { text: String(text).slice(0, 4000), at: nowMs() };
+    }),
     consentHr: () => update((s) => { if (s.hr.signedAt) s.hr.consentAt ??= nowMs(); }),
     reset: () => store.reset(),
   });

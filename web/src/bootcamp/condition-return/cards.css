@@ -64,6 +64,9 @@
 .crc-actions .cc-btn { margin: 0; text-decoration: none; }
 .crc-actions .cc-btn[disabled] { cursor: not-allowed; opacity: 0.55; }
 .crc-card[data-state="met"] .crc-go { background: var(--card); color: var(--fg); border-color: var(--line); }
+/* 어두운 모드: 봉인 styles.css 의 .cc[data-state="open"] .cc-btn 이 바탕 var(--fg)(밝음) + 글자 #fff 라
+ * 글자가 안 보인다. 우리 버튼만 글자색을 바탕색으로 뒤집는다 (B6). 봉인 쪽 같은 문제는 오규원에게 전달. */
+:root[data-theme="dark"] .crc-card[data-state="open"] .crc-go { color: var(--bg); }
 
 .crc-sub-btn {
   padding: 8px 12px;
@@ -96,3 +99,46 @@
 .crc-standin { max-width: 640px; margin: 40px auto; padding: 0 16px; }
 .crc-standin textarea { width: 100%; min-height: 9em; font: inherit; padding: 8px; }
 .crc-standin .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+
+/* 미충족 회고 — 어디를 고쳐 다시 써야 하는지 */
+.crc-fix {
+  margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--warn-tag-fg, #b45309);
+  background: var(--warn-bg, #fef3c7); color: var(--fg); font-size: 0.82rem; line-height: 1.55; border-radius: 0 8px 8px 0;
+}
+
+/* ── 카드 순서 정돈 (11/6) — 해야 할 일 → 충족 여부 → 이유·근거 → 다음 행동 ─────────── */
+.crc-todo { margin: 2px 0 10px; font-size: 0.8rem; line-height: 1.55; color: var(--muted); }
+.crc-verdict {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px;
+  margin: 0 0 10px; padding: 10px 12px; border-radius: 10px;
+  background: var(--line-soft); color: var(--fg);
+}
+.crc-verdict strong { font-size: 1.25rem; letter-spacing: -0.02em; line-height: 1.2; }
+.crc-verdict-sub { font-size: 0.74rem; color: var(--muted); }
+.crc-verdict[data-tone="ok"] { background: var(--ok-soft); color: var(--ok); }
+.crc-verdict[data-tone="bad"] { background: var(--warn-bg); color: var(--warn-tag-fg); }
+.crc-verdict[data-tone="wait"] { background: var(--navy-soft); }
+.crc-verdict[data-tone="warn"] { background: var(--warn-bg); color: var(--warn-tag-fg); }
+.crc-why { margin: 0 0 4px; font-size: 0.86rem; line-height: 1.55; font-weight: 600; }
+.crc-source { margin: 0 0 10px; font-size: 0.74rem; color: var(--muted); }
+.crc-more { margin: 8px 0 0; font-size: 0.76rem; }
+.crc-more summary { cursor: pointer; color: var(--muted); }
+.crc-more > :not(summary) { margin-top: 6px; }
+.crc-ai { margin: 8px 0 0; }
+.crc-ai-k { margin: 0; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.crc-fix p:last-child { margin: 4px 0 0; }
+
+/* 손가락 크기(최소 24px) — 접기 손잡이 */
+.crc-more summary, .crc-message summary { display: inline-flex; align-items: center; min-height: 28px; padding: 2px 4px; }
+
+/* 접힌 시연 조작 — 제품 화면이 먼저 보이게 */
+.crc-demo-details { margin: 10px 0 0; }
+.crc-demo-details > summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 28px; font-size: 0.82rem; color: var(--muted); }
+.crc-demo-details > p { margin: 8px 0 0; color: var(--muted); font-size: 0.84rem; line-height: 1.6; }
+.crc-preview-top h1 { margin: 0 0 4px; }
+
+/* 네 카드의 충족 칸이 같은 높이에서 시작하게 — 제목 두 줄("HackerRank Python (Basic) 인증" 이 꺾인다)
+ * + 할 일 세 줄까지 자리를 고정한다 (B3). 좁은 화면(한 줄 배치)에서는 해제한다. */
+.crc-card .bcx-task-name { min-height: 3em; }
+.crc-todo { min-height: calc(1.55em * 3); }
+@media (max-width: 560px) { .crc-card .bcx-task-name { min-height: 0; } .crc-todo { min-height: 0; } }
