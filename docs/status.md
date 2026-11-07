@@ -1,5 +1,14 @@
 # 개발 현황
 
+## 2026-11-07 Moodle 후속과 작업 브랜치 병합
+
+아래 후보의 병합 대상은 각각의 PR base를 기준으로 한다. 원격 확인 **2026-11-07 11:02 KST** 기준 [main 94c03a8](https://github.com/gw020328-oss/clear-education-v4/commit/94c03a8fc0528bf23d18f26f601b873531196bcd), [develop c18c3f7](https://github.com/gw020328-oss/clear-education-v4/commit/c18c3f74f5a77ce7bec183e1915af12e508ab232). 어제 문서 병합 이후 두 base에 새 기능 병합은 없다.
+
+- **작업 브랜치에 병합**. Moodle 플러그인 후속 [#178](https://github.com/gw020328-oss/clear-education-v4/pull/178)은 MERGED이지만 대상은 `codex/claude-c-operator-panel`이다. [병합 커밋 04de63a](https://github.com/gw020328-oss/clear-education-v4/commit/04de63a6f56ab691145739860cff6c499f46e159)의 작업 브랜치 반영과 develop/main 제공 범위를 구분한다. 이 PR에 표시된 CI 검사는 없다.
+- **진행 중**. Moodle native 지급 안정화와 운영자 조건 구조화 후보 [#174](https://github.com/gw020328-oss/clear-education-v4/pull/174)의 base는 `codex/native-activity-return`, 외부 D 구조화 후보 [#176](https://github.com/gw020328-oss/clear-education-v4/pull/176)의 base는 `codex/external-preview-deploy-prep`, 서버 중단 후 독립 청구 후보 [#177](https://github.com/gw020328-oss/clear-education-v4/pull/177)의 base는 `codex/claude-moodle-operator-preview`다. 확인 head는 각각 [d702b1c](https://github.com/gw020328-oss/clear-education-v4/commit/d702b1c5ac8da74a2c78c51044ca99fe7b8efb64), [ed46a46](https://github.com/gw020328-oss/clear-education-v4/commit/ed46a46307174aa7f9da26ce5b67f8be423d940a), [288d49c](https://github.com/gw020328-oss/clear-education-v4/commit/288d49ca9efba241a59f2528cca6e79cbec630eb)이며 세 PR 모두 표시 CI가 없다. 제목의 지급·연결 표현만으로 실제 성공이나 base 반영을 확정하지 않는다.
+- **검사 확인**. develop 대상 열린 [#172](https://github.com/gw020328-oss/clear-education-v4/pull/172) head 81f09cb와 [#173](https://github.com/gw020328-oss/clear-education-v4/pull/173) head 254f73b는 각각 [CI 4개](https://github.com/gw020328-oss/clear-education-v4/actions/runs/42160166749), [CI 4개](https://github.com/gw020328-oss/clear-education-v4/actions/runs/42227007452)가 성공했다. 해당 결과는 후보 커밋의 검사 결과다. 실제 사용자 지급·타 사용자 시험·외부 배포의 새 공개 근거는 이번 확인에서 검증하지 않았다.
+
+
 ## 2026-11-06 조건 구조화와 운영자 제안 연결
 
 아래 구현과 병합 상태는 develop 기준이다. 원격 확인 **2026-11-06 11:44 KST** 기준 [main 348fad3](https://github.com/gw020328-oss/clear-education-v4/commit/348fad3f7b0df5988be10492cbc1e587a096660c), [develop e4d3c20](https://github.com/gw020328-oss/clear-education-v4/commit/e4d3c205c43804a02b2360b816e5e7a6dd975a3b).
